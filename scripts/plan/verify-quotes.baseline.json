@@ -3,7 +3,7 @@
     "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
     "line": 432,
     "words": "license.at is a semantic input, not build timing, and the distinction is",
-    "reason": "false trigger: line ~428's 'read verbatim from one named source metadata key' describes an unrelated field; this callout is the ADR's own original prose, not an external quotation."
+    "reason": "false trigger: line ~428's 'read verbatim from one named source metadata key' describes an unrelated field; this callout is the ADR's own original prose, not an external quotation -- a tool false trigger, not an offender (round-10 finding 8)."
   },
   {
     "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
@@ -15,7 +15,7 @@
     "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
     "line": 403,
     "words": "the accepted mechanism is unchanged; this replaces a selector the acceptance never",
-    "reason": "source DECISIONS-PENDING.md:1053 ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source."
+    "reason": "source DECISIONS-PENDING.md:1053 ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; an appended ADR-020 note is owed."
   },
   {
     "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
@@ -31,20 +31,26 @@
   },
   {
     "file": "engine/ADMISSION-PREREGISTRATION.md",
+    "line": 220,
+    "words": "G-A1 Fast admission is structural. A test that observes reads on the",
+    "reason": "source cited (`:218`) as \"DRAFT-2-BRIEF-A…:96-112\" -- the filename is itself elided with an ellipsis in the citing heading and no tracked file matches it; cannot be found here by construction."
+  },
+  {
+    "file": "engine/ADMISSION-PREREGISTRATION.md",
     "line": 949,
     "words": "a false status string does not sit on main between P3a and",
-    "reason": "source DECISIONS-PENDING.md:41; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte."
+    "reason": "source DECISIONS-PENDING.md:41; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte; correction owed in P3b's record round (appended)."
   },
   {
     "file": "engine/ADMISSION-PREREGISTRATION.md",
     "line": 993,
     "words": "Adopt the architect's sentence as written, with one addition: the accessor's doc",
-    "reason": "source DECISIONS-PENDING.md:44; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte."
+    "reason": "source DECISIONS-PENDING.md:44; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte; correction owed in P3b's record round (appended)."
   },
   {
     "file": "frontends/shell/ENTRY-66B-PREREGISTRATION.md",
     "line": 104,
-    "words": "No membership predicate that does not answer identically to tileCoverForBbox's key set",
+    "words": "1. No membership predicate that does not answer identically to tileCoverForBbox's key",
     "reason": "source is 'the consult' (an architect-agent design consult), never committed as a tracked document -- cannot be found here by construction."
   },
   {
@@ -56,7 +62,7 @@
   {
     "file": "frontends/shell/HOVER-REPICK-PREREGISTRATION.md",
     "line": 53,
-    "words": "No re-pick at a stored pixel that does not re-validate the framebuffer",
+    "words": "8. No re-pick at a stored pixel that does not re-validate the",
     "reason": "source is 'the consult §2' (an architect-agent design consult), never committed as a tracked document -- cannot be found here by construction."
   },
   {
@@ -64,6 +70,12 @@
     "line": 113,
     "words": "via the real panel DOM, scan completed on its own;",
     "reason": "source is an e2e harness run's own console line (frontends/shell/e2e/out/, .gitignore'd), never a tracked file -- cannot be found here by construction."
+  },
+  {
+    "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+    "line": 113,
+    "words": "\"[FIND'] PASS (14878ms): applied \\\"id > 99900\\\" via the real panel DOM, scan",
+    "reason": "source is the same e2e harness run's own FIND' log line (frontends/shell/e2e/out/, .gitignore'd; npm run e2e:regression), never a tracked file -- cannot be found here by construction (a second, backtick-introduced passage at this line, round-10 finding 10's backtick recognition)."
   },
   {
     "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
@@ -75,19 +87,25 @@
     "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
     "line": 76,
     "words": "The restated target (the load-bearing correction): at fit-to-extent the viewport IS the",
-    "reason": "labelled 'quoted verbatim' but is a restatement of ADR-028:19's point, worded differently from that or any other single tracked source."
+    "reason": "labelled 'quoted verbatim' but the named source (this document's own §2 header) is a rolling file, since overwritten -- not a fixed byte-for-byte target."
   },
   {
     "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
     "line": 86,
     "words": "C1 No docs/08 normative row lands this cut, not even \"proposed\" -",
-    "reason": "labelled 'quoted verbatim' but this block-on-sight list is self-authored for this document, not a literal copy of a separate tracked source."
+    "reason": "labelled 'quoted verbatim' but the named source (this document's own §2 header) is a rolling file, since overwritten -- not a fixed byte-for-byte target."
   },
   {
     "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
     "line": 125,
-    "words": "vsync interval, zero dropped frames, across the benchmark matrix below (06)",
+    "words": "≤ vsync interval, zero dropped frames, across the benchmark matrix below (06)",
     "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte."
+  },
+  {
+    "file": "scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md",
+    "line": 54,
+    "words": "verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name",
+    "reason": "branch staleness, not a misquote: the source is DECISIONS-PENDING.md's round-10 ruling, which landed on origin/main after this branch forked and is not yet in this branch's own copy of that file; verified separately (scripts/plan/verify-quotes.mjs run against a scratch origin/main checkout plus this branch's own governance files) to PASS byte-for-byte once merged -- see VERIFY-QUOTES-PREREGISTRATION.md's Amendment 5."
   },
   {
     "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",

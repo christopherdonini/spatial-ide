@@ -7,30 +7,58 @@
 // from/quoting/the human:), but the source does not carry that sentence. `verify-cites.mjs` proves a
 // `path:line` reference EXISTS; this proves a claimed-verbatim PASSAGE actually occurs in the tree.
 //
-// GATED CHECK: a quotation (>= 8 words, straight "..." or curly "..." double quotes, or one or more
-// adjacent `> ` blockquote paragraphs merged into one passage -- see mergedBlockquoteRuns) introduced
-// within the ~200 characters preceding its OWN first character by one of the eight trigger words
-// above. Normalized (blockquote/comment-continuation/heading/list line-start markers stripped,
-// markdown emphasis and backticks stripped, curly quotes/dashes folded to straight, whitespace
-// collapsed -- applied identically to the passage and to every candidate source) and required to
-// occur, as a substring, somewhere in the tracked tree's text files, excluding the citing passage's
-// own source line(s) (so a quote never "verifies" against itself). A passage introduced by a nearby
-// `path:line` cite is looked up in that file FIRST; missing there but found elsewhere is advisory, not
-// gated (the cite itself may be stale -- verify-cites.mjs gates that separately). A finding matching
-// scripts/plan/verify-quotes.baseline.json's (file, line) is a pre-existing, human-reviewed offender:
-// printed as advisory on every run, never gated, so a NEW mismatch still fails the check today.
+// GATED CHECK: a quotation (>= 8 words -- straight "...", curly "...", a backtick `...` span, or one
+// or more adjacent `> ` blockquote paragraphs merged into one passage, see mergedBlockquoteRuns)
+// introduced by one of the eight trigger words above, anchored at word boundaries and case-folded, in
+// the ~200 characters preceding its own first character (a backtick span may instead be introduced in
+// the ~200 characters AFTER its own last character -- this tree's own style often reads `` `...`,
+// quoted verbatim `` with the trigger trailing, not leading). A passage nested inside a larger one
+// (a straight quote that is also the whole content of a `> ` blockquote line) counts once, as the
+// larger passage. Normalized (see normalizeText) identically on both sides and required to occur, as a
+// substring, somewhere in the tracked tree -- EXCEPT within the citing document's own OTHER extracted
+// quote passages: every quote passage's line range is blanked out of its OWN file's haystack copy
+// before the search, so a misquote reproduced (even to correct it) later IN THE SAME DOCUMENT can never
+// "verify" against that reproduction (the cut/briefa-p3b ADMISSION-PREREGISTRATION.md:1425/:1446 case).
+// This is deliberately SAME-FILE only, not tree-wide: DECISIONS-PENDING.md's own rulings are literally
+// recorded as `**"...", quoted verbatim` blocks -- excluding every quotation tree-wide would blank out
+// the one document most things in this tree legitimately quote FROM, breaking far more true positives
+// than the self-verifying-misquote defect it would close (see VERIFY-QUOTES-PREREGISTRATION.md's
+// Amendment 5 for the concrete count). A same-document self-verifying misquote is the named defect;
+// a cross-document quotation of an authoritative primary source is not the same shape.
 //
-// ADVISORY LISTING (--show-cites, never fails): every path:line cite's first cited line, trimmed, so
-// a reader can eyeball whether the line says what the clause claims -- this script does not judge it.
+// A passage introduced by a nearby `path:line` cite is GATED against that file alone when the cite
+// resolves to exactly one candidate: found there is a PASS, missing there is a FAIL (baseline
+// permitting) -- no fallback search of the rest of the tree (the human's round-10 ruling: a path-cited
+// quote that isn't where it says it is is exactly the class of defect this check exists to catch, not
+// something to soften into a note). A cite that resolves to zero or several candidates cannot be gated
+// against "that file" with confidence and is reported advisory instead (unresolved/ambiguous cites are
+// verify-cites.mjs's own gate, a different failure class). A passage with no nearby path cite is
+// searched across the whole tracked-tree haystack.
 //
-// DISCLOSED GAPS: a straight/curly quote spans at most one physical source line (this tree's prose
-// keeps a paragraph on one line; a hard-wrapped quote defeats the regex, the same limit
+// scripts/plan/verify-quotes.baseline.json itself is excluded from the haystack (its own recorded
+// "words" text must never let a passage "verify" against the very file that records it as unverified)
+// and is consulted only AFTER the search above has failed: a match on (file, line, and the entry's
+// `words` as a normalized PREFIX of the passage) is a KNOWN failure -- recorded and classified by the
+// custodian's worker, pending the human's sight at this PR -- printed as baselined on every run, never
+// gated, so the check passes on the tree as found while any NEW mismatch (a different line, or
+// different wording at the same line) still fails it. A baseline entry that matches nothing this run is
+// reported too (a shifted line, or a corrected quote, leaves a stale entry -- surfaced, not silently
+// carried). Missing or unparsable baseline.json is an empty baseline, never fatal.
+//
+// ADVISORY LISTING (--show-cites, never fails, computed only when passed): every path:line cite's
+// first cited line, trimmed, so a reader can eyeball whether the line says what the clause claims --
+// this script does not judge it. An ambiguous or unresolved cite is printed as such, never as the
+// first same-basename candidate's unrelated text; a cited line past its file's end is printed as such,
+// never as an empty string.
+//
+// DISCLOSED GAPS: a straight/curly/backtick quote spans at most one physical source line (this tree's
+// prose keeps a paragraph on one line; a hard-wrapped quote defeats the regex, the same limit
 // citationIntegrity.test.mjs accepts); after flattening, a passage that is a substring of unrelated
-// adjacent text can false-match (shared by every flatten-then-substring check in this tree); a
-// misquote that happens to coincide with a genuine substring elsewhere is not caught -- this proves
-// the passage's TEXT exists somewhere, not that the citing document's ATTRIBUTION put it there; a
-// quote attributed to an untracked source (a `.gitignore`d evidence log, a third-party crate's source
-// not vendored into this repo) can never be found here by construction, not because it is wrong.
+// adjacent text can false-match (shared by every flatten-then-substring check in this tree); a quote
+// attributed to an untracked source (a `.gitignore`d evidence log, a third-party crate's source not
+// vendored into this repo) can never be found here by construction, not because it is wrong; the
+// tree-wide search for a passage with no nearby path cite is a FLOOR (the text exists somewhere), not
+// source attribution (it does not prove the citing document's own claimed source is that occurrence).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -41,10 +69,32 @@ import { claimFiles } from './verify-test-claims.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..');
 
-export const TEXT_EXTS = new Set(['md', 'rs', 'ts', 'tsx', 'mjs', 'json', 'toml', 'yaml']);
-export const TRIGGERS = ['verbatim', 'reads:', 'reads,', 'says:', 'states:', 'quoted from', 'quoting', 'the human:'];
+const TEXT_EXTS = new Set(['md', 'rs', 'ts', 'tsx', 'mjs', 'json', 'toml', 'yaml']);
+const BASELINE_REL_PATH = 'scripts/plan/verify-quotes.baseline.json';
 const INTRO_WINDOW = 200;
 const MIN_WORDS = 8;
+
+// Anchored at a word boundary on whichever end abuts a letter/digit, case-folded: `quoting` must not
+// match inside `misquoting`; `reads,` must not match inside `threads,`.
+const TRIGGERS = ['verbatim', 'reads:', 'reads,', 'says:', 'states:', 'quoted from', 'quoting', 'the human:'];
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+const TRIGGER_RES = TRIGGERS.map((t) => {
+  const startsWord = /^[A-Za-z0-9]/.test(t);
+  const endsWord = /[A-Za-z0-9]$/.test(t);
+  return new RegExp((startsWord ? '\\b' : '') + escapeRe(t) + (endsWord ? '\\b' : ''), 'i');
+});
+
+function hasTrigger(text, beforeIdx) {
+  const windowText = text.slice(Math.max(0, beforeIdx - INTRO_WINDOW), beforeIdx);
+  return TRIGGER_RES.some((re) => re.test(windowText));
+}
+
+function hasTriggerAfter(text, afterIdx) {
+  const windowText = text.slice(afterIdx, afterIdx + INTRO_WINDOW);
+  return TRIGGER_RES.some((re) => re.test(windowText));
+}
 
 function lineOf(text, idx) {
   let n = 1;
@@ -58,10 +108,17 @@ function extOf(p) {
 }
 
 // A line-start structural marker: `> ` blockquote, `///`/`//!`/`//` and `/**`/`*/`/`*` comment
-// continuations, a heading `#`, or a list bullet/ordinal -- none carries quoted CONTENT, so none
-// belongs in a passage compared against a source that may wrap the same words differently.
+// continuations, a heading `#`, or a `-`/`+` bullet -- none carries quoted CONTENT, so none belongs in
+// a passage compared against a source that may wrap the same words differently. A NUMBERED list marker
+// (`1.`, `2.`) is deliberately NOT here: the number is content (a renumbered item -- `3.` become `5.`
+// -- must not verify against its own earlier self), and this substring architecture has no per-line
+// pairing to strip a marker only when both sides carry one, so the safe simplification is to never
+// fold it.
+// The lone-`*` comment-continuation alternative is `(?!\*)`-guarded so it never eats one star of a
+// line-leading `**bold**` pair (common in this tree's "**Amendment N —**" style) before
+// stripEmphasisPairs gets to see the intact pair.
 const LEADING_MARKER_RE =
-  /^[ \t]*(?:>[ \t]?|\/\/\/[ \t]?|\/\/![ \t]?|\/\/[ \t]?|\/\*\*?[ \t]?|\*\/[ \t]?|\*[ \t]?|#{1,6}[ \t]+|[-+][ \t]+|\d+\.[ \t]+)/;
+  /^[ \t]*(?:>[ \t]?|\/\/\/[ \t]?|\/\/![ \t]?|\/\/[ \t]?|\/\*\*?[ \t]?|\*\/[ \t]?|\*(?!\*)[ \t]?|#{1,6}[ \t]+|[-+][ \t]+)/;
 
 function stripLeadingMarkers(line) {
   let prev;
@@ -72,23 +129,36 @@ function stripLeadingMarkers(line) {
   return line;
 }
 
+// Emphasis PAIRS only -- `**bold**`, `*italic*`, `_italic_` at a word boundary -- never a lone `*`/`_`,
+// so `2*3=6`, `Vec<_>` and `scripts/plan/*.test.mjs` survive unchanged (there is no closing partner to
+// pair with, so the pair regex never matches them at all).
+function stripEmphasisPairs(s) {
+  let prev;
+  do {
+    prev = s;
+    s = s
+      .replace(/\*\*([^\s*][^*]*?)\*\*/g, '$1')
+      .replace(/(?<![A-Za-z0-9*])\*([^\s*][^*]*?)\*(?![A-Za-z0-9*])/g, '$1')
+      .replace(/(?<![A-Za-z0-9_])_([^\s_][^_]*?)_(?![A-Za-z0-9_])/g, '$1');
+  } while (s !== prev);
+  return s;
+}
+
 /**
- * Strip line-start structural markers (blockquote/comment-continuation/heading/list), markdown
- * emphasis (`**`/`*`, and `_` only at a word boundary -- an internal `tile_key`-style underscore is
- * content, not emphasis, so it survives) and backticks, fold curly quotes/dashes to straight, collapse
- * whitespace. Applied identically to a claimed passage and to every candidate source, so markup a copy
+ * Strip line-start structural markers, emphasis PAIRS and backticks, fold curly quotes/dashes to
+ * straight, collapse whitespace. Deliberately leaves a numbered list marker, and `′`/`…`/`‐`/`−`
+ * (prime, ellipsis, unicode hyphen/minus) unfolded -- each is content, not markup, in this tree's
+ * prose. Applied identically to a claimed passage and to every candidate source, so markup a copy
  * legitimately drops (or a source legitimately wraps across comment-continuation lines) never defeats
- * an otherwise-true match.
+ * an otherwise-true match, and never quietly erases a real difference.
  */
 export function normalizeText(raw) {
   const stripped = raw.split('\n').map(stripLeadingMarkers).join('\n');
-  const folded = stripped
+  const folded = stripEmphasisPairs(stripped)
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
     .replace(/[–—]/g, '-')
-    .replace(/`/g, '')
-    .replace(/\*/g, '')
-    .replace(/(?<![A-Za-z0-9])_|_(?![A-Za-z0-9])/g, '');
+    .replace(/`/g, '');
   return folded.replace(/\s+/g, ' ').trim();
 }
 
@@ -96,13 +166,15 @@ function wordCount(s) {
   return s ? s.split(' ').filter(Boolean).length : 0;
 }
 
-export function hasTrigger(text, beforeIdx) {
-  const windowText = text.slice(Math.max(0, beforeIdx - INTRO_WINDOW), beforeIdx).toLowerCase();
-  return TRIGGERS.some((t) => windowText.includes(t));
-}
-
 const STRAIGHT_RE = /"([^"\n]+)"/g;
 const CURLY_RE = /“([^”\n]+)”/g;
+// Each delimiting backtick must be ISOLATED (not itself adjacent to another backtick): markdown's own
+// `` `...` `` double-backtick escape (used to show a literal backtick inside inline code -- this very
+// file uses it above) would otherwise mispair, chaining an open backtick from one escape sequence to a
+// close backtick belonging to a LATER, unrelated inline-code span and sweeping up the ordinary prose
+// between them as fabricated "content". Content is matched LAZILY so a genuine pair closes at its own
+// nearest backtick, not a farther one.
+const BACKTICK_RE = /(?<!`)`(?!`)([^`\n]+?)(?<!`)`(?!`)/g;
 const ATOMIC_BLOCKQUOTE_RE = /(?:^[ \t]*>[ \t]?.*\n?)+/gm;
 
 /**
@@ -126,6 +198,21 @@ function mergedBlockquoteRuns(text) {
   return merged;
 }
 
+// A passage whose line range sits inside a larger passage's range counts once -- e.g. a straight quote
+// that is also the entire content of one `> ` blockquote line (`> *"...text..."*`): keep the larger, or
+// on an exact tie the non-blockquote (its extraction is already the clean inner text, no wrapper left).
+function isRedundant(a, b) {
+  const bContainsA = b.startLine <= a.startLine && b.endLine >= a.endLine;
+  if (!bContainsA) return false;
+  const sameRange = a.startLine === b.startLine && a.endLine === b.endLine;
+  if (sameRange) return a.kind === 'blockquote' && b.kind !== 'blockquote';
+  return b.endLine - b.startLine > a.endLine - a.startLine;
+}
+
+function dedupeNested(list) {
+  return list.filter((p, i) => !list.some((q, j) => j !== i && isRedundant(p, q)));
+}
+
 /** Every quoted passage (>= 8 words, verbatim-introduced) in `text`: [{normalized,startLine,endLine,introEnd,kind}]. */
 export function extractQuotePassages(text) {
   const out = [];
@@ -140,16 +227,24 @@ export function extractQuotePassages(text) {
       out.push({ normalized, startLine, endLine: startLine, introEnd: m.index, kind });
     }
   }
+  BACKTICK_RE.lastIndex = 0;
+  let bm;
+  while ((bm = BACKTICK_RE.exec(text))) {
+    const introEnd = bm.index;
+    if (!hasTrigger(text, introEnd) && !hasTriggerAfter(text, introEnd + bm[0].length)) continue;
+    const normalized = normalizeText(bm[1]);
+    if (wordCount(normalized) < MIN_WORDS) continue;
+    const startLine = lineOf(text, introEnd);
+    out.push({ normalized, startLine, endLine: startLine, introEnd, kind: 'backtick' });
+  }
   for (const { start, end } of mergedBlockquoteRuns(text)) {
     const raw = text.slice(start, end);
     let normalized = normalizeText(raw);
-    // A blockquote whose whole content is ALSO a straight-quoted span (nested wrapping, e.g.
-    // `> *"...text..."*`) is stripped of that one outer pair, so it is not double-checked, once
-    // correctly (the straight-kind passage above) and once with stray quote-mark punctuation left in
-    // by this loop's own `> `/emphasis stripping, which cannot also drop a mark that isn't structural.
+    // A blockquote whose whole content is ALSO a redundant straight-quoted span (`> "text..."`) is
+    // unwrapped once: the outer pair is not structural content, and unwrapping can expose a line-start
+    // marker that sat just inside it (`> "# a TOML comment..."` -- stripLeadingMarkers never reaches the
+    // `#` while the `"` still precedes it at the true line start).
     if (normalized.length > 1 && normalized[0] === '"' && normalized[normalized.length - 1] === '"') {
-      // The stripped wrapper can expose a line-start marker that sat just inside it (e.g. a `#`
-      // comment marker right after the opening `"`, `> "# comment...`) -- strip once more.
       normalized = stripLeadingMarkers(normalized.slice(1, -1).trim()).trim();
     }
     if (wordCount(normalized) < MIN_WORDS) continue;
@@ -158,20 +253,51 @@ export function extractQuotePassages(text) {
     const numLines = raw.split('\n').length - (raw.endsWith('\n') ? 1 : 0);
     out.push({ normalized, startLine, endLine: startLine + numLines - 1, introEnd: start, kind: 'blockquote' });
   }
-  return out.sort((a, b) => a.introEnd - b.introEnd);
+  return dedupeNested(out).sort((a, b) => a.introEnd - b.introEnd);
 }
 
-// Blank the citing passage's own source lines with a sentinel token (never whitespace, so the
-// collapsed-whitespace haystack can never let text on either side of the removed span join into a
-// false match) before normalizing, so a quote never "verifies" by finding its own words at its own site.
-function excludeLines(text, startLine, endLine) {
+// Blank every extracted quote passage's own line range with a sentinel token (never whitespace, so the
+// collapsed-whitespace haystack can never let text on either side of a removed span join into a false
+// match) before normalizing a file for the haystack, so a quotation only ever verifies against prose
+// and code -- never against another quotation, including one that reproduces it only to correct it.
+function blankPassages(text, passages) {
+  if (!passages.length) return text;
   const lines = text.split('\n');
-  for (let i = startLine - 1; i < endLine && i < lines.length; i++) lines[i] = '@@EXCLUDED@@';
+  for (const p of passages) {
+    for (let i = p.startLine - 1; i < p.endLine && i < lines.length; i++) lines[i] = '@@EXCLUDED@@';
+  }
   return lines.join('\n');
 }
 
+const PARA_BREAK_RE = /\n[ \t]*\n/g;
+const LIST_OR_HEADING_START_RE = /^[ \t]*(?:[-+][ \t]|\d+\.[ \t]|#{1,6}[ \t]|>[ \t]?)/;
+
+// A blank-line paragraph break fully separates unrelated prose (a heading is always preceded by one, so
+// this subsumes crossing a heading too): a path cite in an earlier, blank-line-separated paragraph or
+// list item never "introduces" a quote in a later one -- it is merely nearby in the 200-char window, not
+// the thing the quote's own trigger clause names. A TIGHT list (bullets on consecutive lines, no blank
+// line between them, this tree's common style) has no paragraph break to catch, so the window is
+// separately clamped to the START of the quote's own line when that line itself opens a fresh
+// bullet/numbered/heading/blockquote item -- a cite sitting in the PRIOR bullet is a different item's
+// own citation, not this one's. The round-10 fix-by-construction gate now FAILS a passage outright when
+// its named file misses, so mistaking an unrelated nearby cite for the real introducer is no longer a
+// soft advisory-only mistake (docs/adr/ADR-023-attribute-projection-on-viewport-query.md line 144's
+// stray "stream.rs:2189", engine/LOD-PREREGISTRATION.md line 303's stray "DECISIONS-PENDING.md:48" from
+// the preceding blank-line-separated item, and frontends/shell/ENTRY-66B-PREREGISTRATION.md line 19's
+// stray "limits.ts:45" from the preceding TIGHT-list bullet, are the three concrete regressions this
+// closes).
 function nearestPathIntro(text, introEnd, topDirs) {
-  const windowStart = Math.max(0, introEnd - INTRO_WINDOW);
+  let windowStart = Math.max(0, introEnd - INTRO_WINDOW);
+  PARA_BREAK_RE.lastIndex = windowStart;
+  let m;
+  while ((m = PARA_BREAK_RE.exec(text)) && m.index < introEnd) {
+    const breakEnd = m.index + m[0].length;
+    if (breakEnd <= introEnd) windowStart = breakEnd;
+  }
+  const lineStart = text.lastIndexOf('\n', introEnd - 1) + 1;
+  if (lineStart > windowStart && LIST_OR_HEADING_START_RE.test(text.slice(lineStart, introEnd))) {
+    windowStart = lineStart;
+  }
   const cites = extractCitations(text.slice(windowStart, introEnd), { commentsOnly: false }).filter(
     (c) => classifyPath(c.pathRaw, topDirs) !== 'doc-number',
   );
@@ -186,15 +312,13 @@ function defaultScanFiles(root, index) {
   return claimFiles(index.files).map((f) => path.join(root, f));
 }
 
-export const BASELINE_REL_PATH = 'scripts/plan/verify-quotes.baseline.json';
-
 /**
- * The pre-existing, human-reviewed offenders recorded at `scripts/plan/verify-quotes.baseline.json`:
- * `[{file, line, words, reason}]`. A finding matching one by (file, line) is a KNOWN failure -- printed
- * as advisory on every run, never gated -- so the check passes on the tree as found while any NEW
- * mismatch still fails it. Missing or unparsable is treated as an empty baseline, never as fatal.
+ * The pre-existing offenders at `scripts/plan/verify-quotes.baseline.json`: `[{file, line, words,
+ * reason}]` -- recorded and classified by the custodian's worker, pending the human's sight at this PR,
+ * never described as "human-reviewed" until it is. Missing or unparsable is an empty baseline, never
+ * fatal.
  */
-export function loadBaseline(root) {
+function loadBaseline(root) {
   const p = path.join(root, BASELINE_REL_PATH);
   if (!fs.existsSync(p)) return [];
   try {
@@ -205,22 +329,49 @@ export function loadBaseline(root) {
   }
 }
 
+// (file, line, words-as-a-normalized-PREFIX-of-the-passage): a stale entry whose line shifted, or whose
+// recorded words no longer prefix what is actually there today, matches nothing -- it does not silently
+// waive a different bad quote that happens to land on the same line.
+function matchBaseline(entries, used, relPath, line, normalizedPassage) {
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    const wordsNorm = normalizeText(e.words ?? '');
+    if (wordsNorm && normalizedPassage.startsWith(wordsNorm)) {
+      used.add(i);
+      return e;
+    }
+  }
+  return null;
+}
+
 /**
  * Scans `files` (default: every tracked `*PREREGISTRATION*.md` and `docs/adr/*.md`; explicit paths
- * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-
- * introduced quotes and checks each against the tracked tree. Returns
- * { findings, advisories, baselined, checked, scanned }.
+ * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
+ * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
+ * baseline file itself) from the searchable text. Returns
+ * { findings, advisories, baselined, checked, scanned, unmatchedBaseline }.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
-  const baselineMap = new Map(loadBaseline(root).map((b) => [`${b.file}:${b.line}`, b]));
+  const baselineEntries = loadBaseline(root);
+  const usedBaseline = new Set();
+  const baselineAbs = path.join(root, BASELINE_REL_PATH);
 
   const haystack = new Set(scanAbs);
-  for (const rel of index.files) if (TEXT_EXTS.has(extOf(rel))) haystack.add(path.join(root, rel));
+  for (const rel of index.files) {
+    if (!TEXT_EXTS.has(extOf(rel))) continue;
+    const abs = path.join(root, rel);
+    if (abs !== baselineAbs) haystack.add(abs);
+  }
+  haystack.delete(baselineAbs);
 
+  // Plain normalize (no blanking) -- used for every OTHER file a passage is searched against. Deliberately
+  // NOT the quote-free text: a source document's own authoritative content is routinely recorded AS a
+  // quotation (DECISIONS-PENDING.md's `**"...", quoted verbatim` rulings) and must stay searchable.
   const normCache = new Map();
   const readNorm = (abs) => {
     if (!normCache.has(abs)) normCache.set(abs, normalizeText(fs.readFileSync(abs, 'utf8')));
@@ -235,38 +386,52 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   for (const absPath of scanAbs) {
     const relPath = path.relative(root, absPath).split(path.sep).join('/');
     const text = fs.readFileSync(absPath, 'utf8');
-    for (const p of extractQuotePassages(text)) {
-      checked++;
-      const selfExcluded = normalizeText(excludeLines(text, p.startLine, p.endLine));
-      const norm = (abs) => (abs === absPath ? selfExcluded : readNorm(abs));
+    const passages = extractQuotePassages(text);
+    // Every OTHER passage in THIS SAME document is blanked before a passage from it searches its own
+    // file -- same-document self-verification only (see the header comment for why not tree-wide).
+    const selfQuoteFree = normalizeText(blankPassages(text, passages));
+    const norm = (abs) => (abs === absPath ? selfQuoteFree : readNorm(abs));
 
+    for (const p of passages) {
+      checked++;
+      const snippet = firstWords(p.normalized, 12);
       const pathCite = nearestPathIntro(text, p.introEnd, topDirs);
+
       if (pathCite) {
         const { exact, all } = resolveRef(pathCite.pathRaw, relPath, index);
         const named = (exact.length ? exact : all).map((f) => path.join(root, f));
-        if (named.some((abs) => norm(abs).includes(p.normalized))) continue; // PASS: found in the named file
+        if (named.length === 1) {
+          if (norm(named[0]).includes(p.normalized)) continue; // PASS: found in the one named file
+          const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
+          if (known) {
+            baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
+            continue;
+          }
+          findings.push({ relPath, line: p.startLine, snippet, reason: `not found in named "${pathCite.pathRaw}"` });
+          continue;
+        }
+        advisories.push({
+          relPath,
+          line: p.startLine,
+          snippet,
+          reason:
+            named.length > 1
+              ? `named "${pathCite.pathRaw}" is ambiguous (${named.length} candidates) -- not gated, see verify:cites`
+              : `named "${pathCite.pathRaw}" does not resolve to a tracked file -- not gated, see verify:cites`,
+        });
+        continue;
       }
 
-      let elsewhere = null;
+      let found = false;
       for (const abs of haystack) {
         if (norm(abs).includes(p.normalized)) {
-          elsewhere = abs;
+          found = true;
           break;
         }
       }
-      const snippet = firstWords(p.normalized, 12);
-      if (elsewhere) {
-        if (pathCite) {
-          advisories.push({
-            relPath,
-            line: p.startLine,
-            snippet,
-            reason: `not found in named "${pathCite.pathRaw}"; found in ${path.relative(root, elsewhere).split(path.sep).join('/')}`,
-          });
-        }
-        continue;
-      }
-      const known = baselineMap.get(`${relPath}:${p.startLine}`);
+      if (found) continue;
+
+      const known = matchBaseline(baselineEntries, usedBaseline, relPath, p.startLine, p.normalized);
       if (known) {
         baselined.push({ relPath, line: p.startLine, snippet, reason: known.reason });
         continue;
@@ -274,10 +439,16 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
       findings.push({ relPath, line: p.startLine, snippet });
     }
   }
-  return { findings, advisories, baselined, checked, scanned: scanAbs.length };
+  const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
+  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline };
 }
 
-/** Every `path:line[-line]` cite (whose path resolves) with its first cited line's text, trimmed to 100 chars. */
+/**
+ * Every `path:line[-line]` cite (whose path is not the `docs/NN` doc-number convention) with its first
+ * cited line's text, trimmed to 100 chars -- or, when the cite cannot be attributed to exactly one
+ * tracked file, or the cited line is past that file's end, a status string instead (never the first
+ * same-basename candidate's unrelated content, never an empty string).
+ */
 export function listCiteContents({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const index = buildTrackedIndex(root);
@@ -291,11 +462,29 @@ export function listCiteContents({ repoRoot, files } = {}) {
     for (const c of extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) })) {
       if (classifyPath(c.pathRaw, topDirs) === 'doc-number') continue;
       const { exact, all } = resolveRef(c.pathRaw, relPath, index);
-      const cand = (exact.length ? exact : all)[0];
-      if (!cand) continue;
-      const lines = fs.readFileSync(path.join(root, cand), 'utf8').split('\n');
-      const firstLine = (lines[c.startL - 1] ?? '').trim().slice(0, 100);
-      out.push({ relPath, citeLine: c.citeLine, target: `${cand}:${c.startL}`, firstLine });
+      const cands = exact.length ? exact : all;
+      let target, firstLine;
+      if (cands.length === 0) {
+        target = `${c.pathRaw}:${c.startL}`;
+        firstLine = 'unresolved';
+      } else if (cands.length > 1) {
+        target = `${c.pathRaw}:${c.startL}`;
+        firstLine = `ambiguous (${cands.length} candidates)`;
+      } else {
+        const cand = cands[0];
+        const lines = fs.readFileSync(path.join(root, cand), 'utf8').split('\n');
+        if (c.startL < 1 || c.startL > lines.length) {
+          target = `${cand}:${c.startL}`;
+          firstLine = `out of range (file has ${lines.length} lines)`;
+        } else {
+          target = `${cand}:${c.startL}`;
+          const raw = (lines[c.startL - 1] ?? '').trim();
+          // A genuinely blank target line is real (a spacer between a brace and a doc comment, say) --
+          // reported as such, not as an empty string a reader could mistake for a classification miss.
+          firstLine = raw ? raw.slice(0, 100) : '(blank line)';
+        }
+      }
+      out.push({ relPath, citeLine: c.citeLine, target, firstLine });
     }
   }
   return out;
@@ -310,29 +499,37 @@ function parseArgs(argv) {
   return args;
 }
 
+function pluralBaselineEntries(n) {
+  return `${n} baseline ${n === 1 ? 'entry' : 'entries'}`;
+}
+
 function main() {
   const { showCites, files } = parseArgs(process.argv.slice(2));
   const opts = { repoRoot: REPO_ROOT, files: files.length ? files : undefined };
-  const { findings, advisories, baselined, checked, scanned } = runVerifyQuotes(opts);
-  const cites = listCiteContents(opts);
+  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline } = runVerifyQuotes(opts);
 
-  console.log(`verify:quotes — ${cites.length} path:line cite(s) across ${scanned} file(s) (--show-cites for the listing).`);
-  if (showCites) for (const c of cites) console.log(`  - ${c.relPath}:${c.citeLine} -> ${c.target} — "${c.firstLine}"`);
+  console.log(`verify:quotes — scanned ${scanned} file(s) for verbatim-marked quotations (--show-cites for the path:line cite listing).`);
+  if (showCites) {
+    const cites = listCiteContents(opts);
+    console.log(`  ${cites.length} path:line cite(s):`);
+    for (const c of cites) console.log(`  - ${c.relPath}:${c.citeLine} -> ${c.target} — "${c.firstLine}"`);
+  }
 
   if (advisories.length) {
-    console.error(`verify:quotes — ${advisories.length} advisory (path-introduced, not in the named file):`);
+    console.error(`verify:quotes — ${advisories.length} advisory (path cite unresolved/ambiguous, not gated -- see verify:cites):`);
     for (const a of advisories) console.error(`  - ${a.relPath}:${a.line} — "${a.snippet}…" — ${a.reason}`);
   }
   if (baselined.length) {
     console.error(`verify:quotes — ${baselined.length} baselined (pre-existing, ${BASELINE_REL_PATH}, still failing):`);
     for (const b of baselined) console.error(`  - ${b.relPath}:${b.line} — "${b.snippet}…" — ${b.reason}`);
   }
+  console.error(`verify:quotes — ${pluralBaselineEntries(unmatchedBaseline.length)} matched nothing this run (stale ${BASELINE_REL_PATH} entries).`);
+  for (const e of unmatchedBaseline) console.error(`  - ${e.file}:${e.line} — "${String(e.words ?? '').slice(0, 60)}…"`);
 
+  const verified = checked - baselined.length - advisories.length - findings.length;
   if (findings.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} quote(s) verified across ${scanned} file(s).` +
-        (advisories.length ? ` (${advisories.length} advisory.)` : '') +
-        (baselined.length ? ` (${baselined.length} baselined.)` : ''),
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory.`,
     );
     return;
   }
