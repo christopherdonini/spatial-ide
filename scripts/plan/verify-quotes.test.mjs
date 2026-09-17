@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { normalizeText, extractQuotePassages, runVerifyQuotes, listCiteContents } from './verify-quotes.mjs';
+import { normalizeText, extractQuotePassages, runVerifyQuotes, listCiteContents, REPO_ROOT } from './verify-quotes.mjs';
 
 function sha256(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
@@ -337,14 +337,22 @@ test('a_misquote_quoted_inside_a_correction_does_not_verify_against_that_correct
 test('a_baselined_offender_whose_words_covers_the_whole_passage_is_reported_baselined_not_silently_verified', () => {
   const dir = gitTree({
     'A.md': 'Verbatim: "the crimson banner waved steadily above the ancient stone tower" end.\n',
-    'scripts/plan/verify-quotes.baseline.json': JSON.stringify([
-      {
-        file: 'A.md',
-        line: 1,
-        words: 'the crimson banner waved steadily above the ancient stone tower',
-        reason: 'known offender, source untracked',
-      },
-    ]),
+    // The shipped baseline shape is `{ $doc, entries }` (round 11's ratchet) -- the pre-round-11 bare
+    // array is dropped, not carried as a fallback (round-12 fix round item (e)); every fixture here uses
+    // the real shape, with the fields loadBaseline's own validation now requires.
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'the crimson banner waved steadily above the ancient stone tower',
+          reason: 'known offender, source untracked',
+          disposition: 'unfindable-by-construction',
+          ruling: 'round 11, 2026-09-17',
+        },
+      ],
+    }),
   });
   const { findings, baselined, checked } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(checked, 1);
@@ -361,14 +369,19 @@ test('a_baselined_offender_whose_words_covers_the_whole_passage_is_reported_base
 test('a_baseline_entry_whose_line_has_shifted_does_not_waive_the_offender_and_is_reported_unmatched', () => {
   const dir = gitTree({
     'A.md': '\nVerbatim: "the weary traveler crossed the frozen river before dawn broke" end.\n',
-    'scripts/plan/verify-quotes.baseline.json': JSON.stringify([
-      {
-        file: 'A.md',
-        line: 1,
-        words: 'the weary traveler crossed the frozen river before dawn broke',
-        reason: 'recorded before the file gained a leading blank line',
-      },
-    ]),
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'the weary traveler crossed the frozen river before dawn broke',
+          reason: 'recorded before the file gained a leading blank line',
+          disposition: 'unfindable-by-construction',
+          ruling: 'round 11, 2026-09-17',
+        },
+      ],
+    }),
   });
   const { findings, baselined, unmatchedBaseline } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(baselined.length, 0, JSON.stringify(baselined));
@@ -386,14 +399,19 @@ test('a_baseline_entry_whose_line_has_shifted_does_not_waive_the_offender_and_is
 test('a_baseline_entry_does_not_waive_a_different_bad_quote_recorded_at_the_same_line', () => {
   const dir = gitTree({
     'A.md': 'Verbatim: "the golden hawk circled twice above the quiet valley floor" end.\n',
-    'scripts/plan/verify-quotes.baseline.json': JSON.stringify([
-      {
-        file: 'A.md',
-        line: 1,
-        words: 'a completely different sentence that was once the offender recorded',
-        reason: 'a prior, now-corrected offender at this same line',
-      },
-    ]),
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'a completely different sentence that was once the offender recorded',
+          reason: 'a prior, now-corrected offender at this same line',
+          disposition: 'unfindable-by-construction',
+          ruling: 'round 11, 2026-09-17',
+        },
+      ],
+    }),
   });
   const { findings, baselined, unmatchedBaseline } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(baselined.length, 0, JSON.stringify(baselined));
@@ -652,11 +670,12 @@ test('a_byte_copied_marker_whose_reproduction_does_not_match_fails_by_name', () 
   assert.match(hashFindings[0].reason, /not a byte-exact substring/);
 });
 
-// RECORDED MUTATION: in listCiteContents, changing `hashMark ? \`${firstLine} [${hashMark}]\` : firstLine`
-// to always `firstLine` (scripts/plan/verify-quotes.mjs) makes
-// a_hash_status_mark_appears_in_the_cite_listing FAIL: "AssertionError [ERR_ASSERTION]" on the `/\[hash:
-// PASS\]/` match (the hash-checked reference's own status is silently dropped from --show-cites' output,
-// leaving a reader no way to see it without re-running the gate separately).
+// RECORDED MUTATION: in listCiteContents, changing `hashByKey.get(...) ?? null` to always `null`
+// (scripts/plan/verify-quotes.mjs) makes a_hash_status_mark_appears_in_the_cite_listing FAIL:
+// "AssertionError [ERR_ASSERTION]" on the `c.hashMark === 'hash: PASS'` assertion (the hash-checked
+// reference's own status is silently dropped from --show-cites' output, leaving a reader no way to see
+// it without re-running the gate separately). The mark is its own field, OUTSIDE the quoted `firstLine`
+// (round-12 fix round item (e)) -- main() appends it after the closing quote, not asserted here.
 test('a_hash_status_mark_appears_in_the_cite_listing', () => {
   const dir = gitTree({
     'T.md': 'Line one of the target file.\n',
@@ -666,5 +685,132 @@ test('a_hash_status_mark_appears_in_the_cite_listing', () => {
   const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   const c = cites.find((x) => x.target === 'T.md:1');
   assert.ok(c, JSON.stringify(cites));
-  assert.match(c.firstLine, /\[hash: PASS\]/);
+  assert.equal(c.hashMark, 'hash: PASS');
+  assert.equal(c.firstLine, 'Line one of the target file.');
+});
+
+// --- round-12 fix round: the grammar accepts every shape the real record corpus carries today
+// (architect B1, reviewer B3) -- three end-to-end tests, each fixture line byte-copied BY SCRIPT (at
+// test-run time, via `git show`, never pasted) from the real branch and line the dispatch names, run
+// against THIS repository's own REPO_ROOT (not a throwaway gitTree()) so the named revs -- a955bee,
+// 0db7e57, 60ece22, a3f5f2e, all fetched onto this local object store -- are the real commits. -------
+
+function byteCopiedLine(rev, relPath, lineNum) {
+  const content = execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: REPO_ROOT, encoding: 'utf8' });
+  return content.split('\n')[lineNum - 1];
+}
+
+function byteCopiedLines(rev, relPath, startLine, endLine) {
+  const content = execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: REPO_ROOT, encoding: 'utf8' });
+  return content.split('\n').slice(startLine - 1, endLine).join('\n');
+}
+
+function fixtureFile(content) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-quotes-realref-'));
+  const p = path.join(dir, 'FIXTURE.md');
+  fs.writeFileSync(p, content.endsWith('\n') ? content : content + '\n');
+  return p;
+}
+
+// RECORDED MUTATION: reverting HASH_REF_RE's rev group back to `[0-9a-f]{12,40}` (its pre-round-12-fix
+// shape) (scripts/plan/verify-quotes.mjs) makes
+// a_shell_owner_invalidation_hash_reference_byte_copied_from_the_real_record_verifies FAIL:
+// "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: 2 !== 0" on
+// `hashFindings.length` -- both references use a 7-character rev (a955bee, 0db7e57); with only 12-40
+// hex accepted, `:(\d+)` still matches but the `@ rev` clause cannot, so `\s*sha256:` never finds itself
+// immediately after the digits (the literal "@ a955bee" sits in between) and the whole match fails at
+// that position -- both become unbound-hash-token findings instead of hash-checked ones, `hashFindings`
+// still non-empty either way, this test catches the regression by name regardless of which shape it
+// takes.
+test('a_shell_owner_invalidation_hash_reference_byte_copied_from_the_real_record_verifies', () => {
+  // Shape: `path:line @ <7-char rev> sha256:<hex>` all INSIDE one backtick span (twice on this real
+  // line -- the second a BARE `:900`, bound to the first reference's own path in the same sentence).
+  const line = byteCopiedLine('origin/cut/briefa-p3b', 'frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md', 1072);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: REPO_ROOT, files: [fixtureFile(line)] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
+
+// RECORDED MUTATION: reverting HASH_REF_RE's rev group back to `[0-9a-f]{12,40}` (its pre-round-12-fix
+// shape) (scripts/plan/verify-quotes.mjs) makes
+// an_engine_admission_hash_reference_byte_copied_from_the_real_record_verifies FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 1 !== 0" on `hashFindings.length` (rev
+// `60ece22` is 7 characters; the whole match fails and the token becomes an unbound-hash-token finding
+// instead of a hash-checked one). The path-resolution fallback (checkHashRef's `named.length === 0`
+// branch, `git show <rev>:<path>` when the current tree's index misses) is NOT what this test exercises
+// -- `engine/ADMISSION-PREREGISTRATION.md` is tracked on this branch; the LOD test below is the one that
+// depends on, and is mutated against, that fallback.
+test('an_engine_admission_hash_reference_byte_copied_from_the_real_record_verifies', () => {
+  // Shape: `path:line @ <7-char rev> sha256:<hex>` all INSIDE one backtick span, with a path.
+  const line = byteCopiedLine('origin/cut/briefa-p3b', 'engine/ADMISSION-PREREGISTRATION.md', 1540);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: REPO_ROOT, files: [fixtureFile(line)] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
+
+// RECORDED MUTATION: reverting checkHashRef's path-resolution fallback to unconditionally return the
+// "unresolvable path" finding on a `named.length === 0` current-index miss (scripts/plan/verify-quotes.mjs)
+// makes a_lod_tier_builder_hash_references_byte_copied_from_the_real_record_verify FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 5 !== 0" on `hashFindings.length` --
+// `engine/tests/common/mod.rs` is tracked on `engine/lod-tier-builder` (where this line lives) but not
+// on THIS branch's own tree, so every one of this fixture's five references depends on the fallback
+// actually asking `git show a3f5f2e:engine/tests/common/mod.rs` directly rather than requiring the path
+// to already be in the current tree's own index.
+test('a_lod_tier_builder_hash_references_byte_copied_from_the_real_record_verify', () => {
+  // Shape: `path:line` (plain citation) then, in the same paragraph, bare `:line` @ <7-char rev>
+  // sha256:<hex> references OUTSIDE the backticks, bound to that path -- plus two more explicit-path
+  // OUTSIDE-shape references on the following lines. `engine/tests/common/mod.rs` is tracked on
+  // `engine/lod-tier-builder`, not on this branch -- checkHashRef's rev-aware path fallback (this
+  // round's own addition, justified in its own doc comment) is what makes this resolve at all.
+  const lines = byteCopiedLines('origin/engine/lod-tier-builder', 'engine/LOD-PREREGISTRATION.md', 531, 534);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: REPO_ROOT, files: [fixtureFile(lines)] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
+
+// RECORDED MUTATION: changing checkHashRef's `if (actual !== ref.hash)` to `if (actual === ref.hash)`
+// (scripts/plan/verify-quotes.mjs) makes a_seven_character_rev_with_a_wrong_hash_fails_by_name FAIL:
+// "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: 0 !== 1" on
+// `hashFindings.length` (a genuinely wrong hash against a real, resolvable 7-character rev is reported
+// as verified).
+test('a_seven_character_rev_with_a_wrong_hash_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\nLine two of the target file.\n',
+  });
+  const rev7 = headOf(dir).slice(0, 7);
+  const wrongHash = sha256('not the real content of T.md:1, deliberately wrong for this test');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1\` @ ${rev7} sha256:${wrongHash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /sha256 mismatch/);
+});
+
+// RECORDED MUTATION: adding an unconditional `continue;` as findUnboundHashTokens' first loop
+// statement (scripts/plan/verify-quotes.mjs) makes
+// an_unbound_hash_token_near_an_attempted_reference_fails_by_name FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 0 !== 1" on `hashFindings.length` (the
+// malformed, unbound reference attempt is silently dropped instead of reported by name).
+test('an_unbound_hash_token_near_an_attempted_reference_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\n',
+  });
+  const hash = sha256('Line one of the target file.\n');
+  // `T.md:1` is cited, but prose (not whitespace/backtick) sits between it and the hash token, so the
+  // grammar cannot bind them into one reference -- an attempted, malformed reference, not an unrelated
+  // checksum (the kernel/*-PREREGISTRATION.md fixture-hash tables this guard is disclosed to exclude).
+  fs.writeFileSync(path.join(dir, 'A.md'), `See \`T.md:1\` and note its hash is sha256:${hash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /unbound hash reference/);
+});
+
+// RECORDED MUTATION: removing the `COLON_DIGIT_NEARBY_RE.test(...)` guard from findUnboundHashTokens,
+// making it flag every un-bound `sha256:<hex>` token unconditionally (scripts/plan/verify-quotes.mjs)
+// makes an_unrelated_data_hash_with_no_nearby_line_reference_is_not_flagged_unbound FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 1 !== 0" on `hashFindings.length` (a fixture's
+// own file-integrity checksum, recorded under a convention this mechanism does not own, is wrongly
+// reported as a malformed governance reference).
+test('an_unrelated_data_hash_with_no_nearby_line_reference_is_not_flagged_unbound', () => {
+  const dir = gitTree({
+    'A.md': `| fixture | bytes | recorded SHA-256 |\n| --- | --- | --- |\n| 5 GB | \`data/parcels.parquet\` | 5004376705 | \`sha256:${sha256('unrelated fixture content')}\` |\n`,
+  });
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
 });

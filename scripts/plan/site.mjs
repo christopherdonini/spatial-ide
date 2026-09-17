@@ -480,11 +480,18 @@ function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
   // verify-quotes baseline entry count is a fact read directly from this repository's own tracked file,
   // not from health.mjs's machine refresh or GitHub's API build. Round 11's ratchet condition (c): "the
   // baseline count is a line on the health strip, so a number that never shrinks is visible."
+  // A malformed baseline (exists, but invalid JSON or the wrong shape) is a FAULT, not an absent row --
+  // round-12 fix round item (e): "a malformed baseline renders a visible fault on the health strip, not
+  // an absent row." `null` (the file was never created) still reads "unknown", the pre-existing case.
+  const governanceCountText =
+    governanceBaselineCount === null
+      ? 'unknown'
+      : governanceBaselineCount === 'malformed'
+        ? 'FAULT — verify-quotes.baseline.json does not parse to { entries: [...] }'
+        : String(governanceBaselineCount);
   const governanceGroup =
     `<h3 class="health-source">From this repository's own tracked files</h3>\n` +
-    healthRowsHtml([
-      ['verify-quotes baseline entries', esc(governanceBaselineCount === null ? 'unknown' : String(governanceBaselineCount))],
-    ]);
+    healthRowsHtml([['verify-quotes baseline entries', esc(governanceCountText)]]);
 
   return `
   <section class="panel health-strip">
@@ -728,7 +735,7 @@ function readJsonIfPresent(p) {
   try {
     return JSON.parse(fs.readFileSync(p, 'utf8'));
   } catch {
-    return null;
+    return 'malformed';
   }
 }
 
@@ -743,20 +750,23 @@ const VERIFY_QUOTES_BASELINE_REL = 'scripts/plan/verify-quotes.baseline.json';
  * "RULED 2026-09-17, round 11"): "the baseline count is a line on the health strip, so a number that
  * never shrinks is visible." A repo-tracked fact, unlike health.json/build-health.json: available
  * identically at generation time and at `--check` drift-recomputation time, so reading it directly
- * (relative to `root`, not `outDir`) never causes drift between the two. Accepts both the bare-array
- * legacy baseline shape and the `{ $doc, entries }` shape verify-quotes.mjs's own `loadBaseline` reads
- * (kept in sync by hand, not by import, to keep this script's own stdlib-only, dependency-free stance);
- * missing or unparsable is `null`, never a false zero.
+ * (relative to `root`, not `outDir`) never causes drift between the two. Reads the `{ $doc, entries }`
+ * shape verify-quotes.mjs's own `loadBaseline` reads (kept in sync by hand, not by import, to keep this
+ * script's own stdlib-only, dependency-free stance) -- the pre-round-11 bare-array shape never shipped
+ * on `main` and is dropped here too (round-12 fix round item (e), mirroring verify-quotes.mjs's own
+ * removal). Returns: a number when the file parses to that shape; the string `'malformed'` when the
+ * file EXISTS but does not (invalid JSON, or the wrong shape) -- a fault, distinct from absence, so it
+ * renders as one rather than silently reading the same as "the file was never created" (round-12 fix
+ * round item (e)); `null` only when the file does not exist at all.
  */
 export function readVerifyQuotesBaselineCount(root) {
   const p = path.join(root, VERIFY_QUOTES_BASELINE_REL);
   if (!fs.existsSync(p)) return null;
   try {
     const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
-    const entries = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.entries) ? parsed.entries : null;
-    return entries ? entries.length : null;
+    return Array.isArray(parsed?.entries) ? parsed.entries.length : 'malformed';
   } catch {
-    return null;
+    return 'malformed';
   }
 }
 

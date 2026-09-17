@@ -242,9 +242,30 @@ test('governance group: the verify-quotes baseline entry count renders as its ow
 // RECORDED MUTATION: dropping the `=== null ? 'unknown' :` branch in site.mjs's governanceGroup row
 // (unconditional `String(governanceBaselineCount)`) makes this test FAIL: a `null` count prints "null"
 // instead of "unknown".
-test('governance group: a missing/unparsable baseline file renders "unknown", never a false zero', () => {
+test('governance group: an absent baseline file renders "unknown", never a false zero', () => {
   const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
   assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
+});
+
+// RECORDED MUTATION (round-12 fix round item (e)): reverting readVerifyQuotesBaselineCount's malformed
+// branch to `return null;` (scripts/plan/site.mjs) makes
+// a_malformed_baseline_renders_a_visible_fault_not_an_absent_row FAIL: "AssertionError [ERR_ASSERTION]:
+// The expression evaluated to a falsy value" on the FAULT-text assertion -- a baseline file that EXISTS
+// but does not parse to `{ entries: [...] }` would again read exactly like "unknown" (the file was
+// never created), the same defect the reviewer named for the health-strip row this test covers.
+test('a_malformed_baseline_renders_a_visible_fault_not_an_absent_row', () => {
+  const dir = makeTempDir('verify-quotes-baseline-fault-');
+  fs.mkdirSync(path.join(dir, 'scripts', 'plan'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'scripts', 'plan', 'verify-quotes.baseline.json'), '{ not valid json', 'utf8');
+  const count = readVerifyQuotesBaselineCount(dir);
+  assert.equal(count, 'malformed');
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, {
+    repoSlug: REPO,
+    buildHealth: BUILD_HEALTH,
+    governanceBaselineCount: count,
+  });
+  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>FAULT'));
+  assert.ok(!html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
 });
 
 test('bug 1: a release that is not a pre-release carries no qualifier', () => {

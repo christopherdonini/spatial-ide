@@ -147,9 +147,16 @@ function extOf(p) {
 // fold it.
 // The lone-`*` comment-continuation alternative is `(?!\*)`-guarded so it never eats one star of a
 // line-leading `**bold**` pair (common in this tree's "**Amendment N —**" style) before
-// stripEmphasisPairs gets to see the intact pair.
+// stripEmphasisPairs gets to see the intact pair. Its trailing `[ \t]` is MANDATORY, not optional
+// (round-12 fix round, reviewer B1): a genuine bullet (`* item`) and a doc-comment continuation
+// (` * continued`) always carry a space/tab after the `*`; a hard-wrapped `*emphasis*` pair whose
+// OPENING `*` lands at a line's own start (no space follows -- `*word` runs straight into content,
+// e.g. `state/NEXT-CUT.md:121`'s wrapped `*detected*`) does not, and must survive this pass so
+// stripEmphasisPairs (applied next, over the whole flattened text) sees the intact pair and unwraps
+// it the same way a same-content single-line citation already does -- an optional `[ \t]?` here
+// stripped the opening star regardless, leaving a false orphan `*detected*` mismatch.
 const LEADING_MARKER_RE =
-  /^[ \t]*(?:>[ \t]?|\/\/\/[ \t]?|\/\/![ \t]?|\/\/[ \t]?|\/\*\*?[ \t]?|\*\/[ \t]?|\*(?!\*)[ \t]?|#{1,6}[ \t]+|[-+][ \t]+)/;
+  /^[ \t]*(?:>[ \t]?|\/\/\/[ \t]?|\/\/![ \t]?|\/\/[ \t]?|\/\*\*?[ \t]?|\*\/[ \t]?|\*(?!\*)[ \t]|#{1,6}[ \t]+|[-+][ \t]+)/;
 
 function stripLeadingMarkers(line) {
   let prev;
@@ -335,6 +342,33 @@ function nearestPathIntro(text, introEnd, topDirs) {
   return cites.length ? cites[cites.length - 1] : null;
 }
 
+// A bare hash-checked reference (`` `:a[-b]` @ <rev> sha256:<hex> ``, no path of its own) binds to the
+// nearest preceding path:line CITATION in the same paragraph -- unlike nearestPathIntro's 200-char
+// window (tuned for a quote's own trigger-proximity rule), a hash reference's binding has no such cap:
+// the whole paragraph, back to the nearest blank-line break (or the file start), is searched, since the
+// real records this binds against (frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md at line 1072
+// on origin/cut/briefa-p3b, engine/LOD-PREREGISTRATION.md at line 531 on origin/engine/lod-tier-builder
+// -- cited this way, not as a `path:line` token, so this comment itself does not read as a stale
+// same-branch cite to verify-cites.mjs) sit the bare ref and its owning path cite in the same sentence
+// or bullet, sometimes past 200 characters once a sha256 hex digest sits between them.
+function paragraphStart(text, pos) {
+  PARA_BREAK_RE.lastIndex = 0;
+  let start = 0;
+  let m;
+  while ((m = PARA_BREAK_RE.exec(text)) && m.index < pos) {
+    start = m.index + m[0].length;
+  }
+  return start;
+}
+
+function nearestPathInParagraph(text, pos, topDirs) {
+  const start = paragraphStart(text, pos);
+  const cites = extractCitations(text.slice(start, pos), { commentsOnly: false }).filter(
+    (c) => classifyPath(c.pathRaw, topDirs) !== 'doc-number',
+  );
+  return cites.length ? cites[cites.length - 1] : null;
+}
+
 function firstWords(s, n) {
   return s.split(' ').slice(0, n).join(' ');
 }
@@ -343,20 +377,38 @@ function defaultScanFiles(root, index) {
   return claimFiles(index.files).map((f) => path.join(root, f));
 }
 
+// Round 12's own hash-checked references live wider than the quote-scan set (they cite branch-to-branch
+// record corrections, and the ledger/mechanic docs carry the round's own dogfooded self-citation) --
+// the preregistration/ADR set PLUS these four named files/globs, PLUS every `.claude/agents/*.md`
+// (the human, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
+// passage in any of these extra files is extracted or verified; they never join the quote haystack.
+const EXTRA_HASH_SCAN_FILES = ['DECISIONS-PENDING.md', 'AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
+
+function defaultHashScanFiles(root, index) {
+  const files = new Set(defaultScanFiles(root, index));
+  for (const rel of EXTRA_HASH_SCAN_FILES) {
+    if (index.set.has(rel)) files.add(path.join(root, rel));
+  }
+  for (const rel of index.files) {
+    if (rel.startsWith('.claude/agents/') && rel.endsWith('.md')) files.add(path.join(root, rel));
+  }
+  return [...files];
+}
+
 /**
- * The pre-existing offenders at `scripts/plan/verify-quotes.baseline.json`: `[{file, line, words,
- * reason, disposition, ruling, corrected_by?}]` -- recorded and classified by the custodian's worker,
- * pending the human's sight at this PR, never described as "human-reviewed" until it is. The file may
- * be a bare array (the pre-round-11 shape) or `{ $doc, entries }` (round 11's ratchet, `$doc`
- * documenting the same append-never rule the banner comment above states); both are read the same way.
- * Missing or unparsable is an empty baseline, never fatal.
+ * The pre-existing offenders at `scripts/plan/verify-quotes.baseline.json`: `{ $doc, entries: [{file,
+ * line, words, reason, disposition, ruling, corrected_by?}] }` (round 11's ratchet, `$doc` documenting
+ * the same append-never rule the banner comment above states) -- recorded and classified by the
+ * custodian's worker, pending the human's sight at this PR, never described as "human-reviewed" until
+ * it is. The pre-round-11 bare-array shape never shipped on `main` and had no product caller (round-12
+ * fix round, reviewer should-fix 5); dropped, not carried as a fallback nobody reaches. Missing or
+ * unparsable is an empty baseline, never fatal.
  */
 function loadBaseline(root) {
   const p = path.join(root, BASELINE_REL_PATH);
   if (!fs.existsSync(p)) return [];
   try {
     const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
-    if (Array.isArray(parsed)) return parsed;
     if (parsed && Array.isArray(parsed.entries)) return parsed.entries;
     return [];
   } catch {
@@ -403,19 +455,44 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
 }
 
 // HASH-CHECKED REFERENCES ("quote by reference", docs/PREREGISTRATION-TEMPLATE.md §10; the human,
-// 2026-09-17, round 12 item 1, applying entry 104's rider on (b)): a backtick-wrapped `path:a[-b]` cite,
-// optionally followed by ` @ <rev>` (a full 40-char or 12-char abbreviated commit hash -- absent means
-// HEAD of the checked tree), then ` sha256:<64 hex>`. Recomputed over the bytes of `git show
-// <rev>:<path>` lines a..b, each line WITH its own LF -- FAILS BY NAME on a mismatch or on an
-// unresolvable rev, path or line range (an unavailable rev never passes silently, per the dispatch).
-// A `byte-copied from ` prefix additionally requires the text that follows -- a `> ` blockquote run or
-// an inline `` `code span` `` starting on the next non-blank line -- to be byte-identical to a
-// contiguous substring of those same lines, with NONE of normalizeText's presentation normalization
-// applied (the rider: what is reproduced must be exact, not merely equivalent after folding).
+// 2026-09-17, round 12 item 1, applying entry 104's rider on (b)). Three shapes, all in the real record
+// corpus written under this same ruling (round-12 fix round, architect B1) -- each cited here by branch
+// and line NUMBER, not as a `path:line` token, so this comment does not itself read as a stale
+// same-branch cite to verify-cites.mjs: `` `path:a[-b]` @ <rev> sha256:<hex> `` (rev/hash OUTSIDE the
+// backticks -- engine/LOD-PREREGISTRATION.md, lines 531-534, on origin/engine/lod-tier-builder);
+// `` `path:a[-b] @ <rev> sha256:<hex>` `` (all INSIDE one backtick span --
+// engine/ADMISSION-PREREGISTRATION.md line 1540 and frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md
+// line 1072, both on origin/cut/briefa-p3b); and a bare `` `:a[-b]` `` (no path of its own, either
+// placement, with or without backticks) bound to the nearest preceding path:line CITATION in the same
+// paragraph (nearestPathInParagraph, above --
+// the shell and LOD lines above both use this shape too, for a second/third reference to a path already
+// named earlier in the same sentence or bullet). The grammar below treats the leading and trailing
+// backtick as INDEPENDENTLY optional rather than modelling the two placements as separate alternatives:
+// a lone `` ` `` opportunistically consumed wherever one sits (right after the line range for the
+// OUTSIDE shape, right after the hash for the INSIDE shape, absent for a fully bare reference) covers
+// every real shape above plus the bare-with-no-backticks-at-all case named in the dispatch, with no
+// duplicated capture groups. `<rev>` is any run of non-whitespace, non-backtick characters (not
+// restricted to 7-40 hex at the GRAMMAR level): the dispatch's "7 to 40 hex; anything else ... goes to
+// checkHashRef's unresolvable-rev path and fails by name" means the reference must still be RECOGNIZED
+// (never silently unbound) even when what follows `@` is not hex-shaped -- checkHashRef's own `git show
+// <rev>:<path>` call is what actually resolves or rejects it, by name, never the regex. Absent `@ <rev>`
+// defaults to HEAD of the checked tree. Recomputed over the bytes of `git show <rev>:<path>` lines a..b,
+// each line WITH its own LF -- FAILS BY NAME on a mismatch or on an unresolvable rev, path or line range
+// (an unavailable rev never passes silently, per the dispatch). A `byte-copied from ` prefix additionally
+// requires the text that follows -- a `> ` blockquote run or an inline `` `code span` `` starting on the
+// next non-blank line -- to be byte-identical to a contiguous substring of those same lines, with NONE of
+// normalizeText's presentation normalization applied (the rider: what is reproduced must be exact, not
+// merely equivalent after folding).
 const HASH_REF_RE =
-  /(byte-copied from\s+)?`([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\d+)(?:-(\d+))?`(?:\s*@\s*([0-9a-f]{12}|[0-9a-f]{40})\b)?\s*sha256:([0-9a-f]{64})/g;
+  /(byte-copied from\s+)?`?(?:([A-Za-z0-9_][A-Za-z0-9_./+-]*))?:(\d+)(?:-(\d+))?`?(?:\s*@\s*([^\s`]+))?\s*sha256:([0-9a-f]{64})`?/g;
 
-/** Every hash-checked reference in `text`: [{reproduction,pathRaw,startLine,endLine,rev,hash,line,end}]. */
+// Every raw `sha256:<64 hex>` token, regardless of what (if anything) precedes it -- used to find one
+// the grammar above did NOT bind into any reference at all (round-12 fix round item (b): "never
+// silent"), by comparing each token's position against every successfully extracted reference's own
+// matched span.
+const RAW_SHA_RE = /sha256:([0-9a-f]{64})/g;
+
+/** Every hash-checked reference in `text`: [{reproduction,pathRaw,startLine,endLine,rev,hash,line,start,end}]. */
 export function extractHashRefs(text) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
@@ -429,8 +506,43 @@ export function extractHashRefs(text) {
       rev: m[5] ?? 'HEAD',
       hash: m[6].toLowerCase(),
       line: lineOf(text, m.index),
+      start: m.index,
       end: m.index + m[0].length,
     });
+  }
+  return out;
+}
+
+// A malformed reference attempt still carries SOME `:digit(-digit)?` immediately before its `sha256:`
+// token (every real shape does -- see HASH_REF_RE's own comment); a data-integrity checksum recorded
+// for its own sake (a fixture's file hash, unrelated to this mechanism entirely -- e.g.
+// kernel/CANCEL-RESCORE-PREREGISTRATION.md:49, kernel/SCALE-PASS-PREREGISTRATION.md:521,:571, each
+// recording `sha256:<hex>` for a 5 GB parquet fixture with no `:line` anywhere near it) does not.
+// DISCLOSED NARROWING (round-12 fix round item (b)): "a cite" this item's own wording names is read as
+// an ATTEMPTED one -- a `:digit` sequence within reach -- not literally every `sha256:` substring
+// anywhere in the scanned tree; the alternative (flagging every fixture checksum this tree already
+// records under an unrelated convention) would be a wide new false-positive class this piece's scope
+// does not own fixing (those documents are out of scope here), not a defect this mechanism exists for.
+const UNBOUND_LOOKBACK = 120;
+const COLON_DIGIT_NEARBY_RE = /:\d+(?:-\d+)?/;
+
+/**
+ * Every `sha256:<64 hex>` token in `text` that sits near an ATTEMPTED `:line` reference (a `:digit`
+ * sequence within `UNBOUND_LOOKBACK` characters before it) whose position the grammar above did not
+ * bind into any `refs` entry -- a malformed or orphaned reference attempt, reported by name rather
+ * than silently ignored (round-12 fix round item (b)). Returns `[{line}]`.
+ */
+export function findUnboundHashTokens(text, refs) {
+  const spans = refs.map((r) => [r.start, r.end]);
+  const out = [];
+  RAW_SHA_RE.lastIndex = 0;
+  let m;
+  while ((m = RAW_SHA_RE.exec(text))) {
+    const idx = m.index;
+    if (spans.some(([a, b]) => idx >= a && idx < b)) continue;
+    const windowStart = Math.max(0, idx - UNBOUND_LOOKBACK);
+    if (!COLON_DIGIT_NEARBY_RE.test(text.slice(windowStart, idx))) continue;
+    out.push({ line: lineOf(text, idx) });
   }
   return out;
 }
@@ -485,32 +597,59 @@ function reproducedTextAfter(text, matchEnd) {
  * slice? }. A path that does not resolve to exactly one tracked file, a rev `git show` cannot resolve,
  * an out-of-range line span, a hash mismatch, or (for a `byte-copied from` marker) a reproduction that
  * is missing or not a byte-exact substring of the cited lines -- each fails by name, never silently.
+ *
+ * `topDirs` (from `topDirsOf(index)`) is required to resolve a BARE reference (`ref.pathRaw` undefined):
+ * bound to the nearest preceding path:line citation in the same paragraph (nearestPathInParagraph); a
+ * bare reference with no such citation to bind to fails by name rather than silently doing nothing.
+ *
+ * Path resolution prefers the CURRENT tree's tracked index (`resolveRef`, disambiguating a bare
+ * basename or partial path); when that finds nothing for a fully-written path, it falls back to asking
+ * `git show <rev>:<path>` directly. This is not a weakening: `@ <rev>` exists precisely to pin content
+ * that may not be in the CURRENT tree at all -- the real corpus this grammar was built against cites a
+ * sibling branch's own file (e.g. engine/LOD-PREREGISTRATION.md line 531's `engine/tests/common/mod.rs`,
+ * tracked on `engine/lod-tier-builder` but not on this branch) from the branch actually doing the
+ * citing. A path neither in the current index nor resolvable at the cited rev still fails by name.
  */
-export function checkHashRef(root, index, relPath, text, ref) {
-  const { exact, all } = resolveRef(ref.pathRaw, relPath, index);
-  const named = exact.length ? exact : all;
-  if (named.length !== 1) {
-    return {
-      ok: false,
-      reason:
-        named.length === 0
-          ? `unresolvable path "${ref.pathRaw}" -- no tracked file matches`
-          : `ambiguous path "${ref.pathRaw}" (${named.length} candidates)`,
-    };
+export function checkHashRef(root, index, relPath, text, ref, topDirs) {
+  let pathRaw = ref.pathRaw;
+  if (!pathRaw) {
+    const bound = nearestPathInParagraph(text, ref.start, topDirs);
+    if (!bound) {
+      return { ok: false, reason: 'bare hash reference has no preceding path:line cite to bind to in the same paragraph' };
+    }
+    pathRaw = bound.pathRaw;
   }
-  const content = gitShowFile(root, ref.rev, named[0]);
-  if (content === null) {
-    return { ok: false, reason: `unresolvable rev "${ref.rev}" for "${named[0]}" -- git show failed` };
+  const { exact, all } = resolveRef(pathRaw, relPath, index);
+  const named = exact.length ? exact : all;
+  let resolvedPath;
+  let content;
+  if (named.length === 1) {
+    resolvedPath = named[0];
+    content = gitShowFile(root, ref.rev, resolvedPath);
+    if (content === null) {
+      return { ok: false, reason: `unresolvable rev "${ref.rev}" for "${resolvedPath}" -- git show failed` };
+    }
+  } else if (named.length === 0) {
+    content = gitShowFile(root, ref.rev, pathRaw);
+    if (content === null) {
+      return {
+        ok: false,
+        reason: `unresolvable path "${pathRaw}" -- no tracked file matches, and "git show ${ref.rev}:${pathRaw}" failed`,
+      };
+    }
+    resolvedPath = pathRaw;
+  } else {
+    return { ok: false, reason: `ambiguous path "${pathRaw}" (${named.length} candidates)` };
   }
   const slice = linesWithLF(content, ref.startLine, ref.endLine);
   if (slice === null) {
-    return { ok: false, reason: `line range ${ref.startLine}-${ref.endLine} out of range for "${named[0]}" @ ${ref.rev}` };
+    return { ok: false, reason: `line range ${ref.startLine}-${ref.endLine} out of range for "${resolvedPath}" @ ${ref.rev}` };
   }
   const actual = sha256Hex(slice);
   if (actual !== ref.hash) {
     return {
       ok: false,
-      reason: `sha256 mismatch for "${named[0]}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}: claimed ${ref.hash}, actual ${actual}`,
+      reason: `sha256 mismatch for "${resolvedPath}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}: claimed ${ref.hash}, actual ${actual}`,
     };
   }
   if (ref.reproduction) {
@@ -521,11 +660,11 @@ export function checkHashRef(root, index, relPath, text, ref) {
     if (!slice.includes(repro)) {
       return {
         ok: false,
-        reason: `reproduced text is not a byte-exact substring of "${named[0]}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}`,
+        reason: `reproduced text is not a byte-exact substring of "${resolvedPath}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}`,
       };
     }
   }
-  return { ok: true, resolvedPath: named[0], slice };
+  return { ok: true, resolvedPath, slice };
 }
 
 /**
@@ -540,6 +679,12 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const index = buildTrackedIndex(root);
   const topDirs = topDirsOf(index);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
+  // Hash references are scanned wider than quote passages, for hash checking only, with no quote
+  // haystack (round-12 fix round item (d)): an explicit `files` override scans exactly those files for
+  // both; the default run additionally hash-checks DECISIONS-PENDING.md, AI_DEVELOPMENT.md,
+  // docs/PREREGISTRATION-TEMPLATE.md and every .claude/agents/*.md, none of which ever enters quote
+  // extraction or the quote-verification haystack.
+  const hashScanAbs = files && files.length ? scanAbs : defaultHashScanFiles(root, index).map((f) => path.resolve(f));
   const baselineEntries = loadBaseline(root);
   const baselineErrors = validateBaselineEntries(baselineEntries);
   const usedBaseline = new Set();
@@ -568,6 +713,27 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const hashFindings = [];
   let checked = 0;
 
+  // Hash-ref scanning: its own pass, its own (wider) file set, no quote-passage extraction on any file
+  // here that scanAbs does not also carry.
+  const hashScanSet = new Set(hashScanAbs);
+  for (const abs of scanAbs) hashScanSet.add(abs);
+  for (const absPath of hashScanSet) {
+    const relPath = path.relative(root, absPath).split(path.sep).join('/');
+    const text = fs.readFileSync(absPath, 'utf8');
+    const refs = extractHashRefs(text);
+    for (const tok of findUnboundHashTokens(text, refs)) {
+      hashFindings.push({
+        relPath,
+        line: tok.line,
+        reason: 'unbound hash reference -- a sha256:<hex> token not recognized as part of a `path:line @ rev sha256:hex` reference',
+      });
+    }
+    for (const ref of refs) {
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
+      if (!res.ok) hashFindings.push({ relPath, line: ref.line, reason: res.reason });
+    }
+  }
+
   for (const absPath of scanAbs) {
     const relPath = path.relative(root, absPath).split(path.sep).join('/');
     const text = fs.readFileSync(absPath, 'utf8');
@@ -576,11 +742,6 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     // file -- same-document self-verification only (see the header comment for why not tree-wide).
     const selfQuoteFree = normalizeText(blankPassages(text, passages));
     const norm = (abs) => (abs === absPath ? selfQuoteFree : readNorm(abs));
-
-    for (const ref of extractHashRefs(text)) {
-      const res = checkHashRef(root, index, relPath, text, ref);
-      if (!res.ok) hashFindings.push({ relPath, line: ref.line, reason: res.reason });
-    }
 
     for (const p of passages) {
       checked++;
@@ -653,7 +814,7 @@ export function listCiteContents({ repoRoot, files } = {}) {
     const text = fs.readFileSync(absPath, 'utf8');
     const hashByKey = new Map();
     for (const ref of extractHashRefs(text)) {
-      const res = checkHashRef(root, index, relPath, text, ref);
+      const res = checkHashRef(root, index, relPath, text, ref, topDirs);
       const key = `${ref.line}:${ref.pathRaw}:${ref.startLine}`;
       hashByKey.set(key, res.ok ? 'hash: PASS' : `hash: FAIL — ${res.reason}`);
     }
@@ -682,8 +843,11 @@ export function listCiteContents({ repoRoot, files } = {}) {
           firstLine = raw ? raw.slice(0, 100) : '(blank line)';
         }
       }
-      const hashMark = hashByKey.get(`${c.citeLine}:${c.pathRaw}:${c.startL}`);
-      out.push({ relPath, citeLine: c.citeLine, target, firstLine: hashMark ? `${firstLine} [${hashMark}]` : firstLine });
+      // The hash-status mark is a SEPARATE field, not folded into `firstLine`: `firstLine` is the
+      // quoted target line's own text, and the mark belongs outside that quotation (round-12 fix round
+      // item (e); main() below prints it after the closing quote, never inside it).
+      const hashMark = hashByKey.get(`${c.citeLine}:${c.pathRaw}:${c.startL}`) ?? null;
+      out.push({ relPath, citeLine: c.citeLine, target, firstLine, hashMark });
     }
   }
   return out;
@@ -713,7 +877,11 @@ function main() {
   if (showCites) {
     const cites = listCiteContents(opts);
     console.log(`  ${cites.length} path:line cite(s):`);
-    for (const c of cites) console.log(`  - ${c.relPath}:${c.citeLine} -> ${c.target} — "${c.firstLine}"`);
+    // The hash-status mark sits OUTSIDE the quoted line (round-12 fix round item (e)) -- it is not
+    // part of what the citing document's own target line says.
+    for (const c of cites) {
+      console.log(`  - ${c.relPath}:${c.citeLine} -> ${c.target} — "${c.firstLine}"${c.hashMark ? ` [${c.hashMark}]` : ''}`);
+    }
   }
 
   if (advisories.length) {
@@ -724,8 +892,12 @@ function main() {
     console.error(`verify:quotes — ${baselined.length} baselined (pre-existing, ${BASELINE_REL_PATH}, still failing):`);
     for (const b of baselined) console.error(`  - ${b.relPath}:${b.line} — "${b.snippet}…" — ${b.reason}`);
   }
-  console.error(`verify:quotes — ${pluralBaselineEntries(unmatchedBaseline.length)} matched nothing this run (stale ${BASELINE_REL_PATH} entries).`);
-  for (const e of unmatchedBaseline) console.error(`  - ${e.file}:${e.line} — "${String(e.words ?? '').slice(0, 60)}…"`);
+  // Printed only when non-zero (round-12 fix round item (e)): "0 baseline entries matched nothing"
+  // on every clean run was noise, not a finding.
+  if (unmatchedBaseline.length) {
+    console.error(`verify:quotes — ${pluralBaselineEntries(unmatchedBaseline.length)} matched nothing this run (stale ${BASELINE_REL_PATH} entries).`);
+    for (const e of unmatchedBaseline) console.error(`  - ${e.file}:${e.line} — "${String(e.words ?? '').slice(0, 60)}…"`);
+  }
 
   if (baselineErrors.length) {
     console.error(

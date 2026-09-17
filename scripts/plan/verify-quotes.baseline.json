@@ -21,7 +21,7 @@
       "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
       "line": 403,
       "words": "the accepted mechanism is unchanged; this replaces a selector the acceptance never",
-      "reason": "source DECISIONS-PENDING.md:1053 ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; an appended ADR-020 note is owed.",
+      "reason": "source DECISIONS-PENDING.md, entry 54, ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; an appended ADR-020 note is owed.",
       "disposition": "owed-correction",
       "corrected_by": "an appended ADR-020 note, owed",
       "ruling": "round 11, 2026-09-17"
@@ -44,17 +44,9 @@
     },
     {
       "file": "engine/ADMISSION-PREREGISTRATION.md",
-      "line": 220,
-      "words": "G-A1 Fast admission is structural. A test that observes reads on the",
-      "reason": "source cited (`:218`) as \"DRAFT-2-BRIEF-A…:96-112\" -- the filename is itself elided with an ellipsis in the citing heading, matches no name in `git log --all --diff-filter=A --name-only` for any 'DRAFT-2-BRIEF-A*' path, and no tracked file matches it; cannot be found here by construction. Round 12 item 4 (the two unruled baseline entries) joins the baseline on this disposition -- the source is not real (never committed under any name, confirmed by history search), so owed-correction's 'source is real and the record immutable' condition is not met here.",
-      "disposition": "unfindable-by-construction",
-      "ruling": "round 12"
-    },
-    {
-      "file": "engine/ADMISSION-PREREGISTRATION.md",
       "line": 949,
       "words": "a false status string does not sit on main between P3a and",
-      "reason": "source DECISIONS-PENDING.md:41; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte; correction owed in P3b's record round (appended).",
+      "reason": "source DECISIONS-PENDING.md, round 5, item 1; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte; correction owed in P3b's record round (appended).",
       "disposition": "owed-correction",
       "corrected_by": "P3b, engine §12e Amendment 9 (appended statement; the original bytes are immutable)",
       "ruling": "round 11, 2026-09-17"
@@ -63,7 +55,7 @@
       "file": "engine/ADMISSION-PREREGISTRATION.md",
       "line": 993,
       "words": "Adopt the architect's sentence as written, with one addition: the accessor's doc",
-      "reason": "source DECISIONS-PENDING.md:44; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte; correction owed in P3b's record round (appended).",
+      "reason": "source DECISIONS-PENDING.md, round 5, item 4; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte; correction owed in P3b's record round (appended).",
       "disposition": "owed-correction",
       "corrected_by": "P3b, engine §12e Amendment 9 (appended statement; the original bytes are immutable)",
       "ruling": "round 11, 2026-09-17"
@@ -120,7 +112,7 @@
       "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
       "line": 76,
       "words": "The restated target (the load-bearing correction): at fit-to-extent the viewport IS the",
-      "reason": "labelled 'quoted verbatim' but the named source (this document's own §2 header) is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
+      "reason": "labelled 'quoted verbatim' but the named source (state/NEXT-CUT.md, per this document's own §2 header, 'lifted verbatim from NEXT-CUT.md') is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
       "disposition": "unfindable-by-construction",
       "ruling": "round 11, 2026-09-17"
     },
@@ -128,7 +120,7 @@
       "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
       "line": 86,
       "words": "C1 No docs/08 normative row lands this cut, not even \"proposed\" -",
-      "reason": "labelled 'quoted verbatim' but the named source (this document's own §2 header) is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
+      "reason": "labelled 'quoted verbatim' but the named source (state/NEXT-CUT.md, per this document's own §2 header, 'lifted verbatim from NEXT-CUT.md') is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
       "disposition": "unfindable-by-construction",
       "ruling": "round 11, 2026-09-17"
     },
@@ -136,9 +128,10 @@
       "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
       "line": 125,
       "words": "≤ vsync interval, zero dropped frames, across the benchmark matrix below (06)",
-      "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte; round 11 item 3 adopted the elision clause (an honest elision is not a misquote) -- the tool does not yet understand '…' as an elision marker, a tool-false-trigger under the now-ruled policy. Read across the elision (round 11 item 3's rider, reviewer should-fix 7): the elided remainder reads '\"The display's own interval\" means the fixed reference hardware profile's own refresh rate ... not whatever a runtime happens to negotiate' -- a qualifier on what 'the display's own interval' means, not a negation or a condition on the budget itself; retaining it changes nothing the RESIDENCY piece's own frame-budget prose depends on.",
-      "disposition": "tool-false-trigger",
-      "ruling": "round 11, 2026-09-17"
+      "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte; round 11 item 3 adopted the elision clause (an honest elision is not a misquote), but the elided remainder's actual shape (not reproduced here) is a qualifier on what the display's own interval means (the fixed reference hardware profile's own refresh rate, not whatever a runtime negotiates) AND a negation -- power-saving mode or variable refresh silently lowering the target does not satisfy this budget, only relocates the miss. Round 14, item 3: the human ruled this an owed elision correction, not a tool-false-trigger -- an appended note in frontends/shell/RESIDENCY-PREREGISTRATION.md restating the passage by reference is owed.",
+      "disposition": "owed-correction",
+      "corrected_by": "an appended note in frontends/shell/RESIDENCY-PREREGISTRATION.md restating the passage by reference (round 14, item 3)",
+      "ruling": "round 14, item 3"
     },
     {
       "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",
