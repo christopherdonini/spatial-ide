@@ -911,6 +911,16 @@ export default function App() {
     registerE2eHook("residencyMarkInput", async () => {
       recordResidencyInput();
     });
+    // **Brief A boundary 4, P3b: the counts-only read `e2e/source-changed.mjs` needs.**
+    // Deliberately NOT `residencyEndStep` above: that one merges the same totals into the residency
+    // MEASUREMENT instrument's step snapshot, which carries timing fields, and T10 records no
+    // duration of any kind (ADR-018). This returns the totals and nothing else, computes nothing and
+    // records nothing. `null` when no dataset is admitted, never a fabricated zero.
+    // Its only caller, and why the property must be proven about the running app, are stated at its
+    // own declaration in `e2e-test-surface.ts`. Custodian's decision, 2026-09-17 (recorded as class
+    // 2 in `OWNER-INVALIDATION-PREREGISTRATION.md` §10 Amendment 5): §6 named an existing
+    // counts-only hook and no such hook existed.
+    registerE2eHook("residentCounts", async () => canvasRef.current?.getResidentCounts() ?? null);
     // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
     // trace step reads this alongside console quiescence (§4b's letter).
     registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
@@ -971,6 +981,7 @@ export default function App() {
       unregisterE2eHook("residencyBeginStep");
       unregisterE2eHook("residencyEndStep");
       unregisterE2eHook("residencyMarkInput");
+      unregisterE2eHook("residentCounts");
       unregisterE2eHook("residencyInFlightStreamCount");
       unregisterE2eHook("residencyQueuedTileCount");
       unregisterE2eHook("residencySupersededBytesDropped");

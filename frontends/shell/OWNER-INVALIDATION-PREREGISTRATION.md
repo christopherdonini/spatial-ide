@@ -689,3 +689,38 @@ Two §4 predictions about *which* assertion would bite came out differently and 
 2. the session-ended status line — rendered from `refusalGuidance("engine.source_changed")` (`formatRefusal.ts:97-100`) through `RefusalBlock`. This one **is** asserted verbatim, and deliberately: it is §10 Amendment 1's own ruled string, and the round-5 reason for pinning it (a rewording is a decision, not a refactor) applies to P3b's stronger sentence exactly as it applied to the interim one.
 
 **Suites at this amendment.** `cargo test --workspace --locked`: 61 test binaries, 0 failed, 0 warnings. `npm run verify` (vitest + typecheck + lint + `check:dist-clean` + citation integrity): 70 files, 1024 tests, 0 failed, exit 0. `verify-mutation.mjs`: PASS, 27/27. `verify-cites.mjs`: PASS. `verify-test-claims.mjs`: PASS. The E2E step is (e).
+
+**Amendment 5 — Written after this piece's results were seen (2026-09-17), correcting Amendment 4 (e) by appending.** Classes: **class 2** for (a), a deviation from §6's stated mechanism, with its reason; **class 1** for (b) and (c). Amendment 4 is not edited; this item states what is true instead.
+
+**Amendment 4 (e) said T10 was neither written nor run, and named the hook question as its first blocker. The hook question is now decided and T10 is written. The RUN is still owed.**
+
+**(a) Class 2 — the counts read: §6's stated mechanism does not exist, so one was added.** §6's instruments table names `WorkingCanvasHandle.getResidentCounts()` "through the existing E2E hook". No counts-only hook existed: the only surface exposing those totals is `residencyEndStep` (`frontends/shell/src/App.tsx:906-910`), which is the residency **measurement** instrument and returns its step snapshot's timing fields with them. Reaching a duration-bearing instrument to read a count would put a measurement inside a piece whose §1 declares it measures nothing (boundary 10; A6).
+
+**Decided by the custodian, 2026-09-17 — not the human, and recorded as such.** One counts-only hook, `residentCounts`, declared at `frontends/shell/src/e2e-test-surface.ts:192-221` and registered at `frontends/shell/src/App.tsx:923` with its unregister twin at `:984`, inside the same `isInstrumentedBuild()`-gated effect the residency hooks already live in. It returns `canvasRef.current?.getResidentCounts() ?? null` and nothing else: no timing field, no side effect, no computation, and `null` rather than a fabricated zero when no dataset is admitted.
+
+It is a **test-surface item of the same class as `openPath` and `capturePixels`**, and its doc carries the instrument-accessor form the human's round-5 item-4 ruling requires: read-only over state the shipped build already maintains (the same `ResidentSet` `pushBatch`/`clearStream`/`clearAllTiles` keep); **its only caller named** — the E2E driver `frontends/shell/e2e/source-changed.mjs`; and why the property must be proven about the real app — P3b's whole subject is an owner-side consequence, that a detected change empties the geometry an operator is looking at. Unit tests assert that `clearStream`/`clearAllTiles` were *called* at the real option seams, and they do; only the running app can show the residency is then empty, and there is no product path to that fact.
+
+No other product code changed for this: `git diff` for this round is the hook (two files), the driver, and this amendment.
+
+**(b) T10 is written, exactly as §4 declares it.** `frontends/shell/e2e/source-changed.mjs`, on `e2e/lib.mjs`'s `attachOrLaunch` like its siblings (`regression.mjs`, `refusal-contract-baseline.mjs`), writing `e2e/out/source-changed-<epochms>.json` and exiting non-zero on any failed assertion. Its steps, in §4's own order:
+
+| step | asserts |
+| --- | --- |
+| `S1-open` | the scratch copy (X-4) admits through `window.__SPATIAL_E2E__.openPath` |
+| `S2-settle-and-precondition` | settle, then **both preconditions without which the later assertions would be vacuous**: resident vertices are `> 0`, and a specific pixel is *observed* to show an id (never assumed occupied) |
+| `S3-touch-mtime` | mtime moved forward with `utimesSync`; sha256 **unchanged**, which is what proves the mutation was a touch and not a byte edit (§8.8) |
+| `S4-pan` | one query issued by a real pan |
+| `S5a-status` | the session-ended block is present and **not dismissible**, and no `engine.` code appears in the operator's sentence or its guidance |
+| `S5b-residency-cleared` | `residentCounts()` reports **zero** resident vertices |
+| `S5c-picks-refused` | a hover over the formerly-occupied pixel yields the session-ended refusal — not an id, and **not silence** (silence reads as "nothing under the cursor", the one answer ADR-010 rule 5 forbids here) |
+| `fixture-integrity` | the scratch copy's sha256 is re-taken after the run and compared to the copy taken at start (§8.8's "before and after") |
+
+**One thing S5a asserts precisely, stated because the difference matters.** §4's words are "the status stack names the state with no `engine.` prefix in the text". What the driver asserts is that the operator's **sentence** (`.admission-refusal-message`) and its guidance carry no `engine.` code — that is the prefix regression §0 disclosure 4(b) named. The typed code itself **is** rendered, in its own labelled element (`.admission-refusal-code`), which is `RefusalBlock`'s long-standing shape for every refusal in this app and is not a prefix in front of a sentence. The driver says so at its own S5a comment rather than leaving a reader to infer which reading was taken.
+
+**No timing anywhere** (ADR-018): the report has no elapsed field, and the only millisecond figures in the file are bounds on waiting — `withTimeout`, the mount gate and the whole-run watchdog — the same bounds every sibling driver carries, never reported as a result.
+
+**The recorded mutation's mechanics are documented in the driver's own header** so the run instruction can perform it once: delete `this.clearResidency();` from `viewportStreamManager.ts`'s source-changed branch and `canvas?.clearAllTiles();` from `candidateArmSession.ts`'s `endCandidateSession`; expected failure is **S5b by name**, reporting the non-zero count it found, while S5a and S5c still pass — which is the point, since those two are the owner *saying* something and S5b is the owner having *done* it.
+
+**(c) Still owed, 2026-09-17: the run.** The driver has **never been executed** and no observation exists. It is not run here because the machine is occupied by other measured work, and because a run launches a detached desktop application — it happens on a quiet machine, under its own instruction, per AI_DEVELOPMENT.md's "Launching the app and E2E runs" (one app at a time; a run that PROVES a branch asserts `launched: true`, which the driver records and prints rather than assumes). §9 requires T10 green before either gate concludes. **Until that run exists, Amendment 4 (e)'s closing sentence stands unchanged: this piece claims nothing about what an operator sees end to end.** What this amendment discharges is the hook decision and the driver's existence, and nothing more.
+
+Checks at this amendment: `node --check frontends/shell/e2e/source-changed.mjs` green; the non-ASCII scan of that file is empty (0 bytes above `0x7F`), so it is safe to launch unattended; `npm run verify` exit 0 (70 files, 1024 tests), which includes the citation-integrity scan over `e2e/`.
