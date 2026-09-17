@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17T18:57:26.677Z",
-  "plan_hash": "04b9482d19941237ab55fcc3431606a2d00936dbc7bda3940d9e9e3f481ac2cd",
+  "generated_at": "2026-09-17T20:50:59.333Z",
+  "plan_hash": "17bf157fcff6b5652c8d4c4a7f3f9e12f1acfb4e3a8315db05e3ae99128e956f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1312,6 +1312,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-verify-mutation-header-token",
+      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 5,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
