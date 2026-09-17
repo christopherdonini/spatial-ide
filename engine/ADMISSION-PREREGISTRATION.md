@@ -1454,3 +1454,25 @@ Because the misquote dropped G-A2's own "status text verbatim" clause, the list 
 3. **The status text verbatim clause.** G-A2 requires the refused status text to match a specific string, word for word -- that is what "verbatim" means in its own wording. No test in this tree pins that string against G-A2, because the string itself has not been decided: deciding the exact operator-facing status text is a **P6 wording decision that is the human's**, not this piece's or this amendment's to make. It stands beside the pick refusal and the session-ended status line that `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` Amendment 10 (d) already names as joining §9's P6 sight list, rather than being settled here.
 
 **(3) Amendment 6 (i)3 (`:1361`) cites the wrong `NEXT-CUT.md` row.** It reads: *"It is the human's at P6 (`state/NEXT-CUT.md:106`)."* At this head, `state/NEXT-CUT.md:106` is the **P5** row, whose Phase cell reads: *"Tests carrying the claims (see Gates) + E2E: detected-change invalidation; late-generation rejection; fast-admission distinction"* and whose Gate column reads: *"Reviewer"*. The **P6** row -- whose Phase cell reads, at its opening: *"Walkthrough **Part N** (no durations): open a CRS84 file, read the provenance line; open a keyless single file, read the session-identity statement; mutate the source mid-session, read the refusal"* and whose Gate column reads: *"Human (operator-verified; acceptances are red lines)"* -- is `state/NEXT-CUT.md:107`. Corrected here: the citation is `state/NEXT-CUT.md:107`.
+
+---
+
+### Amendment 9 -- two record-fidelity glyph corrections, appended (2026-09-17)
+
+**Written after the checker's gates found them, ruled as belonging to P3b's round rather than to a baseline.** §12e's rule, honoured in this line. **Amendments 1-8 are byte-untouched**; this item corrects two sites where a nested quotation's glyph was retyped when a ruling was transcribed into this document.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **class 3** throughout (cite/glyph fix, `:110-112`, mechanical, never changes a claim).
+
+---
+
+**(1) `:949-951` re-types round 5 item 1's two nested quotations as single quotes.** The ruling (`DECISIONS-PENDING.md:45`, "RULED 2026-09-16 -- question round 5", item 1) nests two double-quoted phrases inside its own double-quoted whole: P3a's superseded string, rendered here as *'Everything read so far has been discarded'* with single quotes, and the replacement, rendered here as *'The source file changed while it was open; reopen the dataset to continue.'*, also with single quotes. The source uses double quotes for both. Reproduced below byte for byte, from `DECISIONS-PENDING.md:45` (the ruling's relevant span; its own full sentence opens "Accept as pre-committed with one change to (d):", which this document's `:949` quote begins after):
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6."
+
+**(2) `:993-995` re-types round 5 item 4's one nested quotation as single quotes.** The ruling (`DECISIONS-PENDING.md:48`, same round, item 4) nests one double-quoted word inside its own double-quoted whole: rendered here as *'test-only.'* with single quotes; the source has double quotes. Reproduced below byte for byte, from `DECISIONS-PENDING.md:48`:
+
+> "Adopt the architect's sentence as written, with one addition: the accessor's doc names the test that calls it, so the caller-grep can verify the exemption instead of trusting the words "test-only." An exemption that can't be grepped is a hole in the rule it exempts from."
+
+**(3) What changed and what did not.** At both sites, the meaning of the quoted ruling is unchanged either way -- a reader takes the same instruction from the single- or double-quoted rendering; only the glyph marking the ruling's own nested quotation changed, from the human's double quotes to a single-quote substitute. Neither `:949-951` nor `:993-995` is edited by this amendment (Amendments 1-8 stay byte-untouched); this is the correction, appended, per the round-7 fence.
