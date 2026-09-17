@@ -1091,3 +1091,65 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 13 (1), `:990-996` | the two "byte for byte … the line" reproductions of `:900` | the reference forms in (c) above |
 | Amendment 13 (3) item 1, `:1018` and item 2, `:1019` | `DECISIONS-PENDING.md:26` | round 9, item 1 |
 | Amendment 13 (3) item 4, `:1021` | `DECISIONS-PENDING.md:22`, item 1 | round 10, item 1 (form only, already so identified there) |
+
+---
+
+### Amendment 15 -- the closing state-of-the-record list (2026-09-17, appended; the architect's re-scope under round 12, item 2)
+
+**Written after the gates' attempt-5 findings were seen.** §10's rule, honoured in this line. **Read this amendment first**: it is the single resolution point for every earlier amendment in this document, and it supersedes Amendment 14's own index in whole.
+
+**Why this form, and what it is not.** Round 12, item 2 provides that if the round fails on the record again, the record -- not the code -- is re-scoped by the architect as a shorter amendment set rather than corrected again; attempt 5 failed on the record, and this is that re-scope, not a sixth correction. The mechanic that failed five attempts is one: a correction that carries a `:line` into a file its own commit edits is falsified by that commit, and a newest-first ledger moves under a line cite at every merge. So this amendment carries **no bare line cite into this document**, **no ledger line cite**, and **no reproduced text**: self-references are by section, amendment and item; rulings are by round and item (round 12, item 1 (a)); anything else is `path:line @ <commit> sha256:<hex>` (round 12, item 1 (b)). Where a row must name a defective cite in order to identify it, the cell says **retired form**.
+
+**What this commit does to the tree.** It appends this amendment and changes nothing else in this document -- no byte above §10, no byte of Amendments 1-14 -- so no line in this file moves and no cite anywhere in it is falsified by this commit. Proof: `git diff --numstat e53bb97..HEAD -- frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` shows zero deletions.
+
+**Classes used.** **Class 3** (`docs/PREREGISTRATION-TEMPLATE.md:110-112 @ e53bb97 sha256:e4bc1272dfbdb1f0af4b32592670e6a7b3f0646805c95570e7232723e67b7812`) for every row that only corrects where a reference points. **Class 1** for every row that withdraws, supersedes or narrows a claim, on the stated reading that a gate round's findings are this round's results and such a row records what they invalidate -- the reading is stated, not settled, and is routed as gap 2. Two further things fit no pre-declared class and are routed to the human rather than forced into one: gaps 1 and 3.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every "stands" / "corrected" / "withdrawn" / "owed" clause below names the reference, the commit range, the amendment item or the gate resolution that proves it.
+
+**Scope of the no-line rule.** It governs from this amendment forward. An earlier self-line cite that still resolves stands as written and is not listed here; a pinned reference (`path:line @ commit sha256:`) is stable under any later insertion and the rule does not touch it.
+
+---
+
+**The state of the record, by amendment and item.**
+
+| id | status | what governs now |
+| --- | --- | --- |
+| Amendment 14, its "Superseded as of this amendment" index (all six rows) | **superseded in whole** | Every site cell names a line from before the four-line insertion the same commit made under §9's Operator bullet, so none resolves at that commit's own head. Proof: the insertion and the index are both inside the range `60ece22..e53bb97`. This table replaces it and carries no line into this document. |
+| Amendment 14 (a) | **stands, narrowed** | The seven in-place §0-§9 edits stand as made: cite form only, quoted text unchanged. Its completeness clause is true of the literal string `DECISIONS-PENDING.md:NN` and not of every ledger reference in §0-§9; the next row carries the one it missed. |
+| §0 disclosure 2's class-fix sentence (retired form: a bare `` `:46` ``) | **corrected by reference** | The bare line number was anchored to the ledger by the sentence above it, which Amendment 14 (a) converted to round + item, so it now has no antecedent and must not be read as pointing at any file. The class fix that sentence introduces is **round 4, item 1**. The sentence is not edited: §0-§9 takes no byte change in this round. |
+| §0 disclosure 2 and §8 block-on-sight 5 -- the two round 4, item 1 passages marked verbatim | **stand** | Clause (b)'s `path:line` + hash form is unavailable for ledger text, because clause (a) forbids a line cite into the ledger; round + item is the ledger's reference form, and the gate's own resolution against round 4's RULED block is the proof (round 11's floor). Both passages join their source's hard-wrapped line as single spaces -- a reflow, every retained word byte-exact, nothing elided. Gap 3 routes the form question to the human. |
+| Amendment 14 (b) | **stands in substance; its class label withdrawn** | Amendment 10 (a)'s cite-resolution count is superseded with no replacement, because round 12, item 1 (a) retires the citation form that count measured. Class 3 never changes a claim and (b) withdraws one, so (b)'s class-3 label is withdrawn and this amendment's class-1 reading covers it (gap 2). |
+| Amendment 10 (a)'s standing policy that §0-§9 are not re-derived at this head | **narrowed, not superseded** | It is superseded for cite **form** only, by round 12, item 1 (a), which Amendment 14 (a) applied to the seven body sites. Every claim, scope and wording of §0-§9 stands unre-derived, exactly as that policy provides. |
+| Amendment 14 (c) | **stands** | Its two pinned references replace Amendment 13 (1)'s two mid-line reproductions, and no reproduction remains at either site. The proof is recomputation: the gate recomputes both span hashes at their named commits, and no claim here rests on a report. |
+| Amendment 13 (3) item 3's component label for Amendment 12 | **superseded** | Amendment 14 (d)1 supersedes the "four passage corrections" label with six items of three kinds; the total it was a component of stands. This row is the index entry (d)1 lacked. |
+| Amendment 14 (d)2 | **stands** | It defends the per-commit reading of two byte-untouched clauses and supersedes nothing. |
+| Amendment 14 (d)3, and Amendment 14's "Classes used" line | **corrected** | Both describe `docs/PREREGISTRATION-TEMPLATE.md:101-129` as five pre-declared classes; that span declares **six** -- class 6, budget deviation, was added on round 5, item 2. Proof: `docs/PREREGISTRATION-TEMPLATE.md:101-129 @ e53bb97 sha256:d47d4a27c20b2e03cf9d7cccb765735a27a11bfdbbecc8d9f0e21f2772859d8a`, whose list runs 1 to 6. |
+| Amendment 11 (b)'s missing class number | **open, routed** | No pre-declared class describes an evidence-driven sight-list addition, and none is assigned here either. Gap 1 carries it to the human with the class-7 text the architect proposes. |
+| Amendment 14 (e), its attribution | **corrected** | The sight-list line's binding source is **round 12, item 1 (e)**, not item 2. The phrase (e) attributes to item 2 belongs to the custodian's "Applied:" note in that ledger entry and not to the human's ruling; it is withdrawn rather than re-attributed, and no text of it is reproduced -- the sentence carries on the round + item cite alone. |
+| Amendment 14 (e), its placement claim | **withdrawn** | The dated line sits as an indented continuation under §9's **Operator bullet**, inside that list item, which is what the same sentence's second half says. The line itself is not edited; it stands where it is, dated. |
+| Amendment 14 (e)'s routing | **named** | The artifact where the routing lands is this amendment's "Gaps routed to the human" section, and from there the custodian's next question round in `DECISIONS-PENDING.md`. |
+| Amendment 14's short quoted phrases in (b), (c) and (d) | **stand as identifiers** | They name items rather than invoking passages, and none is presented as a ruling's words. One differs from its source in emphasis: Amendment 13 (3) item 3 renders its total in markdown bold, which (d)1's rendering does not carry; corrected by this row, Amendment 13 not edited. |
+| Amendment 13 (1)'s two reproductions | **superseded** | By Amendment 14 (c)'s pinned references; unchanged by this round. |
+| Amendment 4 (g) item 1 -- R-D2's `detail` contract on the generation-ended paths | **owed**, 2026-09-17 | Unchanged; recorded at that item and mirrored in `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 6 (ii). |
+| Amendment 4 (g) item 2 -- guidance for codes other than `engine.source_changed` on the camera pre-check surface | **owed**, 2026-09-17, at P6 or a follow-on | Unchanged; recorded at that item. |
+| Amendment 4 (g) item 3 -- the post-check's shell-side cost carrier | **owed**, 2026-09-17, at P6 or a follow-on | Unchanged; recorded at that item. |
+| Amendment 4 (g) item 4 -- G-A2's score | **owed**, at P5 | Unchanged; P5 scores it, as §2d instructs. |
+| Amendment 10 (c) -- §9's Part N walkthrough row | **owed**, 2026-09-17, at P6 | Unchanged; the row's words and its blank result log are as (c) states. |
+| Amendment 10 (e) item 2 -- one `regression.mjs` run after the e2e moves | **owed**, 2026-09-17, at the next E2E sitting | Unchanged; recorded at that item. |
+| Amendment 10 (e) item 3 -- the type predicate | **owed** to whoever next touches that file | Unchanged; recorded at that item. |
+
+**Items that simply stand, by id.** Amendments 1, 2, 3, 5, 6, 7, 8, 9 and 12; Amendment 4 (a)-(f) and (h); Amendment 10 (b), (d) and (e) item 1; Amendment 11 (a); Amendment 13 (1), (2), (3) items 1, 2, 4 and 5, (4) and (5); Amendment 14 (c). Nothing in this amendment touches them; the owed items among them are listed above only to date them, not to change them.
+
+**Superseded earlier and unchanged here:** Amendment 4 (e)'s closing sentence (by Amendment 9 (f)); Amendments 6 and 7's T10 verdicts (by Amendment 9); Amendment 12 (1)'s closing note (by Amendment 13 (3) item 2).
+
+---
+
+**Gaps routed to the human, named and not forced** (`docs/PREREGISTRATION-TEMPLATE.md` §10's own instruction: a class that fits none is a finding routed to the human, never a freeform amendment).
+
+1. **A class for an evidence-driven sight-list addition.** Amendment 11 (b), Amendment 14 (e) and the sight-list line itself have no pre-declared class; the architect's re-scope of 2026-09-17 proposes a class 7 for the template. Nothing is assigned here.
+2. **The class of a withdrawal in a record-correction round.** A row that withdraws a count, a method or a false clause is not class 3, and it narrows no ruling, so class 5 does not fit; this amendment uses class 1 on the reading stated above, and the reading is the human's to confirm.
+3. **How a ledger passage is pinned.** Clause (b)'s `path:line` + span hash cannot be used for ledger text, because clause (a) forbids a line cite into `DECISIONS-PENDING.md`; and an entries-style block carries no round or item at all (`engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 12 carries that case). The architect proposes a clause (a') for both halves.
+
+---
+
+**Read this amendment first.** §10's amendments correct each other only by a later one; this is the last, and it is where any earlier amendment's current state is written.

@@ -1368,7 +1368,7 @@ assertion is altered.
 - **The claim is about this client, not about the file.** Nothing here says a session up to the detection was a snapshot (A1), and no test asserts one.
 - **The end-to-end evidence is owed.** §4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** — the reason is recorded in P3b's §10 Amendment 4 (e) with its two blockers, and it is owed before P3b's gates conclude. Until then every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run.
 - **The post-check's own cost still has no shell-side carrier.** Amendment 5 (vi)'s open item stands unchanged: the Tauri shell installs `EngineSourceFactory::ticket_only`, whose `connection_reports` is `None`, and its stderr is unattached from the desktop. P3b's preregistration does not name that surface, so P3b built nothing for it.
-- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:797-803` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
+- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:796-802` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
 
 ---
 
@@ -1555,3 +1555,60 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 9 (2), `:1474` | `DECISIONS-PENDING.md:48` (already self-named "same round, item 4" in the same sentence) | round 5, item 4 -- form only, no change in fact |
 | Amendment 10 (1), `:1492`/`:1498` | `DECISIONS-PENDING.md:45`, reproduced complete at `:1500` | round 5, item 1; the reproduction itself is superseded by (2) above's reference form |
 | `kernel/src/skp.rs` cite, `:1371` | `:796-802` | `:797-803`, corrected in place by (1) above |
+
+---
+
+### Amendment 12 -- the closing state-of-the-record list (2026-09-17, appended; the architect's re-scope under round 12, item 2)
+
+**Written after the gates' attempt-5 findings were seen.** §12e's rule, honoured in this line. **Read this amendment first**: it is the single resolution point for every earlier amendment in §12e, and it supersedes Amendment 11's index in whole.
+
+**Why this form, and what it is not.** Round 12, item 2 provides that if the round fails on the record again, the record -- not the code -- is re-scoped by the architect as a shorter amendment set rather than corrected again; attempt 5 failed on the record, and this is that re-scope, not a sixth correction. This amendment carries **no bare line cite into this document**, **no ledger line cite**, and **no reproduced text**: self-references and references to the sibling preregistration are by section, amendment and item; rulings are by round and item (round 12, item 1 (a)); anything else is `path:line @ <commit> sha256:<hex>` (round 12, item 1 (b)). Where a row must name a defective cite in order to identify it, the cell says **retired form**.
+
+**This commit restores one byte, and appends nothing else.** Amendment 11 (1) corrected a cite **in place** inside Amendment 6, which §12e's append-only rule forbids and which this document has no precedent for; the committed bytes of that line at `60ece22` are restored by this commit, and the correction it intended is carried by the first row below instead. Proof, gate-checkable: after this commit `git diff --numstat 60ece22..HEAD -- engine/ADMISSION-PREREGISTRATION.md` shows **zero deletions**, so every line of Amendments 1-11 is byte-identical to `60ece22`.
+
+**Classes used.** **Class 3** (`docs/PREREGISTRATION-TEMPLATE.md:110-112 @ e53bb97 sha256:e4bc1272dfbdb1f0af4b32592670e6a7b3f0646805c95570e7232723e67b7812`) for every row that only corrects where a reference points. **Class 1** for every row that withdraws, supersedes or narrows a claim, on the stated reading that a gate round's findings are this round's results and such a row records what they invalidate -- stated, not settled, and routed as gap 2. Gaps 1, 3 and 4 fit no pre-declared class and go to the human, unforced.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every "stands" / "corrected" / "withdrawn" / "owed" clause below names the reference, the commit range, the amendment item or the gate resolution that proves it.
+
+---
+
+**The state of the record, by amendment and item.**
+
+| id | status | what governs now |
+| --- | --- | --- |
+| Amendment 11 (1) | **withdrawn as to method; its correction stands by this row** | The in-place edit it made inside Amendment 6 is reverted to the bytes at `60ece22`, because §12e is append-only and the sibling document's Amendment 12 item 4 is the precedent: record, never edit. What Amendment 6 (ii)'s fourth bullet cites as `kernel/src/skp.rs:796-802` (retired form) is, at this head, `kernel/src/skp.rs:797-803 @ e53bb97 sha256:4592255528daaca2a102fa1d248411be97ea9bf858664c8b9ed7bbedff74f7b1` -- the live-generation pre-check block, its `if` at the span's first line and its closing brace at the last. Amendment 6 is not edited; this row is the correction. |
+| Amendment 11's header clause that Amendments 1-10 are byte-untouched | **corrected** | It was false at `e53bb97`, whose engine hunk is a single in-place replacement inside Amendment 6, and it is true again at this commit after the restore. The falsity is recorded here rather than erased. Proof: the range `60ece22..e53bb97` carries one deletion in this file, and `60ece22..HEAD` carries none. |
+| Amendment 11 (1)'s two supporting references | **withdrawn** | As written, one names this document's own `:840-846` (retired form) for a correction of this class; that span is Amendment 4's header and item (i), a test-narration correction, and no correction of this class exists in this document. The other names the sibling document's `:1006` (retired form) for its item 5: the item named is right and the line is wrong, so it governs as **the sibling document's Amendment 13 (1), list item 5**. Neither reference supports the row above, which rests on the pinned `kernel/src/skp.rs` span alone. |
+| Amendment 11 (2) | **stands, with its span named** | Its pinned reference replaces Amendment 10 (1)'s unmarked elision, and the hash is the **whole line's**, while the passage it names is a sub-line span of that line -- said here, as the hash form requires. The commit it names is `60ece22`; those bytes are identical at `e53bb97` and this commit does not change them. |
+| Amendment 11 (3) | **corrected** | Its claim that Amendment 10 (1)'s closing sentence already disambiguates the figure is false: that sentence states 465 and says nothing about what the figure counts, which is exactly what (3) supplies. The arithmetic stands -- 465 is the ruling's own span inside its source's quote pair, and 467 is that span plus those two marks. Proof: the gate's character count over round 5, item 1's ruling span. |
+| Amendment 11's header clause and item (4), that every ledger line-cite in this document is converted and retired | **narrowed** | False as written: three instances had no row -- Amendment 10 (1)'s inner ledger cite, and Amendment 10 (4)'s two. The three rows below supply them, and the clause is narrowed to what this list carries. |
+| Amendment 10 (1)'s inner ledger cite | **retired** | **Round 5, item 1** -- form only, no change in fact. |
+| Amendment 10 (4)'s two ledger cites | **retired** | **Round 5, item 1** and **round 5, item 4** -- form only, no change in fact. |
+| Amendment 10 (4)'s cross-file line cite of the sibling document | **corrected by reference** | It names that document's **Amendment 12 (1)** closing note, corrected there by its **Amendment 13 (3) item 2**; cited by amendment and item, no line, so no later append can move it. |
+| Amendment 10 (1)'s cross-file line cite of the sibling document | **corrected by reference** | It names that document's **§10 Amendment 1**, which carries round 5, item 1 complete. The claim that the two are script-compared identical stands, and the gate resolves both against round 5, item 1. |
+| Amendment 11 (4)'s rendering of clause (a) | **marked paraphrase** | It inserts a word the clause does not carry and is introduced by a colon after its source cite, which presents a paraphrase as a quotation; marked a paraphrase here. The binding text is `docs/PREREGISTRATION-TEMPLATE.md:135 @ e53bb97 sha256:52ac25cf7d952920e7607afba503c4de93c44deb80422b76bdc6396b0f61a259`, and no rendering of it is reproduced. |
+| Amendment 11 (4)'s mirror reference into the sibling document | **corrected by reference** | The passage it points at is that document's **Amendment 10 (a)**, opening paragraph; cited by amendment, no line. |
+| Amendment 11's index row for Amendment 5 (ix) | **withdrawn** | The row resolves the wrong text: the retired form `DECISIONS-PENDING.md:182` was written at `264773c`, where that line carried **entry 98**, and at any later head it names unrelated ledger text. Governs now: **entry 98**, the stable identifier Amendment 5 (ix)'s sentence is about; the row's verdict that the cite stays uncorrected is withdrawn. Clause (a) has no form for an entries-style block and clause (b)'s path:line is forbidden into the ledger, so gap 3 routes the form to the human. |
+| Amendment 10 (2)'s reading of Amendment 7's elision | **corrected** | Its statement that the cut removed the same clause on both lines understates the third: there the elision also removed the engine's own refusal sentence preceding the limitation clause. Proof: the three log lines reproduced complete at Amendment 10 (2) show the third carrying both. Amendment 10 is not edited. |
+| Amendment 11's "Classes used" line | **corrected** | It describes `docs/PREREGISTRATION-TEMPLATE.md:101-129` as five classes and claims class 3 throughout; that span declares **six** (class 6 added on round 5, item 2), and its own items that withdraw or narrow a claim are not class 3. Proof: `docs/PREREGISTRATION-TEMPLATE.md:101-129 @ e53bb97 sha256:d47d4a27c20b2e03cf9d7cccb765735a27a11bfdbbecc8d9f0e21f2772859d8a`. Gap 2 routes the class of a withdrawal. |
+| Amendment 6 (i) item 3 -- the ADR-016 Amendment 1 acceptance | **NOT discharged**, unchanged | The human's at P6; its P6-row cite is corrected by Amendment 8 (3). |
+| Amendment 6 (ii) third bullet -- the post-check's shell-side cost carrier | **owed**, 2026-09-17 | Unchanged; mirrored in the sibling document's Amendment 4 (g) item 3. |
+| Amendment 6 (ii) fourth bullet -- R-D2's `detail` contract | **owed**, 2026-09-17 | Unchanged; its cite is corrected by the first row above, and it is mirrored in the sibling document's Amendment 4 (g) item 1. |
+| Amendment 8 (2) item 3 -- G-A2's status-text-verbatim clause | **owed**, at P6 | Unchanged: the string is a P6 wording decision that is the human's, and no test pins it until then. |
+
+**Items that simply stand, by id.** Amendments 1, 2, 3, 4, 5 (i)-(viii) and (x)-(xv), 6 (i) items 1, 2 and 4 and (ii) first bullet, 7, 8 (1) and (3), 9, 10 (3) and (4). Nothing in this amendment touches them; the owed items above are listed only to date them.
+
+**Superseded earlier and unchanged here:** Amendment 6 (ii) second bullet and Amendment 6 (iii)'s T10 verdict (by Amendment 7); Amendment 7 (iii)'s two-item list (by Amendment 8 (2)); Amendment 9 (1)'s reproduction (by Amendment 10 (1), and its charge by Amendment 11 (2)).
+
+---
+
+**Gaps routed to the human, named and not forced** (`docs/PREREGISTRATION-TEMPLATE.md` §10's own instruction).
+
+1. **A class for an evidence-driven sight-list addition** -- the sibling document's Amendment 11 (b) and Amendment 14 (e); the architect's re-scope of 2026-09-17 proposes a class 7. Nothing is assigned here.
+2. **The class of a withdrawal in a record-correction round** -- not class 3, and no ruling is narrowed, so not class 5; this amendment uses class 1 on the reading stated above.
+3. **How a ledger passage is pinned, and how an entries-style block is cited** -- clause (a) forbids a line cite into the ledger and clause (b)'s path:line is therefore unavailable for ledger text, while an entries-style block carries no round or item at all (Amendment 5 (ix)'s case, the row above). The architect proposes a clause (a').
+4. **Where this document's "read the last amendment first" pointer lives.** §12d is this document's sight list and it is pre-code declaration text; a line added there would edit a declaration and shift every §12e line, which is the defect this re-scope exists to remove. The pointer is carried at this amendment's head and foot instead, and whether §12d should carry one at P6 is the human's.
+
+---
+
+**Read this amendment first.** §12e's amendments correct each other only by a later one; this is the last, and it is where any earlier amendment's current state is written.
