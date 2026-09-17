@@ -3,7 +3,7 @@
 *Custodian's filing note (2026-09-16, not part of the architect's text): written verbatim from the architect's draft to this path by the owning-module rule (`docs/README.md:29`; the predicted diff is shell + kernel with `engine/` empty). Every `file:line` into `engine/ADMISSION-PREREGISTRATION.md` below uses the P3a branch's numbering (§13 C is `:316` there and `:248` on `main` until P3a merges; Amendment 3 is `:705-835` there and not yet on `main`); the `:234` cite for the P6 sight list is imprecise — the four strings are pinned at `frontends/shell/src/admission/formatRefusal.test.ts:183-189`. Spot-checked by the custodian against the worktree and `main`: the ruling quotes, boundaries 3–4 and 10, G-A2, ADR-010 rules 5–6, the Proposed ADR-016 amendment's rule 3, `App.tsx:1108`, `liveTicketSet.ts:41-52`, `kernel/src/skp.rs:666-672` and `:1005-1007`, `formatRefusal.ts:70-83`, `pick.ts:26-28`/`:53`, `WorkingCanvas.tsx:116`/`:196-200`, `client.ts:58-65`, `src-tauri/src/lib.rs:368` — all resolve as quoted. A worker re-derives every cite at P3b's own head.*
 
 *Drafted 2026-09-16 by the architect agent on the custodian's brief, from: the human's ruling of
-2026-09-16 (`DECISIONS-PENDING.md:42-46`, question round 4); `state/NEXT-CUT.md`'s P3 row (`:103`)
+2026-09-16 (round 4, item 1); `state/NEXT-CUT.md`'s P3 row (`:103`)
 and settled boundaries 3–9 (`:48-82` — **note**, the brief passed to this consult cited `:50-71`;
 the boundaries as read in the tree run `:48-82`, boundary 3 opening at `:48` and boundary 9 closing
 at `:82`); `engine/ADMISSION-PREREGISTRATION.md` §12b G-A2 (`:221`), §13 C (`:316`) and §13 D
@@ -47,7 +47,7 @@ inferred from the split.
    - and a correction of Amendment 2's own claim that `ticket_is_live` *"gained the caller it was
      written for"*: *"That was untrue of the tree: the only caller was reached through a constructor
      no product code ever called, so the method was dead in every build that shipped."* (`:823-826`).
-2. **The human split the piece on those findings** (`DECISIONS-PENDING.md:44`, verbatim):
+2. **The human split the piece on those findings** (round 4, item 1, verbatim):
    *"P3b gets its own preregistration and gates: the owner-side invalidation (residency cleared,
    picks refused — the consequence P3's own row promised), the kernel-authoritative dead-ticket
    refusal wired with a real caller and correct unknown-handle behaviour, and the §12e amendment
@@ -336,7 +336,7 @@ never an edited prediction):
 
 Every cross-module path is proven by **one end-to-end test from the real shape** — the real kernel
 terminal bytes, the real thrown SKP error, a real `SkpHost::viewport_query` ticket at redemption
-(the human's class fix, `DECISIONS-PENDING.md:46`).
+(the human's class fix, round 4, item 1).
 
 **Kernel (`kernel/tests/session_generation.rs`, extending the file P3a already owns):**
 
@@ -407,7 +407,7 @@ terminal bytes, the real thrown SKP error, a real `SkpHost::viewport_query` tick
 (×2 managers + deps), `ticket_liveness`, `TicketLiveness`, `SkpHost::generations`, `ticket_only`'s
 third parameter, `isSourceChangedRefusal`, `formatTerminalRefusal`, `PickSessionEnded`,
 `latchedHoverReadout`, `handleSessionEnded` — the PR body lists the **product** caller by
-`file:line`. A test-only caller does not count (`DECISIONS-PENDING.md:44`). The one declared
+`file:line`. A test-only caller does not count (round 4, item 1). The one declared
 exception is `dead_ticket_count`, in the named instrument category (§2c.4).
 
 ---
@@ -489,17 +489,17 @@ recorded as a §10 amendment — never tuned to a result.
 
 1. **A subscriber-less callback, option, code path or `pub` item.** Any item added without a product
    caller named by `file:line` in the PR body. A test-only caller does not count
-   (`DECISIONS-PENDING.md:44`). The named exception is the instrument category of §2c.4.
+   (round 4, item 1). The named exception is the instrument category of §2c.4.
 2. **A test encoding an imagined interface.** Any test whose input is an invented string, shape or
    signature where the real producer's output exists and could have been pinned
-   (`DECISIONS-PENDING.md:46`).
+   (round 4, item 1).
 3. **A fabricated source-change for an unknown handle.** Any refusal that says or implies the source
    changed for a handle the kernel has no record of (`docs/01` principle 8;
    `ADMISSION-PREREGISTRATION.md:742-744`).
 4. **A residency clear that leaves pickable geometry.** Any path that clears the visible view without
    latching picks, or that answers a hover with silence rather than the named refusal
    (ADR-010 rule 5, `:68`).
-5. **A release that includes P3a without P3b** (`DECISIONS-PENDING.md:44`, verbatim: *"No release
+5. **A release that includes P3a without P3b** (round 4, item 1, verbatim: *"No release
    includes P3a without P3b."*).
 6. **A machine prefix reaching an operator.** Any `engine.*`/`publish.*` code rendered as raw text in
    a status, banner or readout.
@@ -538,6 +538,10 @@ recorded as a §10 amendment — never tuned to a result.
   (`frontends/shell/src/admission/formatRefusal.ts:52-63`; the set pinned at
   `formatRefusal.test.ts:183-189`). The two strings P3b **adds** — the pick refusal and the session-ended
   status line — join that sight list rather than being settled here.
+
+  *(2026-09-17, Amendment 14: read the last amendment first — §10's amendments correct each other
+  only by a later one, so the current corrected state of any earlier amendment's claims is this
+  document's newest amendment, not the one a top-to-bottom reader reaches first.)*
 
 ---
 
@@ -1038,3 +1042,52 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 ---
 
 **(5) The nit: `state/NEXT-CUT.md`'s true range for boundary 4's policy sentence.** Both §2e (`:295`) and `engine/ADMISSION-PREREGISTRATION.md` Amendment 6 item 4 (`:1362`) cite `state/NEXT-CUT.md:60-63` for the sentence beginning *"The policy does not establish snapshot consistency"*. At this head that sentence runs `state/NEXT-CUT.md:59-61` (it opens mid-line at `:59` and closes at `:61`) — the range Amendment 11 (b) (`:950`) already cites. Stated once here; `engine/ADMISSION-PREREGISTRATION.md`'s own Amendment 10 records the same correction for its `:1362`.
+
+---
+
+### Amendment 14 -- class 3 for (a)-(d); (e) fits no pre-declared class (the same gap Amendment 11 (b) has, routed rather than forced). Written 2026-09-17, a fresh worker's final record-fidelity append under round 12, item 2, closing the architect and reviewer attempt-4 findings. Amendments 1-13 are byte-untouched; this item states what is true instead.
+
+**Written after the gates' attempt-4 findings were seen.** §10's rule, honoured in this line.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-129`): class 3 for (a)-(d) (cite/reference form fix, mechanical, never changes a claim); (e) is a P6 sight-list addition that fits none of the five pre-declared classes -- routed as a gap, not forced into one (the same gap `:1021` names for Amendment 11 (b)).
+
+---
+
+**(a) Seven body-site ledger cites, converted (round 12, item 1 (a); `docs/PREREGISTRATION-TEMPLATE.md:135`).** Every `DECISIONS-PENDING.md:NN` cite in §0-§9 named round 4, item 1 (the round-4 RULED block has only that one item); each is edited in place, cite form only, quoted text unchanged:
+
+| site | old form | new form |
+| --- | --- | --- |
+| `:6` | `DECISIONS-PENDING.md:42-46`, question round 4 | round 4, item 1 |
+| `:50` | `DECISIONS-PENDING.md:44`, verbatim | round 4, item 1, verbatim |
+| `:339` | `DECISIONS-PENDING.md:46` | round 4, item 1 |
+| `:410` | `DECISIONS-PENDING.md:44` | round 4, item 1 |
+| `:492` | `DECISIONS-PENDING.md:44` | round 4, item 1 |
+| `:495` | `DECISIONS-PENDING.md:46` | round 4, item 1 |
+| `:502` | `DECISIONS-PENDING.md:44`, verbatim | round 4, item 1, verbatim |
+
+**(b) Carried item -- Amendment 10 (a)'s count is superseded, not restated.** Amendment 10 (a) (`:878`) counts how many of its cited lines resolve against their targets; `:657` (Amendment 4 (f))'s `DECISIONS-PENDING.md:44` cite is not among the ones it lists as not resolving, and round 12, item 1 (a) now retires that citation form regardless of whether it resolved. The count at `:878` is superseded; no replacement count is given, since the citation form it measured is retired, not re-verified. The index below carries `:657` and `:563`'s replacement forms instead.
+
+**(c) Carried item / B-2 -- Amendment 13 (1)'s two reproductions of `:900` (`:990-996`) are references now, not quotes.** Each was introduced as "byte for byte" for "the line" but reproduced a mid-line span only (162 of 766 characters), with no `…` at either cut. Corrected reference, no reproduction: `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:900 @ a955bee sha256:8d78fd391179b89d7d148ab32f0e4d76396c88c5c3571a6691d0e38dc3ecbfbf` (pre-edit) and `:900 @ 0db7e57 sha256:d8fc6c1356dfb4f80443be0faa1f733296ca5c13cdd1619ad78dbfb04ad365d2` (post-edit) replace both blockquotes; the retained spans were already found byte-exact against both revisions, so only the "byte for byte … the line" framing was wrong, and this reference form does not repeat it.
+
+**(d) Three more should-fix items, one sentence each.**
+
+1. Amendment 13 (3) item 3 (`:1020`) undercounts Amendment 12 as "four passage corrections" against its own "six things" total; Amendment 12 in fact made four passage corrections, confirmed two driver-output quotes already correct, and corrected two cite pairs -- six items of three kinds, not one kind of six -- stated once here, `:1020` not edited.
+2. Amendment 13's "Amendments 1-12 are byte-untouched" (`:984`) and its "Amendments 1-11 are byte-untouched" (`:954`, quoted there as false) both use the per-commit reading -- true of the commit that wrote each amendment, false only of the cumulative state after `0db7e57` edited `:900` one commit later -- and that reading is what both sites mean; neither is edited.
+3. Amendment 11 (b) (`:950`) names its own kind ("a P6 sight-list addition") but carries no class number, as `:1021` says; none of the five pre-declared classes (`docs/PREREGISTRATION-TEMPLATE.md:101-129`) describes an evidence-driven sight-list addition rather than a ruling's scope-narrowing (class 5's own text), so none is assigned here either -- the same gap (e) below has, routed rather than forced.
+
+**(e) A sight-list addition, beneath §9's list, not inside it.** "Read the last amendment first" is appended as a dated line under §9's Operator bullet (`:531-540`), per round 12, item 2's "the superseded index and the sight-list line." No pre-declared class covers an addition of this kind (see (d)3 above); routed, not forced.
+
+---
+
+**Superseded as of this amendment.**
+
+| site | earlier line, cite or claim | superseded by |
+| --- | --- | --- |
+| Amendment 3 (c) table, `:563` | `DECISIONS-PENDING.md:20-24`/`:22`(×4)/`:24`(×3), corrected there to `:42-46`/`:44`/`:46` | both forms name round 4, item 1; retired by the round+item citation, which does not re-shift on a further merge |
+| Amendment 4 (f), `:657` | `DECISIONS-PENDING.md:44` | round 4, item 1 |
+| Amendment 10 (a), `:878` | its cite-resolution count | superseded per (b) above; no replacement count given |
+| Amendment 13 (1), `:990-996` | the two "byte for byte … the line" reproductions of `:900` | the reference forms in (c) above |
+| Amendment 13 (3) item 1, `:1018` and item 2, `:1019` | `DECISIONS-PENDING.md:26` | round 9, item 1 |
+| Amendment 13 (3) item 4, `:1021` | `DECISIONS-PENDING.md:22`, item 1 | round 10, item 1 (form only, already so identified there) |

@@ -1368,7 +1368,7 @@ assertion is altered.
 - **The claim is about this client, not about the file.** Nothing here says a session up to the detection was a snapshot (A1), and no test asserts one.
 - **The end-to-end evidence is owed.** §4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** — the reason is recorded in P3b's §10 Amendment 4 (e) with its two blockers, and it is owed before P3b's gates conclude. Until then every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run.
 - **The post-check's own cost still has no shell-side carrier.** Amendment 5 (vi)'s open item stands unchanged: the Tauri shell installs `EngineSourceFactory::ticket_only`, whose `connection_reports` is `None`, and its stderr is unattached from the desktop. P3b's preregistration does not name that surface, so P3b built nothing for it.
-- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:796-802` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
+- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:797-803` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
 
 ---
 
@@ -1522,3 +1522,36 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 ---
 
 **(4) Checked and not carried here: whether a merge-falsified "resolved when main merges" note lives in this document too.** It does not. The only instance of that shape — *"this branch's own `DECISIONS-PENDING.md` does not yet contain it. … Resolved when `main` next merges into this branch."*, false since merge `7286c81` landed — sits in `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:970` (Amendment 12), corrected there by that document's own Amendment 13 (3) item 2. This document's Amendment 9 cites `DECISIONS-PENDING.md:45` and `:48`, both rulings long since present on `main` and on this branch, with no comparable "not yet merged" claim anywhere in Amendments 1-9.
+
+---
+
+### Amendment 11 -- class 3, mechanical, no claim changed. Written 2026-09-17, a fresh worker's final record-fidelity append under round 12, item 2, closing the architect and reviewer attempt-4 findings and converting every ledger line-cite in this document to the round+item form. Amendments 1-10 are byte-untouched; this item states what is true instead.
+
+**Written after the gates' attempt-4 findings were seen.** §12e's rule, honoured in this line.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-129`): class 3 throughout (cite/reference form fix, mechanical, never changes a claim).
+
+---
+
+**(1) `kernel/src/skp.rs:796-802` corrected to `:797-803`, in place.** `:1371` cited the live-generation pre-check block one off at both ends, the same defect class the P3b comment-fix round already corrected at this document's own `:840-846` and at the sibling document's `:1006` (its item 5). Corrected in place at `:1371`: this is a stale cross-reference, not a claim, per the template's class 3.
+
+**(2) B-1 -- Amendment 10 (1)'s charge against Amendment 9 (`:1492`) is itself an unmarked elision.** It quotes Amendment 9's introduction (`:1470`) only up to a backtick, dropping the parenthetical in which Amendment 9 names its own head cut, with no `…` marking the drop. Corrected reference, no reproduction: `engine/ADMISSION-PREREGISTRATION.md:1470 @ 60ece22 sha256:b62f1777e3a9de9b404cc1e013c93f1caff2eb299ffaf9fcbf76297ce8260bbc` is that introduction sentence whole, parenthetical included; Amendment 10 (1)'s other two defects against `DECISIONS-PENDING.md:45` stand as it found them, and neither Amendment 9 nor Amendment 10 is edited.
+
+**(3) 465 vs 467 -- what is counted.** `:1498` reproduces round 5, item 1 complete: 465 characters is the ruling's own quoted span inside its source's `**"` … `"**` pair; 467 is that span plus the two `"` marks the source carries around it. Both figures are correct, each for what it counts; `:1498` already says so and is not edited.
+
+**(4) Every `DECISIONS-PENDING.md` line-cite in this document, converted.** Round 12, item 1 (a) (`docs/PREREGISTRATION-TEMPLATE.md:135`): ledger rulings are cited by round and item, never by line. `§12e` opens empty (`:238`), so every one of this document's ledger cites sits inside an amendment (5, 6, 9 or 10); none is edited in place, per §10's own append-only rule (mirrored for the sibling document at its `:876-878`) — each is retired in the index below instead.
+
+---
+
+**Superseded as of this amendment.**
+
+| site | old form | superseded by |
+| --- | --- | --- |
+| Amendment 5 (ix), `:1274` | `DECISIONS-PENDING.md:182` | not a "question round" ruling -- an entries-style block (`DECISIONS-PENDING.md:173-192`, "entries 59, 60, 61 …") with no round or item number; no round+item form exists to cite, so this stays a plain path:line reference, uncorrected |
+| Amendment 6 (iv), `:1381` | `DECISIONS-PENDING.md:44`, verbatim | round 4, item 1 |
+| Amendment 9 (1), `:1470` | `DECISIONS-PENDING.md:45` (already self-named "question round 5", item 1 in the same sentence) | round 5, item 1 -- form only, no change in fact |
+| Amendment 9 (2), `:1474` | `DECISIONS-PENDING.md:48` (already self-named "same round, item 4" in the same sentence) | round 5, item 4 -- form only, no change in fact |
+| Amendment 10 (1), `:1492`/`:1498` | `DECISIONS-PENDING.md:45`, reproduced complete at `:1500` | round 5, item 1; the reproduction itself is superseded by (2) above's reference form |
+| `kernel/src/skp.rs` cite, `:1371` | `:796-802` | `:797-803`, corrected in place by (1) above |
