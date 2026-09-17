@@ -739,3 +739,25 @@ place — code comments are not append-only) and into the entry-40 pass preregis
 Amendment 2). The instrument-surface half of the discipline — that an instrument never becomes SKP —
 is the proposed ADR-004 amendment (`docs/adr/PROPOSED-amendment-to-ADR-004-instrument-surface-never-
 skp.md`), still Proposed.
+
+**Amendment 28 (2026-09-18 — MADE AFTER THE REVIEWER'S READ OF THE FIRST DRAFT WAS SEEN; the owed
+correction ordered by round 14, item 3; not a change to any cell of this closed cut.)** §2e's first
+quoted row (structural handle, not a byte-run of the source) marks its own elision honestly, but
+under round 11, item 3's rider the elision still drops meaning: a qualifier — the phrase points at
+the one screen this piece's own harness targets, running at that screen's built-in cadence, never a
+cadence any runtime setting swaps in instead — and a negation — quietly
+letting power-saving behavior or a variable refresh rate reduce the actual presentation rate does
+not satisfy this budget — it only moves where the shortfall becomes visible — read here as class
+3's nearest fit under round 14, item 3's test-text exception, since the correction below points at
+where the quotation should be read, not at any claim it makes. Corrected reference:
+`docs/08_Testing.md:5` @ 79f698c403d8
+sha256:289ae3d58d1eba6beb4ec1f3b66574a6ffb7a0818d11fcb5975a40a378086077 — read there in full for the
+qualifier and the negation this row's elision dropped. Proof: the gate recomputes this pin against
+the cited commit, and round 14, item 3 is the ruling that ordered this note as the correction owed
+for that row.
+
+**Superseded index (this amendment's own close; round 12, item 1(e)'s element).** §2e's first
+quoted row is, from this amendment forward, read through the corrected reference above; nothing
+else in this document is superseded. This document names no P6 sight list of its own — its two
+"P6" mentions are narrative, naming the tester's phase, not a maintained list — so the pointer that
+"read the last amendment first" would otherwise join is, instead, this amendment's own first line.
