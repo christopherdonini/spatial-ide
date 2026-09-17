@@ -45,32 +45,19 @@ use spatial_engine::lod::{
 
 // ---------------------------------------------------------------------------------------------
 // The fixture, and the ladder every shared test reads.
+//
+// `polygons_100k()` itself is shared across this suite and `lod_tier_cancellation.rs` and
+// `lod_tier_measurements.rs` — `engine/tests/common/mod.rs`, which cargo's `tests/*.rs`
+// auto-discovery does not compile as its own test binary because it lives in a subdirectory. Its
+// regeneration is serialized and published atomically; see its doc comment for why, and
+// `two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file` below for the proof.
 // ---------------------------------------------------------------------------------------------
 
-/// `LOD-PREREGISTRATION.md` §3's `polygons-100k`, by absolute path.
-///
-/// The shared target directory is not inside a worktree, so this is read where it actually lives
-/// rather than resolved against `CARGO_MANIFEST_DIR`.
-const POLYGONS_100K: &str =
-    r"C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet";
+mod common;
+use common::polygons_100k;
 
 /// §3's `parcels-5gb`, for the `#[ignore]`d rows only.
 const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
-
-/// The spec `polygons-100k` was written from (`kernel/tests/slice_budgets.rs:472-486`), restated so
-/// an absent fixture is regenerated as the same bytes rather than as a different dataset.
-fn polygons_100k() -> PathBuf {
-    let path = PathBuf::from(POLYGONS_100K);
-    if !path.is_file() {
-        std::fs::create_dir_all(path.parent().expect("fixture dir")).expect("fixture dir");
-        write_geoparquet(
-            &path,
-            &FixtureSpec { features: 100_000, avg_vertices: 100, hole_every: 7, ..Default::default() },
-        )
-        .expect("regenerate polygons-100k");
-    }
-    path
-}
 
 struct Ladder {
     set: TierSet,
@@ -104,6 +91,105 @@ fn clear_tier_directory(source: &Dataset, cancel: &CancelToken) {
     if dir.exists() {
         std::fs::remove_dir_all(&dir).expect("clear the tier directory");
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The fixture's own regeneration race, proved directly against `common::polygons_100k` — not a
+// numbered T (`LOD-PREREGISTRATION.md` §4): this is about the test fixture's own concurrency
+// safety, not about a tier the builder produces.
+//
+// **`#[ignore]`d, deliberately, unlike every T above.** `POLYGONS_100K` is one absolute path shared
+// by every test in this binary (and by `lod_tier_cancellation.rs` and `lod_tier_measurements.rs` —
+// it is not resolved under `CARGO_TARGET_DIR` or `CARGO_MANIFEST_DIR`, so it is the *same* file
+// regardless of worktree). `ladder()`'s callers and `the_rejected_simplifier_...` and
+// `wkb_writer_round_trips_the_first_tier_written` each call `polygons_100k()` and then, moments
+// later, open that same path directly; `polygons_100k()`'s lock guarantees the file is complete the
+// instant any of those calls *returns*, but guarantees nothing about what a *different* thread does
+// to the path afterward. A first version of this test deleted the fixture unconditionally at its own
+// start, which is exactly such a thing — run un-ignored alongside the rest of this suite, it raced
+// two sibling tests' own reads and failed them both (`engine_opens_its_own_tier`,
+// `the_rejected_simplifier_is_the_one_that_emits_invalid_polygons`, both "No files found" /
+// `NotFound`, observed on this machine in that configuration). `#[ignore]` is what keeps this test's
+// own deletion from ever running at the same time as a sibling's read of the same shared path; run it
+// by itself, as the message below says.
+//
+// The suite-wide version of the same proof — regeneration racing for real, under the suite's own
+// parallel tests, with nothing deleting the fixture *while the suite is running* — is the "green
+// twice" evidence run: delete `polygons-100k.parquet` once, *before* `cargo test` starts, then run
+// the un-ignored suite. Every caller that reaches `polygons_100k()` from an absent fixture is then
+// racing the *lock*, not a sibling's mid-flight read.
+// ---------------------------------------------------------------------------------------------
+
+/// A whole-file SHA-256, read streaming rather than loaded whole (the fixture is 151 MB).
+fn sha256_of_file(path: &Path) -> String {
+    use sha2::{Digest, Sha256};
+    let mut file = std::fs::File::open(path).expect("open for hashing");
+    let mut hasher = Sha256::new();
+    std::io::copy(&mut file, &mut hasher).expect("hash");
+    format!("{:x}", hasher.finalize())
+}
+
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, remove the `let _guard =
+// GENERATE.lock().expect("lock");` line from `polygons_100k` (the temporary-path write, the
+// generation counter and the rename are all left exactly as they are) →
+// two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file fails on its last
+// assertion. **Observed** on this machine, fixture deleted first:
+//   thread 'two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file' panicked at
+//   engine\tests\lod_tier_builder.rs:187:5:
+//   assertion `left == right` failed: two concurrent callers of an absent fixture triggered 2
+//   generation(s); the lock exists so every caller but the first waits for the one already in
+//   flight instead of starting its own
+//     left: 2
+//    right: 1
+// The size and sha256 assertions above it still passed in this run — on this machine's NTFS, two
+// threads independently writing the *same deterministic* bytes to the shared temporary name did not
+// corrupt it — which is exactly why this test does not rely on corruption: it is
+// `generations_performed()`'s count, not the file's content, that only the lock keeps at one.
+#[test]
+#[ignore = "deletes the one polygons-100k.parquet every test in this binary (and the other two LOD \
+            suites) shares; run it by itself: cargo test -p spatial-engine --test lod_tier_builder \
+            --features fixture -- --ignored --exact \
+            two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file --nocapture"]
+fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
+    let path = PathBuf::from(common::POLYGONS_100K);
+    let _ = std::fs::remove_file(&path);
+    assert!(!path.is_file(), "the fixture must be absent for this test to exercise regeneration");
+    let before = common::generations_performed();
+
+    // Each thread reads back its *own* view of the file the instant its own call to
+    // `polygons_100k()` returns, rather than the test reading the path once after both threads have
+    // joined — that is what "both threads get a complete file" checks: not that the path is correct
+    // eventually, but that every return of `polygons_100k()` is already backed by a complete file.
+    let (a, b) = std::thread::scope(|scope| {
+        let read_back = || {
+            let p = polygons_100k();
+            let bytes = std::fs::metadata(&p).expect("stat the published fixture").len();
+            let sha = sha256_of_file(&p);
+            (p, bytes, sha)
+        };
+        let ta = scope.spawn(read_back);
+        let tb = scope.spawn(read_back);
+        (ta.join().expect("thread a"), tb.join().expect("thread b"))
+    });
+
+    // `LOD-PREREGISTRATION.md:146`'s declared table row for `polygons-100k`.
+    const DECLARED_BYTES: u64 = 151_812_642;
+    assert_eq!(a.0, path, "thread a's path is the fixture's own path");
+    assert_eq!(b.0, path, "thread b's path is the fixture's own path");
+    assert_eq!(a.1, DECLARED_BYTES, "thread a's file is the declared, complete size");
+    assert_eq!(b.1, DECLARED_BYTES, "thread b's file is the declared, complete size");
+    assert_eq!(
+        a.2, b.2,
+        "both threads read back the same bytes from the one file this function ever publishes"
+    );
+
+    let generated = common::generations_performed() - before;
+    assert_eq!(
+        generated, 1,
+        "two concurrent callers of an absent fixture triggered {generated} generation(s); the lock \
+         exists so every caller but the first waits for the one already in flight instead of \
+         starting its own"
+    );
 }
 
 // ---------------------------------------------------------------------------------------------

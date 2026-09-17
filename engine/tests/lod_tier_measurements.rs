@@ -31,14 +31,14 @@ use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::dataset::Dataset;
-use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::lod::{
     build_tiers, TierBuildProgress, TierSet, LOD_BUILD_WORKERS, LOD_BUILD_WORKERS_ARM_S,
     LOD_TIER_COUNT,
 };
 
-const POLYGONS_100K: &str =
-    r"C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet";
+mod common;
+use common::polygons_100k;
+
 const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
 
 /// The same 40 GiB floor this crate's other 5 GB phases declare
@@ -53,22 +53,6 @@ const SAMPLES_100K: usize = 5;
 // ---------------------------------------------------------------------------------------------
 // Small helpers — none of them touches the code under measurement.
 // ---------------------------------------------------------------------------------------------
-
-/// `LOD-PREREGISTRATION.md` §3's `polygons-100k`, regenerated from the same seeded spec only if it
-/// is absent (`kernel/tests/slice_budgets.rs:472-486`), so this file never measures a different
-/// dataset and never rewrites one that is there.
-fn polygons_100k() -> PathBuf {
-    let path = PathBuf::from(POLYGONS_100K);
-    if !path.is_file() {
-        std::fs::create_dir_all(path.parent().expect("fixture dir")).expect("fixture dir");
-        write_geoparquet(
-            &path,
-            &FixtureSpec { features: 100_000, avg_vertices: 100, hole_every: 7, ..Default::default() },
-        )
-        .expect("regenerate polygons-100k");
-    }
-    path
-}
 
 fn free_bytes_on_c() -> Option<u64> {
     let out = std::process::Command::new("powershell")

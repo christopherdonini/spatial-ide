@@ -21,29 +21,14 @@ use std::time::{Duration, Instant};
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::dataset::Dataset;
 use spatial_engine::error::EngineError;
-use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::lod::{
     build_tiers, TierBuildProgress, LOD_BUILD_WORKERS, LOD_CANCEL_OBSERVED_CEILING_MS,
 };
 
-const POLYGONS_100K: &str =
-    r"C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet";
-const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
+mod common;
+use common::polygons_100k;
 
-/// `LOD-PREREGISTRATION.md` §3's `polygons-100k`, read by absolute path and regenerated from the
-/// same seeded spec only if it is absent (`kernel/tests/slice_budgets.rs:472-486`).
-fn polygons_100k() -> PathBuf {
-    let path = PathBuf::from(POLYGONS_100K);
-    if !path.is_file() {
-        std::fs::create_dir_all(path.parent().expect("fixture dir")).expect("fixture dir");
-        write_geoparquet(
-            &path,
-            &FixtureSpec { features: 100_000, avg_vertices: 100, hole_every: 7, ..Default::default() },
-        )
-        .expect("regenerate polygons-100k");
-    }
-    path
-}
+const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
 
 fn tier_directory(source: &Dataset) -> PathBuf {
     let (hash, _ms) =
