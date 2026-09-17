@@ -1,0 +1,7 @@
+Question round 13 — 2026-09-17 (custodian → human). One item: the LOD tier builder's post-PASS fix record, stopped under Rule 7 (DECISIONS-PENDING entry 105). Status beside it: round 12 recorded and applied (the mechanism in the template, both checklists, the worker brief and AI_DEVELOPMENT); P3b's final append and the checker's round dispatching under it now.
+
+1. #84's fix record. The piece passed both gates and the tester; the CI-only fixture race was fixed in tests alone and the suite is green; two scoped re-reads of the fix's record have failed — the second on the proof test's own recorded mutation, which quotes a line the same commit replaced, and a recorded failure site that now lands on a comment, with five should-fixes beside it. Every earlier finding is resolved in the tree.
+Options:
+  1. One final fresh-worker correction under round 12's mechanism — the quoted line brought current, the panic site labelled with the lines it was observed at, Amendment 12 recording the cite shift by reference within the ceiling, the five should-fixes, a superseded index — then re-read 3; a further record FAIL holds #84 for the architect's re-scope of the record, as you ruled for P3b (Recommended).
+  2. The architect re-scopes the record now — a shorter amendment set replacing Amendments 10–11's prose with references — before any worker.
+  3. Land #84 now with the record's defects owed in the PR body — a waiver of affirmative PASS on a record; refused for P3b because ADR-016's acceptance rests on that record, which is not the case here.

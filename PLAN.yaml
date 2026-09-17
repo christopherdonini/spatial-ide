@@ -775,6 +775,42 @@ nodes:
     summary: "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here"
     dates: {opened: 2026-09-17, done: null}
 
+  - id: governance-verify-quotes
+    title: "verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: in-progress
+    order: 3
+    depends_on: []
+    needs_human: {kind: click, minutes: 5}
+    gate: scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md
+    evidence: {branch: governance/verify-quotes}
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: [101]
+    summary: "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring"
+    dates: {opened: 2026-09-17, done: null}
+
+  - id: governance-verify-mutation-multiline-attrs
+    title: "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: 4
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate"
+    dates: {opened: 2026-09-17, done: null}
+
   - id: engine-tests-configured-connections
     title: "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)"
     kind: task
