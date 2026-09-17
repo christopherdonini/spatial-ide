@@ -52,6 +52,24 @@
 //   pick refusal (S5a, S5c) still pass, which is the point: they are the owner SAYING something,
 //   and S5b is the owner having DONE it. Record the observed failure, then revert.
 //
+//   OBSERVED 2026-09-17, performed once and reverted (run 6, report
+//   `e2e/out/source-changed-1789618937407.json`; section 10 Amendment 9), verbatim:
+//
+//     S5b: resident vertices are 188665 (features 10000), expected 0 -- the owner did not clear
+//     what it was showing
+//
+//   And S5a and S5c PASSED under it, exactly as predicted: those two are the owner SAYING
+//   something, S5b is the owner having DONE it. Both edits were reverted and run 7
+//   (`...-1789618985531.json`) is green from the reverted tree.
+//
+// ----------------------------------------------------------------------------------------------
+// THIS DRIVER PASSES. Runs 5 and 7 are green end to end (reports
+// `e2e/out/source-changed-1789618861740.json` and `...-1789618985531.json`, section 10
+// Amendment 9): resident 188665 -> 0 vertices, the session-ended status rendered and not
+// dismissible, and the hover at the formerly-occupied pixel showing the refusal rather than an id
+// or silence. The kernel's own detection is in the session log on the pre-check route:
+// `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`.
+//
 // ----------------------------------------------------------------------------------------------
 // HOW S2 GOT HERE, in three failed runs -- read this before editing the precondition.
 //
@@ -85,30 +103,32 @@
 // that a hover there ANSWERED before the change. S5c's own assertion is unweakened.
 //
 // ----------------------------------------------------------------------------------------------
-// KNOWN GAP AS OF RUN 4 (2026-09-17): S4 ASSERTS A GESTURE, NOT A QUERY.
+// WHY S4 ASSERTS A QUERY AND NOT A GESTURE (run 4's finding, corrected 2026-09-17).
 //
 // Run 4 (report `e2e/out/source-changed-1789618409392.json`, section 10 Amendment 8) got the
 // precondition RIGHT for the first time -- the notch loop found an interior-verified pixel at notch
 // 2 and the hover there answered with an id, so S2 passed on the strong path, not the fallback.
-// S3 and S4 passed. Then S5a, S5b and S5c all failed, and the render trace says why:
+// S3 and S4 passed. Then S5a, S5b and S5c all failed, and the render trace said why:
 //
 //   82 render-trace entries; the last `viewport_query` is at index 46; the pan begins at index 73;
 //   ZERO `viewport_query` lines follow it -- only view-state lines and one residency status.
 //
-// The tiled arm plans a query only for a covering tile that is not already resident, and at this
+// The tiled arm plans a query only for a covering tile that is not already resident, and at that
 // camera every covering tile was ("Showing all 10000 features in view", residentFeatureCount
-// 10000), so a small pan planned nothing. Every tile stream had also already reached its Completed
-// terminal before the mtime touch, so no stream was open to post-check either. Neither detection
-// path could fire, and the session log's source-change lines are empty -- a check that never ran,
-// not one that ran and found nothing.
+// 10000), so a 120x80 px pan planned nothing. Every tile stream had also already reached its
+// Completed terminal before the mtime touch, so no stream was open to post-check either. Neither
+// detection path could fire, and the session log's source-change lines were empty -- a check that
+// never ran, not one that ran and found nothing. Those three failures therefore said NOTHING about
+// the owner-side code: it was never handed a detection.
 //
-// So S5a/S5b/S5c's failures on that run say NOTHING about the owner-side code: it was never handed
-// a detection. S4's own note ("one pan issued; render trace quiet again") is true and insufficient.
-// Before T10 can mean anything, S4 must produce a real `viewport_query` AFTER the touch. What the
-// run shows about the options: pan far enough to leave the resident cover, zoom a notch (which
-// re-plans tiles), apply a filter through `queryWithFilter` (which always issues), or arrange the
-// change while a stream is still open. Which one T10 takes is a decision about what the test
-// claims and is not made in this file.
+// Section 4 T10's own words are "trigger one query (a pan)". **The requirement is the QUERY; the
+// parenthetical names the gesture.** So S4 now issues a bounded gesture ladder and asserts the
+// query: a pan larger than the viewport first (the literal T10 gesture, and what leaves the
+// resident cover), then one zoom notch if the tiled arm still plans nothing. Which rung produced
+// the query is recorded in `observation.queryProducedBy`. If neither does, the run stops and says
+// so rather than inventing a gesture T10 never named. Custodian's decision, recorded as a class-2
+// deviation in section 10 Amendment 9 -- a driver defect inside T10's own words, not a change to
+// what T10 claims.
 //
 // A run is bounded and never kills anything it did not start: `attachOrLaunch` attaches to an app
 // already on the CDP port and returns `launched: false`, in which case this script leaves it
@@ -320,13 +340,32 @@ function readoutShowsAnId(readout) {
   return readout !== null && /\bid \d/.test(readout.text);
 }
 
-async function doPan(page, rect, dx, dy) {
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  await page.mouse.move(cx, cy);
-  await page.mouse.down();
-  await page.mouse.move(cx + dx, cy + dy, { steps: 8 });
-  await page.mouse.up();
+/**
+ * Pans by MORE than one viewport, as a sequence of full-width drags.
+ *
+ * One drag cannot exceed the window: the pointer has to stay inside the canvas box, so the largest
+ * single displacement is roughly the box's own width. Leaving the already-resident tile cover needs
+ * more than that, so this repeats the drag -- each one carrying the map about 80% of a viewport in
+ * the same direction -- and reports the total displacement in CSS pixels for the record.
+ */
+async function panByViewports(page, rect, drags) {
+  const y = rect.top + rect.height / 2;
+  const fromX = rect.left + rect.width * 0.9;
+  const toX = rect.left + rect.width * 0.1;
+  for (let i = 0; i < drags; i++) {
+    await page.mouse.move(fromX, y);
+    await page.mouse.down();
+    await page.mouse.move(toX, y, { steps: 10 });
+    await page.mouse.up();
+  }
+  return { drags, cssPixelsPerDrag: Math.round(fromX - toX), totalCssPixels: Math.round((fromX - toX) * drags) };
+}
+
+/** How many `viewport_query` lines the render trace carries right now -- S4's own assertion reads
+ * this before and after each gesture, because the QUERY is what T10 requires and the gesture is
+ * only how it is provoked. */
+function viewportQueryCount(consoleHandle) {
+  return consoleHandle.renderTrace().filter((e) => /viewport_query/.test(e.text)).length;
 }
 
 /** The canvas status stack, split the way an operator reads it. */
@@ -605,11 +644,47 @@ async function main() {
     // next viewport_query, which is where the pre-check refuses (or, on the other route, where
     // the post-check's terminal arrives).
     // ------------------------------------------------------------------------------------
-    await runStep("S4-pan", async () => {
-      const rect = await requireCanvasRect(page);
-      await doPan(page, rect, 120, 80);
+    await runStep("S4-issue-one-query", async () => {
+      // **The QUERY is the assertion; the gesture is only recorded** (custodian's decision,
+      // 2026-09-17, on run 4). Section 4 T10 says "trigger one query (a pan)": the requirement is
+      // the query, and the parenthetical names the gesture that usually provokes it. Run 4 panned
+      // 120x80 px inside an already-resident tile cover, the tiled arm planned nothing, and ZERO
+      // `viewport_query` lines followed -- so that step asserted a gesture and not what T10
+      // declares. This is the correction, inside T10's own words.
+      //
+      // A bounded ladder, in the order the decision names, stopping at the first rung that produces
+      // a query: (1) a pan LARGER THAN THE VIEWPORT, the literal T10 gesture, which is what leaves
+      // the resident cover; (2) if the tiled arm still plans nothing, one zoom notch, which
+      // re-plans tiles by construction. No third rung: if neither issues a query, the run stops and
+      // says so rather than inventing a gesture T10 never named.
+      const before = viewportQueryCount(consoleHandle);
+      const ladder = [];
+
+      let rect = await requireCanvasRect(page);
+      const pan = await panByViewports(page, rect, 2);
       await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
-      return "one pan issued; render trace quiet again";
+      let after = viewportQueryCount(consoleHandle);
+      ladder.push({ rung: "pan-beyond-viewport", ...pan, queriesBefore: before, queriesAfter: after });
+
+      if (after === before) {
+        rect = await requireCanvasRect(page);
+        const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        const zoom = await zoomInOneNotch(page, consoleHandle, center);
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+        const afterZoom = viewportQueryCount(consoleHandle);
+        ladder.push({ rung: "zoom-one-notch", motion: zoom.motion, settled: zoom.settled, queriesBefore: after, queriesAfter: afterZoom });
+        after = afterZoom;
+      }
+
+      observation.queryLadder = ladder;
+      observation.queryProducedBy = after > before ? ladder[ladder.length - 1].rung : null;
+      if (after === before) {
+        throw new Error(
+          `S4: no viewport_query followed any gesture in the ladder, so the detection path was never ` +
+            `exercised and S5 below would be vacuous. Ladder: ${JSON.stringify(ladder)}`
+        );
+      }
+      return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)`;
     });
 
     // ------------------------------------------------------------------------------------

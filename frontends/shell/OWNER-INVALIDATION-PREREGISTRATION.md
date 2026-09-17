@@ -823,3 +823,46 @@ Two zoom notches were enough; the fallback was not taken; `observation.precondit
 **(f) What is now known, and what is still not.** Known, and new with this run: the full A9' mechanism does find a pickable interior pixel in this app (notch 2), so the precondition is solved; and the shipped default arm does **not** issue a query for a small pan once the dataset is fully resident. Still unknown, and unchanged since Amendment 4 (e): whether the owner-side chain clears residency, refuses picks and shows the status **in the running app** -- `S5a`, `S5b` and `S5c` have now executed, but against a session in which no change was ever detected, so they say nothing about that chain. **This piece still claims nothing about what an operator sees end to end.** Every claim in Amendment 4 (a) continues to rest on unit and integration assertions at named seams.
 
 **(g) What the next round needs, stated as the evidence leaves it and not chosen here.** T10's S4 must produce a real `viewport_query` after the touch. What the run itself shows about the ways to do that: a pan far enough to leave the resident cover, or a zoom notch (which re-plans tiles), or a filter Apply through `queryWithFilter` (which goes through `reissueUnrestricted` and always issues), or a change detected while a stream is still open. Which of those T10 should take is a decision about what the test claims, and it is not taken in this amendment.
+
+**Amendment 9 — class 2, a deviation from the preregistration's described mechanism, with the reason. Custodian's decision, 2026-09-17; the human sees it in the ledger. Written after the results were seen. T10 IS SATISFIED.**
+
+**(a) The deviation, and why it is one.** §4's T10 says *"trigger one query (a pan)"*. **The requirement is the QUERY; the parenthetical names the gesture.** Run 4's `S4` performed a 120x80 px pan and asserted only that the gesture happened -- and at a camera where the whole dataset was already resident, the tiled arm planned nothing, so no `viewport_query` followed and the detection path was never exercised. That was a **driver defect inside T10's own words**, not a change to what T10 claims and not a precondition failure: the human's round-9 fallback clause was never reached, because the precondition passed on its strong path. Corrected here, by the custodian, on that reading.
+
+**Run 4's failures, verbatim, and their reading** (report `frontends/shell/e2e/out/source-changed-1789618409392.json`; PID 44788; session log `C:\Users\Christopher\AppData\Local\dev.spatialide.shell\logs\session-1789618396.log`):
+
+> `S5a: no .canvas-session-ended block in the status stack; stack text was "Showing all 10000 features in view"`
+> `S5b: resident vertices are 188665 (features 10000), expected 0 -- the owner did not clear what it was showing`
+> `S5c: the hover still names an identity: "id 2322 @ (2604151.328, 1200300.000)"`
+
+Proof that those three said nothing about the owner-side code: the render trace carried 82 entries with its **last `viewport_query` at index 46** and the pan beginning at index **73**, with **zero** `viewport_query` lines after it; every tile stream had already reached its `Completed` terminal in the session log (`candidate-tile-terminal ... Completed`, 1789618402.4xx) before the mtime touch at ~1789618408; and `observation.sessionLog.sourceChangedLines` was **`[]`** -- a check that never ran, not one that ran and found nothing.
+
+**(b) What `S4` is now.** `S4-issue-one-query`: a bounded gesture ladder that stops at the first rung producing a query, asserting the **query** and recording the **gesture**. Rung 1 is a pan larger than the viewport (2 drags of 1024 CSS px each, 2048 px total -- one drag cannot exceed the window, so it repeats); rung 2, only if the tiled arm still plans nothing, is one `zoomInOneNotch`. No third rung: if neither issues a query the run stops and says so rather than inventing a gesture T10 never named. `observation.queryLadder` and `observation.queryProducedBy` carry the record.
+
+**(c) The three-run sequence, completed. Each from a fresh launch, each `launched: true`.**
+
+| run | report | PID / created | session log | outcome |
+| --- | --- | --- | --- | --- |
+| **5, green** | `e2e/out/source-changed-1789618861740.json` | 29968 / `20260917062048.418761+120` | `...\logs\session-1789618848.log`, 25 lines | **every step PASS**, exit 0 |
+| **6, mutation** | `e2e/out/source-changed-1789618937407.json` | 30520 / `20260917062203.942932+120` | `...\logs\session-1789618924.log`, 25 lines | **S5b FAIL by name**; S5a and S5c still PASS |
+| **7, reverted** | `e2e/out/source-changed-1789618985531.json` | 20184 / `20260917062251.934095+120` | `...\logs\session-1789618972.log`, 25 lines | **every step PASS**, exit 0 |
+
+Exe for all three: `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\spatial-ide-shell.exe`; each creation time falls after its own run's start, which is the ownership check. `fixture-integrity` PASS on all three: sha256 `fd0c74ab...fb49`, unchanged, so every mutation was an mtime touch and never a byte edit (§8.8).
+
+**(d) Run 5's steps, each with the evidence that proves it.**
+
+- `S2` PASS on the **strong** path, not the fallback: *"interior-verified pixel buffer(1115,181) at notch 2 -- 25-pixel neighbourhood entirely non-background; alpha 180 >= 150 (47,94,172,180); the hover there answers with an id; precondition: formerly occupied AND formerly hovered"*. `observation.precondition` reads `"formerly occupied AND formerly hovered"`.
+- `S4` PASS: *"a viewport_query followed the \"pan-beyond-viewport\" gesture (5 -> 7 in the render trace)"*. The first rung was enough; the zoom rung was not used.
+- **The detection fired, in the kernel, on the real path** -- `observation.sessionLog.sourceChangedLines`, verbatim: `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`, then `warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime})...`, then `candidate-session-ended-source-changed ds_5fc4839d...: every resident tile cleared; no further plan until reopen`. That is §2b's **pre-check** route, on a tile mint, reaching the owner.
+- `S5a` PASS: the session-ended block rendered, `dismissButtons: 0` (not dismissible), `code: "engine.source_changed"` in its own labelled element, and the operator's sentence and guidance carry no `engine.` code.
+- `S5b` PASS: `residentBefore {188665, 10000}` -> `residentAfter {0, 0}`. **This is boundary 4's "residency cleared", observed in the running app for the first time.**
+- `S5c` PASS: the readout at the formerly-occupied pixel is `className: "hover-readout hover-readout-session-ended"`, and its text is the pick refusal -- not an id, not silence. **This is "picks refused", observed in the running app.**
+
+**(e) The recorded mutation, performed once and reverted -- its observed failure, verbatim.** Mutation: delete `this.clearResidency();` from `viewportStreamManager.ts`'s source-changed branch **and** `canvas?.clearAllTiles();` from `candidateArmSession.ts`'s `endCandidateSession`. Observed on run 6:
+
+> `S5b: resident vertices are 188665 (features 10000), expected 0 -- the owner did not clear what it was showing`
+
+**And S5a and S5c still passed under it**, which is exactly the discrimination the driver's header predicted in advance: those two are the owner *saying* something, `S5b` is the owner having *done* it. Both edits were reverted from pre-mutation copies and run 7 is green from the reverted tree; `git status --porcelain` carries no product-file modification.
+
+**(f) What this discharges, and what it does not.** Amendment 4 (e)'s closing sentence -- *"this piece claims nothing about what an operator sees end to end"* -- **no longer holds, and is superseded here**: run 5 and run 7 are that evidence, and §4's T10 is satisfied. What is still NOT claimed: no snapshot claim about the session before the detection (A1); no timing, rate or performance figure anywhere in the driver or its reports (ADR-018); and the **post-check** route is not what these runs exercised -- the detection came through the **pre-check** on a tile mint, which is one of §2b's two routes. The post-check route remains covered by its unit and integration tests only, and by G-A2 at P5.
+
+**(g) Machine.** Every app was closed by PID after verifying ownership by `ExecutablePath` and creation time. After the last close: no `spatial-ide-shell.exe`, no `cargo.exe`, no `rustc.exe`, no `tauri`/`vite` node process, and neither 9223 nor 5180 listening.
