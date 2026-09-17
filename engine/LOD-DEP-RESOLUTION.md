@@ -181,3 +181,60 @@ The in-tree precedent for calling a Win32 API this way is `protocol/transport-ba
 (`GetProcessMemoryInfo` through the same crate). On a non-Windows target the reading is `None` and
 the preflight fails closed, which is recorded at the function's own site rather than left to be
 discovered.
+
+## 8. Notice set regenerated, 2026-09-17
+
+The last of the three gate steps the human's round-3 approval made the crate set subject to
+("the notice set regenerated and the lockfile diff read for new entries in the same PR"). The
+lockfile diff is §2 and §7 above; this is the regeneration, run on `engine/lod-tier-builder` at
+`8b17aca`.
+
+**Command and exit code.** From `frontends/shell`: `npm run generate:notice`
+(`node scripts/generateNotice.mjs`) — **exit 0**, and it did **not** print `generateNotice: FAIL`.
+Its whole output, after the prerequisite noted below:
+
+```
+generate:notice: frontends/shell/dist-metafile.json not found yet -- writing a provisional
+(bootstrap) NOTICE.txt without the packaged frontend's own npm section. The "build" script
+regenerates this file after its first `vite build`, with full scope.
+src/generated/NOTICE.txt (3427745 bytes)
+```
+
+**Two prerequisites, recorded rather than glossed.** (1) `frontends/shell/node_modules` was absent
+and was installed with `npm ci` (exit 0). (2) The generator aborts if
+`renderer/bundle-viewer/dist-metafile.json` is missing — set (1) of its four sets — so that package
+was installed (`npm ci`, exit 0) and built (`npm run build`, exit 0, esbuild, no vite and no cargo
+build). (3) `frontends/shell/dist-metafile.json` — set (2), the packaged frontend's own npm
+section — is produced only by `vite build`, which was **out of scope for this round**, so the
+generator ran in its declared **bootstrap** mode and says so in the text it wrote. **The set this
+gate step is about — set (3), the Rust crates — is complete either way**: it is read from
+`frontends/shell/src-tauri/Cargo.lock` via `cargo metadata --locked` / `cargo tree`
+(`frontends/shell/scripts/rustCrateNotices.mjs`) and does not depend on either metafile. A
+full-scope notice is produced by `npm run build`'s two-pass ordering and is what ships.
+
+**Linked crates, before and after this branch.** After: **352** linked crates for
+`x86_64-pc-windows-msvc` (`collectLinkedCrates()`). Before: **323**, derived rather than measured on
+a second checkout — `cargo metadata --locked` refuses a lockfile that does not match the manifests
+beside it, so `origin/main`'s lockfile cannot be read against this worktree's manifests, and no
+second checkout was made under this round's light-work constraint. The derivation: §7 records that
+this branch adds **29** packages to the shell lockfile and moves no existing version; all **29** are
+in the linked set (checked by name and version against `collectLinkedCrates()`'s output); so the
+linked set grew by exactly those 29.
+
+**Licence identifiers the new packages contribute, and the ADR-030 fail-closed step.** Across the 29,
+`extractSpdxIds` yields three identifiers: **`Apache-2.0`, `ISC`, `MIT`**. (The other expressions §2
+lists — `Zlib`, `BSD-3-Clause OR MIT OR Apache-2.0` — belong to packages the shell tree already
+carried; they are new to the *workspace* lockfile, not to the conveyed artifact.) Five of the 29 ship
+no licence file of their own and are therefore attributed through a canonical text — `geo 0.33.1`,
+`geo-traits 0.3.0`, `i_overlay 4.5.2`, `rstar 0.12.2` (all `MIT OR Apache-2.0`) and
+`i_key_sort 0.10.3` (`MIT`). `buildCanonicalLicenseTexts()` — the step that **throws** rather than
+shipping a notice with a gap — completed, and the canonical texts the whole linked set needs are
+still exactly the four this repository carries in `LICENSES/`: **`Apache-2.0`, `BSD-3-Clause`,
+`MIT`, `MPL-2.0`**. **No fifth identifier is introduced**, so no new file under `LICENSES/` is owed.
+`ISC` needs none: `earcut 0.4.5` ships its own licence text, which is what the notice embeds.
+
+**Where the output lands, and why there is nothing to commit but this record.**
+`frontends/shell/src/generated/NOTICE.txt` — **untracked and gitignored** (`.gitignore:13`,
+`frontends/shell/src/generated/`), as are the bundle-viewer's build outputs
+(`.gitignore:6` `dist/`, `.gitignore:8` `dist-metafile.json`). The notice is generated at build time
+from the lockfile, never committed, which is why this section is the artifact of the gate step.
