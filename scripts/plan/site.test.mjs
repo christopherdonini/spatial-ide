@@ -239,6 +239,12 @@ test('governance group: the verify-quotes baseline entry count renders as its ow
   assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>21</span>'));
 });
 
+// RECORDED MUTATION: changing the ternary in renderHealthStrip's `governanceGroup` row to
+// `esc(String(governanceBaselineCount))` unconditionally (scripts/plan/site.mjs) makes
+// governance_group_a_missing_unparsable_baseline_file_renders_unknown_never_a_false_zero FAIL:
+// "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value" on the
+// `<span>verify-quotes baseline entries</span><span>unknown</span>` assertion (a `null` count prints
+// the literal string "null" instead of the honest "unknown").
 test('governance group: a missing/unparsable baseline file renders "unknown", never a false zero', () => {
   const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
   assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
