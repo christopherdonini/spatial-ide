@@ -1476,3 +1476,49 @@ Because the misquote dropped G-A2's own "status text verbatim" clause, the list 
 > "Adopt the architect's sentence as written, with one addition: the accessor's doc names the test that calls it, so the caller-grep can verify the exemption instead of trusting the words "test-only." An exemption that can't be grepped is a hole in the rule it exempts from."
 
 **(3) What changed and what did not.** At both sites, the meaning of the quoted ruling is unchanged either way -- a reader takes the same instruction from the single- or double-quoted rendering; only the glyph marking the ruling's own nested quotation changed, from the human's double quotes to a single-quote substitute. Neither `:949-951` nor `:993-995` is edited by this amendment (Amendments 1-8 stay byte-untouched); this is the correction, appended, per the round-7 fence.
+
+---
+
+### Amendment 10 -- class 3, mechanical, no claim changed. Written 2026-09-17, a fresh worker's verification pass on the reviewer and architect gates' attempt-3 findings (2026-09-17, appended)
+
+**Written after the verification pass that found them.** §12e's rule, honoured in this line. **Amendments 1-9 are byte-untouched**; this item corrects one misquote in Amendment 9, one unmarked elision in Amendment 7, and mirrors one shell correction.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **class 3** throughout (cite/quote fix, mechanical, never changes a claim).
+
+---
+
+**(1) Amendment 9 (1)'s reproduction (`:1472`) is not byte for byte against its named source, and drops the ruling's final clause unmarked.** Introduced *"Reproduced below byte for byte, from `DECISIONS-PENDING.md:45`"*, the blockquote at `:1472` reads in full:
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6."
+
+Two defects against the source (`DECISIONS-PENDING.md:45`, "RULED 2026-09-16 -- question round 5", item 1): it adds an opening `"` before *"a false status string"* and a closing `"` after *"wording at P6."* — positions the source carries no quote mark at, since the source's own outer quote pair opens before *"Accept as pre-committed"* and closes after *"the P6 sight list."*; and it drops the ruling's own final clause, *"P3b starts after P3a lands; its two new strings join the P6 sight list."*, with no `…` marking the cut.
+
+The ruling, reproduced complete and byte for byte, from `DECISIONS-PENDING.md:45` (465 characters; `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:549` already carries it complete, and the two are script-compared identical):
+
+> "Accept as pre-committed with one change to (d): a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6. P3b starts after P3a lands; its two new strings join the P6 sight list."
+
+---
+
+**(2) Amendment 7 (`:1405-1407`) elides the kernel's own limitation sentence with `…`, dropping negations and a qualifier, and drops the three lines' leading timestamps unmarked.** It reads:
+
+> `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). …`
+> `candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — …`
+
+The three lines, read as content from `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-1789618848.log:19-21`, complete and byte for byte:
+
+> `1789618859411 tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `1789618859412 warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading`
+> `1789618859412 candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — engine.source_changed: refused: the source file changed while it was open ({mtime}). This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading`
+
+Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *"This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading"* — two negations (*"does not establish"*, *"cannot detect every"*) and a qualifier (*"only after that query has finished reading"*), which the round-10 rule forbids an elision from dropping even when marked. Amendment 7 also opened each quoted line at its own message text, dropping the leading epoch-millisecond timestamp (`1789618859411` / `1789618859412` / `1789618859412`) with no mark at all.
+
+---
+
+**(3) The nit: `state/NEXT-CUT.md`'s true range for boundary 4's policy sentence.** Amendment 6 item 4 (`:1362`) cites `state/NEXT-CUT.md:60-63` for the sentence beginning *"The policy does not establish snapshot consistency"*. At this head that sentence runs `state/NEXT-CUT.md:59-61` (it opens mid-line at `:59` and closes at `:61`) — mirroring the identical correction `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` Amendment 13 (5) makes for that document's own `:950`/`:295` cites of the same sentence. `:1362` is not edited; this states where the range actually falls.
+
+---
+
+**(4) Checked and not carried here: whether a merge-falsified "resolved when main merges" note lives in this document too.** It does not. The only instance of that shape — *"this branch's own `DECISIONS-PENDING.md` does not yet contain it. … Resolved when `main` next merges into this branch."*, false since merge `7286c81` landed — sits in `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:970` (Amendment 12), corrected there by that document's own Amendment 13 (3) item 2. This document's Amendment 9 cites `DECISIONS-PENDING.md:45` and `:48`, both rulings long since present on `main` and on this branch, with no comparable "not yet merged" claim anywhere in Amendments 1-9.

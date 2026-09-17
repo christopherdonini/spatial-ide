@@ -978,3 +978,63 @@ The session-ended status renders through `RefusalBlock`, which puts the typed co
 Neither is requoted here: both already match their real source exactly, and reproducing either passage a second time in this tracked file would let the checker resolve it against this amendment instead of against the untracked report it actually comes from, which is not what checking it means. Both remain a FAIL under the checker afterward, for a structural reason stated plainly here: their real source is not in the tracked tree for the checker to search, not because the quoted text is wrong.
 
 **(4) Two stale `kernel/src/skp.rs` cites, not quotes, recorded corrected.** `:679` (§7g item 1) and `:817` (Amendment 8 (d) item 3) each cite `kernel/src/skp.rs:796-802` for the live-generation pre-check block. At this head that block is `kernel/src/skp.rs:797-803` (`if self.generations.live_or_mint(&dataset_name).is_none() { return Err(...); }`, opening `if` at `:797`, closing brace at `:803`) -- off by one at both ends, the same defect class engine Amendment 8 and the P3b comment-fix round already corrected elsewhere in this tree. Recorded here rather than edited in place, per §10's append-only rule.
+
+---
+
+**Amendment 13 — class 3, mechanical, no claim changed. Written 2026-09-17, a fresh worker's verification pass on the reviewer and architect gates' attempt-3 findings. Amendments 1-12 are byte-untouched; this item corrects what they got wrong, one item at a time.**
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+---
+
+**(1) Commit `0db7e57` edited Amendment 10 (a) (`:900`) in place, under two later "byte-untouched" declarations that were false when written.** The pre-edit line, `git show a955bee:frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:900`, byte for byte:
+
+> Two examples for a reader to check the class by: `liveTicketSet.ts`'s cite of the live-generation pre-check was `kernel/src/skp.rs:666-672` and is now `:796-802`;
+
+The same commit's own post-edit line, `git show 0db7e57:frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:900`, byte for byte:
+
+> Two examples for a reader to check the class by: `liveTicketSet.ts`'s cite of the live-generation pre-check was `kernel/src/skp.rs:666-672` and is now `:797-803`;
+
+That commit is the one that wrote Amendment 11, whose own `:942` says *"Amendments 1–10 are byte-untouched"* — false when written, in the same commit that edited Amendment 10. Amendment 12's commit (`a93bd12`) repeats the same false shape at `:954`, *"Amendments 1-11 are byte-untouched"*, one commit downstream of the edit. Both are recorded false here; neither is edited.
+
+**The seven in-place code-comment cite fixes commit `1176a48` made, listed by file:line at this head** (from `git show --stat 1176a48` and its diff; none is an amendment, so none needed append-only treatment):
+
+1. `kernel/tests/session_generation.rs:266` — `SkpHost::viewport_query` cite `kernel/src/skp.rs:629` corrected to `:760`.
+2. `kernel/tests/session_generation.rs:267` — the pre-check refusal cite `kernel/src/skp.rs:682-687` corrected to `:797-803`.
+3. `kernel/tests/session_generation.rs:372-373` — the `TICKET_TTL + TERMINAL_ENTRY_MAX_AGE` cite `kernel/src/skp.rs:408-414` corrected to `:517` (documented `:506-508`).
+4. `kernel/src/skp.rs:711` — `Self::new`, `:562` corrected to `SkpHost::new`, `:689`.
+5. `frontends/shell/src/streaming/liveTicketSet.ts:62`, `tileViewportStreamManager.test.ts:1421` and `tileViewportStreamManager.ts:944` — the same live-generation pre-check cite, `kernel/src/skp.rs:796-802`, corrected to `:797-803` at all three sites.
+6. `frontends/shell/src/streaming/tileViewportStreamManager.ts:751` — the untiled sink cite `candidateArmSession.ts:1277-1338` corrected to `:1277-1412`.
+7. `kernel/src/lib.rs:416` — the `isSourceChangedTerminal` cite `liveTicketSet.ts:51-53` corrected to `:52-54`.
+
+---
+
+**(2) Amendment 12 (3) (`:975`) names Amendment 8 for `:775`.** `:775` sits inside Amendment 7, which spans `:761-790` (its own header at `:761`; Amendment 8's header opens at `:791`). Corrected: `:775` is Amendment 7's, not Amendment 8's.
+
+---
+
+**(3) Five more record-fidelity slips, one sentence each.**
+
+1. `:960` says *"including all three em dashes in the sentence"*; the ruling it describes is reproduced again at `:964` (Amendment 12's own copy of Amendment 8's `:795` rendering) and, checked against its source (`DECISIONS-PENDING.md:26`), carries **four** em dashes, not three.
+2. `:970`'s *"this branch's own `DECISIONS-PENDING.md` does not yet contain it.* … *Resolved when `main` next merges into this branch."* is false at this head: the merge (`7286c81`, "Merge remote-tracking branch 'origin/main' into cut/briefa-p3b") is already in this branch's history, and the round-9 ruling it carried is present at `DECISIONS-PENDING.md:26`; `:795`'s only mismatch against it is the plain prime-vs-apostrophe difference Amendment 12 (1) already names, corrected at `:968`.
+3. `:954` says *"this item corrects five passages the checker found inside them"*; counting item (4)'s two cite corrections alongside items (1)-(3)'s four passage corrections, Amendment 12 corrects **six** things, not five.
+4. Amendment 11 (b) (`:950`) carries no class marker; it is a class-5 record of the human's round-10 ruling applied (`DECISIONS-PENDING.md:22`, item 1: *"the shell's mirror amendment (four comment cites, three ranges, the small-pan/no-query limitation added to §9's P6 sight list)"*), not a self-originated class-3 finding.
+5. `:972` cites `:378` for the T6 declaration sentence; the sentence *"`reportViewportOutcome`'s catch driven with a real `SkpCallError` built from X-3"* spans `:378-379`.
+
+---
+
+**(4) §2e's ADR-016 rule-3 reproduction (`:296-300`) is not byte for byte against its named source.** Introduced *"verbatim from the Proposed draft (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`)"*, §2e's quote is shortened and single-quoted. The source span, `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`, reproduced here byte for byte:
+
+> **3. Change handling — the read-around policy, declared.** Checks run **before every query issue
+> and after every stream terminal**. A detected change invalidates G: new tickets refused under G,
+> in-flight producer streams cancelled through the **existing** cancel, residency cleared, picks
+> refused until reopen, and a typed status "source changed during use". Its limitation, stated here
+> and in KNOWN-LIMITATIONS in these words: the policy **"does not establish snapshot consistency,
+> cannot detect every in-place modification, and may detect a change during a query only at the
+> post-check"** **[Brief A boundary 4, verbatim]**.
+
+Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`) and re-types the nested double quotes of `"source changed during use"` (source `:55`) as single quotes. §2e stays as written, per Amendment 10 (a)'s own rule that §0–§9 are not re-derived in place; this amendment is the record.
+
+---
+
+**(5) The nit: `state/NEXT-CUT.md`'s true range for boundary 4's policy sentence.** Both §2e (`:295`) and `engine/ADMISSION-PREREGISTRATION.md` Amendment 6 item 4 (`:1362`) cite `state/NEXT-CUT.md:60-63` for the sentence beginning *"The policy does not establish snapshot consistency"*. At this head that sentence runs `state/NEXT-CUT.md:59-61` (it opens mid-line at `:59` and closes at `:61`) — the range Amendment 11 (b) (`:950`) already cites. Stated once here; `engine/ADMISSION-PREREGISTRATION.md`'s own Amendment 10 records the same correction for its `:1362`.
