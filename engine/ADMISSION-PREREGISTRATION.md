@@ -1337,3 +1337,45 @@ verbatim. All four are placeholders" twelve lines above the verbatim assertion t
 required. The sentence was true when written and stopped being true when that ruling landed; the
 header now says which one string is asserted verbatim and why, and says that it changed. No
 assertion is altered.
+
+---
+
+### Amendment 6 — P3b landed: the deferrals, discharged one by one (2026-09-17, appended)
+
+**Written after P3b's results were seen.** §12e's rule, honoured in this line. **Amendments 1–5 are byte-untouched**; this one records what P3b did with what Amendment 3 item 3 deferred, and says plainly which of those deferrals is still open.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in both gate checklists): every clause below that says something is discharged names the test by its exact name or a `file:line`, and every clause that says something is **not** discharged names the open item instead. P3b's own preregistration is `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`; its §10 Amendment 4 carries the full result record, and this amendment does not restate it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **post-result records** throughout.
+
+---
+
+**(i) Which deferral each landed item discharges.** Amendment 3 item 3 (`:752-763`) lists four.
+
+1. *"Owner-side invalidation: residency cleared and picks refused."* **Discharged for the client, on both arms and both detection routes.**
+   - Residency cleared, baseline: `frontends/shell/src/streaming/viewportStreamManager.ts:308` calls `clearResidency()` before nulling `residentStreamHandle`, which fires `onSuperseded` → `canvas.clearStream` (`App.tsx:541-543`). Proof: `viewportStreamManager.test.ts`'s *"a source-changed terminal clears the working canvas residency"*.
+   - Residency cleared, candidate: `frontends/shell/src/residency/candidateArmSession.ts:1075` calls `canvas.clearAllTiles()`, which also clears the untiled first look (ingested under `INITIAL_TILE_KEY`). Proof: `candidateArmSession.test.ts`'s *"a TILE stream's terminal ends the session and clears every tile"* and *"the UNTILED first look's own terminal ends the session and clears every tile"*.
+   - Picks refused: `frontends/shell/src/canvas/pick.ts:100`'s `latchedHoverReadout`, at one site covering both arms (`App.tsx:1477`), with its own readout state so silence is never the answer (ADR-010 rule 5). Proof: `pick.test.ts`'s *"every readout state becomes the refusal while latched, including null and a standing id"* and `HoverReadoutView.test.tsx`'s *"renders the refusal in the hover slot, and never a bare or standing id"*.
+   - **The third sink Amendment 3 did not know about.** P3a's `isSourceChangedTerminal` had exactly two product call sites, both in streaming managers; the candidate session's own untiled stream tested no terminal code at all, so a change detected on the first query of a tiled session ended nothing on the client. `candidateArmSession.ts:1325` now routes it through `TileViewportStreamManager.notifySourceChanged`.
+2. *"The kernel-authoritative dead-ticket refusal, wired to a real caller, with correct three-valued unknown-handle behaviour."* **Discharged.** `GenerationRegistry::ticket_liveness` (`kernel/src/skp.rs:466`) answers `Live`/`EndedBySourceChange`/`Unknown`; only the middle arm refuses by name (`kernel/src/lib.rs:410`), and `Unknown` falls through to `StreamRegistry::redeem`'s own three refusals. Its product caller is `EngineSourceFactory::create_from_ticket`, reached on every real START frame; the factory now takes the registry as a third parameter and the shell installs it at `frontends/shell/src-tauri/src/lib.rs:373-377`. Proof, end to end from the real shape: `kernel/tests/session_generation.rs`'s `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code`, in which nothing is fabricated and no test calls `end_generation`; and the fabrication it replaces is fenced by `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal`.
+3. *"The ADR-016 Amendment 1 acceptance, which stays Proposed and binds nothing."* **NOT discharged, and not touchable by this work.** It is the human's at P6 (`state/NEXT-CUT.md:106`). `git diff origin/main...cut/briefa-p3b -- docs/adr` is empty: no ADR Status is changed by P3b, and a full pass on both its gates does not accept it either.
+4. *"Boundary 4's own sentence about detection clearing residency and refusing picks."* **Now claimed, at the scope §2e of P3b's preregistration fixes and no wider**: *on a detected change, this client clears the resident geometry it holds for that dataset and refuses picks until the dataset is reopened.* It remains true in the same breath that the policy does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only at the post-check (`state/NEXT-CUT.md:60-63`) — those are the engine's own words and arrive in the refusal's `message`; the shell's sentence states only what the shell did. The operator-facing form of the claim is `refusalGuidance("engine.source_changed")` (`frontends/shell/src/admission/formatRefusal.ts:97-100`), which is the stronger sentence the human's round-5 ruling said P3b would restore *"when it becomes true"*; it is asserted verbatim by `formatRefusal.test.ts`'s *"engine.source_changed: says only what is true at this commit"* and rendered whole, with the engine's message, by `RefusalBlock.test.tsx`'s *"the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform"*.
+
+---
+
+**(ii) What this amendment does NOT claim, stated rather than left to be inferred.**
+
+- **The claim is about this client, not about the file.** Nothing here says a session up to the detection was a snapshot (A1), and no test asserts one.
+- **The end-to-end evidence is owed.** §4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** — the reason is recorded in P3b's §10 Amendment 4 (e) with its two blockers, and it is owed before P3b's gates conclude. Until then every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run.
+- **The post-check's own cost still has no shell-side carrier.** Amendment 5 (vi)'s open item stands unchanged: the Tauri shell installs `EngineSourceFactory::ticket_only`, whose `connection_reports` is `None`, and its stderr is unattached from the desktop. P3b's preregistration does not name that surface, so P3b built nothing for it.
+- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:796-802` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
+
+---
+
+**(iii) G-A2's status, said rather than claimed.** §12b's G-A2 (`:221`) reads: *"Open; issue a query; mutate the file (mutation fixture); the next read refuses `engine.source_changed`; residency cleared; picks refused; late batches dropped. Asserted at the pre-check and at the post-check paths separately."*
+
+**G-A2 remains P5's gate, and P3b does not score it.** What P3b builds is the *behaviour* G-A2 scores — the refusal at both paths, residency cleared, picks refused, late batches dropped — and each half is asserted at its own seam by the tests named in (i) above, at both the pre-check (`liveTicketSet.test.ts`'s *"matches the real thrown refusal on its code, never on its prose"*; `tileViewportStreamManager.test.ts`'s *"a source-changed refusal at a tile mint ends the session, and is not retried"*) and the post-check (the terminal-route tests in (i)) **separately**, as G-A2's own wording requires. What is missing for the gate itself is the single end-to-end run over a real mutated fixture, which is (ii)'s owed T10. A gate is scored by its own run; this amendment records the behaviour, not the score.
+
+---
+
+**(iv) "No release includes P3a without P3b"** (`DECISIONS-PENDING.md:44`, verbatim). P3b is the branch `cut/briefa-p3b`; until it merges, that sentence still binds, and it is recorded as a plan dependency rather than only here.

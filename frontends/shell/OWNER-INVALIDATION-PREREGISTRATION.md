@@ -148,7 +148,7 @@ same commit** — a callback without a product subscriber is a block-on-sight (�
   - The manager clears the working canvas's residency **through the interface the owner already
     has**: its own `clearResidency()` (`viewportStreamManager.ts:349-356`) fires
     `opts.onSuperseded(resident)`, which `makeManagerCallbacks` wires to
-    `canvas.clearStream(streamHandle)` (`App.tsx:539-541`; the handle method at
+    `canvas.clearStream(streamHandle)` (`App.tsx:541-543`; the handle method at
     `frontends/shell/src/canvas/WorkingCanvas.tsx:116`). The source-changed branch
     (`viewportStreamManager.ts:270-279`) today nulls `residentStreamHandle` **without** clearing;
     P3b calls `clearResidency()` *before* nulling it. **No new canvas method is added.**
@@ -460,7 +460,7 @@ the detection was a snapshot.
 | quantity | class | instrument |
 |---|---|---|
 | resident vertices/features after invalidation | **assertion** | `WorkingCanvasHandle.getResidentCounts()` (`WorkingCanvas.tsx:156-160`) |
-| `onSuperseded` / `clearAllTiles` call counts | **assertion** | test doubles at the real option seams (`App.tsx:539-541`; `candidateArmSession.ts:200-210`) |
+| `onSuperseded` / `clearAllTiles` call counts | **assertion** | test doubles at the real option seams (`App.tsx:541-543`; `candidateArmSession.ts:200-210`) |
 | hover readout state while latched | **assertion** | the typed union (`pick.ts:53`) — a structural fact, not a string |
 | terminal detail shape | **assertion** | exact-equality on the kernel side (X-2), parse assertion on the shell side |
 | ticket attributions / dead-ticket entries | **assertion** | `attributed_ticket_count` (`kernel/src/skp.rs:397`) and `dead_ticket_count` |
@@ -581,3 +581,111 @@ Unchanged and re-verified as quoted, not assumed: `docs/README.md:29`; `state/NE
 1. **§0 disclosure 4(b)'s quoted line.** The disclosure quotes `setCanvasRefusal(\`stream ${terminal.kind}: ${terminal.detail}\`)`. At `App.tsx:1108` that call now reads `setCanvasRefusal(\`stream ${terminal.kind}: ${formatTerminalRefusal(terminal.detail).message}\`)`, and `frontends/shell/src/streaming/formatTerminalRefusal.ts` exists (44 lines, with `formatTerminalRefusal.test.ts` beside it). The disclosure was true when written; it is not true of this head.
 2. **§0 disclosure 4(c)'s quoted string.** `refusalGuidance("engine.source_changed")` no longer returns *"Everything read so far has been discarded"*; `formatRefusal.ts:83` returns the human's round-5 sentence, which is what §10 Amendment 1 of this document required.
 3. **§2c's "P3a's removal note stands in-source at `kernel/src/lib.rs`"** — the note stands, at `:378-388` rather than `:365-375`, and its last paragraph names P3b by the human's round-4 ruling.
+
+**Amendment 4 — Written after this piece's results were seen (2026-09-17).** Classes used (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **class 1** for the results below; **class 2** for each deviation in (c); **class 4** for the mutation record in (d); **class 3** for the test-name corrections in (c)(2). No prediction in §3 or §5 is edited; where an outcome differs from one, the outcome is recorded and the prediction left standing.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test by its exact name or a `file:line`; where a thing is **not** done it says so and names the open item instead.
+
+---
+
+**(a) What landed, per §2 item.**
+
+| §2 item | landed at | proven by |
+| --- | --- | --- |
+| 2a(i) the notification seam, with its subscriber in the same diff | `viewportStreamManager.ts:42-59` + `:315`; `tileViewportStreamManager.ts:88-101` + `:744`; subscribers `App.tsx:1144`, `App.tsx:1203`, `candidateArmSession.ts:163`/`:1046` | `viewportStreamManager.test.ts`'s *"the owner is told exactly once, however many terminals carry the code"*; `candidateArmSession.test.ts`'s *"the owner is told once, whichever sink or however many terminals"* |
+| 2a(ii) baseline residency cleared through `clearResidency()` | `viewportStreamManager.ts:308` | `viewportStreamManager.test.ts`'s *"a source-changed terminal clears the working canvas residency"*; the invariant it rests on by *"every issue supersedes the previous stream's residency, so at most one stream is ever resident"* |
+| 2a(iii) candidate tiles cleared through `clearAllTiles()`, all three sinks | `candidateArmSession.ts:1074-1083` (the clear), `:1325` (the untiled sink), `tileViewportStreamManager.ts:760` (`notifySourceChanged`), `:952` (the mint catch) | `candidateArmSession.test.ts`'s *"the UNTILED first look's own terminal ends the session and clears every tile"* and *"a TILE stream's terminal ends the session and clears every tile"* |
+| 2a(iv) picks refused — the fourth readout state, the view branch, the one latch site | `pick.ts:62-101`, `HoverReadoutView.tsx:67-78`, `App.tsx:1477` | `pick.test.ts`'s *"every readout state becomes the refusal while latched, including null and a standing id"*; `HoverReadoutView.test.tsx`'s *"renders the refusal in the hover slot, and never a bare or standing id"* |
+| 2a(v) the typed status, through `RefusalBlock`, not dismissible | `App.tsx:634-644` (`handleSessionEnded`), `:1546-1551` (the block) | `App.test.ts`'s *"sets the typed status with no machine prefix, and refuses picks"* |
+| 2b the pre-check route, matched on the code, at both product catches | `liveTicketSet.ts:69`/`:83`; `App.tsx:1026`; `tileViewportStreamManager.ts:952` | `liveTicketSet.test.ts`'s *"matches the real thrown refusal on its code, never on its prose"*; `tileViewportStreamManager.test.ts`'s *"a source-changed refusal at a tile mint ends the session, and is not retried"*; `App.test.ts`'s *"reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code"* |
+| 2c the three-valued dead-ticket refusal, with its real caller | `kernel/src/skp.rs:339-359` (`TicketLiveness`), `:466-479` (`ticket_liveness`), `:551-562` (the record, written before the prune), `kernel/src/lib.rs:409-433`, product caller `frontends/shell/src-tauri/src/lib.rs:373-377` | `kernel/tests/session_generation.rs`'s `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code` (end to end from the real shape) and `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal` |
+| 2d the §12e amendment | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 6 | that amendment's own text |
+| 2e the ADR-016 acceptance | **not taken, by anything in this piece** | no file under `docs/adr/` is touched: `git diff origin/main...HEAD -- docs/adr` is empty |
+
+**Registered predictions (§5), as they came out.** 1 — held: the dead-ticket arm is reachable only in the mint→invalidate→redeem window, and T1 builds exactly that window from the product path. 2 — held, and now asserted rather than argued: `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it` shows `attributed_ticket_count()` at 0 and `ticket_liveness` still `EndedBySourceChange` in the same instant. 3 — **not tested by this piece and left open**: whether the untiled first look is where a real session most often first sees a changed source is a claim about real sessions, and only T10 (not delivered, (e) below) could speak to it; what is proven is that the sink now ends the session, which is the part that was missing. 4 — held: no new SKP code, field or fixture; `protocol/` is an empty diff. 5 — held: no new `WorkingCanvasHandle` method was added on either arm.
+
+**Falsification (§5), swept.** None of the six observed: no path clears the view without latching picks (the latch is one site and covers every readout); no refusal fires for a handle the kernel has no record of (`an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal`); no client path decides invalidation by reading prose (`matches the real thrown refusal on its code, never on its prose`); every added item has a product caller ((f) below); and no snapshot claim appears in the diff.
+
+---
+
+**(b) The declared-unchanged list (§5), verified rather than assumed.** `renderer/` — zero files. `protocol/data-plane/` and `protocol/skp/` — empty diffs; `SKP_VERSION` untouched. `engine/` — empty diff, as predicted. ADR-010 rules 1, 2, 3 and 6 untouched; rule 5 is satisfied, not amended. No new constant: §7's table is unchanged, and the dead-ticket record reuses the existing `TICKET_TTL + TERMINAL_ENTRY_MAX_AGE` sum (`kernel/src/skp.rs:519-527`). No duration, rate or performance word anywhere in the diff.
+
+---
+
+**(c) Deviations — class 2, each with its reason. The declarations they deviate from are not edited.**
+
+1. **`dead_tickets` holds `(dataset, Instant)`, not the bare `Instant` §2c.1 declared.** The dataset is what lets `forget_dataset` and `mint_for_open` drop exactly this dataset's dead handles: without it, one dataset's reopen would retire another's record, or nothing could be scoped at all. Recorded at the field's own doc (`kernel/src/skp.rs:313-334`) and asserted by `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close`'s last case.
+
+2. **Class 3 — six §4 test names differ from the names the tests ended up with.** The behaviour each asserts is §4's; only the names are longer or split differently. `verify-test-claims.mjs` reports §4's six original names as *planned*, which is what this item resolves.
+
+   | §4's name | the test that exists |
+   | --- | --- |
+   | T3 `the_dead_ticket_record_is_bounded` | `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` |
+   | T4 `a_source_changed_terminal_clears_the_working_canvas_residency` | `viewportStreamManager.test.ts`'s *"a source-changed terminal clears the working canvas residency"* (a vitest description, not a Rust fn name) |
+   | T5 `a_source_changed_terminal_on_either_stream_clears_every_resident_tile` | split into the two cases §4 asked for: *"the UNTILED first look's own terminal ends the session and clears every tile"* and *"a TILE stream's terminal ends the session and clears every tile"* — split so the untiled case can fail **alone**, which §4's own mutation asks it to |
+   | T6 `the_pre_check_refusal_latches_the_session_in_the_untiled_catch` | *"reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code"* plus the three `handleSessionEnded` tests beside it |
+   | T7 `the_pre_check_refusal_latches_the_session_on_a_tile_mint` | *"a source-changed refusal at a tile mint ends the session, and is not retried"* |
+   | T9 `a_terminal_refusal_reaches_the_operator_without_its_machine_prefix` | **already existed**: P3a landed `formatTerminalRefusal.ts` and `formatTerminalRefusal.test.ts` in its final commits. P3b adds nothing here; see (3) |
+
+3. **Two §2 items were already true of the tree when P3b started, and P3b therefore built neither.** Both were flagged mechanically in Amendment 3 (e) and are recorded here as scope, not as cites. (i) §2a(v)'s *"`App.tsx:1104`'s `setCanvasRefusal(\`stream ${terminal.kind}: ${terminal.detail}\`)` is replaced by [`formatTerminalRefusal`'s] output"* — done on P3a's last commits; at this head `App.tsx:1150` already calls it, and `frontends/shell/src/streaming/formatTerminalRefusal.ts` (44 lines) exists with its own test. (ii) §0 disclosure 4(c)'s string — replaced by §10 Amendment 1's interim sentence before P3a merged. P3b's own half of Amendment 1 **is** delivered: the stronger sentence, now that it is true (`formatRefusal.ts:97-100`), asserted verbatim by `formatRefusal.test.ts`'s *"engine.source_changed: says only what is true at this commit"*.
+
+4. **Three items §2 did not name were added, each with a product caller in this diff.** (i) `TileViewportStreamManager.notifySourceChanged` (`:760`) — `public`, one product caller, `candidateArmSession.ts:1325`; it exists because the session cannot latch the manager, and a session whose owner cleared its tiles while its manager kept planning is the half-ended state boundary 4 prevents. (ii) `refusalDetailOf` (`liveTicketSet.ts:83`) — two product callers, `App.tsx:1026` and `tileViewportStreamManager.ts:953`; it exists so both routes hand the owner ONE shape, and `liveTicketSet.test.ts`'s *"the pre-check refusal and the post-check terminal are the same string"* proves that shape is the kernel's own rather than a re-spelling. (iii) the `reissueUnrestricted` latch (`candidateArmSession.ts:1546`) — the candidate analogue of `requestViewport`'s, without which a filter Apply after the latch would clear tiles and mint a query the kernel has already said it will refuse; `candidateArmSession.test.ts`'s *"reissueUnrestricted is refused after the session ended"*.
+
+5. **Two behaviours of existing code changed beyond §2's letter, both toward the same rule.** (i) The baseline source-changed branch now guards on `!this.sessionEnded` (`viewportStreamManager.ts:305`), so §2a(i)'s *"called exactly once"* is structural rather than an inference from another method's invariant; §2a(i) asserted that both managers "already latch idempotently", which was true of the tiled one and not of this one. (ii) The `viewportRefusal` block is not rendered while the session-ended block stands (`App.tsx:1573`). §2b keeps `setViewportRefusal` and that is unchanged — the *state* is still set and `App.test.ts` still pins the call — but rendering both would put the identical refusal on the canvas twice, once with the guidance and once without.
+
+6. **A latch was written and then removed because no input could reach it.** `endCandidateSession` first carried its own `sessionEnded` guard. Its mutation (remove the guard) left the suite green: `TileViewportStreamManager.endSession` latches before calling `onSessionEnded`, and every route into the session goes through that one method. A branch no input can take is a claim about the code rather than a property of it, so the guard was deleted and the reason written at the function's own doc (`candidateArmSession.ts:1053-1065`). The at-most-once property is still asserted, against the guard that actually provides it, by *"the owner is told once, whichever sink or however many terminals"*.
+
+---
+
+**(d) Class 4 — every mutation performed once on this branch and reverted, with the failure observed.** Each is also recorded in-source beside its test, which is what `node scripts/plan/verify-mutation.mjs` resolves; that check reports **PASS — all 27 new test(s) have a recorded mutation naming them**. Twenty-four mutations were run: four kernel (`session_generation.rs`), twenty shell. Each observed failure is written beside its own test rather than repeated here, with one exception worth naming: **one mutation did not fail**, item (c)(6) above, and that non-failure is recorded rather than replaced with one that would have.
+
+Two §4 predictions about *which* assertion would bite came out differently and are recorded, not edited: T2's mutation fails on the positive `is unknown` assertion (written first) rather than on the negative one, both covering the same defect; and T5's untiled mutation took the tile case with it, because the untiled branch's `return` is what routes the tile case in the unmutated code — the distinguishing evidence §4 wanted is the *subscriber-removed* mutation beside it.
+
+---
+
+**(e) NOT delivered: §4's T10, the E2E driver — named as owed, with the blocker, not claimed.**
+
+`frontends/shell/e2e/source-changed.mjs` **does not exist** and no E2E run was made. Two reasons, both stated rather than implied:
+
+1. **The residency read T10 needs has no non-measurement hook.** §6 names `WorkingCanvasHandle.getResidentCounts()` "through the existing E2E hook". The only hook that exposes it is `residencyEndStep` (`App.tsx:906-910`), which is the residency **measurement** instrument and returns timing fields with it. Reaching a duration-bearing instrument would cross §1's own boundary 10 / A6 line for a piece that measures nothing; adding a dedicated counts-only hook instead is a new item whose only caller would be a driver that has never run. Choosing between those two is a design call with an evidence component, and it belongs with the run.
+2. **Running it launches a detached desktop application.** `e2e/lib.mjs`'s `attachOrLaunch` spawns `npx tauri dev` detached and unref'd, deliberately outliving the script. That is not in this piece's declared suite list and is not something to start unattended.
+
+**Owed, 2026-09-17, before P3b's gates conclude** (§9 lists "the E2E step T10" among the suites that must be green before either gate): T10 as §4 declares it, including the one recorded mutation (skip the owner clear in a dev build → resident vertices non-zero), and the hook decision above. Until it is run, **this piece claims nothing about what an operator sees end to end** — every claim in (a) is a unit or integration assertion at a named seam.
+
+---
+
+**(f) The caller grep, run and pasted** (§4's gate check; `DECISIONS-PENDING.md:44`: a test-only caller does not count). Every item this diff adds, with its **product** caller:
+
+| item | product caller |
+| --- | --- |
+| `ViewportStreamManagerOptions.onSessionEnded` | `App.tsx:1203` |
+| `TileViewportStreamManagerOptions.onSessionEnded` | `candidateArmSession.ts:1046` |
+| `CandidateArmSessionDeps.onSessionEnded` | `App.tsx:1144` |
+| `TileViewportStreamManager.notifySourceChanged` | `candidateArmSession.ts:1325` |
+| `isSourceChangedRefusal` | `App.tsx:1026`, `tileViewportStreamManager.ts:952` |
+| `refusalDetailOf` | `App.tsx:1026`, `tileViewportStreamManager.ts:953` |
+| `PickSessionEnded` / `isPickSessionEnded` | `HoverReadoutView.tsx:67`, `pickResolution.ts:197`, `WorkingCanvas.tsx:676` |
+| `latchedHoverReadout` | `App.tsx:1477` |
+| `handleSessionEnded` | `App.tsx:994` |
+| `GenerationRegistry::ticket_liveness` / `TicketLiveness` | `kernel/src/lib.rs:409` (reached on every real START frame through `SourceFactory::create`, `kernel/src/lib.rs:321-336`, `protocol/data-plane/src/server.rs:384`) |
+| `SkpHost::generations` | `frontends/shell/src-tauri/src/lib.rs:376` |
+| `EngineSourceFactory::ticket_only`'s third parameter | `frontends/shell/src-tauri/src/lib.rs:373` |
+| `GenerationRegistry::dead_ticket_count` | **none, and declared** — §2c.4's instrument category (the human, 2026-09-16, round 5 item 4). Its doc (`kernel/src/skp.rs:481-494`) names its two test callers, `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` and `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it`, and why the bound must be proven about the shipped build. It acts on nothing; `ticket_liveness` beside it is what acts, and that one is not exempt |
+
+---
+
+**(g) Open items this piece names and does not close.** Each has a date and a home; none is described as discharged.
+
+1. **R-D2's `{detail}` contract is unmet on three kernel paths** (P3a's architect note N3, carried into this piece). `protocol/skp/SKP-V0.md:602-608` declares that `engine.source_changed`'s `detail` "names **every** component that differed (`{size, mtime, footer-length, footer-hash}`)". Two pre-existing sites fill it with a brace-delimited sentence instead — `kernel/src/skp.rs:796-802` (the live-generation pre-check) and `:840-846` (the mint race) — and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is a third, deliberately: that registry holds no descriptor and never read the file, so naming components there would be a second fabrication of the same class as the one the round-4 ruling removed. **Owed, 2026-09-17**: either a narrowing of the SKP-V0 sentence to the paths that read the file, or a detail carried from the post-check through `SessionInvalidator::end_generation` (a signature change with two callers). Not taken here because it is a wire-document decision, and this piece's §1 declares no wire surface is added or changed.
+2. **The camera pre-check surface still dispatches no guidance for any code other than `engine.source_changed`.** P3a's Amendment 5 (v) recorded it; P3b closes it for this one code only, because the session-ended block renders through `RefusalBlock` (`App.tsx:1548`). `App.tsx:1573-1589`'s own `viewportRefusal` block still renders `code` + `message` and nothing else for every other refusal. **Owed, 2026-09-17, P6 or a follow-on** — it is an operator-visible surface decision, and §1 puts the wording of every such string with the human.
+3. **The post-check's cost has no shell-side carrier.** P3a's Amendment 5 (vi) recorded it as an open item for the human. This preregistration does not name it, so P3b builds no carrier. **Owed, 2026-09-17, P6 or a follow-on**, unchanged in substance from Amendment 5 (vi)'s own words.
+4. **G-A2 is not scored by this piece, and P5 still owns it** (§2d's own instruction). What P3b builds is the behaviour G-A2 measures; the gate itself needs the end-to-end run T10 is the first half of, and (e) above records that as owed.
+
+---
+
+**(h) The two new operator-visible strings, joining the P6 sight list** (§9; §10 Amendment 1's closing sentence). Neither is asserted verbatim by any test.
+
+1. the pick refusal — `HoverReadoutView.tsx:69-72`;
+2. the session-ended status line — rendered from `refusalGuidance("engine.source_changed")` (`formatRefusal.ts:97-100`) through `RefusalBlock`. This one **is** asserted verbatim, and deliberately: it is §10 Amendment 1's own ruled string, and the round-5 reason for pinning it (a rewording is a decision, not a refactor) applies to P3b's stronger sentence exactly as it applied to the interim one.
+
+**Suites at this amendment.** `cargo test --workspace --locked`: 61 test binaries, 0 failed, 0 warnings. `npm run verify` (vitest + typecheck + lint + `check:dist-clean` + citation integrity): 70 files, 1024 tests, 0 failed, exit 0. `verify-mutation.mjs`: PASS, 27/27. `verify-cites.mjs`: PASS. `verify-test-claims.mjs`: PASS. The E2E step is (e).
