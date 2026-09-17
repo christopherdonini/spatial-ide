@@ -30,7 +30,11 @@ name: Governance CI — plan, queue, site
 # name on a mismatch or an unresolvable rev, path or range (round 12's "quote by reference" mechanism).
 # For a passage with no `path:line` beside it this proves only that the words occur somewhere in the
 # tree's non-quotation text -- a floor, not proof the citing document's own claimed source is that
-# occurrence; a gate still resolves each passage against its named source. Every test named in a
+# occurrence; a gate still resolves each passage against its named source. It does not recognize `…`
+# as an elision marker either -- round 11 item 3's rider (an elision may not drop a negation, a
+# condition or a qualifier) is a human-read rule, not yet a mechanical one, so an elided quote is
+# either baselined by hand or a false FAIL, never verified by construction (round-12 fix round, the
+# architect's N2). Every test named in a
 # preregistration/ADR exists (verify:test-claims),
 # PLAN.yaml's recorded statuses agree with what the repository can verify
 # (merged PRs, ADR Status lines, tags, releases, commits on main, tracked paths), and regenerating
