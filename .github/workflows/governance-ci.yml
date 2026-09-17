@@ -20,8 +20,10 @@ name: Governance CI — plan, queue, site
 # ## What a green run here means, stated narrowly (the other product workflows' own discipline)
 #
 # It means: every test under scripts/plan and scripts/hooks passes, every rooted (in-tree) path:line
-# reference resolves against the tree (verify:cites) and every test named in a preregistration/ADR
-# exists (verify:test-claims), PLAN.yaml's recorded statuses agree with what the repository can verify
+# reference resolves against the tree (verify:cites), every quotation marked verbatim matches its
+# source byte-for-byte after normalization or is a recorded, reviewed baseline entry (verify:quotes,
+# the human's round-10 ruling), every test named in a preregistration/ADR exists (verify:test-claims),
+# PLAN.yaml's recorded statuses agree with what the repository can verify
 # (merged PRs, ADR Status lines, tags, releases, commits on main, tracked paths), and regenerating
 # CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
 # It does **not** mean any hook has been exercised inside a real Claude Code session — that is the
@@ -92,6 +94,9 @@ jobs:
       # below fail only on semantics. Both are pure Node over `git ls-files`, no network, no `gh`.
       - name: verify:cites (path:line references resolve against the tree)
         run: node scripts/plan/verify-cites.mjs
+
+      - name: verify:quotes (a quotation marked verbatim matches its source, byte-for-byte, after normalization)
+        run: node scripts/plan/verify-quotes.mjs
 
       - name: verify:test-claims (a test named in a preregistration/ADR actually exists)
         run: node scripts/plan/verify-test-claims.mjs
