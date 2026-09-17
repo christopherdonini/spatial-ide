@@ -283,6 +283,12 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   amendments stating as done what the tree did not do — the third round of that class. Beside it, on
   operator-visible text (the same ruling): "Engine messages state engine facts; owners state consequences." — the engine's `SourceChanged` Display had
   carried the shell's consequence sentence ("everything read is discarded") while the shell discarded nothing.
+- **Verbatim quotes and record-correction rounds (the human's rule, 2026-09-17, `DECISIONS-PENDING.md` "RULED 2026-09-17 —
+  question round 10"; permanent, in both gate checklists and the worker brief).** Verbatim: "a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name." and "record-correction rounds always go to a fresh worker — fidelity work never runs from a long context."
+  The lesson's cost: P3b failed two docs-only gate rounds on quotes and cites inside the record its ADR-016 click rests on — the third piece of the
+  week to fail this class — every correction written from a ~750k-token context, each round closing old fidelity defects and opening new ones;
+  `verify-cites` proves a cited line exists, nothing checked quote content. `scripts/plan/verify-quotes.mjs` (a gated verbatim-quote check + a
+  cite-content listing) is the mechanical guard; workers run it before a gate.
 
 ### Records, claims and reports
 

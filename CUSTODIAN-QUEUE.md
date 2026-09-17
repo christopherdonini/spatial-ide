@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1351c688bcc830c1d6213fbec2facc48e98292e474b937b5e72c87bb42248a38`) at `2026-09-17T01:20:22.737Z`.
+Generated from `PLAN.yaml` (sha256 `f013cf0c1ee29d8b592bcad0d961e8a73c98c599ebe15008ab0d26232415b105`) at `2026-09-17T10:37:30.392Z`.
 
 ## 1. Next
 
@@ -31,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `1351c688bcc830c1d6213fbec2facc48e98292e474b9
 - **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: PR #83
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: branch `cut/briefa-p3b`
+- **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
 
 ## 6. Proposed / unscheduled
 
