@@ -45,6 +45,15 @@
 // reported too (a shifted line, or a corrected quote, leaves a stale entry -- surfaced, not silently
 // carried). Missing or unparsable baseline.json is an empty baseline, never fatal.
 //
+// ROUND 11'S RATCHET (DECISIONS-PENDING.md, "RULED 2026-09-17, round 11"; see
+// VERIFY-QUOTES-PREREGISTRATION.md Amendment 6): every baseline entry carries a `disposition`
+// (`unfindable-by-construction` / `tool-false-trigger` / `owed-correction`, the owed ones naming the
+// correcting piece in `corrected_by`) and a `ruling` naming what authorised it -- an entry missing
+// either is a baseline error and FAILS the check by name (`validateBaselineEntries`), never silently
+// accepted. Entries leave when corrected; none is added except by a ruling; a new mismatch always
+// fails. The baseline file itself may be a bare array (the pre-round-11 shape, still accepted) or
+// `{ $doc, entries }` (the current shape -- `$doc` documents this same ratchet at the file's own head).
+//
 // ADVISORY LISTING (--show-cites, never fails, computed only when passed): every path:line cite's
 // first cited line, trimmed, so a reader can eyeball whether the line says what the clause claims --
 // this script does not judge it. An ambiguous or unresolved cite is printed as such, never as the
@@ -314,19 +323,45 @@ function defaultScanFiles(root, index) {
 
 /**
  * The pre-existing offenders at `scripts/plan/verify-quotes.baseline.json`: `[{file, line, words,
- * reason}]` -- recorded and classified by the custodian's worker, pending the human's sight at this PR,
- * never described as "human-reviewed" until it is. Missing or unparsable is an empty baseline, never
- * fatal.
+ * reason, disposition, ruling, corrected_by?}]` -- recorded and classified by the custodian's worker,
+ * pending the human's sight at this PR, never described as "human-reviewed" until it is. The file may
+ * be a bare array (the pre-round-11 shape) or `{ $doc, entries }` (round 11's ratchet, `$doc`
+ * documenting the same append-never rule the banner comment above states); both are read the same way.
+ * Missing or unparsable is an empty baseline, never fatal.
  */
 function loadBaseline(root) {
   const p = path.join(root, BASELINE_REL_PATH);
   if (!fs.existsSync(p)) return [];
   try {
     const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
-    return Array.isArray(parsed) ? parsed : [];
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed && Array.isArray(parsed.entries)) return parsed.entries;
+    return [];
   } catch {
     return [];
   }
+}
+
+const VALID_DISPOSITIONS = new Set(['unfindable-by-construction', 'tool-false-trigger', 'owed-correction']);
+
+/**
+ * Round 11's ratchet, conditions (a) and (b) (DECISIONS-PENDING.md, "RULED 2026-09-17, round 11"; see
+ * VERIFY-QUOTES-PREREGISTRATION.md Amendment 6): every baseline entry carries exactly one of the three
+ * valid `disposition`s and a non-empty `ruling` naming what authorised it -- so nothing is added except
+ * by a ruling. An entry lacking either is a baseline error, returned (not thrown) so every offending
+ * entry is reported in one run rather than stopping at the first.
+ */
+function validateBaselineEntries(entries) {
+  const errors = [];
+  for (const e of entries) {
+    if (!VALID_DISPOSITIONS.has(e.disposition)) {
+      errors.push({ file: e.file, line: e.line, reason: `missing or invalid "disposition" (${JSON.stringify(e.disposition ?? null)})` });
+    }
+    if (typeof e.ruling !== 'string' || !e.ruling.trim()) {
+      errors.push({ file: e.file, line: e.line, reason: 'missing "ruling"' });
+    }
+  }
+  return errors;
 }
 
 // (file, line, words-as-a-normalized-PREFIX-of-the-passage): a stale entry whose line shifted, or whose
@@ -350,7 +385,7 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
- * { findings, advisories, baselined, checked, scanned, unmatchedBaseline }.
+ * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors }.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -358,6 +393,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const topDirs = topDirsOf(index);
   const scanAbs = (files && files.length ? files : defaultScanFiles(root, index)).map((f) => path.resolve(f));
   const baselineEntries = loadBaseline(root);
+  const baselineErrors = validateBaselineEntries(baselineEntries);
   const usedBaseline = new Set();
   const baselineAbs = path.join(root, BASELINE_REL_PATH);
 
@@ -440,7 +476,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     }
   }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
-  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline };
+  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline, baselineErrors };
 }
 
 /**
@@ -506,7 +542,7 @@ function pluralBaselineEntries(n) {
 function main() {
   const { showCites, files } = parseArgs(process.argv.slice(2));
   const opts = { repoRoot: REPO_ROOT, files: files.length ? files : undefined };
-  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline } = runVerifyQuotes(opts);
+  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors } = runVerifyQuotes(opts);
 
   console.log(`verify:quotes — scanned ${scanned} file(s) for verbatim-marked quotations (--show-cites for the path:line cite listing).`);
   if (showCites) {
@@ -526,14 +562,21 @@ function main() {
   console.error(`verify:quotes — ${pluralBaselineEntries(unmatchedBaseline.length)} matched nothing this run (stale ${BASELINE_REL_PATH} entries).`);
   for (const e of unmatchedBaseline) console.error(`  - ${e.file}:${e.line} — "${String(e.words ?? '').slice(0, 60)}…"`);
 
+  if (baselineErrors.length) {
+    console.error(
+      `verify:quotes — ${baselineErrors.length} baseline entry error(s) (round 11's ratchet: every entry needs a valid "disposition" and a "ruling"):`,
+    );
+    for (const e of baselineErrors) console.error(`  - ${e.file}:${e.line} — ${e.reason}`);
+  }
+
   const verified = checked - baselined.length - advisories.length - findings.length;
-  if (findings.length === 0) {
+  if (findings.length === 0 && baselineErrors.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors.`,
     );
     return;
   }
-  console.error(`verify:quotes FAIL — ${findings.length} not found:`);
+  console.error(`verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s):`);
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
   process.exitCode = 1;
 }

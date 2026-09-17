@@ -456,3 +456,61 @@ test('a_straight_quote_that_is_also_a_whole_blockquote_line_counts_once', () => 
   const passages = extractQuotePassages(text);
   assert.equal(passages.length, 1, JSON.stringify(passages));
 });
+
+// --- round 11's ratchet (DECISIONS-PENDING.md, "RULED 2026-09-17, round 11"; see
+// VERIFY-QUOTES-PREREGISTRATION.md Amendment 6): every baseline entry needs a valid `disposition` and
+// a `ruling`, or the check fails by name ------------------------------------------------------------
+
+// RECORDED MUTATION (round 11's ratchet, condition (a)): removing the
+// `VALID_DISPOSITIONS.has(e.disposition)` check from validateBaselineEntries
+// (scripts/plan/verify-quotes.mjs) makes
+// a_baseline_entry_without_a_valid_disposition_fails_the_check_by_name FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 0 !== 1" on `baselineErrors.length` (an entry
+// with no `disposition` field, or an invalid one, is silently accepted instead of failing the check).
+test('a_baseline_entry_without_a_valid_disposition_fails_the_check_by_name', () => {
+  const dir = gitTree({
+    'A.md': 'Verbatim: "a distant bell tolled twice across the quiet misty harbor tonight" end.\n',
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'a distant bell tolled twice across the quiet misty harbor',
+          reason: 'known offender, source untracked',
+          disposition: 'not-a-real-disposition',
+          ruling: 'round 11, 2026-09-17',
+        },
+      ],
+    }),
+  });
+  const { baselineErrors } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(baselineErrors.length, 1, JSON.stringify(baselineErrors));
+  assert.match(baselineErrors[0].reason, /disposition/);
+});
+
+// RECORDED MUTATION (round 11's ratchet, condition (b)): removing the `!e.ruling.trim()` check from
+// validateBaselineEntries (scripts/plan/verify-quotes.mjs) makes
+// a_baseline_entry_without_a_ruling_fails_the_check_by_name FAIL: "AssertionError [ERR_ASSERTION]:
+// Expected values to be strictly equal: 0 !== 1" on `baselineErrors.length` (an entry with no `ruling`
+// field is silently accepted, so a baseline addition with no authorising ruling would never be caught).
+test('a_baseline_entry_without_a_ruling_fails_the_check_by_name', () => {
+  const dir = gitTree({
+    'A.md': 'Verbatim: "a lantern swung gently beside the old wooden dock at dusk" end.\n',
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'a lantern swung gently beside the old wooden dock',
+          reason: 'known offender, source untracked',
+          disposition: 'unfindable-by-construction',
+        },
+      ],
+    }),
+  });
+  const { baselineErrors } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(baselineErrors.length, 1, JSON.stringify(baselineErrors));
+  assert.match(baselineErrors[0].reason, /ruling/);
+});

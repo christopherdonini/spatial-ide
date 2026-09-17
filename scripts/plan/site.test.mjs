@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
-import { renderSite, checkSiteDrift, shippedRecently, readBuildHealth } from './site.mjs';
+import { renderSite, checkSiteDrift, shippedRecently, readBuildHealth, readVerifyQuotesBaselineCount, REPO_ROOT } from './site.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -220,6 +220,30 @@ test('machine group: an absent gate log says so; no dated done nodes says so; a 
   assert.ok(html.includes('<span>Gate first-pass</span><span>no gate log yet</span>'));
 });
 
+// ------------------------------------------------------------- round 11's ratchet, condition (c):
+// the verify-quotes baseline entry count on the health strip (DECISIONS-PENDING.md, "RULED
+// 2026-09-17, round 11"; see scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md Amendment 6).
+
+// RECORDED MUTATION: removing the `governanceGroup` block from renderHealthStrip's returned template
+// (scripts/plan/site.mjs) makes
+// governance_group_renders_the_verify_quotes_baseline_entry_count_as_its_own_labelled_group FAIL:
+// "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value" on the
+// `<span>verify-quotes baseline entries</span><span>21</span>` assertion (the row never appears).
+test('governance group: the verify-quotes baseline entry count renders as its own labelled group, never mixed with the other two', () => {
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, {
+    repoSlug: REPO,
+    buildHealth: BUILD_HEALTH,
+    governanceBaselineCount: 21,
+  });
+  assert.ok(html.includes("From this repository's own tracked files"));
+  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>21</span>'));
+});
+
+test('governance group: a missing/unparsable baseline file renders "unknown", never a false zero', () => {
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
+  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
+});
+
 test('bug 1: a release that is not a pre-release carries no qualifier', () => {
   const buildHealth = {
     ...BUILD_HEALTH,
@@ -330,8 +354,11 @@ test('bug 1: the drift check never depends on build-health.json', () => {
   const outDir = path.join(dir, 'site');
   fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
 
-  // Generate WITHOUT the build facts, exactly as a machine outside the Pages build would.
-  const { html, planJson } = renderSite(plan, null, { repoSlug: REPO });
+  // Generate WITHOUT the build facts, exactly as a machine outside the Pages build would; the
+  // governance baseline count IS a repo-tracked fact, so it must match what checkSiteDrift itself will
+  // read fresh below (readVerifyQuotesBaselineCount(REPO_ROOT), the real repo's own baseline file).
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
+  const { html, planJson } = renderSite(plan, null, { repoSlug: REPO, governanceBaselineCount });
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(outDir, 'data', 'plan.json'), planJson, 'utf8');
   fs.writeFileSync(path.join(outDir, '.nojekyll'), '', 'utf8');

@@ -440,7 +440,7 @@ function healthRowsHtml(rows) {
  * build-time facts come from GitHub's API inside the Pages build (buildHealth.mjs), the machine
  * facts from the custodian's machine (health.mjs). No row ever mixes the two.
  */
-function renderHealthStrip(health, buildHealth, byId) {
+function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
   let buildGroup;
   if (buildHealth?.unreadable) {
     // A corrupt file is not an absent one: saying "generated outside that build" here would be
@@ -475,11 +475,23 @@ function renderHealthStrip(health, buildHealth, byId) {
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
 
+  // A third source, always rendered, never mixed into the other two (the human, 2026-09-14: "no row
+  // mixes the two" -- this is a third, clearly labelled one, not a mixed one): the verify-quotes
+  // baseline entry count is a fact read directly from this repository's own tracked file, not from
+  // health.mjs's machine refresh or GitHub's API build. Round 11's ratchet condition (c): "the baseline
+  // count is a line on the health strip, so a number that never shrinks is visible."
+  const governanceGroup =
+    `<h3 class="health-source">From this repository's own tracked files</h3>\n` +
+    healthRowsHtml([
+      ['verify-quotes baseline entries', esc(governanceBaselineCount === null ? 'unknown' : String(governanceBaselineCount))],
+    ]);
+
   return `
   <section class="panel health-strip">
     <h2>Health</h2>
     ${buildGroup}
     ${machineGroup}
+    ${governanceGroup}
   </section>`;
 }
 
@@ -569,7 +581,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 }
 `;
 
-function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null }) {
+function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null, governanceBaselineCount = null }) {
   const violations = findMetricViolations(plan);
   if (violations.length > 0) throw new SiteMetricViolationError(violations);
 
@@ -623,7 +635,7 @@ ${seededNote}
 ${renderWaitingOnYou(waitingOnHuman)}
 ${renderShipped(plan, repoSlug)}
 </div>
-${renderHealthStrip(health, buildHealth, byId)}
+${renderHealthStrip(health, buildHealth, byId, governanceBaselineCount)}
 <main>
 ${laneHtml}
 </main>
@@ -687,13 +699,15 @@ ${laneHtml}
 
 /**
  * Pure: builds { html, planJson } from an already-loaded plan, the optional machine-facts health
- * object, and (via `options.buildHealth`) the optional build-time facts.
+ * object, and (via `options.buildHealth`) the optional build-time facts, and (via
+ * `options.governanceBaselineCount`) the verify-quotes baseline's entry count.
  */
 export function renderSite(plan, health, options = {}) {
   const repoSlug = options.repoSlug ?? DEFAULT_REPO_SLUG;
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const buildHealth = options.buildHealth ?? null;
-  const html = renderHtml(plan, health, { repoSlug, generatedAt, buildHealth });
+  const governanceBaselineCount = options.governanceBaselineCount ?? null;
+  const html = renderHtml(plan, health, { repoSlug, generatedAt, buildHealth, governanceBaselineCount });
   const planJson = `${JSON.stringify(
     {
       generated_at: generatedAt,
@@ -720,6 +734,30 @@ function readJsonIfPresent(p) {
 
 function readHealth(outDir) {
   return readJsonIfPresent(path.join(outDir, 'data', 'health.json'));
+}
+
+const VERIFY_QUOTES_BASELINE_REL = 'scripts/plan/verify-quotes.baseline.json';
+
+/**
+ * The verify-quotes baseline's entry count -- round 11's ratchet condition (c) (DECISIONS-PENDING.md,
+ * "RULED 2026-09-17, round 11"): "the baseline count is a line on the health strip, so a number that
+ * never shrinks is visible." A repo-tracked fact, unlike health.json/build-health.json: available
+ * identically at generation time and at `--check` drift-recomputation time, so reading it directly
+ * (relative to `root`, not `outDir`) never causes drift between the two. Accepts both the bare-array
+ * legacy baseline shape and the `{ $doc, entries }` shape verify-quotes.mjs's own `loadBaseline` reads
+ * (kept in sync by hand, not by import, to keep this script's own stdlib-only, dependency-free stance);
+ * missing or unparsable is `null`, never a false zero.
+ */
+export function readVerifyQuotesBaselineCount(root) {
+  const p = path.join(root, VERIFY_QUOTES_BASELINE_REL);
+  if (!fs.existsSync(p)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+    const entries = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.entries) ? parsed.entries : null;
+    return entries ? entries.length : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -751,10 +789,13 @@ function normalizeHtmlTimestamp(html) {
 export function checkSiteDrift({ planPath, outDir, repoSlug }) {
   const plan = loadPlan(planPath);
   const health = readHealth(outDir);
+  // Unlike buildHealth (Pages-build-only, gitignored), the baseline is a repo-tracked file: reading it
+  // fresh here gives the same value it had at generation time, so it never causes drift by itself.
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
   let html, planJson;
   try {
     // buildHealth stays absent here on purpose (see readBuildHealth).
-    ({ html, planJson } = renderSite(plan, health, { repoSlug, buildHealth: null }));
+    ({ html, planJson } = renderSite(plan, health, { repoSlug, buildHealth: null, governanceBaselineCount }));
   } catch (e) {
     if (e instanceof SiteMetricViolationError) return { ok: false, problems: [e.message] };
     throw e;
@@ -833,7 +874,8 @@ function main() {
   const plan = loadPlan(planPath);
   const health = readHealth(outDir);
   const buildHealth = readBuildHealth(outDir);
-  const { html, planJson } = renderSite(plan, health, { repoSlug, buildHealth });
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
+  const { html, planJson } = renderSite(plan, health, { repoSlug, buildHealth, governanceBaselineCount });
 
   fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
