@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T22:17:05.254Z",
-  "plan_hash": "c66d95b140aea8501901f0185ef1cf4087abb2a67b9003718fff64003e26d8f5",
+  "generated_at": "2026-09-17T10:37:30.392Z",
+  "plan_hash": "f013cf0c1ee29d8b592bcad0d961e8a73c98c599ebe15008ab0d26232415b105",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -71,28 +71,6 @@
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "briefa-p3b-owner-side-invalidation",
-      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 5,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "sight",
-        "minutes": 20
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-16",
-        "done": null
-      },
-      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
-      "blocked_by": [
-        "briefa-p3-p6"
-      ]
-    },
     {
       "id": "geometry-types-beyond-polygons",
       "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
@@ -281,8 +259,8 @@
       "order": 5,
       "budget_minutes": 390,
       "needs_human": {
-        "kind": "click",
-        "minutes": 5
+        "kind": "sitting",
+        "minutes": 15
       },
       "evidence": {
         "pr": 83
@@ -303,18 +281,62 @@
       "order": 7,
       "budget_minutes": 480,
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 10
       },
       "evidence": {
-        "branch": "engine/lod-tier-builder"
+        "pr": 84
       },
       "dates": {
         "opened": "2026-09-16",
         "done": null
       },
       "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
-      "evidence_label": "branch `engine/lod-tier-builder`"
+      "evidence_label": "PR #84"
+    },
+    {
+      "id": "briefa-p3b-owner-side-invalidation",
+      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "evidence": {
+        "branch": "cut/briefa-p3b"
+      },
+      "dates": {
+        "opened": "2026-09-16",
+        "done": null
+      },
+      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
+      "evidence_label": "branch `cut/briefa-p3b`"
+    },
+    {
+      "id": "governance-verify-quotes",
+      "title": "verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 5
+      },
+      "evidence": {
+        "branch": "governance/verify-quotes"
+      },
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
+      "evidence_label": "branch `governance/verify-quotes`"
     }
   ],
   "proposed": [

@@ -549,7 +549,7 @@ nodes:
     status: in-progress
     order: 5
     depends_on: [briefa-p1-p2, sitting-4-rows]
-    needs_human: {kind: click, minutes: 5}
+    needs_human: {kind: sitting, minutes: 15}
     gate: engine/ADMISSION-PREREGISTRATION.md
     evidence: {pr: 83}
     budget_minutes: 390
@@ -729,9 +729,9 @@ nodes:
     status: in-progress
     order: 7
     depends_on: [adr-031-lod-preregistration]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: click, minutes: 10}
     gate: engine/LOD-PREREGISTRATION.md
-    evidence: {branch: engine/lod-tier-builder}
+    evidence: {pr: 84}
     budget_minutes: 480
     generation: 1
     felt_verdict: false
@@ -775,6 +775,24 @@ nodes:
     summary: "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here"
     dates: {opened: 2026-09-17, done: null}
 
+  - id: governance-verify-quotes
+    title: "verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: in-progress
+    order: 3
+    depends_on: []
+    needs_human: {kind: click, minutes: 5}
+    gate: scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md
+    evidence: {branch: governance/verify-quotes}
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: [101]
+    summary: "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring"
+    dates: {opened: 2026-09-17, done: null}
+
   - id: engine-tests-configured-connections
     title: "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)"
     kind: task
@@ -798,12 +816,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: in-progress
     order: 5
     depends_on: [briefa-p3-p6]
     needs_human: {kind: sight, minutes: 20}
     gate: frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/briefa-p3b}
     budget_minutes: 240
     generation: 1
     felt_verdict: false
