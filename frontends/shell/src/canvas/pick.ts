@@ -52,7 +52,7 @@ export interface PickConfirming {
  * was cleared and the identities it handed out no longer refer to anything this client can resolve.
  *
  * **Why this is a state and not silence.** With residency cleared, `onHover` resolves no layer and
- * emits `null` (`WorkingCanvas.tsx:1965-1977`), and `null` means *"nothing under the cursor"* --
+ * emits `null` (`WorkingCanvas.tsx:1968-1972`), and `null` means *"nothing under the cursor"* --
  * which is a different, and false, statement. ADR-010 rule 5 (`:68`, *"Staleness is signalled,
  * never silently served"*) forbids exactly that reading, so the refusal is named.
  *
@@ -92,7 +92,7 @@ export function isPickSessionEnded(value: HoverReadout): value is PickSessionEnd
  * were voided is precisely the stale-service ADR-010 rule 5 forbids.
  *
  * **The latch is permanent for the session.** It is cleared only by reopening the dataset, which
- * remounts `WorkingCanvas` and rebuilds both managers (`App.tsx:1363-1364`, keyed on
+ * remounts `WorkingCanvas` and rebuilds both managers (`App.tsx:1477`, keyed on
  * `admitted.dataset`) -- boundary 4's own "until reopen" (`state/NEXT-CUT.md:58-59`), and §7's
  * declared lifetime: no timeout, because a timeout would resurrect exactly what the never-resurrect
  * rule prevents.

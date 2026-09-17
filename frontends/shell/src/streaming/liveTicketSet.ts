@@ -59,11 +59,11 @@ export function isSourceChangedTerminal(terminal: Terminal): boolean {
  * G-A2's own wording requires both routes -- *"Asserted at the pre-check and at the post-check paths
  * separately"* (`engine/ADMISSION-PREREGISTRATION.md:221`). The post-check arrives as a data-plane
  * terminal (`isSourceChangedTerminal` above); the pre-check arrives synchronously, as a thrown
- * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:666-672`)
- * and its mint-race arm (`:709-715`), reaching this client through `skp/client.ts:58-65`.
+ * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:796-802`)
+ * and its mint-race arm (`:840-846`), reaching this client through `skp/client.ts:58-65`.
  *
  * **Matched on `.skpError.code`, never on prose** -- the precedent `RETRYABLE_ENGINE_CODE`/
- * `isRetryableRefusal` already sets (`tileViewportStreamManager.ts:288-308`). The message's wording
+ * `isRetryableRefusal` already sets (`tileViewportStreamManager.ts:316`/`:324`). The message's wording
  * is the human's at P6 and is not required to contain the code.
  */
 export function isSourceChangedRefusal(err: unknown): boolean {
@@ -75,7 +75,7 @@ export function isSourceChangedRefusal(err: unknown): boolean {
  * `"<code>: <display>"` -- so an owner has exactly one thing to parse rather than two.
  *
  * This is not a re-spelling of the kernel's format: it is the same one. `terminal_detail_of` is
- * `format!("{}: {e}", error_of(e).code)` (`kernel/src/skp.rs:1005-1007`), and `error_of`'s own
+ * `format!("{}: {e}", error_of(e).code)` (`kernel/src/skp.rs:1136`), and `error_of`'s own
  * `message` is that same `Display` output, so `code + ": " + message` is byte-identical to the
  * terminal's `detail` for any given error. `liveTicketSet.test.ts` asserts that equality against
  * the two pinned real shapes rather than leaving it argued.

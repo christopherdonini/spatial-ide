@@ -708,7 +708,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    * **T4 (P3b §4): the owner-side clear, on the baseline arm.**
    *
    * The whole of boundary 4's "residency cleared" for this arm is that `onSuperseded` fires for the
-   * resident handle -- `App.tsx:539-541` wires that option to `canvas.clearStream(streamHandle)`,
+   * resident handle -- `App.tsx:541-543` wires that option to `canvas.clearStream(streamHandle)`,
    * which is the real product path an ordinary supersede-on-pan already uses. Asserted here at the
    * real option seam rather than against a canvas double, because the seam IS the interface.
    *

@@ -221,7 +221,7 @@ fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
 // `GenerationRegistry`'s: what it records when a generation ends, and what a redemption is
 // therefore entitled to say. The first is an END-TO-END test from the real product shape (the
 // human's class fix, `DECISIONS-PENDING.md:46`): a real `SkpHost`, a real `viewport_query`, the
-// real `EngineSourceFactory` constructor `frontends/shell/src-tauri/src/lib.rs:369` installs, and
+// real `EngineSourceFactory` constructor `frontends/shell/src-tauri/src/lib.rs:373-377` installs, and
 // the real `SourceFactory::create` the data plane calls at
 // `protocol/data-plane/src/server.rs:384`. Nothing is fabricated and `end_generation` is never
 // called by a test.
@@ -302,7 +302,7 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
     let refused = host.viewport_query(request(dataset.clone())).expect_err("the pre-check refuses");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 
-    // 4. The redemption, through the constructor `frontends/shell/src-tauri/src/lib.rs:369`
+    // 4. The redemption, through the constructor `frontends/shell/src-tauri/src/lib.rs:373-377`
     //    installs and the call `protocol/data-plane/src/server.rs:384` makes.
     let factory = EngineSourceFactory::ticket_only(catalog, tickets, host.generations());
     let detail = factory

@@ -613,7 +613,7 @@ export function handleCanvasCeilingRefusal(
  * operator sees one behaviour whichever arm is running and whichever route detected the change.
  *
  * **`detail` is parsed, never interpolated.** It is the `"<code>: <display>"` shape the kernel mints
- * (`kernel/src/skp.rs:1005-1007`), and `formatTerminalRefusal` is what splits it, so no machine
+ * (`kernel/src/skp.rs:1136`), and `formatTerminalRefusal` is what splits it, so no machine
  * prefix reaches an operator (§8.6). An unprefixed detail passes through whole, exactly as the
  * publish parser does.
  *

@@ -460,8 +460,8 @@ impl GenerationRegistry {
     /// human's round-4 ruling removed, `engine/ADMISSION-PREREGISTRATION.md:742-744`).
     ///
     /// **Its product caller is `EngineSourceFactory::create_from_ticket`**
-    /// (`kernel/src/lib.rs:369`), reached on every real START frame through
-    /// `SourceFactory::create` (`kernel/src/lib.rs:301-316`,
+    /// (`kernel/src/lib.rs:390`), reached on every real START frame through
+    /// `SourceFactory::create` (`kernel/src/lib.rs:321-336`,
     /// `protocol/data-plane/src/server.rs:384`). This is not an instrument: it acts.
     pub fn ticket_liveness(&self, handle: &str) -> TicketLiveness {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
@@ -710,7 +710,7 @@ impl SkpHost {
     /// [`GenerationRegistry::ticket_liveness`] about what this host ended — the host constructs the
     /// registry privately (`Self::new`, `:562`) and nothing else can hand out that `Arc`.
     ///
-    /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:369`,
+    /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:373-377` (`host.generations()` at `:376`),
     /// `EngineSourceFactory::ticket_only(catalog, tickets, host.generations())`. Same shape as
     /// [`Self::catalog`] and [`Self::tickets`] above, for the same reason.
     pub fn generations(&self) -> Arc<GenerationRegistry> {

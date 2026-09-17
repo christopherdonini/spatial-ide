@@ -377,6 +377,16 @@ export async function waitForSettle(traceFn, { quietMs = 3000, timeoutMs = 45_00
 // `regression.mjs` imports it back. **Every function and constant below is byte-identical to what
 // it was in `regression.mjs`; only the `export` keyword was added.** Their doc comments, including
 // every finding and threshold justification, moved with them unchanged.
+//
+// **`export` was added UNIFORMLY, and nine of these exports have no importer outside this file** --
+// `BISECTION_COARSE_COLS`, `BISECTION_COARSE_ROWS`, `BISECTION_SUBDIVIDE`,
+// `BISECTION_FINAL_PATCH_MAX_PX`, `BISECTION_DENSE_FRACTION_TARGET`, `INTERIOR_PATCH_RADIUS`,
+// `ALPHA_INTERIOR_THRESHOLD`, `neighborhoodRegions` and `parseAlpha` are read only by the functions
+// beside them. Exporting them anyway is what keeps the bodies byte-identical to what `regression.mjs`
+// had, which is the property the move claims and a reader can check; making the set minimal would
+// have meant editing the moved text. Stated here so an unimported `export` reads as that choice
+// rather than as a leftover. This is an e2e module, not a product surface -- the caller rule the
+// gates run is about product code (`DECISIONS-PENDING.md:44`).
 // ------------------------------------------------------------------------------------------------
 
 export const BISECTION_COARSE_COLS = 8; // task's own "e.g. 8x5" coarse grid

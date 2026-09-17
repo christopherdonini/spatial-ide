@@ -282,7 +282,7 @@ export class ViewportStreamManager {
         //
         // **The residency clear goes through `clearResidency()`, not a new canvas method** (P3b
         // §2a(ii)): that method fires `opts.onSuperseded(resident)`, which `makeManagerCallbacks`
-        // wires to `canvas.clearStream(streamHandle)` (`App.tsx:539-541`;
+        // wires to `canvas.clearStream(streamHandle)` (`App.tsx:541-543`;
         // `frontends/shell/src/canvas/WorkingCanvas.tsx:116`) -- the same path an ordinary
         // supersede-on-pan already uses. It rests on a structural fact this manager already
         // guarantees and `viewportStreamManager.test.ts` asserts: the baseline resident set holds at
@@ -301,7 +301,7 @@ export class ViewportStreamManager {
         // set the latch without guarding re-entry, which was harmless while the branch only logged;
         // with an owner callback on the other side of it, "at most one stream is in flight so a
         // second terminal cannot arrive" would be a claim resting on another method's invariant.
-        // The tiled sibling already guards this way (`tileViewportStreamManager.ts:714-722`).
+        // The tiled sibling already guards this way (`tileViewportStreamManager.ts:732`).
         if (isSourceChangedTerminal(terminal) && !this.sessionEnded) {
           this.sessionEnded = true;
           this.liveTickets.invalidate();

@@ -1063,7 +1063,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * **Cleared through the interface this session already has** -- `canvas.clearAllTiles()`
    * (`WorkingCanvas.tsx:196-200`, implemented `:1656`), the same call `reissueUnrestricted` already
    * makes on a filter reissue. No new canvas method. It also clears the untiled first look, whose
-   * batches are ingested under `INITIAL_TILE_KEY` (`candidateArmSession.ts:1235`) and therefore live
+   * batches are ingested under `INITIAL_TILE_KEY` (`candidateArmSession.ts:1295`) and therefore live
    * in the same `TileResidentSet`.
    *
    * **What is NOT done here, and why.** No `resetFitForNewGeneration()`: a fit anchor is a camera

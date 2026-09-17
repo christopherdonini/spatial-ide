@@ -866,3 +866,73 @@ Exe for all three: `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\sp
 **(f) What this discharges, and what it does not.** Amendment 4 (e)'s closing sentence -- *"this piece claims nothing about what an operator sees end to end"* -- **no longer holds, and is superseded here**: run 5 and run 7 are that evidence, and §4's T10 is satisfied. What is still NOT claimed: no snapshot claim about the session before the detection (A1); no timing, rate or performance figure anywhere in the driver or its reports (ADR-018); and the **post-check** route is not what these runs exercised -- the detection came through the **pre-check** on a tile mint, which is one of §2b's two routes. The post-check route remains covered by its unit and integration tests only, and by G-A2 at P5.
 
 **(g) Machine.** Every app was closed by PID after verifying ownership by `ExecutablePath` and creation time. After the last close: no `spatial-ide-shell.exe`, no `cargo.exe`, no `rustc.exe`, no `tauri`/`vite` node process, and neither 9223 nor 5180 listening.
+
+**Amendment 10 — class 3 for (a), class 2 for (b), class 1 for (c)–(e). Written 2026-09-17 after both P3b gates returned FAIL on attempt 1. Docs-only: no product code, no test and no E2E run changed in this round.** Amendments 1–9 are byte-untouched; this item states what is true instead.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it; where a thing is **not** done it says so, and dates what is owed.
+
+---
+
+**(a) Class 3 — every cite in Amendments 4–9 re-derived at this head. Mechanical; no claim changes, only where it points.**
+
+**Amendments are not edited in place, and that is the reason this is a table and not a diff.** §10 is append-only from the first commit, and an amendment is the record of what was written when it was written — correcting one in place would destroy the record the round-7 fence exists to protect. So: **this table is the resolution point for any `file:line` in Amendments 4–9.** Fifty-nine distinct cites appear there; **forty-six resolve at this head to the thing they name, and thirteen do not.** All thirteen are below, with the line that carries the named thing now.
+
+| where | the cite as written | at this head | the line it names |
+| --- | --- | --- | --- |
+| 4(a) row 2a(i) | `tileViewportStreamManager.ts:88-101` | **`:89-102`** | `onSessionEnded?: (detail: string) => void;` (`:102`), its doc `:89-101`; `:88` is `onTerminal?` |
+| 4(a) row 2a(i), 4(f) | `App.tsx:1144` | **`:1155`** | `onSessionEnded: endSession,` (the candidate-arm deps) |
+| 4(a) row 2a(i), 4(f) | `App.tsx:1203` | **`:1214`** | `onSessionEnded: endSession,` (the baseline manager) |
+| 4(a) row 2a(iv), 4(f) | `App.tsx:1477` | **`:1488`** | `onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}` |
+| 4(a) row 2a(v) | `App.tsx:1546-1551` | **`:1566-1570`** | `{sessionEnded && (` … `<RefusalBlock refusal={sessionEnded} />` … `)}` |
+| 4(a) row 2b, 4(c)(4)(ii), 4(f) ×2 | `App.tsx:1026` | **`:1037`** | `if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e));` |
+| 4(c)(3) | `App.tsx:1104`, quoting §2a(v) | **`:1108`** in the quotation | §2a(v) has read `App.tsx:1108` since Amendment 3(b)'s own table (`:564`); the quotation reproduced the pre-Amendment-3 text |
+| 4(c)(3) | `App.tsx:1150` | **`:1221`** | `setCanvasRefusal(\`stream ${terminal.kind}: ${formatTerminalRefusal(terminal.detail).message}\`);` |
+| 4(c)(4)(iii) | `candidateArmSession.ts:1546` | **`:1620`** | `if (sessionEnded) return { kind: "session-ended" };` inside `reissueUnrestricted` |
+| 4(c)(5)(ii) | `App.tsx:1573` | **`:1594`** | `{viewportRefusal && !sessionEnded && (` |
+| 4(f) | `App.tsx:994` | **`:1005`** | `handleSessionEnded(detail, {` |
+| 4(g)(2) | `App.tsx:1548` | **`:1568`** | `<RefusalBlock refusal={sessionEnded} />` |
+| 4(g)(2) | `App.tsx:1573-1589` | **`:1594-1608`** | the `viewportRefusal` block, `code` + `message` + its Dismiss button |
+
+**Two causes, separated rather than folded into one.** Five of the thirteen — `App.tsx:994`, `:1026`, `:1144`, `:1203`, `:1477` — were **correct when Amendment 4 was written** and went stale when Amendment 5(a)'s `residentCounts` hook landed at `App.tsx:923` and moved everything below it by eleven lines; the proof is the branch's own history, `git show ece5f05:frontends/shell/src/App.tsx`, where each anchor sits at exactly the cited line. The other eight — `tileViewportStreamManager.ts:88-101`, `candidateArmSession.ts:1546`, `App.tsx:1104`, `:1150`, `:1546-1551`, `:1548`, `:1573`, `:1573-1589` — **were wrong when they were written**: at `ece5f05` the tile decl was already `:102`, the candidate latch already `:1620`, the `formatTerminalRefusal` call `:1210`, the session-ended block `:1555` and the `viewportRefusal` block `:1583`. That is a filing error in Amendment 4, not a drift, and it is recorded as one.
+
+**§0–§9 are deliberately NOT re-derived at this head, and that is a decision rather than an omission.** Those sections are the piece's declarations, written before its code, and their cites describe the tree the piece **started from** — `279ec77`, where Amendment 3 derived them. §2a(v)'s *"`App.tsx:1108`'s `setCanvasRefusal(...)` is replaced by…"* is a statement about the pre-change line; re-pointing it at `:1221` would put post-change numbering under pre-change prose and make the declaration unreadable as the declaration it is. The header's rule — *"a worker re-derives every cite it touches at P3b's own head"* — is satisfied for every cite this piece's **results** rest on, which is what (a) above does.
+
+**Also corrected in this round, in place and not by table: twenty comment lines carrying stale `file:line` references,** across `liveTicketSet.ts`, `tileViewportStreamManager.ts` (+ its test), `viewportStreamManager.ts` (+ its test), `candidateArmSession.ts`, `pick.ts`, `App.tsx`, `kernel/src/lib.rs`, `kernel/src/skp.rs` and `kernel/tests/session_generation.rs`. Comments are not append-only records, so those are fixed where they sit. Two examples for a reader to check the class by: `liveTicketSet.ts`'s cite of the live-generation pre-check was `kernel/src/skp.rs:666-672` and is now `:796-802`; `kernel/tests/session_generation.rs`'s cite of the product wiring was `frontends/shell/src-tauri/src/lib.rs:369` and is now `:373-377`. No comment's meaning changed.
+
+**And one comment added rather than corrected, about the moves Amendments 7 and 8 made.** `frontends/shell/e2e/lib.mjs` now says at the moved block's own header why `export` was applied uniformly: nine of the moved definitions — the five `BISECTION_*` constants, `INTERIOR_PATCH_RADIUS`, `ALPHA_INTERIOR_THRESHOLD`, `neighborhoodRegions` and `parseAlpha` — have **no importer outside that file** (checked against both drivers' import lists: `regression.mjs:35-54` and `source-changed.mjs:149-161` name neither), and exporting them anyway is what keeps the bodies byte-identical, which is the property the move claims. The note says so, and says that this is an e2e module rather than a product surface, so an unimported `export` reads as that choice rather than as a leftover.
+
+---
+
+**(b) Class 2 — T6 was built by a different mechanism than §4 declares, and Amendment 4(c)(2) recorded only its name change. The mechanism change is recorded here.**
+
+§4's T6 says: *"`reportViewportOutcome`'s catch **driven** with a real `SkpCallError` built from X-3"*. What exists is a **source-text pin**, not a driven catch: `frontends/shell/src/App.test.ts:1168`, *"reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code"*, reads `App.tsx` and asserts five regexes over it (`:1173-1182`).
+
+**The reason, stated at the test's own doc (`App.test.ts:1151-1167`) and not only here:** `reportViewportOutcome` is a closure over `App`'s hooks, is not exported, and there is no product path that reaches it without rendering the whole `App`. Driving it would have required either exporting it — a `pub`-class surface with no product caller, which the caller rule forbids — or a full-render harness this piece does not have.
+
+**What this weakens, said plainly.** A source pin proves the catch is *written* the way §2b requires; it does not prove the catch *behaves* that way when a real `SkpCallError` arrives. Its recorded mutation (match on `message` instead of `code`) fails it by a regex no longer matching (`OBSERVED` at `App.test.ts:1165-1166`), which is a weaker discrimination than a driven error would give.
+
+**What covers the behaviour instead, each named:** the code-not-prose matching is driven with the real thrown error by `liveTicketSet.test.ts`'s *"matches the real thrown refusal on its code, never on its prose"*; and the end-to-end consequence is observed in the running app by T10 run 5's `S5a` and `S5c` (report `frontends/shell/e2e/out/source-changed-1789618861740.json`, Amendment 9(d)). §4's T6 declaration is not edited.
+
+---
+
+**(c) NOT delivered: §9's operator row. Named as owed, with its date, not claimed.**
+
+§9 requires *"One walkthrough row appended to **Part N** (`state/NEXT-CUT.md:106`), committed with a blank result log"*. **`frontends/shell/MANUAL-WALKTHROUGH.md` has no Part N** — its last part is **Part M** (`frontends/shell/MANUAL-WALKTHROUGH.md:1312`, "Part M run (release cut — the packaged build on a clean profile)"), and P3b appended nothing. **Owed, 2026-09-17, at P6**: the Part N row in §9's own words — *open the 100k copy, let it fill, change the file underneath, act on the canvas* — with a blank result log and **no duration in the row** (A6). It is an operator-facing document whose felt verdicts are the human's, and this piece does not write one for them.
+
+---
+
+**(d) One more operator-visible element joins the P6 sight list (§9), and it is not a string this piece wrote.**
+
+The session-ended status renders through `RefusalBlock`, which puts the typed code in its own labelled chip — `<div className="admission-refusal-code">{refusal.code}</div>` (`frontends/shell/src/admission/RefusalBlock.tsx:28`). For this refusal that chip reads `engine.source_changed`, observed in the running app by T10 run 5's `S5a` (Amendment 9(d)). The chip is `RefusalBlock`'s long-standing shape for every refusal in this app and P3b did not add it; what is new is that a **canvas** surface now shows it, in a block the operator cannot dismiss. Whether an operator should see a machine code in that position is an operator-visible decision, so it **joins the §9 sight list** beside the pick refusal and the session-ended status line rather than being settled here.
+
+---
+
+**(e) Three items recorded and deliberately not fixed in this round, each with its date.**
+
+1. **`verify-test-claims.mjs` reports twelve planned entries for this file, and they are not defects.** Six §4 names (`:359`, `:367`, `:372`, `:377`, `:382`, `:390`) are superseded by the tests that exist, and Amendment 4(c)(2)'s mapping table (`:623-628`) repeats each superseded name in its left column — so the check counts each of the six twice. The check's own verdict is `PASS … (13 planned, advisory)`. **Not fixed, 2026-09-17**: editing §4's names would edit a declaration to match its outcome, which class 2 forbids, and rewriting the mapping table would remove the very column that makes it a mapping.
+2. **`e2e/regression.mjs` has not been run since fourteen of its definitions moved to `e2e/lib.mjs`.** Amendments 7 and 8 moved nine `A9'` definitions plus `gridRegions`, `canvasRect`, `doWheel`, `hasFreshRenderTraceMotion`, `zoomInOneNotch` (with their constants) out and imported them back. The move was checked mechanically — bodies byte-identical, only `export` added — and `node --check frontends/shell/e2e/regression.mjs` is green, but **the suite itself has not been executed since**. `regression.mjs` is not among §9's suites and re-running it launches a detached desktop application, which this docs-only round does not do. **Owed, 2026-09-17, at the next E2E sitting**: one `regression.mjs` run to confirm the move left it green.
+3. **`isSourceChangedRefusal(err: unknown): boolean` could be a type predicate and is not.** `frontends/shell/src/streaming/liveTicketSet.ts:69` returns `boolean`, so its tiled caller casts — `refusalDetailOf(err as SkpCallError)` (`tileViewportStreamManager.ts:953`). Declaring it `err is SkpCallError` would delete that cast at both call sites. **Not taken, 2026-09-17**: it is a product-code change, this round is docs-only, and the cast is checked by the same tests either way. Owed to whoever next touches that file.
+
+---
+
+**Suites at this amendment.** No product code, no test and no driver changed in this round — the diff is markdown plus twenty comment lines and one added comment — so no suite result changes. Re-run anyway, because comment text sits inside compiled and linted files: `cargo test --workspace --locked` exit 0, 61 test binaries, 0 failed, 0 warnings; `npm run verify` exit 0, 70 files, 1024 tests, 0 failed; `node --check` green on all three e2e modules (`lib.mjs`, `regression.mjs`, `source-changed.mjs`); the non-ASCII scan of `source-changed.mjs` is 0 bytes above `0x7F`, unchanged. `verify-cites.mjs`, `verify-test-claims.mjs` and `verify-mutation.mjs` were run after `git add`, and their verdicts are in this round's commit message.

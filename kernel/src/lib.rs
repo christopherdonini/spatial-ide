@@ -408,7 +408,8 @@ impl EngineSourceFactory {
         // about a ticket and never about a file.
         match generations.ticket_liveness(handle.as_str()) {
             skp::TicketLiveness::EndedBySourceChange => {
-                // The `"<code>: <display>"` shape `skp::terminal_detail_of` mints, which the data
+                // The `"<code>: <display>"` shape `skp::terminal_detail_of` mints
+                // (`kernel/src/skp.rs:1136`), which the data
                 // plane sends as `TERM_PRODUCER_FAILED`
                 // (`protocol/data-plane/src/server.rs:388-401`) and the shell's **existing**
                 // `isSourceChangedTerminal` already matches

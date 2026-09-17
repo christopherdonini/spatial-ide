@@ -1418,7 +1418,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * **T7 (P3b §4): the pre-check refusal latches the session on a tile mint.**
    *
    * `viewport_query` refuses synchronously with `engine.source_changed` when the live-generation
-   * check has already ended this dataset's session (`kernel/src/skp.rs:666-672`). On this arm that
+   * check has already ended this dataset's session (`kernel/src/skp.rs:796-802`). On this arm that
    * refusal lands in `mintAndStart`'s catch, where P3a only logged it (`logMintRefused`) and then
    * planned the next tile -- so an arm that learned the session was over kept asking.
    *

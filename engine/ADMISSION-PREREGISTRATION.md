@@ -1379,3 +1379,54 @@ assertion is altered.
 ---
 
 **(iv) "No release includes P3a without P3b"** (`DECISIONS-PENDING.md:44`, verbatim). P3b is the branch `cut/briefa-p3b`; until it merges, that sentence still binds, and it is recorded as a plan dependency rather than only here.
+
+---
+
+### Amendment 7 — correcting Amendment 6 (ii) and (iii) by appending: T10 was written, run, and satisfied (2026-09-17, appended)
+
+**Written after P3b's T10 runs were seen.** §12e's rule, honoured in this line. **Amendments 1–6 are byte-untouched.** This item exists because **Amendment 6 is false at this head**, and it is the record the human reads before accepting the Proposed ADR-016 Amendment 1 by click, so it must be true.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+---
+
+**(i) What Amendment 6 (ii) says, and why it is now false.** It reads: *"§4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** … and it is owed before P3b's gates conclude."* That was true when written. **T10 is now written and satisfied**, in the file that clause names, and the sentence that follows it there — *"every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run"* — no longer holds either.
+
+**(ii) The runs, and what each proves.** Three runs, each from a fresh launch, each `launched: true` (AI_DEVELOPMENT.md's own condition for a run that proves a branch), each on the exe `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\spatial-ide-shell.exe` with a creation time after its own run's start — the documented ownership check. Reports live under `frontends/shell/e2e/out/`, which `frontends/shell/.gitignore:1` ignores, so they are cited by path and kept on disk.
+
+| run | report | app session log | outcome |
+| --- | --- | --- | --- |
+| **5** | `frontends/shell/e2e/out/source-changed-1789618861740.json` | `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-1789618848.log` | every step PASS, exit 0 |
+| **6**, the recorded mutation | `frontends/shell/e2e/out/source-changed-1789618937407.json` | `…\logs\session-1789618924.log` | **S5b FAIL by name**; S5a and S5c PASS |
+| **7**, reverted | `frontends/shell/e2e/out/source-changed-1789618985531.json` | `…\logs\session-1789618972.log` | every step PASS, exit 0 |
+
+**The kernel's own detection, in the app's session log** (`session-1789618848.log:19-21`, read as content and not inferred from a size — the stale-directory-entry rule):
+
+> `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). …`
+> `candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — …`
+
+**The owner-side consequences, observed in the running app:**
+
+- **residency cleared** — `observation.residentBefore` `{totalResidentVertices: 188665, totalResidentFeatures: 10000}` → `observation.residentAfter` `{0, 0}`, read through the counts-only hook `residentCounts` (`frontends/shell/src/e2e-test-surface.ts:192-221`, registered `frontends/shell/src/App.tsx:923`);
+- **picks refused** — the readout at a pixel proven occupied before the change (interior-verified by read-back, and hovered to an id) is `className: "hover-readout hover-readout-session-ended"`: not an id, and **not silence**, which is the answer ADR-010 rule 5 forbids here;
+- **the typed status** — the session-ended block rendered with `dismissButtons: 0` (not dismissible), its code in its own labelled `.admission-refusal-code` element, and no `engine.` code in the operator's sentence or its guidance.
+
+**The recorded mutation, performed once and reverted** — delete `this.clearResidency();` from `viewportStreamManager.ts`'s source-changed branch and `canvas?.clearAllTiles();` from `candidateArmSession.ts`'s `endCandidateSession`. Observed failure on run 6, verbatim:
+
+> `S5b: resident vertices are 188665 (features 10000), expected 0 -- the owner did not clear what it was showing`
+
+**and S5a and S5c passed under it**, which is the discrimination the driver predicted in advance: those two are the owner *saying* something, S5b is the owner having *done* it. Run 7 is green from the reverted tree.
+
+**The fixture discipline held on all three**: the scratch copy's sha256 is `fd0c74ab2d5df1e1df084802134d2a6678278e764ba180ea2ea5812f53ddfb49` before and after every run, so every mutation was an mtime touch and never a byte edit (P3b's §8.8).
+
+---
+
+**(iii) Correcting Amendment 6 (iii) by appending.** That item says: *"What is missing for the gate itself is the single end-to-end run T10 is the first half of."* **That is no longer what is missing.** The end-to-end run exists and is green (above). What remains for **G-A2** is narrower and is stated here rather than left implied:
+
+1. **The post-check route's own end-to-end.** G-A2's wording requires both routes — *"Asserted at the pre-check and at the post-check paths separately"* (`:221`). Runs 5 and 7 detected the change through the **pre-check**, on a tile mint (`tile-stream-mint-refused` above). The **post-check** route — a change found at a stream's own end, `EngineSource::end_session_if_source_changed` — is covered by its unit and integration tests (`kernel/tests/typed_terminal_codes.rs`'s `the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code`; the shell's terminal-route tests in `viewportStreamManager.test.ts` and `candidateArmSession.test.ts`) but **not** by an end-to-end run. Arranging one needs the change to land while a stream is still open, which T10's scenario does not do.
+2. **P5's own scoring.** G-A2 is P5's gate, and a gate is scored by its own run. P3b builds the behaviour G-A2 scores and now demonstrates most of it end to end; it does not score the gate, and this amendment does not claim it does.
+
+---
+
+**(iv) One cite correction carried here** (class 3, mechanical, no claim changed): Amendment 6 (i) cites `frontends/shell/src/App.tsx:1477` for the one pick-latch site and `frontends/shell/src/residency/candidateArmSession.ts:1075` for the tile clear. Both shifted when the `residentCounts` hook landed. At this head they are **`App.tsx:1488`** (`onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}`) and **`candidateArmSession.ts:1076`** (`canvas?.clearAllTiles();` inside `endCandidateSession`). Amendment 6 is not edited; this states where they point now.
