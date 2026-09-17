@@ -393,6 +393,26 @@ row 2 230.40 s over five runs, row 3 418.68 s, row 4 842.43 s + 1,731.67 s — i
 
 ---
 
+## Regression check, and one figure Amendment 8 (q) is owed
+
+Run at 01:10Z, after every measurement, on the same tree: the three LOD test binaries' own result
+lines, against the lines `§10` Amendment 8 (e) records for the gated tree.
+
+| Binary | Amendment 8 (e)'s recorded line | This run (release) | Verdict |
+|---|---|---|---|
+| `tests\lod_tier_builder.rs` | 14 passed; 0 failed; 1 ignored | **14 passed; 0 failed; 1 ignored** | **no regression** |
+| `tests\lod_tier_cancellation.rs` | 1 passed; 0 failed; 1 ignored | **1 passed; 0 failed; 1 ignored** | **no regression** |
+| `tests\lod_tier_preflight.rs` | 1 passed; 0 failed; 0 ignored | **1 passed; 0 failed; 0 ignored** | **no regression** |
+| `tests\lod_tier_measurements.rs` (added by this gate) | — | 1 passed; 0 failed; **4 ignored** | new; the four ignored are this file's measurement runs |
+
+**The known suite cost of Amendment 8 (q), measured in the profile that item did not have.** That
+item records the `lod_tier_builder` binary at **935 s inside a default `cargo test --workspace`** —
+one sample, that machine, **debug** profile. On this machine, in **release**, the same binary's own
+result line reads **34.92 s** — **one sample, not a p50/p95**, and deliberately **not divided** by
+the debug figure: they are different profiles on different runs and a ratio would manufacture a
+comparison neither measurement supports. The cost Amendment 8 (q) names is real and is a debug-profile
+cost; nothing about it is a budget, and nothing is claimed here beyond the two numbers side by side.
+
 ## Not run, not reported, and why
 
 - **`cancel_quiescent`** — not instrumented anywhere in this piece (row 2). ADR-018 asks it be
