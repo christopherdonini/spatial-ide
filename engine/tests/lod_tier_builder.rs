@@ -182,12 +182,14 @@ impl Drop for FixtureAside {
 }
 
 // RECORDED MUTATION: in `engine/tests/common/mod.rs`, remove the lock-acquisition line —
-// `engine/tests/common/mod.rs:68` @ a3f5f2e
+// `engine/tests/common/mod.rs:68` @ a3f5f2e28d39
 // sha256:7ab72429b281ae83ac58e4a5b2aaa25bb45a697c076196a775f62fb33848923f — from `polygons_100k`
 // (the temporary-path write, the generation counter and the rename are all left exactly as they
 // are) → two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file fails on its last
-// assertion. **Observed at commit 43a3039**, fixture deleted first, where the failing assertion sat
-// at `engine/tests/lod_tier_builder.rs:187:5` (this file's line numbers at that commit):
+// assertion. **Observed at commit 43a3039**, fixture deleted first. At that commit the line was
+// `engine/tests/common/mod.rs:55` @ 43a3039a3a4d
+// sha256:75855d7b077133b4f9369f609cedc7785fd3fe6238f00c6e7ab5b30ad683abbb — the assertion sat at
+// `engine/tests/lod_tier_builder.rs:187:5` (this file's line numbers at that commit):
 //   thread 'two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file' panicked at
 //   engine\tests\lod_tier_builder.rs:187:5:
 //   assertion `left == right` failed: two concurrent callers of an absent fixture triggered 2
@@ -195,16 +197,14 @@ impl Drop for FixtureAside {
 //   flight instead of starting its own
 //     left: 2
 //    right: 1
-// The size and sha256 assertions above it still passed in this run — on this machine's NTFS, two
-// threads independently writing the *same deterministic* bytes to the shared temporary name did not
-// corrupt it — which is exactly why this test does not rely on corruption: it is
-// `generations_performed()`'s count, not the file's content, that only the lock keeps at one. The
-// same assertion sits at `:254` in this file as committed here (`LOD-PREREGISTRATION.md` §10
-// Amendment 12(a)); not re-run at this commit, per round 13 item 1.
+// The size and sha256 assertions above it still passed in that run — on this machine's NTFS two
+// threads writing the *same deterministic* bytes to one temporary name did not corrupt it. That
+// is why this test does not rely on corruption: it is `generations_performed()`'s count, not the
+// file's content, that only the lock keeps at one. Not re-run at this commit; unit-only.
 #[test]
 #[ignore = "moves the one polygons-100k.parquet every test in this binary (and the other two LOD \
-            suites) shares aside and restores it when done; no other cargo test anywhere on this \
-            machine may read \
+            suites) shares aside and restores it on exit paths the process unwinds through; no \
+            other cargo test anywhere on this machine may read \
             C:\\dev\\spatial-ide\\target\\fixtures\\slice-budgets\\polygons-100k.parquet, whatever \
             its CARGO_TARGET_DIR (the path is absolute and shared by the three LOD binaries and \
             kernel/tests/slice_budgets.rs): cargo test -p spatial-engine --test lod_tier_builder \
