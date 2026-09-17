@@ -526,3 +526,60 @@ export async function findInteriorCandidate(page) {
     levels,
   };
 }
+
+
+// ------------------------------------------------------------------------------------------------
+// The zoom-notch primitives A9' drives its interior search with, MOVED here verbatim from
+// `regression.mjs` (2026-09-17, P3b T10 round 4, on the human's round-9 ruling).
+//
+// **The LOOP itself is not here, and that is stated rather than glossed:** in `regression.mjs` it is
+// inline inside `stepA9`, not a function, and it leaves nine local bindings behind it that the rest
+// of that step reads (`grid`, `fractions`, `denseIdx`, `emptyIdx`, `interiorVerified`,
+// `orderedCandidates`, `rect`, `notchesUsed`, `successBisectionFraction`). Extracting it would be a
+// refactor of that step, not a move, and `regression.mjs` is a suite this round cannot re-run. So
+// every primitive the loop CALLS is shared byte-identical below, and
+// `e2e/source-changed.mjs` runs the same control flow over them -- notch 0 first, then real wheel
+// zoom-ins to the same `MAX_ZOOM_NOTCHES` budget, re-bisecting and re-verifying per notch, with the
+// same early stop on two consecutive frame-wide non-background decreases -- with each condition
+// named at its own line there.
+// ------------------------------------------------------------------------------------------------
+
+export const ZOOM_NOTCH_DELTA_Y = -300; // one "zoom in" wheel notch -- the same magnitude A5'/A6'/A8'
+// already use for their own zoom gestures, just repeated here rather than reinvented.
+export const MAX_ZOOM_NOTCHES = 15; // entry 21/P10's own bound, unchanged by this fix -- the search below
+// tries notch 0 (no zoom) FIRST, then up to this many zoom-in notches, so up to 16 attempts total.
+
+export function gridRegions() {
+  const regions = [];
+  for (let gy = 0; gy < 3; gy++) {
+    for (let gx = 0; gx < 3; gx++) {
+      regions.push({ x: gx / 3, y: gy / 3, w: 1 / 3, h: 1 / 3 });
+    }
+  }
+  return regions;
+}
+
+export async function canvasRect(page) {
+  return page.evaluate(() => {
+    const el = document.querySelector(".working-canvas");
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  });
+}
+
+export async function doWheel(page, center, deltaY) {
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.wheel(0, deltaY);
+}
+
+export function hasFreshRenderTraceMotion(entries, sinceCount) {
+  return entries.length > sinceCount && entries.slice(sinceCount).some((e) => /view-state|viewport_query/.test(e.text));
+}
+
+export async function zoomInOneNotch(page, consoleHandle, center) {
+  const before = consoleHandle.renderTrace().length;
+  await doWheel(page, center, ZOOM_NOTCH_DELTA_Y);
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
+  return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
+}

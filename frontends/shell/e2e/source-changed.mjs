@@ -52,43 +52,63 @@
 //   pick refusal (S5a, S5c) still pass, which is the point: they are the owner SAYING something,
 //   and S5b is the owner having DONE it. Record the observed failure, then revert.
 //
-//   NOT YET OBSERVED. As of 2026-09-17 this mutation has never been performed, because no run has
-//   ever reached S5b -- see the next block.
-//
 // ----------------------------------------------------------------------------------------------
-// KNOWN GAP, 2026-09-17: S2's pixel probe is insufficient, and this driver does not yet pass.
+// HOW S2 GOT HERE, in three failed runs -- read this before editing the precondition.
 //
-// Two runs were attempted on a quiet machine (reports
-// `e2e/out/source-changed-1789608089617.json` and `e2e/out/source-changed-1789608230988.json`,
-// recorded in `OWNER-INVALIDATION-PREREGISTRATION.md` section 10 Amendment 6). Both launched the
-// app themselves and both passed S1-open; both then failed in S2. The first hit a step bound that
-// was too tight, now corrected here. The SECOND reported the real gap honestly: no pixel among the
-// 25 tried around the canvas centre yielded a hover id, and the render trace carried zero
-// hover/pick lines -- the synthetic pointer never landed on a feature's own footprint.
-//
-// The centre-anchored grid those two runs used was the naive approach `A9'` was written around; it
-// has since been replaced by `A9'`'s own mechanism (`findInteriorCandidate` +
-// `verifyInteriorCandidate` + `bufferPointToCss`, shared from `lib.mjs`).
-//
-// A THIRD run (report `e2e/out/source-changed-1789608771959.json`, section 10 Amendment 7) still
-// failed in S2, and its message is the one to read before touching this file:
+// Runs 1 and 2 (reports `e2e/out/source-changed-1789608089617.json`,
+// `...-1789608230988.json`; section 10 Amendment 6) probed a blind centre-anchored grid and found
+// nothing, with zero hover/pick lines in the render trace: a synthetic pointer has to land inside a
+// feature's own footprint, which a blind grid does not do. Run 3 (`...-1789608771959.json`;
+// Amendment 7) took `A9'`'s densest-patch bisection and still failed, verbatim:
 //
 //   S2: no interior-verified pixel at this camera -- 11/25 neighbourhood pixels touch background
 //   (edge-adjacent); bisection levels coarse 8x5: 46.5% -> subdivide 4x4 (level 1): 54.3% ->
 //   subdivide 4x4 (level 2): 80.0%
 //
-// The bisection worked -- it converged on an 80%-non-background patch at buffer (1005,141) in a
-// 1280x200 buffer -- but no 5x5 fully-covered patch exists anywhere in the frame at the
-// fit-to-bounds camera this app opens with. `A9'` handles exactly that with a ZOOM-NOTCH LOOP
-// around the bisection (notch 0, then real wheel zoom-ins until one verifies, with an early stop on
-// two consecutive non-background decreases). That loop was deliberately NOT taken here, because the
-// authorized scope was the bisection swap and nothing else -- and it is what the failure names.
+// The bisection had worked -- 80% non-background at buffer (1005,141) in a 1280x200 buffer -- but no
+// 5x5 fully-covered patch existed anywhere in the frame at the fit-to-bounds camera. That is what
+// `A9'`'s ZOOM-NOTCH LOOP exists for, and run 4 takes it (the human's ruling, 2026-09-17, round 9).
 //
-// Three runs have now stopped at S2. Nothing past S1-open has ever evaluated: S5a, S5b and S5c have
-// never run and the recorded mutation above has never been performed. What the runs DID prove:
-// `residentCounts()` returns real totals from the running app (188665 vertices / 10000 features,
-// identical in all three), and the scratch copy's sha256 was identical before and after each run.
-// The next step is the human's, per section 10 Amendment 7.
+// ----------------------------------------------------------------------------------------------
+// THE PRE-DECLARED FALLBACK (the same ruling, option 2) -- automatic, in the SAME run, never a
+// judgement call at run time and never a retry.
+//
+// If, even with the notch loop, the interior-verified pixel yields no hover answer BEFORE the
+// change, this driver takes that pixel as the formerly-occupied point on the read-back evidence
+// alone, records `precondition: "formerly occupied, not formerly hovered"` in its report JSON,
+// prints the weakening, and proceeds to S3-S5 unchanged. S5c still hovers that pixel after the
+// change and still asserts the refusal readout -- not an id, and not silence. The report and this
+// header both say which path a given run took; `observation.precondition` is the field to read.
+//
+// What the weakening costs, stated plainly: on that path the run proves the pixel HELD DRAWN
+// GEOMETRY before the change (read back from the drawing buffer, 5x5 interior-verified) but not
+// that a hover there ANSWERED before the change. S5c's own assertion is unweakened.
+//
+// ----------------------------------------------------------------------------------------------
+// KNOWN GAP AS OF RUN 4 (2026-09-17): S4 ASSERTS A GESTURE, NOT A QUERY.
+//
+// Run 4 (report `e2e/out/source-changed-1789618409392.json`, section 10 Amendment 8) got the
+// precondition RIGHT for the first time -- the notch loop found an interior-verified pixel at notch
+// 2 and the hover there answered with an id, so S2 passed on the strong path, not the fallback.
+// S3 and S4 passed. Then S5a, S5b and S5c all failed, and the render trace says why:
+//
+//   82 render-trace entries; the last `viewport_query` is at index 46; the pan begins at index 73;
+//   ZERO `viewport_query` lines follow it -- only view-state lines and one residency status.
+//
+// The tiled arm plans a query only for a covering tile that is not already resident, and at this
+// camera every covering tile was ("Showing all 10000 features in view", residentFeatureCount
+// 10000), so a small pan planned nothing. Every tile stream had also already reached its Completed
+// terminal before the mtime touch, so no stream was open to post-check either. Neither detection
+// path could fire, and the session log's source-change lines are empty -- a check that never ran,
+// not one that ran and found nothing.
+//
+// So S5a/S5b/S5c's failures on that run say NOTHING about the owner-side code: it was never handed
+// a detection. S4's own note ("one pan issued; render trace quiet again") is true and insufficient.
+// Before T10 can mean anything, S4 must produce a real `viewport_query` AFTER the touch. What the
+// run shows about the options: pan far enough to leave the resident cover, zoom a notch (which
+// re-plans tiles), apply a filter through `queryWithFilter` (which always issues), or arrange the
+// change while a stream is still open. Which one T10 takes is a decision about what the test
+// claims and is not made in this file.
 //
 // A run is bounded and never kills anything it did not start: `attachOrLaunch` attaches to an app
 // already on the CDP port and returns `launched: false`, in which case this script leaves it
@@ -110,10 +130,14 @@ import {
   attachOrLaunch,
   attachConsole,
   bufferPointToCss,
+  canvasRect,
   CDP_PORT,
   findInteriorCandidate,
+  gridRegions,
+  MAX_ZOOM_NOTCHES,
   verifyInteriorCandidate,
   waitForSettle,
+  zoomInOneNotch,
 } from "./lib.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
@@ -257,13 +281,11 @@ async function waitForMountReady(page) {
   );
 }
 
-async function canvasRect(page) {
-  const rect = await page.evaluate(() => {
-    const el = document.querySelector(".working-canvas");
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    return { left: r.left, top: r.top, width: r.width, height: r.height };
-  });
+/** `lib.mjs`'s shared `canvasRect` (moved there from `regression.mjs`, byte-identical) returns
+ * `null` when the element is absent; every call here wants a throw instead of a silent null, so
+ * this is the one-line assert around it -- never a second implementation of the query. */
+async function requireCanvasRect(page) {
+  const rect = await canvasRect(page);
   if (!rect) throw new Error("no .working-canvas element in the DOM");
   return rect;
 }
@@ -419,36 +441,95 @@ async function main() {
       }
       observation.residentBefore = counts;
 
-      // **The occupied pixel, found by READ-BACK and not by guessing** -- `e2e/regression.mjs`'s
-      // own `A9'` mechanism, shared rather than copied (it moved to `lib.mjs` for this; see that
-      // module's own note). The first two runs of this driver probed a centre-anchored grid and
-      // found nothing, with zero hover/pick lines in the render trace: a synthetic pointer has to
-      // land inside a feature's own footprint, which a blind grid does not do.
+      // **The occupied pixel, found by READ-BACK and not by guessing** -- `A9'`'s full mechanism:
+      // the densest-patch bisection, the 5x5 interior verification, AND the zoom-notch loop around
+      // both. Runs 1 and 2 of this driver probed a blind centre grid and found nothing; run 3 took
+      // the bisection alone and reported "no interior-verified pixel at this camera -- 11/25
+      // neighbourhood pixels touch background", which is precisely what the notch loop exists for.
       //
-      // `findInteriorCandidate` bisects the densest patch of the real drawing buffer;
-      // `verifyInteriorCandidate` then confirms every pixel of a 5x5 patch around it is
-      // non-background AND that the frame carries a genuinely high-alpha colour -- so the candidate
-      // is an INTERIOR pixel, not an anti-aliased boundary one. `bufferPointToCss` converts the
-      // buffer index to a CSS page point, trying both row-0 conventions exactly as `A9'` does
-      // rather than assuming one.
-      const rect = await canvasRect(page);
-      const bisection = await findInteriorCandidate(page);
-      const verdict = await verifyInteriorCandidate(page, bisection.candidate, bisection.bufferWidth, bisection.bufferHeight);
-      observation.interiorCandidate = { ...bisection, verdict };
-      if (!verdict.ok) {
-        throw new Error(
-          `S2: no interior-verified pixel at this camera -- ${verdict.reason}; bisection levels ` +
-            bisection.levels.map((l) => `${l.label}: ${(l.fraction * 100).toFixed(1)}%`).join(" -> ")
-        );
+      // The loop's control flow is `stepA9`'s, condition for condition: notch 0 (the CURRENT
+      // camera) first, then real wheel zoom-ins up to `MAX_ZOOM_NOTCHES`, re-bisecting and
+      // re-verifying against a freshly settled frame each time, with the same early stop on two
+      // consecutive frame-wide non-background DECREASES (content leaving the viewport -- zooming
+      // further cannot help). `lib.mjs` carries every primitive it calls, byte-identical; see that
+      // module's note for why the loop body itself could not be moved as a unit.
+      let rect = await requireCanvasRect(page);
+      const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      let bisection = null;
+      let verdict = null;
+      let notchesUsed = 0;
+      let overshootStopped = false;
+      let previousNonBackgroundCount = null;
+      let declineStreak = 0;
+      const notchEvidence = [];
+
+      for (let notch = 0; notch <= MAX_ZOOM_NOTCHES; notch++) {
+        let zoomMotion = null;
+        let zoomSettled = null;
+        if (notch > 0) {
+          const zoomResult = await zoomInOneNotch(page, consoleHandle, center);
+          zoomMotion = zoomResult.motion;
+          zoomSettled = zoomResult.settled;
+          rect = await canvasRect(page);
+          if (!rect) throw new Error("S2: .working-canvas not found after a zoom notch");
+        }
+        notchesUsed = notch;
+
+        const grid = await page.evaluate((regions) => window.__SPATIAL_E2E__.capturePixels(regions), gridRegions());
+        const nonBackgroundCount = grid.nonBackgroundCount;
+        if (previousNonBackgroundCount !== null) {
+          declineStreak = nonBackgroundCount < previousNonBackgroundCount ? declineStreak + 1 : 0;
+        }
+        previousNonBackgroundCount = nonBackgroundCount;
+
+        if (nonBackgroundCount <= 0) {
+          notchEvidence.push({ notch, zoomMotion, zoomSettled, nonBackgroundCount, declineStreak, best: "(nothing non-background this notch)" });
+          if (declineStreak >= 2) { overshootStopped = true; break; }
+          continue;
+        }
+
+        const candidate = await findInteriorCandidate(page);
+        const candidateVerdict = await verifyInteriorCandidate(page, candidate.candidate, candidate.bufferWidth, candidate.bufferHeight);
+        notchEvidence.push({
+          notch,
+          zoomMotion,
+          zoomSettled,
+          nonBackgroundCount,
+          declineStreak,
+          bufferSize: `${candidate.bufferWidth}x${candidate.bufferHeight}`,
+          bisectionLevels: candidate.levels.map((l) => `${l.label}: ${(l.fraction * 100).toFixed(1)}%`).join(" -> "),
+          best: `buffer(${candidate.candidate.x},${candidate.candidate.y}): ${candidateVerdict.ok ? "OK" : "MISS"} -- ${candidateVerdict.reason}`,
+        });
+        if (candidateVerdict.ok) {
+          bisection = candidate;
+          verdict = candidateVerdict;
+          break;
+        }
+        if (declineStreak >= 2) { overshootStopped = true; break; }
       }
 
-      // The pixel is proven occupied by the read-back above. What the hover establishes here is a
-      // weaker and separate thing: that the pick path ANSWERS at this pixel today, so that S5c's
-      // "it now refuses" is a real change rather than a pixel that never answered at all.
+      observation.notchEvidence = notchEvidence;
+      observation.notchesUsed = notchesUsed;
+      observation.overshootStopped = overshootStopped;
+      if (!bisection) {
+        throw new Error(
+          `S2: no interior-verified pixel at ANY notch ${
+            overshootStopped
+              ? `-- stopped early at notch ${notchesUsed} after 2 consecutive non-background decreases (overshoot)`
+              : `after notch 0 plus ${MAX_ZOOM_NOTCHES} zoom-in notch(es)`
+          }. Per-notch evidence:\n` +
+            notchEvidence.map((e) => `notch ${e.notch} (non-bg=${e.nonBackgroundCount}px, decline=${e.declineStreak}): ${e.best}`).join("\n")
+        );
+      }
+      observation.interiorCandidate = { ...bisection, verdict };
+
+      // The pixel is proven occupied by the read-back above. What the hover adds is a weaker and
+      // separate thing: that the pick path ANSWERS at this pixel today, so S5c's "it now refuses"
+      // is a real change rather than a pixel that never answered at all.
       //
       // Either answer counts as "the pick path is alive": an id, or the declared
-      // below-pick-resolution refusal (`canvas/pickResolution.ts` -- at a fit-to-bounds camera over
-      // a 100k-feature fixture the average feature can genuinely sit under the 9 px threshold, and
+      // below-pick-resolution refusal (`canvas/pickResolution.ts` -- at a wide camera over a
+      // 100k-feature fixture the average feature can genuinely sit under the 9 px threshold, and
       // that refusal is the honest answer there, not a miss). What must NOT already be showing is
       // the session-ended refusal, which is what S5c asserts appears only after the change.
       const attempts = [];
@@ -464,19 +545,40 @@ async function main() {
         }
       }
       observation.preconditionAttempts = attempts;
+
+      // **The PRE-DECLARED fallback (the human's ruling, 2026-09-17, round 9 -- option 2).** Not a
+      // decision made at run time and not a retry: if the interior-verified pixel yields no hover
+      // answer under either row-0 convention, this run takes that pixel as the formerly-occupied
+      // point anyway, on the READ-BACK evidence alone, and proceeds. The weakening is named, in the
+      // report and on stdout, in the ruling's own words -- "formerly occupied, not formerly
+      // hovered" -- and S5c below is unchanged: it still asserts the refusal readout at that
+      // pixel after the change, and still rejects both an id and silence.
       if (!occupiedPoint) {
-        throw new Error(
-          `S2: the interior-verified pixel buffer(${bisection.candidate.x},${bisection.candidate.y}) produced no ` +
-            `hover answer under either row-0 convention, so "a formerly-occupied pixel" cannot be established. ` +
-            `Attempts: ${JSON.stringify(attempts)}`
+        occupiedPoint = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, true);
+        observation.precondition = "formerly occupied, not formerly hovered";
+        observation.occupiedPointFlipY = true;
+        observation.readoutBefore = null;
+        console.warn(
+          "source-changed: PRE-DECLARED FALLBACK taken -- the interior-verified pixel gave no hover answer before " +
+            "the change, so it is treated as formerly occupied on the read-back evidence alone. Weakening recorded: " +
+            '"formerly occupied, not formerly hovered". S5c still asserts the refusal, not an id and not silence.'
         );
+      } else {
+        observation.precondition = "formerly occupied AND formerly hovered";
       }
       observation.occupiedPoint = occupiedPoint;
-      const kind = readoutShowsAnId(observation.readoutBefore) ? "an id" : "the below-pick-resolution refusal";
+
+      const kind =
+        observation.readoutBefore === null
+          ? "no hover answer (fallback path)"
+          : readoutShowsAnId(observation.readoutBefore)
+            ? "an id"
+            : "the below-pick-resolution refusal";
       return (
         `resident before the change: ${counts.totalResidentVertices} vertices / ` +
         `${counts.totalResidentFeatures} features; interior-verified pixel ` +
-        `buffer(${bisection.candidate.x},${bisection.candidate.y}) -- ${verdict.reason}; the hover there answers with ${kind}`
+        `buffer(${bisection.candidate.x},${bisection.candidate.y}) at notch ${notchesUsed} -- ${verdict.reason}; ` +
+        `the hover there answers with ${kind}; precondition: ${observation.precondition}`
       );
     }, "PASS", PRECONDITION_TIMEOUT_MS);
     if (!s2) throw new Error("S2 failed; the assertions below would be vacuous");
@@ -504,7 +606,7 @@ async function main() {
     // the post-check's terminal arrives).
     // ------------------------------------------------------------------------------------
     await runStep("S4-pan", async () => {
-      const rect = await canvasRect(page);
+      const rect = await requireCanvasRect(page);
       await doPan(page, rect, 120, 80);
       await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
       return "one pan issued; render trace quiet again";

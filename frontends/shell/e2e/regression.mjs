@@ -36,14 +36,21 @@ import {
   attachOrLaunch,
   attachConsole,
   bufferPointToCss,
+  canvasRect,
   captureDensest,
   CDP_PORT,
+  doWheel,
   findInteriorCandidate,
   fractionOf,
+  gridRegions,
+  hasFreshRenderTraceMotion,
+  MAX_ZOOM_NOTCHES,
   samePoint,
   subdivideRegion,
   verifyInteriorCandidate,
   waitForSettle,
+  ZOOM_NOTCH_DELTA_Y,
+  zoomInOneNotch,
 } from "./lib.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
@@ -204,15 +211,7 @@ async function waitForMountReady(page, timeoutMs = MOUNT_READY_TIMEOUT_MS) {
 /** The fixed 3x3 grid `debug-session.mjs` already uses -- kept identical so a report from
  * either tool means the same regions. Fractions are in `PixelRegion`'s own convention
  * (`e2e-test-surface.ts`): the WebGL `readPixels` origin, bottom-left. */
-function gridRegions() {
-  const regions = [];
-  for (let gy = 0; gy < 3; gy++) {
-    for (let gx = 0; gx < 3; gx++) {
-      regions.push({ x: gx / 3, y: gy / 3, w: 1 / 3, h: 1 / 3 });
-    }
-  }
-  return regions;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares the zoom-notch mechanism)
 
 // (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
@@ -231,14 +230,7 @@ function bufferRegionToCss(region, canvasRect, fx, fy) {
   };
 }
 
-async function canvasRect(page) {
-  return page.evaluate(() => {
-    const el = document.querySelector(".working-canvas");
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    return { left: r.left, top: r.top, width: r.width, height: r.height };
-  });
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares the zoom-notch mechanism)
 
 async function assertNoRefusalOrBanner(page, stepId) {
   const found = await page.evaluate(() => ({
@@ -256,14 +248,9 @@ async function doPan(page, center, dx, dy) {
   await page.mouse.up();
 }
 
-async function doWheel(page, center, deltaY) {
-  await page.mouse.move(center.x, center.y);
-  await page.mouse.wheel(0, deltaY);
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares the zoom-notch mechanism)
 
-function hasFreshRenderTraceMotion(entries, sinceCount) {
-  return entries.length > sinceCount && entries.slice(sinceCount).some((e) => /view-state|viewport_query/.test(e.text));
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares the zoom-notch mechanism)
 
 /**
  * 2026-08-13 fix (coordinator-authorized instrument round): converts one of `capturePixels`'s new
@@ -594,22 +581,14 @@ async function stepA8(page, consoleHandle) {
 // signature -- zooming further only walks the viewport away from data, never named a fix target
 // here since this piece is selection-only). A miss even after that still fails loudly with full
 // per-notch evidence, never silently falling back to the old first-non-background heuristic.
-const ZOOM_NOTCH_DELTA_Y = -300; // one "zoom in" wheel notch -- the same magnitude A5'/A6'/A8'
-// already use for their own zoom gestures, just repeated here rather than reinvented.
-const MAX_ZOOM_NOTCHES = 15; // entry 21/P10's own bound, unchanged by this fix -- the search below
-// tries notch 0 (no zoom) FIRST, then up to this many zoom-in notches, so up to 16 attempts total.
+// (ZOOM_NOTCH_DELTA_Y / MAX_ZOOM_NOTCHES moved to e2e/lib.mjs with zoomInOneNotch)
 
 /** Wheels in ONE notch from the canvas centre (`doWheel`'s own mechanics, unchanged), settles,
  * and reports whether the render trace actually moved -- evidence for the per-notch report
  * either way. Settling once per notch, not once per fixed-size batch (the attempt this replaces),
  * is what "evidence-driven" means here: the loop below re-evaluates the interior check against a
  * fully-settled frame before ever deciding whether to zoom again. */
-async function zoomInOneNotch(page, consoleHandle, center) {
-  const before = consoleHandle.renderTrace().length;
-  await doWheel(page, center, ZOOM_NOTCH_DELTA_Y);
-  const settle = await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 1500, timeoutMs: 15_000 });
-  return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares the zoom-notch mechanism)
 
 // (BISECTION_* moved to e2e/lib.mjs with findInteriorCandidate)
 // reports whether this bar was met, leaving the actual accept/reject call to
