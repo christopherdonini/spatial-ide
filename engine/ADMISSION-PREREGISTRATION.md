@@ -1430,3 +1430,27 @@ assertion is altered.
 ---
 
 **(iv) One cite correction carried here** (class 3, mechanical, no claim changed): Amendment 6 (i) cites `frontends/shell/src/App.tsx:1477` for the one pick-latch site and `frontends/shell/src/residency/candidateArmSession.ts:1075` for the tile clear. Both shifted when the `residentCounts` hook landed. At this head they are **`App.tsx:1488`** (`onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}`) and **`candidateArmSession.ts:1076`** (`canvas?.clearAllTiles();` inside `endCandidateSession`). Amendment 6 is not edited; this states where they point now.
+
+---
+
+### Amendment 8 -- correcting Amendment 6 (iii) and Amendment 7 (iii) by appending: two misquotes and a stale P6 cite (2026-09-17, appended)
+
+**Written after the verification pass that found them.** §12e's rule, honoured in this line. **Amendments 1-7 are byte-untouched**; this item corrects three record-fidelity defects in Amendments 6 and 7, one by one, without editing either.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in both gate checklists): every clause below that says something is discharged names the test by its exact name or a `file:line`, and every clause that says something is **not** discharged names the open item instead.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): item (3) below is **class 3** (cite/line-number fix, `:110-112`, mechanical, never changes a claim). Items (1)-(2) correct misquotes of the same mechanical kind -- the quoted text is made to match its source; item (2)'s correction also completes a list the misquote had left one clause short. No claim Amendments 6 or 7 already discharged is reopened by any of the three.
+
+---
+
+**(1) Amendment 7 (iii) (`:1425`) misquotes Amendment 6 (iii).** Introduced by *"That item says:"*, it attributes to Amendment 6 (iii) the sentence, quoting: *"What is missing for the gate itself is the single end-to-end run T10 is the first half of."* Amendment 6 (iii) (`:1377`) does not contain that sentence. What Amendment 6 (iii) says, verbatim: *"What is missing for the gate itself is the single end-to-end run over a real mutated fixture, which is (ii)'s owed T10."* Amendment 7's conclusion drawn from the misquoted sentence -- that the run named there now exists, is green, and is no longer what is missing (Amendment 7 (ii)'s three reports) -- does not depend on the exact wording and is unaffected; only the attributed sentence was wrong, and this corrects it.
+
+**(2) Amendment 6 (iii) (`:1375`) misquotes §12b's G-A2.** It quotes G-A2 (`:221`) as ending, verbatim: *"picks refused; late batches dropped. Asserted at the pre-check and at the post-check paths separately."* G-A2 (`:221`) does not end that way; it states: *"picks refused; status text verbatim. Asserted at the pre-check and at the post-check paths separately."* "Late batches dropped" is G-A3's language, which reads: *"A batch whose ticket belongs to an invalidated generation, delivered after invalidation, is dropped and never rendered"* (`:222`) -- not G-A2's.
+
+Because the misquote dropped G-A2's own "status text verbatim" clause, the list of what G-A2 still lacks (Amendment 7 (iii), `:1427-1428`) is short one item. Restated complete, G-A2 has **three** outstanding clauses, not two:
+
+1. The post-check route's own end-to-end (Amendment 7 (iii) item 1, unchanged by this correction).
+2. P5's own scoring (Amendment 7 (iii) item 2, unchanged by this correction).
+3. **The status text verbatim clause.** G-A2 requires the refused status text to match a specific string, word for word -- that is what "verbatim" means in its own wording. No test in this tree pins that string against G-A2, because the string itself has not been decided: deciding the exact operator-facing status text is a **P6 wording decision that is the human's**, not this piece's or this amendment's to make. It stands beside the pick refusal and the session-ended status line that `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` Amendment 10 (d) already names as joining §9's P6 sight list, rather than being settled here.
+
+**(3) Amendment 6 (i)3 (`:1361`) cites the wrong `NEXT-CUT.md` row.** It reads: *"It is the human's at P6 (`state/NEXT-CUT.md:106`)."* At this head, `state/NEXT-CUT.md:106` is the **P5** row, whose Phase cell reads: *"Tests carrying the claims (see Gates) + E2E: detected-change invalidation; late-generation rejection; fast-admission distinction"* and whose Gate column reads: *"Reviewer"*. The **P6** row -- whose Phase cell reads, at its opening: *"Walkthrough **Part N** (no durations): open a CRS84 file, read the provenance line; open a keyless single file, read the session-identity statement; mutate the source mid-session, read the refusal"* and whose Gate column reads: *"Human (operator-verified; acceptances are red lines)"* -- is `state/NEXT-CUT.md:107`. Corrected here: the citation is `state/NEXT-CUT.md:107`.
