@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-16T22:38:46.638Z",
-  "plan_hash": "b14c9fdf11b7ea49898fa7401108b318a0a8a06cda06eeb37ffe928ddaf4d51f",
+  "generated_at": "2026-09-17T01:20:22.737Z",
+  "plan_hash": "1351c688bcc830c1d6213fbec2facc48e98292e474b937b5e72c87bb42248a38",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -281,18 +281,18 @@
       "order": 7,
       "budget_minutes": 480,
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 10
       },
       "evidence": {
-        "branch": "engine/lod-tier-builder"
+        "pr": 84
       },
       "dates": {
         "opened": "2026-09-16",
         "done": null
       },
       "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
-      "evidence_label": "branch `engine/lod-tier-builder`"
+      "evidence_label": "PR #84"
     },
     {
       "id": "briefa-p3b-owner-side-invalidation",
