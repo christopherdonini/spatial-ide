@@ -475,11 +475,11 @@ function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
 
-  // A third source, always rendered, never mixed into the other two (the human, 2026-09-14: "no row
-  // mixes the two" -- this is a third, clearly labelled one, not a mixed one): the verify-quotes
-  // baseline entry count is a fact read directly from this repository's own tracked file, not from
-  // health.mjs's machine refresh or GitHub's API build. Round 11's ratchet condition (c): "the baseline
-  // count is a line on the health strip, so a number that never shrinks is visible."
+  // A third source, always rendered, never mixed into the other two (AUTONOMY.md:231, the human,
+  // 2026-09-14: "No row mixes the two." -- this is a third, clearly labelled one, not a mixed one): the
+  // verify-quotes baseline entry count is a fact read directly from this repository's own tracked file,
+  // not from health.mjs's machine refresh or GitHub's API build. Round 11's ratchet condition (c): "the
+  // baseline count is a line on the health strip, so a number that never shrinks is visible."
   const governanceGroup =
     `<h3 class="health-source">From this repository's own tracked files</h3>\n` +
     healthRowsHtml([
@@ -811,7 +811,13 @@ export function checkSiteDrift({ planPath, outDir, repoSlug }) {
   } else {
     const committed = normalizeHtmlTimestamp(fs.readFileSync(indexPath, 'utf8'));
     const fresh = normalizeHtmlTimestamp(html);
-    if (committed !== fresh) problems.push(`${indexPath} differs from a fresh generation`);
+    if (committed !== fresh) {
+      // Reviewer should-fix 8 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7): this diff can come from
+      // PLAN.yaml OR from scripts/plan/verify-quotes.baseline.json's own entry count (governanceGroup,
+      // above) changing without `node scripts/plan/site.mjs` re-run -- named here so the diagnosis does
+      // not stop at PLAN.yaml.
+      problems.push(`${indexPath} differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)`);
+    }
   }
   if (!fs.existsSync(planJsonPath)) {
     problems.push(`${planJsonPath} does not exist`);

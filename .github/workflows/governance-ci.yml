@@ -22,12 +22,16 @@ name: Governance CI — plan, queue, site
 # It means: every test under scripts/plan and scripts/hooks passes, every rooted (in-tree) path:line
 # reference resolves against the tree (verify:cites), every quotation marked verbatim occurs in its
 # named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text,
-# after presentation normalization -- or is a recorded, reviewed baseline entry, advisory rather than
-# gated (verify:quotes, the human's round-10 ruling: "a quote marked verbatim that does not match its
-# source byte-for-byte is a gate failure by name"). For a passage with no `path:line` beside it this
-# proves only that the words occur somewhere in the tree's non-quotation text -- a floor, not proof the
-# citing document's own claimed source is that occurrence; a gate still resolves each passage against
-# its named source. Every test named in a preregistration/ADR exists (verify:test-claims),
+# after presentation normalization -- or is a recorded, classified baseline entry (pending the human's
+# sight at its PR), advisory rather than gated (verify:quotes, the human's round-10 ruling: "a quote
+# marked verbatim that does not match its source byte-for-byte is a gate failure by name"; round 11's
+# ratchet: every baseline entry carries a disposition and a ruling, or the check fails by name). Every
+# `path:a-b @ <rev> sha256:<hex>` reference is recomputed against `git show <rev>:<path>` and fails by
+# name on a mismatch or an unresolvable rev, path or range (round 12's "quote by reference" mechanism).
+# For a passage with no `path:line` beside it this proves only that the words occur somewhere in the
+# tree's non-quotation text -- a floor, not proof the citing document's own claimed source is that
+# occurrence; a gate still resolves each passage against its named source. Every test named in a
+# preregistration/ADR exists (verify:test-claims),
 # PLAN.yaml's recorded statuses agree with what the repository can verify
 # (merged PRs, ADR Status lines, tags, releases, commits on main, tracked paths), and regenerating
 # CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
@@ -42,6 +46,13 @@ name: Governance CI — plan, queue, site
 # beyond `contents: read` (AI_DEVELOPMENT.md's public-repo rule: least privilege, re-issued by the
 # human).
 
+# Reviewer should-fix 2 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7): these `paths:` filters cover the
+# set of files verify:quotes CITES FROM (preregistrations, ADRs, this workflow) -- a quote breaks when
+# its SOURCE changes, and a source can be DECISIONS-PENDING.md, AUTONOMY.md, or any other tracked file
+# in the whole-tree haystack (see verify-quotes.mjs's own header). This filter set is deliberately not
+# widened to the whole tree (it would make every push run this job); disclosed, not fixed, here --
+# editing a ruling elsewhere and never touching a citing file leaves this job unrun until the next push
+# that does touch one of the paths below.
 on:
   push:
     paths:
@@ -104,7 +115,7 @@ jobs:
       - name: verify:cites (path:line references resolve against the tree)
         run: node scripts/plan/verify-cites.mjs
 
-      - name: verify:quotes (a passage marked verbatim occurs in its named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text, after presentation normalization; recorded baseline entries advisory)
+      - name: verify:quotes (a passage marked verbatim occurs in its named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text, after presentation normalization, and every path:a-b @ rev sha256:hex reference recomputes; recorded baseline entries advisory)
         run: node scripts/plan/verify-quotes.mjs
 
       - name: verify:test-claims (a test named in a preregistration/ADR actually exists)

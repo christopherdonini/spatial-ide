@@ -10,8 +10,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { normalizeText, extractQuotePassages, runVerifyQuotes, listCiteContents } from './verify-quotes.mjs';
+
+function sha256(s) {
+  return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
+}
+
+function headOf(dir) {
+  return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+}
 
 function gitTree(files) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-quotes-'));
@@ -28,6 +37,12 @@ function gitTree(files) {
   return dir;
 }
 
+// These two tests carry no `// RECORDED MUTATION:` comment of their own (Amendment 3; disclosed at
+// Amendment 5 point 11 as pure-function unit checks whose branches every test below already covers by
+// name). Reviewer should-fix 5, said plainly: `verify-mutation.mjs` nonetheless prints `ok` for both --
+// it matches "mutation" occurring anywhere in this FILE (this header comment's own line 5-6), not a
+// mutation naming THIS test -- so `node scripts/plan/verify-mutation.mjs`'s confirmation does not
+// actually reach these two; the disclosure above is the only proof either one has.
 test('normalizeText strips blockquote prefixes, folds curly quotes/dashes, collapses whitespace', () => {
   assert.equal(normalizeText('> a  b\n> c“d”—e'), 'a b c"d"-e');
 });
@@ -265,16 +280,26 @@ test('a_baselined_offender_is_advisory_and_a_new_mismatch_still_fails', () => {
     'A.md':
       'Verbatim: "a lonely wolf howls beneath the pale full moon under starlit skies tonight" end.\n' +
       'Verbatim: "a different wolf howls beneath the pale full moon under starlit skies tonight" end.\n',
-    'scripts/plan/verify-quotes.baseline.json': JSON.stringify([
-      {
-        file: 'A.md',
-        line: 1,
-        words: 'a lonely wolf howls beneath the pale full moon under starlit skies',
-        reason: 'known offender',
-      },
-    ]),
+    // Reviewer should-fix 4 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7): the shipped baseline file
+    // is `{ $doc, entries }` (round 11's ratchet); this fixture uses that same shape, with the
+    // disposition/ruling fields round 11 requires, so at least one matching test exercises the shape
+    // the product actually has, not only the pre-round-11 bare array (still accepted, see loadBaseline).
+    'scripts/plan/verify-quotes.baseline.json': JSON.stringify({
+      $doc: 'entries leave when corrected; none is added except by a ruling; a new mismatch always fails.',
+      entries: [
+        {
+          file: 'A.md',
+          line: 1,
+          words: 'a lonely wolf howls beneath the pale full moon under starlit skies',
+          reason: 'known offender',
+          disposition: 'unfindable-by-construction',
+          ruling: 'round 11, 2026-09-17',
+        },
+      ],
+    }),
   });
-  const { findings, baselined } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  const { findings, baselined, baselineErrors } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(baselineErrors.length, 0, JSON.stringify(baselineErrors));
   assert.equal(baselined.length, 1, JSON.stringify(baselined));
   assert.equal(baselined[0].line, 1);
   assert.equal(findings.length, 1, JSON.stringify(findings));
@@ -513,4 +538,133 @@ test('a_baseline_entry_without_a_ruling_fails_the_check_by_name', () => {
   const { baselineErrors } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
   assert.equal(baselineErrors.length, 1, JSON.stringify(baselineErrors));
   assert.match(baselineErrors[0].reason, /ruling/);
+});
+
+// --- round 12's hash check ("quote by reference", docs/PREREGISTRATION-TEMPLATE.md §10; the human,
+// 2026-09-17, round 12 item 1): `path:a-b` @ <rev> sha256:<hex> recomputed against `git show
+// <rev>:<path>`, and a `byte-copied from` marker's reproduction checked byte-exact --------------------
+
+// RECORDED MUTATION: changing checkHashRef's `if (actual !== ref.hash)` to `if (actual === ref.hash)`
+// (scripts/plan/verify-quotes.mjs) makes
+// a_hash_checked_reference_with_an_explicit_rev_and_correct_hash_verifies FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 1 !== 0" on `hashFindings.length` (a genuinely
+// correct hash is now reported as a mismatch).
+test('a_hash_checked_reference_with_an_explicit_rev_and_correct_hash_verifies', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\nLine two of the target file.\nLine three of the target file.\n',
+  });
+  const rev = headOf(dir);
+  const hash = sha256('Line one of the target file.\nLine two of the target file.\n');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1-2\` @ ${rev} sha256:${hash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
+
+// RECORDED MUTATION: removing the `if (actual !== ref.hash)` block entirely (returning `{ ok: true, ... }`
+// unconditionally) (scripts/plan/verify-quotes.mjs) makes
+// a_hash_checked_reference_with_a_wrong_hash_fails_by_name FAIL: "AssertionError [ERR_ASSERTION]:
+// Expected values to be strictly equal: 0 !== 1" on `hashFindings.length` (a wrong claimed hash is no
+// longer caught).
+test('a_hash_checked_reference_with_a_wrong_hash_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\nLine two of the target file.\nLine three of the target file.\n',
+  });
+  const wrongHash = sha256('this is not the cited content at all, on purpose, for this test');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1-2\` sha256:${wrongHash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /sha256 mismatch/);
+});
+
+// RECORDED MUTATION: changing gitShowFile's `catch { return null; }` to `catch { return ''; }`
+// (scripts/plan/verify-quotes.mjs) makes a_hash_checked_reference_to_an_unresolvable_rev_fails_by_name
+// FAIL on the reason assertion: "AssertionError [ERR_ASSERTION]: The input did not match the regular
+// expression /unresolvable rev/" -- the reported reason becomes "sha256 mismatch ... actual
+// e3b0c442...852b855" (sha256 of the empty string an unresolvable `git show` now silently returns)
+// instead of naming the rev itself as unresolvable, so an unavailable rev would be reported under the
+// wrong name instead of failing by its own name (observed, not the range-based guess first written here).
+test('a_hash_checked_reference_to_an_unresolvable_rev_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\nLine two of the target file.\n',
+  });
+  const hash = sha256('Line one of the target file.\n');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1\` @ 0123456789ab sha256:${hash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /unresolvable rev/);
+});
+
+// RECORDED MUTATION: changing linesWithLF's out-of-range guard from `b > totalLines` to
+// `b > totalLines + 100` (scripts/plan/verify-quotes.mjs) makes
+// a_hash_checked_reference_to_an_out_of_range_line_span_fails_by_name FAIL on the reason assertion: the
+// slice silently clamps to the file's actual end instead of being rejected, so the reported reason
+// becomes a "sha256 mismatch" (the wrong lines were hashed) rather than naming the range as out of range.
+test('a_hash_checked_reference_to_an_out_of_range_line_span_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'Only one line here.\n',
+  });
+  const hash = sha256('irrelevant, the range itself is the defect');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:5-6\` sha256:${hash}\n`);
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /out of range/);
+});
+
+// RECORDED MUTATION: replacing reproducedTextAfter's `codeSpan` match-and-return with an unconditional
+// `return null;` (scripts/plan/verify-quotes.mjs) makes
+// a_byte_copied_marker_whose_reproduction_matches_verifies FAIL: "AssertionError [ERR_ASSERTION]:
+// Expected values to be strictly equal: 1 !== 0" on `hashFindings.length`, reason `"\"byte-copied from\"
+// marker has no reproduced blockquote or code span following it"` (a genuine, byte-exact reproduction is
+// no longer found, so the marker fails for lack of one).
+test('a_byte_copied_marker_whose_reproduction_matches_verifies', () => {
+  const dir = gitTree({
+    'T.md': 'PrecisionWord appears here.\nA second line follows.\n',
+  });
+  const hash = sha256('PrecisionWord appears here.\n');
+  fs.writeFileSync(
+    path.join(dir, 'A.md'),
+    `Evidence, byte-copied from \`T.md:1\` sha256:${hash}\n\`PrecisionWord appears here.\`\n`,
+  );
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 0, JSON.stringify(hashFindings));
+});
+
+// RECORDED MUTATION: removing the `if (!slice.includes(repro))` block entirely (falling through to
+// `return { ok: true, ... }` unconditionally once a reproduction is found)
+// (scripts/plan/verify-quotes.mjs) makes
+// a_byte_copied_marker_whose_reproduction_does_not_match_fails_by_name FAIL: "AssertionError
+// [ERR_ASSERTION]: Expected values to be strictly equal: 0 !== 1" on `hashFindings.length` (a reproduction
+// that does not match the cited bytes is no longer caught -- exactly the defect this marker exists to
+// close, since the sha256 above it only proves the CITED lines are correct, not that what a reader sees
+// below the marker is what those lines actually say).
+test('a_byte_copied_marker_whose_reproduction_does_not_match_fails_by_name', () => {
+  const dir = gitTree({
+    'T.md': 'PrecisionWord appears here.\nA second line follows.\n',
+  });
+  const hash = sha256('PrecisionWord appears here.\n');
+  fs.writeFileSync(
+    path.join(dir, 'A.md'),
+    // The hash is correct for T.md:1, but the reproduced code span silently drifts from it.
+    `Evidence, byte-copied from \`T.md:1\` sha256:${hash}\n\`PrecisionWord appears THERE.\`\n`,
+  );
+  const { hashFindings } = runVerifyQuotes({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  assert.equal(hashFindings.length, 1, JSON.stringify(hashFindings));
+  assert.match(hashFindings[0].reason, /not a byte-exact substring/);
+});
+
+// RECORDED MUTATION: in listCiteContents, changing `hashMark ? \`${firstLine} [${hashMark}]\` : firstLine`
+// to always `firstLine` (scripts/plan/verify-quotes.mjs) makes
+// a_hash_status_mark_appears_in_the_cite_listing FAIL: "AssertionError [ERR_ASSERTION]" on the `/\[hash:
+// PASS\]/` match (the hash-checked reference's own status is silently dropped from --show-cites' output,
+// leaving a reader no way to see it without re-running the gate separately).
+test('a_hash_status_mark_appears_in_the_cite_listing', () => {
+  const dir = gitTree({
+    'T.md': 'Line one of the target file.\n',
+  });
+  const hash = sha256('Line one of the target file.\n');
+  fs.writeFileSync(path.join(dir, 'A.md'), `A trusted figure: \`T.md:1\` sha256:${hash}\n`);
+  const cites = listCiteContents({ repoRoot: dir, files: [path.join(dir, 'A.md')] });
+  const c = cites.find((x) => x.target === 'T.md:1');
+  assert.ok(c, JSON.stringify(cites));
+  assert.match(c.firstLine, /\[hash: PASS\]/);
 });

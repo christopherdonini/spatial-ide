@@ -24,7 +24,12 @@
 // the one document most things in this tree legitimately quote FROM, breaking far more true positives
 // than the self-verifying-misquote defect it would close (see VERIFY-QUOTES-PREREGISTRATION.md's
 // Amendment 5 for the concrete count). A same-document self-verifying misquote is the named defect;
-// a cross-document quotation of an authoritative primary source is not the same shape.
+// a cross-document quotation of an authoritative primary source is not the same shape. DISCLOSED
+// RESIDUAL (reviewer should-fix 1, Amendment 7): the same-file scope means a misquote reproduced in a
+// DIFFERENT tracked file -- a gate log, state/CUT-STATE.md, a DECISIONS-PENDING.md entry recording the
+// correction -- still verifies against that reproduction; this tree records corrections in a different
+// file as a matter of routine, so the hole is live, not theoretical, and stays open by the same
+// false-positive-cost argument as the SAME-FILE choice above.
 //
 // A passage introduced by a nearby `path:line` cite is GATED against that file alone when the cite
 // resolves to exactly one candidate: found there is a PASS, missing there is a FAIL (baseline
@@ -58,7 +63,15 @@
 // first cited line, trimmed, so a reader can eyeball whether the line says what the clause claims --
 // this script does not judge it. An ambiguous or unresolved cite is printed as such, never as the
 // first same-basename candidate's unrelated text; a cited line past its file's end is printed as such,
-// never as an empty string.
+// never as an empty string. A cite that also carries a hash-checked reference (see below) gets a
+// trailing `[hash: PASS]` / `[hash: FAIL — ...]` mark.
+//
+// HASH-CHECKED REFERENCES (round 12's "quote by reference" mechanism, docs/PREREGISTRATION-TEMPLATE.md
+// §10; the human, 2026-09-17, round 12 item 1): `` `path:a-b` @ <rev> sha256:<hex> `` is GATED --
+// recomputed over `git show <rev>:<path>` lines a..b (each line with its LF) and failed by name on a
+// mismatch or an unresolvable rev, path or range; `@ <rev>` defaults to HEAD when absent. A `byte-copied
+// from ` prefix additionally requires the following blockquote or inline code span to be a byte-exact
+// substring of those lines, no normalization applied. See extractHashRefs/checkHashRef.
 //
 // DISCLOSED GAPS: a straight/curly/backtick quote spans at most one physical source line (this tree's
 // prose keeps a paragraph on one line; a hard-wrapped quote defeats the regex, the same limit
@@ -67,10 +80,19 @@
 // attributed to an untracked source (a `.gitignore`d evidence log, a third-party crate's source not
 // vendored into this repo) can never be found here by construction, not because it is wrong; the
 // tree-wide search for a passage with no nearby path cite is a FLOOR (the text exists somewhere), not
-// source attribution (it does not prove the citing document's own claimed source is that occurrence).
+// source attribution (it does not prove the citing document's own claimed source is that occurrence);
+// this check does not recognize `…` as an elision marker and cannot read across one for a removed
+// negation, condition or qualifier -- round 11 item 3's rider is a human-read rule, not yet a mechanical
+// one, so an elided quote is either baselined by hand or a false FAIL, never verified by construction
+// (the architect gate's N2, round-12 attempt); the `byte-copied from` reproduction check reads only the
+// FIRST following blockquote run or inline code span -- a reproduction split across both, or sitting
+// more than one blank line down, fails by name for lack of a resolvable reproduction rather than being
+// silently accepted.
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildTrackedIndex, extractCitations, resolveRef, classifyPath, topDirsOf, CODE_EXTS } from './verify-cites.mjs';
 import { claimFiles } from './verify-test-claims.mjs';
@@ -380,12 +402,138 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
   return null;
 }
 
+// HASH-CHECKED REFERENCES ("quote by reference", docs/PREREGISTRATION-TEMPLATE.md §10; the human,
+// 2026-09-17, round 12 item 1, applying entry 104's rider on (b)): a backtick-wrapped `path:a[-b]` cite,
+// optionally followed by ` @ <rev>` (a full 40-char or 12-char abbreviated commit hash -- absent means
+// HEAD of the checked tree), then ` sha256:<64 hex>`. Recomputed over the bytes of `git show
+// <rev>:<path>` lines a..b, each line WITH its own LF -- FAILS BY NAME on a mismatch or on an
+// unresolvable rev, path or line range (an unavailable rev never passes silently, per the dispatch).
+// A `byte-copied from ` prefix additionally requires the text that follows -- a `> ` blockquote run or
+// an inline `` `code span` `` starting on the next non-blank line -- to be byte-identical to a
+// contiguous substring of those same lines, with NONE of normalizeText's presentation normalization
+// applied (the rider: what is reproduced must be exact, not merely equivalent after folding).
+const HASH_REF_RE =
+  /(byte-copied from\s+)?`([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\d+)(?:-(\d+))?`(?:\s*@\s*([0-9a-f]{12}|[0-9a-f]{40})\b)?\s*sha256:([0-9a-f]{64})/g;
+
+/** Every hash-checked reference in `text`: [{reproduction,pathRaw,startLine,endLine,rev,hash,line,end}]. */
+export function extractHashRefs(text) {
+  const out = [];
+  HASH_REF_RE.lastIndex = 0;
+  let m;
+  while ((m = HASH_REF_RE.exec(text))) {
+    out.push({
+      reproduction: Boolean(m[1]),
+      pathRaw: m[2],
+      startLine: Number(m[3]),
+      endLine: m[4] !== undefined ? Number(m[4]) : Number(m[3]),
+      rev: m[5] ?? 'HEAD',
+      hash: m[6].toLowerCase(),
+      line: lineOf(text, m.index),
+      end: m.index + m[0].length,
+    });
+  }
+  return out;
+}
+
+function gitShowFile(root, rev, relPath) {
+  try {
+    return execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch {
+    return null;
+  }
+}
+
+// Lines a..b (1-indexed, inclusive), each carrying its own trailing LF -- except the file's very last
+// line when the file itself has no trailing newline, which then carries none (a real fact about the
+// file's bytes, not something this slices around).
+function linesWithLF(content, a, b) {
+  const starts = [0];
+  for (let i = 0; i < content.length; i++) if (content.charCodeAt(i) === 10) starts.push(i + 1);
+  const totalLines = content.endsWith('\n') ? starts.length - 1 : starts.length;
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b < a || b > totalLines) return null;
+  const startOffset = starts[a - 1];
+  const endOffset = b < starts.length ? starts[b] : content.length;
+  return content.slice(startOffset, endOffset);
+}
+
+function sha256Hex(s) {
+  return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
+}
+
+// The reproduced text a `byte-copied from` marker requires: a `> ` blockquote run (prefix stripped per
+// line, content otherwise untouched) or a single inline `` `code span` `` -- whichever starts the next
+// non-blank line after the marker's own line. DISCLOSED GAP: only ONE such following element is read
+// (the first blockquote run or the first code span, whichever the text actually uses); a reproduction
+// split across a blockquote AND a trailing code span, or appearing more than one blank line down, is not
+// found and the marker fails by name for lack of a resolvable reproduction, not silently accepted.
+function reproducedTextAfter(text, matchEnd) {
+  const nl = text.indexOf('\n', matchEnd);
+  let rest = nl === -1 ? '' : text.slice(nl + 1);
+  rest = rest.replace(/^(?:[ \t]*\n)*/, '');
+  const bqRun = /^(?:[ \t]*>[ \t]?.*\n?)+/.exec(rest);
+  if (bqRun) {
+    const lines = bqRun[0].split('\n').map((l) => l.replace(/^[ \t]*>[ \t]?/, ''));
+    if (lines[lines.length - 1] === '') lines.pop();
+    return lines.join('\n');
+  }
+  const codeSpan = /^[ \t]*`([^`\n]+)`/.exec(rest);
+  return codeSpan ? codeSpan[1] : null;
+}
+
+/**
+ * Resolves and hash-checks one reference against the tracked tree. Returns { ok, reason?, resolvedPath?,
+ * slice? }. A path that does not resolve to exactly one tracked file, a rev `git show` cannot resolve,
+ * an out-of-range line span, a hash mismatch, or (for a `byte-copied from` marker) a reproduction that
+ * is missing or not a byte-exact substring of the cited lines -- each fails by name, never silently.
+ */
+export function checkHashRef(root, index, relPath, text, ref) {
+  const { exact, all } = resolveRef(ref.pathRaw, relPath, index);
+  const named = exact.length ? exact : all;
+  if (named.length !== 1) {
+    return {
+      ok: false,
+      reason:
+        named.length === 0
+          ? `unresolvable path "${ref.pathRaw}" -- no tracked file matches`
+          : `ambiguous path "${ref.pathRaw}" (${named.length} candidates)`,
+    };
+  }
+  const content = gitShowFile(root, ref.rev, named[0]);
+  if (content === null) {
+    return { ok: false, reason: `unresolvable rev "${ref.rev}" for "${named[0]}" -- git show failed` };
+  }
+  const slice = linesWithLF(content, ref.startLine, ref.endLine);
+  if (slice === null) {
+    return { ok: false, reason: `line range ${ref.startLine}-${ref.endLine} out of range for "${named[0]}" @ ${ref.rev}` };
+  }
+  const actual = sha256Hex(slice);
+  if (actual !== ref.hash) {
+    return {
+      ok: false,
+      reason: `sha256 mismatch for "${named[0]}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}: claimed ${ref.hash}, actual ${actual}`,
+    };
+  }
+  if (ref.reproduction) {
+    const repro = reproducedTextAfter(text, ref.end);
+    if (repro === null) {
+      return { ok: false, reason: `"byte-copied from" marker has no reproduced blockquote or code span following it` };
+    }
+    if (!slice.includes(repro)) {
+      return {
+        ok: false,
+        reason: `reproduced text is not a byte-exact substring of "${named[0]}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}`,
+      };
+    }
+  }
+  return { ok: true, resolvedPath: named[0], slice };
+}
+
 /**
  * Scans `files` (default: every tracked `*PREREGISTRATION*.md` and `docs/adr/*.md`; explicit paths
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
- * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors }.
+ * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings }.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -417,6 +565,7 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const findings = [];
   const advisories = [];
   const baselined = [];
+  const hashFindings = [];
   let checked = 0;
 
   for (const absPath of scanAbs) {
@@ -427,6 +576,11 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     // file -- same-document self-verification only (see the header comment for why not tree-wide).
     const selfQuoteFree = normalizeText(blankPassages(text, passages));
     const norm = (abs) => (abs === absPath ? selfQuoteFree : readNorm(abs));
+
+    for (const ref of extractHashRefs(text)) {
+      const res = checkHashRef(root, index, relPath, text, ref);
+      if (!res.ok) hashFindings.push({ relPath, line: ref.line, reason: res.reason });
+    }
 
     for (const p of passages) {
       checked++;
@@ -476,14 +630,16 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     }
   }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
-  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline, baselineErrors };
+  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline, baselineErrors, hashFindings };
 }
 
 /**
  * Every `path:line[-line]` cite (whose path is not the `docs/NN` doc-number convention) with its first
  * cited line's text, trimmed to 100 chars -- or, when the cite cannot be attributed to exactly one
  * tracked file, or the cited line is past that file's end, a status string instead (never the first
- * same-basename candidate's unrelated content, never an empty string).
+ * same-basename candidate's unrelated content, never an empty string). A cite that is also a
+ * hash-checked reference (extractHashRefs) gains a trailing hash-status mark, `[hash: PASS]` or
+ * `[hash: FAIL — <reason>]`, so the two checks are readable together at a glance.
  */
 export function listCiteContents({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -495,6 +651,12 @@ export function listCiteContents({ repoRoot, files } = {}) {
     const relPath = path.relative(root, absPath).split(path.sep).join('/');
     const ext = extOf(absPath);
     const text = fs.readFileSync(absPath, 'utf8');
+    const hashByKey = new Map();
+    for (const ref of extractHashRefs(text)) {
+      const res = checkHashRef(root, index, relPath, text, ref);
+      const key = `${ref.line}:${ref.pathRaw}:${ref.startLine}`;
+      hashByKey.set(key, res.ok ? 'hash: PASS' : `hash: FAIL — ${res.reason}`);
+    }
     for (const c of extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) })) {
       if (classifyPath(c.pathRaw, topDirs) === 'doc-number') continue;
       const { exact, all } = resolveRef(c.pathRaw, relPath, index);
@@ -520,7 +682,8 @@ export function listCiteContents({ repoRoot, files } = {}) {
           firstLine = raw ? raw.slice(0, 100) : '(blank line)';
         }
       }
-      out.push({ relPath, citeLine: c.citeLine, target, firstLine });
+      const hashMark = hashByKey.get(`${c.citeLine}:${c.pathRaw}:${c.startL}`);
+      out.push({ relPath, citeLine: c.citeLine, target, firstLine: hashMark ? `${firstLine} [${hashMark}]` : firstLine });
     }
   }
   return out;
@@ -542,9 +705,11 @@ function pluralBaselineEntries(n) {
 function main() {
   const { showCites, files } = parseArgs(process.argv.slice(2));
   const opts = { repoRoot: REPO_ROOT, files: files.length ? files : undefined };
-  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors } = runVerifyQuotes(opts);
+  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings } = runVerifyQuotes(opts);
 
-  console.log(`verify:quotes — scanned ${scanned} file(s) for verbatim-marked quotations (--show-cites for the path:line cite listing).`);
+  console.log(
+    `verify:quotes — scanned ${scanned} file(s) for verbatim-marked quotations and hash-checked references (--show-cites for the path:line cite listing).`,
+  );
   if (showCites) {
     const cites = listCiteContents(opts);
     console.log(`  ${cites.length} path:line cite(s):`);
@@ -570,14 +735,17 @@ function main() {
   }
 
   const verified = checked - baselined.length - advisories.length - findings.length;
-  if (findings.length === 0 && baselineErrors.length === 0) {
+  if (findings.length === 0 && baselineErrors.length === 0 && hashFindings.length === 0) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors.`,
     );
     return;
   }
-  console.error(`verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s):`);
+  console.error(
+    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s):`,
+  );
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
+  for (const h of hashFindings) console.error(`  FAIL — hash reference: ${h.relPath}:${h.line} — ${h.reason}`);
   process.exitCode = 1;
 }
 

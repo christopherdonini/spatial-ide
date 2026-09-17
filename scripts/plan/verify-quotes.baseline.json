@@ -46,9 +46,9 @@
       "file": "engine/ADMISSION-PREREGISTRATION.md",
       "line": 220,
       "words": "G-A1 Fast admission is structural. A test that observes reads on the",
-      "reason": "source cited (`:218`) as \"DRAFT-2-BRIEF-A…:96-112\" -- the filename is itself elided with an ellipsis in the citing heading and no tracked file matches it; cannot be found here by construction.",
+      "reason": "source cited (`:218`) as \"DRAFT-2-BRIEF-A…:96-112\" -- the filename is itself elided with an ellipsis in the citing heading, matches no name in `git log --all --diff-filter=A --name-only` for any 'DRAFT-2-BRIEF-A*' path, and no tracked file matches it; cannot be found here by construction. Round 12 item 4 (the two unruled baseline entries) joins the baseline on this disposition -- the source is not real (never committed under any name, confirmed by history search), so owed-correction's 'source is real and the record immutable' condition is not met here.",
       "disposition": "unfindable-by-construction",
-      "ruling": "round 11, 2026-09-17"
+      "ruling": "round 12"
     },
     {
       "file": "engine/ADMISSION-PREREGISTRATION.md",
@@ -104,9 +104,9 @@
       "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
       "line": 113,
       "words": "\"[FIND'] PASS (14878ms): applied \\\"id > 99900\\\" via the real panel DOM, scan",
-      "reason": "source is the same e2e harness run's own FIND' log line (frontends/shell/e2e/out/, .gitignore'd; npm run e2e:regression), never a tracked file -- cannot be found here by construction (a second, backtick-introduced passage at this line, round-10 finding 10's backtick recognition).",
+      "reason": "source is the same e2e harness run's own FIND' log line (frontends/shell/e2e/out/, .gitignore'd; npm run e2e:regression), never a tracked file -- cannot be found here by construction (a second, backtick-introduced passage at this line, round-10 finding 10's backtick recognition). Round 12 item 4 (the two unruled baseline entries) joins the baseline on this disposition -- the run genuinely happened (the log is real output) but a .gitignore'd path is not a record this tool, or an appended amendment, can ever point at; owed-correction's 'source is real and the record immutable' condition names a correction naming its piece, and there is no piece that can correct a citation to a file this tree deliberately never tracks.",
       "disposition": "unfindable-by-construction",
-      "ruling": "round 11, 2026-09-17"
+      "ruling": "round 12"
     },
     {
       "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
@@ -136,16 +136,8 @@
       "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
       "line": 125,
       "words": "≤ vsync interval, zero dropped frames, across the benchmark matrix below (06)",
-      "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte; round 11 item 3 adopted the elision clause (an honest elision is not a misquote) -- the tool does not yet understand '…' as an elision marker, a tool-false-trigger under the now-ruled policy.",
+      "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte; round 11 item 3 adopted the elision clause (an honest elision is not a misquote) -- the tool does not yet understand '…' as an elision marker, a tool-false-trigger under the now-ruled policy. Read across the elision (round 11 item 3's rider, reviewer should-fix 7): the elided remainder reads '\"The display's own interval\" means the fixed reference hardware profile's own refresh rate ... not whatever a runtime happens to negotiate' -- a qualifier on what 'the display's own interval' means, not a negation or a condition on the budget itself; retaining it changes nothing the RESIDENCY piece's own frame-budget prose depends on.",
       "disposition": "tool-false-trigger",
-      "ruling": "round 11, 2026-09-17"
-    },
-    {
-      "file": "scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md",
-      "line": 54,
-      "words": "verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name",
-      "reason": "branch staleness, not a misquote: the source is DECISIONS-PENDING.md's round-10 ruling, which landed on origin/main after this branch forked and is not yet in this branch's own copy of that file; verified separately (scripts/plan/verify-quotes.mjs run against a scratch origin/main checkout plus this branch's own governance files) to PASS byte-for-byte once merged -- see VERIFY-QUOTES-PREREGISTRATION.md's Amendment 5.",
-      "disposition": "unfindable-by-construction",
       "ruling": "round 11, 2026-09-17"
     },
     {
@@ -161,14 +153,6 @@
       "line": 10,
       "words": "The code is a union over nodes: … erify-test-claims.mjs:157-168 skips done nodes",
       "reason": "source is the architect gate's own finding-5 review comment, never committed to the tracked tree -- cannot be found here by construction.",
-      "disposition": "unfindable-by-construction",
-      "ruling": "round 11, 2026-09-17"
-    },
-    {
-      "file": "scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md",
-      "line": 80,
-      "words": "Accept the baseline as a ratchet on those terms, the 17 entries in the PR body",
-      "reason": "branch staleness, not a misquote: the source is DECISIONS-PENDING.md's round-11 ruling (entry 102 (1)), which landed on origin/main after this branch forked and is not yet in this branch's own copy of that file; verified separately (git show origin/main:DECISIONS-PENDING.md, line 22) to match byte-for-byte; see this file's Amendment 6.",
       "disposition": "unfindable-by-construction",
       "ruling": "round 11, 2026-09-17"
     }
