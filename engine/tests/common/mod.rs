@@ -50,7 +50,7 @@ pub const POLYGONS_100K: &str =
 /// **All three are load-bearing, for different reasons.** The rename is what makes a *reader that
 /// opens the fixture directly* safe: no write this function performs is ever visible partially
 /// under the final name. That guarantee is per-helper, not per-path — `kernel/tests/slice_budgets.rs:472-486`
-/// writes this same absolute path directly, with neither a lock nor a temp-then-rename (an
+/// writes this same absolute path directly when run from the primary checkout, with neither a lock nor a temp-then-rename (an
 /// `#[ignore]`d by-hand harness, not run alongside this suite in ordinary `cargo test` practice), so
 /// a reader racing *that* writer would still see the partial-write hazard this function's own rename
 /// exists to prevent. The lock is what makes "every caller waits for one generation" true rather

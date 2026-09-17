@@ -133,9 +133,11 @@ fn sha256_of_file(path: &Path) -> String {
 }
 
 /// Moves the fixture at `original` aside for the lifetime of this guard and restores it on every
-/// exit path — including a panic mid-test, since `Drop` still runs during unwind — so the proof
-/// test below never leaves the tester's own hash-recorded fixture deleted or replaced by whatever
-/// this run regenerated under the same name (`LOD-PREREGISTRATION.md` §10 Amendment 11).
+/// exit path the process itself unwinds through — including a panic mid-test, since `Drop` still
+/// runs during unwind — so the proof test below never leaves the tester's own hash-recorded
+/// fixture deleted or replaced by whatever this run regenerated under the same name. An abort or a
+/// kill is not such a path: `Drop` does not run, and the fixture stays at `<original>.aside.<pid>`
+/// (`LOD-PREREGISTRATION.md` §10 Amendment 12(c)).
 ///
 /// Constructing this asserts the fixture is present: the proof test moves the *tester's* copy aside
 /// and back, it does not create one from nothing, and a missing fixture here is a misconfigured
@@ -179,11 +181,13 @@ impl Drop for FixtureAside {
     }
 }
 
-// RECORDED MUTATION: in `engine/tests/common/mod.rs`, remove the `let _guard =
-// GENERATE.lock().expect("lock");` line from `polygons_100k` (the temporary-path write, the
-// generation counter and the rename are all left exactly as they are) →
-// two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file fails on its last
-// assertion. **Observed** on this machine, fixture deleted first:
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, remove the lock-acquisition line —
+// `engine/tests/common/mod.rs:68` @ a3f5f2e
+// sha256:7ab72429b281ae83ac58e4a5b2aaa25bb45a697c076196a775f62fb33848923f — from `polygons_100k`
+// (the temporary-path write, the generation counter and the rename are all left exactly as they
+// are) → two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file fails on its last
+// assertion. **Observed at commit 43a3039**, fixture deleted first, where the failing assertion sat
+// at `engine/tests/lod_tier_builder.rs:187:5` (this file's line numbers at that commit):
 //   thread 'two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file' panicked at
 //   engine\tests\lod_tier_builder.rs:187:5:
 //   assertion `left == right` failed: two concurrent callers of an absent fixture triggered 2
@@ -194,13 +198,17 @@ impl Drop for FixtureAside {
 // The size and sha256 assertions above it still passed in this run — on this machine's NTFS, two
 // threads independently writing the *same deterministic* bytes to the shared temporary name did not
 // corrupt it — which is exactly why this test does not rely on corruption: it is
-// `generations_performed()`'s count, not the file's content, that only the lock keeps at one.
+// `generations_performed()`'s count, not the file's content, that only the lock keeps at one. The
+// same assertion sits at `:254` in this file as committed here (`LOD-PREREGISTRATION.md` §10
+// Amendment 12(a)); not re-run at this commit, per round 13 item 1.
 #[test]
 #[ignore = "moves the one polygons-100k.parquet every test in this binary (and the other two LOD \
-            suites) shares aside and restores it when done; run only with no other cargo test \
-            running against C:\\dev\\spatial-ide\\target (the path is absolute and shared by the \
-            three LOD binaries and kernel/tests/slice_budgets.rs): cargo test -p spatial-engine \
-            --test lod_tier_builder -- --ignored --exact \
+            suites) shares aside and restores it when done; no other cargo test anywhere on this \
+            machine may read \
+            C:\\dev\\spatial-ide\\target\\fixtures\\slice-budgets\\polygons-100k.parquet, whatever \
+            its CARGO_TARGET_DIR (the path is absolute and shared by the three LOD binaries and \
+            kernel/tests/slice_budgets.rs): cargo test -p spatial-engine --test lod_tier_builder \
+            -- --ignored --exact \
             two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file --nocapture"]
 fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     let path = PathBuf::from(common::POLYGONS_100K);
