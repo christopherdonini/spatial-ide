@@ -52,6 +52,30 @@
 //   pick refusal (S5a, S5c) still pass, which is the point: they are the owner SAYING something,
 //   and S5b is the owner having DONE it. Record the observed failure, then revert.
 //
+//   NOT YET OBSERVED. As of 2026-09-17 this mutation has never been performed, because no run has
+//   ever reached S5b -- see the next block.
+//
+// ----------------------------------------------------------------------------------------------
+// KNOWN GAP, 2026-09-17: S2's pixel probe is insufficient, and this driver does not yet pass.
+//
+// Two runs were attempted on a quiet machine (reports
+// `e2e/out/source-changed-1789608089617.json` and `e2e/out/source-changed-1789608230988.json`,
+// recorded in `OWNER-INVALIDATION-PREREGISTRATION.md` section 10 Amendment 6). Both launched the
+// app themselves and both passed S1-open; both then failed in S2. The first hit a step bound that
+// was too tight, now corrected here. The SECOND reported the real gap honestly: no pixel among the
+// 25 tried around the canvas centre yielded a hover id, and the render trace carried zero
+// hover/pick lines -- the synthetic pointer never landed on a feature's own footprint.
+//
+// The fix is known and is not a guess: `e2e/regression.mjs`'s own `A9'` step solves exactly this by
+// finding a READ-BACK-VERIFIED non-background pixel through `capturePixels` and converting its
+// drawing-buffer coordinate to a CSS page point before moving the mouse. This driver's
+// centre-anchored grid is the naive approach that step was written around. Replacing the probe with
+// that mechanism is owed before T10 is run again.
+//
+// What the two runs DID prove, and it is not nothing: `residentCounts()` returns real totals from
+// the running app (188665 vertices / 10000 features, both runs), and the scratch copy's sha256 was
+// identical before and after each run. No assertion past S1-open has ever evaluated.
+//
 // A run is bounded and never kills anything it did not start: `attachOrLaunch` attaches to an app
 // already on the CDP port and returns `launched: false`, in which case this script leaves it
 // running (the sibling policy). A run that PROVES a branch must assert `launched: true`
@@ -62,8 +86,9 @@
 //   Select-String -Path frontends/shell/e2e/source-changed.mjs -Pattern '[^\x00-\x7F]'
 // which must print nothing before this is ever launched unattended.
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -80,10 +105,83 @@ const SCRATCH_COPY = join(OUT_DIR, "source-changed-scratch.parquet");
 // Bounds on waiting, not results (ADR-018). Same shape as every sibling driver.
 const MOUNT_READY_TIMEOUT_MS = 120_000;
 const STEP_TIMEOUT_MS = 60_000;
+// S2's own bound, larger than the others because it is the only step that both waits for a settle
+// AND probes a grid of pixels looking for one that shows an id. Raised from the shared 60s after
+// the first run of this driver (2026-09-17) timed out here with the settle alone already spent:
+// a bound that was too tight, not a product finding -- that run had already read
+// 188665 resident vertices through `residentCounts` before the probe began.
+const PRECONDITION_TIMEOUT_MS = 180_000;
 const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 600_000);
 
 function sha256(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+/**
+ * The running shell app's PID, ExecutablePath and creation time.
+ *
+ * AI_DEVELOPMENT.md, "Launching the app and E2E runs": "an E2E that proves a branch must assert
+ * `launched: true` and record PID, exe path and session log", and "ownership is checked by the
+ * process's `ExecutablePath` (or creation time), not its command line" -- the harness spawns the
+ * app with a RELATIVE command line, so a worktree-path match on the command line fails for the
+ * instance you own. `attachOrLaunch` returns no PID of its own (it holds the `npx tauri dev`
+ * wrapper, not the app), so this asks the OS. Best-effort: a failure here is recorded, never fatal.
+ */
+function appProcesses() {
+  try {
+    const csv = execFileSync(
+      "wmic",
+      ["process", "where", "name='spatial-ide-shell.exe'", "get", "ProcessId,ExecutablePath,CreationDate", "/format:csv"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }
+    );
+    const lines = csv.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+    const header = lines.shift();
+    if (!header) return [];
+    const cols = header.split(",");
+    const iCreated = cols.indexOf("CreationDate");
+    const iExe = cols.indexOf("ExecutablePath");
+    const iPid = cols.indexOf("ProcessId");
+    return lines.map((line) => {
+      const parts = line.split(",");
+      return { creationDate: parts[iCreated] ?? null, exePath: parts[iExe] ?? null, pid: Number(parts[iPid] ?? NaN) };
+    });
+  } catch (e) {
+    return [{ error: `could not enumerate spatial-ide-shell.exe: ${e.message}` }];
+  }
+}
+
+/**
+ * The app's own session log, READ rather than sized.
+ *
+ * AI_DEVELOPMENT.md: "A file another process holds open for append shows a STALE size in directory
+ * listings ... Never infer 'nothing was written' from a size -- read the content." So this reads the
+ * newest `session-*.log` and records its byte length as measured from the CONTENT it actually read,
+ * plus a tail, never a `statSync` size.
+ */
+function newestSessionLog() {
+  try {
+    const local = process.env.LOCALAPPDATA;
+    if (!local) return { error: "LOCALAPPDATA is not set" };
+    const dir = join(local, "dev.spatialide.shell", "logs");
+    if (!existsSync(dir)) return { error: `no session-log directory at ${dir}` };
+    const candidates = readdirSync(dir)
+      .filter((n) => /^session-.*\.log$/.test(n))
+      .map((n) => ({ name: n, path: join(dir, n), mtimeMs: statSync(join(dir, n)).mtimeMs }))
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+    if (candidates.length === 0) return { error: `no session-*.log in ${dir}` };
+    const chosen = candidates[0];
+    const content = readFileSync(chosen.path, "utf8");
+    const lines = content.split(/\r?\n/).filter((l) => l.length > 0);
+    return {
+      path: chosen.path,
+      bytesReadFromContent: Buffer.byteLength(content),
+      lineCount: lines.length,
+      tail: lines.slice(-40),
+      sourceChangedLines: lines.filter((l) => /source.changed|session-ended|session ended/i.test(l)),
+    };
+  } catch (e) {
+    return { error: `could not read the session log: ${e.message}` };
+  }
 }
 
 function withTimeout(promise, ms, stepId) {
@@ -161,12 +259,12 @@ async function hoverReadout(page) {
   });
 }
 
-async function hoverAt(page, x, y) {
+async function hoverAt(page, x, y, budgetMs = 6_000) {
   await page.mouse.move(x, y);
   // Settle the pointer: the canvas re-picks on its own schedule, and this waits for the readout
   // to appear rather than assuming one frame is enough. A bound, not a measurement.
   const start = Date.now();
-  while (Date.now() - start < 6_000) {
+  while (Date.now() - start < budgetMs) {
     const readout = await hoverReadout(page);
     if (readout !== null) return readout;
     await sleep(100);
@@ -239,10 +337,18 @@ async function main() {
   const results = [];
   /** @type {Record<string, unknown>} */
   const observation = { launched, cdpPort: CDP_PORT, fixture: SCRATCH_COPY, hashBefore };
+  // Recorded on every run, whether this one launched or attached, so a gate can read which kind of
+  // run it got rather than assume (AI_DEVELOPMENT.md, "Launching the app and E2E runs").
+  observation.appProcesses = appProcesses();
+  if (!launched) {
+    console.warn(
+      "source-changed: attached to an app already on the CDP port -- launched:false. A run that PROVES a branch must assert launched:true."
+    );
+  }
 
-  async function runStep(id, fn, passStatus = "PASS") {
+  async function runStep(id, fn, passStatus = "PASS", timeoutMs = STEP_TIMEOUT_MS) {
     try {
-      const note = await withTimeout(fn(), STEP_TIMEOUT_MS, id);
+      const note = await withTimeout(fn(), timeoutMs, id);
       results.push({ id, status: passStatus, note });
       console.log(`[${id}] ${passStatus}: ${note}`);
       return true;
@@ -296,12 +402,15 @@ async function main() {
       const rect = await canvasRect(page);
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const offsets = [0, 40, -40, 80, -80, 120, -120];
+      const offsets = [0, 60, -60, 120, -120];
       const attempts = [];
       for (const dx of offsets) {
         for (const dy of offsets) {
           const point = { x: cx + dx, y: cy + dy };
-          const readout = await hoverAt(page, point.x, point.y);
+          // A short per-point budget: a miss is the common case while probing, and 25 misses at the
+          // full budget would exhaust the step. The point that HITS is re-hovered at the full
+          // budget in S5c, where the answer matters.
+          const readout = await hoverAt(page, point.x, point.y, 1_200);
           attempts.push({ point, readout });
           if (readoutShowsAnId(readout)) {
             occupiedPoint = point;
@@ -321,7 +430,7 @@ async function main() {
         `resident before the change: ${counts.totalResidentVertices} vertices / ` +
         `${counts.totalResidentFeatures} features; an id is shown at (${occupiedPoint.x}, ${occupiedPoint.y})`
       );
-    });
+    }, "PASS", PRECONDITION_TIMEOUT_MS);
     if (!s2) throw new Error("S2 failed; the assertions below would be vacuous");
 
     // ------------------------------------------------------------------------------------
@@ -430,6 +539,11 @@ async function main() {
     results.push({ id: "harness", status: "FAIL", note: e?.stack ?? e?.message ?? String(e) });
     console.error(`source-changed: harness failure: ${e?.stack ?? e?.message ?? String(e)}`);
   } finally {
+    // The app's own session log, read (never sized) -- AI_DEVELOPMENT.md's stale-directory-entry
+    // finding. Captured here so it lands in the report whether the run passed or failed.
+    observation.sessionLog = newestSessionLog();
+    observation.appProcessesAtEnd = appProcesses();
+
     // The fixture hash, after use (section 8.8's "before and after").
     try {
       observation.hashAfter = existsSync(SCRATCH_COPY) ? sha256(SCRATCH_COPY) : null;

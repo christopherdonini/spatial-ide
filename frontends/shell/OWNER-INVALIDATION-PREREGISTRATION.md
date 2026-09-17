@@ -724,3 +724,36 @@ No other product code changed for this: `git diff` for this round is the hook (t
 **(c) Still owed, 2026-09-17: the run.** The driver has **never been executed** and no observation exists. It is not run here because the machine is occupied by other measured work, and because a run launches a detached desktop application — it happens on a quiet machine, under its own instruction, per AI_DEVELOPMENT.md's "Launching the app and E2E runs" (one app at a time; a run that PROVES a branch asserts `launched: true`, which the driver records and prints rather than assumes). §9 requires T10 green before either gate concludes. **Until that run exists, Amendment 4 (e)'s closing sentence stands unchanged: this piece claims nothing about what an operator sees end to end.** What this amendment discharges is the hook decision and the driver's existence, and nothing more.
 
 Checks at this amendment: `node --check frontends/shell/e2e/source-changed.mjs` green; the non-ASCII scan of that file is empty (0 bytes above `0x7F`), so it is safe to launch unattended; `npm run verify` exit 0 (70 files, 1024 tests), which includes the citation-integrity scan over `e2e/`.
+
+**Amendment 6 — Written after two T10 runs were attempted and both failed (2026-09-17). Class 1, post-result.** Amendment 5 is not edited; this states what the runs produced. **T10 is still not satisfied, and this amendment claims no operator-visible result.**
+
+**Two attempts were made on a quiet machine and both failed in the driver's own precondition step. Neither is a product finding, and neither produced a T10 verdict. Under Rule 7 the run stopped after the second rather than retrying a third time.**
+
+**What the runs did establish, with their evidence.** Both launched the app themselves (`launched: true`, the condition AI_DEVELOPMENT.md's "Launching the app and E2E runs" sets for a run that proves a branch), against the shell built from this worktree's own package id.
+
+| | run 1 | run 2 |
+| --- | --- | --- |
+| report | `frontends/shell/e2e/out/source-changed-1789608089617.json` | `frontends/shell/e2e/out/source-changed-1789608230988.json` |
+| app PID / exe | 27604 / `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\spatial-ide-shell.exe` | 2660 / same exe |
+| creation time (ownership) | `20260917032022.965051+120`, after the run's own start at 01:19:42Z | `20260917032329.499916+120`, after 01:23:22Z |
+| app session log | `...\dev.spatialide.shell\logs\session-1789608023.log` | `...\dev.spatialide.shell\logs\session-1789608209.log`, 1790 bytes / 25 lines, read as content and not sized |
+| `S1-open` | PASS | PASS |
+| `S2` | FAIL, timed out at the 60 s step bound | FAIL, no pixel among 25 yielded a hover id |
+| `fixture-integrity` | PASS, sha256 `fd0c74ab...fb49` unchanged | PASS, same hash |
+
+**Three things are now proven that were assumptions before, and they are worth recording even though T10 is not met.**
+
+1. **The `residentCounts` hook works against the real app.** Both runs read `{totalResidentVertices: 188665, totalResidentFeatures: 10000}` through it after the scratch copy settled -- Amendment 5 (a)'s decision is sound in fact, not only in design, and the hook is present in a `tauri dev` build (`waitForMountReady` gates on it).
+2. **The fixture discipline holds.** The scratch copy's sha256 was identical before and after both runs (section 8.8), so nothing in this driver edits bytes.
+3. **The app under this branch opens the mutated-copy path and fills a canvas normally** -- 10,000 features resident, the candidate arm's own `candidate-residency-status` and `tile-ingest` lines in the render trace.
+
+**Why each attempt failed, named rather than summarised as "flaky".**
+
+- **Run 1: a bound that was too tight, in this driver.** `S2` carries both a settle (up to 45 s) and a pixel probe, under the shared 60 s step bound. The settle alone consumed most of it. Fixed in this commit: `PRECONDITION_TIMEOUT_MS = 180_000` for that one step, and a per-point hover budget of 1.2 s instead of 6 s. Not a product behaviour.
+- **Run 2: the probe strategy is insufficient, and this is the real gap.** With the larger bound the step completed and reported honestly: no pixel among 25 tried around the canvas centre yielded a hover id, and the render trace carried **zero** hover/pick lines -- the synthetic pointer never landed on a feature's own footprint. A centre-anchored grid is the naive approach that `e2e/regression.mjs`'s own `A9'` was written around: that step finds a **read-back-verified** non-background pixel through `capturePixels` and converts its drawing-buffer coordinate to a CSS page point before moving the mouse there. This driver does not, so its "formerly-occupied pixel" precondition cannot be established on this fixture at this zoom.
+
+**Owed, 2026-09-17, before T10 can be run again:** replace `S2`'s centre-grid probe with `capturePixels` plus the buffer-to-CSS conversion `e2e/regression.mjs` already carries for `A9'`, and only then re-run the three-run sequence (green, mutation fails S5b by name, green). The driver is left in the tree with its probe unchanged in shape but its bounds corrected, and this amendment is what a reader finds before trusting it.
+
+**What is NOT claimed.** No assertion past `S1-open` has ever evaluated: `S5a` (the status line), `S5b` (residency cleared) and `S5c` (picks refused) have never run, and the recorded mutation has never been performed. Amendment 4 (e)'s closing sentence stands unchanged: **this piece claims nothing about what an operator sees end to end.** Every clause in Amendment 4 (a) still rests on unit and integration assertions at named seams, exactly as it did before these runs.
+
+**The machine was left as it was found.** Both apps were closed by PID after verifying ownership by `ExecutablePath` and creation time (the documented check, not the command line -- the harness spawns a relative command line). After the second close: no `spatial-ide-shell.exe`, no `cargo.exe`, no `rustc.exe`, and no `tauri`/`vite` node process remained.
