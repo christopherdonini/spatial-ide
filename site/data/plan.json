@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17T10:37:30.513Z",
-  "plan_hash": "f013cf0c1ee29d8b592bcad0d961e8a73c98c599ebe15008ab0d26232415b105",
+  "generated_at": "2026-09-17T18:57:26.677Z",
+  "plan_hash": "04b9482d19941237ab55fcc3431606a2d00936dbc7bda3940d9e9e3f481ac2cd",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1287,6 +1287,31 @@
         101
       ],
       "summary": "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-verify-mutation-multiline-attrs",
+      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 4,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
