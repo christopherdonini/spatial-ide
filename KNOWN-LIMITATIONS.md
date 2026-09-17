@@ -140,7 +140,7 @@ no performance claim at all (`docs/08_Testing.md`).*
     dynamically — the Microsoft Visual C++ 2015–2022 runtime — and the installer does not carry it.
     Part M could not observe what a machine lacking that runtime does, because the walkthrough machine
     already had it; that case is untested, and what to do about it is an open decision.
-    <!-- RELEASE-0.1.md Amendment 14, the imports row (`dumpbin /DEPENDENTS`: MSVCP140.dll, "which the installer does not bundle"); RELEASE-DRAFTS-0.1.0/part-m-prep-pack.md §3 ("Record in M1/M2: 'VC++ redistributable dependency not exercised'"); DECISIONS-PENDING.md entry 69 (open) -->
+    <!-- RELEASE-0.1.md Amendment 14, the imports row (`dumpbin /DEPENDENTS`: MSVCP140.dll, "which the installer does not bundle"); state/drafts/part-m-prep-pack.md §3 ("Record in M1/M2: 'VC++ redistributable dependency not exercised'"); DECISIONS-PENDING.md entry 69 (open) -->
 
 ---
 

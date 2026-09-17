@@ -29,7 +29,7 @@ Options:
 
 ---
 
-4. An untracked Authority. RELEASE-DRAFTS-0.1.0/ is untracked in this public repository; engine/ADMISSION-PREREGISTRATION.md:7 names a file in it as the preregistration's Authority and ADR-032 cites it as binding, so no cite into it can resolve and no hash can pin it.
+4. An untracked Authority. state/drafts/ is untracked in this public repository; engine/ADMISSION-PREREGISTRATION.md:7 names a file in it as the preregistration's Authority and ADR-032 cites it as binding, so no cite into it can resolve and no hash can pin it.
 Options:
   1. Track it: commit the directory as it stands (this publishes the drafts).
   2. Keep it out of tree: the citing records declare the Authority out of tree by appended notes, and future preregistrations cite only tracked text.

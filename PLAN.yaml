@@ -2,7 +2,7 @@
 #
 # Seeded 2026-09-13 by the custodian from: AUTONOMY.md §1-§2 + Appendix A (the human's directive,
 # verbatim); docs/07_Roadmap.md; DECISIONS-PENDING.md (RULED blocks + open entries 69, 73, 75, 77,
-# 78, 79, 83, 86-92); CUT-STATE.md's "Open at the close" list and ledger; RELEASE-DRAFTS-0.1.0's
+# 78, 79, 83, 86-92); CUT-STATE.md's "Open at the close" list and ledger; state/drafts's
 # post-tag Brief A (DRAFT-2), Brief B (DRAFT-3), the LOD brief and the ADR-032 problem-statement
 # drafts; RELEASE-0.1.md Amendments 15-19; docs/adr/ Status lines; `gh pr list`; `git tag`.
 #

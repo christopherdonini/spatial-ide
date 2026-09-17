@@ -412,7 +412,7 @@ carrying the accumulated context forward.
 
 ## Amendment 1 to the Custodian role — bounded closing attempt and delegation matrix (2026-09-10, appended on the human's direction; from the review-loop draft of 2026-09-09)
 
-*Ported verbatim from the human-reviewed draft (`DRAFT-1-review-loop-amendment.md`, Fable, 2026-09-09; a byte copy sits under `RELEASE-DRAFTS-0.1.0/post-tag/` until the cut archive). Docs-only. Narrow by design: it does not touch the red lines above, and it does not introduce current-contract summaries (those need reviewed clause references and explicit precedence — a separate proposal). In force from the merge of the PR that carries it; every custodian report from then on lists delegated closures explicitly per §C.*
+*Ported verbatim from the human-reviewed draft (`DRAFT-1-review-loop-amendment.md`, Fable, 2026-09-09; a byte copy sits under `state/drafts/post-tag/` until the cut archive). Docs-only. Narrow by design: it does not touch the red lines above, and it does not introduce current-contract summaries (those need reviewed clause references and explicit precedence — a separate proposal). In force from the merge of the PR that carries it; every custodian report from then on lists delegated closures explicitly per §C.*
 
 ### Context (facts on the record)
 

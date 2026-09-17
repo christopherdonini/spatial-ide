@@ -9,7 +9,7 @@ deleted in the same commit. Filed as a separate file per the precedent of
 **Would amend:** ADR-015 (Accepted 2026-08-05, architect-blockable — `ADR-015:3`) as **Amendment 1**,
 by appended text, never by rewriting.
 **Basis:** Brief A's settled boundaries 1, 2 and 10 (2026-09-09, binding). Reuses the §5 wording
-drafted at the 2026-09-09 architect consult (`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-032.md`), extended where
+drafted at the 2026-09-09 architect consult (`state/drafts/post-tag/architect-consult-adr-032.md`), extended where
 boundary 1 goes further than that draft did.
 **Related:** ADR-032 (Proposed — this amendment supplies what its candidate (B) needs and decides
 nothing for it); `docs/01` principle 8; `docs/05:26`, `:64-67`; ADR-010 rule 1.

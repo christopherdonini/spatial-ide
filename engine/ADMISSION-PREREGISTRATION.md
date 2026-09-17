@@ -4,7 +4,7 @@
 
 **Committed before any code and before any corpus file has been opened by this engine.** Same discipline as `frontends/shell/RESIDENCY-PREREGISTRATION.md` and `kernel/QUERY-WINDOW-ATTRIBUTION-PREREGISTRATION.md`: every rule, expected outcome, fixture and gate below is fixed by this commit; an amendment made after an outcome has been seen **must say so in its first line** and invalidates the work it touches. **Append-only once committed.**
 
-**Authority.** `RELEASE-DRAFTS-0.1.0/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md` — its "Settled boundaries" 1–10 (`:23-70`) are binding and are cited by number, never restated here as this document's own reasoning. The review-loop amendment (Draft 1, `AI_DEVELOPMENT.md` Amendment 1) is in force from its merge. This file declares *what is admitted, refused, and recorded*; it does not design the reader.
+**Authority.** `state/drafts/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md` — its "Settled boundaries" 1–10 (`:23-70`) are binding and are cited by number, never restated here as this document's own reasoning. The review-loop amendment (Draft 1, `AI_DEVELOPMENT.md` Amendment 1) is in force from its merge. This file declares *what is admitted, refused, and recorded*; it does not design the reader.
 
 ---
 
@@ -13,7 +13,7 @@
 No admission run of any kind informed this file. Two inputs did, and are disclosed rather than left to be inferred:
 
 1. **The compatibility corpus was collected before this file was written** (`target/fixtures/compat-corpus/`, 12 files collected 2026-09-10, then extended the same day with GDAL- and QGIS-written files and a `mutations/` directory, four files retired to keep the main set at the brief's ceiling). It deliberately records **no expected outcome** (`MANIFEST.json`, its README), so nothing below is reverse-engineered from a verdict someone else already formed. Every "observed" value cited here is quoted from that manifest.
-2. **The architect consult of 2026-09-09** (`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-032.md`) shaped §2's rules and §10's ADR list. Two of its cites are second-hand in this file and labelled where used.
+2. **The architect consult of 2026-09-09** (`state/drafts/post-tag/architect-consult-adr-032.md`) shaped §2's rules and §10's ADR list. Two of its cites are second-hand in this file and labelled where used.
 
 **One observed field this document needed did not exist in the first manifest.** It recorded `crs_shape`, `crs_projjson_name` and `crs_projjson_id`, but not `coordinate_system.axis` directions or names — the exact input `engine/src/geoparquet.rs:159-189` reads to establish axis order. The corpus extension adds `crs_axis_names` and `crs_axis_directions` under `observed`; every axis-dependent prediction below states its branch condition and is resolved from those fields where they are present, else marked **not derivable statically — record at P4**.
 

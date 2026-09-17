@@ -4,7 +4,7 @@
 
 **Committed before any code exists.** Same discipline as `frontends/shell/RESIDENCY-PREREGISTRATION.md` and the `kernel/*-PREREGISTRATION.md` set. Every definition, ceiling, test, gate, invalidator and out-of-scope line below is fixed by this commit; an amendment made after any result has been seen **must say so in its first line**. **Append-only once committed** — amendments are dated additions, never edits.
 
-**Authority.** `RELEASE-0.1.md` Amendment 12's "Preregistration — entry 66 (b)" paragraph is the outline the human accepted; this file is that paragraph expanded into the shape `RESIDENCY-PREREGISTRATION.md` set. Inputs: `RELEASE-DRAFTS-0.1.0/post-tag/entry-66b-geometric-protection-brief.draft.md` (the piece brief) and `RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-lod-47-66b-ordering.md` §1A / §2 conditions 1–7. The human authorized building the piece on a branch through its full gates; **the merge is held until after the v0.1.0 tag.**
+**Authority.** `RELEASE-0.1.md` Amendment 12's "Preregistration — entry 66 (b)" paragraph is the outline the human accepted; this file is that paragraph expanded into the shape `RESIDENCY-PREREGISTRATION.md` set. Inputs: `state/drafts/post-tag/entry-66b-geometric-protection-brief.draft.md` (the piece brief) and `state/drafts/post-tag/architect-consult-lod-47-66b-ordering.md` §1A / §2 conditions 1–7. The human authorized building the piece on a branch through its full gates; **the merge is held until after the v0.1.0 tag.**
 
 ## §0. Disclosure
 
