@@ -708,7 +708,7 @@ impl SkpHost {
     /// The dataset-session generation registry this host mints into (P3b §2c).
     /// `EngineSourceFactory::ticket_only` needs the identical `Arc` to answer
     /// [`GenerationRegistry::ticket_liveness`] about what this host ended — the host constructs the
-    /// registry privately (`Self::new`, `:562`) and nothing else can hand out that `Arc`.
+    /// registry privately (`SkpHost::new`, `:689`) and nothing else can hand out that `Arc`.
     ///
     /// **Its product caller is one line**: `frontends/shell/src-tauri/src/lib.rs:373-377` (`host.generations()` at `:376`),
     /// `EngineSourceFactory::ticket_only(catalog, tickets, host.generations())`. Same shape as

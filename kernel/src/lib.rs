@@ -413,7 +413,7 @@ impl EngineSourceFactory {
                 // plane sends as `TERM_PRODUCER_FAILED`
                 // (`protocol/data-plane/src/server.rs:388-401`) and the shell's **existing**
                 // `isSourceChangedTerminal` already matches
-                // (`frontends/shell/src/streaming/liveTicketSet.ts:51-53`). No new client code
+                // (`frontends/shell/src/streaming/liveTicketSet.ts:52-54`). No new client code
                 // path, no new field, no new frame.
                 //
                 // `detail` is the pre-check's own sentence, byte-identical

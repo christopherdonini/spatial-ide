@@ -263,8 +263,8 @@ fn touch_modification_time(path: &Path) {
 /// The window this exercises is the only one in which the dead-ticket arm is reachable at all
 /// (§5 prediction 1): a ticket minted, its generation ended while the ticket is still pending, and
 /// the redemption arriving afterwards. Every step runs through the product path — the ticket comes
-/// from `SkpHost::viewport_query` (`kernel/src/skp.rs:629`), the generation is ended by
-/// `viewport_query`'s own pre-check refusal (`kernel/src/skp.rs:682-687`) and not by this test, and
+/// from `SkpHost::viewport_query` (`kernel/src/skp.rs:760`), the generation is ended by
+/// `viewport_query`'s own pre-check refusal (`kernel/src/skp.rs:797-803`) and not by this test, and
 /// the redemption goes through `SourceFactory::create` on the constructor the shell installs.
 ///
 /// RECORDED MUTATION: delete the `TicketLiveness::EndedBySourceChange` arm from
@@ -369,7 +369,8 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 /// **T3 — the dead-ticket record is bounded**, by the same two levers every other per-dataset map in
 /// this registry is bounded by.
 ///
-/// The age half of the bound (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, `kernel/src/skp.rs:408-414`) is
+/// The age half of the bound (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, `kernel/src/skp.rs:517`,
+/// documented `:506-508`) is
 /// **not** asserted here for the same reason
 /// `dead_generation_attributions_are_pruned_rather_than_accumulating` above does not assert its own:
 /// it would need a clock this file must not take (ADR-018). It is stated at `prune_locked`'s own

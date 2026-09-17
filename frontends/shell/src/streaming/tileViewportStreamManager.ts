@@ -748,7 +748,7 @@ export class TileViewportStreamManager {
    * **The untiled first-look stream's way in** (P3b §2a(iii)).
    *
    * The candidate session owns a third stream sink of its own -- the untiled "first look"/reissue
-   * (`candidateArmSession.ts:1277-1338`) -- which this manager never sees a terminal for. Before
+   * (`candidateArmSession.ts:1277-1412`) -- which this manager never sees a terminal for. Before
    * P3b nothing tested that sink's terminal for the code at all, so a change detected on the FIRST
    * query of a tiled session (the likeliest place, §5 prediction 3) ended nothing on the client.
    *
@@ -941,7 +941,7 @@ export class TileViewportStreamManager {
       logMintRefused(tileKey, err);
       // **P3b §2b: the pre-check's own route into this manager.** `viewport_query` refuses
       // synchronously with `engine.source_changed` when the live-generation check has already ended
-      // this dataset's session (`kernel/src/skp.rs:796-802`), and that refusal lands here -- where
+      // this dataset's session (`kernel/src/skp.rs:797-803`), and that refusal lands here -- where
       // P3a only logged it. It is not a per-tile failure and is not retryable (§7: the retryable set
       // stays `engine.connections_exhausted` alone): the session is over, so this ends it rather
       // than dropping the tile and planning the next one.

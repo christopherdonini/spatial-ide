@@ -59,7 +59,7 @@ export function isSourceChangedTerminal(terminal: Terminal): boolean {
  * G-A2's own wording requires both routes -- *"Asserted at the pre-check and at the post-check paths
  * separately"* (`engine/ADMISSION-PREREGISTRATION.md:221`). The post-check arrives as a data-plane
  * terminal (`isSourceChangedTerminal` above); the pre-check arrives synchronously, as a thrown
- * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:796-802`)
+ * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:797-803`)
  * and its mint-race arm (`:840-846`), reaching this client through `skp/client.ts:58-65`.
  *
  * **Matched on `.skpError.code`, never on prose** -- the precedent `RETRYABLE_ENGINE_CODE`/
