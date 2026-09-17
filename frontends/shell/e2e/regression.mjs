@@ -32,7 +32,19 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+import {
+  attachOrLaunch,
+  attachConsole,
+  bufferPointToCss,
+  captureDensest,
+  CDP_PORT,
+  findInteriorCandidate,
+  fractionOf,
+  samePoint,
+  subdivideRegion,
+  verifyInteriorCandidate,
+  waitForSettle,
+} from "./lib.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -202,9 +214,7 @@ function gridRegions() {
   return regions;
 }
 
-function fractionOf(summary) {
-  return summary.totalPixels > 0 ? summary.nonBackgroundCount / summary.totalPixels : 0;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 /** Maps a fractional point *inside* a grid region (`fx`/`fy` in 0..1, region-local) to a CSS
  * point on the page. `region.x`/`region.y` are WebGL buffer fractions (0,0 = bottom-left);
@@ -275,22 +285,9 @@ function hasFreshRenderTraceMotion(entries, sinceCount) {
  * `point.x`/`point.y` this function is actually called with is a valid buffer index
  * (`0..width-1`/`0..height-1`), so the clamp should never actually trigger.
  */
-function bufferPointToCss(point, canvasRect, bufferWidth, bufferHeight, flipY) {
-  const scaleX = canvasRect.width / bufferWidth;
-  const scaleY = canvasRect.height / bufferHeight;
-  const cssX = canvasRect.left + (point.x + 0.5) * scaleX;
-  const cssY = flipY
-    ? canvasRect.top + canvasRect.height - (point.y + 0.5) * scaleY
-    : canvasRect.top + (point.y + 0.5) * scaleY;
-  return {
-    x: Math.min(canvasRect.left + canvasRect.width, Math.max(canvasRect.left, cssX)),
-    y: Math.min(canvasRect.top + canvasRect.height, Math.max(canvasRect.top, cssY)),
-  };
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
-function samePoint(a, b) {
-  return !!a && !!b && a.x === b.x && a.y === b.y;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 /**
  * A9' interior-pixel hardening (action-console cut, P5c fix 2). Diagnosed by P5b
@@ -338,57 +335,22 @@ function samePoint(a, b) {
  * exact per-candidate interior guarantee, rather than overclaimed as an exact per-pixel alpha read
  * for every candidate -- disclosed here rather than silently narrowed.
  */
-const INTERIOR_PATCH_RADIUS = 2; // 5x5 patch (task's own "or a 5x5 patch" option) -- one pixel
-// wider than a bare 3x3/8-neighbourhood, for margin against a 2px-wide AA transition band.
-const ALPHA_INTERIOR_THRESHOLD = 150; // of 255 -- see this section's own doc comment for the data.
+// (INTERIOR_PATCH_RADIUS / ALPHA_INTERIOR_THRESHOLD moved to e2e/lib.mjs with the functions that read them)
 
 /** Builds up to (2*radius+1)^2 single-pixel `PixelRegion`s (fractional, `capturePixels`' own
  * convention) covering the patch centred on `point`, clamped to the buffer bounds -- a candidate
  * near the buffer edge simply gets fewer regions, which only makes the interior check MORE strict
  * (every requested region must still be fully non-background), never silently lenient. */
-function neighborhoodRegions(point, bufferWidth, bufferHeight, radius) {
-  const regions = [];
-  for (let dy = -radius; dy <= radius; dy++) {
-    for (let dx = -radius; dx <= radius; dx++) {
-      const x = point.x + dx;
-      const y = point.y + dy;
-      if (x < 0 || y < 0 || x >= bufferWidth || y >= bufferHeight) continue;
-      regions.push({ x: x / bufferWidth, y: y / bufferHeight, w: 1 / bufferWidth, h: 1 / bufferHeight });
-    }
-  }
-  return regions;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
-function parseAlpha(rgba) {
-  const parts = rgba.split(",").map(Number);
-  return parts.length === 4 ? parts[3] : NaN;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 /** Runs both signals above for one candidate point, in a single fresh `capturePixels` call (the
  * hook forces its own synchronized re-render/readback per call -- see its own doc comment -- so
  * this is one atomic read of the current frame, not a race against a later one). Returns a reason
  * string either way, for the loud fallback log line this function's own caller writes when no
  * candidate verifies. */
-async function verifyInteriorCandidate(page, point, bufferWidth, bufferHeight) {
-  const regions = neighborhoodRegions(point, bufferWidth, bufferHeight, INTERIOR_PATCH_RADIUS);
-  if (regions.length === 0) {
-    return { ok: false, reason: "no in-bounds neighbourhood pixels (candidate at the buffer's own corner)" };
-  }
-  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
-  const allInterior = summary.regions.every((r) => r.totalPixels > 0 && r.nonBackgroundCount === r.totalPixels);
-  if (!allInterior) {
-    const missCount = summary.regions.filter((r) => r.nonBackgroundCount !== r.totalPixels).length;
-    return { ok: false, reason: `${missCount}/${summary.regions.length} neighbourhood pixels touch background (edge-adjacent)` };
-  }
-  const highAlphaBin = (summary.topColors ?? []).find((c) => c.rgba !== "0,0,0,0" && parseAlpha(c.rgba) >= ALPHA_INTERIOR_THRESHOLD);
-  if (!highAlphaBin) {
-    return {
-      ok: false,
-      reason: `neighbourhood fully non-background but no captured colour has alpha >= ${ALPHA_INTERIOR_THRESHOLD} (topColors: ${(summary.topColors ?? []).map((c) => c.rgba).join(" | ")})`,
-    };
-  }
-  return { ok: true, reason: `${regions.length}-pixel neighbourhood entirely non-background; alpha ${parseAlpha(highAlphaBin.rgba)} >= ${ALPHA_INTERIOR_THRESHOLD} (${highAlphaBin.rgba})` };
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 // ---------------------------------------------------------------------------------------
 // Steps. Each returns a short PASS note (string) or throws with a message naming its own
@@ -649,44 +611,18 @@ async function zoomInOneNotch(page, consoleHandle, center) {
   return { motion: hasFreshRenderTraceMotion(consoleHandle.renderTrace(), before), settled: settle.settled };
 }
 
-const BISECTION_COARSE_COLS = 8; // task's own "e.g. 8x5" coarse grid
-const BISECTION_COARSE_ROWS = 5;
-const BISECTION_SUBDIVIDE = 4; // 4x4, both bisection levels
-const BISECTION_FINAL_PATCH_MAX_PX = 12; // "repeat once more if the sub-region is still larger
-// than ~12x12 px" -- task's own stopping bound.
-const BISECTION_DENSE_FRACTION_TARGET = 0.9; // task's own confidence bar for the final patch;
-// not a loop-control value -- `findInteriorCandidate` always runs its full 2-3 levels and simply
+// (BISECTION_* moved to e2e/lib.mjs with findInteriorCandidate)
 // reports whether this bar was met, leaving the actual accept/reject call to
 // `verifyInteriorCandidate` (unchanged) as before.
 
 /** Splits `region` (a `PixelRegion`-shaped fractional rectangle, `capturePixels`' own convention)
  * into a `cols`x`rows` grid of equal-sized sub-regions, same convention throughout. */
-function subdivideRegion(region, cols, rows) {
-  const out = [];
-  for (let gy = 0; gy < rows; gy++) {
-    for (let gx = 0; gx < cols; gx++) {
-      out.push({
-        x: region.x + (gx / cols) * region.w,
-        y: region.y + (gy / rows) * region.h,
-        w: region.w / cols,
-        h: region.h / rows,
-      });
-    }
-  }
-  return out;
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 /** One `capturePixels(regions)` call, returning the densest (highest non-background fraction)
  * region among them alongside the full summary -- callers need `summary.width`/`summary.height`
  * to convert the winning region's own fractional rectangle to buffer pixels. */
-async function captureDensest(page, regions) {
-  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
-  let idx = 0;
-  for (let i = 1; i < summary.regions.length; i++) {
-    if (fractionOf(summary.regions[i]) > fractionOf(summary.regions[idx])) idx = i;
-  }
-  return { summary, region: regions[idx], fraction: fractionOf(summary.regions[idx]) };
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 /**
  * Densest-patch bisection (action-console P11 -- see this section's own top comment for the full
@@ -699,57 +635,7 @@ async function captureDensest(page, regions) {
  * construction whenever `finalFraction` is high -- `denseEnough` names the task's own 0.9 bar,
  * reported for evidence but never itself gating anything (`verifyInteriorCandidate` decides).
  */
-async function findInteriorCandidate(page) {
-  const levels = [];
-  const whole = { x: 0, y: 0, w: 1, h: 1 };
-
-  // (a) coarse grid over the whole buffer.
-  let picked = await captureDensest(page, subdivideRegion(whole, BISECTION_COARSE_COLS, BISECTION_COARSE_ROWS));
-  levels.push({ label: `coarse ${BISECTION_COARSE_COLS}x${BISECTION_COARSE_ROWS}`, fraction: picked.fraction });
-  let bufferWidth = picked.summary.width;
-  let bufferHeight = picked.summary.height;
-  let bestRegion = picked.region;
-  let bestFraction = picked.fraction;
-
-  if (picked.fraction > 0) {
-    // (b) subdivide the densest coarse region.
-    picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
-    levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 1)`, fraction: picked.fraction });
-    bufferWidth = picked.summary.width;
-    bufferHeight = picked.summary.height;
-    bestRegion = picked.region;
-    bestFraction = picked.fraction;
-
-    // (c) repeat once more only if that sub-region is still bigger than ~12x12px.
-    const patchPxW = bestRegion.w * bufferWidth;
-    const patchPxH = bestRegion.h * bufferHeight;
-    if (bestFraction > 0 && (patchPxW > BISECTION_FINAL_PATCH_MAX_PX || patchPxH > BISECTION_FINAL_PATCH_MAX_PX)) {
-      picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
-      levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 2)`, fraction: picked.fraction });
-      bufferWidth = picked.summary.width;
-      bufferHeight = picked.summary.height;
-      bestRegion = picked.region;
-      bestFraction = picked.fraction;
-    }
-  }
-
-  // (d) the final patch's CENTER pixel is the candidate.
-  const centerXFrac = bestRegion.x + bestRegion.w / 2;
-  const centerYFrac = bestRegion.y + bestRegion.h / 2;
-  const candidate = {
-    x: Math.min(bufferWidth - 1, Math.max(0, Math.round(centerXFrac * bufferWidth))),
-    y: Math.min(bufferHeight - 1, Math.max(0, Math.round(centerYFrac * bufferHeight))),
-  };
-
-  return {
-    candidate,
-    bufferWidth,
-    bufferHeight,
-    finalFraction: bestFraction,
-    denseEnough: bestFraction >= BISECTION_DENSE_FRACTION_TARGET,
-    levels,
-  };
-}
+// (moved to e2e/lib.mjs, imported above -- P3b T10 shares this mechanism)
 
 async function stepA9(page, consoleHandle) {
   const initialRect = await canvasRect(page);

@@ -365,3 +365,164 @@ export async function waitForSettle(traceFn, { quietMs = 3000, timeoutMs = 45_00
     }
   }
 }
+
+
+// ------------------------------------------------------------------------------------------------
+// The A9' interior-pixel mechanism, MOVED here verbatim from `regression.mjs` (2026-09-17, P3b T10).
+//
+// Why it moved rather than being copied: `e2e/source-changed.mjs` needs the same "find a
+// read-back-verified non-background pixel and convert it to a CSS page point" mechanism, and
+// `regression.mjs` runs `await main()` at module scope -- importing from it would run the whole
+// regression suite. So the closure moved to this module, which is already the shared one, and
+// `regression.mjs` imports it back. **Every function and constant below is byte-identical to what
+// it was in `regression.mjs`; only the `export` keyword was added.** Their doc comments, including
+// every finding and threshold justification, moved with them unchanged.
+// ------------------------------------------------------------------------------------------------
+
+export const BISECTION_COARSE_COLS = 8; // task's own "e.g. 8x5" coarse grid
+export const BISECTION_COARSE_ROWS = 5;
+export const BISECTION_SUBDIVIDE = 4; // 4x4, both bisection levels
+export const BISECTION_FINAL_PATCH_MAX_PX = 12; // "repeat once more if the sub-region is still larger
+// than ~12x12 px" -- task's own stopping bound.
+export const BISECTION_DENSE_FRACTION_TARGET = 0.9; // task's own confidence bar for the final patch;
+// not a loop-control value -- `findInteriorCandidate` always runs its full 2-3 levels and simply
+
+export const INTERIOR_PATCH_RADIUS = 2; // 5x5 patch (task's own "or a 5x5 patch" option) -- one pixel
+// wider than a bare 3x3/8-neighbourhood, for margin against a 2px-wide AA transition band.
+export const ALPHA_INTERIOR_THRESHOLD = 150; // of 255 -- see this section's own doc comment for the data.
+
+export function fractionOf(summary) {
+  return summary.totalPixels > 0 ? summary.nonBackgroundCount / summary.totalPixels : 0;
+}
+
+export function bufferPointToCss(point, canvasRect, bufferWidth, bufferHeight, flipY) {
+  const scaleX = canvasRect.width / bufferWidth;
+  const scaleY = canvasRect.height / bufferHeight;
+  const cssX = canvasRect.left + (point.x + 0.5) * scaleX;
+  const cssY = flipY
+    ? canvasRect.top + canvasRect.height - (point.y + 0.5) * scaleY
+    : canvasRect.top + (point.y + 0.5) * scaleY;
+  return {
+    x: Math.min(canvasRect.left + canvasRect.width, Math.max(canvasRect.left, cssX)),
+    y: Math.min(canvasRect.top + canvasRect.height, Math.max(canvasRect.top, cssY)),
+  };
+}
+
+export function samePoint(a, b) {
+  return !!a && !!b && a.x === b.x && a.y === b.y;
+}
+
+export function neighborhoodRegions(point, bufferWidth, bufferHeight, radius) {
+  const regions = [];
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const x = point.x + dx;
+      const y = point.y + dy;
+      if (x < 0 || y < 0 || x >= bufferWidth || y >= bufferHeight) continue;
+      regions.push({ x: x / bufferWidth, y: y / bufferHeight, w: 1 / bufferWidth, h: 1 / bufferHeight });
+    }
+  }
+  return regions;
+}
+
+export function parseAlpha(rgba) {
+  const parts = rgba.split(",").map(Number);
+  return parts.length === 4 ? parts[3] : NaN;
+}
+
+export async function verifyInteriorCandidate(page, point, bufferWidth, bufferHeight) {
+  const regions = neighborhoodRegions(point, bufferWidth, bufferHeight, INTERIOR_PATCH_RADIUS);
+  if (regions.length === 0) {
+    return { ok: false, reason: "no in-bounds neighbourhood pixels (candidate at the buffer's own corner)" };
+  }
+  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
+  const allInterior = summary.regions.every((r) => r.totalPixels > 0 && r.nonBackgroundCount === r.totalPixels);
+  if (!allInterior) {
+    const missCount = summary.regions.filter((r) => r.nonBackgroundCount !== r.totalPixels).length;
+    return { ok: false, reason: `${missCount}/${summary.regions.length} neighbourhood pixels touch background (edge-adjacent)` };
+  }
+  const highAlphaBin = (summary.topColors ?? []).find((c) => c.rgba !== "0,0,0,0" && parseAlpha(c.rgba) >= ALPHA_INTERIOR_THRESHOLD);
+  if (!highAlphaBin) {
+    return {
+      ok: false,
+      reason: `neighbourhood fully non-background but no captured colour has alpha >= ${ALPHA_INTERIOR_THRESHOLD} (topColors: ${(summary.topColors ?? []).map((c) => c.rgba).join(" | ")})`,
+    };
+  }
+  return { ok: true, reason: `${regions.length}-pixel neighbourhood entirely non-background; alpha ${parseAlpha(highAlphaBin.rgba)} >= ${ALPHA_INTERIOR_THRESHOLD} (${highAlphaBin.rgba})` };
+}
+
+export function subdivideRegion(region, cols, rows) {
+  const out = [];
+  for (let gy = 0; gy < rows; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      out.push({
+        x: region.x + (gx / cols) * region.w,
+        y: region.y + (gy / rows) * region.h,
+        w: region.w / cols,
+        h: region.h / rows,
+      });
+    }
+  }
+  return out;
+}
+
+export async function captureDensest(page, regions) {
+  const summary = await page.evaluate((r) => window.__SPATIAL_E2E__.capturePixels(r), regions);
+  let idx = 0;
+  for (let i = 1; i < summary.regions.length; i++) {
+    if (fractionOf(summary.regions[i]) > fractionOf(summary.regions[idx])) idx = i;
+  }
+  return { summary, region: regions[idx], fraction: fractionOf(summary.regions[idx]) };
+}
+
+export async function findInteriorCandidate(page) {
+  const levels = [];
+  const whole = { x: 0, y: 0, w: 1, h: 1 };
+
+  // (a) coarse grid over the whole buffer.
+  let picked = await captureDensest(page, subdivideRegion(whole, BISECTION_COARSE_COLS, BISECTION_COARSE_ROWS));
+  levels.push({ label: `coarse ${BISECTION_COARSE_COLS}x${BISECTION_COARSE_ROWS}`, fraction: picked.fraction });
+  let bufferWidth = picked.summary.width;
+  let bufferHeight = picked.summary.height;
+  let bestRegion = picked.region;
+  let bestFraction = picked.fraction;
+
+  if (picked.fraction > 0) {
+    // (b) subdivide the densest coarse region.
+    picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
+    levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 1)`, fraction: picked.fraction });
+    bufferWidth = picked.summary.width;
+    bufferHeight = picked.summary.height;
+    bestRegion = picked.region;
+    bestFraction = picked.fraction;
+
+    // (c) repeat once more only if that sub-region is still bigger than ~12x12px.
+    const patchPxW = bestRegion.w * bufferWidth;
+    const patchPxH = bestRegion.h * bufferHeight;
+    if (bestFraction > 0 && (patchPxW > BISECTION_FINAL_PATCH_MAX_PX || patchPxH > BISECTION_FINAL_PATCH_MAX_PX)) {
+      picked = await captureDensest(page, subdivideRegion(bestRegion, BISECTION_SUBDIVIDE, BISECTION_SUBDIVIDE));
+      levels.push({ label: `subdivide ${BISECTION_SUBDIVIDE}x${BISECTION_SUBDIVIDE} (level 2)`, fraction: picked.fraction });
+      bufferWidth = picked.summary.width;
+      bufferHeight = picked.summary.height;
+      bestRegion = picked.region;
+      bestFraction = picked.fraction;
+    }
+  }
+
+  // (d) the final patch's CENTER pixel is the candidate.
+  const centerXFrac = bestRegion.x + bestRegion.w / 2;
+  const centerYFrac = bestRegion.y + bestRegion.h / 2;
+  const candidate = {
+    x: Math.min(bufferWidth - 1, Math.max(0, Math.round(centerXFrac * bufferWidth))),
+    y: Math.min(bufferHeight - 1, Math.max(0, Math.round(centerYFrac * bufferHeight))),
+  };
+
+  return {
+    candidate,
+    bufferWidth,
+    bufferHeight,
+    finalFraction: bestFraction,
+    denseEnough: bestFraction >= BISECTION_DENSE_FRACTION_TARGET,
+    levels,
+  };
+}

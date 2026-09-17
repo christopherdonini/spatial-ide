@@ -66,15 +66,29 @@
 // 25 tried around the canvas centre yielded a hover id, and the render trace carried zero
 // hover/pick lines -- the synthetic pointer never landed on a feature's own footprint.
 //
-// The fix is known and is not a guess: `e2e/regression.mjs`'s own `A9'` step solves exactly this by
-// finding a READ-BACK-VERIFIED non-background pixel through `capturePixels` and converting its
-// drawing-buffer coordinate to a CSS page point before moving the mouse. This driver's
-// centre-anchored grid is the naive approach that step was written around. Replacing the probe with
-// that mechanism is owed before T10 is run again.
+// The centre-anchored grid those two runs used was the naive approach `A9'` was written around; it
+// has since been replaced by `A9'`'s own mechanism (`findInteriorCandidate` +
+// `verifyInteriorCandidate` + `bufferPointToCss`, shared from `lib.mjs`).
 //
-// What the two runs DID prove, and it is not nothing: `residentCounts()` returns real totals from
-// the running app (188665 vertices / 10000 features, both runs), and the scratch copy's sha256 was
-// identical before and after each run. No assertion past S1-open has ever evaluated.
+// A THIRD run (report `e2e/out/source-changed-1789608771959.json`, section 10 Amendment 7) still
+// failed in S2, and its message is the one to read before touching this file:
+//
+//   S2: no interior-verified pixel at this camera -- 11/25 neighbourhood pixels touch background
+//   (edge-adjacent); bisection levels coarse 8x5: 46.5% -> subdivide 4x4 (level 1): 54.3% ->
+//   subdivide 4x4 (level 2): 80.0%
+//
+// The bisection worked -- it converged on an 80%-non-background patch at buffer (1005,141) in a
+// 1280x200 buffer -- but no 5x5 fully-covered patch exists anywhere in the frame at the
+// fit-to-bounds camera this app opens with. `A9'` handles exactly that with a ZOOM-NOTCH LOOP
+// around the bisection (notch 0, then real wheel zoom-ins until one verifies, with an early stop on
+// two consecutive non-background decreases). That loop was deliberately NOT taken here, because the
+// authorized scope was the bisection swap and nothing else -- and it is what the failure names.
+//
+// Three runs have now stopped at S2. Nothing past S1-open has ever evaluated: S5a, S5b and S5c have
+// never run and the recorded mutation above has never been performed. What the runs DID prove:
+// `residentCounts()` returns real totals from the running app (188665 vertices / 10000 features,
+// identical in all three), and the scratch copy's sha256 was identical before and after each run.
+// The next step is the human's, per section 10 Amendment 7.
 //
 // A run is bounded and never kills anything it did not start: `attachOrLaunch` attaches to an app
 // already on the CDP port and returns `launched: false`, in which case this script leaves it
@@ -92,7 +106,15 @@ import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+import {
+  attachOrLaunch,
+  attachConsole,
+  bufferPointToCss,
+  CDP_PORT,
+  findInteriorCandidate,
+  verifyInteriorCandidate,
+  waitForSettle,
+} from "./lib.mjs";
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -397,38 +419,64 @@ async function main() {
       }
       observation.residentBefore = counts;
 
-      // Find a pixel that really is occupied, by observing an id there -- never by assuming the
-      // centre is over data. A small grid around the centre, first hit wins.
+      // **The occupied pixel, found by READ-BACK and not by guessing** -- `e2e/regression.mjs`'s
+      // own `A9'` mechanism, shared rather than copied (it moved to `lib.mjs` for this; see that
+      // module's own note). The first two runs of this driver probed a centre-anchored grid and
+      // found nothing, with zero hover/pick lines in the render trace: a synthetic pointer has to
+      // land inside a feature's own footprint, which a blind grid does not do.
+      //
+      // `findInteriorCandidate` bisects the densest patch of the real drawing buffer;
+      // `verifyInteriorCandidate` then confirms every pixel of a 5x5 patch around it is
+      // non-background AND that the frame carries a genuinely high-alpha colour -- so the candidate
+      // is an INTERIOR pixel, not an anti-aliased boundary one. `bufferPointToCss` converts the
+      // buffer index to a CSS page point, trying both row-0 conventions exactly as `A9'` does
+      // rather than assuming one.
       const rect = await canvasRect(page);
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const offsets = [0, 60, -60, 120, -120];
-      const attempts = [];
-      for (const dx of offsets) {
-        for (const dy of offsets) {
-          const point = { x: cx + dx, y: cy + dy };
-          // A short per-point budget: a miss is the common case while probing, and 25 misses at the
-          // full budget would exhaust the step. The point that HITS is re-hovered at the full
-          // budget in S5c, where the answer matters.
-          const readout = await hoverAt(page, point.x, point.y, 1_200);
-          attempts.push({ point, readout });
-          if (readoutShowsAnId(readout)) {
-            occupiedPoint = point;
-            break;
-          }
-        }
-        if (occupiedPoint) break;
+      const bisection = await findInteriorCandidate(page);
+      const verdict = await verifyInteriorCandidate(page, bisection.candidate, bisection.bufferWidth, bisection.bufferHeight);
+      observation.interiorCandidate = { ...bisection, verdict };
+      if (!verdict.ok) {
+        throw new Error(
+          `S2: no interior-verified pixel at this camera -- ${verdict.reason}; bisection levels ` +
+            bisection.levels.map((l) => `${l.label}: ${(l.fraction * 100).toFixed(1)}%`).join(" -> ")
+        );
       }
+
+      // The pixel is proven occupied by the read-back above. What the hover establishes here is a
+      // weaker and separate thing: that the pick path ANSWERS at this pixel today, so that S5c's
+      // "it now refuses" is a real change rather than a pixel that never answered at all.
+      //
+      // Either answer counts as "the pick path is alive": an id, or the declared
+      // below-pick-resolution refusal (`canvas/pickResolution.ts` -- at a fit-to-bounds camera over
+      // a 100k-feature fixture the average feature can genuinely sit under the 9 px threshold, and
+      // that refusal is the honest answer there, not a miss). What must NOT already be showing is
+      // the session-ended refusal, which is what S5c asserts appears only after the change.
+      const attempts = [];
+      for (const flipY of [true, false]) {
+        const css = bufferPointToCss(bisection.candidate, rect, bisection.bufferWidth, bisection.bufferHeight, flipY);
+        const readout = await hoverAt(page, css.x, css.y, 5_000);
+        attempts.push({ flipY, css, readout });
+        if (readout !== null && !readout.className.includes("hover-readout-session-ended")) {
+          occupiedPoint = css;
+          observation.occupiedPointFlipY = flipY;
+          observation.readoutBefore = readout;
+          break;
+        }
+      }
+      observation.preconditionAttempts = attempts;
       if (!occupiedPoint) {
         throw new Error(
-          `S2: no pixel among ${attempts.length} tried around the canvas centre yielded a hover id, so ` +
-            `"a formerly-occupied pixel" cannot be established; last readout: ${JSON.stringify(attempts.at(-1)?.readout)}`
+          `S2: the interior-verified pixel buffer(${bisection.candidate.x},${bisection.candidate.y}) produced no ` +
+            `hover answer under either row-0 convention, so "a formerly-occupied pixel" cannot be established. ` +
+            `Attempts: ${JSON.stringify(attempts)}`
         );
       }
       observation.occupiedPoint = occupiedPoint;
+      const kind = readoutShowsAnId(observation.readoutBefore) ? "an id" : "the below-pick-resolution refusal";
       return (
         `resident before the change: ${counts.totalResidentVertices} vertices / ` +
-        `${counts.totalResidentFeatures} features; an id is shown at (${occupiedPoint.x}, ${occupiedPoint.y})`
+        `${counts.totalResidentFeatures} features; interior-verified pixel ` +
+        `buffer(${bisection.candidate.x},${bisection.candidate.y}) -- ${verdict.reason}; the hover there answers with ${kind}`
       );
     }, "PASS", PRECONDITION_TIMEOUT_MS);
     if (!s2) throw new Error("S2 failed; the assertions below would be vacuous");
