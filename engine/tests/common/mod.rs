@@ -32,7 +32,7 @@ pub const POLYGONS_100K: &str =
 /// while a *different* thread's `write_geoparquet` was still writing it, directly, under the final
 /// name.
 ///
-/// Two changes close it:
+/// Three changes close it:
 ///
 /// 1. The `Mutex` below serializes the check-and-generate, so only the first caller through this
 ///    function ever generates — every other caller blocks on the lock until that generation
@@ -40,32 +40,47 @@ pub const POLYGONS_100K: &str =
 /// 2. Generation writes to a temporary path in the same directory, `rename`d into place only once
 ///    complete, so nothing under the final name is ever a partial write — including for a reader
 ///    that opens [`POLYGONS_100K`] directly rather than through this function.
+/// 3. That temporary path is named with this process's own id, not a fixed name, so two separate
+///    `cargo test` processes — two worktrees regenerating the same absent fixture at once is
+///    documented practice here — never interleave writes into *one* temporary file and publish
+///    whichever bytes landed last. Within a single process the `Mutex` already keeps every thread
+///    but the first from writing at all, so this only matters across processes, which share no
+///    `Mutex` (`LOD-PREREGISTRATION.md` §10 Amendment 11).
 ///
-/// **Both are load-bearing, for different reasons.** The rename is what makes a *reader that opens
-/// the fixture directly* safe: nothing under the final name is ever less than complete, whoever
-/// opens it. The lock is what makes "every caller waits for one generation" true rather than merely
-/// "every caller eventually gets a complete file" — two unguarded callers would still generate to
-/// the *same* fixed temporary path at once, and it is the lock, not the rename, that keeps that
-/// generation from happening twice. See
+/// **All three are load-bearing, for different reasons.** The rename is what makes a *reader that
+/// opens the fixture directly* safe: no write this function performs is ever visible partially
+/// under the final name. That guarantee is per-helper, not per-path — `kernel/tests/slice_budgets.rs:472-486`
+/// writes this same absolute path directly, with neither a lock nor a temp-then-rename (an
+/// `#[ignore]`d by-hand harness, not run alongside this suite in ordinary `cargo test` practice), so
+/// a reader racing *that* writer would still see the partial-write hazard this function's own rename
+/// exists to prevent. The lock is what makes "every caller waits for one generation" true rather
+/// than merely "every caller eventually gets a complete file" — two callers unguarded by it would
+/// still generate to the *same* temporary path (per process) at once, and it is the lock, not the
+/// rename, that keeps that generation from happening twice within one process. The per-process name
+/// is what keeps two *processes'* generations from sharing one temporary path. See
 /// `two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file` in `lod_tier_builder.rs`
 /// for the proof and its `RECORDED MUTATION` for what removing only the lock does.
 pub fn polygons_100k() -> PathBuf {
     static GENERATE: Mutex<()> = Mutex::new(());
     let path = PathBuf::from(POLYGONS_100K);
-    let _guard = GENERATE.lock().expect("lock");
+    // A poisoned lock (a prior caller panicked while holding it) must not bury that first failure
+    // behind a second, unrelated `"lock"` panic here — the inner guard is still usable, so take it.
+    let _guard = GENERATE.lock().unwrap_or_else(|e| e.into_inner());
     if !path.is_file() {
         std::fs::create_dir_all(path.parent().expect("fixture dir")).expect("fixture dir");
-        let tmp = path.with_extension("parquet.tmp");
+        let tmp = PathBuf::from(format!("{}.{}.tmp", path.display(), std::process::id()));
         write_geoparquet(
             &tmp,
             &FixtureSpec { features: 100_000, avg_vertices: 100, hole_every: 7, ..Default::default() },
         )
         .expect("regenerate polygons-100k");
-        GENERATIONS.fetch_add(1, Ordering::SeqCst);
         std::fs::rename(&tmp, &path).expect("publish polygons-100k atomically");
+        GENERATIONS.fetch_add(1, Ordering::SeqCst);
     }
     path
 }
+
+static GENERATIONS: AtomicU64 = AtomicU64::new(0);
 
 /// How many times [`polygons_100k`] has actually invoked the generator in this process.
 ///
@@ -76,8 +91,6 @@ pub fn polygons_100k() -> PathBuf {
 /// than each racing to generate its own. This module is compiled fresh into each of the three LOD
 /// test binaries (`mod common;` per binary, not a shared library), and only
 /// `lod_tier_builder.rs`'s copy calls this — `#[allow(dead_code)]` is for the other two.
-static GENERATIONS: AtomicU64 = AtomicU64::new(0);
-
 #[allow(dead_code)]
 pub fn generations_performed() -> u64 {
     GENERATIONS.load(Ordering::SeqCst)

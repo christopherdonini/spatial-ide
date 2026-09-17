@@ -111,7 +111,10 @@ fn clear_tier_directory(source: &Dataset, cancel: &CancelToken) {
 // `the_rejected_simplifier_is_the_one_that_emits_invalid_polygons`, both "No files found" /
 // `NotFound`, observed on this machine in that configuration). `#[ignore]` is what keeps this test's
 // own deletion from ever running at the same time as a sibling's read of the same shared path; run it
-// by itself, as the message below says.
+// by itself, as the message below says. It empties the path for the same reason today — moving the
+// fixture aside rather than deleting it outright, and restoring it (`FixtureAside`, below) — so the
+// `#[ignore]` reasoning is unchanged: nothing under `POLYGONS_100K` may be read by a sibling while
+// this test runs (`LOD-PREREGISTRATION.md` §10 Amendment 11).
 //
 // The suite-wide version of the same proof — regeneration racing for real, under the suite's own
 // parallel tests, with nothing deleting the fixture *while the suite is running* — is the "green
@@ -127,6 +130,53 @@ fn sha256_of_file(path: &Path) -> String {
     let mut hasher = Sha256::new();
     std::io::copy(&mut file, &mut hasher).expect("hash");
     format!("{:x}", hasher.finalize())
+}
+
+/// Moves the fixture at `original` aside for the lifetime of this guard and restores it on every
+/// exit path — including a panic mid-test, since `Drop` still runs during unwind — so the proof
+/// test below never leaves the tester's own hash-recorded fixture deleted or replaced by whatever
+/// this run regenerated under the same name (`LOD-PREREGISTRATION.md` §10 Amendment 11).
+///
+/// Constructing this asserts the fixture is present: the proof test moves the *tester's* copy aside
+/// and back, it does not create one from nothing, and a missing fixture here is a misconfigured
+/// run, not something this guard should silently paper over by proceeding anyway.
+struct FixtureAside {
+    original: PathBuf,
+    aside: PathBuf,
+}
+
+impl FixtureAside {
+    fn take(original: &Path) -> Self {
+        assert!(
+            original.is_file(),
+            "the fixture must already be present at {} for this test to move it aside and back; \
+             run `common::polygons_100k()` once (any other test in this binary does) before this \
+             one, or check the tester's evidence for why it is absent",
+            original.display()
+        );
+        let aside = PathBuf::from(format!("{}.aside.{}", original.display(), std::process::id()));
+        std::fs::rename(original, &aside).expect("move the fixture aside");
+        Self { original: original.to_path_buf(), aside }
+    }
+}
+
+impl Drop for FixtureAside {
+    fn drop(&mut self) {
+        // Whatever this run published under the original name is discarded; the tester's fixture,
+        // moved aside at construction, is what this test leaves behind.
+        let _ = std::fs::remove_file(&self.original);
+        if let Err(e) = std::fs::rename(&self.aside, &self.original) {
+            // A panicking Drop during an unwind aborts the process (a double panic) — report instead,
+            // and say exactly where the tester's fixture actually ended up so it is not lost silently.
+            eprintln!(
+                "FixtureAside::drop: failed to restore {} from {}: {e} — the tester's fixture is \
+                 still at {}",
+                self.original.display(),
+                self.aside.display(),
+                self.aside.display()
+            );
+        }
+    }
 }
 
 // RECORDED MUTATION: in `engine/tests/common/mod.rs`, remove the `let _guard =
@@ -146,13 +196,15 @@ fn sha256_of_file(path: &Path) -> String {
 // corrupt it — which is exactly why this test does not rely on corruption: it is
 // `generations_performed()`'s count, not the file's content, that only the lock keeps at one.
 #[test]
-#[ignore = "deletes the one polygons-100k.parquet every test in this binary (and the other two LOD \
-            suites) shares; run it by itself: cargo test -p spatial-engine --test lod_tier_builder \
-            --features fixture -- --ignored --exact \
+#[ignore = "moves the one polygons-100k.parquet every test in this binary (and the other two LOD \
+            suites) shares aside and restores it when done; run only with no other cargo test \
+            running against C:\\dev\\spatial-ide\\target (the path is absolute and shared by the \
+            three LOD binaries and kernel/tests/slice_budgets.rs): cargo test -p spatial-engine \
+            --test lod_tier_builder -- --ignored --exact \
             two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file --nocapture"]
 fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     let path = PathBuf::from(common::POLYGONS_100K);
-    let _ = std::fs::remove_file(&path);
+    let _aside = FixtureAside::take(&path);
     assert!(!path.is_file(), "the fixture must be absent for this test to exercise regeneration");
     let before = common::generations_performed();
 
@@ -172,8 +224,10 @@ fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
         (ta.join().expect("thread a"), tb.join().expect("thread b"))
     });
 
-    // `LOD-PREREGISTRATION.md:146`'s declared table row for `polygons-100k`.
+    // `LOD-PREREGISTRATION.md:146`'s declared table row for `polygons-100k`, and the tester's own
+    // recorded hash for the same bytes (`LOD-PREREGISTRATION.md` §10 Amendment 10(e)).
     const DECLARED_BYTES: u64 = 151_812_642;
+    const DECLARED_SHA256: &str = "9ecd79242ac7d99e09f1989c8c124fd53dcd697689546ec6013949f806ca6043";
     assert_eq!(a.0, path, "thread a's path is the fixture's own path");
     assert_eq!(b.0, path, "thread b's path is the fixture's own path");
     assert_eq!(a.1, DECLARED_BYTES, "thread a's file is the declared, complete size");
@@ -181,6 +235,11 @@ fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     assert_eq!(
         a.2, b.2,
         "both threads read back the same bytes from the one file this function ever publishes"
+    );
+    assert_eq!(
+        a.2, DECLARED_SHA256,
+        "the regenerated bytes are the same bytes the tester recorded, not merely the same as \
+         each other"
     );
 
     let generated = common::generations_performed() - before;
