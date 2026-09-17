@@ -1,0 +1,104 @@
+[
+  {
+    "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
+    "line": 432,
+    "words": "license.at is a semantic input, not build timing, and the distinction is",
+    "reason": "false trigger: line ~428's 'read verbatim from one named source metadata key' describes an unrelated field; this callout is the ADR's own original prose, not an external quotation."
+  },
+  {
+    "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
+    "line": 780,
+    "words": "a route recorded, not a guarantee. This format records where corresponding source",
+    "reason": "source is kernel/src/bundle/mod.rs:359-362's CORRESPONDING_SOURCE_NOTE constant; wording matches, but its Rust line-continuation backslash survives normalizeText as a stray character."
+  },
+  {
+    "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+    "line": 403,
+    "words": "the accepted mechanism is unchanged; this replaces a selector the acceptance never",
+    "reason": "source DECISIONS-PENDING.md:1053 ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source."
+  },
+  {
+    "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+    "line": 519,
+    "words": "session log: 1788855035342 info data-plane expected origin (config mirror): http://localhost:5180 stderr: [spatial-ide-shell]",
+    "reason": "source is a live session log under %LOCALAPPDATA%\\dev.spatialide.shell\\logs, never a tracked file -- cannot be found here by construction."
+  },
+  {
+    "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+    "line": 573,
+    "words": "1788864076672 error ADR-020 Amendment 1: the main window's configured url (External(Url {",
+    "reason": "source is a live session log under %LOCALAPPDATA%\\dev.spatialide.shell\\logs, never a tracked file -- cannot be found here by construction."
+  },
+  {
+    "file": "engine/ADMISSION-PREREGISTRATION.md",
+    "line": 949,
+    "words": "a false status string does not sit on main between P3a and",
+    "reason": "source DECISIONS-PENDING.md:41; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte."
+  },
+  {
+    "file": "engine/ADMISSION-PREREGISTRATION.md",
+    "line": 993,
+    "words": "Adopt the architect's sentence as written, with one addition: the accessor's doc",
+    "reason": "source DECISIONS-PENDING.md:44; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte."
+  },
+  {
+    "file": "frontends/shell/ENTRY-66B-PREREGISTRATION.md",
+    "line": 104,
+    "words": "No membership predicate that does not answer identically to tileCoverForBbox's key set",
+    "reason": "source is 'the consult' (an architect-agent design consult), never committed as a tracked document -- cannot be found here by construction."
+  },
+  {
+    "file": "frontends/shell/HOVER-CONFIRMING-MARKER-PREREGISTRATION.md",
+    "line": 124,
+    "words": "state was sighted mid-gesture at 1/2 notch(es) that had an id standing",
+    "reason": "source is frontends/shell/e2e/regression.mjs:1657's template string; the quote reproduces one run's runtime-filled values, which the static template source never contains literally."
+  },
+  {
+    "file": "frontends/shell/HOVER-REPICK-PREREGISTRATION.md",
+    "line": 53,
+    "words": "No re-pick at a stored pixel that does not re-validate the framebuffer",
+    "reason": "source is 'the consult §2' (an architect-agent design consult), never committed as a tracked document -- cannot be found here by construction."
+  },
+  {
+    "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+    "line": 113,
+    "words": "via the real panel DOM, scan completed on its own;",
+    "reason": "source is an e2e harness run's own console line (frontends/shell/e2e/out/, .gitignore'd), never a tracked file -- cannot be found here by construction."
+  },
+  {
+    "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+    "line": 119,
+    "words": "kernel/src/skp.rs:497 pins build_viewport_query to Result<_, FilterError>, so the ? at kernel/src/skp.rs:521 invokes",
+    "reason": "source is the reviewer/architect gate's own review comment text, never committed to the tracked tree -- cannot be found here by construction."
+  },
+  {
+    "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+    "line": 76,
+    "words": "The restated target (the load-bearing correction): at fit-to-extent the viewport IS the",
+    "reason": "labelled 'quoted verbatim' but is a restatement of ADR-028:19's point, worded differently from that or any other single tracked source."
+  },
+  {
+    "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+    "line": 86,
+    "words": "C1 No docs/08 normative row lands this cut, not even \"proposed\" -",
+    "reason": "labelled 'quoted verbatim' but this block-on-sight list is self-authored for this document, not a literal copy of a separate tracked source."
+  },
+  {
+    "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+    "line": 125,
+    "words": "vsync interval, zero dropped frames, across the benchmark matrix below (06)",
+    "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte."
+  },
+  {
+    "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",
+    "line": 9,
+    "words": "The exemption can reach an ADR - an §21a-category file exempted by",
+    "reason": "source is the reviewer gate's own finding-4 review comment, never committed to the tracked tree -- cannot be found here by construction."
+  },
+  {
+    "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",
+    "line": 10,
+    "words": "The code is a union over nodes: … erify-test-claims.mjs:157-168 skips done nodes",
+    "reason": "source is the architect gate's own finding-5 review comment, never committed to the tracked tree -- cannot be found here by construction."
+  }
+]
