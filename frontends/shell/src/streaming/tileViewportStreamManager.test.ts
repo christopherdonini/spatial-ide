@@ -1455,10 +1455,11 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * source-changed refusal is not `engine.connections_exhausted` and must not be requeued (§7: the
    * retryable set stays that one code alone).
    *
-   * RECORDED MUTATION: widen `isSourceChangedRefusal` to `err instanceof SkpCallError` (any typed
-   * refusal, rather than one code). Expected failure: "a source-changed refusal is not retryable,
-   * unlike an exhausted-connection one" fails -- an ordinary capacity refusal, which the declared
-   * retryable set exists to retry, would end the whole session instead.
+   * RECORDED MUTATION naming its test:
+   * "a source-changed refusal is not retryable, unlike an exhausted-connection one"
+   * -- widen `isSourceChangedRefusal` to `err instanceof SkpCallError` (any typed refusal, rather
+   * than one code). Expected failure: that test fails -- an ordinary capacity refusal, which the
+   * declared retryable set exists to retry, would end the whole session instead.
    * OBSERVED: FAILED -- this test by name, and with it the four pre-existing entry-87 requeue tests
    * (`AssertionError: expected "spy" to be called with arguments: [ 'tile-stream-mint-recovered', …`).
    */

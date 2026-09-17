@@ -6,7 +6,7 @@ import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { HoverReadoutView, HOVER_CONFIRMING_MARKER_TEXT } from "./HoverReadoutView";
-import { confirmingReadout, type PickResult } from "./pick";
+import { confirmingReadout, type PickResult, type PickSessionEnded } from "./pick";
 
 // React 18.3's own `act` (not `react-dom/test-utils`'s deprecated re-export), exactly as
 // `OriginMismatchState.test.tsx` sets it up -- this suite renders the real component into a real
@@ -172,8 +172,20 @@ describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
     expect(container.textContent).not.toContain("6430");
   });
 
+  // RECORDED MUTATION naming its test:
+  // "the type carries no identity for a render path to reach"
+  // -- give `PickSessionEnded` an `id: bigint` field in `pick.ts`. Expected failure: the two
+  // `@ts-expect-error` directives below become unused and `npm run typecheck` fails on them, which
+  // is where a type-level property has to fail. The same discipline the labelled state's own
+  // `@ts-expect-error` pair above already uses.
+  // OBSERVED (performed once on this branch, then reverted): FAILED --
+  // `src/canvas/HoverReadoutView.test.tsx(185,5): error TS2578: Unused '@ts-expect-error' directive.`
+  // and the same at `(187,5)`; plus `WorkingCanvas.test.ts(473,5): error TS2322`, since the widened
+  // variant also stops being assignable where only a `PickResult` may go.
   it("the type carries no identity for a render path to reach", () => {
-    const refused = { kind: "session-ended" } as const;
+    // Typed as the variant itself, not as a literal, so the two directives below are assertions
+    // about `PickSessionEnded` and fail when that type gains a field.
+    const refused: PickSessionEnded = { kind: "session-ended" };
     // @ts-expect-error -- `PickSessionEnded` has no `id`; there is nothing to render as one.
     expect(refused.id).toBeUndefined();
     // @ts-expect-error -- and no `standing` either, unlike the labelled state.

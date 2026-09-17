@@ -3488,8 +3488,9 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
     return { kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL };
   }
 
-  // RECORDED MUTATION for "the UNTILED first look's own terminal ends the session and clears every
-  // tile": delete the `isSourceChangedTerminal(terminal)` branch from the untiled sink's
+  // RECORDED MUTATION naming its test:
+  // "the UNTILED first look's own terminal ends the session and clears every tile"
+  // -- delete the `isSourceChangedTerminal(terminal)` branch from the untiled sink's
   // `onTerminal` in `candidateArmSession.ts`. Expected failure: that test fails by name (and ONLY
   // it -- the tile-stream case below still passes, which is exactly the gap this closes).
   // OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`. The

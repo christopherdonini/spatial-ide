@@ -80,8 +80,9 @@ describe("isPickBelowResolution", () => {
  * as the pure function `App.tsx`'s one `onHover` site wraps every readout with.
  */
 describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
-  // RECORDED MUTATION for "every readout state becomes the refusal while latched, including null and
-  // a standing id": let `PickConfirming` pass through the latch (`sessionEnded && !isPickConfirming
+  // RECORDED MUTATION naming its test:
+  // "every readout state becomes the refusal while latched, including null and a standing id"
+  // -- let `PickConfirming` pass through the latch (`sessionEnded && !isPickConfirming
   // (readout) ? {kind:"session-ended"} : readout`). Expected failure: that test fails on the
   // confirming case -- a standing id would still be rendered after the identities behind it were
   // voided, which is the "never a standing id" property this exists for.
@@ -122,6 +123,12 @@ describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
     });
   });
 
+  // RECORDED MUTATION naming its test:
+  // "isPickSessionEnded discriminates it from every other readout state"
+  // -- relax the guard to `value !== null && "kind" in value`, so every kinded readout reads as the
+  // refusal. Expected failure: that test fails on the `below-pick-resolution` case.
+  // OBSERVED (performed once on this branch, then reverted): FAILED --
+  // `AssertionError: expected true to be false`.
   it("isPickSessionEnded discriminates it from every other readout state", () => {
     expect(isPickSessionEnded(null)).toBe(false);
     expect(isPickSessionEnded(resolvePick(batch(), 0))).toBe(false);
