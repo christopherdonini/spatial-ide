@@ -289,6 +289,15 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   week to fail this class — every correction written from a ~750k-token context, each round closing old fidelity defects and opening new ones;
   `verify-cites` proves a cited line exists, nothing checked quote content. `scripts/plan/verify-quotes.mjs` (a gated verbatim-quote check + a
   cite-content listing) is the mechanical guard; workers run it before a gate.
+  The tool is a floor and elisions are honest (the human, 2026-09-17, round 11), verbatim: "`verify:quotes` green does not discharge this rule — the gate resolves each verbatim passage against its named source; the check is a floor, not the proof." and "an elision marked `…` is honest quotation; each retained span must match byte-for-byte." with the rider "an elision may never remove a negation, a condition, or a qualifier from the retained meaning — the gate reads across each … for that, the same way it reads a paraphrase."
+- **Dispatch efficiency (the human's directive, 2026-09-17, verbatim at `state/directives/2026-09-17-dispatch-efficiency.md`;
+  persistent edits approved in round 11).** Honour the agent definitions' models (worker/tester = sonnet; reviewer/architect = opus);
+  an override is task-local, for a named reasoning/correctness risk, a diagnosed block, or a limitation a prior attempt exposed — one line
+  in the dispatch and the report (default → override → reason), never for a failed build or a routine correction. Hand off to a fresh worker
+  at a completed phase or a scope change with a six-line verified handoff (branch/worktree + commit; uncommitted work and owner; binding
+  decisions; what was verified; exact remaining findings; evidence links); record-correction rounds always start fresh. Workers self-check the
+  four failure classes before a gate and batch corrections with prior findings and dispositions before any re-review. The Agent tool here has
+  no per-dispatch effort control — say so, never pretend. Judge by completed, verified outcomes, not fewer tokens.
 
 ### Records, claims and reports
 
