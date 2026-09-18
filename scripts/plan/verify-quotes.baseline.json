@@ -175,6 +175,15 @@
       "ruling": "round 16, item 5 (2026-09-18); previously round 15, item 3"
     },
     {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 912,
+      "words": "reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code",
+      "reason": "the quoted App.test.ts title was renamed by PR #90 (cut/briefa-p3b-test-names, merged 2026-09-18) to the section-4 T6 string under round 14 item 2's test-text exception, so the source no longer carries it; the quote was byte-exact at 46cde2c and this record's own section-10 Amendment 17 row pins line 912 there as superseded; the original line stays by append-only, so the correction is the erratum row, not a rewrite. Found when the checker's baseline was re-run against main after PR #90 merged (round 15, item 3: the baseline re-derived against final main).",
+      "disposition": "owed-correction",
+      "corrected_by": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md section 10 Amendment 17, its line-912 row (PR #90, merged 2026-09-18), landed",
+      "ruling": "round 15, item 3 (the baseline re-derived against final main); round 14, item 2 (the test-text exception the rename ran under)"
+    },
+    {
       "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
       "line": 113,
       "words": "via the real panel DOM, scan completed on its own;",
