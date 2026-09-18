@@ -1629,25 +1629,3 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 12, gap 3 | settled | round 14, item 2 |
 
 **Read this amendment first.**
-
-### Amendment 16 -- P5 record (2026-09-18, appended)
-
-**Written after the gate tests were run.** §12e's rule, honoured in this line. Class 3
-(`docs/PREREGISTRATION-TEMPLATE.md:110-112 @ e53bb97 sha256:e4bc1272dfbdb1f0af4b32592670e6a7b3f0646805c95570e7232723e67b7812`)
-for every row below: each is a reference, not a claim beyond what its pin proves. Numbering note
-(the custodian, 2026-09-18): this amendment lands as 16 on the custodian's anticipation that a
-P3b test-names branch takes 14 and P4 takes 15; if the tree at this commit's merge shows a
-different last number, that number is authoritative over this heading and the gate renumbers.
-
-| id | status | reference |
-| --- | --- | --- |
-| G-A1 | green | `engine/tests/admission_instruments.rs:58-59 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:797f127bdd5810febcfa89c8ce5290640079b092a7e8a33cf7faf7a6aaac63bb`; instrument `engine/src/dataset.rs:1481 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:844762c88910710250c90b60dca366dcce2672072686fa5df13189ca1db32320`; mutation run and reverted, observed failure recorded in the test file's own doc comment |
-| G-A2 pre-check | green, P3b's own | the sibling document's §4 T10, unchanged by this piece |
-| G-A2 post-check | written, not run this piece | `frontends/shell/e2e/source-changed.mjs:223 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:f3fb3c5d2aee92935c5acad8451df5be430f25b5dc1f3e57dd5d84d1b21f564e` (route); `:934 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:55bc235cdfb61cc2d93e5135351c381f27eca63f7de5ec220e1237e92217e847` (the distinguishing assertion); no report path -- no run completed this piece |
-| G-A3 client | green, P3b's own | `frontends/shell/src/streaming/viewportStreamManager.test.ts:667 @ 5632f9405de2447cee4fcfa1b6cb77ce794e9520 sha256:bb1fa791c2d0af780169eeb4bfe909b574cd082a8be2858c6cbbde6ab8ce9e88`; `frontends/shell/src/streaming/tileViewportStreamManager.test.ts:1364 @ 5632f9405de2447cee4fcfa1b6cb77ce794e9520 sha256:7feb9761cde6a0e678c570689ac1a428d87d6bea5e8094a8b87414c169d98a0e` |
-| G-A3 E2E | deviation | no test-only hook exists to observe one batch's delivery after invalidation in the real running app; none added |
-| G-A4 | green | `kernel/tests/no_generation_in_persisted_artifacts.rs:173-174 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:a0fb29fd2d7ba910bce83086bdc03d886a588bafd0ddf6489755eb2a02f9e3cd`; `:230-231 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:682849e56cd87ff5ef478826188ce58a97efe3c5c40dd1f3ac8413688b1760ea`; `:280-281 @ 75ece8b0e31440dd6718661e347cab65ae5bf5a6 sha256:dc042023140672828847fd449946abc919c4cf5ed2ef7ae92e3dd78c36d662ac`; three mutations run and reverted, each an observed failure recorded in the test file's own doc comments |
-| G-A5 | not this piece | P4's node |
-| G-A6 workspace | partial | `cargo test --workspace --locked` reached `engine/tests/lod_tier_builder.rs` and stopped there on fail-fast; every test before it passed, including `admission_format_semantics.rs` (23/23) and this piece's own `admission_instruments.rs` (1/1); `lod_tier_builder.rs`'s two failures (`the_built_sets_size_is_disclosed_with_the_tiers`, `tier_build_emits_zero_invalid_polygons`) are in a file this piece's diff does not touch (`git diff --stat origin/main...HEAD` names four files, none of them); that file's own doc comment (`:356`) states its fixture path is shared and unguarded across every `cargo test` on the machine "whatever its `CARGO_TARGET_DIR`", and a sibling P4 worktree was actively running at the same wall-clock minute (`.claude/worktrees/briefa-p4`, mtime observed during this run); kernel, `protocol/data-plane`, `protocol/skp` and `renderer` were not reached by this run and are not claimed green or red here |
-| G-A6 vitest | green | 70 files, 1024 tests, `npm test -- --run` in `frontends/shell` |
-| G-A6 diff | clean | `git diff --stat origin/main...HEAD` (pre-merge) names exactly `engine/src/dataset.rs`, `engine/tests/admission_instruments.rs` (new), `kernel/tests/no_generation_in_persisted_artifacts.rs` (new), `frontends/shell/e2e/source-changed.mjs`; no existing test file's assertions changed |

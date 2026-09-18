@@ -1172,16 +1172,3 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 13 (3), and Amendment 8's two driver-output quotes it checks | recorded: evidence, not Authority; the rule dated non-retroactive | round 15, item 4 |
 
 **Read this amendment first.**
-
-### Amendment 18 -- G-A2's shell-side row, P5 (2026-09-18, appended)
-
-**Written after the piece's own runs.** §10's rule, honoured in this line. Class 3
-(`docs/PREREGISTRATION-TEMPLATE.md:110-112 @ e53bb97 sha256:e4bc1272dfbdb1f0af4b32592670e6a7b3f0646805c95570e7232723e67b7812`):
-this row references the engine document's own record rather than restating it. Numbering note
-(the custodian, 2026-09-18): this lands as 18 on the custodian's anticipation that a P3b
-test-names branch takes 17; if the tree at this commit's merge shows a different last number,
-that number is authoritative over this heading and the gate renumbers.
-
-| id | status | reference |
-| --- | --- | --- |
-| G-A2, both routes | see engine record | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 16 (or its renumbering per that amendment's own note) |
