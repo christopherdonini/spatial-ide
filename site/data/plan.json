@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17T18:57:26.677Z",
-  "plan_hash": "04b9482d19941237ab55fcc3431606a2d00936dbc7bda3940d9e9e3f481ac2cd",
+  "generated_at": "2026-09-18T05:07:21.128Z",
+  "plan_hash": "7fd8be3629a2d67d66fe5bc0fd1a3d593464096a2ea57510f55c0ad32691c2ba",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1314,6 +1314,85 @@
       "summary": "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-verify-mutation-header-token",
+      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 5,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-record-round-count",
+      "title": "health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "click",
+        "minutes": 2
+      },
+      "gate": "scripts/plan/RECORD-ROUND-COUNT-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "governance/record-round-count"
+      },
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        108
+      ],
+      "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form, single reviewer gate",
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-verify-gate-file-exists",
+      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 7,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate",
+      "dates": {
+        "opened": "2026-09-18",
         "done": null
       }
     },

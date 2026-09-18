@@ -1,72 +1,23 @@
-# ADR-029 — The Scan-Progress Carrier Quantity
+> **Status: consult — the architect's ADR-029 / operation-lifecycle consult of 2026-09-13, for the human's sight.**
+> Record, not policy — moved from the untracked `RELEASE-DRAFTS-0.1.0/` directory on the human's round-14 ruling (2026-09-17); nothing here binds, and its cites are historical (advisory in `verify-cites`, never gated).
 
-**Status:** Proposed — **decision drafted 2026-09-14 for the human's sight (below); binds nothing until its gate and the human's word.** Filed 2026-09-02 as the
-named home for the true-scan-progress debt (SKP-V0.md §4 item 5), so the gap has an address
-instead of rolling to "the next SKP version that opens the wire" a third time (the ADR-023
-pattern, the ADR-011-gate-8 pattern applied to a protocol quantity). Not architect-blockable. No
-implementation exists or is licensed by this filing.
-**Drafted by:** the custodian, per `DECISIONS-PENDING.md`'s resolved entry 9 — the human's
-2026-09-02 confirmation of `SKP-V0.md`'s second explicit re-deferral of this debt, which named
-this filing as the stronger carrier that makes the re-deferral bearable.
-**Related:** ADR-021 (the acceptance condition this debt descends from: the filter-panel cut must
-present liveness + a working cancel during zero-batch filtered scans as the interim, with true
-scan-progress the named SKP-V0 §4.5 debt); ADR-018 (what "cancellation acknowledged" means — the
-same discipline of naming a quantity precisely before scoring it, applied here to a different
-quantity); `SKP-V0.md` §4 item 5 (the debt's own dated history: parked 2026-08-14 on "the next SKP
-version that opens the wire for any reason"; `skp/0.2` was that version, confirmed 2026-09-02 as
-the second explicit re-deferral, this ADR being the condition that made it acceptable); ADR-004
-(bit-critical wire scalars — a future carrier, whatever shape it takes, is wire-visible and inherits
-that discipline).
-**Record:** Decision drafted for sight per DECISIONS-PENDING.md RULED 2026-09-14 question set C2;
-Status stays Proposed until G1 and the human's word.
+# Architect consult — ADR-029 and the operation lifecycle: the decision draft for the human's sight
 
-## Context
+*Consult of 2026-09-13 on the custodian's brief under the human's directive ("ADR-029 + operation lifecycle: architect consult, then the decision draft for my sight (quantity, carrier, refusal shape; non-authorising operation id beside the handle, never derived from it; no data-plane change)"). Filed verbatim from the architect agent's report (HTML entities restored). **Nothing here binds.** ADR-029 stays Proposed ("decision deliberately undrafted") until the human's word; the three routed questions for the human are DECISIONS-PENDING entry 92.*
 
-The filter-panel cut shipped an interim for zero-batch filtered scans: indeterminate liveness (a
-scan-liveness indicator) plus a working, client-derived Cancel — never a true progress figure,
-because none exists on the wire. `TAG_PROGRESS` (the data-plane frame that could carry one) fires
-only after a batch, so a scan that produces zero batches yet — the exact case the interim covers —
-has nothing to report progress *from*. That gap was named a debt at ADR-021's own acceptance
-(2026-08-13) and parked with a deadline: "the next SKP version that opens the wire for any reason
-— a `skp/0.2`, or `docs/07`'s 1.0 freeze, whichever comes first." The admission-remediation cut's
-`skp/0.2` was that version (it opens the wire for two `open_dataset` fields, unrelated to scanning),
-so the debt's own carrier clause fired again — and was re-deferred a second time, 2026-08-14 to
-2026-09-02, on the same three reasons as before (no batch-independent data-plane carrier exists;
-the quantity itself is undecided; the interim already ships) plus this filing as the condition that
-makes a third rollover impossible: the question now has an address, here, rather than a clause
-buried in a spec file that the next SKP version has to remember to re-read.
+---
 
-## Decision — the original OPEN framing (2026-09-02), superseded 2026-09-14
+## Verdict
 
-*The blockquote below is the question as it stood open from 2026-09-02. It is kept as the record of what was undecided; the drafted answer is **"Decision — drafted 2026-09-14 for the human's sight"** further down, folding the human's ruling of 2026-09-14 (question set C2). Read the drafted section for the current proposal; this one is history.*
+**Pass with notes** — the requested shape (control-plane carrier, non-authorising id, no data-plane change) is constitutionally sound; nothing in it violates 01, 02/10, ADR-004 Amd 4, ADR-006 or ADR-018. Two premises in the brief are wrong against the code and the draft below corrects them rather than smoothing them over (SKP-V0 §2's own "corrections recorded, not smoothed" discipline). Read-only; nothing written to `docs/adr/`.
 
-> OPEN: what the scan-progress quantity actually **is** — rows scanned, bytes read, row groups
-> completed, elapsed-since-first-source-row, or something else entirely — is undecided and is an
-> ADR-class question, not an implementation detail (a wrong choice here is wire-visible and
-> version-locked, the same reason ADR-018 named its own three instants precisely before scoring
-> anything against them). Also open: whether the carrier is a new `TAG_PROGRESS`-adjacent
-> data-plane frame independent of batch delivery, a control-plane poll, or something else; its own
-> refusal/error shape if the source can't report it (e.g. a scan DuckDB can't size in advance);
-> and whether it is universally available or only for admitted-but-unscored quantities (matching
-> this project's own docs/08 "reported, never gated" discipline until it earns a budget row). A
-> future SKP version string is implied.
+**Correction C1 — "rows emitted" is identically zero across the window this debt names.** `StreamStats.rows_generated` (`engine/src/stream.rs:573`) counts *post-filter* rows, and the producer loop consumes DuckDB result chunks (`chunk.num_rows()`, `engine/src/stream.rs:1583`); a late-matching predicate yields no chunk at all until it matches. Rows emitted is an honest quantity, but it cannot discharge §4.5.
 
-## Consequences (of the deferral, not of a decision)
+**Correction C2 — "row groups consumed" does not exist as a producer counter.** DuckDB owns the scan; the tree's only row-group knowledge is *plan-time* (`admitted_row_groups()` / `ranges_for`, `engine/src/stream.rs:1250-1274`) and is `None` when no index was built (`:1253`). It is a **denominator when present, never a numerator**. So the decision is gated on a feasibility check (gate G1 below) — ADR-029 must not be drafted as if the number already exists (principle 8; docs/08 "no numbers, no claim").
 
-Until this is decided: a zero-batch filtered scan continues to show indeterminate liveness only,
-never a percentage or a count — the ADR-021 interim stays the shipped behavior, not a placeholder
-silently upgraded. No SKP version may re-defer this debt to "the next version that opens the wire"
-again without amending this ADR first — that escape hatch is spent; this filing is the debt's
-permanent address now. **Due before `docs/07`'s Prototype exit** (the deadline the human's
-2026-09-02 confirmation carried), per the same accepted-with-a-deadline discipline ADR-027 already
-applies to principle 4's own style/publish gaps.
+---
 
-## Decision — drafted 2026-09-14 for the human's sight (Proposed; binds nothing until G1 and the human's word)
-
-*Ported verbatim from the architect consult of 2026-09-13
-(`state/drafts/post-tag/architect-consult-adr-029-operation-lifecycle.md`), with the human's
-ruling of 2026-09-14 (question set C2) folded in explicitly below. This binds nothing: ADR-029 stays
-Proposed until gate G1 clears and the human gives the word.*
+## Decision draft — for the human's sight (ADR-029 remains Proposed; this binds nothing)
 
 **1. The quantity.**
 - (a) It is a **monotone count of source-side work consumed, in whole declared units** — *row groups consumed* where a row-group plan supplies the unit, else *rows emitted* — because a count of completed units is checkable against the file itself, whereas a rate is not bounded on this path (ADR-018 item 4: a cadence bounds the quantity it actually bounds and becomes a time bound only if the rate is bounded; `docs/adr/ADR-018-…:80-88`).
@@ -98,24 +49,7 @@ Proposed until gate G1 clears and the human gives the word.*
 
 **7. What this does not decide.** MCP exposure (control-plane eligibility is not exposure; ADR-004's adapter rule is untouched, and MCP never becomes a bulk path); publish progress (already shipped binding-local, `publish.rs:740` — unchanged); undo (a scan is ADR-006 class 1, pure — nothing here becomes a workspace mutation or a side effect, and the operation id is never an undo handle); the `open_dataset` progress shortfall (`SKP-V0.md:47-48`) stays a named absence.
 
-**Folded from the human's ruling (question set C2, 2026-09-14).**
-- **Q1 — the carrier / refusal shape:** the carrier is a set of **typed states `{ scanning | finished | unknown }`** mirroring `cancel`'s shape — progress is a state, not a refusal; `unknown` is the first-class answer when no reading exists, never a fake number (the human's ruling of 2026-09-14, question set C2). This affirms draft point 3(a).
-- **Q2 — the wire literal:** the wire literal is **its own**, its number decided by merge order per SKP-V0 §13 E — `skp/0.5` if it lands after Brief B's `0.4`, `0.4` if before; the number itself is immaterial and is **not** fixed now (the human's ruling of 2026-09-14, question set C2). This supersedes draft point 6's recommendation of a fixed `skp/0.5` — one wire change per version, in the order it merges.
-- **Q3 — the liveness string:** the liveness string is **sighted by the human** as a new state, via the string-sight route (the human's ruling of 2026-09-14, question set C2). This resolves draft point 5's deferral of the final wording.
-
-### Standing conditions (the human, 2026-09-14 C2)
-
-The operation id is non-authorising and never derived from a handle; no data-plane change; G1 returns
-the quantity question to the human if no monotone reading exists rather than shipping a non-monotone
-one.
-
-### Acceptance gates
-- **G1 (feasibility, first and blocking).** Verify against the vendored `duckdb` crate that a monotone scan-progress reading exists on the `read_parquet` path *before* any wire work; if it does not, the quantity question returns to the human — the §13 F conditional-escalation precedent (`ADMISSION-PREREGISTRATION.md:254`). G1 is tracked as its own plan node `adr-029-g1-feasibility`, run on a quiet machine, and its result returns here (and to the human if it bounces).
-- **G2.** A test showing a zero-batch filtered scan produces a strictly increasing reading and a working cancel throughout (the ADR-021 condition, still binding).
-- **G3.** `wire_bytes_invariant.rs` extended to the progress operation class, green with tracing on and off.
-- **G4.** Poll-storm test: N polls against a running stream perform zero engine queries and zero filesystem reads.
-- **G5.** Typed-refusal exhaustiveness test (no wildcard arm) and an unknown/terminal race test.
-- **G6.** Operator walkthrough part: the counted words shown, no bar, no ETA, cancel still works.
+---
 
 ### Block-on-sight for the implementer
 1. Any percentage, bar, ETA, rate or duration derived from the counts, in Rust, TS, a status string or a walkthrough row (ADR-018).
@@ -125,8 +59,18 @@ one.
 5. A `String` error, a wildcard `match` arm, or an invented "failed" code on the new command.
 6. A wire literal bumped without both-side fixtures in the same commit, or a persisted/logged operation id.
 
+### Acceptance gates
+- **G1 (feasibility, first and blocking).** Verify against the vendored `duckdb` crate that a monotone scan-progress reading exists on the `read_parquet` path *before* any wire work; if it does not, the quantity question returns to the human — the §13 F conditional-escalation precedent (`ADMISSION-PREREGISTRATION.md:254`).
+- **G2.** A test showing a zero-batch filtered scan produces a strictly increasing reading and a working cancel throughout (the ADR-021 condition, still binding).
+- **G3.** `wire_bytes_invariant.rs` extended to the progress operation class, green with tracing on and off.
+- **G4.** Poll-storm test: N polls against a running stream perform zero engine queries and zero filesystem reads.
+- **G5.** Typed-refusal exhaustiveness test (no wildcard arm) and an unknown/terminal race test.
+- **G6.** Operator walkthrough part: the counted words shown, no bar, no ETA, cancel still works.
+
 ### Open questions routed
 - **Q1 → human.** States-vs-codes for unknown/finished (draft point 3a departs from the directive's "typed codes for all three"); the `cancel` precedent argues for states, the directive for codes.
 - **Q2 → human.** The literal: own `skp/0.5` (recommended) vs folding into 0.4.
 - **Q3 → human.** The liveness string wording (the 24(b) string-sight route).
 - **Q4 → architect, at P0.** Whether the unit is row groups or rows when both are available — decide once, declare it in the response, never mix within one operation.
+
+**Files read for this consult:** `docs/adr/ADR-029-scan-progress-carrier-quantity.md`, `ADR-004-skp-control-data-plane-mcp-adapter.md`, `ADR-018-what-cancellation-acknowledged-means.md`, `ADR-006-lineage-undo-side-effects.md`, `ADR-010-render-frames-origins-boundaries.md`, `ADR-027-action-console-and-display-truth.md`, `docs/01_Principles.md`, `docs/10_SKP_Protocol.md`, `docs/08_Testing.md`, `protocol/skp/SKP-V0.md`, `protocol/data-plane/src/adapter_ws.rs`, `kernel/src/skp.rs`, `engine/src/stream.rs`, `engine/ADMISSION-PREREGISTRATION.md`, `frontends/shell/src/residency/residencyStatus.ts`, `frontends/shell/src/diagnostics/renderTrace.ts`, `frontends/shell/src/streaming/viewportStreamManager.ts`, `frontends/shell/src/App.tsx`, `frontends/shell/src-tauri/src/publish.rs`.
