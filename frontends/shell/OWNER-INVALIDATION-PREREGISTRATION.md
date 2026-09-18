@@ -1185,3 +1185,15 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Owner's `clearAllTiles()` call site exercised by the mutation | pinned | `frontends/shell/src/residency/candidateArmSession.ts:1076 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:cf363518c47ce44d0f43d6fd9057ef38c9c19cd864e100fe1e1cb96d73058bc1`, inside `endCandidateSession`, the unified owner-clearing call its own doc comment names for every route in -- `frontends/shell/src/residency/candidateArmSession.ts:1052-1067 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:76abd5ea0ac915a54bcf03aff78b2506dd4448fa84b33824c4191bff2786d7a1`, both the tiled and untiled arms and both routes. Removing it, re-running the post-check route, leaves the owner's status/refusal text correct while residency itself does not clear -- the mutation isolates the owner's clearing act from its messaging, the same act/consequence split this document's own vocabulary keeps. |
 
 **Read this amendment first.**
+
+---
+
+### Amendment 19 -- pointer: Amendment 18's row is narrowed by the engine record (2026-09-18, appended)
+
+**Written after the architect gate's attempt-2 findings were seen.** Class **3** (pointer row). Filed as 19: 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 18's "discharged" | narrowed | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 17, its first row. |
+
+**Read this amendment first, for Amendments 1-19.**

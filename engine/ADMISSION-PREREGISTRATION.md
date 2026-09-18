@@ -1651,3 +1651,22 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | G-A6 -- existing suites green | partial, stated plainly | `cargo test -p spatial-kernel --test no_generation_in_persisted_artifacts` and `-p spatial-engine --test admission_instruments` green at `8fb09ddc1f8a157f8c21ba0aef36c01267164718`. A full `cargo test --workspace` was not re-run this round: round 1's own run of it reported partial, traced to a documented shared-fixture-across-worktrees hazard unrelated to this piece's diff (`engine/tests/lod_tier_builder.rs`), and no file this round touches that suite's fixtures. No existing test file's assertions were changed by this piece. |
 
 **Read this amendment first.**
+
+---
+
+### Amendment 17 -- the architect's reduction of Amendment 16 (2026-09-18, appended; the record cap's point (3): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`)
+
+**Written after the architect gate's attempt-2 findings were seen.** **Read this amendment first.** Classes: **1** for a withdrawal or narrowing row (round 15, item 1, clause (g)); **3** for the test-text row (round 14's named exception). Amendment 16 is byte-untouched; each row states what is true instead. Pins into `8fb09ddc1f8a157f8c21ba0aef36c01267164718` name a branch commit on `cut/briefa-p5` (Amendment 16's own disclosure).
+
+**Superseded index** (round 12, item 1 (e)).
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 16's two G-A2 rows, and `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` §10 Amendment 18's row | narrowed: "discharged" covers every §12b G-A2 clause except **status text verbatim**, which no step asserts | `frontends/shell/e2e/source-changed.mjs:865-885 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:c6c2069a52900a6384f9d909706216097354629f5298d526888173efa7c20145`; the strings are the human's at P6 (§12d). |
+| Amendment 16's G-A3 row, as to "P4's node" | withdrawn: G-A3 is this node's | §12e Amendment 1, item 9; `PLAN.yaml`'s `briefa-p5-gate-tests` title. |
+| Amendment 16's G-A3 row, as to evidence | narrowed to §12b G-A3's client clause; the other two **unrun — reason** (§8) | Client clause: Amendment 16's two pins stand. E2E clause: unrun -- no run asserts a late batch dropped; `source-changed.mjs` establishes no batch in flight at invalidation, and the product signal that would (`frontends/shell/src/diagnostics/renderTrace.ts:37-46 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:3f58da2eded9c2868e75a069e6ffb1ba5c574f6425b9c4bd039417934a2625c2`) is unused by it. Test-text clause: unrun -- the scoping sentence lives in product code, `frontends/shell/src/admission/formatRefusal.ts:80 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:0df7128d5e2e931e6051392923d4dbbc74f5af5d89ab3985ce4b62f97fe08f1c`. |
+| Amendment 16's G-A4 row, as to the enumeration's declared scope | narrowed to the writers it names | Exhaustive over `engine/src`, `kernel/src`, `frontends/shell/src-tauri/src`, `protocol/skp/src`. `protocol/transport-bakeoff/src/main.rs:302 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:591bc5aa8aa161329391a53bc47c865389c41da36d36f73f96c757a827b93e79` and `:566 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:23be0ab08a988487014d967d9f56f2e2011927c18ff48e004b91b52aa1f58557` write outside `#[cfg(test)]` and leave the scope with the workspace: the root `Cargo.toml`'s `exclude` list names `protocol/transport-bakeoff`, lines 19-20 at `9af7308d7d11f79cb43fd2f2021a47071f49eeb1` -- cited in prose, not as a hash-pinned reference, since a bare `Cargo.toml` cite written from this directory resolves against `engine/Cargo.toml`, not the workspace root (round 15 (e) has no reach into a path the checker cannot disambiguate). |
+| `kernel/tests/no_generation_in_persisted_artifacts.rs`'s scope sentence | class 3, test text: corrected in this commit to the row above | `kernel/tests/no_generation_in_persisted_artifacts.rs:50-52 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:aee6eb03d5024141ecf63190451c07215ffa4b1eb21c80aa7736ed0965a224bd` |
+| Amendment 16's G-A6 row | reduced: its narrative withdrawn, its claim split | No existing test file appears in `git diff --name-only origin/main...HEAD` at this branch's tip; the workspace run at that tip is the reviewer's gate, recorded in `state/gate-log.json` for node `briefa-p5-gate-tests`. |
+
+**Read this amendment first, for Amendments 1-17.**

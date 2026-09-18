@@ -237,6 +237,12 @@ session-ended state in place for the second (`openPath` on the same path does no
 so each scenario needs its own fresh launch -- observed as a zoom ladder producing zero motion at
 every notch on a second run against the same instance, silent otherwise.
 
+**`source-changed.mjs`'s post-check route (P5).** Setting `SPATIAL_E2E_SOURCE_CHANGED_ROUTE=post`
+switches the same driver from its default pre-check route (T10, unchanged) to a route that lets a
+tile's mint succeed against the file before the change and mutates only after, so the
+source-changed refusal is caught when that tile's own stream later drains rather than at mint time
+(`frontends/shell/e2e/source-changed.mjs:144-159`).
+
 ## Action console spec (action-console cut, P5)
 
 ```

@@ -13,9 +13,9 @@
 //!
 //! ## What this tree can produce, enumerated by its own writers
 //!
-//! Grepped over `engine/src`, `kernel/src`, `protocol/*/src` and `frontends/shell/src-tauri/src`
+//! Grepped over `engine/src`, `kernel/src`, `protocol/skp/src` and `frontends/shell/src-tauri/src`
 //! for `std::fs::write`/`File::create`/`OpenOptions::new()` outside `#[cfg(test)]`, and reconciled
-//! against the record's own architect gate (round 2, B-1). Four families:
+//! against gate-log record 85, finding B-1. Four families:
 //!
 //! 1. **The published bundle** — `kernel/src/publish/mod.rs` (`Staging::write`, `kernel/src/publish/mod.rs:1355`)
 //!    and `kernel/src/bundle/mod.rs`'s path constants: `manifest.json`, `style.json`, the viewer
@@ -48,8 +48,10 @@
 //! about one) applies to what it writes. Not scanned.
 //!
 //! **No standalone project-file or recipe-file format exists in this tree at this commit** —
-//! grepped, not assumed, against the same four-path scope above; nothing outside the four families
-//! and the one exclusion resolves.
+//! grepped, not assumed, against the same four-path scope above (`protocol/skp/src`, not the whole
+//! `protocol/*` tree: `protocol/transport-bakeoff/src/main.rs:302,566` write outside
+//! `#[cfg(test)]`, but that crate is `exclude`d from the workspace, `Cargo.toml:19-20`); nothing
+//! outside the four families and the one exclusion resolves.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -347,7 +349,7 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
     );
 }
 
-/// **The LOD tier-set half of G-A4** (architect gate, round 2, B-1, family 3). `build_tiers` writes
+/// **The LOD tier-set half of G-A4** (gate-log record 85, finding B-1, family 3). `build_tiers` writes
 /// `tiers.json` (`engine/src/lod.rs:1203`) and, per tier, a GeoParquet file (`:1367`) to a real
 /// on-disk cache. Same real-product-path discipline as the bundle test above: a real `build_tiers`
 /// call, over a small fixture, scanned byte-for-byte -- not a schema walk this time, because
@@ -406,7 +408,7 @@ fn env_lock() -> MutexGuard<'static, ()> {
     LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
 }
 
-/// **The permission audit log half of G-A4** (architect gate, round 2, B-1, family 4).
+/// **The permission audit log half of G-A4** (gate-log record 85, finding B-1, family 4).
 /// `AuditLog::open_for` probes writability with an `OpenOptions` open (`kernel/src/permission/audit/log.rs:144`)
 /// and `AuditLog::append` writes the real record line (`:215-221`). Real product path, the same
 /// shape `kernel/tests/permission_boundary.rs::an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record`
