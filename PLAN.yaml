@@ -971,7 +971,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [112, 113]
-    summary: "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- renders the three fields N3 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)"
+    summary: "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- the three fields round 16, item 1 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)"
     dates: {opened: 2026-09-18, done: null}
 
   - id: accept-adr-015-a1
