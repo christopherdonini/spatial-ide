@@ -739,3 +739,11 @@ place — code comments are not append-only) and into the entry-40 pass preregis
 Amendment 2). The instrument-surface half of the discipline — that an instrument never becomes SKP —
 is the proposed ADR-004 amendment (`docs/adr/PROPOSED-amendment-to-ADR-004-instrument-surface-never-
 skp.md`), still Proposed.
+
+**Amendment 28 (2026-09-18, appended; the owed correction ordered by round 14, item 3; reduced to references under the human's standing directive of 2026-09-18, point (1): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`; not a change to any cell of this closed cut). Class 3.**
+
+| id | status | reference |
+| --- | --- | --- |
+| §2e's first quoted row | corrected reference | `docs/08_Testing.md:5 @ 8a488ee290fb sha256:289ae3d58d1eba6beb4ec1f3b66574a6ffb7a0818d11fcb5975a40a378086077` |
+
+**Superseded index** (round 12, item 1 (e)): §2e's first quoted row, as to its reference — this amendment.
