@@ -1172,3 +1172,30 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 13 (3), and Amendment 8's two driver-output quotes it checks | recorded: evidence, not Authority; the rule dated non-retroactive | round 15, item 4 |
 
 **Read this amendment first.**
+
+---
+
+### Amendment 17 -- class 3 (test text), the six §5 titles aligned (2026-09-18, appended)
+
+**Written after `cut/briefa-p3b-test-names`'s renames landed on that branch.** **Read this amendment first** for the rows below; Amendment 15 remains the resolution point for everything else it lists. Classes: **3** throughout (round 14, item 2's test-text exception; `docs/PREREGISTRATION-TEMPLATE.md:112-114 @ 5632f94 sha256:8933bc8e294970c5cf38be8b25c680322f3adb5480b3fa28b842c633efcb1ce5`). Every pin names its commit; where the cited text is not on `main`, the commit named is the branch commit that carries it (`13eca3c`, `cut/briefa-p3b-test-names`). This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| T3 | title aligned to §5 at `13eca3c` | `kernel/tests/session_generation.rs:383 @ 13eca3c sha256:fcd738346963e6f3f9fafcf62de9c4438bfa53ad23ce2dc3bbe5fe1113637dd6` |
+| T4 | title aligned to §5 at `13eca3c` | `frontends/shell/src/streaming/viewportStreamManager.test.ts:727 @ 13eca3c sha256:4b07250bc98d4bd503faa8ed7c2de02b8996ec54d90d1f5df09aa46f3fbfc6c2` |
+| T5 | title aligned to §5 at `13eca3c` | `frontends/shell/src/residency/candidateArmSession.test.ts:3501 @ 13eca3c sha256:d0210531ae9fc2b4928ef019424db492870097fcdcfaee7875085ab62e9deb78` |
+| T6 | title aligned to §5 at `13eca3c` | `frontends/shell/src/App.test.ts:1168 @ 13eca3c sha256:f5eccf759e631568af75b4f6837288edf78199937123b4965d4908b3ef739451` |
+| T7 | title aligned to §5 at `13eca3c` | `frontends/shell/src/streaming/tileViewportStreamManager.test.ts:1431 @ 13eca3c sha256:98f2931d439628c59684e4cc9910afc5fa29686a5475889a65d9bf781b365878` |
+| T9 | title aligned to §5 at `13eca3c` | `frontends/shell/src/streaming/formatTerminalRefusal.test.ts:16 @ 13eca3c sha256:4f1c0479aa2d5bb1050011bdc893fa502561c421d4e7c4d9eca34f5cd1648cee` |
+| Amendment 4 (a) table, row 2a(ii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:600 @ 46cde2c sha256:f6bd5501f35b779f518c774f0e9f40cd2da1a38938b732ff668055efbb65dff1` |
+| Amendment 4 (a) table, row 2a(iii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:601 @ 46cde2c sha256:2ecf5459bf515aa9eb6e7a351f8916089f5a097d551a29d22030de1985f97311` |
+| Amendment 4 (a) table, row 2b | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:604 @ 46cde2c sha256:4ce36104f4c83983a028b2a420dada75d35b994f551f775ee62203d09aad5d9d` |
+| Amendment 4 (c), item 1 | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:621 @ 46cde2c sha256:88d89d06ede95c83d1f24f9cb88f1e467516d658b7cd9343955add460c587a44` |
+| Amendment 4 (c) item 2's table, T3 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:627 @ 46cde2c sha256:9de743ddfeb3d03902d2f1f4c20483021aea090ab05b03c08cfa845af152be43` |
+| Amendment 4 (c) item 2's table, T4 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:628 @ 46cde2c sha256:c38c8a40443831d954ca62f5120379c527a0c55fdc0c6937cd5b99e2ad6e8092` |
+| Amendment 4 (c) item 2's table, T5 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:629 @ 46cde2c sha256:95e03985d5f95058c31f6947e87187c7cfc73b4beebc6d28147c8f7265e24a4f` |
+| Amendment 4 (c) item 2's table, T6 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:630 @ 46cde2c sha256:d906473971bfdfa80a82fe717c78cc1e657ffc75187a6aeaf288b47437a368c9` |
+| Amendment 4 (c) item 2's table, T7 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:631 @ 46cde2c sha256:d04e3d6c2914b39d7483aae409fe02dc1a37db85d9d7f61abea52f2551198465` |
+| Amendment 4 (f) table, the instrument-exemption row (`GenerationRegistry::dead_ticket_count`) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:677 @ 46cde2c sha256:2a2ebfac9b64a428c084c4faab28defafb25e96e6d1c5588973528474fd4f8ff` |
+
+**Read this amendment first.**
