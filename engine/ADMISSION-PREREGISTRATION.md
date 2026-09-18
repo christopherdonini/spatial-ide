@@ -1629,3 +1629,21 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 12, gap 3 | settled | round 14, item 2 |
 
 **Read this amendment first.**
+
+### Amendment 15 -- P4 record (2026-09-18, appended)
+
+**Filed as 15, not the mechanically-next 14**: at this piece's `git merge origin/main` (`26f3154`),
+§12e ran through Amendment 13 only; Amendment 14 is reserved for the concurrent P3b test-names
+branch per the coordinator's instruction of 2026-09-18. References and hashes only; no prose
+restates a reference; no claim of "discharged" -- the gates say what is discharged.
+
+| id | status | reference |
+| --- | --- | --- |
+| runner | recorded | `engine/tests/admission_p4_corpus.rs:600-603 @ afdc75dc35755b3eb20368bbf44464a8f16ed5f7 sha256:86a58701ef3a499211c0dcf31bfa10b094da49e4394d70b5c70df2466cd3f7c6` |
+| results | recorded | `engine/ADMISSION-RESULTS.md:1 @ 5839e35de73615cff998ca63fac0e1d837ed9ae7 sha256:2eb8d0f50a9be0a1eaec1a11304dec4b8206f5bf97ce0fef8afd055511533ca0` |
+| deviation-M-4 | DEVIATION | results row `engine/ADMISSION-RESULTS.md:26 @ 5839e35de73615cff998ca63fac0e1d837ed9ae7 sha256:2b24ca6d4a94386745787677c279fb64055372749a268e9b789064bfa74eb877` vs §4 mutation table, M-4 |
+| G-A5 | recorded | `engine/ADMISSION-RESULTS.md:50-57 @ 5839e35de73615cff998ca63fac0e1d837ed9ae7 sha256:8db618538cddb9f674dc6cb2e8fdd96f8f1df5372d7aab53fd61c3c44680f9fa` |
+| G-A6 | recorded | `git diff 26f3154...5839e35 --stat` -- 2 files changed, both new (`engine/ADMISSION-RESULTS.md`, `engine/tests/admission_p4_corpus.rs`), zero existing files touched; `cargo test -p spatial-engine --test admission_format_semantics` 23 passed/0 failed and `cargo test -p spatial-engine --test identity` 8 passed/0 failed, both @ 5839e35de73615cff998ca63fac0e1d837ed9ae7, neither test file in the diff above |
+| workspace-tests | partial | `cargo test --workspace --locked` @ 5839e35de73615cff998ca63fac0e1d837ed9ae7 fail-fast-stopped inside `engine/tests/lod_tier_builder.rs` (11 passed, 3 failed, 2 ignored) before reaching the kernel/protocol/frontend crates; every other `spatial-engine` test binary that ran before the stop passed (92 passed, 0 failed, 7 ignored, summed across `admission_format_semantics`, `admission_p4_corpus`, `batch_sizing`, `connection_reuse`, `filter_composition`, `first_batch_and_pruning`, `fixture_generation`, `identity`, `import_layout_5gb_digest`, `import_layout_5gb_fixtures`, `import_layout_digest`, `import_layout_fixtures`, `index_build_cancellation`); the 3 failures (`NotFound` / "Invalid Parquet file. Corrupt footer" reading the shared `C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet`) match the concurrent-access exclusivity this tree already discloses at `engine/tests/lod_tier_builder.rs:205-212`; not re-run under this piece |
+
+**Read this amendment first.**
