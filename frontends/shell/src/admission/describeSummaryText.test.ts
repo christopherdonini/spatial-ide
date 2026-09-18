@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CrsInfo, IdentityInfo } from "../skp/types";
-import { crsSummaryLine, identitySummaryLine } from "./describeSummaryText";
+import { crsProvenanceLine, crsSummaryLine, identitySummaryLine, sessionStatementLine } from "./describeSummaryText";
 
 function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
   return {
@@ -88,11 +88,6 @@ describe("identitySummaryLine (I6: the payload's own uniqueness fact, verbatim, 
   });
 });
 
-// Appended below the file's original content -- round 16, item 1 ("render before Part N",
-// DECISIONS-PENDING.md entry 112). A separate import line, not an edit of the one above (this
-// package's append-only convention for this file), naming the two functions these two new tests cover.
-import { crsProvenanceLine, sessionStatementLine } from "./describeSummaryText";
-
 describe("crsProvenanceLine (round 16, item 1: crs.provenance and crs.axis_provenance rendered verbatim)", () => {
   // RECORDED MUTATION for "crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated":
   // swap the two fields (`return `${crs.axis_provenance}, ${crs.provenance}`;`). Expected failure:
@@ -105,9 +100,17 @@ describe("crsProvenanceLine (round 16, item 1: crs.provenance and crs.axis_prove
 });
 
 describe("sessionStatementLine (round 16, item 1: identity.session_statement rendered verbatim, only when non-null)", () => {
+  // sessionStatementLine is a pass-through (describeSummaryText.ts:56-58); this unit test drives it
+  // from a plainly-marked placeholder, not the wire's sentence. The wire's actual bytes
+  // (SESSION_IDENTITY_STATEMENT, DECISIONS-PENDING.md round 16, item 1) are proven reaching this
+  // same function from the real fixture in the seam assertion
+  // `expect(sessionStatementLine(res.identity)).toBe(res.identity.session_statement)` added to
+  // fixtures.test.ts's "describe response for a session-ordinal dataset..." test, which loads
+  // v0-describe-response-session-ordinal.json.
+  //
   // RECORDED MUTATION for "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal":
   // replace the returned value with a paraphrase (`return identity.session_statement === null ? null : "a session-ordinal identity";`).
-  // Expected failure: the first assertion below no longer matches the exact wire sentence.
+  // Expected failure: the first assertion below no longer matches the placeholder string.
   it("sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal", () => {
     const sessionOrdinal: IdentityInfo = {
       source: "session-ordinal:file_row_number",
@@ -116,11 +119,9 @@ describe("sessionStatementLine (round 16, item 1: identity.session_statement ren
       max_value: null,
       js_exact: null,
       class: "session-ordinal",
-      session_statement: "This identity does not outlive the open that established it.",
+      session_statement: "<session statement placeholder>",
     };
-    expect(sessionStatementLine(sessionOrdinal)).toBe(
-      "This identity does not outlive the open that established it."
-    );
+    expect(sessionStatementLine(sessionOrdinal)).toBe("<session statement placeholder>");
 
     const native: IdentityInfo = {
       source: "file:id",

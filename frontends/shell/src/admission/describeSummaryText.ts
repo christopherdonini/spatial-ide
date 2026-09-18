@@ -39,8 +39,8 @@ export function identitySummaryLine(identity: IdentityInfo): string {
 }
 
 /**
- * `DescribeSummary`'s CRS provenance row (`DECISIONS-PENDING.md` round 16, item 1, entry 112 --
- * "render before Part N"; the sight first recorded entry 111 (1)). Renders `crs.provenance` and
+ * `DescribeSummary`'s CRS provenance row (DECISIONS-PENDING.md, RULED 2026-09-18 round 16, item 1;
+ * entry 112; the sight first recorded entry 111 (1)). Renders `crs.provenance` and
  * `crs.axis_provenance` VERBATIM, comma-separated -- their own wire strings
  * (`frontends/shell/src/skp/types.ts:89,92`), never mapped to friendlier words.
  */
