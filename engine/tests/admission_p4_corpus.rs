@@ -26,21 +26,30 @@
 //! **Two rows are not comparable to this instrument** (`gp-epsg2056-intkey-changed-same-size.parquet`
 //! / M-1c and `gp-epsg2056-intkey-appended.parquet` / M-1a-equivalent): their §4 "Brief A" text
 //! (`engine.source_changed` firing or not firing) describes the G-A2 open-then-mutate-in-place-then-
-//! query workflow, which `ADMISSION-PREREGISTRATION.md` Amendment 1, item 9 states plainly is P5's
-//! gate and was **not built** as of this commit. This runner performs one [`Dataset::open`] per file
-//! and nothing else, so it cannot exercise that workflow. Both rows still get a real, standalone-open
-//! outcome recorded as this instrument's own fact; that fact is not compared against the G-A2 text,
-//! and the run says so by name rather than silently marking either "as predicted" or "DEVIATION".
+//! query workflow, which `ADMISSION-PREREGISTRATION.md` Amendment 1, item 9 states is P5's and not
+//! approximated, and which Amendment 7 (iii) item 2 states G-A2 remains unscored (a gate is scored
+//! by its own run). This runner performs one [`Dataset::open`] per file and nothing else, so it
+//! cannot exercise that workflow. Both rows still get a real, standalone-open outcome recorded as
+//! this instrument's own fact; that fact is not compared against the G-A2 text, and the run says so
+//! by name rather than silently marking either "as predicted" or "DEVIATION".
+//!
+//! **Two more §3 cells name a component this instrument cannot reach either** (rows #3 and #8):
+//! each ends with a boundary-8 publish-preflight refusal plus the equirectangular statement, and a
+//! single [`Dataset::open`] cannot reach a publish preflight. §8's `unrun — reason` rule applies to
+//! that one component of each cell; the rest of each cell (class, provenance, identity, sanity
+//! level, and — for row #3 — the registered declared axis order) is still compared and still scored
+//! `AsPredicted` / `DEVIATION` on its own terms. See each row's own note, and the Predictions
+//! section's boundary-8 line, below.
 //!
 //! **RECORDED MUTATION — applied and observed, not only asserted, against
 //! [`the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results`]
 //! below.** Inverting the comparison in [`sha256_matches`] (`==` to `!=`) makes every file in the
 //! corpus report a hash mismatch regardless of its actual bytes; the run then records "unrun —
 //! hash mismatch" for all 17 rows instead of opening any of them. Observed by making that one-line
-//! change locally and re-running this test: it panics at the `assert_eq!(not_run, 0, ...)` below
-//! (line 1035 at this commit), not at `assert!(rows_opened > 0, ...)` further down, because
-//! `not_run` reaches 17 before `rows_opened` (0) is ever checked — a real failure inside the
-//! test's own assertions, not a setup-time panic — then reverted.
+//! change locally and re-running this test: it panics at the `assert_eq!(not_run, 0, ...)` below,
+//! not at `assert!(rows_opened > 0, ...)` further down, because `not_run` reaches 17 before
+//! `rows_opened` (0) is ever checked — a real failure inside the test's own assertions, not a
+//! setup-time panic — then reverted.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -95,9 +104,10 @@ enum Prediction {
     /// §4 M-2: "not derivable statically — record at P4" — only that the open fails; §5's registered
     /// predictions do not name a variant, so none is compared here.
     OpenFailsUndetermined,
-    /// §4 M-1c / M-1a-equivalent: the preregistered "Brief A" text names the G-A2 workflow (P5's,
-    /// not built — Amendment 1 item 9), a different instrument from this run's single
-    /// [`Dataset::open`]. See this file's own doc comment.
+    /// §4 M-1c / M-1a-equivalent: the preregistered "Brief A" text names the G-A2 workflow (P5's
+    /// and not approximated — Amendment 1 item 9; still unscored — Amendment 7 (iii) item 2), a
+    /// different instrument from this run's single [`Dataset::open`]. See this file's own doc
+    /// comment.
     OutOfScopeForThisInstrument,
 }
 
@@ -124,6 +134,15 @@ struct RowSpec {
     /// sanity check runs, so §3 registers none for them). `None` for every mutation row: §3 does not
     /// register mutation-row sanity levels this way, and S3's check is scoped to the main set.
     registered_sanity_level: Option<&'static str>,
+    /// §3 row 3's own registered declared axis order, retained as a recorded fact (the
+    /// `declared_axis_order` metadata key) — `Some("latitude,longitude")` for row #3 only, `None`
+    /// everywhere else (no other row's §3/§4 cell registers a retained declared order).
+    registered_declared_axis_order: Option<&'static str>,
+    /// `Some(reason)` for the two rows (#3, #8) whose §3 cell also ends with a boundary-8
+    /// publish-preflight refusal and the equirectangular statement — a component a single
+    /// [`Dataset::open`] cannot reach; `None` everywhere else. §8's `unrun — reason` rule applies
+    /// to that one component; the rest of each cell is still compared on its own terms.
+    unrun_boundary8_reason: Option<&'static str>,
 }
 
 fn main_set_rows() -> Vec<RowSpec> {
@@ -136,6 +155,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("none"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#2",
@@ -145,6 +166,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#3",
@@ -154,6 +177,10 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedUnderFormatRule("axis:format-override"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("metadata"),
+            registered_declared_axis_order: Some("latitude,longitude"),
+            unrun_boundary8_reason: Some(
+                "a single Dataset::open cannot reach a publish preflight",
+            ),
         },
         RowSpec {
             id: "#4",
@@ -163,6 +190,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#5",
@@ -172,6 +201,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#6",
@@ -181,6 +212,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.format_default_contradicted"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("metadata"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#7",
@@ -190,6 +223,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("none"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#8",
@@ -199,6 +234,10 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedUnderFormatRule("crs:format-default"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("metadata"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: Some(
+                "a single Dataset::open cannot reach a publish preflight",
+            ),
         },
         RowSpec {
             id: "#9",
@@ -208,6 +247,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("none"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#10",
@@ -217,6 +258,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("none"),
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#11",
@@ -226,6 +269,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "#12",
@@ -235,6 +280,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
     ]
 }
@@ -249,6 +296,8 @@ fn mutation_rows() -> Vec<RowSpec> {
             prediction: Prediction::OpenFailsUndetermined,
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "M-3",
@@ -258,6 +307,8 @@ fn mutation_rows() -> Vec<RowSpec> {
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "M-4",
@@ -267,6 +318,8 @@ fn mutation_rows() -> Vec<RowSpec> {
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: Some("no_such_bbox_column"),
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "M-1c",
@@ -276,6 +329,8 @@ fn mutation_rows() -> Vec<RowSpec> {
             prediction: Prediction::OutOfScopeForThisInstrument,
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
         RowSpec {
             id: "M-1a-equivalent",
@@ -285,6 +340,8 @@ fn mutation_rows() -> Vec<RowSpec> {
             prediction: Prediction::OutOfScopeForThisInstrument,
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
+            registered_declared_axis_order: None,
+            unrun_boundary8_reason: None,
         },
     ]
 }
@@ -297,7 +354,15 @@ enum Observed {
         crs_provenance: String,
         crs_source: String,
         axis_provenance: String,
+        /// `declared_axis_order` (`engine/src/envelope.rs:134-135`) — the definition's own axis
+        /// order, retained whenever a definition existed; absent (`None`) where none did.
+        declared_axis_order: Option<String>,
         format_rule_reference: Option<String>,
+        /// `coordinate_unit` (`engine/src/envelope.rs:150`) — always present for an admitted row.
+        coordinate_unit: String,
+        /// `coordinate_unit_source` (`engine/src/envelope.rs:151-153`) — which of the two sources
+        /// supplied the unit; absent where there was neither.
+        coordinate_unit_source: Option<String>,
         sanity_level: String,
         sanity_reason: String,
         identity_class: &'static str,
@@ -352,7 +417,10 @@ fn open_and_observe(path: &Path) -> Observed {
                 crs_provenance: get("crs_provenance"),
                 crs_source: get("crs_source"),
                 axis_provenance: get("axis_provenance"),
+                declared_axis_order: md.get("declared_axis_order").cloned(),
                 format_rule_reference: md.get("format_rule_reference").cloned(),
+                coordinate_unit: get("coordinate_unit"),
+                coordinate_unit_source: md.get("coordinate_unit_source").cloned(),
                 sanity_level: get("sanity_level"),
                 sanity_reason: get("sanity_reason"),
                 identity_class,
@@ -384,9 +452,9 @@ impl Verdict {
     }
 }
 
-/// Every admitted row this corpus predicts is session-ordinal (§3's own rule-derived summary: "class
-/// of every admit: session-ordinal, 6 of 6" — carried forward to the two admitted mutations, M-4 and
-/// M-1c, both derived from session-ordinal bases).
+/// Every admitted row this corpus predicts is session-ordinal (§3's identity-class summary —
+/// carried forward to the two admitted mutations, M-4 and M-1c, both derived from session-ordinal
+/// bases).
 const EXPECTED_ADMITTED_IDENTITY_CLASS: &str = "session-ordinal";
 
 /// The sanity level this instrument actually observed for a row, structured — not the free-text
@@ -411,6 +479,7 @@ fn evaluate(
     observed: &Observed,
     expect_sanity_reason_contains: Option<&str>,
     registered_sanity_level: Option<&str>,
+    registered_declared_axis_order: Option<&str>,
 ) -> (Verdict, String) {
     let (verdict, note) = evaluate_class(prediction, observed);
     // A row whose §3/§4 text names a *specific mechanism* (not only the coarse three-way class) is
@@ -450,6 +519,27 @@ fn evaluate(
             );
         }
     }
+    // B1(a): §3 row 3 registers this row's declared axis order as retained, a recorded fact (the
+    // `declared_axis_order` metadata key, `engine/src/envelope.rs:134-135`) — held to that value
+    // too, the same "mechanism, not only class" shape as the two blocks above.
+    if let Some(expected_order) = registered_declared_axis_order {
+        let observed_order = match observed {
+            Observed::Admitted { declared_axis_order, .. } => declared_axis_order.clone(),
+            Observed::Refused { .. } => None,
+        };
+        if observed_order.as_deref() != Some(expected_order) {
+            return (
+                Verdict::Deviation,
+                format!(
+                    "{note} ADDITIONALLY: §3 registers this row's declared axis order as \
+                     {expected_order:?}, retained as a recorded fact (the `declared_axis_order` \
+                     metadata key); observed declared_axis_order = {observed_order:?}, which does \
+                     not match. The coarse class may have matched, but the registered retention \
+                     did not — this is the deviation."
+                ),
+            );
+        }
+    }
     (verdict, note)
 }
 
@@ -459,7 +549,8 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
             Verdict::NotComparableDifferentInstrument,
             format!(
                 "§4's Brief A text for this row describes the G-A2 open-then-mutate-then-query \
-                 workflow (P5's gate, not built as of this commit — Amendment 1 item 9); this \
+                 workflow (P5's and not approximated — Amendment 1 item 9; still \
+                 unscored — Amendment 7 (iii) item 2); this \
                  instrument performs one standalone Dataset::open only. That open admitted \
                  (identity class {identity_class}), recorded as this instrument's own fact and not \
                  compared against the G-A2 text."
@@ -469,7 +560,8 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
             Verdict::NotComparableDifferentInstrument,
             format!(
                 "§4's Brief A text for this row describes the G-A2 open-then-mutate-then-query \
-                 workflow (P5's gate, not built as of this commit — Amendment 1 item 9); this \
+                 workflow (P5's and not approximated — Amendment 1 item 9; still \
+                 unscored — Amendment 7 (iii) item 2); this \
                  instrument performs one standalone Dataset::open only. That open refused \
                  {code} ({detail}), recorded as this instrument's own fact and not compared \
                  against the G-A2 text."
@@ -739,7 +831,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
                 citation: row.citation,
                 pre_hash_ok: false,
                 post_hash_ok: false,
-                summary: format!("unrun — hash mismatch / {reason}"),
+                summary: format!("unrun — {reason}"),
                 verdict_label: "unrun",
                 note: "hash verification failed before the file was ever opened; §8's rule — a \
                        mismatch invalidates the row rather than the run."
@@ -760,7 +852,44 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
             &observed,
             row.expect_sanity_reason_contains,
             row.registered_sanity_level,
+            row.registered_declared_axis_order,
         );
+
+        // B1(b): rows #3 and #8's §3 cell also ends with a boundary-8 publish-preflight refusal and
+        // the equirectangular statement — a component a single Dataset::open cannot reach. Record it
+        // as unrun (§8's `unrun — reason` rule), name what the rest of the cell compared, and never
+        // let the row's label read as an unqualified "as predicted" for the cell as a whole.
+        let note = if let Some(reason) = row.unrun_boundary8_reason {
+            let mut compared: Vec<&str> = vec!["class", "provenance", "identity", "sanity level"];
+            if row.registered_declared_axis_order.is_some() {
+                compared.push("the registered declared axis order (retention)");
+            }
+            format!(
+                "{note} §3's Brief A cell for this row also ends with a boundary-8 publish-\
+                 preflight refusal and the equirectangular statement; that component is recorded \
+                 unrun — {reason} (§8's `unrun — reason` rule: a registered element not run is \
+                 never a pass by omission). What this instrument compared against the rest of the \
+                 cell — {} — stands on its own, above.",
+                compared.join(", "),
+            )
+        } else {
+            note
+        };
+        let verdict_label: &'static str = if row.unrun_boundary8_reason.is_some() {
+            match verdict {
+                Verdict::AsPredicted => {
+                    "as predicted (class/provenance/identity/sanity/retention only) — boundary-8 \
+                     preflight unrun"
+                }
+                Verdict::Deviation => {
+                    "DEVIATION (class/provenance/identity/sanity/retention) — boundary-8 preflight \
+                     also unrun"
+                }
+                _ => verdict.label(),
+            }
+        } else {
+            verdict.label()
+        };
 
         let mut rec_refusal_code = None;
         let mut rec_crs_provenance = None;
@@ -775,7 +904,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
                 crs_provenance,
                 crs_source,
                 axis_provenance,
+                declared_axis_order,
                 format_rule_reference,
+                coordinate_unit,
+                coordinate_unit_source,
                 sanity_level,
                 sanity_reason,
                 identity_class,
@@ -793,7 +925,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
                 format!(
                     "{class} — crs={crs}, crs_provenance={crs_provenance}, \
                      crs_source={crs_source}, axis_provenance={axis_provenance}, \
+                     declared_axis_order={declared_axis_order:?}, \
                      format_rule_reference={format_rule_reference:?}, \
+                     coordinate_unit={coordinate_unit}, \
+                     coordinate_unit_source={coordinate_unit_source:?}, \
                      sanity_level={sanity_level} ({sanity_reason}), identity={identity_class}"
                 )
             }
@@ -818,7 +953,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
             pre_hash_ok: true,
             post_hash_ok: false, // filled in by the post-run pass below
             summary,
-            verdict_label: verdict.label(),
+            verdict_label,
             note,
             main_set,
             refusal_code: rec_refusal_code,
@@ -880,17 +1015,26 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         })
         .map(|r| r.spec_id)
         .collect();
-    let p3_status = if p3_rows == vec!["#3"] { "borne out" } else { "not borne out" };
+    let p3_status = if p3_rows == vec!["#3"] {
+        "borne out (primary-provenance precedence applied: a row whose crs_provenance is \
+         crs:format-default is counted under prediction 2, not here, even where its \
+         axis_provenance is also axis:format-override — #8 is excluded from this count on that \
+         precedence)"
+    } else {
+        "not borne out (primary-provenance precedence applied: a row whose crs_provenance is \
+         crs:format-default is counted under prediction 2, not here, even where its \
+         axis_provenance is also axis:format-override)"
+    };
 
     // Prediction 4 names the G-A2 workflow this instrument cannot exercise (see this file's own doc
-    // comment); §8's rule ("a registered element not run is recorded `unrun — reason`") applies
-    // rather than a pass-by-omission "borne out".
+    // comment); §8's `unrun — reason` rule applies rather than a pass-by-omission "borne out".
     let m1c_verdict = records.iter().find(|r| r.spec_id == "M-1c").map(|r| r.verdict_label);
     let p4_status = match m1c_verdict {
         Some("not comparable (different instrument)") => {
             "unrun — this instrument performs one standalone Dataset::open; §4's Brief A text for \
              M-1c describes the G-A2 open-then-mutate-then-query workflow, which Amendment 1, item 9 \
-             states is P5's and not built as of this commit (see the M-1c row's own note, above)"
+             states is P5's and not approximated, and which Amendment 7 (iii) item 2 states G-A2 \
+             remains unscored (see the M-1c row's own note, above)"
                 .to_string()
         }
         Some(other) => format!(
@@ -925,9 +1069,19 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         .count();
     let p6_status = format!(
         "unrun — this corpus carries {crs_format_default_count} crs:format-default instance(s) and \
-         {axis_format_override_count} axis:format-override instance(s); a population-level trend \
-         across any wider producer set is not something a fixed corpus of this size samples"
+         {axis_format_override_count} axis:format-override instance(s) (primary-provenance \
+         precedence applied: a row whose crs_provenance is crs:format-default is counted in the \
+         first figure and excluded from the second, even where its axis_provenance is also \
+         axis:format-override); a population-level trend across any wider producer set is not \
+         something a fixed corpus of this size samples"
     );
+
+    // B1(b): a component of §3's own per-row cells (rows #3, #8), not one of §5's six registered
+    // predictions — recorded here by name because it is a registered element this instrument does
+    // not reach (§8's `unrun — reason` rule).
+    let p_boundary8_status = "unrun — a single Dataset::open cannot reach a publish preflight; \
+         §3's boundary-8 publish-preflight refusal and equirectangular statement for rows #3 and \
+         #8 are not reached by this instrument (see each row's own note, above)";
 
     // ---- Write the GENERATED admission table --------------------------------------------------
     let repo_root =
@@ -946,7 +1100,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(
         out,
         "Generator: `engine/tests/admission_p4_corpus.rs::the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results`. \
-         Commit: `{commit}`. Corpus manifest: `{CORPUS_ROOT}\\MANIFEST.json`, sha256 `{manifest_sha256}`. Generated: {date}. \
+         Generated from the tree at `{commit}`. Corpus manifest: `{CORPUS_ROOT}\\MANIFEST.json`, sha256 `{manifest_sha256}`. Generated: {date}. \
          Correctness only — no duration, no rate, no timing appears anywhere in this file (ADR-018; the preregistration's boundary 10)."
     ).unwrap();
     writeln!(out).unwrap();
@@ -1024,6 +1178,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     )
     .unwrap();
     writeln!(out, "| 6 | {p6_status} |").unwrap();
+    writeln!(out, "| §3 rows #3, #8 (boundary-8) | {p_boundary8_status} |").unwrap();
 
     let results_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ADMISSION-RESULTS.md");
     std::fs::write(&results_path, &out).expect("write engine/ADMISSION-RESULTS.md");
