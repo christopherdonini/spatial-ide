@@ -122,9 +122,9 @@
       "file": "frontends/shell/HOVER-REPICK-PREREGISTRATION.md",
       "line": 53,
       "words": "8. No re-pick at a stored pixel that does not re-validate the",
-      "reason": "source is 'the consult §2' (an architect-agent design consult), never committed as a tracked document -- cannot be found here by construction.",
-      "disposition": "unfindable-by-construction",
-      "ruling": "round 11, 2026-09-17"
+      "reason": "source is the architect consult tracked at state/drafts/post-tag/architect-consult-lod-47-66b-ordering.md:65-71 (tracked under round 14, item 4, after this entry was first written as unfindable-by-construction against an untracked source); the seven quoted items are byte-identical to that source except that item 14's trailing citation (the parenthesised DECISIONS-PENDING.md line references) is dropped without an ellipsis mark -- a dropped trailing citation is not a negation, condition or qualifier, so the checker's difference finding is a false trigger against a quote verbatim in substance. RULED 2026-09-18 (round 16, item 5): tool-false-trigger, with this reason corrected from the untracked-source reason it replaced.",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 11, 2026-09-17"
     },
     {
       "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
@@ -138,10 +138,9 @@
       "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
       "line": 799,
       "words": "Fourth attempt with the full A9' mechanism - the zoom-notch loop around",
-      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries.",
-      "disposition": "owed-correction",
-      "corrected_by": "an appended note in frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md correcting A9' to A9′, owed",
-      "ruling": "round 15, item 3"
+      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries. RULED 2026-09-18 (round 16, item 5): the record is closed under the record cap of 2026-09-18 and names no corrector, so the correction no piece can ever make is placed under the frontends/shell/POLISH-87-88-89-PREREGISTRATION.md:113 precedent (round 12) -- unfindable-by-construction as a disposition of record, not of fact: the source is DECISIONS-PENDING.md entry 100 and the difference is the one re-typed glyph (the first of the two identical occurrences). The owed correction this entry carried is withdrawn by the ruling, not discharged.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 15, item 3"
     },
     {
       "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
@@ -171,10 +170,9 @@
       "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
       "line": 968,
       "words": "Fourth attempt with the full A9' mechanism - the zoom-notch loop around",
-      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries; this is the second of two identical occurrences (the first at :799), same-file quote-exclusion means neither can verify against the other.",
-      "disposition": "owed-correction",
-      "corrected_by": "an appended note in frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md correcting A9' to A9′, owed",
-      "ruling": "round 15, item 3"
+      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries; this is the second of two identical occurrences (the first at :799), same-file quote-exclusion means neither can verify against the other. RULED 2026-09-18 (round 16, item 5): the record is closed under the record cap of 2026-09-18 and names no corrector, so the correction no piece can ever make is placed under the frontends/shell/POLISH-87-88-89-PREREGISTRATION.md:113 precedent (round 12) -- unfindable-by-construction as a disposition of record, not of fact: the source is DECISIONS-PENDING.md entry 100 and the difference is the one re-typed glyph (the second of the two identical occurrences). The owed correction this entry carried is withdrawn by the ruling, not discharged.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 15, item 3"
     },
     {
       "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
