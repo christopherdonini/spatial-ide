@@ -898,8 +898,8 @@ nodes:
     budget_minutes: 240
     generation: 1
     felt_verdict: false
-    entries: [96, 104, 106, 107, 108, 110]
-    summary: "LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one"
+    entries: [96, 104, 106, 107, 108, 110, 112]
+    summary: "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one"
     dates: {opened: 2026-09-16, done: null}
 
   - id: briefa-p4-corpus-run
@@ -916,8 +916,8 @@ nodes:
     budget_minutes: 60
     generation: 1
     felt_verdict: false
-    entries: [110]
-    summary: "Dispatched 2026-09-18 on the human's word (entry 110): a tester runs every corpus and mutation file through the engine's real admission path, hash-verified before and after, and writes the admission table to engine/ADMISSION-RESULTS.md as generated evidence; the P4 record is Amendment 3 of the preregistration, references only (the record cap); correctness only, no timing"
+    entries: [110, 113]
+    summary: "Reviewer attempt 1 FAIL 2026-09-18 (gate-log 89; entry 113): the corpus result reproduced end to end, four blockers of record form and gate mechanism only; one correction round (the record re-appended whole under the unmerged-append revert, the runner's #[test] placement, the should-fixes batched), then both gates at attempt 2 -- the architect alongside the reviewer because the runner crosses AUTONOMY section 21c's bound (the custodian's dispatch had named the reviewer alone). Earlier: Dispatched 2026-09-18 on the human's word (entry 110): a tester runs every corpus and mutation file through the engine's real admission path, hash-verified before and after, and writes the admission table to engine/ADMISSION-RESULTS.md as generated evidence; the P4 record is Amendment 15 of the preregistration (numbered 3 at dispatch), references only (the record cap); correctness only, no timing"
     dates: {opened: 2026-09-18, done: null}
 
   - id: briefa-p5-gate-tests
@@ -1286,18 +1286,36 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 5
     depends_on: [adr-029-operation-lifecycle, sitting-4-rows]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 92}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
-    entries: [92]
-    summary: "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
-    dates: {opened: 2026-09-14, done: null}
+    entries: [92, 111, 112]
+    summary: "PR #92 open for the click (2026-09-18): the architect's reduced README applied byte-exact at 2bc9756 (sha256 c1c6f705 over 273 lines). RULED 2026-09-18 (round 16, item 2): read 2 FAIL, STOPPED under Rule 7 (gate-log 80, 86) -- the architect reduces the README to the facts read 2 verified clean and the spike lands with the reduced record by a PR for the click; done on merge. What G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path and is fine-grained; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB reports an estimated denominator. The route: deferred to Brief B B2 (round 16, item 3; node decision-adr-029-scan-progress-route). Earlier: RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: decision-adr-029-scan-progress-route
+    title: "ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: 5
+    depends_on: [adr-029-g1-feasibility, briefb-b2-save-reopen]
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: [112]
+    summary: "RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
+    dates: {opened: 2026-09-18, done: null}
 
   # ============================== PROPOSED ==============================
 
@@ -1668,3 +1686,62 @@ nodes:
 
   # cli lane: no unscheduled node. docs/07 does not itself name a "CLI as a first-class SKP
   # client" capability outside Brief B's own B3 stage (briefb-b3-publish-v2, above, proposed).
+
+  # ============================== PROPOSED (2026-09-18 handoff) ==============================
+  # Recorded 2026-09-18 from the human's handoff HANDOFF-2026-09-18-source-consistency.md (kept
+  # outside the repository); the tracked nodes below are the record -- Part 2 and Part 4 of that
+  # handoff.
+
+  - id: engine-source-change-watcher
+    title: "The advisory source-change watcher"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: sight, minutes: 15}
+    gate: state/briefs/source-change-watcher-brief.md
+    evidence: null
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: decision-watcher-scheduling
+    title: "Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged)."
+    kind: task
+    lane: governance
+    phase: prototype
+    status: blocked
+    order: 1
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Owner: engine-source-change-watcher -- the proposed PLAN node this scheduling ruling would place."
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: decision-prepare-managed-selection-default
+    title: "Whether \"Prepare\" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight."
+    kind: task
+    lane: shell
+    phase: prototype
+    status: blocked
+    order: 1
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Owner: briefb-b2-save-reopen -- decided at B2's preregistration sight (state/drafts/post-tag/DRAFT-3-BRIEF-B-recipe-replay-publish.md's Save vs Prepare amendment)."
+    dates: {opened: 2026-09-18, done: null}

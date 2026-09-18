@@ -1,42 +1,60 @@
 {
-  "generated_at": "2026-09-18T05:42:40.648Z",
+  "generated_at": "2026-09-18T22:13:28.618Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\agent-a9a46cfdf5ad47189\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\agent-a9a46cfdf5ad47189\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 61344825344,
+        "bytes": 32159592448,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415102676992,
+        "bytes": 415106007040,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 4,
+    "total": 1,
     "by_name": {
       "cargo": 0,
-      "node": 4,
+      "node": 1,
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [],
+  "waiting_on_human": [
+    {
+      "id": "decision-prepare-managed-selection-default",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    },
+    {
+      "id": "decision-watcher-scheduling",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    }
+  ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 31
+    "n": 32
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 21,
+    "nodes": 28,
     "first_pass": 12,
-    "rate": 0.5714285714285714
+    "rate": 0.42857142857142855
   },
   "record_rounds": {
     "present": true,
@@ -44,8 +62,11 @@
       "briefa-p3b-owner-side-invalidation": 5,
       "lod-tier-builder-route-b": 4,
       "governance-verify-quotes": 3,
-      "governance-record-round-count": 1
+      "governance-record-round-count": 1,
+      "briefa-p3b-test-names": 1,
+      "briefa-p5-gate-tests": 1,
+      "briefa-p4-corpus-run": 1
     },
-    "total": 13
+    "total": 16
   }
 }
