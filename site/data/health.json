@@ -1,19 +1,16 @@
 {
-  "generated_at": "2026-09-18T21:10:56.552Z",
+  "generated_at": "2026-09-18T21:13:23.219Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": false,
-    "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
-    ]
+    "ok": true,
+    "failures": []
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 32332115968,
-        "total": 510320472064
+        "bytes": 32331214848,
+        "total": 510319915008
       },
       {
         "drive": "D",
@@ -30,7 +27,22 @@
       "spatial-ide-shell": 1
     }
   },
-  "waiting_on_human": [],
+  "waiting_on_human": [
+    {
+      "id": "decision-prepare-managed-selection-default",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    },
+    {
+      "id": "decision-watcher-scheduling",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    }
+  ],
   "median_opened_to_done": {
     "days": 1,
     "n": 32
