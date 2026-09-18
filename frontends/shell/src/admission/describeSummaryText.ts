@@ -37,3 +37,22 @@ export function crsSummaryLine(crs: CrsInfo): string {
 export function identitySummaryLine(identity: IdentityInfo): string {
   return `${identity.source} — ${identity.uniqueness}`;
 }
+
+/**
+ * `DescribeSummary`'s CRS provenance row (`DECISIONS-PENDING.md` round 16, item 1, entry 112 --
+ * "render before Part N"; the sight first recorded entry 111 (1)). Renders `crs.provenance` and
+ * `crs.axis_provenance` VERBATIM, comma-separated -- their own wire strings
+ * (`frontends/shell/src/skp/types.ts:89,92`), never mapped to friendlier words.
+ */
+export function crsProvenanceLine(crs: CrsInfo): string {
+  return `${crs.provenance}, ${crs.axis_provenance}`;
+}
+
+/**
+ * `DescribeSummary`'s session-identity row (round 16, item 1). Renders `identity.session_statement`
+ * VERBATIM (the Rust-constant sentence carried over the wire, `frontends/shell/src/skp/types.ts:124`)
+ * when non-null; `null` means this identity is not session-ordinal, and the caller renders no row.
+ */
+export function sessionStatementLine(identity: IdentityInfo): string | null {
+  return identity.session_statement;
+}

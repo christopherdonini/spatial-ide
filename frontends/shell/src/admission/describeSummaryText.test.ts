@@ -87,3 +87,50 @@ describe("identitySummaryLine (I6: the payload's own uniqueness fact, verbatim, 
     expect(line).not.toBe("mapped:parcel_key — unique");
   });
 });
+
+// Appended below the file's original content -- round 16, item 1 ("render before Part N",
+// DECISIONS-PENDING.md entry 112). A separate import line, not an edit of the one above (this
+// package's append-only convention for this file), naming the two functions these two new tests cover.
+import { crsProvenanceLine, sessionStatementLine } from "./describeSummaryText";
+
+describe("crsProvenanceLine (round 16, item 1: crs.provenance and crs.axis_provenance rendered verbatim)", () => {
+  // RECORDED MUTATION for "crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated":
+  // swap the two fields (`return `${crs.axis_provenance}, ${crs.provenance}`;`). Expected failure:
+  // the exact-string assertion below no longer matches ("axis:declared, crs:declared" instead of
+  // "crs:declared, axis:declared").
+  it("crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated", () => {
+    const line = crsProvenanceLine(fileCrs({ provenance: "crs:declared", axis_provenance: "axis:declared" }));
+    expect(line).toBe("crs:declared, axis:declared");
+  });
+});
+
+describe("sessionStatementLine (round 16, item 1: identity.session_statement rendered verbatim, only when non-null)", () => {
+  // RECORDED MUTATION for "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal":
+  // replace the returned value with a paraphrase (`return identity.session_statement === null ? null : "a session-ordinal identity";`).
+  // Expected failure: the first assertion below no longer matches the exact wire sentence.
+  it("sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal", () => {
+    const sessionOrdinal: IdentityInfo = {
+      source: "session-ordinal:file_row_number",
+      uniqueness: "by-construction-within-generation",
+      verified_rows: null,
+      max_value: null,
+      js_exact: null,
+      class: "session-ordinal",
+      session_statement: "This identity does not outlive the open that established it.",
+    };
+    expect(sessionStatementLine(sessionOrdinal)).toBe(
+      "This identity does not outlive the open that established it."
+    );
+
+    const native: IdentityInfo = {
+      source: "file:id",
+      uniqueness: "verified-at-open-full-file",
+      verified_rows: "100000",
+      max_value: "99999",
+      js_exact: true,
+      class: "native",
+      session_statement: null,
+    };
+    expect(sessionStatementLine(native)).toBeNull();
+  });
+});
