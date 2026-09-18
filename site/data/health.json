@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T05:42:40.648Z",
+  "generated_at": "2026-09-18T21:13:23.219Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,34 +9,49 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 61344825344,
+        "bytes": 32331214848,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415102676992,
+        "bytes": 415106076672,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 4,
+    "total": 8,
     "by_name": {
-      "cargo": 0,
-      "node": 4,
-      "spatial-ide-shell": 0
+      "cargo": 2,
+      "node": 5,
+      "spatial-ide-shell": 1
     }
   },
-  "waiting_on_human": [],
+  "waiting_on_human": [
+    {
+      "id": "decision-prepare-managed-selection-default",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    },
+    {
+      "id": "decision-watcher-scheduling",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-18",
+      "age_days": 0
+    }
+  ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 31
+    "n": 32
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 21,
+    "nodes": 27,
     "first_pass": 12,
-    "rate": 0.5714285714285714
+    "rate": 0.4444444444444444
   },
   "record_rounds": {
     "present": true,
@@ -44,8 +59,9 @@
       "briefa-p3b-owner-side-invalidation": 5,
       "lod-tier-builder-route-b": 4,
       "governance-verify-quotes": 3,
-      "governance-record-round-count": 1
+      "governance-record-round-count": 1,
+      "briefa-p3b-test-names": 1
     },
-    "total": 13
+    "total": 14
   }
 }
