@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77`) at `2026-09-18T06:06:59.180Z`.
+Generated from `PLAN.yaml` (sha256 `3291a9dc76d402fd2608afc54182fab25facd88ec76ebb67e3163a49054204c2`) at `2026-09-18T11:38:39.167Z`.
 
 ## 1. Next
 
@@ -49,6 +49,9 @@ Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
+- **engine-source-change-watcher** — The advisory source-change watcher (phase `prototype`) — never queued until placed
+- **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (phase `prototype`) — never queued until placed
+- **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

@@ -1523,3 +1523,62 @@ nodes:
 
   # cli lane: no unscheduled node. docs/07 does not itself name a "CLI as a first-class SKP
   # client" capability outside Brief B's own B3 stage (briefb-b3-publish-v2, above, proposed).
+
+  # ============================== PROPOSED (2026-09-18 handoff) ==============================
+  # Recorded 2026-09-18 from the human's handoff HANDOFF-2026-09-18-source-consistency.md (kept
+  # outside the repository); the tracked nodes below are the record -- Part 2 and Part 4 of that
+  # handoff.
+
+  - id: engine-source-change-watcher
+    title: "The advisory source-change watcher"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: sight, minutes: 15}
+    gate: state/briefs/source-change-watcher-brief.md
+    evidence: null
+    budget_minutes: 240
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: decision-watcher-scheduling
+    title: "Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged)."
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Owner: engine-source-change-watcher -- the proposed PLAN node this scheduling ruling would place."
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: decision-prepare-managed-selection-default
+    title: "Whether \"Prepare\" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight."
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Owner: briefb-b2-save-reopen -- decided at B2's preregistration sight (state/drafts/post-tag/DRAFT-3-BRIEF-B-recipe-replay-publish.md's Save vs Prepare amendment)."
+    dates: {opened: 2026-09-18, done: null}
