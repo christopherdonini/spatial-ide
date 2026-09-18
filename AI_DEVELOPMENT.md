@@ -177,13 +177,6 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
   final commits (recovered only because git keeps objects).
 
-- **Generated files are never conflict-resolved by hand (the human, 2026-09-19; `state/directives/2026-09-19-generated-files.md`).** When a
-  PR touching `PLAN.yaml` conflicts with main on `CUSTODIAN-QUEUE.*`, `site/index.html` or `site/data/*.json`:
-  merge `origin/main` into the branch, `git checkout --theirs` the generated set, resolve `PLAN.yaml`
-  semantically (both sides' node changes kept), regenerate (`queue.mjs`, `health.mjs`, `site.mjs`),
-  `verify.mjs`, commit, push, CI. Applied first to PRs #90 and #91 on 2026-09-19 (`AUTONOMY.md` §2 carries
-  the mechanic).
-
 ### Launching the app and E2E runs
 
 - **One app at a time; only the harness launches it (2026-09-08).** A worker or gate that needs the
@@ -717,3 +710,12 @@ lines already forbid touching repository visibility or any other admin-level set
 in this section delegates any part of it; it is a record for the human's own use, not a task list
 for the custodian. (The one narrowing the same directive makes for the custodian — Dependabot
 patch-level bumps — is recorded as a precedent, not here: `PRECEDENTS.md` P-033.)
+
+## Amendment 3 to the Custodian role — generated files regenerate on merge (2026-09-19, appended on the human's directive of the same day; appended here rather than inserted into the mechanics list so that no line a record cites above it moves)
+
+- **Generated files are never conflict-resolved by hand (the human, 2026-09-19; `state/directives/2026-09-19-generated-files.md`).** When a
+  PR touching `PLAN.yaml` conflicts with main on `CUSTODIAN-QUEUE.*`, `site/index.html` or `site/data/*.json`:
+  merge `origin/main` into the branch, `git checkout --theirs` the generated set, resolve `PLAN.yaml`
+  semantically (both sides' node changes kept), regenerate (`queue.mjs`, `health.mjs`, `site.mjs`),
+  `verify.mjs`, commit, push, CI. Applied first to PRs #90 and #91 on 2026-09-19 (`AUTONOMY.md` §2 carries
+  the mechanic).
