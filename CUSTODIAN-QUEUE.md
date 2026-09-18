@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97ee5848684a33a393a83f8`) at `2026-09-18T21:12:56.235Z`.
+Generated from `PLAN.yaml` (sha256 `338b58411b1edda60384838ef5a56508195be9f5219247703119a7d6efe7c302`) at `2026-09-18T21:23:28.200Z`.
 
 ## 1. Next
 
@@ -25,7 +25,7 @@ Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97e
 - **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
 - **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
 - **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
-- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-describe-fields
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: adr-029-g1-feasibility, briefb-b2-save-reopen
@@ -41,6 +41,7 @@ Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97e
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **briefa-p4-corpus-run** — Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6) — evidence: branch `cut/briefa-p4`
 - **briefa-p5-gate-tests** — Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction — evidence: branch `cut/briefa-p5`
+- **briefa-p6-describe-fields** — Brief A P6 -- render the three wire fields (crs.provenance, crs.axis_provenance, identity.session_statement) in the describe summary before Part N runs (round 16, item 1) — evidence: branch `cut/briefa-p6-describe-fields`
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — evidence: branch `spike/adr-029-g1`
 - **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87

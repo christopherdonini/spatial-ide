@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T21:12:56.235Z",
-  "plan_hash": "27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97ee5848684a33a393a83f8",
+  "generated_at": "2026-09-18T21:23:28.200Z",
+  "plan_hash": "338b58411b1edda60384838ef5a56508195be9f5219247703119a7d6efe7c302",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -245,7 +245,8 @@
       "summary": "Part N's rows are being drafted on docs/part-n-walkthrough with a blank result log (the sitting the human asked for on 2026-09-18, entry 110); the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
       "blocked_by": [
         "briefa-p4-corpus-run",
-        "briefa-p5-gate-tests"
+        "briefa-p5-gate-tests",
+        "briefa-p6-describe-fields"
       ]
     },
     {
@@ -515,6 +516,28 @@
       },
       "summary": "Dispatched 2026-09-18 on the human's word (entry 110): a worker builds the tests carrying the claims under the existing preregistration (section 6's declared instruments only); the P5 record is Amendment 4 of the engine preregistration and Amendment 17 of the P3b preregistration, references only; reviewer and architect gates",
       "evidence_label": "branch `cut/briefa-p5`"
+    },
+    {
+      "id": "briefa-p6-describe-fields",
+      "title": "Brief A P6 -- render the three wire fields (crs.provenance, crs.axis_provenance, identity.session_statement) in the describe summary before Part N runs (round 16, item 1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/briefa-p6-describe-fields"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary, discharging Part N's N3 gap",
+      "evidence_label": "branch `cut/briefa-p6-describe-fields`"
     },
     {
       "id": "adr-029-g1-feasibility",
