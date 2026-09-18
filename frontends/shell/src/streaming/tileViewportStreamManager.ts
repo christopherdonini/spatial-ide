@@ -14,7 +14,12 @@ import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
-import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
+import {
+  isSourceChangedRefusal,
+  isSourceChangedTerminal,
+  LiveTicketSet,
+  refusalDetailOf,
+} from "./liveTicketSet";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
 
@@ -81,6 +86,20 @@ export interface TileViewportStreamManagerOptions {
    * residency itself is what needs clearing). */
   onTileSuperseded: (tileKey: string, streamHandle: string | null) => void;
   onTerminal?: (tileKey: string, streamHandle: string, terminal: Terminal) => void;
+  /**
+   * **This dataset's session ended: the source was observed to have changed** (P3b §2a(i); Brief A
+   * boundary 4). Called **exactly once** per manager, from `endSession` below, which latches before
+   * calling. `detail` is the `"<code>: <display>"` shape both routes carry -- the terminal's own on
+   * the post-check route, and `refusalDetailOf(err)` on the pre-check route -- so the owner has one
+   * thing to parse.
+   *
+   * **Subscribed in this same diff** by `candidateArmSession.ts`, which is the owner that holds the
+   * tile residency this manager deliberately does not (`TileResidencyAccessor` answers per tile and
+   * cannot enumerate the set). A callback with no product subscriber is a block-on-sight (§8.1);
+   * P3a removed the earlier version of this option for exactly that reason
+   * (`engine/ADMISSION-PREREGISTRATION.md:749-750`).
+   */
+  onSessionEnded?: (detail: string) => void;
 }
 
 export type TilePlanOutcome =
@@ -704,21 +723,42 @@ export class TileViewportStreamManager {
    * `"session-ended"` and plans nothing further until the dataset is reopened (which builds a new
    * manager). `detail` is the terminal's own text, logged and not otherwise acted on here.
    *
-   * **What it does NOT do, and what P3a therefore does not claim.** It does not clear residency and
-   * it does not refuse picks. Both live with the owner (`candidateArmSession.ts` /
-   * `App.tsx`) -- `TileResidencyAccessor` can answer about one tile but cannot enumerate the
-   * resident set, and this manager has no pick surface at all. Wiring the owner is **P3b**'s, by
-   * the human's ruling of 2026-09-16 (round 4). What an operator sees today is that this manager
-   * stops filling and that stale batches are dropped; the view it already holds stays.
+   * **What it still does NOT do itself: clear residency and refuse picks.** Both live with the
+   * owner -- `TileResidencyAccessor` can answer about one tile but cannot enumerate the resident
+   * set, and this manager has no pick surface at all. P3b does not move either job here; it wires
+   * the owner, through `onSessionEnded` below. This manager states its own fact; the owner states
+   * the consequence (the human's ruling of 2026-09-16, round 7).
    */
   private endSession(detail: string): void {
     if (this.sessionEnded) return;
     this.sessionEnded = true;
     this.liveTickets.invalidate();
-    // No resident-key hint: this manager does not hold the resident set. Clearing what the owner
-    // holds is P3b's; `clearAll` here drops only this manager's own queued and in-flight work.
+    // No resident-key hint: this manager does not hold the resident set. `clearAll` here drops only
+    // this manager's own queued and in-flight work; the owner's `onSessionEnded` below is what
+    // clears what the owner holds.
     this.clearAll();
     logSessionEvent("warn", `tile-session-ended-source-changed: ${detail}`);
+    // Last, and exactly once (the latch above guards re-entry): every tile's terminal can carry the
+    // same code, and a session ends once. Placed after `clearAll` so the owner's own clear runs
+    // against a manager that has already stopped rather than one still draining.
+    this.opts.onSessionEnded?.(detail);
+  }
+
+  /**
+   * **The untiled first-look stream's way in** (P3b §2a(iii)).
+   *
+   * The candidate session owns a third stream sink of its own -- the untiled "first look"/reissue
+   * (`candidateArmSession.ts:1277-1412`) -- which this manager never sees a terminal for. Before
+   * P3b nothing tested that sink's terminal for the code at all, so a change detected on the FIRST
+   * query of a tiled session (the likeliest place, §5 prediction 3) ended nothing on the client.
+   *
+   * `public` with one product caller, named: `candidateArmSession.ts`'s untiled `onTerminal`. It
+   * exists rather than the session duplicating `endSession`'s work because the session cannot latch
+   * this manager, and a session that ended while its manager kept planning tiles would be the
+   * half-ended state boundary 4 exists to prevent. Idempotent, like `endSession` itself.
+   */
+  notifySourceChanged(detail: string): void {
+    this.endSession(detail);
   }
 
   /** Cancels the active stream (if any) for a specific tile, wherever it is in this manager's own
@@ -899,6 +939,20 @@ export class TileViewportStreamManager {
     } catch (err) {
       // Entry 87 §2.3(i), unconditional: named before anything below decides what to do about it.
       logMintRefused(tileKey, err);
+      // **P3b §2b: the pre-check's own route into this manager.** `viewport_query` refuses
+      // synchronously with `engine.source_changed` when the live-generation check has already ended
+      // this dataset's session (`kernel/src/skp.rs:797-803`), and that refusal lands here -- where
+      // P3a only logged it. It is not a per-tile failure and is not retryable (§7: the retryable set
+      // stays `engine.connections_exhausted` alone): the session is over, so this ends it rather
+      // than dropping the tile and planning the next one.
+      //
+      // Checked BEFORE the epoch guard below, deliberately: a tile that left the view before its
+      // own mint resolved still learned a fact about the whole session, and discarding it because
+      // the tile is stale would lose the only notice this arm may get.
+      if (isSourceChangedRefusal(err)) {
+        this.endSession(refusalDetailOf(err as SkpCallError));
+        return;
+      }
       if (this.issueEpoch.get(tileKey) === epoch) {
         // Entry 87 §2.3(iii): the bounded requeue. Five conditions, all required: not stopped, a
         // declared-retryable code (`isRetryableRefusal`), this tile has not already spent its one

@@ -1,9 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import fs from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
-import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
+import { SkpCallError } from "../skp/client";
+import type { SkpError } from "../skp/types";
+import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
+import {
+  isSourceChangedRefusal,
+  isSourceChangedTerminal,
+  LiveTicketSet,
+  refusalDetailOf,
+} from "./liveTicketSet";
 
 /**
  * The client half of Brief A boundary 4, unit-tested on its own terms.
@@ -85,5 +96,62 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     const surface = Object.getOwnPropertyNames(Object.getPrototypeOf(live)).join(" ");
     expect(surface).not.toContain("generation");
     expect(JSON.stringify(live)).not.toContain("generation");
+  });
+});
+
+/**
+ * **P3b §2b: the pre-check's half of the same fact, and the shape both routes share.**
+ *
+ * The inputs are the two real producer shapes, never transcriptions: the kernel's pinned terminal
+ * bytes (`REAL_SOURCE_CHANGED_TERMINAL_DETAIL`, exact-equality-asserted in
+ * `kernel/tests/typed_terminal_codes.rs`) and the SKP wire fixture the Rust host round-trips
+ * (`protocol/skp/tests/data/v0-error-source_changed.json`,
+ * `protocol/skp/tests/fixtures.rs::the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields`).
+ */
+describe("the pre-check refusal, and the one shape both routes carry", () => {
+  function realSourceChangedError(): SkpError {
+    const file = path.resolve(
+      __dirname,
+      "../../../../protocol/skp/tests/data/v0-error-source_changed.json"
+    );
+    return JSON.parse(fs.readFileSync(file, "utf-8")) as SkpError;
+  }
+
+  // RECORDED MUTATION for "matches the real thrown refusal on its code, never on its prose": change
+  // `isSourceChangedRefusal` to test `err.message.includes("source file changed")`. Expected
+  // failure: that test fails on the neighbouring-code assertion -- a refusal whose prose happens to
+  // quote the sentence would match, and the code-carrying one whose wording changes at P6 would
+  // stop matching.
+  // OBSERVED: FAILED -- `AssertionError: expected true to be false`.
+  it("matches the real thrown refusal on its code, never on its prose", () => {
+    expect(isSourceChangedRefusal(new SkpCallError(realSourceChangedError()))).toBe(true);
+
+    // A neighbouring engine refusal, and a non-SKP throw, are both false.
+    expect(
+      isSourceChangedRefusal(
+        new SkpCallError({
+          code: "engine.connections_exhausted",
+          message: "refused: the source file changed while it was open (quoted in prose)",
+          fields: {},
+        })
+      )
+    ).toBe(false);
+    expect(isSourceChangedRefusal(new Error("network died"))).toBe(false);
+    expect(isSourceChangedRefusal(null)).toBe(false);
+  });
+
+  // RECORDED MUTATION for "the pre-check refusal and the post-check terminal are the same string":
+  // change `refusalDetailOf` to `${err.skpError.code} - ${err.skpError.message}`. Expected failure:
+  // that test fails on the byte-equality assertion -- and with it the claim that an owner has ONE
+  // shape to parse rather than two.
+  // OBSERVED: FAILED -- `AssertionError: expected 'engine.source_changed - refused: the …' to be
+  // 'engine.source_changed: refused: the s…'`.
+  it("the pre-check refusal and the post-check terminal are the same string", () => {
+    const thrown = new SkpCallError(realSourceChangedError());
+    expect(refusalDetailOf(thrown)).toBe(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    // Which means the terminal matcher recognises it too: one predicate, both routes.
+    expect(isSourceChangedTerminal({ kind: "ProducerFailed", detail: refusalDetailOf(thrown) })).toBe(
+      true
+    );
   });
 });

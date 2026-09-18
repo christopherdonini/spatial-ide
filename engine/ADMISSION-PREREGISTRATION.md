@@ -1337,3 +1337,295 @@ verbatim. All four are placeholders" twelve lines above the verbatim assertion t
 required. The sentence was true when written and stopped being true when that ruling landed; the
 header now says which one string is asserted verbatim and why, and says that it changed. No
 assertion is altered.
+
+---
+
+### Amendment 6 — P3b landed: the deferrals, discharged one by one (2026-09-17, appended)
+
+**Written after P3b's results were seen.** §12e's rule, honoured in this line. **Amendments 1–5 are byte-untouched**; this one records what P3b did with what Amendment 3 item 3 deferred, and says plainly which of those deferrals is still open.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in both gate checklists): every clause below that says something is discharged names the test by its exact name or a `file:line`, and every clause that says something is **not** discharged names the open item instead. P3b's own preregistration is `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`; its §10 Amendment 4 carries the full result record, and this amendment does not restate it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **post-result records** throughout.
+
+---
+
+**(i) Which deferral each landed item discharges.** Amendment 3 item 3 (`:752-763`) lists four.
+
+1. *"Owner-side invalidation: residency cleared and picks refused."* **Discharged for the client, on both arms and both detection routes.**
+   - Residency cleared, baseline: `frontends/shell/src/streaming/viewportStreamManager.ts:308` calls `clearResidency()` before nulling `residentStreamHandle`, which fires `onSuperseded` → `canvas.clearStream` (`App.tsx:541-543`). Proof: `viewportStreamManager.test.ts`'s *"a source-changed terminal clears the working canvas residency"*.
+   - Residency cleared, candidate: `frontends/shell/src/residency/candidateArmSession.ts:1075` calls `canvas.clearAllTiles()`, which also clears the untiled first look (ingested under `INITIAL_TILE_KEY`). Proof: `candidateArmSession.test.ts`'s *"a TILE stream's terminal ends the session and clears every tile"* and *"the UNTILED first look's own terminal ends the session and clears every tile"*.
+   - Picks refused: `frontends/shell/src/canvas/pick.ts:100`'s `latchedHoverReadout`, at one site covering both arms (`App.tsx:1477`), with its own readout state so silence is never the answer (ADR-010 rule 5). Proof: `pick.test.ts`'s *"every readout state becomes the refusal while latched, including null and a standing id"* and `HoverReadoutView.test.tsx`'s *"renders the refusal in the hover slot, and never a bare or standing id"*.
+   - **The third sink Amendment 3 did not know about.** P3a's `isSourceChangedTerminal` had exactly two product call sites, both in streaming managers; the candidate session's own untiled stream tested no terminal code at all, so a change detected on the first query of a tiled session ended nothing on the client. `candidateArmSession.ts:1325` now routes it through `TileViewportStreamManager.notifySourceChanged`.
+2. *"The kernel-authoritative dead-ticket refusal, wired to a real caller, with correct three-valued unknown-handle behaviour."* **Discharged.** `GenerationRegistry::ticket_liveness` (`kernel/src/skp.rs:466`) answers `Live`/`EndedBySourceChange`/`Unknown`; only the middle arm refuses by name (`kernel/src/lib.rs:410`), and `Unknown` falls through to `StreamRegistry::redeem`'s own three refusals. Its product caller is `EngineSourceFactory::create_from_ticket`, reached on every real START frame; the factory now takes the registry as a third parameter and the shell installs it at `frontends/shell/src-tauri/src/lib.rs:373-377`. Proof, end to end from the real shape: `kernel/tests/session_generation.rs`'s `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code`, in which nothing is fabricated and no test calls `end_generation`; and the fabrication it replaces is fenced by `an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal`.
+3. *"The ADR-016 Amendment 1 acceptance, which stays Proposed and binds nothing."* **NOT discharged, and not touchable by this work.** It is the human's at P6 (`state/NEXT-CUT.md:106`). `git diff origin/main...cut/briefa-p3b -- docs/adr` is empty: no ADR Status is changed by P3b, and a full pass on both its gates does not accept it either.
+4. *"Boundary 4's own sentence about detection clearing residency and refusing picks."* **Now claimed, at the scope §2e of P3b's preregistration fixes and no wider**: *on a detected change, this client clears the resident geometry it holds for that dataset and refuses picks until the dataset is reopened.* It remains true in the same breath that the policy does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only at the post-check (`state/NEXT-CUT.md:60-63`) — those are the engine's own words and arrive in the refusal's `message`; the shell's sentence states only what the shell did. The operator-facing form of the claim is `refusalGuidance("engine.source_changed")` (`frontends/shell/src/admission/formatRefusal.ts:97-100`), which is the stronger sentence the human's round-5 ruling said P3b would restore *"when it becomes true"*; it is asserted verbatim by `formatRefusal.test.ts`'s *"engine.source_changed: says only what is true at this commit"* and rendered whole, with the engine's message, by `RefusalBlock.test.tsx`'s *"the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform"*.
+
+---
+
+**(ii) What this amendment does NOT claim, stated rather than left to be inferred.**
+
+- **The claim is about this client, not about the file.** Nothing here says a session up to the detection was a snapshot (A1), and no test asserts one.
+- **The end-to-end evidence is owed.** §4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** — the reason is recorded in P3b's §10 Amendment 4 (e) with its two blockers, and it is owed before P3b's gates conclude. Until then every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run.
+- **The post-check's own cost still has no shell-side carrier.** Amendment 5 (vi)'s open item stands unchanged: the Tauri shell installs `EngineSourceFactory::ticket_only`, whose `connection_reports` is `None`, and its stderr is unattached from the desktop. P3b's preregistration does not name that surface, so P3b built nothing for it.
+- **R-D2's `detail` contract is still unmet on the generation-ended paths.** `protocol/skp/SKP-V0.md:602-608` declares that `detail` names every component that differed; `kernel/src/skp.rs:796-802` and `:840-846` fill it with a brace-delimited sentence, and P3b's redemption refusal (`kernel/src/lib.rs:424-428`) is deliberately a third such site — that registry holds no descriptor and never read the file, so naming components there would be a fabrication of the same class the round-4 ruling removed. Owed, 2026-09-17, recorded in P3b's §10 Amendment 4 (g)(1).
+
+---
+
+**(iii) G-A2's status, said rather than claimed.** §12b's G-A2 (`:221`) reads: *"Open; issue a query; mutate the file (mutation fixture); the next read refuses `engine.source_changed`; residency cleared; picks refused; late batches dropped. Asserted at the pre-check and at the post-check paths separately."*
+
+**G-A2 remains P5's gate, and P3b does not score it.** What P3b builds is the *behaviour* G-A2 scores — the refusal at both paths, residency cleared, picks refused, late batches dropped — and each half is asserted at its own seam by the tests named in (i) above, at both the pre-check (`liveTicketSet.test.ts`'s *"matches the real thrown refusal on its code, never on its prose"*; `tileViewportStreamManager.test.ts`'s *"a source-changed refusal at a tile mint ends the session, and is not retried"*) and the post-check (the terminal-route tests in (i)) **separately**, as G-A2's own wording requires. What is missing for the gate itself is the single end-to-end run over a real mutated fixture, which is (ii)'s owed T10. A gate is scored by its own run; this amendment records the behaviour, not the score.
+
+---
+
+**(iv) "No release includes P3a without P3b"** (`DECISIONS-PENDING.md:44`, verbatim). P3b is the branch `cut/briefa-p3b`; until it merges, that sentence still binds, and it is recorded as a plan dependency rather than only here.
+
+---
+
+### Amendment 7 — correcting Amendment 6 (ii) and (iii) by appending: T10 was written, run, and satisfied (2026-09-17, appended)
+
+**Written after P3b's T10 runs were seen.** §12e's rule, honoured in this line. **Amendments 1–6 are byte-untouched.** This item exists because **Amendment 6 is false at this head**, and it is the record the human reads before accepting the Proposed ADR-016 Amendment 1 by click, so it must be true.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+---
+
+**(i) What Amendment 6 (ii) says, and why it is now false.** It reads: *"§4 of P3b's preregistration declares a T10 E2E step (`frontends/shell/e2e/source-changed.mjs`). **It was not written and no E2E run was made** … and it is owed before P3b's gates conclude."* That was true when written. **T10 is now written and satisfied**, in the file that clause names, and the sentence that follows it there — *"every clause in (i) rests on unit and integration assertions at named seams, not on an operator-visible run"* — no longer holds either.
+
+**(ii) The runs, and what each proves.** Three runs, each from a fresh launch, each `launched: true` (AI_DEVELOPMENT.md's own condition for a run that proves a branch), each on the exe `C:\dev\spatial-ide\frontends\shell\src-tauri\target\debug\spatial-ide-shell.exe` with a creation time after its own run's start — the documented ownership check. Reports live under `frontends/shell/e2e/out/`, which `frontends/shell/.gitignore:1` ignores, so they are cited by path and kept on disk.
+
+| run | report | app session log | outcome |
+| --- | --- | --- | --- |
+| **5** | `frontends/shell/e2e/out/source-changed-1789618861740.json` | `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-1789618848.log` | every step PASS, exit 0 |
+| **6**, the recorded mutation | `frontends/shell/e2e/out/source-changed-1789618937407.json` | `…\logs\session-1789618924.log` | **S5b FAIL by name**; S5a and S5c PASS |
+| **7**, reverted | `frontends/shell/e2e/out/source-changed-1789618985531.json` | `…\logs\session-1789618972.log` | every step PASS, exit 0 |
+
+**The kernel's own detection, in the app's session log** (`session-1789618848.log:19-21`, read as content and not inferred from a size — the stale-directory-entry rule):
+
+> `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). …`
+> `candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — …`
+
+**The owner-side consequences, observed in the running app:**
+
+- **residency cleared** — `observation.residentBefore` `{totalResidentVertices: 188665, totalResidentFeatures: 10000}` → `observation.residentAfter` `{0, 0}`, read through the counts-only hook `residentCounts` (`frontends/shell/src/e2e-test-surface.ts:192-221`, registered `frontends/shell/src/App.tsx:923`);
+- **picks refused** — the readout at a pixel proven occupied before the change (interior-verified by read-back, and hovered to an id) is `className: "hover-readout hover-readout-session-ended"`: not an id, and **not silence**, which is the answer ADR-010 rule 5 forbids here;
+- **the typed status** — the session-ended block rendered with `dismissButtons: 0` (not dismissible), its code in its own labelled `.admission-refusal-code` element, and no `engine.` code in the operator's sentence or its guidance.
+
+**The recorded mutation, performed once and reverted** — delete `this.clearResidency();` from `viewportStreamManager.ts`'s source-changed branch and `canvas?.clearAllTiles();` from `candidateArmSession.ts`'s `endCandidateSession`. Observed failure on run 6, verbatim:
+
+> `S5b: resident vertices are 188665 (features 10000), expected 0 -- the owner did not clear what it was showing`
+
+**and S5a and S5c passed under it**, which is the discrimination the driver predicted in advance: those two are the owner *saying* something, S5b is the owner having *done* it. Run 7 is green from the reverted tree.
+
+**The fixture discipline held on all three**: the scratch copy's sha256 is `fd0c74ab2d5df1e1df084802134d2a6678278e764ba180ea2ea5812f53ddfb49` before and after every run, so every mutation was an mtime touch and never a byte edit (P3b's §8.8).
+
+---
+
+**(iii) Correcting Amendment 6 (iii) by appending.** That item says: *"What is missing for the gate itself is the single end-to-end run T10 is the first half of."* **That is no longer what is missing.** The end-to-end run exists and is green (above). What remains for **G-A2** is narrower and is stated here rather than left implied:
+
+1. **The post-check route's own end-to-end.** G-A2's wording requires both routes — *"Asserted at the pre-check and at the post-check paths separately"* (`:221`). Runs 5 and 7 detected the change through the **pre-check**, on a tile mint (`tile-stream-mint-refused` above). The **post-check** route — a change found at a stream's own end, `EngineSource::end_session_if_source_changed` — is covered by its unit and integration tests (`kernel/tests/typed_terminal_codes.rs`'s `the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code`; the shell's terminal-route tests in `viewportStreamManager.test.ts` and `candidateArmSession.test.ts`) but **not** by an end-to-end run. Arranging one needs the change to land while a stream is still open, which T10's scenario does not do.
+2. **P5's own scoring.** G-A2 is P5's gate, and a gate is scored by its own run. P3b builds the behaviour G-A2 scores and now demonstrates most of it end to end; it does not score the gate, and this amendment does not claim it does.
+
+---
+
+**(iv) One cite correction carried here** (class 3, mechanical, no claim changed): Amendment 6 (i) cites `frontends/shell/src/App.tsx:1477` for the one pick-latch site and `frontends/shell/src/residency/candidateArmSession.ts:1075` for the tile clear. Both shifted when the `residentCounts` hook landed. At this head they are **`App.tsx:1488`** (`onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}`) and **`candidateArmSession.ts:1076`** (`canvas?.clearAllTiles();` inside `endCandidateSession`). Amendment 6 is not edited; this states where they point now.
+
+---
+
+### Amendment 8 -- correcting Amendment 6 (iii) and Amendment 7 (iii) by appending: two misquotes and a stale P6 cite (2026-09-17, appended)
+
+**Written after the verification pass that found them.** §12e's rule, honoured in this line. **Amendments 1-7 are byte-untouched**; this item corrects three record-fidelity defects in Amendments 6 and 7, one by one, without editing either.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7, permanent in both gate checklists): every clause below that says something is discharged names the test by its exact name or a `file:line`, and every clause that says something is **not** discharged names the open item instead.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): item (3) below is **class 3** (cite/line-number fix, `:110-112`, mechanical, never changes a claim). Items (1)-(2) correct misquotes of the same mechanical kind -- the quoted text is made to match its source; item (2)'s correction also completes a list the misquote had left one clause short. No claim Amendments 6 or 7 already discharged is reopened by any of the three.
+
+---
+
+**(1) Amendment 7 (iii) (`:1425`) misquotes Amendment 6 (iii).** Introduced by *"That item says:"*, it attributes to Amendment 6 (iii) the sentence, quoting: *"What is missing for the gate itself is the single end-to-end run T10 is the first half of."* Amendment 6 (iii) (`:1377`) does not contain that sentence. What Amendment 6 (iii) says, verbatim: *"What is missing for the gate itself is the single end-to-end run over a real mutated fixture, which is (ii)'s owed T10."* Amendment 7's conclusion drawn from the misquoted sentence -- that the run named there now exists, is green, and is no longer what is missing (Amendment 7 (ii)'s three reports) -- does not depend on the exact wording and is unaffected; only the attributed sentence was wrong, and this corrects it.
+
+**(2) Amendment 6 (iii) (`:1375`) misquotes §12b's G-A2.** It quotes G-A2 (`:221`) as ending, verbatim: *"picks refused; late batches dropped. Asserted at the pre-check and at the post-check paths separately."* G-A2 (`:221`) does not end that way; it states: *"picks refused; status text verbatim. Asserted at the pre-check and at the post-check paths separately."* "Late batches dropped" is G-A3's language, which reads: *"A batch whose ticket belongs to an invalidated generation, delivered after invalidation, is dropped and never rendered"* (`:222`) -- not G-A2's.
+
+Because the misquote dropped G-A2's own "status text verbatim" clause, the list of what G-A2 still lacks (Amendment 7 (iii), `:1427-1428`) is short one item. Restated complete, G-A2 has **three** outstanding clauses, not two:
+
+1. The post-check route's own end-to-end (Amendment 7 (iii) item 1, unchanged by this correction).
+2. P5's own scoring (Amendment 7 (iii) item 2, unchanged by this correction).
+3. **The status text verbatim clause.** G-A2 requires the refused status text to match a specific string, word for word -- that is what "verbatim" means in its own wording. No test in this tree pins that string against G-A2, because the string itself has not been decided: deciding the exact operator-facing status text is a **P6 wording decision that is the human's**, not this piece's or this amendment's to make. It stands beside the pick refusal and the session-ended status line that `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` Amendment 10 (d) already names as joining §9's P6 sight list, rather than being settled here.
+
+**(3) Amendment 6 (i)3 (`:1361`) cites the wrong `NEXT-CUT.md` row.** It reads: *"It is the human's at P6 (`state/NEXT-CUT.md:106`)."* At this head, `state/NEXT-CUT.md:106` is the **P5** row, whose Phase cell reads: *"Tests carrying the claims (see Gates) + E2E: detected-change invalidation; late-generation rejection; fast-admission distinction"* and whose Gate column reads: *"Reviewer"*. The **P6** row -- whose Phase cell reads, at its opening: *"Walkthrough **Part N** (no durations): open a CRS84 file, read the provenance line; open a keyless single file, read the session-identity statement; mutate the source mid-session, read the refusal"* and whose Gate column reads: *"Human (operator-verified; acceptances are red lines)"* -- is `state/NEXT-CUT.md:107`. Corrected here: the citation is `state/NEXT-CUT.md:107`.
+
+---
+
+### Amendment 9 -- two record-fidelity glyph corrections, appended (2026-09-17)
+
+**Written after the checker's gates found them, ruled as belonging to P3b's round rather than to a baseline.** §12e's rule, honoured in this line. **Amendments 1-8 are byte-untouched**; this item corrects two sites where a nested quotation's glyph was retyped when a ruling was transcribed into this document.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **class 3** throughout (cite/glyph fix, `:110-112`, mechanical, never changes a claim).
+
+---
+
+**(1) `:949-951` re-types round 5 item 1's two nested quotations as single quotes.** The ruling (`DECISIONS-PENDING.md:45`, "RULED 2026-09-16 -- question round 5", item 1) nests two double-quoted phrases inside its own double-quoted whole: P3a's superseded string, rendered here as *'Everything read so far has been discarded'* with single quotes, and the replacement, rendered here as *'The source file changed while it was open; reopen the dataset to continue.'*, also with single quotes. The source uses double quotes for both. Reproduced below byte for byte, from `DECISIONS-PENDING.md:45` (the ruling's relevant span; its own full sentence opens "Accept as pre-committed with one change to (d):", which this document's `:949` quote begins after):
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6."
+
+**(2) `:993-995` re-types round 5 item 4's one nested quotation as single quotes.** The ruling (`DECISIONS-PENDING.md:48`, same round, item 4) nests one double-quoted word inside its own double-quoted whole: rendered here as *'test-only.'* with single quotes; the source has double quotes. Reproduced below byte for byte, from `DECISIONS-PENDING.md:48`:
+
+> "Adopt the architect's sentence as written, with one addition: the accessor's doc names the test that calls it, so the caller-grep can verify the exemption instead of trusting the words "test-only." An exemption that can't be grepped is a hole in the rule it exempts from."
+
+**(3) What changed and what did not.** At both sites, the meaning of the quoted ruling is unchanged either way -- a reader takes the same instruction from the single- or double-quoted rendering; only the glyph marking the ruling's own nested quotation changed, from the human's double quotes to a single-quote substitute. Neither `:949-951` nor `:993-995` is edited by this amendment (Amendments 1-8 stay byte-untouched); this is the correction, appended, per the round-7 fence.
+
+---
+
+### Amendment 10 -- class 3, mechanical, no claim changed. Written 2026-09-17, a fresh worker's verification pass on the reviewer and architect gates' attempt-3 findings (2026-09-17, appended)
+
+**Written after the verification pass that found them.** §12e's rule, honoured in this line. **Amendments 1-9 are byte-untouched**; this item corrects one misquote in Amendment 9, one unmarked elision in Amendment 7, and mirrors one shell correction.
+
+**The fence, applied to this amendment's own words** (the human, 2026-09-16, round 7): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-122`): **class 3** throughout (cite/quote fix, mechanical, never changes a claim).
+
+---
+
+**(1) Amendment 9 (1)'s reproduction (`:1472`) is not byte for byte against its named source, and drops the ruling's final clause unmarked.** Introduced *"Reproduced below byte for byte, from `DECISIONS-PENDING.md:45`"*, the blockquote at `:1472` reads in full:
+
+> "a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6."
+
+Two defects against the source (`DECISIONS-PENDING.md:45`, "RULED 2026-09-16 -- question round 5", item 1): it adds an opening `"` before *"a false status string"* and a closing `"` after *"wording at P6."* — positions the source carries no quote mark at, since the source's own outer quote pair opens before *"Accept as pre-committed"* and closes after *"the P6 sight list."*; and it drops the ruling's own final clause, *"P3b starts after P3a lands; its two new strings join the P6 sight list."*, with no `…` marking the cut.
+
+The ruling, reproduced complete and byte for byte, from `DECISIONS-PENDING.md:45` (465 characters; `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:549` already carries it complete, and the two are script-compared identical):
+
+> "Accept as pre-committed with one change to (d): a false status string does not sit on main between P3a and P3b. Replace P3a's "Everything read so far has been discarded" now, in one docs-class commit, with a sentence true at that commit — "The source file changed while it was open; reopen the dataset to continue." — and P3b restores the stronger sentence when it becomes true, wording at P6. P3b starts after P3a lands; its two new strings join the P6 sight list."
+
+---
+
+**(2) Amendment 7 (`:1405-1407`) elides the kernel's own limitation sentence with `…`, dropping negations and a qualifier, and drops the three lines' leading timestamps unmarked.** It reads:
+
+> `tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). …`
+> `candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — …`
+
+The three lines, read as content from `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-1789618848.log:19-21`, complete and byte for byte:
+
+> `1789618859411 tile-stream-mint-refused 7:8: engine.source_changed {"detail":"{mtime}"}`
+> `1789618859412 warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while it was open ({mtime}). This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading`
+> `1789618859412 candidate-session-ended-source-changed ds_5fc4839d1363849c9bb6e74a8f680820: every resident tile cleared; no further plan until reopen — engine.source_changed: refused: the source file changed while it was open ({mtime}). This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading`
+
+Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *"This check does not establish snapshot consistency, cannot detect every in-place modification, and may detect a change during a query only after that query has finished reading"* — two negations (*"does not establish"*, *"cannot detect every"*) and a qualifier (*"only after that query has finished reading"*), which the round-10 rule forbids an elision from dropping even when marked. Amendment 7 also opened each quoted line at its own message text, dropping the leading epoch-millisecond timestamp (`1789618859411` / `1789618859412` / `1789618859412`) with no mark at all.
+
+---
+
+**(3) The nit: `state/NEXT-CUT.md`'s true range for boundary 4's policy sentence.** Amendment 6 item 4 (`:1362`) cites `state/NEXT-CUT.md:60-63` for the sentence beginning *"The policy does not establish snapshot consistency"*. At this head that sentence runs `state/NEXT-CUT.md:59-61` (it opens mid-line at `:59` and closes at `:61`) — mirroring the identical correction `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` Amendment 13 (5) makes for that document's own `:950`/`:295` cites of the same sentence. `:1362` is not edited; this states where the range actually falls.
+
+---
+
+**(4) Checked and not carried here: whether a merge-falsified "resolved when main merges" note lives in this document too.** It does not. The only instance of that shape — *"this branch's own `DECISIONS-PENDING.md` does not yet contain it. … Resolved when `main` next merges into this branch."*, false since merge `7286c81` landed — sits in `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:970` (Amendment 12), corrected there by that document's own Amendment 13 (3) item 2. This document's Amendment 9 cites `DECISIONS-PENDING.md:45` and `:48`, both rulings long since present on `main` and on this branch, with no comparable "not yet merged" claim anywhere in Amendments 1-9.
+
+---
+
+### Amendment 11 -- class 3, mechanical, no claim changed. Written 2026-09-17, a fresh worker's final record-fidelity append under round 12, item 2, closing the architect and reviewer attempt-4 findings and converting every ledger line-cite in this document to the round+item form. Amendments 1-10 are byte-untouched; this item states what is true instead.
+
+**Written after the gates' attempt-4 findings were seen.** §12e's rule, honoured in this line.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every clause below that says something is done names the test, the report or the `file:line` that proves it.
+
+**Classes used** (`docs/PREREGISTRATION-TEMPLATE.md:101-129`): class 3 throughout (cite/reference form fix, mechanical, never changes a claim).
+
+---
+
+**(1) `kernel/src/skp.rs:796-802` corrected to `:797-803`, in place.** `:1371` cited the live-generation pre-check block one off at both ends, the same defect class the P3b comment-fix round already corrected at this document's own `:840-846` and at the sibling document's `:1006` (its item 5). Corrected in place at `:1371`: this is a stale cross-reference, not a claim, per the template's class 3.
+
+**(2) B-1 -- Amendment 10 (1)'s charge against Amendment 9 (`:1492`) is itself an unmarked elision.** It quotes Amendment 9's introduction (`:1470`) only up to a backtick, dropping the parenthetical in which Amendment 9 names its own head cut, with no `…` marking the drop. Corrected reference, no reproduction: `engine/ADMISSION-PREREGISTRATION.md:1470 @ 60ece22 sha256:b62f1777e3a9de9b404cc1e013c93f1caff2eb299ffaf9fcbf76297ce8260bbc` is that introduction sentence whole, parenthetical included; Amendment 10 (1)'s other two defects against `DECISIONS-PENDING.md:45` stand as it found them, and neither Amendment 9 nor Amendment 10 is edited.
+
+**(3) 465 vs 467 -- what is counted.** `:1498` reproduces round 5, item 1 complete: 465 characters is the ruling's own quoted span inside its source's `**"` … `"**` pair; 467 is that span plus the two `"` marks the source carries around it. Both figures are correct, each for what it counts; `:1498` already says so and is not edited.
+
+**(4) Every `DECISIONS-PENDING.md` line-cite in this document, converted.** Round 12, item 1 (a) (`docs/PREREGISTRATION-TEMPLATE.md:135`): ledger rulings are cited by round and item, never by line. `§12e` opens empty (`:238`), so every one of this document's ledger cites sits inside an amendment (5, 6, 9 or 10); none is edited in place, per §10's own append-only rule (mirrored for the sibling document at its `:876-878`) — each is retired in the index below instead.
+
+---
+
+**Superseded as of this amendment.**
+
+| site | old form | superseded by |
+| --- | --- | --- |
+| Amendment 5 (ix), `:1274` | `DECISIONS-PENDING.md:182` | not a "question round" ruling -- an entries-style block (`DECISIONS-PENDING.md:173-192`, "entries 59, 60, 61 …") with no round or item number; no round+item form exists to cite, so this stays a plain path:line reference, uncorrected |
+| Amendment 6 (iv), `:1381` | `DECISIONS-PENDING.md:44`, verbatim | round 4, item 1 |
+| Amendment 9 (1), `:1470` | `DECISIONS-PENDING.md:45` (already self-named "question round 5", item 1 in the same sentence) | round 5, item 1 -- form only, no change in fact |
+| Amendment 9 (2), `:1474` | `DECISIONS-PENDING.md:48` (already self-named "same round, item 4" in the same sentence) | round 5, item 4 -- form only, no change in fact |
+| Amendment 10 (1), `:1492`/`:1498` | `DECISIONS-PENDING.md:45`, reproduced complete at `:1500` | round 5, item 1; the reproduction itself is superseded by (2) above's reference form |
+| `kernel/src/skp.rs` cite, `:1371` | `:796-802` | `:797-803`, corrected in place by (1) above |
+
+---
+
+### Amendment 12 -- the closing state-of-the-record list (2026-09-17, appended; the architect's re-scope under round 12, item 2)
+
+**Written after the gates' attempt-5 findings were seen.** §12e's rule, honoured in this line. **Read this amendment first**: it is the single resolution point for every earlier amendment in §12e, and it supersedes Amendment 11's index in whole.
+
+**Why this form, and what it is not.** Round 12, item 2 provides that if the round fails on the record again, the record -- not the code -- is re-scoped by the architect as a shorter amendment set rather than corrected again; attempt 5 failed on the record, and this is that re-scope, not a sixth correction. This amendment carries **no bare line cite into this document**, **no ledger line cite**, and **no reproduced text**: self-references and references to the sibling preregistration are by section, amendment and item; rulings are by round and item (round 12, item 1 (a)); anything else is `path:line @ <commit> sha256:<hex>` (round 12, item 1 (b)). Where a row must name a defective cite in order to identify it, the cell says **retired form**.
+
+**This commit restores one byte, and appends nothing else.** Amendment 11 (1) corrected a cite **in place** inside Amendment 6, which §12e's append-only rule forbids and which this document has no precedent for; the committed bytes of that line at `60ece22` are restored by this commit, and the correction it intended is carried by the first row below instead. Proof, gate-checkable: after this commit `git diff --numstat 60ece22..HEAD -- engine/ADMISSION-PREREGISTRATION.md` shows **zero deletions**, so every line of Amendments 1-11 is byte-identical to `60ece22`.
+
+**Classes used.** **Class 3** (`docs/PREREGISTRATION-TEMPLATE.md:110-112 @ e53bb97 sha256:e4bc1272dfbdb1f0af4b32592670e6a7b3f0646805c95570e7232723e67b7812`) for every row that only corrects where a reference points. **Class 1** for every row that withdraws, supersedes or narrows a claim, on the stated reading that a gate round's findings are this round's results and such a row records what they invalidate -- stated, not settled, and routed as gap 2. Gaps 1, 3 and 4 fit no pre-declared class and go to the human, unforced.
+
+**The fence, applied to this amendment's own words** (round 7, item 1): every "stands" / "corrected" / "withdrawn" / "owed" clause below names the reference, the commit range, the amendment item or the gate resolution that proves it.
+
+---
+
+**The state of the record, by amendment and item.**
+
+| id | status | what governs now |
+| --- | --- | --- |
+| Amendment 11 (1) | **withdrawn as to method; its correction stands by this row** | The in-place edit it made inside Amendment 6 is reverted to the bytes at `60ece22`, because §12e is append-only and the sibling document's Amendment 12 item 4 is the precedent: record, never edit. What Amendment 6 (ii)'s fourth bullet cites as `kernel/src/skp.rs:796-802` (retired form) is, at this head, `kernel/src/skp.rs:797-803 @ e53bb97 sha256:4592255528daaca2a102fa1d248411be97ea9bf858664c8b9ed7bbedff74f7b1` -- the live-generation pre-check block, its `if` at the span's first line and its closing brace at the last. Amendment 6 is not edited; this row is the correction. |
+| Amendment 11's header clause that Amendments 1-10 are byte-untouched | **corrected** | It was false at `e53bb97`, whose engine hunk is a single in-place replacement inside Amendment 6, and it is true again at this commit after the restore. The falsity is recorded here rather than erased. Proof: the range `60ece22..e53bb97` carries one deletion in this file, and `60ece22..HEAD` carries none. |
+| Amendment 11 (1)'s two supporting references | **withdrawn** | As written, one names this document's own `:840-846` (retired form) for a correction of this class; that span is Amendment 4's header and item (i), a test-narration correction, and no correction of this class exists in this document. The other names the sibling document's `:1006` (retired form) for its item 5: the item named is right and the line is wrong, so it governs as **the sibling document's Amendment 13 (1), list item 5**. Neither reference supports the row above, which rests on the pinned `kernel/src/skp.rs` span alone. |
+| Amendment 11 (2) | **stands, with its span named** | Its pinned reference replaces Amendment 10 (1)'s unmarked elision, and the hash is the **whole line's**, while the passage it names is a sub-line span of that line -- said here, as the hash form requires. The commit it names is `60ece22`; those bytes are identical at `e53bb97` and this commit does not change them. |
+| Amendment 11 (3) | **corrected** | Its claim that Amendment 10 (1)'s closing sentence already disambiguates the figure is false: that sentence states 465 and says nothing about what the figure counts, which is exactly what (3) supplies. The arithmetic stands -- 465 is the ruling's own span inside its source's quote pair, and 467 is that span plus those two marks. Proof: the gate's character count over round 5, item 1's ruling span. |
+| Amendment 11's header clause and item (4), that every ledger line-cite in this document is converted and retired | **narrowed** | False as written: three instances had no row -- Amendment 10 (1)'s inner ledger cite, and Amendment 10 (4)'s two. The three rows below supply them, and the clause is narrowed to what this list carries. |
+| Amendment 10 (1)'s inner ledger cite | **retired** | **Round 5, item 1** -- form only, no change in fact. |
+| Amendment 10 (4)'s two ledger cites | **retired** | **Round 5, item 1** and **round 5, item 4** -- form only, no change in fact. |
+| Amendment 10 (4)'s cross-file line cite of the sibling document | **corrected by reference** | It names that document's **Amendment 12 (1)** closing note, corrected there by its **Amendment 13 (3) item 2**; cited by amendment and item, no line, so no later append can move it. |
+| Amendment 10 (1)'s cross-file line cite of the sibling document | **corrected by reference** | It names that document's **§10 Amendment 1**, which carries round 5, item 1 complete. The claim that the two are script-compared identical stands, and the gate resolves both against round 5, item 1. |
+| Amendment 11 (4)'s rendering of clause (a) | **marked paraphrase** | It inserts a word the clause does not carry and is introduced by a colon after its source cite, which presents a paraphrase as a quotation; marked a paraphrase here. The binding text is `docs/PREREGISTRATION-TEMPLATE.md:135 @ e53bb97 sha256:52ac25cf7d952920e7607afba503c4de93c44deb80422b76bdc6396b0f61a259`, and no rendering of it is reproduced. |
+| Amendment 11 (4)'s mirror reference into the sibling document | **corrected by reference** | The passage it points at is that document's **Amendment 10 (a)**, opening paragraph; cited by amendment, no line. |
+| Amendment 11's index row for Amendment 5 (ix) | **withdrawn** | The row resolves the wrong text: the retired form `DECISIONS-PENDING.md:182` was written at `264773c`, where that line carried **entry 98**, and at any later head it names unrelated ledger text. Governs now: **entry 98**, the stable identifier Amendment 5 (ix)'s sentence is about; the row's verdict that the cite stays uncorrected is withdrawn. Clause (a) has no form for an entries-style block and clause (b)'s path:line is forbidden into the ledger, so gap 3 routes the form to the human. |
+| Amendment 10 (2)'s reading of Amendment 7's elision | **corrected** | Its statement that the cut removed the same clause on both lines understates the third: there the elision also removed the engine's own refusal sentence preceding the limitation clause. Proof: the three log lines reproduced complete at Amendment 10 (2) show the third carrying both. Amendment 10 is not edited. |
+| Amendment 11's "Classes used" line | **corrected** | It describes `docs/PREREGISTRATION-TEMPLATE.md:101-129` as five classes and claims class 3 throughout; that span declares **six** (class 6 added on round 5, item 2), and its own items that withdraw or narrow a claim are not class 3. Proof: `docs/PREREGISTRATION-TEMPLATE.md:101-129 @ e53bb97 sha256:d47d4a27c20b2e03cf9d7cccb765735a27a11bfdbbecc8d9f0e21f2772859d8a`. Gap 2 routes the class of a withdrawal. |
+| Amendment 6 (i) item 3 -- the ADR-016 Amendment 1 acceptance | **NOT discharged**, unchanged | The human's at P6; its P6-row cite is corrected by Amendment 8 (3). |
+| Amendment 6 (ii) third bullet -- the post-check's shell-side cost carrier | **owed**, 2026-09-17 | Unchanged; mirrored in the sibling document's Amendment 4 (g) item 3. |
+| Amendment 6 (ii) fourth bullet -- R-D2's `detail` contract | **owed**, 2026-09-17 | Unchanged; its cite is corrected by the first row above, and it is mirrored in the sibling document's Amendment 4 (g) item 1. |
+| Amendment 8 (2) item 3 -- G-A2's status-text-verbatim clause | **owed**, at P6 | Unchanged: the string is a P6 wording decision that is the human's, and no test pins it until then. |
+
+**Items that simply stand, by id.** Amendments 1, 2, 3, 4, 5 (i)-(viii) and (x)-(xv), 6 (i) items 1, 2 and 4 and (ii) first bullet, 7, 8 (1) and (3), 9, 10 (3) and (4). Nothing in this amendment touches them; the owed items above are listed only to date them.
+
+**Superseded earlier and unchanged here:** Amendment 6 (ii) second bullet and Amendment 6 (iii)'s T10 verdict (by Amendment 7); Amendment 7 (iii)'s two-item list (by Amendment 8 (2)); Amendment 9 (1)'s reproduction (by Amendment 10 (1), and its charge by Amendment 11 (2)).
+
+---
+
+**Gaps routed to the human, named and not forced** (`docs/PREREGISTRATION-TEMPLATE.md` §10's own instruction).
+
+1. **A class for an evidence-driven sight-list addition** -- the sibling document's Amendment 11 (b) and Amendment 14 (e); the architect's re-scope of 2026-09-17 proposes a class 7. Nothing is assigned here.
+2. **The class of a withdrawal in a record-correction round** -- not class 3, and no ruling is narrowed, so not class 5; this amendment uses class 1 on the reading stated above.
+3. **How a ledger passage is pinned, and how an entries-style block is cited** -- clause (a) forbids a line cite into the ledger and clause (b)'s path:line is therefore unavailable for ledger text, while an entries-style block carries no round or item at all (Amendment 5 (ix)'s case, the row above). The architect proposes a clause (a').
+4. **Where this document's "read the last amendment first" pointer lives.** §12d is this document's sight list and it is pre-code declaration text; a line added there would edit a declaration and shift every §12e line, which is the defect this re-scope exists to remove. The pointer is carried at this amendment's head and foot instead, and whether §12d should carry one at P6 is the human's.
+
+---
+
+**Read this amendment first.** §12e's amendments correct each other only by a later one; this is the last, and it is where any earlier amendment's current state is written.
+
+---
+
+### Amendment 13 -- erratum rows (2026-09-18, appended; the architect's reduction under the human's standing directive of 2026-09-18, point (1): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`)
+
+**Written after the gates' attempt-6 findings were seen.** **Read this amendment first.** Classes: **1** for a withdrawal or narrowing row (round 15, item 1, clause (g)); **3** for a pointer row. Every pin names its commit; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+**Superseded index** (round 12, item 1 (e)).
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 11's "Classes used" line | corrected: Amendment 12's row on it withdrawn as to the count | `engine/ADMISSION-PREREGISTRATION.md:1534 @ 959bd088156b sha256:94bd466768a83d998f7b9184c9e698b76a46438f83d0cd33828c0bcf123e22d9` |
+| Amendment 12, gap 1 | settled | round 14, item 2 |
+| Amendment 12, gap 2 | settled | round 15, item 1, clause (g) |
+| Amendment 12, gap 3 | settled | round 14, item 2 |
+
+**Read this amendment first.**

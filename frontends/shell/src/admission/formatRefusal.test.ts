@@ -139,20 +139,32 @@ describe("refusalGuidance", () => {
  * keeps.
  */
 describe("refusalGuidance for Brief A P3's new states", () => {
-  // Mutation: restore the pre-round-5 string (the "Everything read so far has been discarded"
-  // wording). Expected failure: "engine.source_changed: says only what is true at this commit"
-  // fails on both the exact-equality assertion and the no-discarding-claim assertion.
+  // Mutation: revert to P3a's interim sentence ("The source file changed while it was open; reopen
+  // the dataset to continue."). Expected failure: "engine.source_changed: says only what is true at
+  // this commit" fails on the exact-equality assertion and on the cleared/identified assertions --
+  // which is the point of pinning it: the interim sentence is now an UNDER-claim, and an operator
+  // would not be told their canvas was emptied when it was.
+  // OBSERVED (performed once on this branch, then reverted): FAILED --
+  // `AssertionError: expected 'The source file changed while it was …' to be 'The source file
+  // changed while it was …'`.
   it("engine.source_changed: says only what is true at this commit", () => {
-    // **Asserted verbatim, unlike its three siblings below** -- the human ruled this exact sentence
-    // (2026-09-16, round 5 item 1) precisely because the previous one described behaviour P3a does
-    // not have. A rewording is a decision, not a refactor, so it must break this test.
+    // **Asserted verbatim, unlike its three siblings below** -- the human ruled that this sentence's
+    // wording is a decision (2026-09-16, round 5 item 1) precisely because an earlier one described
+    // behaviour the shell did not have. A rewording is a decision, not a refactor, so it must break
+    // this test. **P3b's sentence**, replacing the interim one on the second half of that same
+    // ruling ("P3b restores the stronger sentence when it becomes true, wording at P6").
     expect(refusalGuidance("engine.source_changed")).toBe(
-      "The source file changed while it was open; reopen the dataset to continue."
+      "The source file changed while it was open. What this canvas had read from it has been " +
+        "cleared, and features here can no longer be identified; reopen the dataset to continue."
     );
-    // The specific falsehood that was there: nothing is discarded in P3a, because nothing clears
-    // the resident view until P3b.
-    expect(refusalGuidance("engine.source_changed")).not.toMatch(/discard/i);
-    // And no snapshot is claimed for what came before (A1).
+    // The two consequences it claims are the two P3b performs, and no more: residency cleared
+    // (both arms) and picks refused until reopen. Asserted as properties rather than only as bytes,
+    // so a P6 rewording that dropped one of them is caught by name.
+    expect(refusalGuidance("engine.source_changed")).toMatch(/cleared/i);
+    expect(refusalGuidance("engine.source_changed")).toMatch(/no longer be identified/i);
+    expect(refusalGuidance("engine.source_changed")).toMatch(/reopen the dataset/i);
+    // And no snapshot is claimed for what came before (A1): what was cleared is stated, never that
+    // what was cleared was consistent.
     expect(refusalGuidance("engine.source_changed")).not.toMatch(/snapshot/i);
   });
 

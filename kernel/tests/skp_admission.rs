@@ -29,7 +29,7 @@ use spatial_engine::fixture::{
     ZONE_VALUES,
 };
 use spatial_engine::trace::{self, TraceKey};
-use spatial_kernel::skp::{SkpHost, StreamRegistry};
+use spatial_kernel::skp::{GenerationRegistry, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
 use spatial_skp::v0::{DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -124,7 +124,7 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
         .expect("viewport_query");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
         static_dir: None,
         expected_origin: None,
     })
@@ -175,7 +175,7 @@ async fn a_raw_stream_params_start_is_refused_in_ticket_only_mode() {
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
         static_dir: None,
         expected_origin: None,
     })
@@ -212,7 +212,7 @@ async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_l
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
         static_dir: None,
         expected_origin: Some("http://localhost:5180".to_string()),
     })
@@ -266,7 +266,7 @@ async fn a_declared_origin_with_a_wrong_token_is_refused_as_a_credential_rejecti
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
         static_dir: None,
         expected_origin: Some("http://localhost:5180".to_string()),
     })
@@ -364,7 +364,7 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
         .expect("a real, admitted predicate must not be refused");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
         static_dir: None,
         expected_origin: None,
     })
@@ -605,7 +605,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     let stream_handle = ticket.stream.clone();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets)),
+        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
         static_dir: None,
         expected_origin: None,
     })

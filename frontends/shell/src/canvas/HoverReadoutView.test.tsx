@@ -6,7 +6,7 @@ import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { HoverReadoutView, HOVER_CONFIRMING_MARKER_TEXT } from "./HoverReadoutView";
-import { confirmingReadout, type PickResult } from "./pick";
+import { confirmingReadout, type PickResult, type PickSessionEnded } from "./pick";
 
 // React 18.3's own `act` (not `react-dom/test-utils`'s deprecated re-export), exactly as
 // `OriginMismatchState.test.tsx` sets it up -- this suite renders the real component into a real
@@ -104,5 +104,91 @@ describe("HoverReadoutView (B1's labelled state, at the render)", () => {
     // The id it labels is reachable only by naming the variant -- which is the branch that renders
     // the marker beside it.
     expect(bareIdLine(labelled.standing)).toBe("id 6430");
+  });
+});
+
+/**
+ * **T8's second half (P3b §4): the session-ended readout, at the render.**
+ *
+ * The property is structural, not textual: whatever the operator reads, it is a refusal and it is
+ * never an id. The wording itself is the human's at P6 (§9) and nothing here asserts it verbatim.
+ */
+describe("HoverReadoutView, boundary 4's session-ended refusal", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  function render(readout: Parameters<typeof HoverReadoutView>[0]["readout"]): void {
+    act(() => {
+      root.render(<HoverReadoutView readout={readout} />);
+    });
+  }
+
+  // RECORDED MUTATION for "renders the refusal in the hover slot, and never a bare or standing id":
+  // delete the `isPickSessionEnded` branch from `HoverReadoutView.tsx`, so the readout falls through
+  // to the bare-id line. Expected failure: that test fails on the class assertion -- the slot
+  // renders an id line for a readout that carries no id, which is the silent-service ADR-010 rule 5
+  // forbids, in its worst form.
+  // OBSERVED: FAILED -- `TypeError: Cannot read properties of undefined (reading 'toString')`, i.e.
+  // the id line reaching for an id that does not exist.
+  it("renders the refusal in the hover slot, and never a bare or standing id", () => {
+    render({ kind: "session-ended" });
+
+    const el = container.querySelector(".hover-readout");
+    expect(el).not.toBeNull();
+    expect(el!.className).toContain("hover-readout-session-ended");
+    // It says something -- silence is the one answer boundary 4 and ADR-010 rule 5 forbid here.
+    expect(el!.textContent!.trim().length).toBeGreaterThan(0);
+    // And it is not an identity, in any of the three forms this slot can otherwise take.
+    expect(container.textContent).not.toMatch(/\bid \d/);
+    expect(container.textContent).not.toContain(HOVER_CONFIRMING_MARKER_TEXT);
+    expect(container.querySelector(".hover-readout-confirming-marker")).toBeNull();
+  });
+
+  // RECORDED MUTATION for "the refusal replaces a standing id rather than sitting beside it":
+  // return `null` from the session-ended branch -- silence instead of a named refusal, which is
+  // exactly the answer boundary 4 and ADR-010 rule 5 forbid. Expected failure: that test fails on
+  // the single-element assertion (nothing renders at all).
+  // OBSERVED: FAILED -- `AssertionError: expected  to have a length of 1 but got +0` (and the first
+  // test of this block on `expected null not to be null`).
+  it("the refusal replaces a standing id rather than sitting beside it", () => {
+    render(confirmingReadout(ID_WITH_ANCHOR));
+    expect(container.textContent).toContain("id 6430");
+
+    render({ kind: "session-ended" });
+    expect(container.querySelectorAll(".hover-readout")).toHaveLength(1);
+    expect(container.textContent).not.toContain("6430");
+  });
+
+  // RECORDED MUTATION naming its test:
+  // "the type carries no identity for a render path to reach"
+  // -- give `PickSessionEnded` an `id: bigint` field in `pick.ts`. Expected failure: the two
+  // `@ts-expect-error` directives below become unused and `npm run typecheck` fails on them, which
+  // is where a type-level property has to fail. The same discipline the labelled state's own
+  // `@ts-expect-error` pair above already uses.
+  // OBSERVED (performed once on this branch, then reverted): FAILED --
+  // `src/canvas/HoverReadoutView.test.tsx(185,5): error TS2578: Unused '@ts-expect-error' directive.`
+  // and the same at `(187,5)`; plus `WorkingCanvas.test.ts(473,5): error TS2322`, since the widened
+  // variant also stops being assignable where only a `PickResult` may go.
+  it("the type carries no identity for a render path to reach", () => {
+    // Typed as the variant itself, not as a literal, so the two directives below are assertions
+    // about `PickSessionEnded` and fail when that type gains a field.
+    const refused: PickSessionEnded = { kind: "session-ended" };
+    // @ts-expect-error -- `PickSessionEnded` has no `id`; there is nothing to render as one.
+    expect(refused.id).toBeUndefined();
+    // @ts-expect-error -- and no `standing` either, unlike the labelled state.
+    expect(refused.standing).toBeUndefined();
   });
 });

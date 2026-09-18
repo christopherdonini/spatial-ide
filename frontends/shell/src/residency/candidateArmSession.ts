@@ -25,6 +25,7 @@ import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
 import { dataPlaneAttach } from "../streaming/dataPlaneClient";
 import { debounce } from "../streaming/debounce";
+import { isSourceChangedTerminal } from "../streaming/liveTicketSet";
 import type { StreamSink, TerminalKind } from "../streaming/transport";
 import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
 import type { TilePlanOutcome } from "../streaming/tileViewportStreamManager";
@@ -146,6 +147,20 @@ export interface CandidateArmSessionDeps {
    * piece, the `TileViewportStreamManager` construction below passed no `level` option at all. Optional
    * so every pre-existing test/call site of this function keeps compiling and behaving unchanged. */
   tileGridLevel?: TileGridLevel | null;
+  /**
+   * **This dataset's session ended: the source was observed to have changed** (P3b §2a(iii); Brief A
+   * boundary 4). Fired **exactly once** per session, after this session has cleared the tile
+   * residency it holds, with the `"<code>: <display>"` detail both routes carry.
+   *
+   * Subscribed by `App.tsx`'s candidate construction site in this same diff, so BOTH arms reach the
+   * same App-level handler (`handleSessionEnded`) and the operator sees one behaviour whichever arm
+   * is running. Optional, defaulted to nothing, so every pre-existing test/call site of this
+   * function keeps compiling and behaving unchanged.
+   *
+   * What this session states by calling it is what this session did: the tiles it held are gone.
+   * The status line and the pick latch are the App's, because the App owns both surfaces.
+   */
+  onSessionEnded?: (detail: string) => void;
 }
 
 /** The single, session-lifetime sentinel `streamHandle` this session's own `{kind:"issued"}` dispatch
@@ -287,6 +302,10 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   const { dataset, canvas } = deps;
   let frameEstablished = false;
   let stopped = false;
+  /** Brief A boundary 4 (P3b §2a(iii)): latched the moment this session learns the source changed,
+   * on any of its three routes. Permanent for this session -- reopening the dataset builds a new
+   * one. Distinct from `stopped`, which is an ordinary teardown. */
+  let sessionEnded = false;
   let currentFilter: Filter | null = null;
   let lastCoveringTileKeys: ReadonlySet<string> = new Set();
   /** Re-review S4: the MOST RECENT `TilePlanOutcome.coveringTruncated` (`TileViewportStreamManager
@@ -1019,7 +1038,48 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // to a genuine terminal exactly as it does to a supersede.
       if (manager.trackedTileCount === 0) emitResidencyStatus();
     },
+    // **P3b §2a(iii): the owner's half of boundary 4, on the tiled arm.** Reached from every one of
+    // the three places this arm can learn the fact -- a tile stream's terminal, the untiled
+    // first-look stream's terminal (through `manager.notifySourceChanged`, below), and a tile
+    // mint's own pre-check refusal -- because all three go through `TileViewportStreamManager
+    // .endSession`, which is the one place that calls this.
+    onSessionEnded: (detail) => endCandidateSession(detail),
   });
+
+  /**
+   * **P3b §2a(iii): clear the residency this session holds, then tell the App.**
+   *
+   * **Called at most once, and the guard that makes that true is the manager's, not a second one
+   * here.** `TileViewportStreamManager.endSession` latches before it calls `onSessionEnded`, and
+   * every route into this function -- a tile terminal, the untiled terminal (through
+   * `notifySourceChanged`), and a tile mint's pre-check refusal -- goes through that one method.
+   * A latch of this session's own was written first and then removed: no test could reach it, and a
+   * branch no input can take is a claim about the code rather than a property of it (recorded as a
+   * finding in `OWNER-INVALIDATION-PREREGISTRATION.md` §10). What the at-most-once property rests
+   * on is asserted, through the real seam, by
+   * `candidateArmSession.test.ts`'s "the owner is told once, whichever sink or however many
+   * terminals".
+   *
+   * **Cleared through the interface this session already has** -- `canvas.clearAllTiles()`
+   * (`WorkingCanvas.tsx:196-200`, implemented `:1656`), the same call `reissueUnrestricted` already
+   * makes on a filter reissue. No new canvas method. It also clears the untiled first look, whose
+   * batches are ingested under `INITIAL_TILE_KEY` (`candidateArmSession.ts:1295`) and therefore live
+   * in the same `TileResidentSet`.
+   *
+   * **What is NOT done here, and why.** No `resetFitForNewGeneration()`: a fit anchor is a camera
+   * fact, and there is no new generation to fit -- the session is over until the dataset is
+   * reopened, which remounts the canvas and discards the anchor with it. No status and no pick
+   * latch: the App owns both surfaces, and it is the App's handler that states the consequence.
+   */
+  function endCandidateSession(detail: string): void {
+    sessionEnded = true;
+    canvas?.clearAllTiles();
+    logSessionEvent(
+      "candidate-session-ended-source-changed",
+      `${dataset}: every resident tile cleared; no further plan until reopen — ${detail}`
+    );
+    deps.onSessionEnded?.(detail);
+  }
 
   function ingestAndMaybeEstablishFrame(
     tileKey: string,
@@ -1246,6 +1306,25 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // in the orphan case either).
         const wasCurrent = untiledStreamHandle === stream;
         if (untiledStreamHandle === stream) untiledStreamHandle = null;
+        // **P3b §2a(iii): the third sink, and the reason it needed its own test.** Before this
+        // line, `isSourceChangedTerminal` was called at exactly two product sites -- both streaming
+        // managers -- and this sink, which the candidate session owns itself, tested no terminal
+        // code at all. A change detected on the FIRST query of a tiled session (the likeliest
+        // place, §5 prediction 3) therefore ended nothing on the client.
+        //
+        // Routed through the manager rather than calling `endCandidateSession` directly, so the
+        // manager latches too: a session whose owner cleared its tiles while its manager kept
+        // planning new ones is the half-ended state boundary 4 exists to prevent. The manager's
+        // `onSessionEnded` brings it back here, once.
+        //
+        // Deliberately NOT gated on `wasCurrent`: the fact is about the dataset's session, not
+        // about which generation's stream noticed it. An orphaned previous-generation stream that
+        // learns the source changed has learned something true of the file every later generation
+        // is also reading.
+        if (isSourceChangedTerminal(terminal)) {
+          manager.notifySourceChanged(terminal.detail);
+          return;
+        }
         if (isInstrumentedBuild()) {
           recordResidencyStreamEnded();
         }
@@ -1528,6 +1607,17 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
      * see `App.tsx`'s own `makeCandidateViewportDispatcher`. */
     cancelPendingViewportChange: () => cancelViewportDebounce(),
     reissueUnrestricted: async (bbox, filter) => {
+      // **P3b §2a(iii): nothing is re-issued after the source was observed to have changed.** This
+      // is the candidate arm's analogue of `ViewportStreamManager.requestViewport`'s own latch
+      // check, and it is this session's rather than the manager's because `reissueUnrestricted`
+      // does not go through `manager.onCameraChange` -- it issues an UNTILED query directly. Without
+      // it, a filter Apply after the session ended would clear the tiles, mint a query the kernel
+      // then refuses at its pre-check, and end up back here through `App.tsx`'s catch: safe, but it
+      // asks a question boundary 4 already answered ("until reopen").
+      //
+      // Checked FIRST, before the clear and before the filter is recorded, so an Apply after the
+      // latch changes nothing at all.
+      if (sessionEnded) return { kind: "session-ended" };
       currentFilter = filter;
       cancelViewportDebounce();
       // S2: see `suppressNestedSupersededEmit`'s own doc comment above -- this guard exists solely so

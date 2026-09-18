@@ -189,6 +189,36 @@ export interface E2eTestSurface {
    * totals read off `WorkingCanvas` at the same moment) -- `null` if the instrument is disabled or no
    * step was active (`residencyInstrument.ts`'s own `endResidencyStep` doc comment). */
   residencyEndStep?: () => Promise<ResidencyEndStepResult | null>;
+  /**
+   * **Brief A boundary 4, P3b: the resident vertex/feature totals, and nothing else.**
+   *
+   * **An instrument accessor, in the declared category** (the human's ruling of 2026-09-16, round 5
+   * item 4): read-only over state the shipped build already maintains -- the same `ResidentSet`
+   * `pushBatch`/`clearStream`/`clearAllTiles` keep, read through
+   * `WorkingCanvasHandle.getResidentCounts()` (`canvas/WorkingCanvas.tsx:160`). It computes
+   * nothing, records nothing, and changes nothing.
+   *
+   * **Its only caller is the E2E driver `frontends/shell/e2e/source-changed.mjs`**, named here so
+   * the caller-grep can verify this exemption instead of trusting the words "test-only". No product
+   * module reads it.
+   *
+   * **Why the property must be proven about the real app.** P3b's whole subject is an owner-side
+   * consequence -- that a detected source change empties the resident geometry an operator is
+   * looking at. Unit tests can assert that `clearStream`/`clearAllTiles` were *called* at the real
+   * option seams, and they do; only the running app can show that the residency itself is then
+   * empty. There is no product path to that fact, and inventing one would put a test surface in the
+   * product.
+   *
+   * **Why NOT `residencyEndStep`.** That hook exposes the same totals, but merged into the
+   * residency **measurement** instrument's step snapshot, which carries timing fields. T10 records
+   * no duration of any kind (ADR-018; `OWNER-INVALIDATION-PREREGISTRATION.md` §1's boundary-10
+   * line), so reaching a duration-bearing instrument to read a count would drag a measurement into
+   * a piece that measures nothing. This hook has no timing field at all.
+   *
+   * `null` whenever no dataset is admitted (`canvasRef.current` is `null`), never a fabricated zero
+   * -- the same honesty `residencyEndStep`'s own `residentAtEndStep` keeps.
+   */
+  residentCounts?: () => Promise<ResidentCounts | null>;
   /** Marks "an input happened right now" for the input-to-present proxy (§6) -- the driver calls
    * this immediately before dispatching a real pointer/wheel gesture that drives a pan or zoom step,
    * so the NEXT rendered frame's timestamp becomes that gesture's proxy latency
