@@ -490,7 +490,7 @@ impl GenerationRegistry {
     /// **Its callers, named so the caller-grep can verify this exemption rather than trust the
     /// words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4) — both in
     /// `kernel/tests/session_generation.rs`:
-    /// `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close`,
+    /// `the_dead_ticket_record_is_bounded`,
     /// `a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it`.
     pub fn dead_ticket_count(&self) -> usize {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());

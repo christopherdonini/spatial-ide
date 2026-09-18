@@ -3489,7 +3489,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   }
 
   // RECORDED MUTATION naming its test:
-  // "the UNTILED first look's own terminal ends the session and clears every tile"
+  // "a_source_changed_terminal_on_either_stream_clears_every_resident_tile"
   // -- delete the `isSourceChangedTerminal(terminal)` branch from the untiled sink's
   // `onTerminal` in `candidateArmSession.ts`. Expected failure: that test fails by name (and ONLY
   // it -- the tile-stream case below still passes, which is exactly the gap this closes).
@@ -3498,7 +3498,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   // that case reaches its tile terminal through the untiled sink's `return` in the unmutated code,
   // so deleting the branch changes both. The distinguishing evidence the prediction wanted is
   // M8 below (subscriber removed) versus this one.
-  it("the UNTILED first look's own terminal ends the session and clears every tile", async () => {
+  it("a_source_changed_terminal_on_either_stream_clears_every_resident_tile", async () => {
     const canvas = fakeCanvas();
     const onSessionEnded = vi.fn();
     const session = startCandidateArmSession({ dataset: "ds_x", canvas, onSessionEnded });

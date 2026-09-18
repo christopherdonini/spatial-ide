@@ -1423,12 +1423,12 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * planned the next tile -- so an arm that learned the session was over kept asking.
    *
    * RECORDED MUTATION: revert the catch to `logMintRefused` only (delete the
-   * `isSourceChangedRefusal` branch). Expected failure: "a source-changed refusal at a tile mint
-   * ends the session, and is not retried" fails on the next-plan assertion -- `onCameraChange`
+   * `isSourceChangedRefusal` branch). Expected failure: "the_pre_check_refusal_latches_the_session_on_a_tile_mint"
+   * fails on the next-plan assertion -- `onCameraChange`
    * returns `"planned"` again and mints more tiles.
    * OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
    */
-  it("a source-changed refusal at a tile mint ends the session, and is not retried", async () => {
+  it("the_pre_check_refusal_latches_the_session_on_a_tile_mint", async () => {
     const onSessionEnded = vi.fn();
     const { manager } = makeManager({ onSessionEnded });
     manager.establishGridFrame(ANCHOR);
