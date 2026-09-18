@@ -458,7 +458,7 @@ function healthRowsHtml(rows) {
  * build-time facts come from GitHub's API inside the Pages build (buildHealth.mjs), the machine
  * facts from the custodian's machine (health.mjs). No row ever mixes the two.
  */
-function renderHealthStrip(health, buildHealth, byId) {
+function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
   let buildGroup;
   if (buildHealth?.unreadable) {
     // A corrupt file is not an absent one: saying "generated outside that build" here would be
@@ -494,11 +494,30 @@ function renderHealthStrip(health, buildHealth, byId) {
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;
 
+  // A third source, always rendered, never mixed into the other two (AUTONOMY.md:231, the human,
+  // 2026-09-14: "No row mixes the two." -- this is a third, clearly labelled one, not a mixed one): the
+  // verify-quotes baseline entry count is a fact read directly from this repository's own tracked file,
+  // not from health.mjs's machine refresh or GitHub's API build. Round 11's ratchet condition (c): "the
+  // baseline count is a line on the health strip, so a number that never shrinks is visible."
+  // A malformed baseline (exists, but invalid JSON or the wrong shape) is a FAULT, not an absent row --
+  // round-12 fix round item (e): "a malformed baseline renders a visible fault on the health strip, not
+  // an absent row." `null` (the file was never created) still reads "unknown", the pre-existing case.
+  const governanceCountText =
+    governanceBaselineCount === null
+      ? 'unknown'
+      : governanceBaselineCount === 'malformed'
+        ? 'FAULT — verify-quotes.baseline.json does not parse to { entries: [...] }'
+        : String(governanceBaselineCount);
+  const governanceGroup =
+    `<h3 class="health-source">From this repository's own tracked files</h3>\n` +
+    healthRowsHtml([['verify-quotes baseline entries (quote + hash)', esc(governanceCountText)]]);
+
   return `
   <section class="panel health-strip">
     <h2>Health</h2>
     ${buildGroup}
     ${machineGroup}
+    ${governanceGroup}
   </section>`;
 }
 
@@ -588,7 +607,7 @@ header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-
 }
 `;
 
-function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null }) {
+function renderHtml(plan, health, { repoSlug, generatedAt, buildHealth = null, governanceBaselineCount = null }) {
   const violations = findMetricViolations(plan);
   if (violations.length > 0) throw new SiteMetricViolationError(violations);
 
@@ -642,7 +661,7 @@ ${seededNote}
 ${renderWaitingOnYou(waitingOnHuman)}
 ${renderShipped(plan, repoSlug)}
 </div>
-${renderHealthStrip(health, buildHealth, byId)}
+${renderHealthStrip(health, buildHealth, byId, governanceBaselineCount)}
 <main>
 ${laneHtml}
 </main>
@@ -706,13 +725,15 @@ ${laneHtml}
 
 /**
  * Pure: builds { html, planJson } from an already-loaded plan, the optional machine-facts health
- * object, and (via `options.buildHealth`) the optional build-time facts.
+ * object, and (via `options.buildHealth`) the optional build-time facts, and (via
+ * `options.governanceBaselineCount`) the verify-quotes baseline's entry count.
  */
 export function renderSite(plan, health, options = {}) {
   const repoSlug = options.repoSlug ?? DEFAULT_REPO_SLUG;
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   const buildHealth = options.buildHealth ?? null;
-  const html = renderHtml(plan, health, { repoSlug, generatedAt, buildHealth });
+  const governanceBaselineCount = options.governanceBaselineCount ?? null;
+  const html = renderHtml(plan, health, { repoSlug, generatedAt, buildHealth, governanceBaselineCount });
   const planJson = `${JSON.stringify(
     {
       generated_at: generatedAt,
@@ -728,6 +749,17 @@ export function renderSite(plan, health, options = {}) {
   return { html, planJson };
 }
 
+// RECORD-CAP FIX (round 15, item 3, the site.mjs regression; state/gate-log.json record 68, B4):
+// this function's catch branch briefly returned the string 'malformed' instead of `null`, a change
+// meant for readVerifyQuotesBaselineCount's OWN parsing (below) but landed here instead, on this
+// function's only caller, readHealth. renderHealthStrip's `health ? … : …` ternary treats any truthy
+// value -- including the string 'malformed' -- as a populated health object: `health.generated_at`,
+// `health.drift?.ok`, etc. all read `undefined` on a string, so a corrupt health.json rendered a
+// fully-populated-looking "From the custodian's machine — refreshed unknown" panel with every row
+// reading "unknown", indistinguishable from a genuine (if stale) refresh -- a fabricated panel, not a
+// disclosed fault. Reverted to the parsed form: a corrupt file reads the same as an absent one (`null`),
+// which is what this function returned before that change and what readHealth's only caller,
+// renderHealthStrip, already handles correctly (the "no site/data/health.json yet" branch).
 function readJsonIfPresent(p) {
   if (!fs.existsSync(p)) return null;
   try {
@@ -737,8 +769,50 @@ function readJsonIfPresent(p) {
   }
 }
 
-function readHealth(outDir) {
+/**
+ * `site/data/health.json` if present and parseable; `null` if absent OR corrupt (see the comment on
+ * readJsonIfPresent above for why corrupt is not distinguished from absent here). Exported so a test
+ * can call it directly against a scratch `outDir`, the same pattern `readBuildHealth` below already
+ * uses -- its only real callers remain `checkSiteDrift` and `main()`, both in this file. The direct
+ * caller proving the corrupt-vs-absent behaviour above is `site.test.mjs:401`'s own test, `a corrupt
+ * health.json reads the same as an absent one — never a fabricated "refreshed" panel`.
+ */
+export function readHealth(outDir) {
   return readJsonIfPresent(path.join(outDir, 'data', 'health.json'));
+}
+
+const VERIFY_QUOTES_BASELINE_REL = 'scripts/plan/verify-quotes.baseline.json';
+
+/**
+ * The verify-quotes baseline's entry count -- round 11's ratchet condition (c) (DECISIONS-PENDING.md,
+ * "RULED 2026-09-17, round 11"): "the baseline count is a line on the health strip, so a number that
+ * never shrinks is visible." A repo-tracked fact, unlike health.json/build-health.json: available
+ * identically at generation time and at `--check` drift-recomputation time, so reading it directly
+ * (relative to `root`, not `outDir`) never causes drift between the two. Reads the `{ $doc, entries }`
+ * shape verify-quotes.mjs's own `loadBaseline` reads (kept in sync by hand, not by import, to keep this
+ * script's own stdlib-only, dependency-free stance) -- the pre-round-11 bare-array shape never shipped
+ * on `main` and is dropped here too (round-12 fix round item (e), mirroring verify-quotes.mjs's own
+ * removal). Returns: a number when the file parses to that shape; the string `'malformed'` when the
+ * file EXISTS but does not (invalid JSON, or the wrong shape) -- a fault, distinct from absence, so it
+ * renders as one rather than silently reading the same as "the file was never created" (round-12 fix
+ * round item (e)); `null` only when the file does not exist at all. Sums `entries.length` with
+ * `hashEntries.length` when the latter is present (round 15, item 3's hash-finding baseline route,
+ * state/gate-log.json records 66 and 68 -- verify-quotes.mjs's own `loadHashBaseline` reads the same
+ * sibling key; an absent `hashEntries` counts as zero, so every baseline.json before this round still
+ * reads exactly as it did): one debt number, the whole known baseline, not only the quote half of it.
+ */
+export function readVerifyQuotesBaselineCount(root) {
+  const p = path.join(root, VERIFY_QUOTES_BASELINE_REL);
+  if (!fs.existsSync(p)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!Array.isArray(parsed?.entries)) return 'malformed';
+    const hashEntries = parsed.hashEntries;
+    if (hashEntries !== undefined && !Array.isArray(hashEntries)) return 'malformed';
+    return parsed.entries.length + (hashEntries?.length ?? 0);
+  } catch {
+    return 'malformed';
+  }
 }
 
 /**
@@ -770,10 +844,13 @@ function normalizeHtmlTimestamp(html) {
 export function checkSiteDrift({ planPath, outDir, repoSlug }) {
   const plan = loadPlan(planPath);
   const health = readHealth(outDir);
+  // Unlike buildHealth (Pages-build-only, gitignored), the baseline is a repo-tracked file: reading it
+  // fresh here gives the same value it had at generation time, so it never causes drift by itself.
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
   let html, planJson;
   try {
     // buildHealth stays absent here on purpose (see readBuildHealth).
-    ({ html, planJson } = renderSite(plan, health, { repoSlug, buildHealth: null }));
+    ({ html, planJson } = renderSite(plan, health, { repoSlug, buildHealth: null, governanceBaselineCount }));
   } catch (e) {
     if (e instanceof SiteMetricViolationError) return { ok: false, problems: [e.message] };
     throw e;
@@ -789,7 +866,13 @@ export function checkSiteDrift({ planPath, outDir, repoSlug }) {
   } else {
     const committed = normalizeHtmlTimestamp(fs.readFileSync(indexPath, 'utf8'));
     const fresh = normalizeHtmlTimestamp(html);
-    if (committed !== fresh) problems.push(`${indexPath} differs from a fresh generation`);
+    if (committed !== fresh) {
+      // Reviewer should-fix 8 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7): this diff can come from
+      // PLAN.yaml OR from scripts/plan/verify-quotes.baseline.json's own entry count (governanceGroup,
+      // above) changing without `node scripts/plan/site.mjs` re-run -- named here so the diagnosis does
+      // not stop at PLAN.yaml.
+      problems.push(`${indexPath} differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)`);
+    }
   }
   if (!fs.existsSync(planJsonPath)) {
     problems.push(`${planJsonPath} does not exist`);
@@ -852,7 +935,8 @@ function main() {
   const plan = loadPlan(planPath);
   const health = readHealth(outDir);
   const buildHealth = readBuildHealth(outDir);
-  const { html, planJson } = renderSite(plan, health, { repoSlug, buildHealth });
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
+  const { html, planJson } = renderSite(plan, health, { repoSlug, buildHealth, governanceBaselineCount });
 
   fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');

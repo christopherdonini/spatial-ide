@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
-import { renderSite, checkSiteDrift, shippedRecently, readBuildHealth } from './site.mjs';
+import { renderSite, checkSiteDrift, shippedRecently, readHealth, readBuildHealth, readVerifyQuotesBaselineCount, REPO_ROOT } from './site.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -240,6 +240,103 @@ test('the record-rounds line lists each non-zero node and the total, with the ta
   );
 });
 
+// ------------------------------------------------------------- round 11's ratchet, condition (c):
+// the verify-quotes baseline entry count on the health strip (DECISIONS-PENDING.md, "RULED
+// 2026-09-17, round 11"; see scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md Amendment 6).
+
+// RECORDED MUTATION: removing the `governanceGroup` block from renderHealthStrip's returned template
+// (scripts/plan/site.mjs) makes
+// governance_group_renders_the_verify_quotes_baseline_entry_count_as_its_own_labelled_group FAIL:
+// "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value" on the
+// `<span>verify-quotes baseline entries (quote + hash)</span><span>21</span>` assertion (the row never appears).
+test('governance group: the verify-quotes baseline entry count renders as its own labelled group, never mixed with the other two', () => {
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, {
+    repoSlug: REPO,
+    buildHealth: BUILD_HEALTH,
+    governanceBaselineCount: 21,
+  });
+  assert.ok(html.includes("From this repository's own tracked files"));
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>21</span>'));
+});
+
+// RECORDED MUTATION: dropping the `=== null ? 'unknown' :` branch in site.mjs's governanceGroup row
+// (unconditional `String(governanceBaselineCount)`) makes this test FAIL: a `null` count prints "null"
+// instead of "unknown".
+test('governance group: an absent baseline file renders "unknown", never a false zero', () => {
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>unknown</span>'));
+});
+
+// RECORDED MUTATION (round-12 fix round item (e)): reverting readVerifyQuotesBaselineCount's malformed
+// branch to `return null;` (scripts/plan/site.mjs) makes
+// a_malformed_baseline_renders_a_visible_fault_not_an_absent_row FAIL: "AssertionError [ERR_ASSERTION]:
+// The expression evaluated to a falsy value" on the FAULT-text assertion -- a baseline file that EXISTS
+// but does not parse to `{ entries: [...] }` would again read exactly like "unknown" (the file was
+// never created), the same defect the reviewer named for the health-strip row this test covers.
+test('a_malformed_baseline_renders_a_visible_fault_not_an_absent_row', () => {
+  const dir = makeTempDir('verify-quotes-baseline-fault-');
+  fs.mkdirSync(path.join(dir, 'scripts', 'plan'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'scripts', 'plan', 'verify-quotes.baseline.json'), '{ not valid json', 'utf8');
+  const count = readVerifyQuotesBaselineCount(dir);
+  assert.equal(count, 'malformed');
+  const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, {
+    repoSlug: REPO,
+    buildHealth: BUILD_HEALTH,
+    governanceBaselineCount: count,
+  });
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>FAULT'));
+  assert.ok(!html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>unknown</span>'));
+});
+
+// RECORDED MUTATION (round 15, item 3; state/gate-log.json records 66 and 68): dropping the
+// `+ (hashEntries?.length ?? 0)` term in readVerifyQuotesBaselineCount (scripts/plan/site.mjs) makes
+// this test FAIL: "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: 2 !== 5" (the
+// count reads only the 2 quote entries, silently dropping the 3 hash entries from the health-strip
+// debt figure).
+test('a baseline entry count sums quote entries and hash entries, one debt figure', () => {
+  const dir = makeTempDir('verify-quotes-baseline-hash-count-');
+  fs.mkdirSync(path.join(dir, 'scripts', 'plan'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'scripts', 'plan', 'verify-quotes.baseline.json'),
+    JSON.stringify({
+      entries: [
+        { file: 'A.md', line: 1, words: 'w', reason: 'r', disposition: 'tool-false-trigger', ruling: 'x' },
+        { file: 'A.md', line: 2, words: 'w', reason: 'r', disposition: 'tool-false-trigger', ruling: 'x' },
+      ],
+      hashEntries: [
+        { file: 'B.md', line: 1, reason: 'r', disposition: 'unfindable-by-construction', ruling: 'x' },
+        { file: 'B.md', line: 2, reason: 'r', disposition: 'unfindable-by-construction', ruling: 'x' },
+        { file: 'B.md', line: 3, reason: 'r', disposition: 'owed-correction', ruling: 'x', corrected_by: 'y' },
+      ],
+    }),
+    'utf8',
+  );
+  assert.equal(readVerifyQuotesBaselineCount(dir), 5);
+});
+
+// RECORDED MUTATION (observed directly): changing `(hashEntries?.length ?? 0)` to `hashEntries.length`
+// in readVerifyQuotesBaselineCount (scripts/plan/site.mjs) makes
+// "a baseline file with no hashEntries key at all still counts only the quote entries" FAIL:
+// "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: 'malformed' !== 2" --
+// `hashEntries.length` throws on `undefined` (the pre-round-15 shape, no `hashEntries` key at all), and
+// the function's own outer try/catch turns that throw into the same 'malformed' a genuinely corrupt
+// file would report, not a crash -- but also not the correct count.
+test('a baseline file with no hashEntries key at all still counts only the quote entries', () => {
+  const dir = makeTempDir('verify-quotes-baseline-no-hash-key-');
+  fs.mkdirSync(path.join(dir, 'scripts', 'plan'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'scripts', 'plan', 'verify-quotes.baseline.json'),
+    JSON.stringify({
+      entries: [
+        { file: 'A.md', line: 1, words: 'w', reason: 'r', disposition: 'tool-false-trigger', ruling: 'x' },
+        { file: 'A.md', line: 2, words: 'w', reason: 'r', disposition: 'tool-false-trigger', ruling: 'x' },
+      ],
+    }),
+    'utf8',
+  );
+  assert.equal(readVerifyQuotesBaselineCount(dir), 2);
+});
+
 test('bug 1: a release that is not a pre-release carries no qualifier', () => {
   const buildHealth = {
     ...BUILD_HEALTH,
@@ -292,6 +389,27 @@ test('bug 1: a corrupt build-health.json says so — it is not read as "generate
     'a corrupt file must not claim the page was generated outside the Pages build',
   );
   assert.equal(readBuildHealth(path.join(dir, 'nowhere')), null, 'absent is still absent');
+});
+
+// RECORDED MUTATION (round 15, item 3, the site.mjs regression; state/gate-log.json record 68, B4):
+// changing readJsonIfPresent's catch branch back to `return 'malformed';` (scripts/plan/site.mjs) makes
+// "a corrupt health.json reads the same as an absent one — never a fabricated "refreshed" panel" FAIL
+// on its first assertion: "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+// 'malformed' !== null" -- readHealth would again return a truthy string that renderHealthStrip's
+// `health ? … : …` ternary reads as a populated machine-facts object, fabricating a "refreshed unknown"
+// panel with every row reading "unknown" instead of the honest "never refreshed" sentence.
+test('a corrupt health.json reads the same as an absent one — never a fabricated "refreshed" panel', () => {
+  const dir = makeTempDir('site-corrupt-health-');
+  const outDir = path.join(dir, 'site');
+  fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'data', 'health.json'), '{ this is not json', 'utf8');
+
+  assert.equal(readHealth(outDir), null);
+  assert.equal(readHealth(path.join(dir, 'nowhere')), null, 'absent is still absent');
+
+  const { html } = renderSite(fixturePlan(), readHealth(outDir), { repoSlug: REPO, buildHealth: BUILD_HEALTH });
+  assert.ok(html.includes('no site/data/health.json yet — never refreshed'));
+  assert.ok(!html.includes('refreshed unknown'));
 });
 
 test('bug 1: an API-sourced href is emitted only when it is an https:// URL', () => {
@@ -350,8 +468,11 @@ test('bug 1: the drift check never depends on build-health.json', () => {
   const outDir = path.join(dir, 'site');
   fs.mkdirSync(path.join(outDir, 'data'), { recursive: true });
 
-  // Generate WITHOUT the build facts, exactly as a machine outside the Pages build would.
-  const { html, planJson } = renderSite(plan, null, { repoSlug: REPO });
+  // Generate WITHOUT the build facts, exactly as a machine outside the Pages build would; the
+  // governance baseline count IS a repo-tracked fact, so it must match what checkSiteDrift itself will
+  // read fresh below (readVerifyQuotesBaselineCount(REPO_ROOT), the real repo's own baseline file).
+  const governanceBaselineCount = readVerifyQuotesBaselineCount(REPO_ROOT);
+  const { html, planJson } = renderSite(plan, null, { repoSlug: REPO, governanceBaselineCount });
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
   fs.writeFileSync(path.join(outDir, 'data', 'plan.json'), planJson, 'utf8');
   fs.writeFileSync(path.join(outDir, '.nojekyll'), '', 'utf8');

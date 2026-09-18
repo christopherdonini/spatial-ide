@@ -20,8 +20,29 @@ name: Governance CI — plan, queue, site
 # ## What a green run here means, stated narrowly (the other product workflows' own discipline)
 #
 # It means: every test under scripts/plan and scripts/hooks passes, every rooted (in-tree) path:line
-# reference resolves against the tree (verify:cites) and every test named in a preregistration/ADR
-# exists (verify:test-claims), PLAN.yaml's recorded statuses agree with what the repository can verify
+# reference resolves against the tree (verify:cites), every quotation marked verbatim occurs in its
+# named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text,
+# after presentation normalization -- or is a recorded, classified baseline entry (pending the human's
+# sight at its PR), advisory rather than gated (verify:quotes, the human's round-10 ruling: "a quote
+# marked verbatim that does not match its source byte-for-byte is a gate failure by name"; round 11's
+# ratchet: every baseline entry carries a disposition and a ruling, or the check fails by name). Every
+# `path:a-b @ <rev> sha256:<hex>` reference is recomputed against `git show <rev>:<path>` and fails by
+# name on a mismatch or an unresolvable rev, path or range (round 12's "quote by reference" mechanism)
+# -- or is a recorded, classified `hashEntries` baseline entry, advisory rather than gated the same way
+# a quote finding is (round 15, item 3's hash-finding baseline route: a hash reference sitting in text
+# this piece's own authority does not own, e.g. an already-landed, closed piece's append-only amendment,
+# that cannot be fixed in place). A `byte-copied from` marker's reproduction may sit on the marker's own
+# line (before or after it) as well as on the line after it, and a reference rustfmt has wrapped across
+# two `//`-commented lines is still recognized as one (see verify-quotes.mjs's own header for both).
+# For a passage with no `path:line` beside it this proves only that the words occur somewhere in the
+# tree's non-quotation text -- a floor, not proof the citing document's own claimed source is that
+# occurrence; a gate still resolves each passage against its named source. It does not recognize `…`
+# as an elision marker either -- round 11 item 3's rider (an elision may not drop a negation, a
+# condition or a qualifier) is a human-read rule, not yet a mechanical one, so an elided quote is
+# either baselined by hand or a false FAIL, never verified by construction (round-12 fix round, the
+# architect's N2). Every test named in a
+# preregistration/ADR exists (verify:test-claims),
+# PLAN.yaml's recorded statuses agree with what the repository can verify
 # (merged PRs, ADR Status lines, tags, releases, commits on main, tracked paths), and regenerating
 # CUSTODIAN-QUEUE.md/.json and site/ produces no diff.
 # It does **not** mean any hook has been exercised inside a real Claude Code session — that is the
@@ -35,6 +56,15 @@ name: Governance CI — plan, queue, site
 # beyond `contents: read` (AI_DEVELOPMENT.md's public-repo rule: least privilege, re-issued by the
 # human).
 
+# Reviewer should-fix 2 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7), corrected (reviewer S2, gate
+# vq-a5): these `paths:` filters cover the CITING documents verify:quotes scans by default --
+# preregistrations, ADRs, this workflow, AI_DEVELOPMENT.md, and every `.claude/agents/*.md` (the gated
+# hash scan covers them since round 15, item 3's widening) -- not the full set of files a quote or hash
+# reference can cite FROM: a source can be DECISIONS-PENDING.md, AUTONOMY.md, or any other tracked file
+# in the whole-tree haystack (see verify-quotes.mjs's own header). This filter set is deliberately not
+# widened to the whole tree (it would make every push run this job); disclosed, not fixed, here --
+# editing a ruling elsewhere and never touching a citing file leaves this job unrun until the next push
+# that does touch one of the paths below.
 on:
   push:
     paths:
@@ -46,6 +76,10 @@ on:
       - "CUSTODIAN-QUEUE.json"
       - ".claude/settings.json"
       - ".github/workflows/governance-ci.yml"
+      - "**/*PREREGISTRATION*.md"
+      - "docs/adr/**"
+      - "AI_DEVELOPMENT.md"
+      - ".claude/agents/*.md"
   pull_request:
     paths:
       - "PLAN.yaml"
@@ -56,6 +90,10 @@ on:
       - "CUSTODIAN-QUEUE.json"
       - ".claude/settings.json"
       - ".github/workflows/governance-ci.yml"
+      - "**/*PREREGISTRATION*.md"
+      - "docs/adr/**"
+      - "AI_DEVELOPMENT.md"
+      - ".claude/agents/*.md"
   workflow_dispatch:
 
 concurrency:
@@ -89,9 +127,12 @@ jobs:
         run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"
 
       # Pre-gate self-checks (AUTONOMY.md Appendix A3): mechanical integrity so the semantic gates
-      # below fail only on semantics. Both are pure Node over `git ls-files`, no network, no `gh`.
+      # below fail only on semantics. All three are pure Node over `git ls-files`, no network, no `gh`.
       - name: verify:cites (path:line references resolve against the tree)
         run: node scripts/plan/verify-cites.mjs
+
+      - name: verify:quotes (a passage marked verbatim occurs in its named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text, after presentation normalization, and every path:a-b @ rev sha256:hex reference recomputes; recorded baseline entries advisory)
+        run: node scripts/plan/verify-quotes.mjs
 
       - name: verify:test-claims (a test named in a preregistration/ADR actually exists)
         run: node scripts/plan/verify-test-claims.mjs

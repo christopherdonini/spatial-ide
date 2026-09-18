@@ -139,6 +139,51 @@
 // This file is deliberately pure ASCII (AI_DEVELOPMENT.md, "Scripts we write"): scan with
 //   Select-String -Path frontends/shell/e2e/source-changed.mjs -Pattern '[^\x00-\x7F]'
 // which must print nothing before this is ever launched unattended.
+//
+// ----------------------------------------------------------------------------------------------
+// THE POST-CHECK ROUTE (P5, G-A2's other half -- extending this driver rather than forking a
+// near-duplicate of it, per the P5 brief's own "the driver to extend, not duplicate").
+//
+// Everything above this note is the PRE-check route (T10, unchanged by this extension -- every
+// step below runs its ORIGINAL body, unchanged apart from the indentation this branch's `if` adds,
+// whenever SPATIAL_E2E_SOURCE_CHANGED_ROUTE is unset or "pre"). Set it to "post" to run the other half of what engine/ADMISSION-PREREGISTRATION.md
+// section 12b's gate G-A2 requires: the post-check path, asserted separately from the pre-check path
+// S1-S5c above already cover, against engine/src/stream.rs's post-check (section 13 C of that
+// document: the check that runs AFTER DuckDB's result iterator is fully drained, not before a query
+// is minted).
+//
+// WHAT MAKES THIS THE POST-CHECK AND NOT A SECOND COPY OF THE PRE-CHECK. The pre-check route (S3
+// above) mutates the file BEFORE issuing the next query, so the kernel's live-generation check
+// inside `viewport_query` itself refuses -- the ticket is never minted. The post-check route must
+// instead let a tile's mint SUCCEED against the UNCHANGED file (so the pre-check passes) and only
+// then mutate, so the change is caught when that tile's own stream later drains. This driver has no
+// hook into the Rust producer thread, so it cannot be TOLD the exact instant between mint and
+// drain -- it infers a safe point in that window from a signal the product ALREADY emits for an
+// unrelated reason: `traceStreamIssued`. Its own doc comment
+// (`frontends/shell/src/diagnostics/renderTrace.ts:27-32`) names the baseline arm's call site
+// (`ViewportStreamManager.requestViewport`, right before it returns `{kind:"issued", streamHandle}`)
+// and states it fires at the moment a ticket actually mints. On the TILED arm specifically -- the
+// route this driver drives -- `traceStreamIssued` is called on line 1096 of
+// `frontends/shell/src/streaming/tileViewportStreamManager.ts`, AFTER `startStream(...)` on line
+// 1093 (already carrying the real, already-minted `ticket.stream`), unconditionally: no `if` guards
+// the call, so it runs on every reach of `mintAndStart`'s success path, and that call site's own
+// comment (`:1094-1095`) states it fires at the same moment the baseline arm's does -- right after
+// the real mint, never before. So a NEW `stream-issued` line is strictly AFTER the pre-check for
+// that tile already passed. Polling for one and mutating the instant it appears is therefore
+// mutating no earlier than "this tile's pre-check already passed", with the actual data transfer,
+// decode and render still ahead of it -- the same use this driver already makes of `[render-trace]
+// viewport_query` in S4 above, one product-emitted signal later in the same pipeline.
+//
+// WHAT THIS DOES NOT GUARANTEE, STATED RATHER THAN HIDDEN. A camera gesture can plan more than one
+// tile; this driver mutates on the FIRST `stream-issued` line it sees, and a SIBLING tile whose own
+// mint has not yet resolved at that instant would see the already-mutated file and hit the
+// pre-check instead. That is not a silent false pass: `endSession` is idempotent (`tile-session-
+// ended-source-changed` is logged from exactly one first caller), and this driver asserts the
+// session log carries NO `tile-stream-mint-refused` line at all for the run -- the pre-check's own
+// distinct log line (`logMintRefused`, `tileViewportStreamManager.ts:273-280`) -- so a run that
+// actually lost the race to the pre-check FAILS BY NAME on that assertion rather than passing on
+// the wrong route. No timing bound is asserted anywhere in this addition (ADR-018; A6) -- the
+// polling interval below is a mechanism, not a claim.
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -178,6 +223,15 @@ const STEP_TIMEOUT_MS = 60_000;
 // 188665 resident vertices through `residentCounts` before the probe began.
 const PRECONDITION_TIMEOUT_MS = 180_000;
 const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 600_000);
+
+// P5, G-A2's post-check half (see this file's own header note above `main`'s definition for what
+// "post" changes and does not guarantee). Unset or any value other than "post" is the ORIGINAL T10
+// route, unchanged.
+const ROUTE = process.env.SPATIAL_E2E_SOURCE_CHANGED_ROUTE === "post" ? "post" : "pre";
+// A tight poll: the whole point of racing `stream-issued` is to mutate as soon as possible after a
+// mint succeeds, before that stream's own drain and post-check. A bound, not a result (ADR-018).
+const STREAM_ISSUED_POLL_MS = 5;
+const STREAM_ISSUED_WAIT_TIMEOUT_MS = 30_000;
 
 function sha256(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -366,6 +420,39 @@ async function panByViewports(page, rect, drags) {
  * only how it is provoked. */
 function viewportQueryCount(consoleHandle) {
   return consoleHandle.renderTrace().filter((e) => /viewport_query/.test(e.text)).length;
+}
+
+/** How many `[render-trace] stream-issued` lines the render trace carries right now -- the POST
+ * route's own signal (see this file's header note above `main`): `traceStreamIssued` fires strictly
+ * AFTER a real mint succeeds, unlike `viewport_query` above which fires before it. */
+function streamIssuedCount(consoleHandle) {
+  return consoleHandle.renderTrace().filter((e) => /stream-issued/.test(e.text)).length;
+}
+
+/**
+ * POST route only. Polls for the FIRST new `stream-issued` line after `baseline` and, the instant
+ * one appears, synchronously touches `scratchPath`'s mtime (no byte edit) and returns immediately --
+ * every millisecond between detection and the touch is mechanism, not a claim (ADR-018).
+ *
+ * Returns `{touchedAfterNewStreamIssued: true, count}` on success (`count` is the new
+ * `stream-issued` total, for the report); throws if no new line appears within
+ * `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce one.
+ */
+async function touchOnFirstNewStreamIssued(consoleHandle, scratchPath, baseline, rungLabel) {
+  const start = Date.now();
+  while (Date.now() - start < STREAM_ISSUED_WAIT_TIMEOUT_MS) {
+    const now = streamIssuedCount(consoleHandle);
+    if (now > baseline) {
+      const later = new Date(Date.now() + 120_000);
+      utimesSync(scratchPath, later, later);
+      return { touchedAfterNewStreamIssued: true, count: now };
+    }
+    await sleep(STREAM_ISSUED_POLL_MS);
+  }
+  throw new Error(
+    `${rungLabel}: no new [render-trace] stream-issued line within ${STREAM_ISSUED_WAIT_TIMEOUT_MS}ms of the gesture -- ` +
+      `no mint to race against a mutation for`
+  );
 }
 
 /** The canvas status stack, split the way an operator reads it. */
@@ -622,70 +709,149 @@ async function main() {
     }, "PASS", PRECONDITION_TIMEOUT_MS);
     if (!s2) throw new Error("S2 failed; the assertions below would be vacuous");
 
+    observation.route = ROUTE;
+    // S5d (POST route) must not read a "tile-stream-mint-refused" line left over from an EARLIER
+    // run in the same still-running app's session log (the app is reused across runs, S1's own
+    // "attach or launch" discipline) -- a stale line from a PRIOR pre-check run would be a false
+    // failure that says nothing about THIS run. Recorded here, before either route mutates
+    // anything, as the line count every later read subtracts off.
+    const sessionLogBaselineLineCount = newestSessionLog().lineCount ?? 0;
+    observation.sessionLogBaselineLineCount = sessionLogBaselineLineCount;
+
     // ------------------------------------------------------------------------------------
-    // S3: change the source underneath it -- mtime only, bytes untouched.
+    // S3: change the source underneath it -- mtime only, bytes untouched. PRE route only: the
+    // POST route (see this file's header note) must NOT mutate before a mint, so it defers the
+    // touch into S4 below, racing it against that gesture's own `stream-issued` line instead.
     // ------------------------------------------------------------------------------------
-    await runStep("S3-touch-mtime", async () => {
-      const later = new Date(Date.now() + 120_000);
-      utimesSync(SCRATCH_COPY, later, later);
-      const hashAfterTouch = sha256(SCRATCH_COPY);
-      if (hashAfterTouch !== hashBefore) {
-        throw new Error(
-          `S3: the scratch copy's bytes changed (${hashBefore} -> ${hashAfterTouch}); this mutation must be ` +
-            `an mtime touch only (block-on-sight 8)`
-        );
-      }
-      observation.hashAfterTouch = hashAfterTouch;
-      return "modification time moved forward; sha256 unchanged, so no byte was edited";
-    });
+    if (ROUTE === "pre") {
+      await runStep("S3-touch-mtime", async () => {
+        const later = new Date(Date.now() + 120_000);
+        utimesSync(SCRATCH_COPY, later, later);
+        const hashAfterTouch = sha256(SCRATCH_COPY);
+        if (hashAfterTouch !== hashBefore) {
+          throw new Error(
+            `S3: the scratch copy's bytes changed (${hashBefore} -> ${hashAfterTouch}); this mutation must be ` +
+              `an mtime touch only (block-on-sight 8)`
+          );
+        }
+        observation.hashAfterTouch = hashAfterTouch;
+        return "modification time moved forward; sha256 unchanged, so no byte was edited";
+      });
+    } else {
+      await runStep("S3-touch-mtime", async () => "deferred to S4 (POST route): mutated only after a mint succeeds", "INFO");
+    }
 
     // ------------------------------------------------------------------------------------
     // S4: one query. A pan is what an operator does; it is also what makes the client issue the
-    // next viewport_query, which is where the pre-check refuses (or, on the other route, where
-    // the post-check's terminal arrives).
+    // next viewport_query, which is where the pre-check refuses (PRE route) or, on the POST
+    // route, where a tile's own mint succeeds against the still-unchanged file and this step
+    // mutates immediately afterward, racing the post-check that runs once that stream drains.
     // ------------------------------------------------------------------------------------
-    await runStep("S4-issue-one-query", async () => {
-      // **The QUERY is the assertion; the gesture is only recorded** (custodian's decision,
-      // 2026-09-17, on run 4). Section 4 T10 says "trigger one query (a pan)": the requirement is
-      // the query, and the parenthetical names the gesture that usually provokes it. Run 4 panned
-      // 120x80 px inside an already-resident tile cover, the tiled arm planned nothing, and ZERO
-      // `viewport_query` lines followed -- so that step asserted a gesture and not what T10
-      // declares. This is the correction, inside T10's own words.
-      //
-      // A bounded ladder, in the order the decision names, stopping at the first rung that produces
-      // a query: (1) a pan LARGER THAN THE VIEWPORT, the literal T10 gesture, which is what leaves
-      // the resident cover; (2) if the tiled arm still plans nothing, one zoom notch, which
-      // re-plans tiles by construction. No third rung: if neither issues a query, the run stops and
-      // says so rather than inventing a gesture T10 never named.
-      const before = viewportQueryCount(consoleHandle);
-      const ladder = [];
+    if (ROUTE === "pre") {
+      await runStep("S4-issue-one-query", async () => {
+        // **The QUERY is the assertion; the gesture is only recorded** (custodian's decision,
+        // 2026-09-17, on run 4). Section 4 T10 says "trigger one query (a pan)": the requirement is
+        // the query, and the parenthetical names the gesture that usually provokes it. Run 4 panned
+        // 120x80 px inside an already-resident tile cover, the tiled arm planned nothing, and ZERO
+        // `viewport_query` lines followed -- so that step asserted a gesture and not what T10
+        // declares. This is the correction, inside T10's own words.
+        //
+        // A bounded ladder, in the order the decision names, stopping at the first rung that produces
+        // a query: (1) a pan LARGER THAN THE VIEWPORT, the literal T10 gesture, which is what leaves
+        // the resident cover; (2) if the tiled arm still plans nothing, one zoom notch, which
+        // re-plans tiles by construction. No third rung: if neither issues a query, the run stops and
+        // says so rather than inventing a gesture T10 never named.
+        const before = viewportQueryCount(consoleHandle);
+        const ladder = [];
 
-      let rect = await requireCanvasRect(page);
-      const pan = await panByViewports(page, rect, 2);
-      await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
-      let after = viewportQueryCount(consoleHandle);
-      ladder.push({ rung: "pan-beyond-viewport", ...pan, queriesBefore: before, queriesAfter: after });
-
-      if (after === before) {
-        rect = await requireCanvasRect(page);
-        const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-        const zoom = await zoomInOneNotch(page, consoleHandle, center);
+        let rect = await requireCanvasRect(page);
+        const pan = await panByViewports(page, rect, 2);
         await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
-        const afterZoom = viewportQueryCount(consoleHandle);
-        ladder.push({ rung: "zoom-one-notch", motion: zoom.motion, settled: zoom.settled, queriesBefore: after, queriesAfter: afterZoom });
-        after = afterZoom;
-      }
+        let after = viewportQueryCount(consoleHandle);
+        ladder.push({ rung: "pan-beyond-viewport", ...pan, queriesBefore: before, queriesAfter: after });
 
-      observation.queryLadder = ladder;
-      observation.queryProducedBy = after > before ? ladder[ladder.length - 1].rung : null;
-      if (after === before) {
-        throw new Error(
-          `S4: no viewport_query followed any gesture in the ladder, so the detection path was never ` +
-            `exercised and S5 below would be vacuous. Ladder: ${JSON.stringify(ladder)}`
+        if (after === before) {
+          rect = await requireCanvasRect(page);
+          const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+          const zoom = await zoomInOneNotch(page, consoleHandle, center);
+          await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+          const afterZoom = viewportQueryCount(consoleHandle);
+          ladder.push({ rung: "zoom-one-notch", motion: zoom.motion, settled: zoom.settled, queriesBefore: after, queriesAfter: afterZoom });
+          after = afterZoom;
+        }
+
+        observation.queryLadder = ladder;
+        observation.queryProducedBy = after > before ? ladder[ladder.length - 1].rung : null;
+        if (after === before) {
+          throw new Error(
+            `S4: no viewport_query followed any gesture in the ladder, so the detection path was never ` +
+              `exercised and S5 below would be vacuous. Ladder: ${JSON.stringify(ladder)}`
+          );
+        }
+        return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)`;
+      });
+    } else {
+      await runStep("S4-issue-one-query-and-touch-on-mint", async () => {
+        // Same gesture ladder as the PRE route (proven to produce a query against the shipped
+        // default arm, T10 runs 5/7), but racing `stream-issued` instead of `viewport_query` (see
+        // this file's header note for why that is the later, mint-confirmed signal) and mutating
+        // the instant a NEW one appears, instead of before the gesture at all.
+        const before = streamIssuedCount(consoleHandle);
+        const ladder = [];
+
+        let rect = await requireCanvasRect(page);
+        const panPromise = panByViewports(page, rect, 2);
+        let raceResult = null;
+        let raceError = null;
+        try {
+          raceResult = await touchOnFirstNewStreamIssued(consoleHandle, SCRATCH_COPY, before, "pan-beyond-viewport");
+        } catch (e) {
+          raceError = e;
+        }
+        const pan = await panPromise;
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+        let after = streamIssuedCount(consoleHandle);
+        ladder.push({ rung: "pan-beyond-viewport", ...pan, streamsIssuedBefore: before, streamsIssuedAfter: after, raced: raceResult, racedError: raceError?.message ?? null });
+
+        if (!raceResult) {
+          rect = await requireCanvasRect(page);
+          const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+          const zoomPromise = zoomInOneNotch(page, consoleHandle, center);
+          try {
+            raceResult = await touchOnFirstNewStreamIssued(consoleHandle, SCRATCH_COPY, after, "zoom-one-notch");
+          } catch (e) {
+            raceError = e;
+          }
+          const zoom = await zoomPromise;
+          await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+          const afterZoom = streamIssuedCount(consoleHandle);
+          ladder.push({ rung: "zoom-one-notch", motion: zoom.motion, settled: zoom.settled, streamsIssuedBefore: after, streamsIssuedAfter: afterZoom, raced: raceResult, racedError: raceError?.message ?? null });
+          after = afterZoom;
+        }
+
+        observation.queryLadder = ladder;
+        observation.queryProducedBy = raceResult ? ladder[ladder.length - 1].rung : null;
+        if (!raceResult) {
+          throw new Error(
+            `S4: no stream-issued line followed any gesture in the ladder, so there was never a mint to race a ` +
+              `mutation against. Ladder: ${JSON.stringify(ladder)}`
+          );
+        }
+        const hashAfterTouch = sha256(SCRATCH_COPY);
+        if (hashAfterTouch !== hashBefore) {
+          throw new Error(
+            `S4: the scratch copy's bytes changed (${hashBefore} -> ${hashAfterTouch}); the race must touch mtime ` +
+              `only (block-on-sight 8)`
+          );
+        }
+        observation.hashAfterTouch = hashAfterTouch;
+        return (
+          `a stream-issued line followed the "${observation.queryProducedBy}" gesture ` +
+          `(${before} -> ${after} in the render trace); the scratch copy's mtime was touched on that signal, ` +
+          `sha256 unchanged`
         );
-      }
-      return `a viewport_query followed the "${observation.queryProducedBy}" gesture (${before} -> ${after} in the render trace)`;
-    });
+      });
+    }
 
     // ------------------------------------------------------------------------------------
     // S5a: the status stack names the state, and no machine PREFIX reaches the operator.
@@ -760,6 +926,55 @@ async function main() {
       }
       return "hover over the formerly-occupied pixel shows the session-ended refusal, no id";
     });
+
+    // ------------------------------------------------------------------------------------
+    // S5d: POST route only. The one assertion that distinguishes this run from a PRE-route one --
+    // not "a session ended" (S5a-c already prove that, on both routes) but WHICH product code path
+    // ended it. `tile-stream-mint-refused` (`logMintRefused`,
+    // `tileViewportStreamManager.ts:273-280`) is logged ONLY from the mint's own catch -- the
+    // PRE-check's route into this manager (`mintAndStart`'s `isSourceChangedRefusal` branch,
+    // `:952-954`). The terminal route (`onTerminal`'s `isSourceChangedTerminal` branch, `:1081-1083`)
+    // never logs it. `endSession` is idempotent (`:733`, `if (this.sessionEnded) return`), so
+    // whichever route reaches it FIRST is the only one whose log lines this run can observe.
+    // ------------------------------------------------------------------------------------
+    if (ROUTE === "post") {
+      await runStep("S5d-post-check-route-confirmed", async () => {
+        const log = newestSessionLog();
+        if (log.error) throw new Error(`S5d: could not read the session log: ${log.error}`);
+        // **Scoped to THIS run's own lines only** -- everything appended since
+        // `sessionLogBaselineLineCount` (taken before S3/S4 touched anything). The app is reused
+        // across runs (S1's "attach or launch"), so the log can already carry an EARLIER run's own
+        // "tile-stream-mint-refused" line (a prior pre-route run, say); scanning the whole file
+        // would make that a false failure about a run that never produced it.
+        const fullContent = readFileSync(log.path, "utf8");
+        const allLines = fullContent.split(/\r?\n/).filter((l) => l.length > 0);
+        const newLines = allLines.slice(sessionLogBaselineLineCount);
+        const mintRefused = newLines.filter((l) => /tile-stream-mint-refused/.test(l));
+        const sessionEnded = newLines.filter((l) => /tile-session-ended-source-changed/.test(l));
+        observation.postCheckLogEvidence = {
+          sessionLogBaselineLineCount,
+          newLineCount: newLines.length,
+          mintRefused,
+          sessionEnded,
+        };
+        if (sessionEnded.length === 0) {
+          throw new Error(
+            `S5d: no "tile-session-ended-source-changed" line appeared in the session log after this run's own ` +
+              `baseline (line ${sessionLogBaselineLineCount}) -- the terminal route never fired`
+          );
+        }
+        if (mintRefused.length > 0) {
+          throw new Error(
+            `S5d: a "tile-stream-mint-refused" line appeared after this run's own baseline -- this run's touch ` +
+              `lost the race to a tile's PRE-check rather than landing on the POST-check route (see this file's ` +
+              `header note on what this does and does not guarantee). Not a silent pass: this is exactly the ` +
+              `route this assertion exists to distinguish. Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`
+          );
+        }
+        return `"tile-session-ended-source-changed" present, no "tile-stream-mint-refused" since this run's own ` +
+          `baseline -- the terminal (post-check) route ended this session, not the pre-check`;
+      });
+    }
   } catch (e) {
     results.push({ id: "harness", status: "FAIL", note: e?.stack ?? e?.message ?? String(e) });
     console.error(`source-changed: harness failure: ${e?.stack ?? e?.message ?? String(e)}`);

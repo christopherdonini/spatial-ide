@@ -49,6 +49,40 @@ pub fn index_consultations() -> u64 {
     INDEX_CONSULTATIONS.load(Ordering::SeqCst)
 }
 
+/// How many times `admit_identity`'s uniqueness scan has run in this process — G-A1's instrument.
+/// Same discipline as `INDEX_CONSULTATIONS` two items above: unconditional, process-wide, never
+/// `cfg(test)`-gated (see `identity_verification_scans` below for the property it exists to prove).
+static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
+
+/// How many times `admit_identity`'s **uniqueness scan** — the SQL pass that reads a whole
+/// candidate-identity column to answer "are these values distinct" — has run in this process.
+///
+/// **G-A1's instrument, in the shape `INDEX_CONSULTATIONS` above already uses.** Unconditional and
+/// process-wide, never behind `cfg(test)` or a feature, for the same reason: the property under
+/// test is "a *session-ordinal* open never scans a column", and a counter compiled only into a
+/// test build would prove that about a build nobody ships (`docs/01` principle 8).
+///
+/// **What this counts and what it does not.** It is incremented exactly once per call to
+/// `run_identity_scan`, which is the *only* whole-column read `admit_identity` can ever issue: the
+/// session-ordinal arm (R-I3, no native or mapped column found) returns before reaching it, and so
+/// does the `skip_uniqueness_check` arm (a caller-declared, explicitly-unverified mapping) — see
+/// their own comments a few lines above the increment. There is no separate content-hash call
+/// anywhere on the open path to count beside it: identity admission's only content hash is
+/// `index::content_hash` inside `build_index`, which `Dataset::open*` never calls (`admitted_index`
+/// is the only other reader of `INDEX_CONSULTATIONS`, and open never calls it either). So "zero
+/// whole-file reads, no hash call" for a session-ordinal open is a structural fact about
+/// `open_inner`'s call graph, provable by inspection, and this counter is what makes the other half
+/// — "the verification scan runs" for native and mapped identity — checkable the same way.
+///
+/// **Its only caller is the test suite, named so the caller-grep can verify this exemption instead
+/// of trusting the words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4, the same
+/// discipline `liveTicketSet.ts`'s `size` getter states for itself):
+/// `admission_instruments.rs`'s
+/// `session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan`.
+pub fn identity_verification_scans() -> u64 {
+    IDENTITY_VERIFICATION_SCANS.load(Ordering::SeqCst)
+}
+
 /// Process-wide, in-memory **row-group** index cache (lever B2). Not persisted, for the reason
 /// `INDEX_CACHE` is not: the first thing this tree writes to disk owes `docs/11`'s ResourceRef model
 /// and ADR-005's grades, and that is a decision rather than a side effect of a latency fix.
@@ -1443,6 +1477,14 @@ fn admit_identity(
         c = column.replace('"', "\"\""),
         p = path.replace('\'', "''")
     );
+
+    // **G-A1's structural claim, made assertable.** This is the one place `admit_identity` can
+    // issue a whole-column read: the session-ordinal arm above (no native or mapped column) and the
+    // `skip` arm above (a declared, explicitly-unverified mapping) both return before this line, so
+    // neither ever bumps the counter. Counting the call rather than its outcome is deliberate — a
+    // scan that goes on to refuse (a duplicate or negative value) still read the column, and the
+    // property under test is "a read happened", not "identity was admitted".
+    IDENTITY_VERIFICATION_SCANS.fetch_add(1, Ordering::SeqCst);
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).

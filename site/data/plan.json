@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T23:05:11.840Z",
-  "plan_hash": "1fef85adff614bfbd19f5edc1c94442eb64811960290ae735dc05e08b4a5f0cc",
+  "generated_at": "2026-09-18T23:54:15.031Z",
+  "plan_hash": "5991154dbc85fa7a472a308f7dfff691b4dfc2fd81192130c97473316084b0ca",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1283,7 +1283,7 @@
       },
       "gate": "scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md",
       "evidence": {
-        "branch": "governance/verify-quotes"
+        "pr": 91
       },
       "budget_minutes": 120,
       "generation": 1,
