@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T22:28:46.438Z",
-  "plan_hash": "0308369971b004cc6247b134a0cae3f6bdd179f26986ceb31b5f8f17829a38fc",
+  "generated_at": "2026-09-18T22:30:13.971Z",
+  "plan_hash": "f93c63730d5760c457ec3f76904f5a70416fa29a863db7b7a75d9184dde2edf4",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1579,7 +1579,7 @@
       },
       "gate": "frontends/shell/DESCRIBE-FIELDS-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p6-describe-fields"
+        "pr": 93
       },
       "budget_minutes": 30,
       "generation": 1,
