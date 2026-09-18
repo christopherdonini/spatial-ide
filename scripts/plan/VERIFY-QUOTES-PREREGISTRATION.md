@@ -193,3 +193,17 @@ This branch forked before round 10 and round 11 landed on `origin/main` (`git me
 | .github/workflows/governance-ci.yml, the "what a green run means" comment | updated | round 15, item 3; state/gate-log.json record 66 (path only, no line: a leading-dot path cannot be written as a hash reference under this checker's own grammar) |
 
 **Superseded index.** None; Amendments 1–8 are untouched and this amendment adds no claim about any cell they carry.
+
+### Amendment 10 -- baseline dispositions ruled (2026-09-18, appended; round 16, item 5)
+
+Class 3 pointer rows (round 15, item 1, clause (g)). Every pin names its commit; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| `frontends/shell/HOVER-REPICK-PREREGISTRATION.md:53` -> tool-false-trigger, reason corrected | ruled | `scripts/plan/verify-quotes.baseline.json:121-128 @ 1eac45e10fa4c24e096f652c02d78e5b1801cc2d sha256:26e21d27c0f7ab4f0375c7b951154c4ea2ddc121d0ec8f3747988f6fb9c8a4c3` |
+| `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:799` -> unfindable-by-construction under the `frontends/shell/POLISH-87-88-89-PREREGISTRATION.md:113` precedent, corrected_by withdrawn | ruled | `scripts/plan/verify-quotes.baseline.json:137-144 @ 1eac45e10fa4c24e096f652c02d78e5b1801cc2d sha256:6bebcf5c1f6ba02b220b0f29cd084a025ac3e48f943b672b9cc0ce20ea5318e6` |
+| `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:968` -> the same | ruled | `scripts/plan/verify-quotes.baseline.json:169-176 @ 1eac45e10fa4c24e096f652c02d78e5b1801cc2d sha256:4849ab42d34158dbfe360f28011cb7f16927d604cb4a6c37f9e1032279d702a3` |
+| the ruling these rows execute | referenced | DECISIONS-PENDING.md, RULED 2026-09-18 -- question round 16, item 5 (the human's word verbatim there) |
+| the checker's run and its own tests at 1eac45e | recorded | verify:quotes PASS -- 103 checked, 73 verified, 29 baselined, 1 advisory, 0 baseline entry errors, 2 hash-baselined; node --test scripts/plan/verify-quotes.test.mjs rc 0 |
+
+**Superseded index.** None; Amendments 1-9 are untouched and this amendment adds no claim about any cell they carry.
