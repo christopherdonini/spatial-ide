@@ -238,7 +238,7 @@ architect gate can assume the mechanical checks are green and fail only on seman
   computed and dated by `scripts/plan/health.mjs` (§5's machine-facts half), never mixed with the
   build-time lines. (`PLAN.yaml` records `dates.opened` and `dates.done`, not a stored readiness
   timestamp — the ready→done start point is the queue derivation's own, so the metric is a
-  best-available reading, not a claim of precision, and it carries no docs/08 measurement, §5.)
+  best-available reading, not a claim of precision, and it carries no docs/08 measurement, §5.) A third governance row, **record rounds per piece** (the human's standing directive of 2026-09-18, point (4) — `state/directives/2026-09-18-record-cap.md`): per node, the count of distinct gate attempts carrying a record tagged `record: true` by the custodian's hand in `state/gate-log.json`, target zero — a machine fact computed from a hand-set input, unlike the two above; the tag's predicate, the custodian's stated choice, is in `scripts/plan/README.md`'s gate-log section.
 
 ### §15a. The D: drive setup (Appendix A3, the second-SSD part)
 

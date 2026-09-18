@@ -839,12 +839,12 @@ nodes:
     depends_on: []
     needs_human: {kind: click, minutes: 2}
     gate: scripts/plan/RECORD-ROUND-COUNT-PREREGISTRATION.md
-    evidence: {branch: governance/record-round-count}
+    evidence: {pr: 87}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
-    entries: [108]
-    summary: "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form, single reviewer gate"
+    entries: [108, 109]
+    summary: "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2"
     dates: {opened: 2026-09-18, done: null}
 
   - id: governance-verify-gate-file-exists
