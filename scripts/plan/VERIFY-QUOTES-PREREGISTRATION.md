@@ -207,3 +207,14 @@ Class 3 pointer rows (round 15, item 1, clause (g)). Every pin names its commit;
 | the checker's run and its own tests at 1eac45e | recorded | verify:quotes PASS -- 103 checked, 73 verified, 29 baselined, 1 advisory, 0 baseline entry errors, 2 hash-baselined; node --test scripts/plan/verify-quotes.test.mjs rc 0 |
 
 **Superseded index.** None; Amendments 1-9 are untouched and this amendment adds no claim about any cell they carry.
+
+### Amendment 11 -- one baseline entry after PR #90 merged (2026-09-19, appended)
+
+Class 3 pointer row (round 15, item 1, clause (g)). The pin names the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:912` -> owed-correction, corrector that record's section 10 Amendment 17 row (PR #90, the test-text rename) | added | `scripts/plan/verify-quotes.baseline.json:177-185 @ 2711da4ac53ad1291b049c4e07ea2bb61019ded6 sha256:a3233c77bcf9b31ac5f6bdf7a03d5291b1bcd55d0f743fa714362cc0b7672652` |
+| the ruling this row executes | referenced | round 15, item 3 (the baseline re-derived against final main); round 14, item 2 |
+
+**Superseded index.** None; Amendments 1-10 are untouched and this amendment adds no claim about any cell they carry.
