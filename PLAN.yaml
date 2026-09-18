@@ -1668,3 +1668,21 @@ nodes:
 
   # cli lane: no unscheduled node. docs/07 does not itself name a "CLI as a first-class SKP
   # client" capability outside Brief B's own B3 stage (briefb-b3-publish-v2, above, proposed).
+
+  - id: governance-test-claims-superseded
+    title: "verify:test-claims — a SUPERSEDED status for a historical, hash-pinned claim in an append-only record"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: in-progress
+    order: 3
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md
+    evidence: {branch: governance/test-claims-superseded}
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: [111]
+    summary: "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands"
+    dates: {opened: 2026-09-18, done: null}

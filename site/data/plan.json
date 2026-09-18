@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T11:36:05.546Z",
-  "plan_hash": "03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9",
+  "generated_at": "2026-09-18T13:37:51.776Z",
+  "plan_hash": "70847d4f037c17af6ef7ef12b76277657a2c2d812f6a794a28bff23809256b32",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2638,6 +2638,35 @@
       "summary": "named last in docs/07's 1.0 list; never delays the analysis pillars",
       "dates": {
         "opened": null,
+        "done": null
+      }
+    },
+    {
+      "id": "governance-test-claims-superseded",
+      "title": "verify:test-claims — a SUPERSEDED status for a historical, hash-pinned claim in an append-only record",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "governance/test-claims-superseded"
+      },
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        111
+      ],
+      "summary": "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands",
+      "dates": {
+        "opened": "2026-09-18",
         "done": null
       }
     }

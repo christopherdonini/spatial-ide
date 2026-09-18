@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T11:36:05.441Z",
-  "plan_hash": "03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9",
+  "generated_at": "2026-09-18T13:37:51.568Z",
+  "plan_hash": "70847d4f037c17af6ef7ef12b76277657a2c2d812f6a794a28bff23809256b32",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -516,6 +516,28 @@
       },
       "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2",
       "evidence_label": "PR #87"
+    },
+    {
+      "id": "governance-test-claims-superseded",
+      "title": "verify:test-claims — a SUPERSEDED status for a historical, hash-pinned claim in an append-only record",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 3,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "governance/test-claims-superseded"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands",
+      "evidence_label": "branch `governance/test-claims-superseded`"
     }
   ],
   "proposed": [
