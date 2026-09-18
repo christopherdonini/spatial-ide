@@ -1684,3 +1684,15 @@ text is not on main, the commit named is the branch commit that carries it.
 | attempts | recorded | `state/gate-log.json` records 89, 95, 96 and this round's (on `origin/main`) |
 
 **Read this amendment first, for Amendments 1-18.**
+
+### Amendment 20 -- the architect's reduction under the record cap (2026-09-19, appended)
+
+**Written after the attempt-3 gate's findings were seen.** Filed as 20: 19 is carried by `cut/briefa-p5`, per the coordinator's numbering of 2026-09-19. Classes: **1** (a gate round's findings are its results -- round 15, item 1, clause (g)); **3** (pointer and cite rows, `docs/PREREGISTRATION-TEMPLATE.md:110-114`). Rows only, under `state/directives/2026-09-18-record-cap.md`'s point (3); pins name their commits, and where the cited text is not on main the commit named is the branch commit that carries it. Amendments 16, 17 and 19 are `cut/briefa-p5`'s and are not in this file.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 18's closing line | narrowed: it resolves Amendment 15's rows and this branch's P4 record only, and says nothing about Amendments 16 and 17 | Amendment 18, closing line |
+| Amendment 18's class line, class 2 | corrected: class 2 is the deviation class at `docs/PREREGISTRATION-TEMPLATE.md:106-109` -- the prediction is never edited to match; "Scope not edited" is class 6's gloss (`docs/PREREGISTRATION-TEMPLATE.md:125-131`) and is withdrawn | Amendment 18, preamble |
+| `ADMISSION-RESULTS.md` row #8's verdict label | recorded defect, not regenerated here: the label names retention among the components compared and §3 row 8 registers no retained declared order; the row's own note is the authoritative record of what was compared, and the label is built from a fixed string rather than that note's list (`engine/tests/admission_p4_corpus.rs`, `verdict_label`) | row `engine/ADMISSION-RESULTS.md:19 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:da0009efa2cb73e025aa963669e2682678d721ec381b3685ea506af36311eb87`; note `engine/ADMISSION-RESULTS.md:39 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:61c6c6bbddf3de0a7458f7df0f886da2212163683828170095495c2abe87f054` |
+
+**Read this amendment first.**
