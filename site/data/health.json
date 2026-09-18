@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-09-18T22:20:25.807Z",
+  "generated_at": "2026-09-18T23:04:15.109Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\p3b-test-names\\site\\index.html differs from a fresh generation",
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\p3b-test-names\\site\\data\\plan.json differs from a fresh generation"
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 32153423872,
+        "bytes": 31785320448,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415106007040,
+        "bytes": 415106056192,
         "total": 500090007552
       }
     ]
@@ -55,7 +55,7 @@
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 32
+    "n": 33
   },
   "gate_first_pass": {
     "present": true,
@@ -72,8 +72,9 @@
       "governance-record-round-count": 1,
       "briefa-p3b-test-names": 1,
       "briefa-p5-gate-tests": 1,
-      "briefa-p4-corpus-run": 1
+      "briefa-p4-corpus-run": 1,
+      "briefa-p6-describe-fields": 1
     },
-    "total": 16
+    "total": 17
   }
 }
