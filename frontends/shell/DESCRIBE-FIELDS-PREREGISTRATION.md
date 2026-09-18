@@ -1,0 +1,11 @@
+# Describe-summary field rendering -- five-line short form (`AUTONOMY.md` §21d)
+
+Committed before any code, per the short-form discipline.
+
+```
+Authority: DECISIONS-PENDING.md RULED 2026-09-18, question round 16, item 1 (the human's word, "Render before Part N"); the sight first recorded at entry 111 (1); AUTONOMY.md §21d
+Scope: frontends/shell/src/admission/describeSummaryText.ts, frontends/shell/src/admission/describeSummaryText.test.ts, frontends/shell/src/admission/DescribeSummary.tsx, PLAN.yaml; declared line budget <= 40 non-generated (insertions + deletions)
+Change: two pure functions appended to describeSummaryText.ts -- crsProvenanceLine(crs) returning `${crs.provenance}, ${crs.axis_provenance}`, and sessionStatementLine(identity) returning identity.session_statement verbatim or null -- and DescribeSummary.tsx rendering a "CRS provenance" row after the existing License row, plus a "Session identity" row rendered only when sessionStatementLine's result is non-null
+Tests+mutation: "crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated" -- mutation: the two fields swapped in the function body; "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal" -- mutation: the non-null return value replaced with a fixed paraphrase
+Out-of-scope: no ADR status line or amendment; no security posture (ADR-020/ADR-009/ADR-021); no wire, control-plane or data-plane field, literal or message (protocol/skp/** untouched -- the three fields already exist on skp/0.3's DescribeResponse, frontends/shell/src/skp/types.ts:89,92,124); no stated guarantee or invariant changed. Rendering three already-wire fields is new user-visible behaviour, which crosses §21c's "no new user-visible behaviour" bound by construction (disclosed, not denied) -- so per §21b's mid-piece clause the architect gate is taken alongside the reviewer, this five-line form kept, mirroring cut/briefa-p3b-test-names's shape.
+```
