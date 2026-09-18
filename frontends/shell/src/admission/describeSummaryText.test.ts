@@ -101,12 +101,12 @@ describe("crsProvenanceLine (round 16, item 1: crs.provenance and crs.axis_prove
 
 describe("sessionStatementLine (round 16, item 1: identity.session_statement rendered verbatim, only when non-null)", () => {
   // sessionStatementLine is a pass-through (describeSummaryText.ts:56-58); this unit test drives it
-  // from a plainly-marked placeholder, not the wire's sentence. The wire's actual bytes
-  // (SESSION_IDENTITY_STATEMENT, DECISIONS-PENDING.md round 16, item 1) are proven reaching this
-  // same function from the real fixture in the seam assertion
-  // `expect(sessionStatementLine(res.identity)).toBe(res.identity.session_statement)` added to
-  // fixtures.test.ts's "describe response for a session-ordinal dataset..." test, which loads
-  // v0-describe-response-session-ordinal.json.
+  // from a plainly-marked placeholder, not the wire's sentence. The real fixture's own bytes --
+  // the shared fixture `protocol/skp/tests/fixtures.rs:120` also reads -- reach this function
+  // unchanged, proven by the seam test named at fixtures.test.ts:174 ("describe response for a
+  // session-ordinal dataset..."), which loads v0-describe-response-session-ordinal.json. The
+  // fixture's transcription of `SESSION_IDENTITY_STATEMENT` (engine/src/identity.rs:145) is not
+  // asserted by any test -- a pre-existing fixture-regime gap this piece did not create.
   //
   // RECORDED MUTATION for "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal":
   // replace the returned value with a paraphrase (`return identity.session_statement === null ? null : "a session-ordinal identity";`).

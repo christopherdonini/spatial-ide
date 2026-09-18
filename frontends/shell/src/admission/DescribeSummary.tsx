@@ -13,7 +13,6 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
     describe.row_count.value !== null
       ? `${describe.row_count.value} (${describe.row_count.basis})`
       : `not established (${describe.row_count.basis})`;
-  const sessionStatement = sessionStatementLine(describe.identity);
 
   return (
     <div className="describe-summary">
@@ -47,10 +46,10 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
         <dt>CRS provenance</dt>
         <dd>{crsProvenanceLine(describe.crs)}</dd>
 
-        {sessionStatement !== null && (
+        {sessionStatementLine(describe.identity) !== null && (
           <>
             <dt>Session identity</dt>
-            <dd>{sessionStatement}</dd>
+            <dd>{sessionStatementLine(describe.identity)}</dd>
           </>
         )}
       </dl>

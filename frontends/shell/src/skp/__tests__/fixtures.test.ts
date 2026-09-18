@@ -190,7 +190,7 @@ describe("SKP v0 shared fixtures", () => {
     // this fixture's own JSON carries it at
     // `protocol/skp/tests/data/v0-describe-response-session-ordinal.json:29`.
     expect(sessionStatementLine(res.identity)).toBe(res.identity.session_statement);
-    expect(crsProvenanceLine(res.crs)).toBe(`${res.crs.provenance}, ${res.crs.axis_provenance}`);
+    expect(crsProvenanceLine(res.crs)).toBe("crs:format-default, axis:declared");
     // The equirectangular sentence travels over the wire from the Rust constant. This test asserts
     // its bytes are carried; it is deliberately the only place in this frontend that quotes it, and
     // it quotes it from the fixture rather than retyping it into rendering code.
