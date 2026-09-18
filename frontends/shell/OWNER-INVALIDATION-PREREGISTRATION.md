@@ -1153,3 +1153,22 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 ---
 
 **Read this amendment first.** §10's amendments correct each other only by a later one; this is the last, and it is where any earlier amendment's current state is written.
+
+---
+
+### Amendment 16 -- erratum rows (2026-09-18, appended; the architect's reduction under the human's standing directive of 2026-09-18, point (1): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`)
+
+**Written after the gates' attempt-6 findings were seen.** **Read this amendment first.** Classes: **1** for a withdrawal or narrowing row (round 15, item 1, clause (g)); **3** for a pointer row. Every pin names its commit; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+**Superseded index** (round 12, item 1 (e)).
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 15's "Scope of the no-line rule" paragraph | narrowed: certifies no cite it does not list | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:1109 @ 959bd088156b sha256:a7ce189995aeea6d782baacb41a5a0d1b3a5c363c8e4efffb2ece758081511f7` |
+| Amendment 15's row on Amendment 11 (b)'s missing class number | settled: class 7 | round 14, item 2 |
+| Amendment 15, gap 1 | settled | round 14, item 2 |
+| Amendment 15, gap 2 | settled | round 15, item 1, clause (g) |
+| Amendment 15, gap 3 | settled | round 14, item 2 |
+| Amendment 13 (3), and Amendment 8's two driver-output quotes it checks | recorded: evidence, not Authority; the rule dated non-retroactive | round 15, item 4 |
+
+**Read this amendment first.**

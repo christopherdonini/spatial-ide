@@ -1612,3 +1612,20 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 ---
 
 **Read this amendment first.** §12e's amendments correct each other only by a later one; this is the last, and it is where any earlier amendment's current state is written.
+
+---
+
+### Amendment 13 -- erratum rows (2026-09-18, appended; the architect's reduction under the human's standing directive of 2026-09-18, point (1): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`)
+
+**Written after the gates' attempt-6 findings were seen.** **Read this amendment first.** Classes: **1** for a withdrawal or narrowing row (round 15, item 1, clause (g)); **3** for a pointer row. Every pin names its commit; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+**Superseded index** (round 12, item 1 (e)).
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 11's "Classes used" line | corrected: Amendment 12's row on it withdrawn as to the count | `engine/ADMISSION-PREREGISTRATION.md:1534 @ 959bd088156b sha256:94bd466768a83d998f7b9184c9e698b76a46438f83d0cd33828c0bcf123e22d9` |
+| Amendment 12, gap 1 | settled | round 14, item 2 |
+| Amendment 12, gap 2 | settled | round 15, item 1, clause (g) |
+| Amendment 12, gap 3 | settled | round 14, item 2 |
+
+**Read this amendment first.**
