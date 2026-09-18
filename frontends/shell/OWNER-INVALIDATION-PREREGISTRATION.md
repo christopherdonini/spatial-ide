@@ -1198,5 +1198,6 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 4 (c) item 2's table, T6 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:630 @ 46cde2c sha256:d906473971bfdfa80a82fe717c78cc1e657ffc75187a6aeaf288b47437a368c9` |
 | Amendment 4 (c) item 2's table, T7 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:631 @ 46cde2c sha256:d04e3d6c2914b39d7483aae409fe02dc1a37db85d9d7f61abea52f2551198465` |
 | Amendment 4 (f) table, the instrument-exemption row (`GenerationRegistry::dead_ticket_count`) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:677 @ 46cde2c sha256:2a2ebfac9b64a428c084c4faab28defafb25e96e6d1c5588973528474fd4f8ff` |
+| Amendment 10 (b), the §4-T6 paragraph | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:912 @ 46cde2c sha256:af2ecbc2dab258ffb996d260ac1517873c52eb4068247d2dd3da57ea42abb5c9` |
 
 **Read this amendment first.**
