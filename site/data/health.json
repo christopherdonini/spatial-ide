@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T22:13:28.618Z",
+  "generated_at": "2026-09-18T22:20:33.651Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 32159592448,
+        "bytes": 32152723456,
         "total": 510319915008
       },
       {
@@ -44,6 +44,13 @@
       "minutes": 5,
       "opened": "2026-09-18",
       "age_days": 0
+    },
+    {
+      "id": "decision-generated-outputs-merge-strategy",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-19",
+      "age_days": -1
     }
   ],
   "median_opened_to_done": {
