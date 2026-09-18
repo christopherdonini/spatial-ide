@@ -1670,7 +1670,7 @@ nodes:
   # client" capability outside Brief B's own B3 stage (briefb-b3-publish-v2, above, proposed).
 
   - id: briefa-p3b-test-names
-    title: "P3b test-name alignment -- rename the six tests OWNER-INVALIDATION-PREREGISTRATION.md section 5 claims (T3-T7, T9) to the exact strings the tests ended up with, so verify:test-claims binds them once briefa-p3b-owner-side-invalidation is done (round 14 item 2's test-text exception)"
+    title: "P3b test-name alignment -- rename the six tests (T3-T7, T9) to the exact strings OWNER-INVALIDATION-PREREGISTRATION.md §4 declares, so verify:test-claims binds them once briefa-p3b-owner-side-invalidation is done (round 14 item 2's test-text exception)"
     kind: task
     lane: engine
     phase: prototype
@@ -1682,7 +1682,7 @@ nodes:
     evidence: {branch: cut/briefa-p3b-test-names}
     felt_verdict: false
     entries: [110]
-    summary: "Short-form piece, dispatched 2026-09-18 (entry 110): rename one Rust fn and five vitest test titles in place, no assertion or preregistration change, so the six section-5 claims verify-test-claims.mjs currently reports as planned become binding matches"
+    summary: "Short-form piece, dispatched 2026-09-18 (entry 110): rename one Rust fn and five vitest test titles in place, no assertion or preregistration change, so the six §4 claims verify-test-claims.mjs currently reports as planned become binding matches"
     budget_minutes: 30
     generation: 1
     dates: {opened: 2026-09-18, done: null}
