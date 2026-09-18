@@ -1,18 +1,17 @@
 {
-  "generated_at": "2026-09-18T23:04:58.603Z",
+  "generated_at": "2026-09-18T23:09:19.571Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\agent-a9a46cfdf5ad47189\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\agent-a9a46cfdf5ad47189\\site\\data\\plan.json differs from a fresh generation"
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\agent-a9a46cfdf5ad47189\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 31783198720,
+        "bytes": 31817551872,
         "total": 510319915008
       },
       {
