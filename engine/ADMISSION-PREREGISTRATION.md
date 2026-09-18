@@ -1629,3 +1629,23 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 12, gap 3 | settled | round 14, item 2 |
 
 **Read this amendment first.**
+
+### Amendment 15 -- P4 record (2026-09-18, appended; re-appended after gate-log record 89)
+
+**Filed as 15, not the mechanically-next 14**: at this piece's `git merge origin/main` (`26f3154`),
+§12e ran through Amendment 13 only; Amendment 14 is reserved for the concurrent P3b test-names
+branch per the coordinator's instruction of 2026-09-18. Every pin names its commit; where the cited
+text is not on main, the commit named is the branch commit that carries it.
+
+| id | status | reference |
+| --- | --- | --- |
+| runner | recorded | `engine/tests/admission_p4_corpus.rs:661-664 @ df31363d1fdfa6075566c347d62e6b54599de917 sha256:cf524a0d4596c8ee9b42d7233077b69ab6fb68c97e357090ea14c459860569fa` |
+| results | recorded | `engine/ADMISSION-RESULTS.md:1 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:2eb8d0f50a9be0a1eaec1a11304dec4b8206f5bf97ce0fef8afd055511533ca0` |
+| deviation-M-4 | DEVIATION | results row `engine/ADMISSION-RESULTS.md:26 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:2b24ca6d4a94386745787677c279fb64055372749a268e9b789064bfa74eb877` vs §4 mutation table, M-4 |
+| not-comparable | recorded | rows `engine/ADMISSION-RESULTS.md:27-28 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:f6d9c3960045a8f4cb042fd3bd0cbf35c40c3eeb545c3120da58227e51b2dd6e`; notes `engine/ADMISSION-RESULTS.md:47-48 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:db61f52a29496a49dc296d8e708b770cc23ccc870732519361bd3b99e2665f7e` |
+| predictions | recorded | `engine/ADMISSION-RESULTS.md:59-68 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:8a1620cd2a5cccce058a82bc15c745cad082d3020209e5c3612581cd9ff3c7f4` |
+| G-A5 | recorded | `engine/ADMISSION-RESULTS.md:50-57 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:8db618538cddb9f674dc6cb2e8fdd96f8f1df5372d7aab53fd61c3c44680f9fa` |
+| G-A6 | recorded | `git diff --name-only origin/main...d2a5d39400b0244d795db5f71c84058773828b7f` -- 3 files (`engine/ADMISSION-PREREGISTRATION.md` appended, `engine/ADMISSION-RESULTS.md` new, `engine/tests/admission_p4_corpus.rs` new), no existing test file touched; `cargo test --workspace --locked @ d2a5d39400b0244d795db5f71c84058773828b7f` -- rc 0, 647 passed / 0 failed / 39 ignored, 0 warning lines |
+| attempt 1 | recorded | `state/gate-log.json` record 89 (on `origin/main`; not yet present on this branch's own copy) |
+
+**Read this amendment first.**
