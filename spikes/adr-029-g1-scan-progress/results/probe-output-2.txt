@@ -1,0 +1,102 @@
+ADR-029 G1 probe -- duckdb 1.10505.0, fixture: C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet
+--- config A: defaults (no progress-bar pragma) (7 samples) ---
+  [0] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [2] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [3] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [4] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [5] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [6] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+--- config A: defaults (no progress-bar pragma), deduplicated ---
+  (0) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x7
+--- config B: enable_progress_bar, progress_bar_time=0 (10 samples) ---
+  [0] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [4] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [5] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [6] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [7] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+--- config B: enable_progress_bar, progress_bar_time=0, deduplicated ---
+  (0) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x2
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x6
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x1
+  (3) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x1
+  config B: over 9 active-window samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000 (the load-bearing figure -- monotonicity alone is vacuous at 0), 1 post-active sample(s), all reset to the unavailable sentinel = true
+--- config C run 1: pending-task driver (13 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [11] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [12] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 1: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x9
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 1: over 12 active-window samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000 (the load-bearing figure -- monotonicity alone is vacuous at 0), 1 post-active sample(s), all reset to the unavailable sentinel = true
+--- config C run 2: pending-task driver (20 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [11] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [12] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [13] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [14] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [15] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [16] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [17] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [18] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [19] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 2: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x16
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 2: over 19 active-window samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000 (the load-bearing figure -- monotonicity alone is vacuous at 0), 1 post-active sample(s), all reset to the unavailable sentinel = true
+--- config C run 3: pending-task driver (20 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [11] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [12] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [13] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [14] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [15] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [16] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [17] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [18] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [19] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 3: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x16
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 3: over 19 active-window samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000 (the load-bearing figure -- monotonicity alone is vacuous at 0), 1 post-active sample(s), all reset to the unavailable sentinel = true

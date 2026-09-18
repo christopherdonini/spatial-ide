@@ -786,7 +786,7 @@ nodes:
     depends_on: []
     needs_human: {kind: click, minutes: 5}
     gate: scripts/plan/VERIFY-QUOTES-PREREGISTRATION.md
-    evidence: {branch: governance/verify-quotes}
+    evidence: {pr: 91}
     budget_minutes: 120
     generation: 1
     felt_verdict: false

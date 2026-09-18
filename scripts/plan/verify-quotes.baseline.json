@@ -1,0 +1,271 @@
+{
+  "$doc": "entries leave when corrected; none is added except by a ruling; a new mismatch always fails. hashEntries is a sibling baseline for a hash-reference finding (round 15, item 3), same shape, same rule.",
+  "entries": [
+    {
+      "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
+      "line": 432,
+      "words": "license.at is a semantic input, not build timing, and the distinction is",
+      "reason": "false trigger: line ~428's 'read verbatim from one named source metadata key' describes an unrelated field; this callout is the ADR's own original prose, not an external quotation -- a tool false trigger, not an offender (round-10 finding 8).",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md",
+      "line": 780,
+      "words": "a route recorded, not a guarantee. This format records where corresponding source",
+      "reason": "source is kernel/src/bundle/mod.rs:359-362's CORRESPONDING_SOURCE_NOTE constant; wording matches, but its Rust line-continuation backslash survives normalizeText as a stray character.",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+      "line": 403,
+      "words": "the accepted mechanism is unchanged; this replaces a selector the acceptance never",
+      "reason": "source DECISIONS-PENDING.md, entry 54, ends '...the acceptance never covered' with no closing period; this blockquote adds one not in the source; an appended ADR-020 note is owed.",
+      "disposition": "owed-correction",
+      "corrected_by": "an appended ADR-020 note, owed",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+      "line": 519,
+      "words": "session log: 1788855035342 info data-plane expected origin (config mirror): http://localhost:5180 stderr: [spatial-ide-shell]",
+      "reason": "source is a live session log under %LOCALAPPDATA%\\dev.spatialide.shell\\logs, never a tracked file -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "docs/adr/ADR-020-data-plane-origin-admission-for-an-embedded-consumer.md",
+      "line": 573,
+      "words": "1788864076672 error ADR-020 Amendment 1: the main window's configured url (External(Url {",
+      "reason": "source is a live session log under %LOCALAPPDATA%\\dev.spatialide.shell\\logs, never a tracked file -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 949,
+      "words": "a false status string does not sit on main between P3a and",
+      "reason": "source DECISIONS-PENDING.md, round 5, item 1; the two nested strings ('Everything read so far...', 'The source file changed...') are re-typed here in single quotes, the source uses double quotes around both -- not byte-for-byte; correction owed in P3b's record round (appended).",
+      "disposition": "owed-correction",
+      "corrected_by": "P3b, engine §12e Amendment 9 (appended statement; the original bytes are immutable)",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 993,
+      "words": "Adopt the architect's sentence as written, with one addition: the accessor's doc",
+      "reason": "source DECISIONS-PENDING.md, round 5, item 4; 'test-only.' is re-typed here in single quotes, the source uses double quotes around the same word -- not byte-for-byte; correction owed in P3b's record round (appended).",
+      "disposition": "owed-correction",
+      "corrected_by": "P3b, engine §12e Amendment 9 (appended statement; the original bytes are immutable)",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 1375,
+      "words": "Open; issue a query; mutate the file (mutation fixture); the next read",
+      "reason": "Amendment 6 (iii)'s own quote of §12b's G-A2 (:221): G-A2 actually ends '...picks refused; status text verbatim. Asserted...', not '...picks refused; late batches dropped. Asserted...' -- a genuine misquote in an already-landed, append-only amendment (P3b, closed under the record cap). Amendment 8 (2), :1448, identifies the error by description; §10's append-only rule forbids editing Amendment 6's own bytes.",
+      "disposition": "owed-correction",
+      "corrected_by": "engine/ADMISSION-PREREGISTRATION.md Amendment 8 (2) (:1448; appended statement identifying the error; the original Amendment 6 bytes are immutable)",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 1393,
+      "words": "§4 of P3b's preregistration declares a T10 E2E step",
+      "reason": "Amendment 7 (i)'s quote of Amendment 6 (ii) (:1369) elides, marked with an honest '…', the clause '-- the reason is recorded in P3b's §10 Amendment 4 (e) with its two blockers,' -- a pointer to where the reason is documented, not a negation, condition or qualifier of the retained sentence's meaning (round 11 item 3's rider, applied); this tool does not recognize '…' as an elision marker and cannot read across one by construction (this file's own DISCLOSED GAPS section).",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 1425,
+      "words": "What is missing for the gate itself is the single end-to-end run",
+      "reason": "Amendment 7 (iii)'s own quote of Amendment 6 (iii) (:1377): Amendment 6 (iii) actually ends '...the single end-to-end run over a real mutated fixture, which is (ii)'s owed T10.', not '...T10 is the first half of.' -- a genuine misquote in an already-landed, append-only amendment (P3b, closed under the record cap). Amendment 8 (1), :1446, identifies the error by description; §10's append-only rule forbids editing Amendment 7's own bytes.",
+      "disposition": "owed-correction",
+      "corrected_by": "engine/ADMISSION-PREREGISTRATION.md Amendment 8 (1) (:1446; appended statement identifying the error; the original Amendment 7 bytes are immutable)",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 1446,
+      "words": "What is missing for the gate itself is the single end-to-end run",
+      "reason": "Amendment 8 (1)'s own deliberate illustrative re-quotation of Amendment 7 (iii)'s wrong sentence, reproduced on purpose to document the correction (a case round-12's same-file exclusion still catches as a self-quote, but not a cross-document one) -- by design this can never verify against any TRUE source, since it exists to show what the wrong quote said, not to assert correct content.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "engine/ADMISSION-PREREGISTRATION.md",
+      "line": 1448,
+      "words": "picks refused; late batches dropped. Asserted at the pre-check and at",
+      "reason": "Amendment 8 (2)'s own deliberate illustrative re-quotation of Amendment 6 (iii)'s wrong sentence, reproduced on purpose to document the correction -- by design this can never verify against any TRUE source, since it exists to show what the wrong quote said, not to assert correct content.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "engine/LOD-PREREGISTRATION.md",
+      "line": 380,
+      "words": "§1 and §5 gain a named follow-on, dated 2026-09-16: tier building",
+      "reason": "introduced 'The architect's text, verbatim:' -- an architect-agent design consult session, never committed as its own tracked document; three paraphrased restatements exist (DECISIONS-PENDING.md entry 99, state/questions/round-8.md, engine/LOD-RESULTS.md) but none is byte-identical to this blockquote -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/HOVER-CONFIRMING-MARKER-PREREGISTRATION.md",
+      "line": 124,
+      "words": "state was sighted mid-gesture at 1/2 notch(es) that had an id standing",
+      "reason": "source is frontends/shell/e2e/regression.mjs:1657's template string; the quote reproduces one run's runtime-filled values, which the static template source never contains literally.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/HOVER-REPICK-PREREGISTRATION.md",
+      "line": 53,
+      "words": "8. No re-pick at a stored pixel that does not re-validate the",
+      "reason": "source is the architect consult tracked at state/drafts/post-tag/architect-consult-lod-47-66b-ordering.md:65-71 (tracked under round 14, item 4, after this entry was first written as unfindable-by-construction against an untracked source); the seven quoted items are byte-identical to that source except that item 14's trailing citation (the parenthesised DECISIONS-PENDING.md line references) is dropped without an ellipsis mark -- a dropped trailing citation is not a negation, condition or qualifier, so the checker's difference finding is a false trigger against a quote verbatim in substance. RULED 2026-09-18 (round 16, item 5): tool-false-trigger, with this reason corrected from the untracked-source reason it replaced.",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 634,
+      "words": "engine.source_changed: says only what is true at this commit",
+      "reason": "the quote's true source, frontends/shell/src/admission/formatRefusal.test.ts:150, is named in the same sentence but with no ':line' -- nearestPathIntro's 200-char window instead gates against the nearest REAL path:line cite, an unrelated 'formatRefusal.ts:97-100' earlier in the same sentence, which does not carry this test description string; a tool false trigger (the window picked the wrong of two cites in one sentence), not a genuine misquote -- verified: this exact string is at frontends/shell/src/admission/formatRefusal.test.ts:150, tree-wide search finds it.",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 799,
+      "words": "Fourth attempt with the full A9' mechanism - the zoom-notch loop around",
+      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries. RULED 2026-09-18 (round 16, item 5): the record is closed under the record cap of 2026-09-18 and names no corrector, so the correction no piece can ever make is placed under the frontends/shell/POLISH-87-88-89-PREREGISTRATION.md:113 precedent (round 12) -- unfindable-by-construction as a disposition of record, not of fact: the source is DECISIONS-PENDING.md entry 100 and the difference is the one re-typed glyph (the first of the two identical occurrences). The owed correction this entry carried is withdrawn by the ruling, not discharged.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 807,
+      "words": "resident before the change: 188665 vertices / 10000 features; interior-verified pixel",
+      "reason": "`S2-settle-and-precondition` run's own captured output, introduced 'PASS, verbatim:' -- an e2e harness run's report (frontends/shell/e2e/out/, .gitignore'd), never a tracked file -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 859,
+      "words": "warn tile-session-ended-source-changed: engine.source_changed: refused: the source file changed while",
+      "reason": "observation.sessionLog.sourceChangedLines, introduced 'verbatim:' -- a captured session log / e2e harness output line (frontends/shell/e2e/out/ or %LOCALAPPDATA%\\dev.spatialide.shell\\logs, both .gitignore'd), never a tracked file -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 952,
+      "words": "§0-§9 are deliberately NOT re-derived at this head",
+      "reason": "introduced by this document's own self-cite 'Amendment 10 (a), :898' -- stale (the true location is :902; a later insertion shifted it, a same-shape defect round 14's clause (a′) exists to prevent going forward); nearestPathIntro's 200-char window instead resolves the bare ':898' fragment against an unrelated 'App.tsx:1573' cite earlier in the same sentence, a tool false trigger -- verified: the phrase is at this document's own :902, a prefix of that line once bold markers are stripped.",
+      "disposition": "tool-false-trigger",
+      "ruling": "round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 968,
+      "words": "Fourth attempt with the full A9' mechanism - the zoom-notch loop around",
+      "reason": "the human's own ruling, DECISIONS-PENDING.md entry 100, reads \"A9′\" (the prime glyph, U+2032) where this document re-types \"A9'\" (a straight apostrophe); normalizeText deliberately does not fold a prime to an apostrophe (each is content, not markup) -- a genuine, if minor, re-typed glyph, the same shape as the ADMISSION-PREREGISTRATION.md :949/:993 entries; this is the second of two identical occurrences (the first at :799), same-file quote-exclusion means neither can verify against the other. RULED 2026-09-18 (round 16, item 5): the record is closed under the record cap of 2026-09-18 and names no corrector, so the correction no piece can ever make is placed under the frontends/shell/POLISH-87-88-89-PREREGISTRATION.md:113 precedent (round 12) -- unfindable-by-construction as a disposition of record, not of fact: the source is DECISIONS-PENDING.md entry 100 and the difference is the one re-typed glyph (the second of the two identical occurrences). The owed correction this entry carried is withdrawn by the ruling, not discharged.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 16, item 5 (2026-09-18); previously round 15, item 3"
+    },
+    {
+      "file": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
+      "line": 912,
+      "words": "reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code",
+      "reason": "the quoted App.test.ts title was renamed by PR #90 (cut/briefa-p3b-test-names, merged 2026-09-18) to the section-4 T6 string under round 14 item 2's test-text exception, so the source no longer carries it; the quote was byte-exact at 46cde2c and this record's own section-10 Amendment 17 row pins line 912 there as superseded; the original line stays by append-only, so the correction is the erratum row, not a rewrite. Found when the checker's baseline was re-run against main after PR #90 merged (round 15, item 3: the baseline re-derived against final main).",
+      "disposition": "owed-correction",
+      "corrected_by": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md section 10 Amendment 17, its line-912 row (PR #90, merged 2026-09-18), landed",
+      "ruling": "round 15, item 3 (the baseline re-derived against final main); round 14, item 2 (the test-text exception the rename ran under)"
+    },
+    {
+      "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+      "line": 113,
+      "words": "via the real panel DOM, scan completed on its own;",
+      "reason": "source is an e2e harness run's own console line (frontends/shell/e2e/out/, .gitignore'd), never a tracked file -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+      "line": 113,
+      "words": "\"[FIND'] PASS (14878ms): applied \\\"id > 99900\\\" via the real panel DOM, scan",
+      "reason": "source is the same e2e harness run's own FIND' log line (frontends/shell/e2e/out/, .gitignore'd; npm run e2e:regression), never a tracked file -- cannot be found here by construction (a second, backtick-introduced passage at this line, round-10 finding 10's backtick recognition). Round 12 item 4 (the two unruled baseline entries) joins the baseline on this disposition -- the run genuinely happened (the log is real output) but a .gitignore'd path is not a record this tool, or an appended amendment, can ever point at; owed-correction's 'source is real and the record immutable' condition names a correction naming its piece, and there is no piece that can correct a citation to a file this tree deliberately never tracks.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 12"
+    },
+    {
+      "file": "frontends/shell/POLISH-87-88-89-PREREGISTRATION.md",
+      "line": 119,
+      "words": "kernel/src/skp.rs:497 pins build_viewport_query to Result<_, FilterError>, so the ? at kernel/src/skp.rs:521 invokes",
+      "reason": "source is the reviewer/architect gate's own review comment text, never committed to the tracked tree -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+      "line": 76,
+      "words": "The restated target (the load-bearing correction): at fit-to-extent the viewport IS the",
+      "reason": "labelled 'quoted verbatim' but the named source (state/NEXT-CUT.md, per this document's own §2 header, 'lifted verbatim from NEXT-CUT.md') is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+      "line": 86,
+      "words": "C1 No docs/08 normative row lands this cut, not even \"proposed\" -",
+      "reason": "labelled 'quoted verbatim' but the named source (state/NEXT-CUT.md, per this document's own §2 header, 'lifted verbatim from NEXT-CUT.md') is a rolling file, since overwritten -- not a fixed byte-for-byte target.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "frontends/shell/RESIDENCY-PREREGISTRATION.md",
+      "line": 125,
+      "words": "≤ vsync interval, zero dropped frames, across the benchmark matrix below (06)",
+      "reason": "source docs/08_Testing.md:5 matches through '...spike M4' but this quote elides the rest with an ellipsis -- not byte-for-byte; round 11 item 3 adopted the elision clause (an honest elision is not a misquote), but the elided remainder's actual shape (not reproduced here) is a qualifier on what the display's own interval means (the fixed reference hardware profile's own refresh rate, not whatever a runtime negotiates) AND a negation -- power-saving mode or variable refresh silently lowering the target does not satisfy this budget, only relocates the miss. Round 14, item 3: the human ruled this an owed elision correction, not a tool-false-trigger -- an appended note in frontends/shell/RESIDENCY-PREREGISTRATION.md restating the passage by reference is owed.",
+      "disposition": "owed-correction",
+      "corrected_by": "frontends/shell/RESIDENCY-PREREGISTRATION.md Amendment 28 (:747; appended, landed -- a corrected reference to docs/08_Testing.md:5, not an edit of §2e's own bytes)",
+      "ruling": "round 14, item 3"
+    },
+    {
+      "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",
+      "line": 9,
+      "words": "The exemption can reach an ADR - an §21a-category file exempted by",
+      "reason": "source is the reviewer gate's own finding-4 review comment, never committed to the tracked tree -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    },
+    {
+      "file": "scripts/plan/TEST-CLAIMS-PLANNED-PREREGISTRATION.md",
+      "line": 10,
+      "words": "The code is a union over nodes: … erify-test-claims.mjs:157-168 skips done nodes",
+      "reason": "source is the architect gate's own finding-5 review comment, never committed to the tracked tree -- cannot be found here by construction.",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 11, 2026-09-17"
+    }
+  ],
+  "hashEntries": [
+    {
+      "file": "engine/LOD-PREREGISTRATION.md",
+      "line": 541,
+      "reason": "bare hash reference has no preceding path:line cite to bind to in the same paragraph",
+      "note": "the paragraph names no path at all (the working file, engine/tests/lod_tier_builder.rs, is established only by Amendment 12(a)'s earlier item, not restated in this item's own paragraph); genuinely unfixable by this mechanism's construction (round 15, item 4(c)).",
+      "disposition": "unfindable-by-construction",
+      "ruling": "round 15, item 4 (c)"
+    },
+    {
+      "file": "engine/LOD-PREREGISTRATION.md",
+      "line": 545,
+      "reason": "unbound hash reference -- a sha256:<hex> token not recognized as part of a `path:line @ rev sha256:hex` reference",
+      "note": "prose (\"'s own definition\") sits between the cited docs/PREREGISTRATION-TEMPLATE.md:113-116 and its sha256: token, which this grammar cannot bridge; owed-correction per round 15, item 4(c), already acknowledged by name. The reference is rev-less and its span moved with round 15's adoption (hashes 20984e79… at bd8f1f9 and earlier, de8e6eca… at HEAD); the substantive correction is in LOD Amendment 14, named by corrected_by.",
+      "disposition": "owed-correction",
+      "corrected_by": "engine/LOD-PREREGISTRATION.md Amendment 14's row on Amendment 13's nine sha256: references (:627; already landed -- checker commit fbf3d55, 'seven bound, two reported')",
+      "ruling": "round 15, item 4 (c)"
+    }
+  ]
+}
