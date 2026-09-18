@@ -1628,6 +1628,28 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 12, gap 2 | settled | round 15, item 1, clause (g) |
 | Amendment 12, gap 3 | settled | round 14, item 2 |
 
+**Read this amendment first, for Amendments 1-13.**
+
+---
+
+### Amendment 16 -- P5's gate-test record: G-A1 through G-A6 discharged or referenced (2026-09-18, appended)
+
+**Written after this piece's results were seen (class 1, `docs/PREREGISTRATION-TEMPLATE.md:103-105 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:bf67639cc8f151ef4bd47156a7421ec9b89bf85e602bbb8e20575c02edbf54ed`).** The two G-A4 mutation rows are class 4 (`docs/PREREGISTRATION-TEMPLATE.md:115-118 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:20984e79f196cfddd1d63032182f828a92fb66f8e43767c574219c27243dadfb`). Filed as 16, not the mechanically-next 14: Amendment 14 is carried by cut/briefa-p3b-test-names (PR #90) and Amendment 15 by cut/briefa-p4, both concurrent branches, per the coordinator's numbering of 2026-09-18; this amendment does not touch Amendments 1-13.
+
+**Branch-commit disclosure.** Pins into `fa373f237ebfa9a3af8a5eb622fc439fa758fa5a`, `41fa58ed29172e57d62015b7e1ec0e6450f20acc` and `8fb09ddc1f8a157f8c21ba0aef36c01267164718` name branch commits on `cut/briefa-p5`, not yet on `main` at this writing (the same disclosure Amendment 13's head states for a branch pin). Report paths under `frontends/shell/e2e/out/` are gitignored, real-app run output, cited by path and this run's date (2026-09-18) only -- no report content reproduced.
+
+| id | status | reference |
+| --- | --- | --- |
+| G-A1 -- fast admission is structural | discharged | Instrument: `engine/src/dataset.rs:82-83 @ 41fa58ed29172e57d62015b7e1ec0e6450f20acc sha256:5989c425f06b26c6c116c42fae1b8927e1f8b62888306cd8b98e85187bd07784`. Test: `engine/tests/admission_instruments.rs:58-59 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:797f127bdd5810febcfa89c8ce5290640079b092a7e8a33cf7faf7a6aaac63bb` |
+| G-A2 -- pre-check route | reconfirmed, byte-identical to T10 | `frontends/shell/e2e/out/source-changed-1789739677575.json` (2026-09-18, `SPATIAL_E2E_SOURCE_CHANGED_ROUTE` unset, 8/8 steps PASS) |
+| G-A2 -- post-check route | discharged, real app, three runs | Isolated: `frontends/shell/e2e/out/source-changed-1789739850935.json` (2026-09-18, ROUTE=post, 9/9 steps PASS incl. S5d). Mutation, `endCandidateSession`'s `clearAllTiles()` call removed (`frontends/shell/src/residency/candidateArmSession.ts:1076 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:cf363518c47ce44d0f43d6fd9057ef38c9c19cd864e100fe1e1cb96d73058bc1`, the unified owner-clearing call site its own doc comment names for every route in, `frontends/shell/src/residency/candidateArmSession.ts:1052-1067 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:76abd5ea0ac915a54bcf03aff78b2506dd4448fa84b33824c4191bff2786d7a1`): `frontends/shell/e2e/out/source-changed-1789739920074.json` (2026-09-18, S5b-residency-cleared FAIL, S5a/S5c/S5d PASS). Reverted: `frontends/shell/e2e/out/source-changed-1789739975354.json` (2026-09-18, 9/9 steps PASS). Driver: `frontends/shell/e2e/source-changed.mjs @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718`. |
+| G-A3 -- late-generation rejection, client test | reference only, P4's node | `frontends/shell/src/streaming/viewportStreamManager.test.ts:667 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:bb1fa791c2d0af780169eeb4bfe909b574cd082a8be2858c6cbbde6ab8ce9e88`; `frontends/shell/src/streaming/tileViewportStreamManager.test.ts:1364 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:7feb9761cde6a0e678c570689ac1a428d87d6bea5e8094a8b87414c169d98a0e` |
+| G-A4 -- no generation persisted, four writer families enumerated | discharged | Published manifest/style, typed-schema: `kernel/tests/no_generation_in_persisted_artifacts.rs:201-202 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:a0fb29fd2d7ba910bce83086bdc03d886a588bafd0ddf6489755eb2a02f9e3cd`. Published bundle bytes: `kernel/tests/no_generation_in_persisted_artifacts.rs:258-259 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:682849e56cd87ff5ef478826188ce58a97efe3c5c40dd1f3ac8413688b1760ea`. Session-log-carriable strings: `kernel/tests/no_generation_in_persisted_artifacts.rs:308-309 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:dc042023140672828847fd449946abc919c4cf5ed2ef7ae92e3dd78c36d662ac`. LOD tier set: `kernel/tests/no_generation_in_persisted_artifacts.rs:363-364 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:d1ff03161609b14a9e3e6971b60a6d744f9ea845007902c6b10607315267ecf1`. Permission audit log: `kernel/tests/no_generation_in_persisted_artifacts.rs:419-420 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:96678d9d1edc3a0ff370675f0ba9fd4ca67a69277f057005eb777b859201e831`. Exclusion, with reason: `engine/src/fixture.rs:627 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:0d959f2dfdb888fb14c67bfde9d53ad083c42450f63071254bd65b794ccca4d7`. |
+| G-A4 -- LOD tier-set mutation | class 4, discharged, unit-only | Site: `engine/src/lod.rs:1173 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1` (`write_manifest`'s `json!({...})`, right after its `"schema"` member). Run and reverted; observed failure recorded at `kernel/tests/no_generation_in_persisted_artifacts.rs:359-362 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718`. |
+| G-A4 -- permission audit log mutation | class 4, discharged, unit-only | Site: `kernel/src/permission/audit/record.rs:197 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1` (`IntentRecord::to_json`'s `Json::obj([...])`, right after its `"schema"` member). Run and reverted; observed failure recorded at `kernel/tests/no_generation_in_persisted_artifacts.rs:415-418 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718`. |
+| G-A5 | not this piece's node | P4's node, per the brief's P5 row -- reference only |
+| G-A6 -- existing suites green | partial, stated plainly | `cargo test -p spatial-kernel --test no_generation_in_persisted_artifacts` and `-p spatial-engine --test admission_instruments` green at `8fb09ddc1f8a157f8c21ba0aef36c01267164718`. A full `cargo test --workspace` was not re-run this round: round 1's own run of it reported partial, traced to a documented shared-fixture-across-worktrees hazard unrelated to this piece's diff (`engine/tests/lod_tier_builder.rs`), and no file this round touches that suite's fixtures. No existing test file's assertions were changed by this piece. |
+
 **Read this amendment first.**
 
 ---
@@ -1643,3 +1665,35 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 6 (iii) paragraph | quotes the title as of `46cde2c`; superseded | `engine/ADMISSION-PREREGISTRATION.md:1377 @ 46cde2c sha256:73e80ccdaccee7f669b13972b2a1dfba08acf5f1d281ab56b3c7faa69a57c1a2` |
 
 **Read this amendment first.**
+
+### Amendment 17 -- the architect's reduction of Amendment 16 (2026-09-18, appended; the record cap's point (3): `state/directives/2026-09-18-record-cap.md:5 @ 6195d5a33d04 sha256:e44168d98d83bff75fc1155dd8b1f94b4ac077e113c8deabacaa93fd2622ef58`)
+
+**Written after the architect gate's attempt-2 findings were seen.** **Read this amendment first.** Classes: **1** for a withdrawal or narrowing row (round 15, item 1, clause (g)); **3** for the test-text row (round 14's named exception). Amendment 16 is byte-untouched; each row states what is true instead. Pins into `8fb09ddc1f8a157f8c21ba0aef36c01267164718` name a branch commit on `cut/briefa-p5` (Amendment 16's own disclosure).
+
+**Superseded index** (round 12, item 1 (e)).
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 16's two G-A2 rows, and `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md` §10 Amendment 18's row | narrowed: "discharged" covers every §12b G-A2 clause except **status text verbatim**, which no step asserts | `frontends/shell/e2e/source-changed.mjs:865-885 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:c6c2069a52900a6384f9d909706216097354629f5298d526888173efa7c20145`; the strings are the human's at P6 (§12d). |
+| Amendment 16's G-A3 row, as to "P4's node" | withdrawn: G-A3 is this node's | §12e Amendment 1, item 9; `PLAN.yaml`'s `briefa-p5-gate-tests` title. |
+| Amendment 16's G-A3 row, as to evidence | narrowed to §12b G-A3's client clause; the other two **unrun — reason** (§8) | Client clause: Amendment 16's two pins stand. E2E clause: unrun -- no run asserts a late batch dropped; `source-changed.mjs` establishes no batch in flight at invalidation, and the product signal that would (`frontends/shell/src/diagnostics/renderTrace.ts:37-46 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:3f58da2eded9c2868e75a069e6ffb1ba5c574f6425b9c4bd039417934a2625c2`) is unused by it. Test-text clause: unrun -- the scoping sentence lives in product code, `frontends/shell/src/admission/formatRefusal.ts:80 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:0df7128d5e2e931e6051392923d4dbbc74f5af5d89ab3985ce4b62f97fe08f1c`. |
+| Amendment 16's G-A4 row, as to the enumeration's declared scope | narrowed to the writers it names | Exhaustive over `engine/src`, `kernel/src`, `frontends/shell/src-tauri/src`, `protocol/skp/src`. `protocol/transport-bakeoff/src/main.rs:302 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:591bc5aa8aa161329391a53bc47c865389c41da36d36f73f96c757a827b93e79` and `:566 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:23be0ab08a988487014d967d9f56f2e2011927c18ff48e004b91b52aa1f58557` write outside `#[cfg(test)]` and leave the scope with the workspace: the root `Cargo.toml`'s `exclude` list names `protocol/transport-bakeoff`, lines 19-20 at `9af7308d7d11f79cb43fd2f2021a47071f49eeb1` -- cited in prose, not as a hash-pinned reference, since a bare `Cargo.toml` cite written from this directory resolves against `engine/Cargo.toml`, not the workspace root (round 15 (e) has no reach into a path the checker cannot disambiguate). |
+| `kernel/tests/no_generation_in_persisted_artifacts.rs`'s scope sentence | class 3, test text: corrected in this commit to the row above | `kernel/tests/no_generation_in_persisted_artifacts.rs:50-52 @ 8fb09ddc1f8a157f8c21ba0aef36c01267164718 sha256:aee6eb03d5024141ecf63190451c07215ffa4b1eb21c80aa7736ed0965a224bd` |
+| Amendment 16's G-A6 row | reduced: its narrative withdrawn, its claim split | No existing test file appears in `git diff --name-only origin/main...HEAD` at this branch's tip; the workspace run at that tip is the reviewer's gate, recorded in `state/gate-log.json` for node `briefa-p5-gate-tests`. |
+
+**Read this amendment first, for Amendments 1-17.**
+
+### Amendment 19 -- narrowing rows after the reviewer's attempt-2 read (2026-09-19, appended)
+
+**Written after the reviewer's attempt-2 findings were seen (`state/gate-log.json` record 99).** Filed as 19, not the mechanically-next 18: 18 is carried by `cut/briefa-p4` (its correction record), per the coordinator's numbering of 2026-09-19. Classes: **1** for a narrowing row (round 15, item 1, clause (g)); **3** for the test-text rows (round 14's named exception). Pins name their commits; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 17's G-A6 row, its no-edits half | narrowed: no existing identity or CRS test-suite file appears in `git diff --name-only origin/main...HEAD`; the diff carries this piece's own G-A2 driver (`frontends/shell/e2e/source-changed.mjs`, an existing E2E file) and `frontends/shell/e2e/README.md` | §12b G-A6; `state/gate-log.json` record 99 |
+| Amendment 17's G-A6 row, its green half | recorded | `cargo test --workspace --locked` at `e1d72cdec1b5d4c07fc3c3b5656bea490144d576` -- rc 0, 653 passed / 0 failed / 38 ignored across 67 binaries, 0 warning lines (the reviewer's run, `state/gate-log.json` record 99) |
+| Amendment 16's G-A2 pre-check row, its "byte-identical to T10" | narrowed: the pre-check steps' bodies are unchanged apart from the indentation the route's `if` adds | `frontends/shell/e2e/source-changed.mjs:147-149 @ e1d72cdec1b5d4c07fc3c3b5656bea490144d576 sha256:953bbe17ce9cf34855ccef46f8ebecb44d1a57a250a68354afc8d42604a80526` (the header sentence before its correction) |
+| Amendment 16's rows reading "9/9 steps PASS" | narrowed: the archived reports carry 8 PASS and 1 INFO of 9 steps | the gitignored reports those rows cite by path and date |
+| the kernel test's root-manifest cite | class 3, test text: a bare `Cargo.toml:19-20` resolving against the kernel manifest, corrected to prose at f41f678 | `kernel/tests/no_generation_in_persisted_artifacts.rs:50-54 @ e1d72cdec1b5d4c07fc3c3b5656bea490144d576 sha256:035bbc3ad280c487b842c2e842a0f8dc07a73bfff69b0a1bb550da475352a400` (the text before its correction) |
+| the driver header's "byte-for-byte" | class 3, test text: corrected at f41f678 | the pin two rows above |
+
+**Read this amendment first, for Amendments 1-19.**

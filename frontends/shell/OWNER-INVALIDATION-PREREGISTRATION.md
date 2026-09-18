@@ -1171,6 +1171,19 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 15, gap 3 | settled | round 14, item 2 |
 | Amendment 13 (3), and Amendment 8's two driver-output quotes it checks | recorded: evidence, not Authority; the rule dated non-retroactive | round 15, item 4 |
 
+**Read this amendment first, for Amendments 1-16.**
+
+---
+
+### Amendment 18 -- P5's G-A2 shell-side row: owner residency-clearing proven end-to-end, real app (2026-09-18, appended)
+
+**Written after this piece's results were seen (class 1, `docs/PREREGISTRATION-TEMPLATE.md:103-105 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:bf67639cc8f151ef4bd47156a7421ec9b89bf85e602bbb8e20575c02edbf54ed`).** Filed as 18, not the mechanically-next 17: Amendment 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18; this amendment does not touch Amendments 1-16. Full run detail lives at that document's own record, cross-cited below, not duplicated here. Report paths under `frontends/shell/e2e/out/` are gitignored real-app run output, cited by path and this run's date (2026-09-18) only.
+
+| id | status | reference |
+| --- | --- | --- |
+| G-A2 -- owner residency clearing on the post-check route, real app | discharged | Full evidence (pre-route reconfirmation, post-route isolated/mutated/reverted runs, driver): `engine/ADMISSION-PREREGISTRATION.md` **§12e Amendment 16**, its G-A2 rows. |
+| Owner's `clearAllTiles()` call site exercised by the mutation | pinned | `frontends/shell/src/residency/candidateArmSession.ts:1076 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:cf363518c47ce44d0f43d6fd9057ef38c9c19cd864e100fe1e1cb96d73058bc1`, inside `endCandidateSession`, the unified owner-clearing call its own doc comment names for every route in -- `frontends/shell/src/residency/candidateArmSession.ts:1052-1067 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:76abd5ea0ac915a54bcf03aff78b2506dd4448fa84b33824c4191bff2786d7a1`, both the tiled and untiled arms and both routes. Removing it, re-running the post-check route, leaves the owner's status/refusal text correct while residency itself does not clear -- the mutation isolates the owner's clearing act from its messaging, the same act/consequence split this document's own vocabulary keeps. |
+
 **Read this amendment first.**
 
 ---
@@ -1201,3 +1214,13 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 10 (b), the §4-T6 paragraph | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:912 @ 46cde2c sha256:af2ecbc2dab258ffb996d260ac1517873c52eb4068247d2dd3da57ea42abb5c9` |
 
 **Read this amendment first.**
+
+### Amendment 19 -- pointer: Amendment 18's row is narrowed by the engine record (2026-09-18, appended)
+
+**Written after the architect gate's attempt-2 findings were seen.** Class **3** (pointer row). Filed as 19: 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 18's "discharged" | narrowed | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 17, its first row. |
+
+**Read this amendment first, for Amendments 1-19.**
