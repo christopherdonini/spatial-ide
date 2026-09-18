@@ -1630,6 +1630,20 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 
 **Read this amendment first.**
 
+---
+
+### Amendment 14 -- class 3 (test text), stale titles superseded by `cut/briefa-p3b-test-names` (2026-09-18, appended)
+
+**Written after `cut/briefa-p3b-test-names`'s renames landed on that branch.** **Read this amendment first** for the rows below; Amendment 12 remains the resolution point for everything else it lists. Classes: **3** throughout (round 14, item 2's test-text exception; `docs/PREREGISTRATION-TEMPLATE.md:112-114 @ 5632f94 sha256:8933bc8e294970c5cf38be8b25c680322f3adb5480b3fa28b842c633efcb1ce5`). Every pin names its commit. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 6 (i) item 1, "Residency cleared, baseline" bullet | quotes the title as of `46cde2c`; superseded | `engine/ADMISSION-PREREGISTRATION.md:1356 @ 46cde2c sha256:4e049dbcfb0cf937ad881fefa501f329f3a6424db40fb62ba688a1dc0852b091` |
+| Amendment 6 (i) item 1, "Residency cleared, candidate" bullet | quotes the title as of `46cde2c`; superseded | `engine/ADMISSION-PREREGISTRATION.md:1357 @ 46cde2c sha256:96f1c0a2ee5ac45a8938dc437e9f575d5c13fd3de68588291fae1b51f9fdb12a` |
+| Amendment 6 (iii) paragraph | quotes the title as of `46cde2c`; superseded | `engine/ADMISSION-PREREGISTRATION.md:1377 @ 46cde2c sha256:73e80ccdaccee7f669b13972b2a1dfba08acf5f1d281ab56b3c7faa69a57c1a2` |
+
+**Read this amendment first.**
+
 ### Amendment 15 -- P4 record (2026-09-18, appended; re-appended after gate-log record 89)
 
 **Filed as 15, not the mechanically-next 14**: at this piece's `git merge origin/main` (`26f3154`),
