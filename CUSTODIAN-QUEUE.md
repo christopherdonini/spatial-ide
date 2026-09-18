@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97ee5848684a33a393a83f8`) at `2026-09-18T21:12:56.235Z`.
+Generated from `PLAN.yaml` (sha256 `3718034c2366d55a55864bc4dc8fe43939487ca81b3ccfc3368517fc39acfa98`) at `2026-09-18T23:04:15.027Z`.
 
 ## 1. Next
 
@@ -11,12 +11,13 @@ Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97e
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration (lane `engine`, order 6, budget 480 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 15 min)
 
 ### ruling
 
 - **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (5 min)
 - **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (5 min)
+- **decision-generated-outputs-merge-strategy** — Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge) (5 min)
 
 ## 4. Blocked on dependencies
 
@@ -41,7 +42,7 @@ Generated from `PLAN.yaml` (sha256 `27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97e
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **briefa-p4-corpus-run** — Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6) — evidence: branch `cut/briefa-p4`
 - **briefa-p5-gate-tests** — Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction — evidence: branch `cut/briefa-p5`
-- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — evidence: branch `spike/adr-029-g1`
+- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — evidence: PR #92
 - **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 

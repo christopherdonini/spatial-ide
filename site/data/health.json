@@ -1,30 +1,33 @@
 {
-  "generated_at": "2026-09-18T21:13:23.219Z",
+  "generated_at": "2026-09-18T23:04:15.109Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 32331214848,
+        "bytes": 31785320448,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415106076672,
+        "bytes": 415106056192,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 8,
+    "total": 1,
     "by_name": {
-      "cargo": 2,
-      "node": 5,
-      "spatial-ide-shell": 1
+      "cargo": 0,
+      "node": 1,
+      "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [
@@ -41,17 +44,24 @@
       "minutes": 5,
       "opened": "2026-09-18",
       "age_days": 0
+    },
+    {
+      "id": "decision-generated-outputs-merge-strategy",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-19",
+      "age_days": -1
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 32
+    "n": 33
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 27,
+    "nodes": 28,
     "first_pass": 12,
-    "rate": 0.4444444444444444
+    "rate": 0.42857142857142855
   },
   "record_rounds": {
     "present": true,
@@ -60,8 +70,11 @@
       "lod-tier-builder-route-b": 4,
       "governance-verify-quotes": 3,
       "governance-record-round-count": 1,
-      "briefa-p3b-test-names": 1
+      "briefa-p3b-test-names": 1,
+      "briefa-p5-gate-tests": 1,
+      "briefa-p4-corpus-run": 1,
+      "briefa-p6-describe-fields": 1
     },
-    "total": 14
+    "total": 17
   }
 }

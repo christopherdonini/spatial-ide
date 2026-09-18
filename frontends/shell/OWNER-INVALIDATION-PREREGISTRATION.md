@@ -1188,6 +1188,33 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 
 ---
 
+### Amendment 17 -- class 3 (test text), the six titles aligned to §4 (2026-09-18, appended)
+
+**Written after `cut/briefa-p3b-test-names`'s renames landed on that branch.** **Read this amendment first** for the rows below; Amendment 15 remains the resolution point for everything else it lists. Classes: **3** throughout (round 14, item 2's test-text exception; `docs/PREREGISTRATION-TEMPLATE.md:112-114 @ 5632f94 sha256:8933bc8e294970c5cf38be8b25c680322f3adb5480b3fa28b842c633efcb1ce5`). The six T-rows below are **bare references** -- path and test name, no line, no hash: the name is the claim itself, a hash pin at a branch commit is forbidden (round 15, item 1, clause (e)), and a pin at `main` is impossible before this branch merges. The ten superseded-quotation rows are pinned `@ 46cde2c`, which is on `main`. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| T3 | title aligned to §4 | `kernel/tests/session_generation.rs`, fn `the_dead_ticket_record_is_bounded` |
+| T4 | title aligned to §4 | `frontends/shell/src/streaming/viewportStreamManager.test.ts`, `a_source_changed_terminal_clears_the_working_canvas_residency` |
+| T5 | title aligned to §4, the untiled case | `frontends/shell/src/residency/candidateArmSession.test.ts`, `a_source_changed_terminal_on_either_stream_clears_every_resident_tile` |
+| T6 | title aligned to §4 | `frontends/shell/src/App.test.ts`, `the_pre_check_refusal_latches_the_session_in_the_untiled_catch` |
+| T7 | title aligned to §4 | `frontends/shell/src/streaming/tileViewportStreamManager.test.ts`, `the_pre_check_refusal_latches_the_session_on_a_tile_mint` |
+| T9 | title aligned to §4 | `frontends/shell/src/streaming/formatTerminalRefusal.test.ts`, `a_terminal_refusal_reaches_the_operator_without_its_machine_prefix` |
+| T5, scope | the claimed name sits on the untiled first-look case; the tile-stream case keeps its own title; both assert the clearing; Amendment 4 (c) item 2's class-2 split disclosure stands | `frontends/shell/src/residency/candidateArmSession.test.ts`, untiled: `a_source_changed_terminal_on_either_stream_clears_every_resident_tile`; tile-stream: `a TILE stream's terminal ends the session and clears every tile` |
+| Amendment 4 (a) table, row 2a(ii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:600 @ 46cde2c sha256:f6bd5501f35b779f518c774f0e9f40cd2da1a38938b732ff668055efbb65dff1` |
+| Amendment 4 (a) table, row 2a(iii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:601 @ 46cde2c sha256:2ecf5459bf515aa9eb6e7a351f8916089f5a097d551a29d22030de1985f97311` |
+| Amendment 4 (a) table, row 2b | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:604 @ 46cde2c sha256:4ce36104f4c83983a028b2a420dada75d35b994f551f775ee62203d09aad5d9d` |
+| Amendment 4 (c), item 1 | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:621 @ 46cde2c sha256:88d89d06ede95c83d1f24f9cb88f1e467516d658b7cd9343955add460c587a44` |
+| Amendment 4 (c) item 2's table, T3 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:627 @ 46cde2c sha256:9de743ddfeb3d03902d2f1f4c20483021aea090ab05b03c08cfa845af152be43` |
+| Amendment 4 (c) item 2's table, T4 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:628 @ 46cde2c sha256:c38c8a40443831d954ca62f5120379c527a0c55fdc0c6937cd5b99e2ad6e8092` |
+| Amendment 4 (c) item 2's table, T5 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:629 @ 46cde2c sha256:95e03985d5f95058c31f6947e87187c7cfc73b4beebc6d28147c8f7265e24a4f` |
+| Amendment 4 (c) item 2's table, T6 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:630 @ 46cde2c sha256:d906473971bfdfa80a82fe717c78cc1e657ffc75187a6aeaf288b47437a368c9` |
+| Amendment 4 (c) item 2's table, T7 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:631 @ 46cde2c sha256:d04e3d6c2914b39d7483aae409fe02dc1a37db85d9d7f61abea52f2551198465` |
+| Amendment 4 (f) table, the instrument-exemption row (`GenerationRegistry::dead_ticket_count`) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:677 @ 46cde2c sha256:2a2ebfac9b64a428c084c4faab28defafb25e96e6d1c5588973528474fd4f8ff` |
+| Amendment 10 (b), the §4-T6 paragraph | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:912 @ 46cde2c sha256:af2ecbc2dab258ffb996d260ac1517873c52eb4068247d2dd3da57ea42abb5c9` |
+
+**Read this amendment first.**
+
 ### Amendment 19 -- pointer: Amendment 18's row is narrowed by the engine record (2026-09-18, appended)
 
 **Written after the architect gate's attempt-2 findings were seen.** Class **3** (pointer row). Filed as 19: 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18.
