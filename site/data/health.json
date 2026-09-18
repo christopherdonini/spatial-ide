@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T21:23:31.762Z",
+  "generated_at": "2026-09-18T21:45:52.200Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,22 +12,22 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 32136572928,
+        "bytes": 32145899520,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415106002944,
+        "bytes": 415106007040,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 25,
+    "total": 1,
     "by_name": {
-      "cargo": 2,
-      "node": 22,
-      "spatial-ide-shell": 1
+      "cargo": 0,
+      "node": 1,
+      "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [
