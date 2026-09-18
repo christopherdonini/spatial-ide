@@ -67,3 +67,36 @@ debug = false
 debug = false
 # Optimizing the vendored C++ costs build time once and buys it back on every query in every test.
 opt-level = 2
+
+# The geometry crates the LOD tier builder runs per feature (`engine/src/lod.rs`), for exactly the
+# reason above: unoptimized, one `cargo test` pass over the 100 000-feature `polygons-100k` ladder
+# runs `simplify_vw_preserve` and `is_valid()` once per feature per tier with no optimization at all,
+# and a suite nobody can afford to run is a suite that stops being run. Optimizing them costs build
+# time once. **No duration is stated here**: a figure in a comment is an unmeasured claim
+# (`docs/08`), and this is a structural reason, not a measurement.
+#
+# **A build-profile decision and nothing else.** No product behaviour, no declared value and no
+# measurement depends on it; any figure the tester takes is taken from a `--release` build, where
+# these settings do not apply at all.
+[profile.dev.package.geo]
+opt-level = 2
+[profile.dev.package.geo-types]
+opt-level = 2
+[profile.dev.package.i_overlay]
+opt-level = 2
+[profile.dev.package.i_float]
+opt-level = 2
+[profile.dev.package.i_shape]
+opt-level = 2
+[profile.dev.package.i_key_sort]
+opt-level = 2
+[profile.dev.package.i_tree]
+opt-level = 2
+[profile.dev.package.robust]
+opt-level = 2
+[profile.dev.package.rstar]
+opt-level = 2
+[profile.dev.package.spade]
+opt-level = 2
+[profile.dev.package.wkb]
+opt-level = 2

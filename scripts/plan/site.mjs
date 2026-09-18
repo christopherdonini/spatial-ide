@@ -331,6 +331,24 @@ function formatGateFirstPass(g) {
   return `${g.first_pass}/${g.nodes} nodes passed first gate (${pct}%)`;
 }
 
+/**
+ * Record-round count per piece (the human's 2026-09-18 directive, point 4;
+ * `state/directives/2026-09-18-record-cap.md`), beside the gate first-pass line: each node with a
+ * non-zero count, the total, and the zero target stated. A node with zero is not listed (its count
+ * is simply absent from `byNode`, and this also drops any zero that slips through). Absent log ->
+ * "no gate log yet", same wording as the first-pass row.
+ */
+function formatRecordRounds(rr) {
+  if (!rr || rr.present === false) return 'no gate log yet';
+  const entries = Object.entries(rr.byNode ?? {})
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const total = rr.total ?? 0;
+  if (entries.length === 0) return `none (total ${total}, target 0)`;
+  const parts = entries.map(([node, n]) => `${node}: ${n}`);
+  return `${parts.join(', ')} (total ${total}, target 0)`;
+}
+
 function formatStrayProcesses(stray) {
   if (!stray) return 'unknown';
   if (stray.error) return `error: ${stray.error}`;
@@ -471,6 +489,7 @@ function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
         ['Waiting on human', waitingOnHumanValueHtml(health.waiting_on_human, byId)],
         ['Median opened→done', esc(formatMedianOpenedToDone(health.median_opened_to_done))],
         ['Gate first-pass', esc(formatGateFirstPass(health.gate_first_pass))],
+        ['Record rounds per piece', esc(formatRecordRounds(health.record_rounds))],
       ])
     : `<h3 class="health-source">From the custodian's machine</h3>\n` +
       `<p class="empty">no site/data/health.json yet — never refreshed</p>`;

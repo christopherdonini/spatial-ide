@@ -6,9 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import AdmissionPanel from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
+import RefusalBlock from "./admission/RefusalBlock";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
-import type { HoverReadout } from "./canvas/pick";
+import { latchedHoverReadout, type HoverReadout } from "./canvas/pick";
 import { HoverReadoutView } from "./canvas/HoverReadoutView";
 import ConsolePanel from "./console/ConsolePanel";
 import { recordNamed } from "./console/recorder";
@@ -61,6 +62,7 @@ import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import { formatTerminalRefusal } from "./streaming/formatTerminalRefusal";
+import { isSourceChangedRefusal, refusalDetailOf } from "./streaming/liveTicketSet";
 import type { Terminal } from "./streaming/transport";
 import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
@@ -602,6 +604,48 @@ export function handleCanvasCeilingRefusal(
 }
 
 /**
+ * **The owner's half of Brief A boundary 4** (P3b §2a(ii)): this dataset's session ended because its
+ * source was observed to have changed, and this is the one place the App states what that means for
+ * the operator.
+ *
+ * **Both arms reach this same function.** The baseline manager's `onSessionEnded`, the candidate
+ * session's `onSessionEnded`, and `reportViewportOutcome`'s pre-check catch all call it, so an
+ * operator sees one behaviour whichever arm is running and whichever route detected the change.
+ *
+ * **`detail` is parsed, never interpolated.** It is the `"<code>: <display>"` shape the kernel mints
+ * (`kernel/src/skp.rs:1136`), and `formatTerminalRefusal` is what splits it, so no machine
+ * prefix reaches an operator (§8.6). An unprefixed detail passes through whole, exactly as the
+ * publish parser does.
+ *
+ * **What it sets, and what each is for:**
+ * - the typed status (`sessionEnded`), rendered through `RefusalBlock` in the canvas status stack --
+ *   which is what makes `refusalGuidance("engine.source_changed")` (`formatRefusal.ts:70-83`)
+ *   actually reach an eye, since `RefusalBlock.tsx:25` is the only product dispatcher of it;
+ * - the ref the hover latch reads (`latchedHoverReadout`, `pick.ts`), set synchronously rather than
+ *   through React state so a hover arriving in the same tick is already refused;
+ * - the hover readout itself, immediately, so a readout standing from before the change is replaced
+ *   rather than left on screen until the pointer next moves.
+ *
+ * Idempotent, because two routes can observe the same change: the first call wins and a later one
+ * changes nothing. Extracted and pure over explicit setters, the same
+ * `admitAndResetStaleUiState`/`handleCanvasCeilingRefusal` shape above, so `App.test.ts` can assert
+ * the sequencing without a DOM.
+ */
+export function handleSessionEnded(
+  detail: string,
+  deps: {
+    /** `sessionEndedRef.current` -- read synchronously by the hover latch. */
+    isAlreadyEnded: () => boolean;
+    setSessionEnded: (refusal: FormattedRefusal) => void;
+    setHover: (value: HoverReadout) => void;
+  }
+): void {
+  if (deps.isAlreadyEnded()) return;
+  deps.setSessionEnded(formatTerminalRefusal(detail));
+  deps.setHover({ kind: "session-ended" });
+}
+
+/**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
  * supersede-on-pan, a filter panel, a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
  * style-panel cut), and a publish panel (NEXT-CUT.md's publish cut, ADR-017's class-3 exposure
@@ -616,6 +660,22 @@ export default function App() {
   const [hover, setHover] = useState<HoverReadout>(null);
   const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
   const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
+  /**
+   * **Brief A boundary 4 (P3b §2a): this dataset's session ended because its source changed.**
+   * `null` until it does. Set once, by `handleSessionEnded`, from whichever of the four routes
+   * (baseline terminal, tile terminal, untiled first-look terminal, either arm's pre-check refusal)
+   * gets there first.
+   *
+   * **Not dismissible and never cleared by anything short of a reopen** -- the `.residency-status`
+   * precedent (`App.tsx`'s own rider-1 block below), and for a stronger reason: the state it names
+   * does not end until the dataset is reopened, which remounts this whole subtree
+   * (`key={admitted.dataset}`) and takes this state with it. §7 declares that lifetime: no timeout.
+   */
+  const [sessionEnded, setSessionEnded] = useState<FormattedRefusal | null>(null);
+  /** The same fact, readable synchronously. `onHover` fires from deck.gl's own render path and must
+   * be able to refuse a pick in the tick the session ended, before React has re-rendered anything --
+   * the identical "ref mirrors state" discipline `WorkingCanvas.tsx`'s own `onHoverRef` uses. */
+  const sessionEndedRef = useRef(false);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
   // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
   // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
@@ -851,6 +911,16 @@ export default function App() {
     registerE2eHook("residencyMarkInput", async () => {
       recordResidencyInput();
     });
+    // **Brief A boundary 4, P3b: the counts-only read `e2e/source-changed.mjs` needs.**
+    // Deliberately NOT `residencyEndStep` above: that one merges the same totals into the residency
+    // MEASUREMENT instrument's step snapshot, which carries timing fields, and T10 records no
+    // duration of any kind (ADR-018). This returns the totals and nothing else, computes nothing and
+    // records nothing. `null` when no dataset is admitted, never a fabricated zero.
+    // Its only caller, and why the property must be proven about the running app, are stated at its
+    // own declaration in `e2e-test-surface.ts`. Custodian's decision, 2026-09-17 (recorded as class
+    // 2 in `OWNER-INVALIDATION-PREREGISTRATION.md` §10 Amendment 5): §6 named an existing
+    // counts-only hook and no such hook existed.
+    registerE2eHook("residentCounts", async () => canvasRef.current?.getResidentCounts() ?? null);
     // M6 (P1b): driver-visible in-flight `viewport_query` count -- `waitForSettle` for a residency
     // trace step reads this alongside console quiescence (§4b's letter).
     registerE2eHook("residencyInFlightStreamCount", async () => getResidencyInFlightStreamCount());
@@ -911,6 +981,7 @@ export default function App() {
       unregisterE2eHook("residencyBeginStep");
       unregisterE2eHook("residencyEndStep");
       unregisterE2eHook("residencyMarkInput");
+      unregisterE2eHook("residentCounts");
       unregisterE2eHook("residencyInFlightStreamCount");
       unregisterE2eHook("residencyQueuedTileCount");
       unregisterE2eHook("residencySupersededBytesDropped");
@@ -924,12 +995,46 @@ export default function App() {
     };
   }, []);
 
+  /**
+   * **P3b §2a(ii): the one binding both arms' `onSessionEnded` and both catches reach.** Writes the
+   * ref synchronously (so a hover in this same tick is already refused) and then runs the exported
+   * pure handler over React's own setters. `useCallback([])`: every setter it closes over is a React
+   * identity-stable setter or a ref, so this never needs to change identity.
+   */
+  const endSession = useCallback((detail: string) => {
+    handleSessionEnded(detail, {
+      isAlreadyEnded: () => sessionEndedRef.current,
+      setSessionEnded: (refusal) => {
+        sessionEndedRef.current = true;
+        setSessionEnded(refusal);
+      },
+      setHover,
+    });
+  }, []);
+
   function reportViewportOutcome(promise: Promise<RequestOutcome>) {
     promise.then(
-      () => setViewportRefusal(null),
+      () => {
+        // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
+        // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
+        // unconditionally -- so a pan after the latch silently wiped a source-change refusal off the
+        // banner, and `requestViewport` itself RESOLVES with `{kind:"session-ended"}` rather than
+        // rejecting, which made that the ordinary case rather than a rare one. The session-ended
+        // block below is separate state and was never dismissible; this keeps the refusal that
+        // named the code from disappearing beside it.
+        if (sessionEndedRef.current) return;
+        setViewportRefusal(null);
+      },
       (e: unknown) => {
         if (e instanceof SkpCallError) {
+          // Unchanged: the camera pre-check route still sets `viewportRefusal` exactly as before
+          // (§2b: "It keeps `setViewportRefusal(formatRefusal(...))`").
           setViewportRefusal(formatRefusal(e.skpError));
+          // **P3b §2b: and, for this one code, additionally ends the session.** This is the catch
+          // both arms' untiled issues land in -- baseline's `issueViewportQuery`, and the candidate
+          // session's `reissueUnrestricted`, which rejects with the real `SkpCallError`
+          // (`candidateArmSession.ts:282-284`). Matched on `.skpError.code`, never on prose.
+          if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e));
           return;
         }
         throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
@@ -1044,6 +1149,10 @@ export default function App() {
         // `CandidateArmSessionDeps.applyScanEvent`'s own narrower type is a safe target by function-
         // parameter contravariance (that field's own doc comment has the full account).
         applyScanEvent,
+        // **P3b §2a(iii): the candidate arm's owner reaches the same App-level handler.** The
+        // session has already cleared its own tile residency by the time this fires; what is added
+        // here is the status and the pick latch, which are the App's surfaces.
+        onSessionEnded: endSession,
       });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
       candidateManagerRef.current = session.manager;
@@ -1099,6 +1208,10 @@ export default function App() {
       onStreamOpened: (streamHandle) => {
         applyScanEvent({ kind: "streamOpened", streamHandle });
       },
+      // **P3b §2a(ii): the baseline arm's owner.** The manager has already cleared the canvas's
+      // residency through `onSuperseded`→`clearStream` by the time this fires; what is added here
+      // is the status and the pick latch.
+      onSessionEnded: endSession,
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
@@ -1366,7 +1479,13 @@ export default function App() {
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
               style={style}
-              onHover={setHover}
+              /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
+               * arm-independent. Once the session has ended, every readout the canvas resolves --
+               * including `null` and a standing `PickConfirming` id -- becomes the named refusal;
+               * `latchedHoverReadout` (`canvas/pick.ts`) has the full account of why silence is the
+               * wrong answer (ADR-010 rule 5). The ref, not the state, because this fires from
+               * deck.gl's own render path. */
+              onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
               onCanvasRefusal={(streamHandle, message) => {
                 // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
                 // comment above has the full account -- a declared-ceiling refusal must dispatch a
@@ -1430,8 +1549,25 @@ export default function App() {
               * advance -- both stay simultaneously visible regardless of message length, and both
               * stay clear of `.hover-readout` (bottom-left) and `.zoom-to-layer` (top-right) exactly
               * as before. */}
-            {(canvasRefusal || viewportRefusal || residencyStatus || scanState.kind === "cancelled") && (
+            {(canvasRefusal || viewportRefusal || sessionEnded || residencyStatus || scanState.kind === "cancelled") && (
               <div className="canvas-status-stack">
+                {/* **P3b §2a(v): the typed session-ended status, first in the stack.** Rendered
+                  * through `RefusalBlock` -- the shared refusal block a dataset-open or filter
+                  * refusal already uses, and the ONLY product dispatcher of `refusalGuidance`
+                  * (`admission/RefusalBlock.tsx:25`), which is what makes the owner's
+                  * `engine.source_changed` sentence reach an operator at all on the canvas surface.
+                  * Its `code`/`message` come from `formatTerminalRefusal`, so no machine prefix is
+                  * rendered as prose (§8.6).
+                  *
+                  * **NOT dismissible** -- `RefusalBlock` renders no button by construction (its own
+                  * doc comment), which is exactly right here: the state does not end until the
+                  * dataset is reopened, and a reopen remounts this subtree. The `.residency-status`
+                  * precedent below is the same reasoning for a weaker fact. */}
+                {sessionEnded && (
+                  <div className="canvas-session-ended">
+                    <RefusalBlock refusal={sessionEnded} />
+                  </div>
+                )}
                 {canvasRefusal && (
                   <div className="canvas-refusal" role="alert">
                     {canvasRefusal}
@@ -1449,7 +1585,13 @@ export default function App() {
                     </button>
                   </div>
                 )}
-                {viewportRefusal && (
+                {/* P3b: suppressed once the session-ended block is standing. The pre-check route
+                  * sets BOTH (§2b keeps `setViewportRefusal` exactly as it was), and the block above
+                  * renders the same code and the same message plus the guidance this surface has
+                  * never dispatched -- so showing both would put the identical refusal on the canvas
+                  * twice, once with its guidance and once without. The state is untouched; only
+                  * whether it renders while a strictly stronger statement is standing. */}
+                {viewportRefusal && !sessionEnded && (
                   <div className="canvas-refusal" role="alert">
                     <div className="admission-refusal-code">{viewportRefusal.code}</div>
                     {viewportRefusal.message}

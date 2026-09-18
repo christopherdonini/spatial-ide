@@ -23,6 +23,7 @@
  * **It carries no claim about snapshots.** Dropping late batches is detection of a *detected*
  * change, not a guarantee that what stayed on the canvas came from one unchanging file.
  */
+import { SkpCallError } from "../skp/client";
 import type { Terminal } from "./transport";
 
 /**
@@ -50,6 +51,37 @@ const SOURCE_CHANGED_CODE = "engine.source_changed";
  */
 export function isSourceChangedTerminal(terminal: Terminal): boolean {
   return terminal.detail.startsWith(`${SOURCE_CHANGED_CODE}: `);
+}
+
+/**
+ * Whether this thrown SKP error is the **pre-check's** half of the same fact (P3b §2b).
+ *
+ * G-A2's own wording requires both routes -- *"Asserted at the pre-check and at the post-check paths
+ * separately"* (`engine/ADMISSION-PREREGISTRATION.md:221`). The post-check arrives as a data-plane
+ * terminal (`isSourceChangedTerminal` above); the pre-check arrives synchronously, as a thrown
+ * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:797-803`)
+ * and its mint-race arm (`:840-846`), reaching this client through `skp/client.ts:58-65`.
+ *
+ * **Matched on `.skpError.code`, never on prose** -- the precedent `RETRYABLE_ENGINE_CODE`/
+ * `isRetryableRefusal` already sets (`tileViewportStreamManager.ts:316`/`:324`). The message's wording
+ * is the human's at P6 and is not required to contain the code.
+ */
+export function isSourceChangedRefusal(err: unknown): boolean {
+  return err instanceof SkpCallError && err.skpError.code === SOURCE_CHANGED_CODE;
+}
+
+/**
+ * The pre-check refusal, written in the **same shape the post-check's terminal already carries** --
+ * `"<code>: <display>"` -- so an owner has exactly one thing to parse rather than two.
+ *
+ * This is not a re-spelling of the kernel's format: it is the same one. `terminal_detail_of` is
+ * `format!("{}: {e}", error_of(e).code)` (`kernel/src/skp.rs:1136`), and `error_of`'s own
+ * `message` is that same `Display` output, so `code + ": " + message` is byte-identical to the
+ * terminal's `detail` for any given error. `liveTicketSet.test.ts` asserts that equality against
+ * the two pinned real shapes rather than leaving it argued.
+ */
+export function refusalDetailOf(err: SkpCallError): string {
+  return `${err.skpError.code}: ${err.skpError.message}`;
 }
 
 export class LiveTicketSet {

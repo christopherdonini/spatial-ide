@@ -12,7 +12,7 @@
 
 ## 0. Disclosure: no pilot, no code, no measurement informs this document
 
-No branch, no spike, no probe. This file rests on the brief `RELEASE-DRAFTS-0.1.0/post-tag/entry-47-repick-brief.draft.md`, the architect consult `RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-lod-47-66b-ordering.md` (§1B, §2 conditions 8–14), and files read directly at `main`. Stated rather than omitted, per the precedent's §0.
+No branch, no spike, no probe. This file rests on the brief `state/drafts/post-tag/entry-47-repick-brief.draft.md`, the architect consult `state/drafts/post-tag/architect-consult-lod-47-66b-ordering.md` (§1B, §2 conditions 8–14), and files read directly at `main`. Stated rather than omitted, per the precedent's §0.
 
 ---
 

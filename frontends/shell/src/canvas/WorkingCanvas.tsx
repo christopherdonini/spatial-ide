@@ -43,7 +43,7 @@ import {
 } from "./limits";
 import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
 import type { HoverReadout, PickResult } from "./pick";
-import { isPickBelowResolution, isPickConfirming, resolvePick } from "./pick";
+import { isPickBelowResolution, isPickConfirming, isPickSessionEnded, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import {
   averageFeatureExtent,
@@ -671,6 +671,9 @@ function hoverReadoutTraceLabel(readout: HoverReadout): string {
   // settle path -- a re-pick RESULT is one of the three above -- but named here so the diagnostic can
   // never print a bare id for a readout the operator is seeing under a marker.
   if (isPickConfirming(readout)) return `confirming id ${readout.standing.id.toString()}`;
+  // P3b §2a(iv): boundary 4's refusal. Named here for the same reason the labelled state is -- so
+  // the diagnostic can never print a bare id for a readout the operator is seeing as a refusal.
+  if (isPickSessionEnded(readout)) return "session-ended";
   return `id ${readout.id.toString()}`;
 }
 

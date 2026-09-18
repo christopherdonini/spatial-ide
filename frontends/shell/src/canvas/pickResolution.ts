@@ -6,6 +6,7 @@ import {
   confirmingReadout,
   isPickBelowResolution,
   isPickConfirming,
+  isPickSessionEnded,
   type HoverReadout,
   type PickResult,
 } from "./pick";
@@ -189,6 +190,11 @@ export function reevaluateStandingHoverOnCameraChange(
   }
   if (isPickConfirming(standing)) return undefined;
   if (isPickBelowResolution(standing)) return null;
+  // P3b §2a(iv): a session-ended readout is never replaced by a confirming one -- the identities a
+  // confirming readout would carry no longer refer to anything (ADR-010 rule 5). `undefined` is this
+  // function's own "leave the standing readout alone", which is exactly right for a latched state.
+  // The compiler, not a convention, is what required this branch: `PickSessionEnded` has no `id`.
+  if (isPickSessionEnded(standing)) return undefined;
   return confirmingReadout(standing);
 }
 

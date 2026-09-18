@@ -4,7 +4,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { ResidentBatch } from "./decodeBatch";
-import { isPickBelowResolution, resolvePick } from "./pick";
+import type { HoverReadout } from "./pick";
+import {
+  confirmingReadout,
+  isPickBelowResolution,
+  isPickSessionEnded,
+  latchedHoverReadout,
+  resolvePick,
+} from "./pick";
 
 function batch(): ResidentBatch {
   return {
@@ -65,5 +72,68 @@ describe("isPickBelowResolution", () => {
 
   it("is true for the refusal shape", () => {
     expect(isPickBelowResolution({ kind: "below-pick-resolution" })).toBe(true);
+  });
+});
+
+/**
+ * **T8's first half (P3b §4): the pick latch** -- Brief A boundary 4's "picks refused until reopen",
+ * as the pure function `App.tsx`'s one `onHover` site wraps every readout with.
+ */
+describe("latchedHoverReadout (boundary 4: picks refused until reopen)", () => {
+  // RECORDED MUTATION naming its test:
+  // "every readout state becomes the refusal while latched, including null and a standing id"
+  // -- let `PickConfirming` pass through the latch (`sessionEnded && !isPickConfirming
+  // (readout) ? {kind:"session-ended"} : readout`). Expected failure: that test fails on the
+  // confirming case -- a standing id would still be rendered after the identities behind it were
+  // voided, which is the "never a standing id" property this exists for.
+  // OBSERVED: FAILED -- `AssertionError: expected { kind: 'confirming', …(1) } to deeply equal
+  // { kind: 'session-ended' }`.
+  it("every readout state becomes the refusal while latched, including null and a standing id", () => {
+    const pick = resolvePick(batch(), 0)!;
+    const states: HoverReadout[] = [
+      null,
+      pick,
+      { kind: "below-pick-resolution" },
+      confirmingReadout(pick),
+    ];
+    for (const state of states) {
+      expect(latchedHoverReadout(state, true)).toEqual({ kind: "session-ended" });
+    }
+    // In particular: nothing carrying an id survives the latch. Asserted structurally rather than
+    // by inspecting text, because the type is what makes it true -- `PickSessionEnded` has no `id`
+    // and no `standing`, so no render path can reach one.
+    for (const state of states) {
+      const latched = latchedHoverReadout(state, true);
+      expect(JSON.stringify(latched)).not.toContain("100");
+      expect(isPickSessionEnded(latched)).toBe(true);
+    }
+  });
+
+  // RECORDED MUTATION for "passes every readout through untouched while the session is live": make
+  // the latch unconditional (`return {kind:"session-ended"}`). Expected failure: that test fails on
+  // the first assertion -- an ordinary pick would be refused on a perfectly live session.
+  // OBSERVED: FAILED -- `AssertionError: expected { kind: 'session-ended' } to be
+  // { streamHandle: 'sh_test', …(3) }`.
+  it("passes every readout through untouched while the session is live", () => {
+    const pick = resolvePick(batch(), 0)!;
+    expect(latchedHoverReadout(pick, false)).toBe(pick);
+    expect(latchedHoverReadout(null, false)).toBeNull();
+    expect(latchedHoverReadout({ kind: "below-pick-resolution" }, false)).toEqual({
+      kind: "below-pick-resolution",
+    });
+  });
+
+  // RECORDED MUTATION naming its test:
+  // "isPickSessionEnded discriminates it from every other readout state"
+  // -- relax the guard to `value !== null && "kind" in value`, so every kinded readout reads as the
+  // refusal. Expected failure: that test fails on the `below-pick-resolution` case.
+  // OBSERVED (performed once on this branch, then reverted): FAILED --
+  // `AssertionError: expected true to be false`.
+  it("isPickSessionEnded discriminates it from every other readout state", () => {
+    expect(isPickSessionEnded(null)).toBe(false);
+    expect(isPickSessionEnded(resolvePick(batch(), 0))).toBe(false);
+    expect(isPickSessionEnded({ kind: "below-pick-resolution" })).toBe(false);
+    expect(isPickSessionEnded(confirmingReadout(resolvePick(batch(), 0)!))).toBe(false);
+    expect(isPickSessionEnded({ kind: "session-ended" })).toBe(true);
   });
 });

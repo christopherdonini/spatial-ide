@@ -26,7 +26,7 @@ is owed live before the working canvas can style by attribute.
 ## Decision
 
 *Ported verbatim from the architect's B1 consult, Document 1 — "ADR-023 Decision, drafted for the
-human's sight" (`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-b1-adr-023-decision.md`), with the
+human's sight" (`state/drafts/post-tag/architect-consult-b1-adr-023-decision.md`), with the
 two §2 amendments ruled by the human on 2026-09-14 marked inline and the entry-79 rulings folded.
 Status stays Proposed until B1's close.*
 

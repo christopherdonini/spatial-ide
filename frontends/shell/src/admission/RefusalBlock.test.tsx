@@ -51,8 +51,13 @@ describe("RefusalBlock, engine.source_changed", () => {
   // engine's message in BOTH copies this test reads -- the SKP fixture
   // `v0-error-source_changed.json` and the kernel-pinned `REAL_SOURCE_CHANGED_TERMINAL_DETAIL` --
   // so the byte-equality assertion still passes and only the class assertion bites. Expected
-  // failure: that test fails on the `discard` sweep over the WHOLE rendered block, which is the
-  // assertion that would have caught P3a attempt 2's over-claim (guidance clean, message not).
+  // failure: that test fails on the `discard` sweep, which is the assertion that would have caught
+  // P3a attempt 2's over-claim (guidance clean, message not).
+  //
+  // **P3b re-aimed that sweep at `error.message` rather than the whole rendered block**, because
+  // the consequence half is now the owner's sentence and is now true. The mutation above still
+  // fails by name: it puts the consequence in the ENGINE's message, which is exactly what the sweep
+  // still reads.
   it("the rendered refusal states the engine's fact and the owner's sentence, and no consequence the shell did not perform", () => {
     const error = realSourceChangedRefusal();
 
@@ -65,17 +70,23 @@ describe("RefusalBlock, engine.source_changed", () => {
     // words). Both are properties of the engine's check and belong in the engine's message.
     expect(text).toContain("the source file changed while it was open");
     expect(text).toContain("does not establish snapshot consistency");
-    // The OWNER's sentence, rendered beside it -- the human's ruled wording (2026-09-16, round 5
-    // item 1), which `formatRefusal.test.ts` asserts verbatim at its source.
+    // The OWNER's sentence, rendered beside it, now stating the consequence P3b performs -- the
+    // second half of the same round-5 ruling ("P3b restores the stronger sentence when it becomes
+    // true"). `formatRefusal.test.ts` asserts its wording verbatim at its source; what is asserted
+    // HERE is that an operator reading the whole block reads both halves.
     expect(text).toContain("reopen the dataset to continue");
+    expect(text).toContain("has been cleared");
+    expect(text).toContain("can no longer be identified");
 
     // **The class this test exists for** (the human's ruling of 2026-09-16, round 7: "Engine
-    // messages state engine facts; owners state consequences"). Nothing an operator reads here may
-    // claim a consequence P3a does not perform: nothing clears the resident view, and no identity
-    // the shell holds is dropped, until P3b.
-    expect(text).not.toMatch(/discard/i);
-    expect(text).not.toMatch(/no longer refer/i);
-    expect(text).not.toMatch(/reopen the file/i);
+    // messages state engine facts; owners state consequences"). The sweep is now on the ENGINE's
+    // own words alone, because the consequence half moved -- it is the owner's sentence and, since
+    // P3b, is true. An engine message that stated it would be the engine speaking for the shell,
+    // which is the direction the ruling actually forbids.
+    expect(error.message).not.toMatch(/discard/i);
+    expect(error.message).not.toMatch(/no longer refer/i);
+    expect(error.message).not.toMatch(/reopen the/i);
+    expect(error.message).not.toMatch(/cleared/i);
 
     // "snapshot" survives in exactly one place: boundary 4's DENIAL of a snapshot claim (A1). An
     // affirmative one anywhere would be the other half of the same over-claim.

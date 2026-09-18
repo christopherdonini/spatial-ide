@@ -64,7 +64,7 @@ applies to principle 4's own style/publish gaps.
 ## Decision — drafted 2026-09-14 for the human's sight (Proposed; binds nothing until G1 and the human's word)
 
 *Ported verbatim from the architect consult of 2026-09-13
-(`RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-029-operation-lifecycle.md`), with the human's
+(`state/drafts/post-tag/architect-consult-adr-029-operation-lifecycle.md`), with the human's
 ruling of 2026-09-14 (question set C2) folded in explicitly below. This binds nothing: ADR-029 stays
 Proposed until gate G1 clears and the human gives the word.*
 

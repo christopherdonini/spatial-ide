@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17T21:32:37.241Z",
-  "plan_hash": "17bf157fcff6b5652c8d4c4a7f3f9e12f1acfb4e3a8315db05e3ae99128e956f",
+  "generated_at": "2026-09-18T11:30:27.046Z",
+  "plan_hash": "f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -307,14 +307,14 @@
         "minutes": 20
       },
       "evidence": {
-        "branch": "cut/briefa-p3b"
+        "pr": 86
       },
       "dates": {
         "opened": "2026-09-16",
         "done": null
       },
       "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
-      "evidence_label": "branch `cut/briefa-p3b`"
+      "evidence_label": "PR #86"
     },
     {
       "id": "governance-verify-quotes",
@@ -337,6 +337,28 @@
       },
       "summary": "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
       "evidence_label": "branch `governance/verify-quotes`"
+    },
+    {
+      "id": "governance-record-round-count",
+      "title": "health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 2
+      },
+      "evidence": {
+        "pr": 87
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2",
+      "evidence_label": "PR #87"
     }
   ],
   "proposed": [
@@ -415,6 +437,25 @@
         "done": null
       },
       "summary": "Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate"
+    },
+    {
+      "id": "governance-verify-gate-file-exists",
+      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 7,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate"
     },
     {
       "id": "engine-tests-configured-connections",

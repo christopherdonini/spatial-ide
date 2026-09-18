@@ -164,6 +164,7 @@ const MACHINE_HEALTH = {
   waiting_on_human: [{ id: 'n-waiting-sight', kind: 'sight', minutes: 15, opened: '2026-09-13', age_days: 0 }],
   median_opened_to_done: { days: 3, n: 12 },
   gate_first_pass: { present: true, nodes: 3, first_pass: 2, rate: 2 / 3 },
+  record_rounds: { present: true, byNode: {}, total: 0 },
 };
 
 // ---------------------------------------------------------------- bug 1: health from two sources
@@ -213,11 +214,30 @@ test('machine group: an absent gate log says so; no dated done nodes says so; a 
     disk_free: { drives: [{ drive: 'C', bytes: 10794078208, total: 250000000000 }] },
     median_opened_to_done: { days: null, n: 0 },
     gate_first_pass: { present: false },
+    record_rounds: { present: false },
   };
   const { html } = renderSite(fixturePlan(), health, { repoSlug: REPO });
   assert.ok(html.includes('<span>Disk free</span><span>C: 10.1 GB</span>'), 'D: omitted when the machine has none');
   assert.ok(html.includes('<span>Median opened→done</span><span>no dated done nodes yet</span>'));
   assert.ok(html.includes('<span>Gate first-pass</span><span>no gate log yet</span>'));
+  assert.ok(html.includes('<span>Record rounds per piece</span><span>no gate log yet</span>'));
+});
+
+// ---------------------------------------------------- record-round counts per piece (2026-09-18 #4)
+
+// RECORDED MUTATION: in site.mjs's formatRecordRounds, dropped the `, target ${0}` suffix (returned
+// `${parts.join(', ')} (total ${total})` instead) -- observed failure: the assertion below looking
+// for the exact string `(total 5, target 0)` failed since the rendered text read `(total 5)`.
+// Reverted after observing the failure.
+test('the record-rounds line lists each non-zero node and the total, with the target stated as zero', () => {
+  const health = {
+    ...MACHINE_HEALTH,
+    record_rounds: { present: true, byNode: { 'node-b': 3, 'node-a': 2 }, total: 5 },
+  };
+  const { html } = renderSite(fixturePlan(), health, { repoSlug: REPO });
+  assert.ok(
+    html.includes('<span>Record rounds per piece</span><span>node-a: 2, node-b: 3 (total 5, target 0)</span>'),
+  );
 });
 
 // ------------------------------------------------------------- round 11's ratchet, condition (c):

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T21:47:31.292Z",
+  "generated_at": "2026-09-18T05:42:40.648Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,41 +9,43 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 65348927488,
+        "bytes": 61344825344,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 107320893440,
+        "bytes": 415102676992,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 4,
     "by_name": {
       "cargo": 0,
-      "node": 3,
+      "node": 4,
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [
-    {
-      "id": "sitting-4-rows",
-      "kind": "sitting",
-      "minutes": 45,
-      "opened": "2026-09-14",
-      "age_days": 0
-    }
-  ],
+  "waiting_on_human": [],
   "median_opened_to_done": {
-    "days": 0,
-    "n": 25
+    "days": 1,
+    "n": 31
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 0,
-    "first_pass": 0,
-    "rate": null
+    "nodes": 21,
+    "first_pass": 12,
+    "rate": 0.5714285714285714
+  },
+  "record_rounds": {
+    "present": true,
+    "byNode": {
+      "briefa-p3b-owner-side-invalidation": 5,
+      "lod-tier-builder-route-b": 4,
+      "governance-verify-quotes": 3,
+      "governance-record-round-count": 1
+    },
+    "total": 13
   }
 }

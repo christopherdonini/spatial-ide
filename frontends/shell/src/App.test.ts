@@ -17,6 +17,7 @@ import {
   ApplyFilterDeps,
   applyFilter,
   handleCanvasCeilingRefusal,
+  handleSessionEnded,
   isScanInFlight,
   makeCandidateViewportDispatcher,
   makeDebouncedViewportQuery,
@@ -1061,5 +1062,123 @@ describe("S-2: App.tsx's own functional-updater call site for onResidencyStatusC
     const callSitePattern =
       /onResidencyStatusChange:\s*\(event\)\s*=>\s*setResidencyStatus\(\s*\(current\)\s*=>\s*nextResidencyStatus\(event,\s*current\)\s*\)/;
     expect(appSource).toMatch(callSitePattern);
+  });
+});
+
+
+/**
+ * **T6 (P3b §4): the App's own half of boundary 4** -- the handler both arms and both routes reach,
+ * driven from the real thrown SKP error, and the two call sites that must reach it.
+ *
+ * The input is the SKP wire fixture the Rust host round-trips
+ * (`protocol/skp/tests/data/v0-error-source_changed.json`), never an invented shape.
+ */
+describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
+  function realSourceChangedError(): SkpError {
+    const file = join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../../protocol/skp/tests/data/v0-error-source_changed.json"
+    );
+    return JSON.parse(readFileSync(file, "utf8")) as SkpError;
+  }
+
+  function realDetail(): string {
+    const e = realSourceChangedError();
+    return `${e.code}: ${e.message}`;
+  }
+
+  // RECORDED MUTATION for "sets the typed status with no machine prefix, and refuses picks": pass
+  // the raw `detail` to `setSessionEnded` instead of `formatTerminalRefusal(detail)`. Expected
+  // failure: that test fails on the message assertion -- the operator would read
+  // `engine.source_changed: refused: ...`, a machine code in front of a sentence (§8.6).
+  // OBSERVED: FAILED -- `AssertionError: expected 'engine.source_changed: refused: the s…' not to
+  // contain 'engine.source_changed'`.
+  it("sets the typed status with no machine prefix, and refuses picks", () => {
+    let ended: FormattedRefusal | null = null;
+    let hover: HoverReadout = null;
+
+    handleSessionEnded(realDetail(), {
+      isAlreadyEnded: () => false,
+      setSessionEnded: (r) => {
+        ended = r;
+      },
+      setHover: (h) => {
+        hover = h;
+      },
+    });
+
+    expect(ended).not.toBeNull();
+    expect(ended!.code).toBe("engine.source_changed");
+    expect(ended!.message).not.toContain("engine.source_changed");
+    expect(ended!.message).toContain("the source file changed while it was open");
+    // Picks are refused immediately, not only at the next pointer move.
+    expect(hover).toEqual({ kind: "session-ended" });
+  });
+
+  // RECORDED MUTATION for "is idempotent -- the first route to notice wins": drop the
+  // `isAlreadyEnded` guard. Expected failure: that test fails on the call-count assertion, and a
+  // second route's later detail would overwrite the first's status.
+  // OBSERVED: FAILED -- `AssertionError: expected "spy" to not be called at all, but actually been
+  // called 1 times`.
+  it("is idempotent -- the first route to notice wins", () => {
+    const setSessionEnded = vi.fn();
+    handleSessionEnded(realDetail(), {
+      isAlreadyEnded: () => true,
+      setSessionEnded,
+      setHover: vi.fn(),
+    });
+    expect(setSessionEnded).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "an unprefixed detail passes through whole rather than being split":
+  // remove the `/^engine\.[a-z0-9_]+$/` guard from `formatTerminalRefusal`. Expected failure: that
+  // test fails -- a transport-level detail containing ": " would be split at its first colon and an
+  // arbitrary word rendered as a refusal code.
+  // OBSERVED: FAILED -- `AssertionError: expected 'the socket closed' to be 'stream-failed'`.
+  it("an unprefixed detail passes through whole rather than being split", () => {
+    let ended: FormattedRefusal | null = null;
+    handleSessionEnded("the socket closed: no frame was ever received", {
+      isAlreadyEnded: () => false,
+      setSessionEnded: (r) => {
+        ended = r;
+      },
+      setHover: vi.fn(),
+    });
+    expect(ended!.code).toBe("stream-failed");
+    expect(ended!.message).toBe("the socket closed: no frame was ever received");
+  });
+
+  /**
+   * **The camera pre-check catch** (§2b's first product catch site), pinned at its call site.
+   *
+   * `reportViewportOutcome` is a closure over `App`'s own hooks and cannot be exported, so what is
+   * asserted here is the source of the one function both arms' untiled issues land in: that it
+   * still sets `viewportRefusal` exactly as before, that it additionally ends the session for this
+   * ONE code, and that it matches on `.skpError.code` rather than on the message.
+   *
+   * RECORDED MUTATION for "reportViewportOutcome keeps viewportRefusal and additionally ends the
+   * session, matched on the code": change the catch to `e.skpError.message.includes("source file
+   * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
+   * pinned message is the human's prose and is not required to contain the code (§4 T6's own
+   * mutation).
+   *
+   * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
+   * /if \(isSourceChangedRefusal\(e\)\) en…/`.
+   */
+  it("reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code", () => {
+    const appSource = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "App.tsx"),
+      "utf8"
+    );
+    expect(appSource).toMatch(/setViewportRefusal\(formatRefusal\(e\.skpError\)\);/);
+    expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\)\);/);
+    // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
+    expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
+    // The one pick-latch site, covering both arms.
+    expect(appSource).toMatch(
+      /onHover=\{\(readout\) => setHover\(latchedHoverReadout\(readout, sessionEndedRef\.current\)\)\}/
+    );
+    // And both construction sites subscribe the same handler.
+    expect(appSource.match(/onSessionEnded: endSession,/g) ?? []).toHaveLength(2);
   });
 });

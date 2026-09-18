@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17T22:03:00.284Z",
-  "plan_hash": "17bf157fcff6b5652c8d4c4a7f3f9e12f1acfb4e3a8315db05e3ae99128e956f",
+  "generated_at": "2026-09-18T11:30:28.631Z",
+  "plan_hash": "f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1343,6 +1343,61 @@
       }
     },
     {
+      "id": "governance-record-round-count",
+      "title": "health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "click",
+        "minutes": 2
+      },
+      "gate": "scripts/plan/RECORD-ROUND-COUNT-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 87
+      },
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        108,
+        109
+      ],
+      "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2",
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-verify-gate-file-exists",
+      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 7,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate",
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      }
+    },
+    {
       "id": "engine-tests-configured-connections",
       "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
       "kind": "task",
@@ -1386,7 +1441,7 @@
       },
       "gate": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p3b"
+        "pr": 86
       },
       "budget_minutes": 240,
       "generation": 1,

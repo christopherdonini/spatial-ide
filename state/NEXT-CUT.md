@@ -1,6 +1,6 @@
 # NEXT-CUT — Brief A: admission format semantics and the session identity lifecycle (the first post-tag cut)
 
-*Ported 2026-09-10 from `RELEASE-DRAFTS-0.1.0/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md` on the human's direction, under the release freeze (nothing past P0 runs before the human's sight; no installer, release text, or shell/kernel code on main until Part M and the v0.1.0 tag). The previous NEXT-CUT (the LOD and 1b drafts, the companion note, the post-release sequencing notes, the entry-66 bullet) is archived at `.cut-archive/NEXT-CUT-2026-09-10-lod-1b-drafts-and-notes.md`; the four post-tag drafts and two consults stay under `RELEASE-DRAFTS-0.1.0/post-tag/`. Transient, untracked; state to `.cut-archive/` at close.*
+*Ported 2026-09-10 from `state/drafts/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md` on the human's direction, under the release freeze (nothing past P0 runs before the human's sight; no installer, release text, or shell/kernel code on main until Part M and the v0.1.0 tag). The previous NEXT-CUT (the LOD and 1b drafts, the companion note, the post-release sequencing notes, the entry-66 bullet) is archived at `.cut-archive/NEXT-CUT-2026-09-10-lod-1b-drafts-and-notes.md`; the four post-tag drafts and two consults stay under `state/drafts/post-tag/`. Transient, untracked; state to `.cut-archive/` at close.*
 
 ## P0 status (custodian, 2026-09-10)
 

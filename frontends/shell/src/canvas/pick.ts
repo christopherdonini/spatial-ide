@@ -46,14 +46,59 @@ export interface PickConfirming {
   standing: PickResult;
 }
 
+/**
+ * **Brief A boundary 4, P3b §2a(iv): picks are refused because the session ended** -- the source
+ * this dataset was opened against was observed to have changed, so the residency behind every pick
+ * was cleared and the identities it handed out no longer refer to anything this client can resolve.
+ *
+ * **Why this is a state and not silence.** With residency cleared, `onHover` resolves no layer and
+ * emits `null` (`WorkingCanvas.tsx:1968-1972`), and `null` means *"nothing under the cursor"* --
+ * which is a different, and false, statement. ADR-010 rule 5 (`:68`, *"Staleness is signalled,
+ * never silently served"*) forbids exactly that reading, so the refusal is named.
+ *
+ * `kind` is the only field, for the reason `PickBelowResolution` above has only `kind`: there is no
+ * feature identity to report, by construction. Built by `latchedHoverReadout` below, which is the
+ * one place it is constructed.
+ */
+export interface PickSessionEnded {
+  kind: "session-ended";
+}
+
 /** `WorkingCanvasProps.onHover`'s own full result type -- `null` (nothing under the cursor),
  * `PickResult` (an ordinary, above-threshold pick, confirmed at the camera it was picked at),
- * `PickBelowResolution` (24(c)'s refusal), or `PickConfirming` (B1's labelled state).
+ * `PickBelowResolution` (24(c)'s refusal), `PickConfirming` (B1's labelled state), or
+ * `PickSessionEnded` (boundary 4's refusal).
  * Discriminate with the guards below, never a bare `"kind" in value` at a call site. */
-export type HoverReadout = PickResult | PickBelowResolution | PickConfirming | null;
+export type HoverReadout = PickResult | PickBelowResolution | PickConfirming | PickSessionEnded | null;
 
 export function isPickBelowResolution(value: HoverReadout): value is PickBelowResolution {
   return value !== null && "kind" in value && value.kind === "below-pick-resolution";
+}
+
+export function isPickSessionEnded(value: HoverReadout): value is PickSessionEnded {
+  return value !== null && "kind" in value && value.kind === "session-ended";
+}
+
+/**
+ * **The pick latch** (P3b §2a(iv)). Once this dataset's session has ended, every hover readout --
+ * whatever the canvas resolved -- becomes the named refusal.
+ *
+ * **One site covers both arms**, because hover is arm-independent: `App.tsx` wraps its single
+ * `onHover={setHover}` with this call, and the baseline and candidate arms share that surface.
+ *
+ * **Every input state is latched, including `null` and `PickConfirming`.** `null` matters because
+ * silence is the wrong answer (see `PickSessionEnded`'s own doc); `PickConfirming` matters because
+ * it *carries a standing id* (`pick.ts:44-47`) and rendering an id after the identities behind it
+ * were voided is precisely the stale-service ADR-010 rule 5 forbids.
+ *
+ * **The latch is permanent for the session.** It is cleared only by reopening the dataset, which
+ * remounts `WorkingCanvas` and rebuilds both managers (`App.tsx:1477`, keyed on
+ * `admitted.dataset`) -- boundary 4's own "until reopen" (`state/NEXT-CUT.md:58-59`), and §7's
+ * declared lifetime: no timeout, because a timeout would resurrect exactly what the never-resurrect
+ * rule prevents.
+ */
+export function latchedHoverReadout(readout: HoverReadout, sessionEnded: boolean): HoverReadout {
+  return sessionEnded ? { kind: "session-ended" } : readout;
 }
 
 export function isPickConfirming(value: HoverReadout): value is PickConfirming {
