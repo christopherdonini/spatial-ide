@@ -145,8 +145,8 @@
 // near-duplicate of it, per the P5 brief's own "the driver to extend, not duplicate").
 //
 // Everything above this note is the PRE-check route (T10, unchanged by this extension -- every
-// step below runs its ORIGINAL body, byte-for-byte, whenever SPATIAL_E2E_SOURCE_CHANGED_ROUTE is
-// unset or "pre"). Set it to "post" to run the other half of what engine/ADMISSION-PREREGISTRATION.md
+// step below runs its ORIGINAL body, unchanged apart from the indentation this branch's `if` adds,
+// whenever SPATIAL_E2E_SOURCE_CHANGED_ROUTE is unset or "pre"). Set it to "post" to run the other half of what engine/ADMISSION-PREREGISTRATION.md
 // section 12b's gate G-A2 requires: the post-check path, asserted separately from the pre-check path
 // S1-S5c above already cover, against engine/src/stream.rs's post-check (section 13 C of that
 // document: the check that runs AFTER DuckDB's result iterator is fully drained, not before a query

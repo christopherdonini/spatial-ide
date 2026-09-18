@@ -50,7 +50,7 @@
 //! **No standalone project-file or recipe-file format exists in this tree at this commit** —
 //! grepped, not assumed, against the same four-path scope above (`protocol/skp/src`, not the whole
 //! `protocol/*` tree: `protocol/transport-bakeoff/src/main.rs:302,566` write outside
-//! `#[cfg(test)]`, but that crate is `exclude`d from the workspace, `Cargo.toml:19-20`); nothing
+//! `#[cfg(test)]`, but the workspace root `Cargo.toml`'s `exclude` list names that crate); nothing
 //! outside the four families and the one exclusion resolves.
 
 use std::path::{Path, PathBuf};
