@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T14:07:16.817Z",
-  "plan_hash": "baa23fc1a66660703b4867824708a202ccbd0269b3fc692130367d8fcd04d5ed",
+  "generated_at": "2026-09-18T14:15:35.594Z",
+  "plan_hash": "a0deb99003bfae2b659800dca1854089499869d7307d3dcf6e71c4b7683aeb41",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2658,7 +2658,7 @@
       },
       "gate": "frontends/shell/P3B-TEST-NAMES-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p3b-test-names"
+        "pr": 90
       },
       "felt_verdict": false,
       "entries": [

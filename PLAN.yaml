@@ -1679,7 +1679,7 @@ nodes:
     depends_on: [briefa-p3b-owner-side-invalidation]
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/P3B-TEST-NAMES-PREREGISTRATION.md
-    evidence: {branch: cut/briefa-p3b-test-names}
+    evidence: {pr: 90}
     felt_verdict: false
     entries: [110]
     summary: "Short-form piece, dispatched 2026-09-18 (entry 110): rename one Rust fn and five vitest test titles in place; assertions untouched; two erratum amendments appended (shell 17, engine 14); one kernel doc-comment renamed; so the six §4 claims verify-test-claims.mjs currently reports as planned become binding matches"
