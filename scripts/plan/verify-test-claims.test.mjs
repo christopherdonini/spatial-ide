@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import {
   isTestShaped,
@@ -181,4 +182,93 @@ test('a_gate_file_named_by_any_done_node_is_never_planned', () => {
     ],
   };
   assert.deepEqual([...plannedGateFiles(plan)], ['engine/T-PREREGISTRATION.md']);
+});
+
+// The SUPERSEDED rule (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2). A
+// two-commit history: v1's claim line is fixed and hashed at its own commit, v2 appends a pin
+// referencing that exact `path:line @ <v1 sha> sha256:<hex>` with the word "superseded" beside it —
+// exactly ADMISSION/OWNER-INVALIDATION's own `path:line @ 46cde2c sha256:<hex>` shape.
+const SUPERSEDED_DOC = 'X-PREREGISTRATION.md';
+const SUPERSEDED_V1 = '# Doc\n\nVerified by test `an_old_test_name_here`.\n';
+const SUPERSEDED_CLAIM_LINE = 3; // "Verified by test `an_old_test_name_here`." in SUPERSEDED_V1
+
+function lineOfV1(n) {
+  return `${SUPERSEDED_V1.split('\n')[n - 1]}\n`;
+}
+
+function sha256Hex(s) {
+  return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
+}
+
+/**
+ * `pinnedLine` (default: the claim's own line) is the line the appended row pins; `hash` (default:
+ * that pinned line's own real hash) lets a test hand in a tampered one; `word` (default: "superseded")
+ * lets a test drop the required marker. Returns { dir, rev, reference }.
+ */
+function supersededFixture({ pinnedLine = SUPERSEDED_CLAIM_LINE, hash, word = 'superseded' } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-'));
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), SUPERSEDED_V1);
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'T'], { cwd: dir });
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'v1'], { cwd: dir });
+  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  const realHash = sha256Hex(lineOfV1(pinnedLine));
+  const usedHash = hash ?? realHash;
+  const reference = `${SUPERSEDED_DOC}:${pinnedLine} @ ${rev} sha256:${usedHash}`;
+  const v2 = `${SUPERSEDED_V1}\nAmendment 1 -- ${reference} (${word}).\n`;
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), v2);
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'v2'], { cwd: dir });
+  return { dir, rev, reference };
+}
+
+// RECORDED MUTATION: drop the superseded check in runVerifyTestClaims (route every claim straight to
+// `findings`/`planned`, ignoring `supersededSpans`/`findSupersededSpan`) →
+// a_superseded_claim_with_a_valid_pin_is_advisory_not_a_failure fails: "AssertionError
+// [ERR_ASSERTION]: no binding finding expected ... 1 !== 0" (the claim lands in `findings` instead).
+test('a_superseded_claim_with_a_valid_pin_is_advisory_not_a_failure', () => {
+  const { dir, reference } = supersededFixture();
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
+  assert.equal(superseded.length, 1, JSON.stringify(superseded));
+  assert.equal(superseded[0].name, 'an_old_test_name_here');
+  assert.equal(superseded[0].relPath, SUPERSEDED_DOC);
+  assert.equal(superseded[0].reference, reference);
+});
+
+// RECORDED MUTATION: in findSupersededSpan, skip the `sha256Hex(slice) === span.hash` comparison
+// (return the span unconditionally once it covers `line`) →
+// a_superseded_pin_with_the_wrong_hash_does_not_exempt fails: "AssertionError [ERR_ASSERTION]:
+// wrong-hash pin must not exempt: [] ... 0 !== 1" (the claim wrongly lands in `superseded`).
+test('a_superseded_pin_with_the_wrong_hash_does_not_exempt', () => {
+  const { dir } = supersededFixture({ hash: '0'.repeat(64) });
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `wrong-hash pin must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].name, 'an_old_test_name_here');
+});
+
+// RECORDED MUTATION: drop the `containsSupersededOutsideBackticks` guard in supersededSpans (accept
+// any hash-pinned self-reference, marked superseded or not) →
+// a_pin_without_the_word_superseded_does_not_exempt fails: "AssertionError [ERR_ASSERTION]:
+// unmarked pin must not exempt: [] ... 0 !== 1".
+test('a_pin_without_the_word_superseded_does_not_exempt', () => {
+  const { dir } = supersededFixture({ word: 'retired' });
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `unmarked pin must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: in findSupersededSpan, drop the `line < span.startLine || line > span.endLine`
+// range check (match the first span whose OWN hash verifies, regardless of the claim's line) →
+// a_pin_to_a_different_line_does_not_exempt fails: "AssertionError [ERR_ASSERTION]: pin to a
+// different line must not exempt: [] ... 0 !== 1" — the line-1 pin (a real, correctly-hashed
+// self-reference, just to the WRONG line) would wrongly exempt line 3's claim.
+test('a_pin_to_a_different_line_does_not_exempt', () => {
+  const { dir } = supersededFixture({ pinnedLine: 1 }); // pins line 1 ("# Doc"), not the claim's line 3
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `pin to a different line must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
 });

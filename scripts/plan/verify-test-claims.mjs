@@ -44,9 +44,23 @@
 // that reuses an existing test's name; and, by the conservative recognizer, a test claim phrased
 // without a narrative prefix AND far from the word "test" (a recall gap, not a false alarm). Node's
 // standard library only.
+//
+// SUPERSEDED (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2 -- a pinned
+// `path:line @ <rev> sha256:<hex>` reference is a historical pin, never silently read as current): a
+// claim at line L of file F that does NOT exist in the current tree is nonetheless not a binding
+// finding when F itself carries a hash-pinned, `superseded`-marked reference to that very line -- an
+// append-only record's own later row saying "this line is old, and here is the proof". Recognized by
+// `HASH_REF_RE`, the same reference grammar `verify-quotes.mjs` (round 12's "quote by reference"
+// mechanism) uses for `` `path:a[-b]` @ <rev> sha256:<hex> ``: a trimmed local copy, since that script
+// is not yet on `main` (`governance/verify-quotes`) to import from. This rule only recognizes an
+// EXPLICIT path equal to the citing file's own repo-relative path -- a bare `:line` self-reference is
+// already forbidden by the round-14 root-cause rule, so a real self-referencing pin always spells the
+// file's own path in full; a bare-reference / nearest-preceding-cite binding (verify-quotes.mjs's own
+// `nearestPathInParagraph`) is out of this piece's scope. See `supersededSpans`/`findSupersededSpan`.
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
@@ -105,6 +119,88 @@ export function extractClaimedTests(text) {
     push(m[2], m.index, 'call');
   }
   return out;
+}
+
+// Reused, trimmed from `verify-quotes.mjs`'s `HASH_REF_RE` (round 12's "quote by reference" grammar;
+// `path:a[-b]` @ <rev> sha256:<hex>`, backticks and `@ <rev>` each optional, `<rev>` any non-whitespace
+// non-backtick run). Group 1 (path) is REQUIRED here, unlike the source grammar: a bare `:line` self
+// reference is out of scope (see the module doc above).
+const HASH_REF_RE = /`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\d+)(?:-(\d+))?`?(?:\s*@\s*([^\s`]+))?\s*sha256:([0-9a-f]{64})`?/g;
+
+function lineTextOf(text, lineNo) {
+  return text.split('\n')[lineNo - 1] ?? '';
+}
+
+/** Condition (b): the word `superseded` appears on the reference's own line, outside any backtick span. */
+export function containsSupersededOutsideBackticks(lineText) {
+  return /\bsuperseded\b/i.test(lineText.replace(/`[^`]*`/g, ''));
+}
+
+/**
+ * Every hash-pinned, `superseded`-marked reference in `text` whose path is `relPath` itself (F's own
+ * path) -- conditions (a) and (b) of the rule, NOT (c) (the hash is checked lazily, per-claim, in
+ * `findSupersededSpan`, so a file with no matching claim never pays for a `git show`).
+ * Returns [{ startLine, endLine, rev, hash, reference }].
+ */
+export function supersededSpans(relPath, text) {
+  const out = [];
+  HASH_REF_RE.lastIndex = 0;
+  let m;
+  while ((m = HASH_REF_RE.exec(text))) {
+    if (m[1] !== relPath) continue;
+    const refLine = lineOf(text, m.index);
+    if (!containsSupersededOutsideBackticks(lineTextOf(text, refLine))) continue;
+    out.push({
+      startLine: Number(m[2]),
+      endLine: m[3] !== undefined ? Number(m[3]) : Number(m[2]),
+      rev: m[4] ?? 'HEAD',
+      hash: m[5].toLowerCase(),
+      reference: m[0],
+    });
+  }
+  return out;
+}
+
+function gitShowFile(root, rev, relPath) {
+  try {
+    return execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch {
+    return null;
+  }
+}
+
+// Lines a..b (1-indexed, inclusive), each with its own trailing LF, except a fileless-final-newline's
+// own last line -- the same slicing `verify-quotes.mjs`'s `linesWithLF` performs.
+function linesWithLF(content, a, b) {
+  const starts = [0];
+  for (let i = 0; i < content.length; i++) if (content.charCodeAt(i) === 10) starts.push(i + 1);
+  const totalLines = content.endsWith('\n') ? starts.length - 1 : starts.length;
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b > totalLines) return null;
+  const startOffset = starts[a - 1];
+  const endOffset = b < starts.length ? starts[b] : content.length;
+  return content.slice(startOffset, endOffset);
+}
+
+function sha256Hex(s) {
+  return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
+}
+
+/**
+ * Condition (c), checked against `spans` in order: the first span whose range contains `line` AND
+ * whose hash recomputes against `git show <rev>:relPath`'s own lines wins. A span that does not cover
+ * `line`, or whose rev/path is unresolvable, or whose hash does not match, is not a match -- the claim
+ * stays a binding finding (or planned), exactly as if no pin existed. Returns the winning span or null.
+ */
+export function findSupersededSpan(root, relPath, line, spans) {
+  for (const span of spans) {
+    if (line < span.startLine || line > span.endLine) continue;
+    const content = gitShowFile(root, span.rev, relPath);
+    if (content === null) continue;
+    const slice = linesWithLF(content, span.startLine, span.endLine);
+    if (slice === null) continue;
+    if (sha256Hex(slice) === span.hash) return span;
+  }
+  return null;
 }
 
 const RUST_FN_RE = /\bfn\s+([a-z_][A-Za-z0-9_]*)/g;
@@ -184,9 +280,14 @@ export function plannedGateFiles(plan) {
 }
 
 /**
- * Returns { findings, planned, scanned, claims }. Each entry: { relPath, line, name }.
+ * Returns { findings, planned, superseded, scanned, claims }. Each entry: { relPath, line, name }
+ * (`superseded` entries additionally carry `reference`, the matched pin text).
  * `plannedGates` is a Set of repo-relative paths whose unmatched claims are advisory, not binding
- * (see PLANNED vs BINDING above); anything not in it is binding.
+ * (see PLANNED vs BINDING above); anything not in it is binding. A claim that does not exist is
+ * SUPERSEDED, and reported under that heading instead of `planned`/`findings`, when the claiming
+ * file's own text pins that exact line as historical (see `supersededSpans`/`findSupersededSpan`
+ * above) — checked whether or not the file is also planned, since a superseded claim "never fails the
+ * run and is never counted as existing" regardless of its node's status.
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -196,17 +297,24 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const targets = claimFiles(files);
   const findings = [];
   const planned = [];
+  const superseded = [];
   let claims = 0;
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
     const isPlanned = exempt.has(rel);
+    const spans = supersededSpans(rel, text);
     for (const c of extractClaimedTests(text)) {
       claims++;
       if (testExists(c.name, index)) continue;
+      const span = spans.length ? findSupersededSpan(root, rel, c.line, spans) : null;
+      if (span) {
+        superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference });
+        continue;
+      }
       (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name });
     }
   }
-  return { findings, planned, scanned: targets.length, claims };
+  return { findings, planned, superseded, scanned: targets.length, claims };
 }
 
 function main() {
@@ -221,15 +329,21 @@ function main() {
     // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
     console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
   }
-  const { findings, planned, scanned, claims } = runVerifyTestClaims({ repoRoot: REPO_ROOT, plannedGates });
+  const { findings, planned, superseded, scanned, claims } = runVerifyTestClaims({ repoRoot: REPO_ROOT, plannedGates });
   if (planned.length > 0 && !quiet) {
     console.error(`verify:test-claims planned (advisory) — ${planned.length} claimed test(s) in a gate file whose node is not done:`);
     for (const p of planned) {
       console.error(`  - ${p.relPath}:${p.line} — claims test \`${p.name}\` — planned — ${notes.get(p.relPath) ?? 'node not done'}`);
     }
   }
+  if (superseded.length > 0 && !quiet) {
+    console.error(`verify:test-claims superseded (advisory) — ${superseded.length} claimed test(s) pinned historical by a hash-checked reference:`);
+    for (const s of superseded) {
+      console.error(`  - ${s.relPath}:${s.line} — claims test \`${s.name}\` — superseded — pinned by ${s.reference}`);
+    }
+  }
   if (findings.length === 0) {
-    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned (${planned.length} planned, advisory).`);
+    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned or superseded (${planned.length} planned, ${superseded.length} superseded, advisory).`);
     return;
   }
   if (!quiet) {
