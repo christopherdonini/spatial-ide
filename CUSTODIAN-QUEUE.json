@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T21:12:56.235Z",
-  "plan_hash": "27f9d8bcadf088ac4efe6edf126f84c9f0e684f7e97ee5848684a33a393a83f8",
+  "generated_at": "2026-09-18T21:35:21.085Z",
+  "plan_hash": "ca561eba150e768223a43bc5f6bdd6a3f4b32d7610da501903a6de21a799a8f5",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -529,14 +529,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "spike/adr-029-g1"
+        "pr": 92
       },
       "dates": {
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "RULED 2026-09-18 (round 16, item 2): read 2 FAIL, STOPPED under Rule 7 (gate-log 80, 86) -- the architect reduces the README to the facts read 2 verified clean and the spike lands with the reduced record by a PR for the click; done on merge. What G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path and is fine-grained; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB reports an estimated denominator. The route: deferred to Brief B B2 (round 16, item 3; node decision-adr-029-scan-progress-route). Earlier: RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
-      "evidence_label": "branch `spike/adr-029-g1`"
+      "summary": "PR #92 open for the click (2026-09-18): the architect's reduced README applied byte-exact at 2bc9756 (sha256 c1c6f705 over 273 lines). RULED 2026-09-18 (round 16, item 2): read 2 FAIL, STOPPED under Rule 7 (gate-log 80, 86) -- the architect reduces the README to the facts read 2 verified clean and the spike lands with the reduced record by a PR for the click; done on merge. What G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path and is fine-grained; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB reports an estimated denominator. The route: deferred to Brief B B2 (round 16, item 3; node decision-adr-029-scan-progress-route). Earlier: RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
+      "evidence_label": "PR #92"
     },
     {
       "id": "governance-verify-quotes",
