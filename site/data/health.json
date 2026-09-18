@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T21:35:21.214Z",
+  "generated_at": "2026-09-18T22:19:30.078Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 31826313216,
+        "bytes": 32154218496,
         "total": 510319915008
       },
       {
@@ -23,9 +23,9 @@
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 1,
     "by_name": {
-      "cargo": 2,
+      "cargo": 0,
       "node": 1,
       "spatial-ide-shell": 0
     }
@@ -44,6 +44,13 @@
       "minutes": 5,
       "opened": "2026-09-18",
       "age_days": 0
+    },
+    {
+      "id": "decision-generated-outputs-merge-strategy",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-19",
+      "age_days": -1
     }
   ],
   "median_opened_to_done": {
@@ -52,9 +59,9 @@
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 27,
+    "nodes": 28,
     "first_pass": 12,
-    "rate": 0.4444444444444444
+    "rate": 0.42857142857142855
   },
   "record_rounds": {
     "present": true,
@@ -63,8 +70,10 @@
       "lod-tier-builder-route-b": 4,
       "governance-verify-quotes": 3,
       "governance-record-round-count": 1,
-      "briefa-p3b-test-names": 1
+      "briefa-p3b-test-names": 1,
+      "briefa-p5-gate-tests": 1,
+      "briefa-p4-corpus-run": 1
     },
-    "total": 14
+    "total": 16
   }
 }
