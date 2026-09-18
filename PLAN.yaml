@@ -1335,6 +1335,24 @@ nodes:
     summary: "RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling"
     dates: {opened: 2026-09-18, done: null}
 
+  - id: decision-generated-outputs-merge-strategy
+    title: "Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: blocked
+    order: 2
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 5}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: [114]
+    summary: "The custodian's reading is DECISIONS-PENDING.md entry 114: (A) the standing mechanic alone (regenerate on merge, now AUTONOMY section 2); (B) a .gitattributes merge driver -- insufficient, GitHub's merge ignores custom drivers; (C) site/index.html and site/data/plan.json built by the Pages workflow from PLAN.yaml and no longer tracked, the queue files kept tracked with a PR CI drift check against the merge ref -- recommended, one governance piece after the current wave; (D) a bot commit on main after merge -- advised against, it fights the branch protection. Until the ruling, (A) is the rule"
+    dates: {opened: 2026-09-19, done: null}
+
   # ============================== PROPOSED ==============================
 
   - id: release-v0-1-1
