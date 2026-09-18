@@ -33,11 +33,14 @@
 //! as this instrument's own fact; that fact is not compared against the G-A2 text, and the run says
 //! so by name rather than silently marking either "as predicted" or "DEVIATION".
 //!
-//! **RECORDED MUTATION.** Inverting the comparison in [`sha256_matches`] (`==` to `!=`) makes every
-//! file in the corpus report a hash mismatch regardless of its actual bytes; the run then records
-//! "not run — hash mismatch" for all 17 rows instead of opening any of them, and the final assertion
-//! that every row reached a real outcome fails — observed by making that one-line change locally and
-//! re-running this test, which fails at `assert_eq!(rows_opened, ...)` below rather than at setup.
+//! **RECORDED MUTATION — applied and observed, not only asserted.** Inverting the comparison in
+//! [`sha256_matches`] (`==` to `!=`) makes every file in the corpus report a hash mismatch
+//! regardless of its actual bytes; the run then records "not run — hash mismatch" for all 17 rows
+//! instead of opening any of them. Observed by making that one-line change locally and re-running
+//! this test: it panics at `assert!(rows_opened > 0, ...)` below
+//! (`the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results ...
+//! FAILED`, "at least one row must have actually been opened and observed") — a real failure inside
+//! the test's own assertions, not a setup-time panic — then reverted.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
