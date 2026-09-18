@@ -1649,3 +1649,24 @@ text is not on main, the commit named is the branch commit that carries it.
 | attempt 1 | recorded | `state/gate-log.json` record 89 (on `origin/main`; not yet present on this branch's own copy) |
 
 **Read this amendment first.**
+
+### Amendment 18 -- P4 record, corrected (2026-09-19, appended; the architect's shape after gate-log record 95)
+
+**Written after the P4 run's results were seen.** Filed as 18, not the mechanically-next 16: 16 and 17 are carried by cut/briefa-p5, 14 by cut/briefa-p3b-test-names, per the coordinator's numbering of 2026-09-19; pins name their commits, and where the cited text is not on main the commit named is the branch commit that carries it. Amendment 15 was appended at bfda11e, restored at 2f6d399 and re-appended at 5d38ce0; append-only is proved against 26f3154, not the immediate parent. Classes: 1 (written after results; a withdrawal or narrowing row), 2 (deviation, Scope not edited), 3 (pointer rows).
+
+| id | status | reference |
+| --- | --- | --- |
+| runner (corrected) | recorded | `engine/tests/admission_p4_corpus.rs:753-756 @ f1b9c85d798ca9e4fc0409aea548ef887674bbb1 sha256:cf524a0d4596c8ee9b42d7233077b69ab6fb68c97e357090ea14c459860569fa` |
+| results (regenerated) | recorded | `engine/ADMISSION-RESULTS.md:1 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:2eb8d0f50a9be0a1eaec1a11304dec4b8206f5bf97ce0fef8afd055511533ca0` |
+| table | recorded | `engine/ADMISSION-RESULTS.md:10-28 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:697101152d70ef2d5d323826397cae6fc668c7fa70f0a3ffac60ab339953adf4` |
+| deviation-M-4 | DEVIATION | row `engine/ADMISSION-RESULTS.md:26 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:722cda4ce4d9a01329656e36d3b54ed1ecf1f727b11db4c208afae428479dae8` vs §4 mutation table, M-4 |
+| not-comparable | recorded | rows `engine/ADMISSION-RESULTS.md:27-28 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:3e80f2293b3b70e4e053dd1d9f1e6f93229ff3b7abdccb876c59a3ccc24fe0ad`; notes `engine/ADMISSION-RESULTS.md:47-48 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:533960730d26f3230dfe5c007bca99ab2ea4e834b3b925f60c70b8bf9764d6bb` |
+| unrun components (#3, #8 boundary 8) | unrun — reason | rows `engine/ADMISSION-RESULTS.md:14 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:1edd6201b0c2c70fddd652c273c2580941d97ea57832651cd9696ab561ebe570` (#3), `engine/ADMISSION-RESULTS.md:19 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:da0009efa2cb73e025aa963669e2682678d721ec381b3685ea506af36311eb87` (#8); notes `engine/ADMISSION-RESULTS.md:34 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:5284feac0d7ab9dea5764f83e3c0078c1e5a6d9119b93fa0165d3cbf47c5ce34` (#3), `engine/ADMISSION-RESULTS.md:39 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:61c6c6bbddf3de0a7458f7df0f886da2212163683828170095495c2abe87f054` (#8); predictions line `engine/ADMISSION-RESULTS.md:69 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:dd6137893236262fb53efb4791a49be2e3fbb373ff9f6e5c7521343064e0506d` vs §3 rows 3, 8 |
+| retention | recorded | row `engine/ADMISSION-RESULTS.md:14 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:1edd6201b0c2c70fddd652c273c2580941d97ea57832651cd9696ab561ebe570` vs §3 row 3 |
+| predictions | recorded | `engine/ADMISSION-RESULTS.md:59-69 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:304aefecf560df7f328e12ce9fc26c2eac89d794fe098f92e44244dc38707968` |
+| G-A5 | recorded | table + totals pins above (`engine/ADMISSION-RESULTS.md:50-57 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:8db618538cddb9f674dc6cb2e8fdd96f8f1df5372d7aab53fd61c3c44680f9fa`) vs §12b |
+| G-A6 | recorded | `git diff --name-only origin/main...ff1b48168f2d15ef8e56613113c0bb11a5d01556` -- 3 files (`engine/ADMISSION-PREREGISTRATION.md` appended, `engine/ADMISSION-RESULTS.md` new, `engine/tests/admission_p4_corpus.rs` new), no existing test file touched; `cargo test --workspace --locked @ ff1b48168f2d15ef8e56613113c0bb11a5d01556` -- rc 0, 647 passed / 0 failed / 39 ignored, 0 warning lines |
+| superseded | Amendment 15's `runner`, `results`, `deviation-M-4`, `not-comparable`, `predictions`, `G-A5`, `G-A6` rows | superseded by the rows above; and Amendment 15's first line, which lacks the written-after statement this amendment's first line carries |
+| attempts | recorded | `state/gate-log.json` records 89, 95, 96 and this round's (on `origin/main`) |
+
+**Read this amendment first, for Amendments 1-18.**
