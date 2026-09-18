@@ -1185,4 +1185,3 @@ that number is authoritative over this heading and the gate renumbers.
 | id | status | reference |
 | --- | --- | --- |
 | G-A2, both routes | see engine record | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 16 (or its renumbering per that amendment's own note) |
-| G-A2 post-check, real-app runs | green, green after one mutation reverted | reports `frontends/shell/e2e/out/source-changed-1789739850935.json` (isolated), `frontends/shell/e2e/out/source-changed-1789739920074.json` (mutation), `frontends/shell/e2e/out/source-changed-1789739975354.json` (reverted), 2026-09-18; the mutated line is `frontends/shell/src/residency/candidateArmSession.ts:1076` |
