@@ -186,10 +186,13 @@ test('a_gate_file_named_by_any_done_node_is_never_planned', () => {
 
 // The SUPERSEDED rule (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2). A
 // two-commit history: v1's claim line is fixed and hashed at its own commit, v2 appends a pin
-// referencing that exact `path:line @ <v1 sha> sha256:<hex>` with the word "superseded" beside it —
-// exactly ADMISSION/OWNER-INVALIDATION's own `path:line @ 46cde2c sha256:<hex>` shape.
+// referencing it. The appended row is a real markdown TABLE ROW, byte-ALIKE in shape (not content) to
+// `OWNER-INVALIDATION-PREREGISTRATION.md:1195` on `cut/briefa-p3b-test-names` @ `46cde2c` -- the
+// reference inside ONE backtick span, in its own table cell, with `superseded` in a different cell
+// (attempt-1 architect gate B6).
 const SUPERSEDED_DOC = 'X-PREREGISTRATION.md';
-const SUPERSEDED_V1 = '# Doc\n\nVerified by test `an_old_test_name_here`.\n';
+const SUPERSEDED_CLAIM_NAME = 'an_old_test_name_here';
+const SUPERSEDED_V1 = `# Doc\n\nVerified by test \`${SUPERSEDED_CLAIM_NAME}\`.\n`;
 const SUPERSEDED_CLAIM_LINE = 3; // "Verified by test `an_old_test_name_here`." in SUPERSEDED_V1
 
 function lineOfV1(n) {
@@ -200,28 +203,47 @@ function sha256Hex(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 }
 
-/**
- * `pinnedLine` (default: the claim's own line) is the line the appended row pins; `hash` (default:
- * that pinned line's own real hash) lets a test hand in a tampered one; `word` (default: "superseded")
- * lets a test drop the required marker. Returns { dir, rev, reference }.
- */
-function supersededFixture({ pinnedLine = SUPERSEDED_CLAIM_LINE, hash, word = 'superseded' } = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-'));
-  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), SUPERSEDED_V1);
+function gitRepoAt(dir, seedRel, seedContent) {
+  fs.writeFileSync(path.join(dir, seedRel), seedContent);
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: dir });
   execFileSync('git', ['config', 'user.name', 'T'], { cwd: dir });
   execFileSync('git', ['add', '-A'], { cwd: dir });
   execFileSync('git', ['commit', '-q', '-m', 'v1'], { cwd: dir });
-  const rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
-  const realHash = sha256Hex(lineOfV1(pinnedLine));
-  const usedHash = hash ?? realHash;
-  const reference = `${SUPERSEDED_DOC}:${pinnedLine} @ ${rev} sha256:${usedHash}`;
-  const v2 = `${SUPERSEDED_V1}\nAmendment 1 -- ${reference} (${word}).\n`;
-  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), v2);
+  return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+}
+
+function commitAll(dir, msg) {
   execFileSync('git', ['add', '-A'], { cwd: dir });
-  execFileSync('git', ['commit', '-q', '-m', 'v2'], { cwd: dir });
-  return { dir, rev, reference };
+  execFileSync('git', ['commit', '-q', '-m', msg], { cwd: dir });
+}
+
+/** A real table-row pin: reference in ONE backtick span, `word` in a different cell (attempt-1 B6). */
+function pinRow({ relPath, pinnedLine, rev, hash, word }) {
+  const refText = rev === undefined ? `${relPath}:${pinnedLine} sha256:${hash}` : `${relPath}:${pinnedLine} @ ${rev} sha256:${hash}`;
+  const shortRev = rev === undefined ? 'unknown' : rev.slice(0, 7);
+  return `| T3 | quotes the title as of \`${shortRev}\`; ${word} | \`${refText}\` |\n`;
+}
+
+/**
+ * `pinnedLine` (default: the claim's own line) is the line the appended row pins; `hash` (default:
+ * that pinned line's own real hash) lets a test hand in a tampered one; `word` (default: "superseded")
+ * lets a test drop the required marker; `omitRev`/`revOverride` let a test drop `@ <rev>` entirely or
+ * substitute a non-commit ref (a branch name). Returns { dir, v1Rev, reference }.
+ */
+function supersededFixture({ pinnedLine = SUPERSEDED_CLAIM_LINE, hash, word = 'superseded', omitRev = false, revOverride } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-'));
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
+  const usedHash = hash ?? sha256Hex(lineOfV1(pinnedLine));
+  const revForRow = omitRev ? undefined : (revOverride ?? v1Rev);
+  const row = pinRow({ relPath: SUPERSEDED_DOC, pinnedLine, rev: revForRow, hash: usedHash, word });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'v2');
+  // The reference cell is itself a backtick span (`pinRow`'s own shape), and `HASH_REF_RE`'s match
+  // (`m[0]`, what `findSupersededSpan` returns as `span.reference`) includes that wrapping backtick.
+  const reference =
+    revForRow === undefined ? `\`${SUPERSEDED_DOC}:${pinnedLine} sha256:${usedHash}\`` : `\`${SUPERSEDED_DOC}:${pinnedLine} @ ${revForRow} sha256:${usedHash}\``;
+  return { dir, v1Rev, reference };
 }
 
 // RECORDED MUTATION: drop the superseded check in runVerifyTestClaims (route every claim straight to
@@ -233,27 +255,37 @@ test('a_superseded_claim_with_a_valid_pin_is_advisory_not_a_failure', () => {
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
   assert.equal(superseded.length, 1, JSON.stringify(superseded));
-  assert.equal(superseded[0].name, 'an_old_test_name_here');
+  assert.equal(superseded[0].name, SUPERSEDED_CLAIM_NAME);
   assert.equal(superseded[0].relPath, SUPERSEDED_DOC);
   assert.equal(superseded[0].reference, reference);
 });
 
-// RECORDED MUTATION: in findSupersededSpan, skip the `sha256Hex(slice) === span.hash` comparison
-// (return the span unconditionally once it covers `line`) →
-// a_superseded_pin_with_the_wrong_hash_does_not_exempt fails: "AssertionError [ERR_ASSERTION]:
-// wrong-hash pin must not exempt: [] ... 0 !== 1" (the claim wrongly lands in `superseded`).
+// Attempt-1 reviewer gate B2: three of the four original RECORDED MUTATION comments here quoted a
+// failure no run actually printed -- a fabricated composite (the passing shape's `[]`/`0 !== 1`
+// spliced with the failing shape's operands). Each below was RE-CAPTURED by applying the mutation for
+// real, running `node --test scripts/plan/verify-test-claims.test.mjs`, copying the printed message,
+// then reverting. The temp repo's own commit sha and content hash differ every run (a fresh git init
+// per test), so the reference string's variable part is elided `<sha>`/`<hash>`; the message text,
+// the array shape, and the final `1 !== 0` comparison are copied as printed.
+
+// RECORDED MUTATION: in findSupersededSpan, skip the `sha256Hex(slice) !== span.hash` comparison
+// (`continue` removed) → fails: "AssertionError [ERR_ASSERTION]: wrong-hash pin must not exempt:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0" (the claim wrongly lands in `superseded`).
 test('a_superseded_pin_with_the_wrong_hash_does_not_exempt', () => {
   const { dir } = supersededFixture({ hash: '0'.repeat(64) });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(superseded.length, 0, `wrong-hash pin must not exempt: ${JSON.stringify(superseded)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
-  assert.equal(findings[0].name, 'an_old_test_name_here');
+  assert.equal(findings[0].name, SUPERSEDED_CLAIM_NAME);
 });
 
-// RECORDED MUTATION: drop the `containsSupersededOutsideBackticks` guard in supersededSpans (accept
-// any hash-pinned self-reference, marked superseded or not) →
-// a_pin_without_the_word_superseded_does_not_exempt fails: "AssertionError [ERR_ASSERTION]:
-// unmarked pin must not exempt: [] ... 0 !== 1".
+// RECORDED MUTATION: in supersededSpans, drop the `containsSupersededOutsideBackticks` guard →
+// fails: "AssertionError [ERR_ASSERTION]: unmarked pin must not exempt:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0". This same mutation also fails
+// `a_pin_with_the_word_superseded_only_in_a_double_backtick_span_does_not_exempt` below (both tests
+// exercise this one guard); its own, narrower mutation is recorded separately at that test.
 test('a_pin_without_the_word_superseded_does_not_exempt', () => {
   const { dir } = supersededFixture({ word: 'retired' });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
@@ -261,14 +293,84 @@ test('a_pin_without_the_word_superseded_does_not_exempt', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
+// Line 1 ALSO names the claim (as bare prose, not a backticked second claim), so condition (d) alone
+// cannot save this test -- only the range check can. Isolates the range check from condition (d)
+// (their first shape, a bare `# Doc` pin, stopped discriminating once condition (d) was added: without
+// the claimed name anywhere in line 1, condition (d) alone already refused that pin).
 // RECORDED MUTATION: in findSupersededSpan, drop the `line < span.startLine || line > span.endLine`
-// range check (match the first span whose OWN hash verifies, regardless of the claim's line) →
-// a_pin_to_a_different_line_does_not_exempt fails: "AssertionError [ERR_ASSERTION]: pin to a
-// different line must not exempt: [] ... 0 !== 1" — the line-1 pin (a real, correctly-hashed
-// self-reference, just to the WRONG line) would wrongly exempt line 3's claim.
+// check → fails: "AssertionError [ERR_ASSERTION]: pin to a different line must not exempt:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:1
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0" -- the reference's own `:1` shows the wrong-line span won.
 test('a_pin_to_a_different_line_does_not_exempt', () => {
-  const { dir } = supersededFixture({ pinnedLine: 1 }); // pins line 1 ("# Doc"), not the claim's line 3
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-wrongline-'));
+  const v1 = `# Doc mentions ${SUPERSEDED_CLAIM_NAME} in passing.\n\nVerified by test \`${SUPERSEDED_CLAIM_NAME}\`.\n`;
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, v1);
+  const line1 = `${v1.split('\n')[0]}\n`; // pinned line 1's own historical bytes
+  const row = pinRow({ relPath: SUPERSEDED_DOC, pinnedLine: 1, rev: v1Rev, hash: sha256Hex(line1), word: 'superseded' });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${v1}\n${row}`);
+  commitAll(dir, 'v2');
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(superseded.length, 0, `pin to a different line must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].name, SUPERSEDED_CLAIM_NAME);
+});
+
+// Condition (d), attempt-1 architect gate B1. v1's line 3 is unrelated historical prose; v2 REPLACES
+// that line with the claim and appends a pin whose hash matches v1's own (unrelated) bytes -- valid
+// range, valid hash, marked superseded, but the historical text never names the claim.
+// RECORDED MUTATION: in findSupersededSpan, drop the `if (!slice.includes(name)) continue;` check →
+// fails: "AssertionError [ERR_ASSERTION]: a pin whose span lacks the claimed name must not exempt:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0".
+test('a_pin_whose_span_lacks_the_claimed_name_does_not_exempt', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-namemismatch-'));
+  const v1 = '# Doc\n\nNothing interesting on this historical line.\n';
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, v1);
+  const historicalLine = `${v1.split('\n')[2]}\n`; // line 3, as it read at v1Rev
+  const row = pinRow({ relPath: SUPERSEDED_DOC, pinnedLine: 3, rev: v1Rev, hash: sha256Hex(historicalLine), word: 'superseded' });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'v2');
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `a pin whose span lacks the claimed name must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].name, SUPERSEDED_CLAIM_NAME);
+});
+
+// No HEAD default, and no non-commit rev, attempt-1 architect gate B2 / reviewer gate B1: a pin with
+// no `@ <rev>` at all, and a pin whose `<rev>` is a branch name rather than a commit id, must each
+// leave the claim binding -- both hit the same `COMMIT_ID_RE` guard in `supersededSpans`.
+// RECORDED MUTATION: replace `if (!rev || !COMMIT_ID_RE.test(rev)) continue;` with `const rev = m[5]
+// ?? 'HEAD';` (the format guard dropped, the HEAD default reinstated) → fails on the FIRST assertion
+// (the test throws before reaching the branch-name case): "AssertionError [ERR_ASSERTION]: a pin with
+// no @ rev must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// sha256:<hash>`"}]" then "1 !== 0".
+test('a_pin_with_no_rev_does_not_exempt', () => {
+  const { dir: dirNoRev } = supersededFixture({ omitRev: true });
+  const noRev = runVerifyTestClaims({ repoRoot: dirNoRev });
+  assert.equal(noRev.superseded.length, 0, `a pin with no @ rev must not exempt: ${JSON.stringify(noRev.superseded)}`);
+  assert.equal(noRev.findings.length, 1, JSON.stringify(noRev.findings));
+
+  const { dir: dirBranch } = supersededFixture({ revOverride: 'master' });
+  const branch = runVerifyTestClaims({ repoRoot: dirBranch });
+  assert.equal(branch.superseded.length, 0, `a pin whose rev is a branch name must not exempt: ${JSON.stringify(branch.superseded)}`);
+  assert.equal(branch.findings.length, 1, JSON.stringify(branch.findings));
+});
+
+// Double-backtick code span, attempt-1 reviewer gate S1: `` ``superseded`` `` must still count as
+// INSIDE a backtick span (the earlier `` /`[^`]*`/g `` stripped only the delimiters' own empty pairs
+// and left the word visible).
+// RECORDED MUTATION: replace `BACKTICK_SPAN_RE` with the earlier `` /`[^`]*`/g `` →
+// fails: "AssertionError [ERR_ASSERTION]: superseded only inside a double-backtick span must not
+// exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0" (this run's own only failure -- the other 18 tests pass).
+test('a_pin_with_the_word_superseded_only_in_a_double_backtick_span_does_not_exempt', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-dblbacktick-'));
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
+  const refText = `${SUPERSEDED_DOC}:${SUPERSEDED_CLAIM_LINE} @ ${v1Rev} sha256:${sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE))}`;
+  const row = `| T3 | \`\`superseded\`\` | \`${refText}\` |\n`;
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'v2');
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `superseded only inside a double-backtick span must not exempt: ${JSON.stringify(superseded)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });

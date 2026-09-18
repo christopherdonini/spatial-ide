@@ -43,20 +43,35 @@
 // actually assert what the prose says (this checks the name exists, not its body); a fabricated claim
 // that reuses an existing test's name; and, by the conservative recognizer, a test claim phrased
 // without a narrative prefix AND far from the word "test" (a recall gap, not a false alarm). Node's
-// standard library only.
+// standard library only. SUPERSEDED (below) adds one more, disclosed rather than mechanized (byte-
+// copied from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 2, itself item 1's own
+// closing sentence): "That the obligation moved rather than vanished is proven by the record's own
+// rows and read by the gate, not by this tool; a claim marked superseded with no replacement anywhere
+// in the file is a defect this check does not catch, disclosed here."
 //
 // SUPERSEDED (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2 -- a pinned
-// `path:line @ <rev> sha256:<hex>` reference is a historical pin, never silently read as current): a
-// claim at line L of file F that does NOT exist in the current tree is nonetheless not a binding
-// finding when F itself carries a hash-pinned, `superseded`-marked reference to that very line -- an
-// append-only record's own later row saying "this line is old, and here is the proof". Recognized by
-// `HASH_REF_RE`, the same reference grammar `verify-quotes.mjs` (round 12's "quote by reference"
-// mechanism) uses for `` `path:a[-b]` @ <rev> sha256:<hex> ``: a trimmed local copy, since that script
-// is not yet on `main` (`governance/verify-quotes`) to import from. This rule only recognizes an
-// EXPLICIT path equal to the citing file's own repo-relative path -- a bare `:line` self-reference is
-// already forbidden by the round-14 root-cause rule, so a real self-referencing pin always spells the
-// file's own path in full; a bare-reference / nearest-preceding-cite binding (verify-quotes.mjs's own
-// `nearestPathInParagraph`) is out of this piece's scope. See `supersededSpans`/`findSupersededSpan`.
+// `path:line @ <rev> sha256:<hex>` reference is a historical pin, never silently read as current; the
+// ruling continues past that to name which is authoritative, the pin or the tree, when they disagree):
+// a claim at line L of file F that does NOT exist in the current tree is nonetheless not a binding
+// finding when F itself carries a hash-pinned, `superseded`-marked reference to that very line whose
+// historical text also names the claim, and whose commit is shown to be on main -- an append-only
+// record's own later row PROVING, not merely asserting, "this line is old, and a rename happened".
+// Five conditions, all required: (a) the reference's line range covers L; (b) the word `superseded`
+// sits on the reference's own line, outside any backtick span; (c) the hash recomputes against
+// `git show <rev>:F`'s own historical bytes; (d) those same historical bytes contain the claimed name
+// (a pin that hashes a line it already has, without ever naming the claim, exempts nothing it was not
+// written to explain -- architect gate, attempt 1, B1); (e) `<rev>` is shown to be an ancestor of
+// `origin/main` -- REFUSED, not merely unproven, when it is not (a rev not yet on main is not
+// something main's own record can rely on surviving a squash/rebase merge -- reviewer gate, attempt 1,
+// S3), SKIPPED rather than failed when `origin/main` does not resolve in the scanned tree at all (true
+// of every unit-test fixture here). Recognized by `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s
+// own reference grammar (round 12's "quote by reference" mechanism) as it stands on
+// `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a record
+// statement about a tool's behaviour names the tool's commit) -- see that constant's own comment for
+// the one grammar-level divergence this tool keeps (the path group is REQUIRED) and the policy layer
+// this tool adds on top of a grammar it otherwise matches exactly: the refused HEAD default, the
+// refused non-commit `<rev>`, and condition (e)'s ancestor-of-main requirement. See
+// `supersededSpans`/`findSupersededSpan`.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -121,61 +136,108 @@ export function extractClaimedTests(text) {
   return out;
 }
 
-// Reused, trimmed from `verify-quotes.mjs`'s `HASH_REF_RE` (round 12's "quote by reference" grammar;
-// `path:a[-b]` @ <rev> sha256:<hex>`, backticks and `@ <rev>` each optional, `<rev>` any non-whitespace
-// non-backtick run). Group 1 (path) is REQUIRED here, unlike the source grammar: a bare `:line` self
-// reference is out of scope (see the module doc above).
-const HASH_REF_RE = /`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\d+)(?:-(\d+))?`?(?:\s*@\s*([^\s`]+))?\s*sha256:([0-9a-f]{64})`?/g;
+// `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s own `HASH_REF_RE` as it stands on
+// `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (`scripts/plan/verify-quotes.mjs:553-554`
+// at that commit; round 15(c) -- a tool claim names the tool's commit). `GAP` is that source's own
+// name and definition, standing in for a plain `\s*` so a reference rustfmt (or, here, a table cell)
+// has wrapped across exactly one `//`-comment continuation still binds, exactly as the source binds
+// it. ONE necessary grammar-level divergence, and the only one kept: group 2 (path) is REQUIRED --
+// the source leaves it optional to support a bare `:line` bound to the nearest preceding path:line
+// citation (`nearestPathInParagraph`), which this tool does not implement; the round-14 root-cause
+// rule already requires a real self-referencing pin to spell the file's own path in full, so nothing
+// this tool needs to recognize is lost by requiring it. `<rev>` (group 5) is matched at the GRAMMAR
+// level exactly as the source matches it (any non-whitespace, non-backtick run, optional) -- this
+// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans`
+// below, not in the shared pattern, because that policy is this tool's own exemption to refuse, not a
+// property of the reference shape itself (round 15(e); architect/reviewer gate, attempt 1, B1/B2).
+const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
+const HASH_REF_RE = new RegExp(
+  '(byte-copied from\\s+)?`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\\d+)(?:-(\\d+))?`?' +
+    `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,
+  'g',
+);
+
+// A commit id this tool will act on: 7-40 lowercase hex digits (a full or abbreviated SHA), never a
+// ref name -- round 15(e)'s "never a branch commit" read literally: a rev spelled as a branch or tag
+// name resolves to whatever that ref currently points at, exactly the "read as current" the round-14
+// root-cause rule forbids. Also closes reviewer gate attempt-1 nit N1 (a rev this fails is never
+// passed to `execFileSync`).
+const COMMIT_ID_RE = /^[0-9a-f]{7,40}$/;
 
 function lineTextOf(text, lineNo) {
   return text.split('\n')[lineNo - 1] ?? '';
 }
 
+// A code span delimited by a matching run of 1 or 2 backticks (markdown's own double-backtick escape
+// for a literal backtick inside a span). The `(?!\1)` per-character guard is this module's own
+// "adjacency, not naive pairing" discipline (see `extractClaimedTests` above) applied to a variable-
+// length delimiter: a run that finds no matching CLOSE of its own captured length simply does not
+// match, rather than pairing across it. Fixes architect/reviewer gate attempt-1 S1: the earlier
+// `` /`[^`]*`/g `` stripped only the two EMPTY single-backtick pairs a double-backtick span's own
+// delimiters form, leaving the word between them (`` ``superseded`` ``) wrongly read as outside.
+const BACKTICK_SPAN_RE = /(`{1,2})(?:(?!\1)[\s\S])*?\1/g;
+
 /** Condition (b): the word `superseded` appears on the reference's own line, outside any backtick span. */
-export function containsSupersededOutsideBackticks(lineText) {
-  return /\bsuperseded\b/i.test(lineText.replace(/`[^`]*`/g, ''));
+function containsSupersededOutsideBackticks(lineText) {
+  return /\bsuperseded\b/i.test(lineText.replace(BACKTICK_SPAN_RE, ''));
 }
 
 /**
- * Every hash-pinned, `superseded`-marked reference in `text` whose path is `relPath` itself (F's own
- * path) -- conditions (a) and (b) of the rule, NOT (c) (the hash is checked lazily, per-claim, in
- * `findSupersededSpan`, so a file with no matching claim never pays for a `git show`).
+ * Every hash-pinned, `superseded`-marked, EXPLICIT-commit-rev reference in `text` whose path is
+ * `relPath` itself (F's own path) -- conditions (a) and (b) of the rule, NOT (c)/(d)/(e) (checked
+ * lazily, per claim, in `findSupersededSpan`, so a file with no matching claim never pays for a
+ * `git show`). A reference with no `@ <rev>`, or whose `<rev>` is not a bare commit id, is never a
+ * span at all: the HEAD default the shared grammar would otherwise apply is this tool's own exemption
+ * to refuse (round 15(e); attempt-1 B1/B2), not a property to inherit from the source.
  * Returns [{ startLine, endLine, rev, hash, reference }].
  */
-export function supersededSpans(relPath, text) {
+function supersededSpans(relPath, text) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
   let m;
   while ((m = HASH_REF_RE.exec(text))) {
-    if (m[1] !== relPath) continue;
+    if (m[2] !== relPath) continue;
+    const rev = m[5];
+    if (!rev || !COMMIT_ID_RE.test(rev)) continue;
     const refLine = lineOf(text, m.index);
     if (!containsSupersededOutsideBackticks(lineTextOf(text, refLine))) continue;
     out.push({
-      startLine: Number(m[2]),
-      endLine: m[3] !== undefined ? Number(m[3]) : Number(m[2]),
-      rev: m[4] ?? 'HEAD',
-      hash: m[5].toLowerCase(),
+      startLine: Number(m[3]),
+      endLine: m[4] !== undefined ? Number(m[4]) : Number(m[3]),
+      rev,
+      hash: m[6].toLowerCase(),
       reference: m[0],
     });
   }
   return out;
 }
 
+// Memoized by (root, rev, relPath): the motivating record alone carries ten spans over one file, and
+// `findSupersededSpan` below may re-ask the same (rev, path) pair once per span per claim -- attempt-1
+// reviewer S5, measured at ~21 ms/spawn on that box.
+const gitShowCache = new Map();
 function gitShowFile(root, rev, relPath) {
+  const key = `${root}\u0000${rev}\u0000${relPath}`;
+  if (gitShowCache.has(key)) return gitShowCache.get(key);
+  let out;
   try {
-    return execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    out = execFileSync('git', ['show', `${rev}:${relPath}`], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   } catch {
-    return null;
+    out = null;
   }
+  gitShowCache.set(key, out);
+  return out;
 }
 
 // Lines a..b (1-indexed, inclusive), each with its own trailing LF, except a fileless-final-newline's
-// own last line -- the same slicing `verify-quotes.mjs`'s `linesWithLF` performs.
+// own last line -- the same slicing `verify-quotes.mjs`'s own `linesWithLF` performs, including its
+// `b < a` rejection (attempt-1 reviewer S2: the earlier copy omitted it; unreachable today because the
+// range check above already rejects an inverted span first, but the omission made the comment untrue).
 function linesWithLF(content, a, b) {
   const starts = [0];
   for (let i = 0; i < content.length; i++) if (content.charCodeAt(i) === 10) starts.push(i + 1);
   const totalLines = content.endsWith('\n') ? starts.length - 1 : starts.length;
-  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b > totalLines) return null;
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 1 || b < a || b > totalLines) return null;
   const startOffset = starts[a - 1];
   const endOffset = b < starts.length ? starts[b] : content.length;
   return content.slice(startOffset, endOffset);
@@ -185,22 +247,66 @@ function sha256Hex(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 }
 
+// Condition (e): memoized per `root`, `origin/main`'s own commit id, or `null` when that ref does not
+// resolve in the scanned tree at all (true of every unit-test fixture below -- none carries a remote).
+const originMainCache = new Map();
+function originMainSha(root) {
+  if (originMainCache.has(root)) return originMainCache.get(root);
+  let sha = null;
+  try {
+    sha = execFileSync('git', ['rev-parse', 'origin/main'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  } catch {
+    sha = null;
+  }
+  originMainCache.set(root, sha);
+  return sha;
+}
+
 /**
- * Condition (c), checked against `spans` in order: the first span whose range contains `line` AND
- * whose hash recomputes against `git show <rev>:relPath`'s own lines wins. A span that does not cover
- * `line`, or whose rev/path is unresolvable, or whose hash does not match, is not a match -- the claim
- * stays a binding finding (or planned), exactly as if no pin existed. Returns the winning span or null.
+ * Condition (e): `rev` is shown to be an ancestor of `origin/main` -- REFUSED, not merely unproven,
+ * when `origin/main` resolves and `rev` is not its ancestor (a commit only on an unmerged branch can
+ * become unreachable from every fetched ref after a squash/rebase merge, silently evaporating the
+ * exemption and turning main red on a landed piece -- attempt-1 reviewer/architect S3; refusing here
+ * is the fail-closed direction). Returns `{ checked, ok }`; `checked: false` when `origin/main` does
+ * not resolve at all -- the caller SKIPS the condition rather than failing it, and is responsible for
+ * surfacing that once (see `runVerifyTestClaims`'s `supersededMainUnchecked`).
  */
-export function findSupersededSpan(root, relPath, line, spans) {
+function isAncestorOfMain(root, rev) {
+  const mainSha = originMainSha(root);
+  if (!mainSha) return { checked: false, ok: false };
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', rev, mainSha], { cwd: root, stdio: 'ignore' });
+    return { checked: true, ok: true };
+  } catch {
+    return { checked: true, ok: false };
+  }
+}
+
+/**
+ * Conditions (c)-(e), checked against `spans` in order; the first span satisfying all three wins.
+ * (c) the hash recomputes against `git show <rev>:relPath`'s own historical bytes. (d) those same
+ * historical bytes CONTAIN the claimed `name` -- attempt-1 architect B1: a pin that merely hashes a
+ * line it already has, without the claimed name ever appearing in it, exempts nothing it was written
+ * to explain. (e) `isAncestorOfMain` above. A span outside `line`'s range, an unresolvable rev/path, a
+ * hash mismatch, a span missing the claimed name, or a rev shown NOT to be on main is not a match --
+ * the claim stays a binding finding (or planned), exactly as if no pin existed.
+ * Returns `{ span, mainUnchecked }` (`span: null` when nothing matched); `mainUnchecked` is true when
+ * condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
+ */
+function findSupersededSpan(root, relPath, line, name, spans) {
   for (const span of spans) {
     if (line < span.startLine || line > span.endLine) continue;
     const content = gitShowFile(root, span.rev, relPath);
     if (content === null) continue;
     const slice = linesWithLF(content, span.startLine, span.endLine);
     if (slice === null) continue;
-    if (sha256Hex(slice) === span.hash) return span;
+    if (sha256Hex(slice) !== span.hash) continue;
+    if (!slice.includes(name)) continue;
+    const anc = isAncestorOfMain(root, span.rev);
+    if (anc.checked && !anc.ok) continue;
+    return { span, mainUnchecked: !anc.checked };
   }
-  return null;
+  return { span: null, mainUnchecked: false };
 }
 
 const RUST_FN_RE = /\bfn\s+([a-z_][A-Za-z0-9_]*)/g;
@@ -280,14 +386,15 @@ export function plannedGateFiles(plan) {
 }
 
 /**
- * Returns { findings, planned, superseded, scanned, claims }. Each entry: { relPath, line, name }
- * (`superseded` entries additionally carry `reference`, the matched pin text).
+ * Returns { findings, planned, superseded, scanned, claims, supersededMainUnchecked }. Each entry:
+ * { relPath, line, name } (`superseded` entries additionally carry `reference`, the matched pin text).
  * `plannedGates` is a Set of repo-relative paths whose unmatched claims are advisory, not binding
  * (see PLANNED vs BINDING above); anything not in it is binding. A claim that does not exist is
  * SUPERSEDED, and reported under that heading instead of `planned`/`findings`, when the claiming
- * file's own text pins that exact line as historical (see `supersededSpans`/`findSupersededSpan`
- * above) — checked whether or not the file is also planned, since a superseded claim "never fails the
- * run and is never counted as existing" regardless of its node's status.
+ * file's own text pins that exact line as historical and proves it (see the module's own SUPERSEDED
+ * disclosure above and `supersededSpans`/`findSupersededSpan`) — checked whether or not the file is
+ * also planned. `supersededMainUnchecked` is true when at least one superseded claim's condition (e)
+ * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim.
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -299,6 +406,7 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const planned = [];
   const superseded = [];
   let claims = 0;
+  let supersededMainUnchecked = false;
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
     const isPlanned = exempt.has(rel);
@@ -306,15 +414,18 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
     for (const c of extractClaimedTests(text)) {
       claims++;
       if (testExists(c.name, index)) continue;
-      const span = spans.length ? findSupersededSpan(root, rel, c.line, spans) : null;
+      const { span, mainUnchecked } = spans.length
+        ? findSupersededSpan(root, rel, c.line, c.name, spans)
+        : { span: null, mainUnchecked: false };
       if (span) {
+        if (mainUnchecked) supersededMainUnchecked = true;
         superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference });
         continue;
       }
       (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name });
     }
   }
-  return { findings, planned, superseded, scanned: targets.length, claims };
+  return { findings, planned, superseded, scanned: targets.length, claims, supersededMainUnchecked };
 }
 
 function main() {
@@ -329,7 +440,10 @@ function main() {
     // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
     console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
   }
-  const { findings, planned, superseded, scanned, claims } = runVerifyTestClaims({ repoRoot: REPO_ROOT, plannedGates });
+  const { findings, planned, superseded, scanned, claims, supersededMainUnchecked } = runVerifyTestClaims({
+    repoRoot: REPO_ROOT,
+    plannedGates,
+  });
   if (planned.length > 0 && !quiet) {
     console.error(`verify:test-claims planned (advisory) — ${planned.length} claimed test(s) in a gate file whose node is not done:`);
     for (const p of planned) {
@@ -340,6 +454,9 @@ function main() {
     console.error(`verify:test-claims superseded (advisory) — ${superseded.length} claimed test(s) pinned historical by a hash-checked reference:`);
     for (const s of superseded) {
       console.error(`  - ${s.relPath}:${s.line} — claims test \`${s.name}\` — superseded — pinned by ${s.reference}`);
+    }
+    if (supersededMainUnchecked) {
+      console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one claim above.');
     }
   }
   if (findings.length === 0) {

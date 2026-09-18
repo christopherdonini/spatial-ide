@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `70847d4f037c17af6ef7ef12b76277657a2c2d812f6a794a28bff23809256b32`) at `2026-09-18T13:37:51.568Z`.
+Generated from `PLAN.yaml` (sha256 `fef6eb9f50475523d0138a79afee7b2925c9f7d0284b10f8b08f61a46a8aa464`) at `2026-09-18T14:23:17.615Z`.
 
 ## 1. Next
 
@@ -57,6 +57,7 @@ Generated from `PLAN.yaml` (sha256 `70847d4f037c17af6ef7ef12b76277657a2c2d812f6a
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
+- **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

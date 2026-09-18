@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T13:37:51.568Z",
-  "plan_hash": "70847d4f037c17af6ef7ef12b76277657a2c2d812f6a794a28bff23809256b32",
+  "generated_at": "2026-09-18T14:23:17.615Z",
+  "plan_hash": "fef6eb9f50475523d0138a79afee7b2925c9f7d0284b10f8b08f61a46a8aa464",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -526,8 +526,8 @@
       "order": 3,
       "budget_minutes": 45,
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 2
       },
       "evidence": {
         "branch": "governance/test-claims-superseded"
@@ -536,7 +536,7 @@
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands",
+      "summary": "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands. Attempt 1 FAILED both gates (2026-09-18); attempt 2 corrected the exemption's five conditions and the record; the merge is the human's click (no docs-only auto-merge -- code paths touched)",
       "evidence_label": "branch `governance/test-claims-superseded`"
     }
   ],
@@ -749,6 +749,25 @@
         "done": null
       },
       "summary": "the recipe milestone may only be described as complete after this operator-verified walkthrough's log carries the human's verdict"
+    },
+    {
+      "id": "governance-hash-grammar-shared",
+      "title": "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself"
     }
   ],
   "unscheduled": [

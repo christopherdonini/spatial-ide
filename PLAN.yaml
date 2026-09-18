@@ -1677,12 +1677,30 @@ nodes:
     status: in-progress
     order: 3
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: click, minutes: 2}
     gate: scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md
     evidence: {branch: governance/test-claims-superseded}
     budget_minutes: 45
+    generation: 2
+    felt_verdict: false
+    entries: [111]
+    summary: "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands. Attempt 1 FAILED both gates (2026-09-18); attempt 2 corrected the exemption's five conditions and the record; the merge is the human's click (no docs-only auto-merge -- code paths touched)"
+    dates: {opened: 2026-09-18, done: null}
+
+  - id: governance-hash-grammar-shared
+    title: "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: [111]
-    summary: "A claimed test name is reported SUPERSEDED, advisory, when the claiming file itself carries a hash-pinned reference to that line marked superseded and the hash recomputes -- so a correctly maintained append-only record does not go red once its node lands"
+    summary: "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself"
     dates: {opened: 2026-09-18, done: null}
