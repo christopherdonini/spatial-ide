@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77`) at `2026-09-18T11:30:27.046Z`.
+Generated from `PLAN.yaml` (sha256 `03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9`) at `2026-09-18T13:31:21.998Z`.
 
 ## 1. Next
 
-- **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`)
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration (lane `engine`)
 
 ## 2. Ready
 
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration (lane `engine`, order 6, budget 480 min)
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
@@ -17,8 +18,13 @@ Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a
 
 ## 4. Blocked on dependencies
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration — blocked by: briefa-p3-p6
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p3-p6
+- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: briefa-p4-corpus-run, briefa-p5-gate-tests
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -28,9 +34,10 @@ Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a
 
 ## 5. In progress
 
-- **briefa-p3-p6** — Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances — evidence: PR #83
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
+- **briefa-p4-corpus-run** — Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6) — evidence: branch `cut/briefa-p4`
+- **briefa-p5-gate-tests** — Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction — evidence: branch `cut/briefa-p5`
 - **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 
