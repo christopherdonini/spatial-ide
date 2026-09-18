@@ -11,6 +11,7 @@ import {
   medianOpenedToDone,
   gateFirstPassRate,
   readGateLog,
+  recordRoundCounts,
 } from './health.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -86,6 +87,7 @@ test('health.mjs carries no build-time facts: CI, open PRs and the latest releas
     'waiting_on_human',
     'median_opened_to_done',
     'gate_first_pass',
+    'record_rounds',
   ]);
 });
 
@@ -150,6 +152,29 @@ test('gateFirstPassRate: the FIRST attempt is decided by date, not log order', (
     { node: 'x', gate: 'g1', attempt: 1, verdict: 'FAIL', date: '2026-09-11' },
   ];
   assert.deepEqual(gateFirstPassRate(log), { nodes: 1, first_pass: 0, rate: 0 });
+});
+
+// ---------------------------------------------------- record-round counts per node (2026-09-18 #4)
+
+// RECORDED MUTATION: changed the `Set` dedup in recordRoundCounts to a plain per-record counter
+// (`byNode[e.node] = (byNode[e.node] ?? 0) + 1` on every matching record, no attempt de-duplication)
+// -- observed failure: `assert.deepEqual` reported `{ byNode: { a: 2 }, total: 2 }` vs the expected
+// `{ byNode: { a: 1 }, total: 1 }`, since attempt 1's two gate records (architect, reviewer) were
+// each counted. Reverted after observing the failure.
+test('recordRoundCounts: an attempt gated twice (both gates record: true) counts once for its node', () => {
+  const log = [
+    { node: 'a', gate: 'architect', attempt: 1, verdict: 'FAIL', record: true, date: '2026-09-17' },
+    { node: 'a', gate: 'reviewer', attempt: 1, verdict: 'FAIL', record: true, date: '2026-09-17' },
+  ];
+  assert.deepEqual(recordRoundCounts(log), { byNode: { a: 1 }, total: 1 });
+});
+
+// RECORDED MUTATION: removed the `e.record !== true` guard so every gate record counts -- observed
+// failure: `assert.deepEqual` reported `{ byNode: { b: 1 }, total: 1 }` vs the expected `{ byNode:
+// {}, total: 0 }`, since node "b"'s untagged record was counted. Reverted after observing the failure.
+test('recordRoundCounts: a node whose gate records carry no record: true field counts zero (absent from byNode)', () => {
+  const log = [{ node: 'b', gate: 'reviewer', attempt: 1, verdict: 'PASS', date: '2026-09-10' }];
+  assert.deepEqual(recordRoundCounts(log), { byNode: {}, total: 0 });
 });
 
 test('readGateLog: absent file is null (the strip then says "no gate log yet"); a bad file is []', () => {

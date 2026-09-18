@@ -10,7 +10,9 @@
 // human 2026-09-14: "median ready->done hours and gate first-pass rate"): median opened->done
 // (the plan carries dates, not timestamps, so this is DAY resolution, and is labelled as such — it
 // is NOT hours, and is not stored under an "hours" name that would misstate it) and the gate
-// first-pass rate (from state/gate-log.json, a tracked custodian-appended log). Timestamped.
+// first-pass rate (from state/gate-log.json, a tracked custodian-appended log). A third, the
+// record-round count per piece (`state/directives/2026-09-18-record-cap.md`, point 4): distinct
+// attempts per node whose gate record carries `record: true`, target zero. Timestamped.
 //
 // CI on main, open PRs and the latest release are NOT read here: they are build-time facts, read
 // from GitHub's API inside the Pages build by buildHealth.mjs (the human, 2026-09-14: "read
@@ -179,6 +181,30 @@ export function gateFirstPassRate(log) {
   return { nodes, first_pass: firstPass, rate: nodes === 0 ? null : firstPass / nodes };
 }
 
+/**
+ * Record-round counts per node (the human's 2026-09-18 directive, point 4;
+ * `state/directives/2026-09-18-record-cap.md`): a gate record that gated a record-correction round
+ * carries `record: true`. Per node, counts the number of DISTINCT attempts that carry at least one
+ * `record: true` record — an attempt gated twice (e.g. both architect and reviewer) counts once, not
+ * twice. Pure. `byNode` carries only nodes with a non-zero count; `total` is the sum.
+ */
+export function recordRoundCounts(log) {
+  const entries = Array.isArray(log) ? log : [];
+  const attemptsByNode = new Map(); // node -> Set(attempt)
+  for (const e of entries) {
+    if (!e || typeof e.node !== 'string' || e.record !== true) continue;
+    if (!attemptsByNode.has(e.node)) attemptsByNode.set(e.node, new Set());
+    attemptsByNode.get(e.node).add(e.attempt);
+  }
+  const byNode = {};
+  let total = 0;
+  for (const [node, attempts] of attemptsByNode) {
+    byNode[node] = attempts.size;
+    total += attempts.size;
+  }
+  return { byNode, total };
+}
+
 export const GATE_LOG_PATH = path.join(REPO_ROOT, 'state', 'gate-log.json');
 
 /**
@@ -208,6 +234,7 @@ export function buildHealthData(plan, opts = {}) {
   const driftResult = runVerify({ planPath, repoRoot, siteDir, offline: true }); // §6: verify runs --offline here
   const gateLog = opts.gateLog !== undefined ? opts.gateLog : readGateLog();
   const gateFirstPass = gateLog === null ? { present: false } : { present: true, ...gateFirstPassRate(gateLog) };
+  const recordRounds = gateLog === null ? { present: false } : { present: true, ...recordRoundCounts(gateLog) };
   return {
     generated_at: now.toISOString(),
     source: MACHINE_SOURCE_LABEL,
@@ -217,6 +244,7 @@ export function buildHealthData(plan, opts = {}) {
     waiting_on_human: computeWaitingAges(plan, { now }),
     median_opened_to_done: medianOpenedToDone(plan),
     gate_first_pass: gateFirstPass,
+    record_rounds: recordRounds,
   };
 }
 
