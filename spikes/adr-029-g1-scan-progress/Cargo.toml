@@ -1,0 +1,25 @@
+# ADR-029 gate G1 (feasibility, first and blocking) -- verify against the vendored `duckdb` crate
+# that a monotone scan-progress reading exists on the `read_parquet` path before any wire work.
+#
+# Standalone crate, deliberately isolated from the product workspace: the empty [workspace] table
+# below stops cargo from walking up and attaching this crate to the root Cargo.toml, so a build
+# here never touches the parent Cargo.lock -- same convention as spikes/lod-feasibility/rust.
+# Build with:
+#   cargo run --release --manifest-path spikes/adr-029-g1-scan-progress/Cargo.toml
+# Not a product crate, not published. Depends on the exact `duckdb` version already vendored and
+# pinned in the workspace's own Cargo.lock (`duckdb = "1.10505.0"`, `engine/Cargo.toml:39`) --
+# `=1.10505.0` here so cargo cannot silently resolve a newer release for this probe.
+[workspace]
+
+[package]
+name = "adr-029-g1-scan-progress-spike"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+# Same feature set as `engine/Cargo.toml:39` (`bundled`, `parquet`, `json`) so this probe builds
+# against the identical vendored DuckDB as the product engine crate -- `parquet` is what makes
+# `read_parquet` exist at all; `bundled`/`json` are carried for parity, not because this probe
+# needs the json extension.
+duckdb = { version = "=1.10505.0", features = ["bundled", "parquet", "json"] }
