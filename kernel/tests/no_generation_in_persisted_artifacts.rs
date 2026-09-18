@@ -356,12 +356,10 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
 /// match and a value match are different failure classes; one scan of a small manifest does not
 /// need to re-prove that distinction, only to run it once more against this format).
 ///
-/// RECORDED MUTATION (run and reverted): add a `"generation": 1,` member to `write_manifest`'s
-/// `json!({...})` in `engine/src/lod.rs`, right after its `"schema"` member. OBSERVED FAILURE: this
-/// test's own assertion fires, its fixed text reading `the substring "generation" appears in these
-/// LOD tier-set files: [...]` -- the `[...]` is this run's own `tiers.json` path under its content-
-/// hash tier directory (`%LOCALAPPDATA%\spatial-ide\tiers\<hash>\`), never fixed text across runs or
-/// machines, so it is not reproduced here.
+/// RECORDED MUTATION (run and reverted): add `"generation": 1,` to `write_manifest`'s
+/// `json!({...})` in `engine/src/lod.rs`, after `"schema"`. OBSERVED FAILURE fixed prefix: `the
+/// substring "generation" appears in these LOD tier-set files:` -- followed by this run's own
+/// `tiers.json` path (content-hash-keyed, not fixed text, not reproduced here).
 #[test]
 fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring() {
     let d = workspace("lod-tiers");
