@@ -1,0 +1,153 @@
+ADR-029 G1 probe -- duckdb 1.10505.0, fixture: C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet
+--- config A: defaults (no progress-bar pragma) (14 samples) ---
+  [0] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [2] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [3] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [4] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [5] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [6] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [7] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [8] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [9] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [10] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [11] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [12] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [13] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+--- config A: defaults (no progress-bar pragma), deduplicated ---
+  (0) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x14
+  0% ▕                                      ▏                             2% ▕▊                                     ▏ (<1 second remaining)       4% ▕█▌                                    ▏ (<1 second remaining)       6% ▕██▎                                   ▏ (<1 second remaining)       8% ▕███                                   ▏ (<1 second remaining)      10% ▕███▊                                  ▏ (<1 second remaining)      12% ▕████▌                                 ▏ (<1 second remaining)      14% ▕█████▎                                ▏ (<1 second remaining)      16% ▕██████                                ▏ (<1 second remaining)      18% ▕██████▊                               ▏ (<1 second remaining)      20% ▕███████▌                              ▏ (<1 second remaining)      22% ▕████████▎                             ▏ (<1 second remaining)      24% ▕█████████                             ▏ (<1 second remaining)      26% ▕█████████▉                            ▏ (<1 second remaining)      28% ▕██████████▋                           ▏ (<1 second remaining)      30% ▕███████████▍                          ▏ (<1 second remaining)      32% ▕████████████▏                         ▏ (<1 second remaining)      34% ▕████████████▉                         ▏ (<1 second remaining)      36% ▕█████████████▋                        ▏ (<1 second remaining)      38% ▕██████████████▍                       ▏ (<1 second remaining)      40% ▕███████████████▏                      ▏ (<1 second remaining)      43% ▕████████████████▎                     ▏ (<1 second remaining)      45% ▕█████████████████                     ▏ (<1 second remaining)      47% ▕█████████████████▊                    ▏ (<1 second remaining)      49% ▕██████████████████▌                   ▏ (<1 second remaining)      51% ▕███████████████████▍                  ▏ (<1 second remaining)      53% ▕████████████████████▏                 ▏ (<1 second remaining)      55% ▕████████████████████▉                 ▏ (<1 second remaining)      57% ▕█████████████████████▋                ▏ (<1 second remaining)      59% ▕██████████████████████▍               ▏ (<1 second remaining)      61% ▕███████████████████████▏              ▏ (<1 second remaining)      63% ▕███████████████████████▉              ▏ (<1 second remaining)      65% ▕████████████████████████▋             ▏ (<1 second remaining)      67% ▕█████████████████████████▍            ▏ (<1 second remaining)      69% ▕██████████████████████████▏           ▏ (<1 second remaining)      71% ▕██████████████████████████▉           ▏ (<1 second remaining)      73% ▕███████████████████████████▋          ▏ (<1 second remaining)      75% ▕████████████████████████████▌         ▏ (<1 second remaining)      77% ▕█████████████████████████████▎        ▏ (<1 second remaining)      79% ▕██████████████████████████████        ▏ (<1 second remaining)      81% ▕██████████████████████████████▊       ▏ (<1 second remaining)      83% ▕███████████████████████████████▌      ▏ (<1 second remaining)      86% ▕████████████████████████████████▋     ▏ (<1 second remaining)      88% ▕█████████████████████████████████▍    ▏ (<1 second remaining)      90% ▕██████████████████████████████████▏   ▏ (<1 second remaining)      92% ▕██████████████████████████████████▉   ▏ (<1 second remaining)      94% ▕███████████████████████████████████▋  ▏ (<1 second remaining)      96% ▕████████████████████████████████████▍ ▏ (<1 second remaining)      98% ▕█████████████████████████████████████▏▏ (<1 second remaining)      99% ▕█████████████████████████████████████▌▏ (<1 second remaining)     100% ▕██████████████████████████████████████▏ (00:00:00.00 elapsed)     
+--- config B: enable_progress_bar, progress_bar_time=0 (11 samples) ---
+  [0] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [4] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [5] percentage=2.047959 rows_processed=2048 total_rows_to_process=100002
+  [6] percentage=26.623468 rows_processed=26623 total_rows_to_process=100002
+  [7] percentage=51.198976 rows_processed=51200 total_rows_to_process=100002
+  [8] percentage=77.822444 rows_processed=77824 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=-1.000000 rows_processed=0 total_rows_to_process=0
+--- config B: enable_progress_bar, progress_bar_time=0, deduplicated ---
+  (0) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x2
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x3
+  (2) percentage=2.047959 rows_processed=2048 total_rows_to_process=100002 x1
+  (3) percentage=26.623468 rows_processed=26623 total_rows_to_process=100002 x1
+  (4) percentage=51.198976 rows_processed=51200 total_rows_to_process=100002 x1
+  (5) percentage=77.822444 rows_processed=77824 total_rows_to_process=100002 x1
+  (6) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x1
+  (7) percentage=-1.000000 rows_processed=0 total_rows_to_process=0 x1
+  0% ▕                                      ▏                            99% ▕█████████████████████████████████████▌▏ (<1 second remaining)     100% ▕██████████████████████████████████████▏ (00:00:00.00 elapsed)     
+--- config C run 1: pending-task driver (57 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [11] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [12] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [13] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [14] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [15] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [16] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [17] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [18] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [19] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [20] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [21] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [22] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [23] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [24] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [25] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [26] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [27] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [28] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [29] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [30] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [31] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [32] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [33] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [34] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [35] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [36] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [37] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [38] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [39] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [40] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [41] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [42] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [43] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [44] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [45] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [46] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [47] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [48] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [49] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [50] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [51] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [52] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [53] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [54] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [55] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [56] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 1: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x53
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 1: over 56 running-phase samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000, resets to 0 after completion = true
+  0% ▕                                      ▏                            99% ▕█████████████████████████████████████▌▏ (<1 second remaining)     100% ▕██████████████████████████████████████▏ (00:00:00.00 elapsed)     
+--- config C run 2: pending-task driver (9 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 2: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x5
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 2: over 8 running-phase samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000, resets to 0 after completion = true
+  0% ▕                                      ▏                            99% ▕█████████████████████████████████████▌▏ (<1 second remaining)     100% ▕██████████████████████████████████████▏ (00:00:00.00 elapsed)     
+--- config C run 3: pending-task driver (23 samples) ---
+  [0] percentage=0.000000 rows_processed=0 total_rows_to_process=0
+  [1] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [2] percentage=0.000000 rows_processed=0 total_rows_to_process=100002
+  [3] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [4] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [5] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [6] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [7] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [8] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [9] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [10] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [11] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [12] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [13] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [14] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [15] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [16] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [17] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [18] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [19] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [20] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [21] percentage=99.998000 rows_processed=100000 total_rows_to_process=100002
+  [22] percentage=99.998000 rows_processed=0 total_rows_to_process=0
+--- config C run 3: pending-task driver, deduplicated ---
+  (0) percentage=0.000000 rows_processed=0 total_rows_to_process=0 x1
+  (1) percentage=0.000000 rows_processed=0 total_rows_to_process=100002 x2
+  (2) percentage=99.998000 rows_processed=100000 total_rows_to_process=100002 x19
+  (3) percentage=99.998000 rows_processed=0 total_rows_to_process=0 x1
+  run 3: over 22 running-phase samples -- rows_processed monotone non-decreasing = true, percentage monotone non-decreasing = true, max rows_processed reached = 100000, resets to 0 after completion = true
