@@ -26,21 +26,21 @@
 //! **Two rows are not comparable to this instrument** (`gp-epsg2056-intkey-changed-same-size.parquet`
 //! / M-1c and `gp-epsg2056-intkey-appended.parquet` / M-1a-equivalent): their §4 "Brief A" text
 //! (`engine.source_changed` firing or not firing) describes the G-A2 open-then-mutate-in-place-then-
-//! query workflow, which `ADMISSION-PREREGISTRATION.md` Amendment 1 item 9 states plainly is P5's
-//! gate and was **not built** as of this commit ("No gate test: G-A1, G-A2, G-A3 and G-A4 are P5's
-//! and are not approximated"). This runner performs one [`Dataset::open`] per file and nothing else,
-//! so it cannot exercise that workflow. Both rows still get a real, standalone-open outcome recorded
-//! as this instrument's own fact; that fact is not compared against the G-A2 text, and the run says
-//! so by name rather than silently marking either "as predicted" or "DEVIATION".
+//! query workflow, which `ADMISSION-PREREGISTRATION.md` Amendment 1, item 9 states plainly is P5's
+//! gate and was **not built** as of this commit. This runner performs one [`Dataset::open`] per file
+//! and nothing else, so it cannot exercise that workflow. Both rows still get a real, standalone-open
+//! outcome recorded as this instrument's own fact; that fact is not compared against the G-A2 text,
+//! and the run says so by name rather than silently marking either "as predicted" or "DEVIATION".
 //!
-//! **RECORDED MUTATION — applied and observed, not only asserted.** Inverting the comparison in
-//! [`sha256_matches`] (`==` to `!=`) makes every file in the corpus report a hash mismatch
-//! regardless of its actual bytes; the run then records "not run — hash mismatch" for all 17 rows
-//! instead of opening any of them. Observed by making that one-line change locally and re-running
-//! this test: it panics at `assert!(rows_opened > 0, ...)` below
-//! (`the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results ...
-//! FAILED`, "at least one row must have actually been opened and observed") — a real failure inside
-//! the test's own assertions, not a setup-time panic — then reverted.
+//! **RECORDED MUTATION — applied and observed, not only asserted, against
+//! [`the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results`]
+//! below.** Inverting the comparison in [`sha256_matches`] (`==` to `!=`) makes every file in the
+//! corpus report a hash mismatch regardless of its actual bytes; the run then records "unrun —
+//! hash mismatch" for all 17 rows instead of opening any of them. Observed by making that one-line
+//! change locally and re-running this test: it panics at the `assert_eq!(not_run, 0, ...)` below
+//! (line 1035 at this commit), not at `assert!(rows_opened > 0, ...)` further down, because
+//! `not_run` reaches 17 before `rows_opened` (0) is ever checked — a real failure inside the
+//! test's own assertions, not a setup-time panic — then reverted.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -118,6 +118,12 @@ struct RowSpec {
     /// mechanism-level check no prediction text names would compare against something never
     /// registered.
     expect_sanity_reason_contains: Option<&'static str>,
+    /// §3's own registered sanity level for this row (`metadata` / `none` / `sample`), where §3
+    /// names one — main-set rows only (§3's "Sanity levels recorded" summary: `metadata` ×3 for #3,
+    /// #6, #8; `none` ×4 for #1, #7, #9, #10; the other six main-set rows are refused before a
+    /// sanity check runs, so §3 registers none for them). `None` for every mutation row: §3 does not
+    /// register mutation-row sanity levels this way, and S3's check is scoped to the main set.
+    registered_sanity_level: Option<&'static str>,
 }
 
 fn main_set_rows() -> Vec<RowSpec> {
@@ -129,6 +135,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 1",
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("none"),
         },
         RowSpec {
             id: "#2",
@@ -137,6 +144,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 2",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "#3",
@@ -145,6 +153,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 3",
             prediction: Prediction::AdmittedUnderFormatRule("axis:format-override"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("metadata"),
         },
         RowSpec {
             id: "#4",
@@ -153,6 +162,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 4",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "#5",
@@ -161,6 +171,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 5",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "#6",
@@ -169,6 +180,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 6",
             prediction: Prediction::RefusedByName("engine.format_default_contradicted"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("metadata"),
         },
         RowSpec {
             id: "#7",
@@ -177,6 +189,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 7",
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("none"),
         },
         RowSpec {
             id: "#8",
@@ -185,6 +198,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 8",
             prediction: Prediction::AdmittedUnderFormatRule("crs:format-default"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("metadata"),
         },
         RowSpec {
             id: "#9",
@@ -193,6 +207,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 9",
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("none"),
         },
         RowSpec {
             id: "#10",
@@ -201,6 +216,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 10",
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: Some("none"),
         },
         RowSpec {
             id: "#11",
@@ -209,6 +225,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 11",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "#12",
@@ -217,6 +234,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §3 row 12",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
     ]
 }
@@ -230,6 +248,7 @@ fn mutation_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §4 mutation table, M-2",
             prediction: Prediction::OpenFailsUndetermined,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "M-3",
@@ -238,6 +257,7 @@ fn mutation_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §4 mutation table, M-3",
             prediction: Prediction::RefusedByName("engine.geo_metadata"),
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "M-4",
@@ -246,6 +266,7 @@ fn mutation_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §4 mutation table, M-4",
             prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: Some("no_such_bbox_column"),
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "M-1c",
@@ -254,6 +275,7 @@ fn mutation_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §4 mutation table, M-1c",
             prediction: Prediction::OutOfScopeForThisInstrument,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
         RowSpec {
             id: "M-1a-equivalent",
@@ -262,6 +284,7 @@ fn mutation_rows() -> Vec<RowSpec> {
             citation: "ADMISSION-PREREGISTRATION.md §4 mutation table, M-1a-equivalent",
             prediction: Prediction::OutOfScopeForThisInstrument,
             expect_sanity_reason_contains: None,
+            registered_sanity_level: None,
         },
     ]
 }
@@ -311,6 +334,9 @@ fn refusal_code(e: &EngineError) -> String {
     format!("engine.{name}")
 }
 
+/// The `native` / `mapped` / `session-ordinal` arms below are the second duplicated kernel
+/// vocabulary in this file (the first is `refusal_code`'s, above); the kernel's own match on the
+/// same three variants is `kernel/src/skp.rs:1073-1077`.
 fn open_and_observe(path: &Path) -> Observed {
     match Dataset::open(path) {
         Ok(ds) => {
@@ -363,10 +389,28 @@ impl Verdict {
 /// M-1c, both derived from session-ordinal bases).
 const EXPECTED_ADMITTED_IDENTITY_CLASS: &str = "session-ordinal";
 
+/// The sanity level this instrument actually observed for a row, structured — not the free-text
+/// `sanity_reason`. An admitted row carries it directly on the envelope metadata. A row refused
+/// `engine.format_default_contradicted` also carries one: it was convicted *during* the sanity check
+/// (`convict_or_record`, `engine/src/dataset.rs:1107-1126`), whose `detail` interpolates the level as
+/// `` at level `{level}`, `` (`dataset.rs:1116-1117`) — parsed here from the engine's own bytes, the
+/// same way the runner elsewhere checks `sanity_reason` substrings rather than re-implementing the
+/// rule. Every other refusal happens before a sanity check runs, so it carries none.
+fn observed_sanity_level(observed: &Observed) -> Option<String> {
+    match observed {
+        Observed::Admitted { sanity_level, .. } => Some(sanity_level.clone()),
+        Observed::Refused { code, detail } if code == "engine.format_default_contradicted" => {
+            detail.split("at level `").nth(1).and_then(|rest| rest.split('`').next()).map(String::from)
+        }
+        Observed::Refused { .. } => None,
+    }
+}
+
 fn evaluate(
     prediction: &Prediction,
     observed: &Observed,
     expect_sanity_reason_contains: Option<&str>,
+    registered_sanity_level: Option<&str>,
 ) -> (Verdict, String) {
     let (verdict, note) = evaluate_class(prediction, observed);
     // A row whose §3/§4 text names a *specific mechanism* (not only the coarse three-way class) is
@@ -385,6 +429,23 @@ fn evaluate(
                      should contain {needle:?}; observed sanity_reason = {sanity_reason:?}, which \
                      does not. The coarse class matched, but the mechanism that produced it did \
                      not — this is the deviation."
+                ),
+            );
+        }
+    }
+    // S3: a main-set row §3 registers a sanity level for is held to that level too, even where the
+    // coarse class above already matched — the same "mechanism, not only class" shape as the block
+    // above, against §3's own registered levels rather than §4's mechanism text.
+    if let Some(expected_level) = registered_sanity_level {
+        let observed_level = observed_sanity_level(observed);
+        if observed_level.as_deref() != Some(expected_level) {
+            return (
+                Verdict::Deviation,
+                format!(
+                    "{note} ADDITIONALLY: §3 registers this row's sanity level as {expected_level:?}; \
+                     observed sanity level = {observed_level:?}, which does not match. The coarse \
+                     class may have matched, but the registered sanity level did not — this is the \
+                     deviation."
                 ),
             );
         }
@@ -597,9 +658,9 @@ fn today_utc() -> String {
 
 // ---- The runner --------------------------------------------------------------------------
 
-#[test]
 #[ignore = "opens real on-disk fixtures under target/fixtures/compat-corpus; run explicitly, on a \
             quiet machine (no spatial-ide-shell.exe running) — Brief A P4"]
+#[test]
 fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results() {
     let manifest_raw = std::fs::read_to_string(manifest_path())
         .unwrap_or_else(|e| panic!("MANIFEST.json unreadable at {CORPUS_ROOT}: {e}"));
@@ -633,6 +694,13 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         summary: String,
         verdict_label: &'static str,
         note: String,
+        /// The remaining fields exist so §5's predictions (below, after the loop) are computed from
+        /// what was actually observed per row, never hand-typed against the corpus.
+        main_set: bool,
+        refusal_code: Option<String>,
+        crs_provenance: Option<String>,
+        axis_provenance: Option<String>,
+        sanity_level: Option<String>,
     }
 
     let mut records = Vec::with_capacity(total_rows);
@@ -659,9 +727,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         };
         let pre_hash_ok = actual_sha.is_some() && manifest_ok && derivations_ok;
 
+        let main_set = row.id.starts_with('#');
+
         if !pre_hash_ok {
             let reason = if actual_sha.is_none() { "absent" } else { "hash mismatch" };
-            *counts.entry("not run").or_insert(0) += 1;
+            *counts.entry("unrun").or_insert(0) += 1;
             records.push(RowRecord {
                 spec_id: row.id,
                 suffix: row.suffix,
@@ -669,19 +739,35 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
                 citation: row.citation,
                 pre_hash_ok: false,
                 post_hash_ok: false,
-                summary: format!("not run — hash mismatch / {reason}"),
-                verdict_label: "not run",
+                summary: format!("unrun — hash mismatch / {reason}"),
+                verdict_label: "unrun",
                 note: "hash verification failed before the file was ever opened; §8's rule — a \
                        mismatch invalidates the row rather than the run."
                     .to_string(),
+                main_set,
+                refusal_code: None,
+                crs_provenance: None,
+                axis_provenance: None,
+                sanity_level: None,
             });
             continue;
         }
 
         let observed = open_and_observe(&full_path);
         rows_opened += 1;
-        let (verdict, note) =
-            evaluate(&row.prediction, &observed, row.expect_sanity_reason_contains);
+        let (verdict, note) = evaluate(
+            &row.prediction,
+            &observed,
+            row.expect_sanity_reason_contains,
+            row.registered_sanity_level,
+        );
+
+        let mut rec_refusal_code = None;
+        let mut rec_crs_provenance = None;
+        let mut rec_axis_provenance = None;
+        // Assigned in both match arms below (never left at a placeholder), so it is declared
+        // without one.
+        let rec_sanity_level;
 
         let summary = match &observed {
             Observed::Admitted {
@@ -701,6 +787,9 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
                     "admitted-as-declared"
                 };
                 *counts.entry(class).or_insert(0) += 1;
+                rec_crs_provenance = Some(crs_provenance.clone());
+                rec_axis_provenance = Some(axis_provenance.clone());
+                rec_sanity_level = Some(sanity_level.clone());
                 format!(
                     "{class} — crs={crs}, crs_provenance={crs_provenance}, \
                      crs_source={crs_source}, axis_provenance={axis_provenance}, \
@@ -710,6 +799,8 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
             }
             Observed::Refused { code, detail } => {
                 *counts.entry("refused-by-name").or_insert(0) += 1;
+                rec_refusal_code = Some(code.clone());
+                rec_sanity_level = observed_sanity_level(&observed);
                 format!("refused-by-name {code} — {detail}")
             }
         };
@@ -729,6 +820,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
             summary,
             verdict_label: verdict.label(),
             note,
+            main_set,
+            refusal_code: rec_refusal_code,
+            crs_provenance: rec_crs_provenance,
+            axis_provenance: rec_axis_provenance,
+            sanity_level: rec_sanity_level,
         });
     }
 
@@ -753,6 +849,85 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         };
         record.post_hash_ok = manifest_ok && derivations_ok;
     }
+
+    // ---- §5's registered predictions, resolved by name, computed from `records` above (never
+    // hand-typed against the corpus — only the expected values §5 itself registers are literal).
+    let p1_refusals: Vec<&str> = records
+        .iter()
+        .filter(|r| r.main_set && r.refusal_code.as_deref() == Some("engine.geo_metadata"))
+        .map(|r| r.spec_id)
+        .collect();
+    let p1_expected: Vec<&str> = vec!["#2", "#4", "#5", "#11", "#12"];
+    let p1_status = if p1_refusals == p1_expected { "borne out" } else { "not borne out" };
+
+    let p2_rows: Vec<&str> = records
+        .iter()
+        .filter(|r| r.main_set && r.refusal_code.as_deref() == Some("engine.format_default_contradicted"))
+        .map(|r| r.spec_id)
+        .collect();
+    let p2_status = if p2_rows == vec!["#6"] { "borne out" } else { "not borne out" };
+
+    // `axis_provenance` alone is not the row's *primary* provenance class — #8 also carries
+    // `axis:format-override` (it has no declared axis either), but its primary class is
+    // `crs:format-default` because `evaluate_class` above checks `crs_provenance` first. The same
+    // precedence is applied here so "exercises axis:format-override" means what §3/§5 mean by it.
+    let p3_rows: Vec<&str> = records
+        .iter()
+        .filter(|r| {
+            r.main_set
+                && r.axis_provenance.as_deref() == Some("axis:format-override")
+                && r.crs_provenance.as_deref() != Some("crs:format-default")
+        })
+        .map(|r| r.spec_id)
+        .collect();
+    let p3_status = if p3_rows == vec!["#3"] { "borne out" } else { "not borne out" };
+
+    // Prediction 4 names the G-A2 workflow this instrument cannot exercise (see this file's own doc
+    // comment); §8's rule ("a registered element not run is recorded `unrun — reason`") applies
+    // rather than a pass-by-omission "borne out".
+    let m1c_verdict = records.iter().find(|r| r.spec_id == "M-1c").map(|r| r.verdict_label);
+    let p4_status = match m1c_verdict {
+        Some("not comparable (different instrument)") => {
+            "unrun — this instrument performs one standalone Dataset::open; §4's Brief A text for \
+             M-1c describes the G-A2 open-then-mutate-then-query workflow, which Amendment 1, item 9 \
+             states is P5's and not built as of this commit (see the M-1c row's own note, above)"
+                .to_string()
+        }
+        Some(other) => format!(
+            "not borne out — the M-1c row recorded verdict {other:?}, not \"not comparable \
+             (different instrument)\""
+        ),
+        None => "unrun — the M-1c row is absent from this run".to_string(),
+    };
+
+    let p5_sample_rows: Vec<&str> = records
+        .iter()
+        .filter(|r| r.main_set && r.sanity_level.as_deref() == Some("sample"))
+        .map(|r| r.spec_id)
+        .collect();
+    let p5_status = if p5_sample_rows.is_empty() { "borne out" } else { "not borne out" };
+
+    // Prediction 6 claims a trend across "any wider producer set" (§5's own words); this fixed
+    // 17-file corpus carries at most one instance of each path, so a population-level trend is
+    // structurally unrun by this instrument regardless of what the two counts below turn out to be.
+    let crs_format_default_count = records
+        .iter()
+        .filter(|r| r.main_set && r.crs_provenance.as_deref() == Some("crs:format-default"))
+        .count();
+    // Same primary-provenance precedence as `p3_rows` above.
+    let axis_format_override_count = records
+        .iter()
+        .filter(|r| {
+            r.main_set
+                && r.axis_provenance.as_deref() == Some("axis:format-override")
+                && r.crs_provenance.as_deref() != Some("crs:format-default")
+        })
+        .count();
+    let p6_status = format!(
+        "unrun — this corpus carries {crs_format_default_count} crs:format-default instance(s) and \
+         {axis_format_override_count} axis:format-override instance(s); a population-level trend \
+         across any wider producer set is not something a fixed corpus of this size samples"
+    );
 
     // ---- Write the GENERATED admission table --------------------------------------------------
     let repo_root =
@@ -817,22 +992,64 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     } else {
         writeln!(out, "DEVIATION rows: {}", deviation_rows.join(", ")).unwrap();
     }
+    writeln!(out).unwrap();
+    writeln!(out, "## Predictions (§5), resolved by name").unwrap();
+    writeln!(out).unwrap();
+    writeln!(out, "| # | status |").unwrap();
+    writeln!(out, "|---|---|").unwrap();
+    writeln!(
+        out,
+        "| 1 | {p1_status} — polygon-gate refusals (main set, engine.geo_metadata): {} (§5 names: {}) |",
+        p1_refusals.join(", "),
+        p1_expected.join(", "),
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| 2 | {p2_status} — engine.format_default_contradicted rows (main set): {} (§5 names: #6) |",
+        p2_rows.join(", "),
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| 3 | {p3_status} — axis:format-override rows (main set): {} (§5 names: #3) |",
+        p3_rows.join(", "),
+    )
+    .unwrap();
+    writeln!(out, "| 4 | {p4_status} |").unwrap();
+    writeln!(
+        out,
+        "| 5 | {p5_status} — sample-level rows (main set): {} |",
+        if p5_sample_rows.is_empty() { "none".to_string() } else { p5_sample_rows.join(", ") },
+    )
+    .unwrap();
+    writeln!(out, "| 6 | {p6_status} |").unwrap();
 
     let results_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ADMISSION-RESULTS.md");
     std::fs::write(&results_path, &out).expect("write engine/ADMISSION-RESULTS.md");
 
     // ---- The assertions this measurement test must actually reach, not only its setup ----------
+    // S1: the artifact above already recorded every row, including any "unrun — hash mismatch /
+    // absent" one (§8's own rule: a mismatch invalidates the row, not the run's ability to record
+    // it). This assertion is what keeps corpus drift red instead of only visible in the table.
+    let not_run = *counts.get("unrun").unwrap_or(&0);
+    assert_eq!(
+        not_run, 0,
+        "corpus drift: {not_run} row(s) recorded unrun — hash mismatch / absent; see the table just \
+         written to {}",
+        results_path.display()
+    );
     assert_eq!(records.len(), total_rows, "every row produced exactly one record, none skipped");
-    let not_run = *counts.get("not run").unwrap_or(&0);
     assert_eq!(
         rows_opened + not_run,
         total_rows as u32,
-        "every row was either opened or recorded not-run — hash mismatch / absent; none silently \
+        "every row was either opened or recorded unrun — hash mismatch / absent; none silently \
          dropped"
     );
     // The RECORDED MUTATION target: with `sha256_matches` inverted, `pre_hash_ok` is false for
-    // every row (bytes always differ from themselves under `!=`), `rows_opened` is 0, and this
-    // assertion is what fails — not a setup-time panic.
+    // every row (bytes always differ from themselves under `!=`), so every row is recorded unrun —
+    // hash mismatch and `not_run` is 17; `assert_eq!(not_run, 0, ...)` above is what fails — not a
+    // setup-time panic — before this `assert!(rows_opened > 0, ...)` is ever reached.
     assert!(rows_opened > 0, "at least one row must have actually been opened and observed");
     for r in &records {
         if r.pre_hash_ok {
@@ -850,7 +1067,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     );
 
     eprintln!(
-        "P4 admission table: {rows_opened} row(s) opened, {not_run} not run, {} DEVIATION row(s) \
+        "P4 admission table: {rows_opened} row(s) opened, {not_run} unrun, {} DEVIATION row(s) \
          — see {}",
         deviation_rows.len(),
         results_path.display()
