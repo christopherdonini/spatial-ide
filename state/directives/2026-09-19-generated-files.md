@@ -1,0 +1,5 @@
+# Directive 2026-09-19 -- generated files regenerate on merge (the human, mid-turn)
+
+Received 2026-09-19 as a mid-turn message; recorded verbatim on line 5 (the custodian adds nothing to it; the applied reading is in `DECISIONS-PENDING.md`'s DIRECTIVE block of the same date).
+
+#90 conflicts on the five generated files (queue .json/.md, plan.json, site/index.html) plus PLAN.yaml. Resolve by regeneration, not by hand: merge origin/main into the branch, take main's version of all four generated files (git checkout --theirs on the generated set), resolve PLAN.yaml semantically — both sides' node changes kept — then run the generators (queue, site, verify:plan) so the four regenerated files match the merged plan; commit, push, CI. Same treatment for any of #88/#89/#91 that conflicts the same way after #90 lands. Mechanic, permanent: generated files are never conflict-resolved by hand — a PR touching PLAN.yaml regenerates on merge with main; and consider whether generated outputs should carry a merge=ours/regenerate .gitattributes strategy or move out of PRs entirely (CI regenerates on main after merge), so sibling PRs stop colliding on files nobody edits.

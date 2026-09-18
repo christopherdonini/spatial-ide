@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T22:11:32.711Z",
-  "plan_hash": "c03f35f51004a18f665d83bffd67c4b20ff022827d2de7afe8772227cab074de",
+  "generated_at": "2026-09-18T22:20:25.708Z",
+  "plan_hash": "6114a26550095923fdd311d335547b09f80abddfe763dcbd1780e770cc0c615e",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -62,7 +62,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 10,
+    "total_minutes": 15,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -104,6 +104,25 @@
             "done": null
           },
           "summary": "Owner: engine-source-change-watcher -- the proposed PLAN node this scheduling ruling would place."
+        },
+        {
+          "id": "decision-generated-outputs-merge-strategy",
+          "title": "Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge)",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 2,
+          "budget_minutes": 0,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 5
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-19",
+            "done": null
+          },
+          "summary": "The custodian's reading is DECISIONS-PENDING.md entry 114: (A) the standing mechanic alone (regenerate on merge, now AUTONOMY section 2); (B) a .gitattributes merge driver -- insufficient, GitHub's merge ignores custom drivers; (C) site/index.html and site/data/plan.json built by the Pages workflow from PLAN.yaml and no longer tracked, the queue files kept tracked with a PR CI drift check against the merge ref -- recommended, one governance piece after the current wave; (D) a bot commit on main after merge -- advised against, it fights the branch protection. Until the ruling, (A) is the rule"
         }
       ],
       "sitting": []

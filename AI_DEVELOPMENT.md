@@ -177,6 +177,13 @@ Scripts we write · Citations and quotes · Gates and rule 7 · Records, claims 
   `.claude/worktrees/*`; a force-push from the main checkout once overwrote a worktree session's
   final commits (recovered only because git keeps objects).
 
+- **Generated files are never conflict-resolved by hand (the human, 2026-09-19; `state/directives/2026-09-19-generated-files.md`).** When a
+  PR touching `PLAN.yaml` conflicts with main on `CUSTODIAN-QUEUE.*`, `site/index.html` or `site/data/*.json`:
+  merge `origin/main` into the branch, `git checkout --theirs` the generated set, resolve `PLAN.yaml`
+  semantically (both sides' node changes kept), regenerate (`queue.mjs`, `health.mjs`, `site.mjs`),
+  `verify.mjs`, commit, push, CI. Applied first to PRs #90 and #91 on 2026-09-19 (`AUTONOMY.md` §2 carries
+  the mechanic).
+
 ### Launching the app and E2E runs
 
 - **One app at a time; only the harness launches it (2026-09-08).** A worker or gate that needs the

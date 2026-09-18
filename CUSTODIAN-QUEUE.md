@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c03f35f51004a18f665d83bffd67c4b20ff022827d2de7afe8772227cab074de`) at `2026-09-18T22:11:32.711Z`.
+Generated from `PLAN.yaml` (sha256 `6114a26550095923fdd311d335547b09f80abddfe763dcbd1780e770cc0c615e`) at `2026-09-18T22:20:25.708Z`.
 
 ## 1. Next
 
@@ -11,12 +11,13 @@ Generated from `PLAN.yaml` (sha256 `c03f35f51004a18f665d83bffd67c4b20ff022827d2d
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration (lane `engine`, order 6, budget 480 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
-## 3. Waiting on the human (total: 10 min)
+## 3. Waiting on the human (total: 15 min)
 
 ### ruling
 
 - **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (5 min)
 - **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (5 min)
+- **decision-generated-outputs-merge-strategy** — Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge) (5 min)
 
 ## 4. Blocked on dependencies
 
