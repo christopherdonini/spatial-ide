@@ -24,7 +24,7 @@ are mechanical and were run, or are re-run, before the human's step that depends
 ## 2. Repository metadata (human — GitHub "About" panel, or `gh repo edit`)
 
 - [x] Description set (one sentence; the README's first line without the marketing tone). `gh repo edit --description "<text>"`. **Done 2026-09-14** — description A (321 chars), the human ran `gh repo edit`.
-- [x] Topics set (**done 2026-09-14** — the fourteen verified topics, the human ran `gh repo edit`): `gh repo edit --add-topic geoparquet --add-topic gis --add-topic tauri --add-topic duckdb --add-topic rust --add-topic spatial-data` (the fourteen verified topics and the final description are in `RELEASE-DRAFTS-0.1.0/decision-notes/repo-description-and-topics.md`; entry 78 ruled 2026-09-11; topics are metadata, not claims).
+- [x] Topics set (**done 2026-09-14** — the fourteen verified topics, the human ran `gh repo edit`): `gh repo edit --add-topic geoparquet --add-topic gis --add-topic tauri --add-topic duckdb --add-topic rust --add-topic spatial-data` (the fourteen verified topics and the final description are in `state/drafts/decision-notes/repo-description-and-topics.md`; entry 78 ruled 2026-09-11; topics are metadata, not claims).
 - [ ] Homepage: none, or the repository's own README (no marketing site exists). `gh repo edit --homepage ""`.
 - [ ] "Releases" and "Packages" sidebar items as GitHub sets them; nothing else changes. Visibility is NOT touched (already public since 2026-08-03; ADR-009's corrigendum).
 

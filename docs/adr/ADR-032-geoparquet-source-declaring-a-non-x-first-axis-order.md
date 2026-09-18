@@ -1,6 +1,6 @@
 # ADR-032 — Axis order for a GeoParquet source whose CRS definition declares a non-x-first order
 
-*Redrafted 2026-09-10 at Brief A's P0 by the architect agent on the custodian's brief, as this cut's accepting record — for the human's sight on `cut/admission-format-semantics`. Sentences marked **[H]** are the human's verbatim; everything else is drafting. Cites marked **[2nd]** are taken from `RELEASE-DRAFTS-0.1.0/post-tag/architect-consult-adr-032.md` and were not re-read in the P0 pass. The 2026-09-08 filing this replaces is in git history (`docs/README.md` still describes it as "decision deliberately open" until acceptance).*
+*Redrafted 2026-09-10 at Brief A's P0 by the architect agent on the custodian's brief, as this cut's accepting record — for the human's sight on `cut/admission-format-semantics`. Sentences marked **[H]** are the human's verbatim; everything else is drafting. Cites marked **[2nd]** are taken from `state/drafts/post-tag/architect-consult-adr-032.md` and were not re-read in the P0 pass. The 2026-09-08 filing this replaces is in git history (`docs/README.md` still describes it as "decision deliberately open" until acceptance).*
 
 **Status:** **Proposed** — filed 2026-09-08 on the human's ruling (DECISIONS-PENDING entry 59 = (a), verbatim: **[H]** *"ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open)"*). **This text is the accepting draft prepared at Brief A's P0; acceptance comes at P6 and only in the human's own words. Until then it binds nothing.** The human's sequencing note, not a decision: **[H]** *"ADR-032 (4326 admission) likely outranks LOD."*
 
@@ -20,7 +20,7 @@ The v0.1.0 release shipped EPSG:3857 alone; KNOWN-LIMITATIONS states the 4326 re
 
 ## Decision
 
-As stated by Brief A's settled boundary 1 (`RELEASE-DRAFTS-0.1.0/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md:25-29`), which this ADR records rather than reopens:
+As stated by Brief A's settled boundary 1 (`state/drafts/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md`), which this ADR records rather than reopens:
 
 1. **An absent `crs` key is the format's own default, not a guess.** It admits as OGC:CRS84 with provenance **`crs:format-default`**, carrying the specification version and the pinned rule that established it. The provenance is shown to the operator and recorded on the envelope.
 2. **An explicit `crs: null` is unchanged**: unknown — assertion required (`engine/src/geoparquet.rs:98-109`, `engine/src/crs.rs:236-239`).

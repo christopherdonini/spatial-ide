@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `04b9482d19941237ab55fcc3431606a2d00936dbc7bda3940d9e9e3f481ac2cd`) at `2026-09-17T18:57:26.550Z`.
+Generated from `PLAN.yaml` (sha256 `7fd8be3629a2d67d66fe5bc0fd1a3d593464096a2ea57510f55c0ad32691c2ba`) at `2026-09-18T05:07:20.979Z`.
 
 ## 1. Next
 
@@ -32,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `04b9482d19941237ab55fcc3431606a2d00936dbc7bd
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: branch `cut/briefa-p3b`
 - **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
+- **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: branch `governance/record-round-count`
 
 ## 6. Proposed / unscheduled
 
@@ -40,6 +41,8 @@ Generated from `PLAN.yaml` (sha256 `04b9482d19941237ab55fcc3431606a2d00936dbc7bd
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (phase `prototype`) — never queued until placed
 - **lod-tier-cache-lifecycle** — LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view (phase `prototype`) — never queued until placed
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (phase `prototype`) — never queued until placed
+- **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (phase `prototype`) — never queued until placed
+- **governance-verify-gate-file-exists** — verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18) (phase `prototype`) — never queued until placed
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed

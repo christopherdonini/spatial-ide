@@ -1,34 +1,21 @@
-# ADR-023 — Attribute Projection on `viewport_query`
+> **Status: consult — the architect's Brief B stage-B1 ADR-023 decision draft of 2026-09-10, for the human's sight.**
+> Record, not policy — moved from the untracked `RELEASE-DRAFTS-0.1.0/` directory on the human's round-14 ruling (2026-09-17); nothing here binds, and its cites are historical (advisory in `verify-cites`, never gated).
 
-**Status:** Proposed — **decision deliberately undrafted; binds nothing.** Filed 2026-08-15 as
-the named home for a deferral, so the gap has an address instead of being rediscovered (the
-ADR-011-gate-8 pattern). Not architect-blockable. No implementation exists or is licensed by this
-filing.
-**Drafted by:** the architect design consult for the `cut/style-panel` branch (2026-08-15).
-**Related:** ADR-021 (the filter predicate's namespace — the same schema surface), ADR-017 §5a
-(style v0's `match` needs a match-key column in the projection — the same discipline owed live),
-ADR-010 rules 1/2 (frame tag; ordinal→id indirection — a widened batch schema must not disturb
-either), `engine/src/attributes.rs` (`admit_projection` — exists, publish-path only),
-`engine/src/envelope.rs` (the widened `[id, geometry, …attributes]` constructor — exists,
-publish-path only), `docs/09` (what an unbounded projection over a local file requires).
-**Record:** Decision text accepted as drafted with two §2 amendments by the human on 2026-09-14
-(`DECISIONS-PENDING.md`, RULED 2026-09-14 question set D, D2); Status unchanged until B1's close.
+# Architect consult — Brief B stage B1: ADR-023's Decision, drafted for the human's sight
 
-## Context
+*Consult of 2026-09-10 on the custodian's brief under the human's authorization ("Brief B, B1 consult only: ADR-023's decision text drafted for my sight (projection of named columns, the type allowlist, refusals) and the architect's ADR-004 review of the data-plane column addition. No code."). Filed verbatim from the architect agent's report (HTML entities restored to `<`/`>`); the companion document is `architect-consult-b1-adr-004-data-plane-review.md`. **Nothing here binds.** ADR-023 stays Proposed until the human's word; Brief B is held until Brief A closes (block-on-sight B-1 applies from the first line: no stage is described as the completed workflow). The agent's verdict and the three items it queued for the human are reproduced first.*
 
-Data-driven styling (`match`), attribute display in the hover panel, and any client-side
-categorical legend all need per-feature attribute values on the **live** stream.
-`viewport_query` has no projection parameter; the engine's declared attribute projection and the
-widened batch envelope already exist but are reachable only from `stream_for_publish`. Style v0
-already requires a `match` column to be present in the published projection — the same discipline
-is owed live before the working canvas can style by attribute.
+---
+
+**Verdict: pass with notes.** No principle or boundary violation in the B1 surface as drafted below. Three items are queued for the human, not resolved here: the refusal set is wider than DRAFT-3's Stage B1 sentence names (§3 below), the live projection needs its own declared ceiling because ADR-017 §16's rows are publish/reader-side only (§4), and the shell's style module carries a comment and a type that become false at B1 (Doc 2, queued conflicts). Nothing here is architect-blockable against ADR-023 (Proposed, `docs/adr/ADR-023-attribute-projection-on-viewport-query.md:3-6` — "Not architect-blockable").
+
+---
+
+# Document 1 — ADR-023 Decision, drafted for the human's sight
+
+*Amendment-shaped: replaces the deliberately-open block at `docs/adr/ADR-023-attribute-projection-on-viewport-query.md:26-31`. **Status stays Proposed** until the human's word at B1's close. Drafted by the architect consult for Brief B stage B1; binds nothing until accepted.*
 
 ## Decision
-
-*Ported verbatim from the architect's B1 consult, Document 1 — "ADR-023 Decision, drafted for the
-human's sight" (`state/drafts/post-tag/architect-consult-b1-adr-023-decision.md`), with the
-two §2 amendments ruled by the human on 2026-09-14 marked inline and the entry-79 rulings folded.
-Status stays Proposed until B1's close.*
 
 ### 1. The surface
 
@@ -47,17 +34,17 @@ Admitted, in Arrow terms (DuckDB's Arrow output types for this reader):
 - **text** — `Utf8`, `LargeUtf8`, `Utf8View` (`attributes.rs:61-63`)
 - **boolean** — `Boolean` (`attributes.rs:64`)
 - **integer** — `Int8/16/32/64` and `UInt8/16/32/64` (`attributes.rs:65-72`). DuckDB `TINYINT/SMALLINT/INTEGER/BIGINT` and their `U*` forms.
-- **float** — `Float64` **and `Float32`**. DuckDB `DOUBLE` and `REAL`. *(amended by the human's ruling of 2026-09-14, question set D)* — the human's words: **"Float32 is ADMITTED as its own Arrow type, carried unchanged — every f32 is exactly representable in f64, so no conversion exists to object to."** The draft's `Float64`-only admission (`attributes.rs:73` — *code to follow the amendment in B1*) and its refusal arm for `Float32`/`REAL` (`attributes.rs:82-88` — *code to follow the amendment in B1*) are superseded by this amendment: an `f32` column travels as `Float32`, is not widened on the way out, and so carries no conversion the caller did not ask for.
-- **dictionary-encoded columns** — *(amended by the human's ruling of 2026-09-14, question set D)* — the human's words: **"dictionary-encoded columns are DECODED to their value type and admitted under that type's rule, the index never exposed — an ENUM of strings is text, not a synthesized identity."** The draft's refusal (`attributes.rs:74-81` — *code to follow the amendment in B1*) is superseded. A dictionary column is admitted if and only if its **value** type is admitted by the rules above, and it is emitted as that value type; the index is decoded away inside the engine and never reaches the envelope, the wire, the style path or the readout. ADR-016 §4's synthesized-identity hazard is therefore not engaged — there is no ordinal to mistake for an identity, because none is exposed.
+- **float** — **`Float64` only** (`attributes.rs:73`). DuckDB `DOUBLE`. `Float32`/`REAL` is **refused** (`attributes.rs:82-88`): widening f32→f64 is exact but is still a conversion the caller did not ask for.
 
 Refused, by name, each through the typed refusal in §3:
 
 - **geometry** — never, at any width or encoding: the geometry column is refused as an attribute because it already travels as GeoArrow (`attributes.rs:150-155`).
 - **identity** — the engine's `id` and the mapped source column both refused (`attributes.rs:156-165`).
-- **timestamps and dates** — `Date32`, `Date64`, `Timestamp(_,_)`, `Time*`, `Interval`, `Duration`: refused by the final arm (`attributes.rs:89-96`; `Date32` pinned by the test at `attributes.rs:197-204`). A timestamp has a unit and a zone; carrying it without deciding how a consumer renders it is a silent conversion waiting at the display end. Timestamps and dates stay refused for v0, with **dates named as the declared next admission** — the next type this allowlist takes up, whenever it is widened, is dates (the human's ruling of 2026-09-14, question set D).
+- **timestamps and dates** — `Date32`, `Date64`, `Timestamp(_,_)`, `Time*`, `Interval`, `Duration`: refused by the final arm (`attributes.rs:89-96`; `Date32` pinned by the test at `attributes.rs:197-204`). A timestamp has a unit and a zone; carrying it without deciding how a consumer renders it is a silent conversion waiting at the display end.
 - **decimals** — `Decimal128`/`Decimal256`: refused. Their exact value is not representable in the double a viewer would read it as.
 - **lists, structs, maps, unions** — refused; the batch schema and the hover readout are flat.
 - **binary** — `Binary`, `LargeBinary`, `FixedSizeBinary`: refused; nothing declares an encoding for them.
+- **dictionary-encoded columns** — refused rather than decoded (`attributes.rs:74-81`): a dictionary index is an ordinal, which ADR-016 §4 names as a synthesized identity wearing a mapping's clothes.
 
 **Nullability is not taken from the source.** Every projected column is emitted nullable (`attributes.rs:174-176`), so a source NULL travels as a NULL and reaches the style's `on_null` branch and an explicit "no value" in the readout, rather than a substituted default.
 
@@ -117,7 +104,7 @@ No save, no persistence of a projection anywhere durable (ADR-021's predicate-pe
 
 ### 10. SKP version consequence
 
-A new field on `viewport_query` is a wire change, and schema evolution here happens exactly once, as a version bump, never as a tolerant reader (`protocol/skp/SKP-V0.md:237-243`). Current literal is `skp/0.2` (`protocol/skp/src/v0/mod.rs:29`). **Brief A takes 0.3** (`DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md:67`, `:76`, `:89`) and merges first, so **B1 bumps to `skp/0.4`**, `==` unchanged — no ranges, no capability set, no handshake; a `skp/0.3` client and a `skp/0.4` host fail on the first call. Every fixture on both the Rust and TypeScript sides updates in the same commit as the literal, `deny_unknown_fields` stays on every derived struct in both directions. If Brief A does not merge first, this decision's number is wrong and is corrected before B1's PR, never assumed.
+A new field on `viewport_query` is a wire change, and schema evolution here happens exactly once, as a version bump, never as a tolerant reader (`protocol/SKP-V0.md:237-243`). Current literal is `skp/0.2` (`protocol/skp/src/v0/mod.rs:29`). **Brief A takes 0.3** (`DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md:67`, `:76`, `:89`) and merges first, so **B1 bumps to `skp/0.4`**, `==` unchanged — no ranges, no capability set, no handshake; a `skp/0.3` client and a `skp/0.4` host fail on the first call. Every fixture on both the Rust and TypeScript sides updates in the same commit as the literal, `deny_unknown_fields` stays on every derived struct in both directions. If Brief A does not merge first, this decision's number is wrong and is corrected before B1's PR, never assumed.
 
 ### 11. Block-on-sight conditions for B1's reviewer
 
@@ -137,25 +124,11 @@ A new field on `viewport_query` is a wire change, and schema evolution here happ
 
 **Architect** (implementation-level unless it becomes a wire change): the constant's name and whether the live ceiling is a second declaration (§4); the producer-resident memory consequence of per-column chunk retention at projection width (Doc 2, queued item 3); whether the existing `filter_composition` prefix tests are re-pinned projection-aware without weakening the verbatim `WHERE` assertion (`stream.rs:2189`).
 
-### Conditions carried into B1 (the human, 2026-09-14)
 
-The four ADR-004 review conflicts, ruled verbatim (`DECISIONS-PENDING.md`, RULED 2026-09-14 question set D, item D2):
+---
 
-1. "the shell style module's in-code assertion that the live stream carries no attributes becomes false with B1 and is corrected in the same piece — never left as a lie"
-2. "ADR-023's Context sentence gets a dated corrigendum at acceptance"
-3. "per-column chunk retention at projection width is the architect's, with the memory consequence DECLARED as a ceiling (ADR-010 rule 6), never discovered"
-4. "the filter_composition prefix tests are re-pinned projection-aware without weakening the verbatim WHERE assertion — architect's, reviewer-checked"
-
-Status stays Proposed until B1's close.
-
-### The human's rulings on the B1 items (2026-09-11, DECISIONS-PENDING entry 79, verbatim) — applied at B1's close; Brief B stays held until Brief A closes
+## The human's rulings on the B1 items (2026-09-11, DECISIONS-PENDING entry 79, verbatim) — applied at B1's close; Brief B stays held until Brief A closes
 
 > *"79: (1) the wider named set, projection_empty_list mandatory; (2) hover shows every projected column, the bound is too-many at admission; (3) describe carries per-column projectable, the panel holds no type logic."*
 
 What each changes in Document 1 when B1 opens: **§3** — the refusal set is the six named codes plus `skp.projection_empty_list` (mandatory: `columns: []` is refused, never read as `null`); **§6** — the readout shows every projected column, and the only bound is `skp.projection_too_many_columns` at admission (no display-side subset); **§8 (`describe`)** — each `describe.schema` row carries a kernel-computed `projectable` boolean derived from `admit_attribute_type`, and the panel holds no type logic of its own (no client-side `arrow_type` filter; the kernel's refusal remains the authority). The `describe` addition is a wire field and rides B1's own version bump (§10). Nothing here is code; nothing here changes Document 2.
-
-## Consequences (of the deferral, not of a decision)
-
-Until this is decided: the working canvas styles by literal only; the hover panel shows `id`
-only; and the hero slice's "colour by attribute" moment lives in the published bundle rather
-than in the shell. Each of those is a named limit, never presented as a product choice.

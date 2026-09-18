@@ -285,6 +285,11 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
     const ext = extOf(relPath);
     const text = fs.readFileSync(path.join(root, relPath), 'utf8');
     const cites = extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) });
+    // `state/drafts/` holds drafts and consults tracked as record, not policy (the human,
+    // 2026-09-17, round 14, item 4): their cites were written against earlier trees and are
+    // historical, so a broken one is reported as advisory, never gated.
+    const archived = relPath.startsWith('state/drafts/');
+    const sink = archived ? advisory : gated;
     for (const cite of cites) {
       cite.relPath = relPath;
       const cls = classifyPath(cite.pathRaw, topDirs);
@@ -296,9 +301,9 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
         // A rooted path (first segment is a real top-level repo dir) that matches nothing is a
         // broken in-tree reference and is gated; a loose/external path that matches nothing is a
         // reference we cannot confirm is even meant to be in-tree, so it is skipped.
-        if (cls === 'rooted') gated.push({ ...at, reason: `no tracked file matches "${cite.pathRaw}"` });
+        if (cls === 'rooted') sink.push({ ...at, reason: `no tracked file matches "${cite.pathRaw}"` });
       } else if (res.status === 'oob-exact') {
-        gated.push({ ...at, reason: res.reason });
+        sink.push({ ...at, reason: res.reason });
       } else {
         advisory.push({ ...at, reason: res.reason });
       }

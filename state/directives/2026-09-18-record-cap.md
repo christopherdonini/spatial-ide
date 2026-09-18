@@ -1,0 +1,13 @@
+# Standing directive — the record cap (the human, 2026-09-18, verbatim)
+
+*Received by the custodian mid-turn on 2026-09-18, after question round 15 was answered. Recorded verbatim; the custodian's compliance notes follow the text and are marked as the custodian's.*
+
+> Standing directive, effective now: record work is capped. (1) The record of a piece is the smallest text that lets a gate verify the claims the piece makes — a closing amendment is references and hashes, never prose that restates them; if a sentence can be replaced by a path:line @ rev sha256 reference, it is. (2) Record-fidelity gate failures do not spawn new clauses; the fourteen adopted this week are the mechanism — a new class goes to the ledger as a finding and to me as a proposal, at most once a week. (3) Per piece, record correction is two rounds maximum; after that the architect reduces the record to references and the piece lands with the reduced record. (4) The health strip carries record-round count per piece; the target is zero. (5) After the erratum rows land: P3b, the LOD, and the checker are landed — their code passed every gate; the checker's own amendment is reduced to references under (1) rather than attempted a fifth time.
+
+## Compliance notes (the custodian's, 2026-09-18)
+
+- **The fourteen clauses** are round 12's five (a)–(e), round 14's clause (a′) and the root-cause rule, and round 15's seven (a)–(g); all are on main in `docs/PREREGISTRATION-TEMPLATE.md` §10, both gate checklists, the worker brief and `AI_DEVELOPMENT.md`, each byte-copied from its committed source with the line's hash.
+- **(1) and (3)** enter the template's §10, both checklists, the worker brief and `AI_DEVELOPMENT.md` by reference to this file, not restated.
+- **(4)** is a tooling change: the gate log gains an optional `record` field on gate records that gate a record-correction round; `scripts/plan/health.mjs` counts them per node and the strip shows the count. Filed as a PLAN node and dispatched as a short-form piece.
+- **(5)** reads with round 15's item 2 ("Hold both") as superseded by this later instruction: the erratum rows for P3b and the LOD are written by the architect as references and hashes only, resolved per row before delivery (round 15 (a)–(b)), executed by a fresh worker with the resolution step, and then the three pieces land through PRs the human clicks. The checker's one build-fix round (round 15, item 3) stands; its closing amendment is references only and is never re-attempted.
+- **The RESIDENCY note** (two failed reads) falls under (3): the architect reduces it to references and it lands with the reduced record.
