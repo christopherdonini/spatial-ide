@@ -226,6 +226,17 @@ have inherited this process's own environment. Same **E2E-verified** evidence cl
 deadline (900s, matching `filter-panel.mjs`'s own heavier-suite precedent -- this suite also builds
 and runs a Rust example as a subprocess); leaves the app running afterward.
 
+**Two environment findings from `source-changed.mjs`'s P5 round-2 real-app runs, worth knowing
+before the next one.** A worktree's very first `tauri dev` launch can leave the webview connected to
+a Vite dev server whose `.vite/deps` optimize cache is still mid-rebuild -- the symptom is a
+dynamically-imported module 404, the HMR WebSocket refusing to connect, and every deck.gl
+`capturePixels` call throwing on a null `layerManager` that never gets constructed; a kill-and-relaunch
+of the app (not the Vite process) cleared it every time it was tried. Separately, reusing ONE running
+app instance across two consecutive `source-changed.mjs` route runs leaves the first run's camera and
+session-ended state in place for the second (`openPath` on the same path does not remount the canvas),
+so each scenario needs its own fresh launch -- observed as a zoom ladder producing zero motion at
+every notch on a second run against the same instance, silent otherwise.
+
 ## Action console spec (action-console cut, P5)
 
 ```

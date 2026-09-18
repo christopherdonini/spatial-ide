@@ -146,10 +146,11 @@
 //
 // Everything above this note is the PRE-check route (T10, unchanged by this extension -- every
 // step below runs its ORIGINAL body, byte-for-byte, whenever SPATIAL_E2E_SOURCE_CHANGED_ROUTE is
-// unset or "pre"). Set it to "post" to run the OTHER half of G-A2's own wording -- "asserted at the
-// pre-check and at the post-check paths separately" (`ADMISSION-PREREGISTRATION.md:221`) -- against
-// engine/src/stream.rs's post-check (section 13 C of that document: the check that runs AFTER
-// DuckDB's result iterator is fully drained, not before a query is minted).
+// unset or "pre"). Set it to "post" to run the other half of what engine/ADMISSION-PREREGISTRATION.md
+// section 12b's gate G-A2 requires: the post-check path, asserted separately from the pre-check path
+// S1-S5c above already cover, against engine/src/stream.rs's post-check (section 13 C of that
+// document: the check that runs AFTER DuckDB's result iterator is fully drained, not before a query
+// is minted).
 //
 // WHAT MAKES THIS THE POST-CHECK AND NOT A SECOND COPY OF THE PRE-CHECK. The pre-check route (S3
 // above) mutates the file BEFORE issuing the next query, so the kernel's live-generation check
@@ -158,14 +159,20 @@
 // then mutate, so the change is caught when that tile's own stream later drains. This driver has no
 // hook into the Rust producer thread, so it cannot be TOLD the exact instant between mint and
 // drain -- it infers a safe point in that window from a signal the product ALREADY emits for an
-// unrelated reason: `traceStreamIssued` (`diagnostics/renderTrace.ts`), the `[render-trace]
-// stream-issued` console line, fires "at the moment a ticket actually mints ... right after the
-// real mint, never before" (that function's own doc comment) -- i.e. strictly AFTER the pre-check
-// for that tile already passed. Polling for a NEW such line and mutating the instant one appears is
-// therefore mutating no earlier than "this tile's pre-check already passed", with the actual data
-// transfer, decode and render still ahead of it -- the same use this driver already makes of
-// `[render-trace] viewport_query` in S4 above, one product-emitted signal later in the same
-// pipeline.
+// unrelated reason: `traceStreamIssued`. Its own doc comment
+// (`frontends/shell/src/diagnostics/renderTrace.ts:27-32`) names the baseline arm's call site
+// (`ViewportStreamManager.requestViewport`, right before it returns `{kind:"issued", streamHandle}`)
+// and states it fires at the moment a ticket actually mints. On the TILED arm specifically -- the
+// route this driver drives -- `traceStreamIssued` is called on line 1096 of
+// `frontends/shell/src/streaming/tileViewportStreamManager.ts`, AFTER `startStream(...)` on line
+// 1093 (already carrying the real, already-minted `ticket.stream`), unconditionally: no `if` guards
+// the call, so it runs on every reach of `mintAndStart`'s success path, and that call site's own
+// comment (`:1094-1095`) states it fires at the same moment the baseline arm's does -- right after
+// the real mint, never before. So a NEW `stream-issued` line is strictly AFTER the pre-check for
+// that tile already passed. Polling for one and mutating the instant it appears is therefore
+// mutating no earlier than "this tile's pre-check already passed", with the actual data transfer,
+// decode and render still ahead of it -- the same use this driver already makes of `[render-trace]
+// viewport_query` in S4 above, one product-emitted signal later in the same pipeline.
 //
 // WHAT THIS DOES NOT GUARANTEE, STATED RATHER THAN HIDDEN. A camera gesture can plan more than one
 // tile; this driver mutates on the FIRST `stream-issued` line it sees, and a SIBLING tile whose own
@@ -427,9 +434,9 @@ function streamIssuedCount(consoleHandle) {
  * one appears, synchronously touches `scratchPath`'s mtime (no byte edit) and returns immediately --
  * every millisecond between detection and the touch is mechanism, not a claim (ADR-018).
  *
- * Returns `{seenAt: <ms elapsed>, count}` on success (`count` for the report, `seenAt` recorded only
- * as a bound-not-result diagnostic the same way `readyAfterMs` above is); throws if no new line
- * appears within `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce one.
+ * Returns `{touchedAfterNewStreamIssued: true, count}` on success (`count` is the new
+ * `stream-issued` total, for the report); throws if no new line appears within
+ * `STREAM_ISSUED_WAIT_TIMEOUT_MS`, naming the ladder rung that failed to produce one.
  */
 async function touchOnFirstNewStreamIssued(consoleHandle, scratchPath, baseline, rungLabel) {
   const start = Date.now();

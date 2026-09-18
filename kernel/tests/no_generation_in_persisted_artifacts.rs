@@ -13,31 +13,53 @@
 //!
 //! ## What this tree can produce, enumerated by its own writers
 //!
-//! `kernel/src/publish/mod.rs` (`std::fs::write`/`staging.write`) is the one product writer of a
-//! **published** artifact: the bundle — `manifest.json`, `style.json`, the viewer assets and the
-//! GeoParquet partitions (`kernel/src/bundle/mod.rs`'s path constants). That bundle is also the only
-//! thing in this tree answering to "project files", "styles" or "recipes" in the brief's list: a
-//! style is `style.json` inside it; the closest thing to a "recipe" is the manifest's `operation`
-//! block (`Manifest::operation`, `bundle/mod.rs:518-540`), which is the filter/projection/limit that
-//! produced the bundle. **No standalone project-file or recipe-file format exists in this tree at
-//! this commit** — grepped, not assumed: `fs::write`/`File::create`/`writeFileSync` outside test and
-//! spike code resolve to exactly `kernel/src/bin/publish-bundle.rs` and `kernel/src/publish/mod.rs`.
-//! The other **persisted** artifact this tree writes during ordinary operation is the shell's session
-//! log (`frontends/shell/src-tauri/src/state.rs::SessionLog`) — plain `<ms> <level> <message>` lines,
-//! `message` always caller-supplied text. This file cannot construct one directly (that struct lives
-//! in the `spatial-ide-shell` crate, not `spatial-kernel`), so it tests the thing that actually
-//! *reaches* a session log line instead: the real `Display` text of every `EngineError` this cut's
-//! detected-change path can produce, and the real kernel-minted refusal strings
-//! (`error_of`/`terminal_detail_of`) the shell's own `logSessionEvent` call sites
-//! (`tileViewportStreamManager.ts:740`, `viewportStreamManager.ts:311-314`) interpolate verbatim
-//! into a log line. If the kernel's own bytes never carry the word, neither can the log line built
-//! from them.
+//! Grepped over `engine/src`, `kernel/src`, `protocol/*/src` and `frontends/shell/src-tauri/src`
+//! for `std::fs::write`/`File::create`/`OpenOptions::new()` outside `#[cfg(test)]`, and reconciled
+//! against the record's own architect gate (round 2, B-1). Four families:
+//!
+//! 1. **The published bundle** — `kernel/src/publish/mod.rs` (`Staging::write`, `kernel/src/publish/mod.rs:1355`)
+//!    and `kernel/src/bundle/mod.rs`'s path constants: `manifest.json`, `style.json`, the viewer
+//!    assets and the GeoParquet partitions. The only thing in this tree answering to "project
+//!    files", "styles" or "recipes" in the brief's list: a style is `style.json` inside it; the
+//!    closest thing to a "recipe" is the manifest's `operation` block (`Manifest::operation`,
+//!    `bundle/mod.rs:518-540`). Scanned below.
+//! 2. **The shell's session log** (`frontends/shell/src-tauri/src/state.rs::SessionLog`) — plain
+//!    `<ms> <level> <message>` lines, `message` always caller-supplied text. This file cannot
+//!    construct one directly (that struct lives in the `spatial-ide-shell` crate, not
+//!    `spatial-kernel`), so it tests what actually *reaches* a session log line instead: the real
+//!    `Display` text of every `EngineError` this cut's detected-change path can produce, and the
+//!    real kernel-minted refusal strings (`error_of`/`terminal_detail_of`) the shell's own
+//!    `logSessionEvent` call sites (`tileViewportStreamManager.ts:740`,
+//!    `viewportStreamManager.ts:311-314`) interpolate verbatim into a log line.
+//! 3. **A built LOD tier set** — `engine/src/lod.rs:1203` (`tiers.json`, the manifest) and `:1367`
+//!    (one tier's GeoParquet file, inside the loop `build_tiers` runs per tier). Scanned below, over
+//!    a small fixture, the same `build_tiers`/`LOD_BUILD_WORKERS_ARM_S` shape
+//!    `engine/tests/lod_tier_builder.rs`'s own non-ladder tests already use.
+//! 4. **The permission audit log** — `kernel/src/permission/audit/log.rs:144` (the writability
+//!    probe, `AuditLog::open_for`) and `:215-221` (`AuditLog::append`, the actual record line).
+//!    Scanned below, over one `IntentRecord`, the same `AuditLog::open_for`/`append_intent` shape
+//!    `kernel/tests/permission_boundary.rs` already uses.
+//!
+//! **Excluded, with reason: `engine/src/fixture.rs:627`.** `File::create` inside
+//! `write_geoparquet`'s `generate` — this writes the GeoParquet **fixtures** every test and
+//! measurement run in this tree opens as a *source*, never something the product persists or
+//! publishes *from* an operator's own data. It is an input generator, not an artifact family; the
+//! same reasoning `docs/01` principle 8 gives a fixture (a stand-in for a real file, not a claim
+//! about one) applies to what it writes. Not scanned.
+//!
+//! **No standalone project-file or recipe-file format exists in this tree at this commit** —
+//! grepped, not assumed, against the same four-path scope above; nothing outside the four families
+//! and the one exclusion resolves.
 
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::lod::{build_tiers, LOD_BUILD_WORKERS_ARM_S};
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
 use spatial_kernel::bundle;
+use spatial_kernel::permission::audit::IntentRecord;
+use spatial_kernel::permission::{AuditLog, AUDIT_LOG_ENV};
 use spatial_kernel::publish::{
     publish_unguarded, CorrespondingSource, CorrespondingSourceKind, PublishRequest, ViewerAsset,
     ViewerAssets, ViewerLicenseInput,
@@ -56,7 +78,13 @@ const STYLE: &str = r##"{
 }"##;
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-no-generation-tests").join(name);
+    // Deliberately avoids the literal substring "generation" in this scratch prefix: the LOD
+    // tier-set test below writes real product manifests that record this directory's own path
+    // for provenance (`path_at_build`), and a case-insensitive byte scan for "generation" would
+    // then trip on the *scratch directory's name*, not on anything the product wrote. (Found by
+    // running this file's own tests: the first version of this prefix, `spatial-kernel-no-
+    // generation-tests`, produced exactly that false failure.)
+    let d = std::env::temp_dir().join("spatial-kernel-artifact-scan-tests").join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -316,5 +344,110 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
     assert!(
         offending.is_empty(),
         "a string a session-log line can carry verbatim names a generation: {offending:#?}"
+    );
+}
+
+/// **The LOD tier-set half of G-A4** (architect gate, round 2, B-1, family 3). `build_tiers` writes
+/// `tiers.json` (`engine/src/lod.rs:1203`) and, per tier, a GeoParquet file (`:1367`) to a real
+/// on-disk cache. Same real-product-path discipline as the bundle test above: a real `build_tiers`
+/// call, over a small fixture, scanned byte-for-byte -- not a schema walk this time, because
+/// `tiers.json` is free-form JSON this file has no typed struct for and the byte scan already
+/// covers a JSON manifest's keys and values alike (the bundle tests above establish that a key
+/// match and a value match are different failure classes; one scan of a small manifest does not
+/// need to re-prove that distinction, only to run it once more against this format).
+///
+/// RECORDED MUTATION (run and reverted): add a `"generation": 1,` member to `write_manifest`'s
+/// `json!({...})` in `engine/src/lod.rs`, right after its `"schema"` member. OBSERVED FAILURE: this
+/// test's own assertion fires, its fixed text reading `the substring "generation" appears in these
+/// LOD tier-set files: [...]` -- the `[...]` is this run's own `tiers.json` path under its content-
+/// hash tier directory (`%LOCALAPPDATA%\spatial-ide\tiers\<hash>\`), never fixed text across runs or
+/// machines, so it is not reproduced here.
+#[test]
+fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring() {
+    let d = workspace("lod-tiers");
+    let path = d.join("parcels.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 2_000,
+            crs_mode: CrsMode::DeclaredLv95,
+            identity: IdentityMode::NativeUnique,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let source = Dataset::open(&path).unwrap();
+    let set = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None)
+        .expect("build a small tier set");
+
+    let mut files: Vec<PathBuf> = vec![set.manifest_path()];
+    for outcome in set.tiers() {
+        files.push(outcome.record().path().to_path_buf());
+    }
+    assert!(files.len() > 1, "the tier set wrote nothing but its own manifest; this scan would be vacuous");
+
+    let mut offending = Vec::new();
+    for f in &files {
+        let bytes = std::fs::read(f).unwrap_or_else(|e| panic!("read {}: {e}", f.display()));
+        if contains_ascii_ci(&bytes, b"generation") {
+            offending.push(f.display().to_string());
+        }
+    }
+    assert!(
+        offending.is_empty(),
+        "the substring \"generation\" appears in these LOD tier-set files: {offending:?}"
+    );
+}
+
+/// Serializes the set-var -> run -> read window for `AUDIT_LOG_ENV`, the same discipline
+/// `kernel/tests/permission_boundary.rs::env_lock` states for itself -- this file has only the one
+/// test touching the var, but the lock costs nothing and keeps the pattern uniform if a second test
+/// is ever added here.
+fn env_lock() -> MutexGuard<'static, ()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// **The permission audit log half of G-A4** (architect gate, round 2, B-1, family 4).
+/// `AuditLog::open_for` probes writability with an `OpenOptions` open (`kernel/src/permission/audit/log.rs:144`)
+/// and `AuditLog::append` writes the real record line (`:215-221`). Real product path, the same
+/// shape `kernel/tests/permission_boundary.rs::an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record`
+/// already uses to construct one.
+///
+/// RECORDED MUTATION (run and reverted): add a `("generation", Json::str("1")),` member to
+/// `IntentRecord::to_json`'s `Json::obj([...])` in `kernel/src/permission/audit/record.rs`, right
+/// after its `"schema"` member. OBSERVED FAILURE, exact text: `the substring "generation" appears
+/// in the permission audit log`.
+#[test]
+fn one_permission_audit_log_line_carries_no_generation_substring() {
+    let d = workspace("audit-log");
+    let log = d.join("audit.jsonl");
+    let dest = d.join("out");
+
+    let _guard = env_lock();
+    std::env::set_var(AUDIT_LOG_ENV, &log);
+    let audit = AuditLog::open_for(&dest).expect("open the audit log");
+    audit
+        .append_intent(&IntentRecord {
+            attempt: "artifact-scan-test-0000".into(),
+            at: "2026-09-18T00:00:00Z".into(),
+            operation: "publish-static-bundle",
+            class: 3,
+            reversibility: "irreversible",
+            principal_kind: "os-user",
+            principal_name: "test-operator".into(),
+            source_name: "parcels".into(),
+            source_content_hash: "sha256:aa".into(),
+            destination: "<user-home>/out".into(),
+            style_hash: "sha256:bb".into(),
+        })
+        .expect("append one intent record");
+    std::env::remove_var(AUDIT_LOG_ENV);
+
+    let bytes = std::fs::read(&log).expect("read the audit log back");
+    assert!(!bytes.is_empty(), "the audit log wrote nothing; this scan would be vacuous");
+    assert!(
+        !contains_ascii_ci(&bytes, b"generation"),
+        "the substring \"generation\" appears in the permission audit log"
     );
 }
