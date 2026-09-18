@@ -1670,3 +1670,18 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | Amendment 16's G-A6 row | reduced: its narrative withdrawn, its claim split | No existing test file appears in `git diff --name-only origin/main...HEAD` at this branch's tip; the workspace run at that tip is the reviewer's gate, recorded in `state/gate-log.json` for node `briefa-p5-gate-tests`. |
 
 **Read this amendment first, for Amendments 1-17.**
+
+### Amendment 19 -- narrowing rows after the reviewer's attempt-2 read (2026-09-19, appended)
+
+**Written after the reviewer's attempt-2 findings were seen (`state/gate-log.json` record 99).** Filed as 19, not the mechanically-next 18: 18 is carried by `cut/briefa-p4` (its correction record), per the coordinator's numbering of 2026-09-19. Classes: **1** for a narrowing row (round 15, item 1, clause (g)); **3** for the test-text rows (round 14's named exception). Pins name their commits; where the cited text is not on main, the commit named is the branch commit that carries it. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 17's G-A6 row, its no-edits half | narrowed: no existing identity or CRS test-suite file appears in `git diff --name-only origin/main...HEAD`; the diff carries this piece's own G-A2 driver (`frontends/shell/e2e/source-changed.mjs`, an existing E2E file) and `frontends/shell/e2e/README.md` | §12b G-A6; `state/gate-log.json` record 99 |
+| Amendment 17's G-A6 row, its green half | recorded | `cargo test --workspace --locked` at `e1d72cdec1b5d4c07fc3c3b5656bea490144d576` -- rc 0, 653 passed / 0 failed / 38 ignored across 67 binaries, 0 warning lines (the reviewer's run, `state/gate-log.json` record 99) |
+| Amendment 16's G-A2 pre-check row, its "byte-identical to T10" | narrowed: the pre-check steps' bodies are unchanged apart from the indentation the route's `if` adds | `frontends/shell/e2e/source-changed.mjs:147-149 @ e1d72cdec1b5d4c07fc3c3b5656bea490144d576 sha256:953bbe17ce9cf34855ccef46f8ebecb44d1a57a250a68354afc8d42604a80526` (the header sentence before its correction) |
+| Amendment 16's rows reading "9/9 steps PASS" | narrowed: the archived reports carry 8 PASS and 1 INFO of 9 steps | the gitignored reports those rows cite by path and date |
+| the kernel test's root-manifest cite | class 3, test text: a bare `Cargo.toml:19-20` resolving against the kernel manifest, corrected to prose at f41f678 | `kernel/tests/no_generation_in_persisted_artifacts.rs:50-54 @ e1d72cdec1b5d4c07fc3c3b5656bea490144d576 sha256:035bbc3ad280c487b842c2e842a0f8dc07a73bfff69b0a1bb550da475352a400` (the text before its correction) |
+| the driver header's "byte-for-byte" | class 3, test text: corrected at f41f678 | the pin two rows above |
+
+**Read this amendment first, for Amendments 1-19.**
