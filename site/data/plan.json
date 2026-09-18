@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T21:45:56.621Z",
-  "plan_hash": "bb465e9997ba51fcf2822535e329324295c604141e0385bd1e2c093e03003548",
+  "generated_at": "2026-09-18T21:49:26.135Z",
+  "plan_hash": "24d85882b0c7140fdbabaab36fa662cce7d7c5ca09bfc04229d1343813e8ddba",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1588,7 +1588,7 @@
         112,
         113
       ],
-      "summary": "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary, discharging Part N's N3 gap",
+      "summary": "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- renders the three fields N3 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)",
       "dates": {
         "opened": "2026-09-18",
         "done": null
