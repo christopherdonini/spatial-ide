@@ -143,6 +143,24 @@ invalid, original recipe intact, rebind offered; (8) publish, scope = filtered d
 preflight; (9) CLI replay — R0/R1/R2 tests pass against the shell's artifact. The milestone
 sentence is written into the record only when Part O's log carries the human's verdict.
 
+## Save vs Prepare — proposed amendment to B2/B3 (recorded 2026-09-18)
+
+Recorded 2026-09-18 from the human's handoff `HANDOFF-2026-09-18-source-consistency.md` (kept outside the repository); this tracked text is the record.
+
+### Accepted product direction (the human, 2026-09-18)
+
+Two verbs, kept distinct:
+
+- **Save** — preserves the workspace/reference recipe: source locators (ADR-005 ResourceRef), the identity policy, workspace state (predicate, style, viewport, scope), and any **explicitly labelled structural observation available without a whole-file scan** — the four-component descriptor with its declared degradations, labelled as a *change-detection observation*, never as stable identity or proof the bytes are unchanged. Save performs **no whole-file scan** (say that, not "instant"). Reproducibility rung: best-effort, shown.
+- **Prepare** — explicitly **acquires or selects** a stable, content-addressed revision for operations that require verified inputs. An already-managed immutable revision is selected, not copied again. Prepared operations **read the installed immutable artifact**; rebinding a preview to it creates a **new generation**; hashing a copy never upgrades a session still reading the mutable original. The guarantee actually established is recorded per artifact; **"Exact" is claimed only when ADR-005's full requirements hold** — immutable input identity, coherent acquisition, and reproducibility of the whole workflow are three distinct claims.
+- **What requires Prepare**: publish-from-recipe, CLI replay that claims R0/R1/R2, and editing's base revision. **What does not**: ordinary CLI source queries, preview replay, reference Save — a CLI read is never silently a preparation.
+
+### Awaiting preregistration (not decided here)
+
+- **Acquisition**: the protected-handle capture (write-exclusive open; read through the same handle; protection retained through validation; atomic install; explicit rebind) is *one prospective Windows implementation*, a candidate for supported ordinary files.
+- **Costs and lifecycle**: peak additional disk derived from the actual lifecycle (a temp file renamed into place is not automatically a second full copy; retained old revisions, partial captures and LOD tiers are counted) with its own preflight declared at its own site — the LOD disk rule is not borrowed as authority. "Preview does not wait for preparation" is the promise; scheduling, contention and cancellation are verified, not assumed. **Retention**: prepared artifacts referenced by saved work have an explicit retention policy and are never collected as disposable render cache.
+- **Schema**: the recipe gains a `verification` field (`reference` | `prepared{hash, guarantee}`); B3's publish-from-recipe refuses by name without a prepared input.
+
 ## Non-goals
 
 Numeric classification · geometry predicates · multi-layer recipes · editing · ordinal identity
