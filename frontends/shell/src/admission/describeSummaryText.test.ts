@@ -106,7 +106,8 @@ describe("sessionStatementLine (round 16, item 1: identity.session_statement ren
   // unchanged, proven by the seam test named at fixtures.test.ts:174 ("describe response for a
   // session-ordinal dataset..."), which loads v0-describe-response-session-ordinal.json. The
   // fixture's transcription of `SESSION_IDENTITY_STATEMENT` (engine/src/identity.rs:145) is not
-  // asserted by any test -- a pre-existing fixture-regime gap this piece did not create.
+  // asserted byte-for-byte by any test (only a substring, fixtures.test.ts:186, and is_some(),
+  // protocol/skp/tests/fixtures.rs:129) -- a pre-existing fixture-regime gap this piece did not create.
   //
   // RECORDED MUTATION for "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal":
   // replace the returned value with a paraphrase (`return identity.session_statement === null ? null : "a session-ordinal identity";`).
