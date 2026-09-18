@@ -56,9 +56,11 @@ name: Governance CI — plan, queue, site
 # beyond `contents: read` (AI_DEVELOPMENT.md's public-repo rule: least privilege, re-issued by the
 # human).
 
-# Reviewer should-fix 2 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7): these `paths:` filters cover the
-# set of files verify:quotes CITES FROM (preregistrations, ADRs, this workflow) -- a quote breaks when
-# its SOURCE changes, and a source can be DECISIONS-PENDING.md, AUTONOMY.md, or any other tracked file
+# Reviewer should-fix 2 (VERIFY-QUOTES-PREREGISTRATION.md Amendment 7), corrected (reviewer S2, gate
+# vq-a5): these `paths:` filters cover the CITING documents verify:quotes scans by default --
+# preregistrations, ADRs, this workflow, AI_DEVELOPMENT.md, and every `.claude/agents/*.md` (the gated
+# hash scan covers them since round 15, item 3's widening) -- not the full set of files a quote or hash
+# reference can cite FROM: a source can be DECISIONS-PENDING.md, AUTONOMY.md, or any other tracked file
 # in the whole-tree haystack (see verify-quotes.mjs's own header). This filter set is deliberately not
 # widened to the whole tree (it would make every push run this job); disclosed, not fixed, here --
 # editing a ruling elsewhere and never touching a citing file leaves this job unrun until the next push
@@ -76,6 +78,8 @@ on:
       - ".github/workflows/governance-ci.yml"
       - "**/*PREREGISTRATION*.md"
       - "docs/adr/**"
+      - "AI_DEVELOPMENT.md"
+      - ".claude/agents/*.md"
   pull_request:
     paths:
       - "PLAN.yaml"
@@ -88,6 +92,8 @@ on:
       - ".github/workflows/governance-ci.yml"
       - "**/*PREREGISTRATION*.md"
       - "docs/adr/**"
+      - "AI_DEVELOPMENT.md"
+      - ".claude/agents/*.md"
   workflow_dispatch:
 
 concurrency:

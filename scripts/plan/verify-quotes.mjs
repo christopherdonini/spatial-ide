@@ -392,7 +392,7 @@ function defaultScanFiles(root, index) {
 // Round 12's own hash-checked references live wider than the quote-scan set (they cite branch-to-branch
 // record corrections, and the ledger/mechanic docs carry the round's own dogfooded self-citation) --
 // the preregistration/ADR set PLUS these four named files/globs, PLUS every `.claude/agents/*.md`
-// (the human, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
+// (the custodian's dispatch brief, 2026-09-17, this round's item (d)). Hash references are checked here ONLY -- no quote
 // passage in any of these extra files is extracted or verified; they never join the quote haystack.
 const EXTRA_HASH_SCAN_FILES = ['DECISIONS-PENDING.md', 'AI_DEVELOPMENT.md', 'docs/PREREGISTRATION-TEMPLATE.md'];
 
@@ -429,9 +429,8 @@ function loadBaseline(root) {
 }
 
 /**
- * Round 15, item 3's hash-finding baseline route (state/gate-log.json records 66 and 68: "a route for
- * hash findings in immutable text ... a baseline route for hash findings (the same {disposition,
- * ruling, corrected_by} shape)"): the SAME file, a SIBLING top-level key, `hashEntries: [{file, line,
+ * Round 15, item 3's hash-finding baseline route (round 15, item 3; state/gate-log.json records 66 and
+ * 68): the SAME file, a SIBLING top-level key, `hashEntries: [{file, line,
  * reason, disposition, ruling, corrected_by?}]` -- for a hash reference this mechanism can never bind
  * or reproduce, sitting in text this piece's own authority does not own (an already-landed, append-only
  * amendment in a DIFFERENT piece's record, e.g. engine/LOD-PREREGISTRATION.md's Amendment 12, closed
@@ -604,7 +603,7 @@ const COLON_DIGIT_NEARBY_RE = /:\d+(?:-\d+)?/;
  * bind into any `refs` entry -- a malformed or orphaned reference attempt, reported by name rather
  * than silently ignored (round-12 fix round item (b)). Returns `[{line}]`.
  */
-export function findUnboundHashTokens(text, refs) {
+function findUnboundHashTokens(text, refs) {
   const spans = refs.map((r) => [r.start, r.end]);
   const out = [];
   RAW_SHA_RE.lastIndex = 0;
@@ -732,7 +731,7 @@ function reproducedTextNear(text, ref) {
  * tracked on `engine/lod-tier-builder` but not on this branch) from the branch actually doing the
  * citing. A path neither in the current index nor resolvable at the cited rev still fails by name.
  */
-export function checkHashRef(root, index, relPath, text, ref, topDirs) {
+function checkHashRef(root, index, relPath, text, ref, topDirs) {
   let pathRaw = ref.pathRaw;
   if (!pathRaw) {
     const bound = nearestPathInParagraph(text, ref.start, topDirs);

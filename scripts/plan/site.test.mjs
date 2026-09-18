@@ -248,7 +248,7 @@ test('the record-rounds line lists each non-zero node and the total, with the ta
 // (scripts/plan/site.mjs) makes
 // governance_group_renders_the_verify_quotes_baseline_entry_count_as_its_own_labelled_group FAIL:
 // "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value" on the
-// `<span>verify-quotes baseline entries</span><span>21</span>` assertion (the row never appears).
+// `<span>verify-quotes baseline entries (quote + hash)</span><span>21</span>` assertion (the row never appears).
 test('governance group: the verify-quotes baseline entry count renders as its own labelled group, never mixed with the other two', () => {
   const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, {
     repoSlug: REPO,
@@ -256,7 +256,7 @@ test('governance group: the verify-quotes baseline entry count renders as its ow
     governanceBaselineCount: 21,
   });
   assert.ok(html.includes("From this repository's own tracked files"));
-  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>21</span>'));
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>21</span>'));
 });
 
 // RECORDED MUTATION: dropping the `=== null ? 'unknown' :` branch in site.mjs's governanceGroup row
@@ -264,7 +264,7 @@ test('governance group: the verify-quotes baseline entry count renders as its ow
 // instead of "unknown".
 test('governance group: an absent baseline file renders "unknown", never a false zero', () => {
   const { html } = renderSite(fixturePlan(), MACHINE_HEALTH, { repoSlug: REPO, buildHealth: BUILD_HEALTH });
-  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>unknown</span>'));
 });
 
 // RECORDED MUTATION (round-12 fix round item (e)): reverting readVerifyQuotesBaselineCount's malformed
@@ -284,8 +284,8 @@ test('a_malformed_baseline_renders_a_visible_fault_not_an_absent_row', () => {
     buildHealth: BUILD_HEALTH,
     governanceBaselineCount: count,
   });
-  assert.ok(html.includes('<span>verify-quotes baseline entries</span><span>FAULT'));
-  assert.ok(!html.includes('<span>verify-quotes baseline entries</span><span>unknown</span>'));
+  assert.ok(html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>FAULT'));
+  assert.ok(!html.includes('<span>verify-quotes baseline entries (quote + hash)</span><span>unknown</span>'));
 });
 
 // RECORDED MUTATION (round 15, item 3; state/gate-log.json records 66 and 68): dropping the
@@ -391,7 +391,7 @@ test('bug 1: a corrupt build-health.json says so — it is not read as "generate
   assert.equal(readBuildHealth(path.join(dir, 'nowhere')), null, 'absent is still absent');
 });
 
-// RECORDED MUTATION (round 15, item 3, "the site.mjs regression"; state/gate-log.json record 68, B4):
+// RECORDED MUTATION (round 15, item 3, the site.mjs regression; state/gate-log.json record 68, B4):
 // changing readJsonIfPresent's catch branch back to `return 'malformed';` (scripts/plan/site.mjs) makes
 // "a corrupt health.json reads the same as an absent one — never a fabricated "refreshed" panel" FAIL
 // on its first assertion: "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:

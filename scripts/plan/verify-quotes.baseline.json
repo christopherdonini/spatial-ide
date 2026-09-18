@@ -255,7 +255,7 @@
       "file": "engine/LOD-PREREGISTRATION.md",
       "line": 545,
       "reason": "unbound hash reference -- a sha256:<hex> token not recognized as part of a `path:line @ rev sha256:hex` reference",
-      "note": "prose (\"'s own definition\") sits between the cited docs/PREREGISTRATION-TEMPLATE.md:113-116 and its sha256: token, which this grammar cannot bridge; owed-correction per round 15, item 4(c), already acknowledged by name.",
+      "note": "prose (\"'s own definition\") sits between the cited docs/PREREGISTRATION-TEMPLATE.md:113-116 and its sha256: token, which this grammar cannot bridge; owed-correction per round 15, item 4(c), already acknowledged by name. The reference is rev-less and its span moved with round 15's adoption (hashes 20984e79… at bd8f1f9 and earlier, de8e6eca… at HEAD); the substantive correction is in LOD Amendment 14, named by corrected_by.",
       "disposition": "owed-correction",
       "corrected_by": "engine/LOD-PREREGISTRATION.md Amendment 14's row on Amendment 13's nine sha256: references (:627; already landed -- checker commit fbf3d55, 'seven bound, two reported')",
       "ruling": "round 15, item 4 (c)"

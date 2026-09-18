@@ -510,7 +510,7 @@ function renderHealthStrip(health, buildHealth, byId, governanceBaselineCount) {
         : String(governanceBaselineCount);
   const governanceGroup =
     `<h3 class="health-source">From this repository's own tracked files</h3>\n` +
-    healthRowsHtml([['verify-quotes baseline entries', esc(governanceCountText)]]);
+    healthRowsHtml([['verify-quotes baseline entries (quote + hash)', esc(governanceCountText)]]);
 
   return `
   <section class="panel health-strip">
@@ -749,7 +749,7 @@ export function renderSite(plan, health, options = {}) {
   return { html, planJson };
 }
 
-// RECORD-CAP FIX (round 15, item 3, "the site.mjs regression"; state/gate-log.json record 68, B4):
+// RECORD-CAP FIX (round 15, item 3, the site.mjs regression; state/gate-log.json record 68, B4):
 // this function's catch branch briefly returned the string 'malformed' instead of `null`, a change
 // meant for readVerifyQuotesBaselineCount's OWN parsing (below) but landed here instead, on this
 // function's only caller, readHealth. renderHealthStrip's `health ? … : …` ternary treats any truthy
@@ -773,7 +773,9 @@ function readJsonIfPresent(p) {
  * `site/data/health.json` if present and parseable; `null` if absent OR corrupt (see the comment on
  * readJsonIfPresent above for why corrupt is not distinguished from absent here). Exported so a test
  * can call it directly against a scratch `outDir`, the same pattern `readBuildHealth` below already
- * uses -- its only real callers remain `checkSiteDrift` and `main()`, both in this file.
+ * uses -- its only real callers remain `checkSiteDrift` and `main()`, both in this file. The direct
+ * caller proving the corrupt-vs-absent behaviour above is `site.test.mjs:401`'s own test, `a corrupt
+ * health.json reads the same as an absent one — never a fabricated "refreshed" panel`.
  */
 export function readHealth(outDir) {
   return readJsonIfPresent(path.join(outDir, 'data', 'health.json'));
