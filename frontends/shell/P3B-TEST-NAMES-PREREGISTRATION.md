@@ -9,3 +9,5 @@ Change: rename one Rust fn and five vitest test titles to the exact strings OWNE
 Tests+mutation: no new test -- the six renamed tests keep their existing recorded mutations verbatim in behaviour, retitled in place; scripts/plan/verify-test-claims.mjs and scripts/plan/verify-mutation.mjs are the checks this piece must pass, not a new test
 Out-of-scope: no assertion touched, no product file touched, OWNER-INVALIDATION-PREREGISTRATION.md not edited; none of ADR / security / wire / guarantee touched
 ```
+
+Amendment: class 6, budget deviation, Scope not edited. Declared line budget <= 30 non-generated across the declared 6 files (met exactly on file count). Final figure 32 (16 insertions + 16 deletions; `git diff --numstat origin/main...HEAD` over the same 6 test files, PLAN.yaml/CUSTODIAN-QUEUE.*/site/** and this preregistration excluded) -- each file's own RECORDED MUTATION comment needed a second changed line beside its test's title line, undercounted when the budget was declared. Well inside `AUTONOMY.md` §21c's real bound (<= 150 lines, <= 8 files); the single-gate route is unaffected.
