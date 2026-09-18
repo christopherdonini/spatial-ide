@@ -73,6 +73,12 @@ static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
 /// whole-file reads, no hash call" for a session-ordinal open is a structural fact about
 /// `open_inner`'s call graph, provable by inspection, and this counter is what makes the other half
 /// — "the verification scan runs" for native and mapped identity — checkable the same way.
+///
+/// **Its only caller is the test suite, named so the caller-grep can verify this exemption instead
+/// of trusting the words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4, the same
+/// discipline `liveTicketSet.ts`'s `size` getter states for itself):
+/// `admission_instruments.rs`'s
+/// `session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan`.
 pub fn identity_verification_scans() -> u64 {
     IDENTITY_VERIFICATION_SCANS.load(Ordering::SeqCst)
 }
