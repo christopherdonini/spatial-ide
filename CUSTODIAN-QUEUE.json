@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T11:36:05.441Z",
-  "plan_hash": "03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9",
+  "generated_at": "2026-09-18T11:58:52.925Z",
+  "plan_hash": "ae583c1caa2a4e4cee5b44852f3421b1077789f97340519d8facf6071757c43a",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -472,6 +472,28 @@
       },
       "summary": "Dispatched 2026-09-18 on the human's word (entry 110): a worker builds the tests carrying the claims under the existing preregistration (section 6's declared instruments only); the P5 record is Amendment 4 of the engine preregistration and Amendment 17 of the P3b preregistration, references only; reviewer and architect gates",
       "evidence_label": "branch `cut/briefa-p5`"
+    },
+    {
+      "id": "briefa-p3b-test-names",
+      "title": "P3b test-name alignment -- rename the six tests OWNER-INVALIDATION-PREREGISTRATION.md section 5 claims (T3-T7, T9) to the exact strings the tests ended up with, so verify:test-claims binds them once briefa-p3b-owner-side-invalidation is done (round 14 item 2's test-text exception)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/briefa-p3b-test-names"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Short-form piece, dispatched 2026-09-18 (entry 110): rename one Rust fn and five vitest test titles in place, no assertion or preregistration change, so the six section-5 claims verify-test-claims.mjs currently reports as planned become binding matches",
+      "evidence_label": "branch `cut/briefa-p3b-test-names`"
     },
     {
       "id": "governance-verify-quotes",
