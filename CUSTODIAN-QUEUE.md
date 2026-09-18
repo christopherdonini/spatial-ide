@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9`) at `2026-09-18T13:31:21.998Z`.
+Generated from `PLAN.yaml` (sha256 `54e65ca8aa5428a80ebd7ebde18a232f3ec4a96ee4916457e11b012dc024b21a`) at `2026-09-18T14:19:40.954Z`.
 
 ## 1. Next
 
@@ -38,7 +38,7 @@ Generated from `PLAN.yaml` (sha256 `03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deae
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **briefa-p4-corpus-run** — Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6) — evidence: branch `cut/briefa-p4`
 - **briefa-p5-gate-tests** — Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction — evidence: branch `cut/briefa-p5`
-- **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
+- **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: PR #91
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 
 ## 6. Proposed / unscheduled

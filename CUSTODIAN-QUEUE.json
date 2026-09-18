@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T13:31:21.998Z",
-  "plan_hash": "03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9",
+  "generated_at": "2026-09-18T14:19:40.954Z",
+  "plan_hash": "54e65ca8aa5428a80ebd7ebde18a232f3ec4a96ee4916457e11b012dc024b21a",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -486,14 +486,14 @@
         "minutes": 5
       },
       "evidence": {
-        "branch": "governance/verify-quotes"
+        "pr": 91
       },
       "dates": {
         "opened": "2026-09-17",
         "done": null
       },
       "summary": "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
-      "evidence_label": "branch `governance/verify-quotes`"
+      "evidence_label": "PR #91"
     },
     {
       "id": "governance-record-round-count",
