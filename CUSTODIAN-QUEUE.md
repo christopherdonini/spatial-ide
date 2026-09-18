@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0897b774a971690790f33f3b634ccc3d2c6e924a8c84058672eaa477c7bb2ac2`) at `2026-09-18T06:05:14.267Z`.
+Generated from `PLAN.yaml` (sha256 `f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77`) at `2026-09-18T06:06:59.180Z`.
 
 ## 1. Next
 
@@ -32,7 +32,7 @@ Generated from `PLAN.yaml` (sha256 `0897b774a971690790f33f3b634ccc3d2c6e924a8c84
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
-- **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: branch `governance/record-round-count`
+- **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 
 ## 6. Proposed / unscheduled
 
