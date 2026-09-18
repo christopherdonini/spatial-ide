@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-18T06:06:59.180Z",
-  "plan_hash": "f00ea0350894e94a83068ceb81a00036e9d7c327b89a41af5a0d3236d0ee9e77",
+  "generated_at": "2026-09-18T11:36:05.441Z",
+  "plan_hash": "03523ab3c9475f9a8826f15f36d8ce7b26e1b6b0deaeb47f343a3b25cc3631e9",
   "priorities_approved": true,
   "next": {
-    "id": "adr-029-g1-feasibility",
-    "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
-    "lane": "kernel-protocol",
-    "phase": "prototype",
+    "id": "geometry-types-beyond-polygons",
+    "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+    "lane": "engine",
+    "phase": "alpha",
     "status": "ready",
-    "order": 5,
-    "budget_minutes": 120,
+    "order": 6,
+    "budget_minutes": 480,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,9 +19,28 @@
       "opened": "2026-09-14",
       "done": null
     },
-    "summary": "RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human"
+    "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider"
   },
   "ready": [
+    {
+      "id": "geometry-types-beyond-polygons",
+      "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+      "lane": "engine",
+      "phase": "alpha",
+      "status": "ready",
+      "order": 6,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-14",
+        "done": null
+      },
+      "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider"
+    },
     {
       "id": "adr-029-g1-feasibility",
       "title": "ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate)",
@@ -72,25 +91,141 @@
   },
   "blocked_on_dependencies": [
     {
-      "id": "geometry-types-beyond-polygons",
-      "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+      "id": "accept-adr-013-instance",
+      "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
       "lane": "engine",
-      "phase": "alpha",
+      "phase": "prototype",
       "status": "blocked",
       "order": 6,
-      "budget_minutes": 480,
+      "budget_minutes": 5,
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 3
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-14",
+        "opened": "2026-09-18",
         "done": null
       },
-      "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider",
+      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
       "blocked_by": [
-        "briefa-p3-p6"
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
+      ]
+    },
+    {
+      "id": "accept-adr-015-a1",
+      "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed",
+      "blocked_by": [
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
+      ]
+    },
+    {
+      "id": "accept-adr-016-a1",
+      "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "blocked_by": [
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
+      ]
+    },
+    {
+      "id": "accept-adr-028-qualification",
+      "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "blocked_by": [
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
+      ]
+    },
+    {
+      "id": "accept-adr-032",
+      "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0",
+      "blocked_by": [
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
+      ]
+    },
+    {
+      "id": "briefa-p6-part-n-acceptances",
+      "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "sitting",
+        "minutes": 60
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Part N's rows are being drafted on docs/part-n-walkthrough with a blank result log (the sitting the human asked for on 2026-09-18, entry 110); the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
+      "blocked_by": [
+        "briefa-p4-corpus-run",
+        "briefa-p5-gate-tests"
       ]
     },
     {
@@ -110,9 +245,9 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
+      "summary": "Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "blocked_by": [
-        "briefa-p3-p6"
+        "briefa-p6-part-n-acceptances"
       ]
     },
     {
@@ -251,28 +386,6 @@
   ],
   "in_progress": [
     {
-      "id": "briefa-p3-p6",
-      "title": "Brief A P3-P6 — session identity tier, corpus table, Part N, ADR acceptances",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 5,
-      "budget_minutes": 390,
-      "needs_human": {
-        "kind": "sitting",
-        "minutes": 15
-      },
-      "evidence": {
-        "pr": 83
-      },
-      "dates": {
-        "opened": "2026-09-11",
-        "done": null
-      },
-      "summary": "STOPPED 2026-09-16 under Rule 7 (entry 96): both gates FAIL twice on the module-boundary seams (owner-side residency/picks unbuilt; publish code discarded by the shell; dead-ticket refusal unwired + false diagnosis for unknown handles); engine/kernel halves verified sound; the human rules: one more bounded round / split P3 / hold. Earlier: RULED 2026-09-14: P3 (the session-identity tier) RELEASED to a branch under its reviewer + architect gate (the human sighted the preregistration and ADR drafts via the digest); the cargo-heavy build is machine-sequenced after the sitting. P4 corpus run and P5 tests follow (worker/tester); P6 Part N + the ADR acceptances remain the human at the sitting",
-      "evidence_label": "PR #83"
-    },
-    {
       "id": "lod-tier-builder-route-b",
       "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
       "lane": "engine",
@@ -303,8 +416,8 @@
       "order": 5,
       "budget_minutes": 240,
       "needs_human": {
-        "kind": "sight",
-        "minutes": 20
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": {
         "pr": 86
@@ -313,8 +426,52 @@
         "opened": "2026-09-16",
         "done": null
       },
-      "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
+      "summary": "LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
       "evidence_label": "PR #86"
+    },
+    {
+      "id": "briefa-p4-corpus-run",
+      "title": "Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/briefa-p4"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Dispatched 2026-09-18 on the human's word (entry 110): a tester runs every corpus and mutation file through the engine's real admission path, hash-verified before and after, and writes the admission table to engine/ADMISSION-RESULTS.md as generated evidence; the P4 record is Amendment 3 of the preregistration, references only (the record cap); correctness only, no timing",
+      "evidence_label": "branch `cut/briefa-p4`"
+    },
+    {
+      "id": "briefa-p5-gate-tests",
+      "title": "Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/briefa-p5"
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Dispatched 2026-09-18 on the human's word (entry 110): a worker builds the tests carrying the claims under the existing preregistration (section 6's declared instruments only); the P5 record is Amendment 4 of the engine preregistration and Amendment 17 of the P3b preregistration, references only; reviewer and architect gates",
+      "evidence_label": "branch `cut/briefa-p5`"
     },
     {
       "id": "governance-verify-quotes",
