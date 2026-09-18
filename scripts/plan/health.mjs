@@ -194,14 +194,21 @@ export function recordRoundCounts(log) {
   for (const e of entries) {
     if (!e || typeof e.node !== 'string' || e.record !== true) continue;
     if (!attemptsByNode.has(e.node)) attemptsByNode.set(e.node, new Set());
-    attemptsByNode.get(e.node).add(e.attempt);
+    // A hand-typed attempt (e.g. the string "2") must dedupe against the numeric 2 an automated gate
+    // writes for the same attempt -- the same guard gateFirstPassRate applies at :164, adapted: a
+    // non-number attempt is normalized (coerced), never left to serve as its own distinct Set key.
+    const attempt = typeof e.attempt === 'number' ? e.attempt : Number(e.attempt);
+    attemptsByNode.get(e.node).add(attempt);
   }
-  const byNode = {};
+  // Built via a Map, not an object-literal assignment, so a node literally named "__proto__" gets an
+  // own property (via Object.fromEntries) rather than silently repointing the prototype.
+  const countsByNode = new Map();
   let total = 0;
   for (const [node, attempts] of attemptsByNode) {
-    byNode[node] = attempts.size;
+    countsByNode.set(node, attempts.size);
     total += attempts.size;
   }
+  const byNode = Object.fromEntries(countsByNode);
   return { byNode, total };
 }
 

@@ -164,6 +164,7 @@ const MACHINE_HEALTH = {
   waiting_on_human: [{ id: 'n-waiting-sight', kind: 'sight', minutes: 15, opened: '2026-09-13', age_days: 0 }],
   median_opened_to_done: { days: 3, n: 12 },
   gate_first_pass: { present: true, nodes: 3, first_pass: 2, rate: 2 / 3 },
+  record_rounds: { present: true, byNode: {}, total: 0 },
 };
 
 // ---------------------------------------------------------------- bug 1: health from two sources

@@ -61,9 +61,10 @@ test('buildHealthData assembles machine facts only — generated_at, source, dri
   assert.ok(Array.isArray(health.drift.failures));
   assert.ok(Array.isArray(health.waiting_on_human));
   assert.ok(health.waiting_on_human.some((w) => w.id === 'n-waiting-sight'));
-  // Both governance metrics are assembled; an absent gate log reports itself, never a fake rate.
+  // All three governance metrics are assembled; an absent gate log reports itself, never a fake rate.
   assert.equal(typeof health.median_opened_to_done.n, 'number');
   assert.deepEqual(health.gate_first_pass, { present: false });
+  assert.deepEqual(health.record_rounds, { present: false });
 });
 
 test('health.mjs carries no build-time facts: CI, open PRs and the latest release are not its business', () => {
@@ -175,6 +176,19 @@ test('recordRoundCounts: an attempt gated twice (both gates record: true) counts
 test('recordRoundCounts: a node whose gate records carry no record: true field counts zero (absent from byNode)', () => {
   const log = [{ node: 'b', gate: 'reviewer', attempt: 1, verdict: 'PASS', date: '2026-09-10' }];
   assert.deepEqual(recordRoundCounts(log), { byNode: {}, total: 0 });
+});
+
+// RECORDED MUTATION: changed `const attempt = typeof e.attempt === 'number' ? e.attempt :
+// Number(e.attempt);` back to the unguarded `attemptsByNode.get(e.node).add(e.attempt);` -- observed
+// failure: `assert.deepEqual` reported `{ byNode: { a: 2 }, total: 2 }` vs the expected `{ byNode: {
+// a: 1 }, total: 1 }`, since the string "2" and the number 2 were added to the Set as two distinct
+// keys. Reverted after observing the failure.
+test('recordRoundCounts: a hand-typed attempt ("2") dedupes against the same numeric attempt (2)', () => {
+  const log = [
+    { node: 'a', gate: 'architect', attempt: '2', verdict: 'FAIL', record: true, date: '2026-09-17' },
+    { node: 'a', gate: 'reviewer', attempt: 2, verdict: 'FAIL', record: true, date: '2026-09-17' },
+  ];
+  assert.deepEqual(recordRoundCounts(log), { byNode: { a: 1 }, total: 1 });
 });
 
 test('readGateLog: absent file is null (the strip then says "no gate log yet"); a bad file is []', () => {

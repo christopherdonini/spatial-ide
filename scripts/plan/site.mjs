@@ -344,7 +344,7 @@ function formatRecordRounds(rr) {
     .filter(([, n]) => n > 0)
     .sort((a, b) => a[0].localeCompare(b[0]));
   const total = rr.total ?? 0;
-  if (entries.length === 0) return `none (total 0, target 0)`;
+  if (entries.length === 0) return `none (total ${total}, target 0)`;
   const parts = entries.map(([node, n]) => `${node}: ${n}`);
   return `${parts.join(', ')} (total ${total}, target 0)`;
 }
