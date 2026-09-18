@@ -133,7 +133,8 @@ name only — **this never kills anything**), and waiting-on-human ages (compute
 `dates.opened`). Always timestamped (`generated_at`).
 
 Three governance metrics (the human, 2026-09-14: "median ready→done hours and gate first-pass rate";
-the human, 2026-09-18, the record cap's point (4): a record-round count per piece, target zero)
+the human, 2026-09-18, the record cap's point (4), paraphrased: a record-round count per piece,
+target zero)
 — operational counts, **not** docs/08 product perf, and labelled as such:
 
 - `median_opened_to_done: {days, n}` (`medianOpenedToDone(plan)`, pure): the median of
@@ -184,10 +185,17 @@ or re-read the piece's record — the record-fidelity class: a quotation, a cite
 amendment's form or ordering, or a scoped re-read of record text appended after the build's gate —
 whatever else the round carried and whatever the verdict. A round dispatched for code, tests or
 operator text is not tagged even when its findings touch an amendment. The custodian sets it by
-hand from the dispatch when appending the record; the record's `note` names the round. A piece's
-first gate attempt is never tagged, even when it fails on the record: the count is rounds spent on
-the record, the quantity the directive's point (3) caps (`state/directives/2026-09-18-record-cap.md`).
-Every gate of a tagged attempt carries the tag; the metric counts the attempt once. It is committed (plain text, diffable — a JSON array cannot carry
+hand from the dispatch when appending the record; henceforth the record's `note` names the round.
+A piece's first gate attempt is never tagged, even when it fails on the record: the count is rounds
+spent on the record, the quantity the directive's point (3) caps
+(`state/directives/2026-09-18-record-cap.md`). Every gate of a tagged attempt carries the tag; the
+metric counts the attempt once. **This predicate is the custodian's stated choice under the
+directive, not the human's ruling — it is the human's to adjust at any time by a one-line note.**
+The tags on records older than this paragraph were applied retroactively on 2026-09-18 from the
+custodian's dispatches: records before 2026-09-17 carry no `note`, and two tagged notes
+(`governance-verify-quotes` attempts 2 and 4) lead with build work and carry their record-led
+reason only in the preceding attempt's findings — the retroactive set is disclosed here, not
+re-derivable from the notes alone. The file is committed (plain text, diffable — a JSON array cannot carry
 a top-of-file comment, hence this note). It ships seeded as `[]`. `health.mjs`'s `readGateLog`
 treats an absent file as "no gate log yet" and a corrupt file as empty (degrade, never throw).
 
