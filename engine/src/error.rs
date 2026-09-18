@@ -125,6 +125,21 @@ pub enum EngineError {
     /// A declared ceiling was reached (ADR-010 rule 6: declared, not discovered).
     CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
 
+    /// An LOD tier build refused, naming **which** refusal fired.
+    ///
+    /// `engine/LOD-PREREGISTRATION.md` §7 declares the refusal identifiers as identifiers, not as
+    /// user-facing prose (§1: "any string an operator reads goes to the human before it ships"), so
+    /// the value a consumer branches on is `refusal` — one of `crate::lod`'s declared constants —
+    /// and `detail` is the evidence that convicted this source. **One variant rather than one per
+    /// refusal**, because from a caller's side they are one failure — this source cannot be tiered —
+    /// and the identifier is what says which; the same argument `IdentityUnusable` above records for
+    /// ADR-016's four.
+    ///
+    /// The two *size* ceilings are deliberately NOT here: they are `CeilingExceeded`, which already
+    /// carries a declared ceiling's name with the limit and the observed value, and a second shape
+    /// for the same fact would make a consumer learn two.
+    LodRefused { refusal: &'static str, detail: String },
+
     /// The declared or native identity column cannot serve as stable feature identity.
     ///
     /// ADR-016. Covers a missing column, a type that cannot widen into `u64` without a transform,
@@ -300,6 +315,9 @@ impl fmt::Display for EngineError {
             Self::Cancelled => write!(f, "cancelled"),
             Self::CeilingExceeded { ceiling, limit, saw } => {
                 write!(f, "declared ceiling {ceiling} exceeded: limit {limit}, saw {saw}")
+            }
+            Self::LodRefused { refusal, detail } => {
+                write!(f, "refused ({refusal}): {detail}")
             }
             Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
                 f,

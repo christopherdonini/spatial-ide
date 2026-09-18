@@ -1247,6 +1247,19 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "timing_dependent_ordering",
             vec![("ordering", ordering.to_string()), ("cut", cut.to_string())],
         ),
+        // **The same kind of stub the `FormatDefaultContradicted` arm above records, and for the
+        // same reason: this match has no wildcard.** `engine/LOD-PREREGISTRATION.md` §7 declares the
+        // LOD refusal identifiers, and `EngineError::LodRefused` carries whichever one fired. No SKP
+        // command builds a tier today — the tier builder's entry point is `engine::lod::build_tiers`
+        // and nothing on the control plane calls it — so this arm is unreachable from the wire; it
+        // exists so that a typed LOD refusal cannot later degrade into "failed" by arriving on a
+        // wildcard. **No wire field, no parameter and no version is added here** (that preregistration's
+        // §5, "declared unchanged"): `refusal` is carried in the same `fields` map every other arm
+        // uses, and `message` is the error's own `Display`.
+        EngineError::LodRefused { refusal, detail } => (
+            "lod_refused",
+            vec![("refusal", refusal.to_string()), ("detail", detail.clone())],
+        ),
     };
     SkpError {
         code: format!("engine.{name}"),
@@ -1481,6 +1494,67 @@ mod tests {
         let e = error_of(&EngineError::CeilingExceeded { ceiling: "c", limit: 1, saw: 2 });
         assert_eq!(e.code, "engine.ceiling_exceeded");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("1"));
+    }
+
+    /// The engine→kernel seam for `engine/LOD-PREREGISTRATION.md`'s typed LOD refusals, **from the
+    /// engine's real path** (the cross-module seam rule, the human 2026-09-16): nothing is
+    /// hand-constructed here. A geographic-CRS GeoParquet is written with the engine's own fixture
+    /// generator, opened as a real `Dataset`, and handed to `spatial_engine::lod::build_tiers`,
+    /// which refuses §2c's angular-unit case; that refusal — the value the engine actually produced
+    /// — is what `error_of` maps.
+    ///
+    /// The arm it exercises is `skp.rs`'s `EngineError::LodRefused`, which carries **which** refusal
+    /// fired in `fields["refusal"]` rather than in the code, so a consumer branches on the
+    /// identifier §7 declares and never on prose.
+    ///
+    // RECORDED MUTATION: map `LodRefused` to the `("source", vec![])` arm in `error_of` (dropping
+    // both fields) → an_engine_produced_lod_refusal_reaches_the_wire_as_engine_dot_lod_refused
+    // fails by name on `assert_eq!(e.code, "engine.lod_refused")` — observed: left `engine.source`,
+    // right `engine.lod_refused`, and both field assertions then fail for a missing key.
+    #[test]
+    fn an_engine_produced_lod_refusal_reaches_the_wire_as_engine_dot_lod_refused() {
+        use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
+
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("target/fixtures/lod-seam");
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join("wgs84-for-lod-seam.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 8,
+                avg_vertices: 8,
+                crs_mode: CrsMode::DeclaredCrs84Degrees,
+                domain: CoordinateDomain::Wgs84Degrees,
+                ..Default::default()
+            },
+        )
+        .expect("write a geographic source");
+
+        let dataset = spatial_engine::dataset::Dataset::open(&path).expect("open");
+        let produced = spatial_engine::lod::build_tiers(
+            &dataset,
+            spatial_engine::lod::LOD_BUILD_WORKERS_ARM_S,
+            &spatial_engine::cancel::CancelToken::new(),
+            None,
+        )
+        .expect_err("a geographic CRS is refused for tier building");
+
+        // The engine's own value, not one this test built: `LodRefused` naming §7's identifier.
+        let refusal_identifier = match &produced {
+            EngineError::LodRefused { refusal, .. } => *refusal,
+            other => panic!("expected LodRefused from the engine, found {other:?}"),
+        };
+        assert_eq!(refusal_identifier, "engine.lod_crs_not_linear");
+
+        let e = error_of(&produced);
+        assert_eq!(e.code, "engine.lod_refused");
+        assert_eq!(e.fields.get("refusal").map(String::as_str), Some("engine.lod_crs_not_linear"));
+        let detail = e.fields.get("detail").expect("the refusal's detail reaches the wire");
+        assert!(!detail.is_empty(), "a typed refusal arrives with the evidence that convicted it");
+        assert_eq!(e.message, produced.to_string(), "the message is the error's own Display");
     }
 
     /// SF3/SF4 (reviewer gate, admission-remediation cut): the two new typed refusals get their
