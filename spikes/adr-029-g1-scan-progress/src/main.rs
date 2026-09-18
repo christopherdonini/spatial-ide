@@ -7,21 +7,29 @@
 //! written conclusion, which is the deliverable.
 //!
 //! Reachability finding this binary depends on (recorded in the README in full, with file:line
-//! citations into the vendored crate): the *only* progress-*reading* C API surface anywhere in the
-//! vendored `libduckdb-sys` bindings is `duckdb_query_progress` / `duckdb_query_progress_type` --
-//! no separate `progress_bar` C function exists, and the high-level `duckdb` crate wraps none of
-//! it. `duckdb_pending_prepared`/`duckdb_pending_execute_task` (the C API's own incremental-query,
-//! "task" stepping primitive -- what the brief called "PendingQuery, task-progress") also exists
-//! in the bindings and is unwrapped by the `duckdb` crate; this probe uses it not as a second
-//! progress *reading*, but as a deterministic **driver** for the scan so that
-//! `duckdb_query_progress` can be sampled once per completed task on the calling thread, with no
-//! wall-clock race against a background thread. `duckdb::Connection` never exposes the raw
-//! `duckdb_connection` handle either interface requires (its holder, `InnerConnection`, lives in a
-//! private module with no accessor). So this probe does not use `duckdb::Connection` at all -- it
-//! drives the raw `duckdb::ffi` C API directly (`duckdb_open`/`duckdb_connect`/`duckdb_prepare`/
+//! citations into the vendored crate, and into the bundled C++ DuckDB it compiles): the *only*
+//! progress-*reading* C API surface anywhere in the vendored `libduckdb-sys` bindings is
+//! `duckdb_query_progress` / `duckdb_query_progress_type` -- no separate `progress_bar` C function
+//! exists, and the high-level `duckdb` crate wraps none of it. `duckdb_pending_prepared`/
+//! `duckdb_pending_execute_task` (the C API's own incremental-query, "task" stepping primitive --
+//! what the brief called "PendingQuery, task-progress") also exists in the bindings and is
+//! unwrapped by the `duckdb` crate; this probe uses it not as a second progress *reading*, but as a
+//! deterministic **driver** for the scan so that `duckdb_query_progress` can be sampled once per
+//! completed task on the calling thread, synchronously -- this removes this probe's *own* poll-vs-
+//! wall-clock race, but the reading's underlying population is still load-dependent (see the
+//! README's (c) and (b) sections): `duckdb_query_progress` reads
+//! `conn->context->GetQueryProgress()` (`duckdb-c.cpp:130-131`) -- **one `ClientContext` per
+//! connection**, so this only works because this probe polls the *same* raw connection it drives
+//! the scan on. `duckdb::Connection` never exposes that raw `duckdb_connection` handle (its holder,
+//! `InnerConnection`, lives in a private module with no accessor) -- so a *second*, separately-
+//! opened raw connection could never observe a scan the crate's `Connection` is running: this is
+//! why the README's Conclusion draws a line between "the reading exists on `read_parquet`" and "the
+//! reading is reachable from the engine's *current* `Connection`-based scan path", and states only
+//! the first as cleared. This probe does not use `duckdb::Connection` at all -- it drives the raw
+//! `duckdb::ffi` C API directly (`duckdb_open`/`duckdb_connect`/`duckdb_prepare`/
 //! `duckdb_pending_prepared`/`duckdb_pending_execute_task`/`duckdb_query_progress`), which the
 //! crate re-exports (`duckdb-1.10505.0/src/lib.rs:58`, `pub use libduckdb_sys as ffi;`) and is
-//! therefore reachable by product code without patching or forking the crate, at the cost of
+//! therefore reachable by a probe that manages its own connection end to end, at the cost of
 //! writing the connection- and statement-management code `Connection`/`Statement` would otherwise
 //! supply.
 
@@ -339,12 +347,88 @@ fn print_deduped_samples(label: &str, samples: &[Sample]) {
     }
 }
 
+/// The load-bearing check, over exactly the samples given (no slicing here -- callers choose what
+/// window to check; see [`verdict`]). Vacuously `true` for a sequence that never leaves
+/// `rows_processed == 0` (review B4): callers must report `max rows_processed reached` alongside
+/// this, never this alone, as the evidence that the sequence actually moved.
 fn rows_monotone_non_decreasing(samples: &[Sample]) -> bool {
     samples.windows(2).all(|w| w[0].rows_processed <= w[1].rows_processed)
 }
 
 fn percentage_monotone_non_decreasing(samples: &[Sample]) -> bool {
     samples.windows(2).all(|w| w[0].percentage <= w[1].percentage)
+}
+
+/// A sample carrying no reading at all -- DuckDB's own idle/unavailable shape
+/// (`percentage=-1, rows_processed=0, total_rows_to_process=0`) or the transitional shape observed
+/// after a query finishes but before this probe's own bookkeeping catches up (a stale `percentage`
+/// beside a reset `rows_processed`/`total_rows_to_process`, both `0`) -- named by ADR-029 3(c)'s
+/// own vocabulary, "absent", not folded into "zero progress".
+fn is_reset(s: &Sample) -> bool {
+    s.rows_processed == 0 && s.total_rows_to_process == 0
+}
+
+/// Splits `samples` at the **last** sample with `rows_processed > 0` (not merely the last sample of
+/// the vector): everything up to and including it is the "active window" monotonicity is checked
+/// over; everything after it is "post-active" and reported separately, however many samples that
+/// is -- one (the deliberate post-completion sample every driver appends) or several (review B3:
+/// one observed config-B run reset to the sentinel *before* this probe's own `done` flag caught up,
+/// putting more than one reset sample inside what a naive "drop the last sample" rule would have
+/// still called the running phase). `None` in the first field means the reading never populated a
+/// nonzero `rows_processed` in this run at all -- itself a finding (see the README's (b)/(c)
+/// sections on load-dependent population), not an error.
+fn verdict(samples: &[Sample]) -> Verdict {
+    match samples.iter().rposition(|s| s.rows_processed > 0) {
+        None => Verdict {
+            active_len: 0,
+            rows_mono: true,
+            pct_mono: true,
+            max_rows: 0,
+            never_populated: true,
+            post_active_all_reset: samples.iter().all(is_reset),
+            post_active_len: samples.len(),
+        },
+        Some(last_active) => {
+            let active = &samples[..=last_active];
+            let post = &samples[last_active + 1..];
+            Verdict {
+                active_len: active.len(),
+                rows_mono: rows_monotone_non_decreasing(active),
+                pct_mono: percentage_monotone_non_decreasing(active),
+                max_rows: active.iter().map(|s| s.rows_processed).max().unwrap_or(0),
+                never_populated: false,
+                post_active_all_reset: post.iter().all(is_reset),
+                post_active_len: post.len(),
+            }
+        }
+    }
+}
+
+struct Verdict {
+    active_len: usize,
+    rows_mono: bool,
+    pct_mono: bool,
+    max_rows: u64,
+    never_populated: bool,
+    post_active_all_reset: bool,
+    post_active_len: usize,
+}
+
+fn print_verdict(label: &str, v: &Verdict) {
+    if v.never_populated {
+        println!(
+            "  {label}: rows_processed never left 0 in any of this run's samples -- the reading did \
+             not populate (load-dependent; see README (b)/(c))."
+        );
+        return;
+    }
+    println!(
+        "  {label}: over {} active-window samples -- rows_processed monotone non-decreasing = \
+         {}, percentage monotone non-decreasing = {}, max rows_processed reached = {} \
+         (the load-bearing figure -- monotonicity alone is vacuous at 0), {} post-active sample(s), \
+         all reset to the unavailable sentinel = {}",
+        v.active_len, v.rows_mono, v.pct_mono, v.max_rows, v.post_active_len, v.post_active_all_reset
+    );
 }
 
 fn main() {
@@ -368,7 +452,12 @@ fn main() {
     // `DUCKDB_EXTENSION_AUTOLOAD_DEFAULT`, `libduckdb-sys-1.10505.0/build_bundled_cc.rs:96-97`).
     let no_autoload = ["SET autoinstall_known_extensions=false;", "SET autoload_known_extensions=false;"];
 
-    // Configuration A: defaults, no progress-bar pragma touched.
+    // Configuration A: defaults, no progress-bar pragma touched. Every sample below is taken
+    // *while the query runs* (the poll loop starts once the query thread is spawned, `main.rs`'s
+    // own `while !done_ref.load(...)` -- there is no "before it starts" phase in this loop); the
+    // -1/0/0 sentinel on every one of them is because `enable_progress_bar` was never set, and
+    // DuckDB only allocates a `ProgressBar` (client_context.cpp:567, `if (config.enable_progress_bar)`)
+    // -- and so only ever populates `query_progress` (:653-656) -- when it is.
     match run_one(&no_autoload, Duration::from_micros(500)) {
         Ok(samples) => {
             print_samples("config A: defaults (no progress-bar pragma)", &samples);
@@ -378,9 +467,19 @@ fn main() {
     }
 
     // Configuration B: progress bar enabled, zero wait threshold, default thread count.
+    // `enable_progress_bar_print=false` suppresses only the printed ASCII bar/ETA text
+    // (`config.print_progress_bar`, checked at client_context.cpp:568, gates the *display*
+    // callback only) -- `query_progress` itself is still populated by `enable_progress_bar=true`
+    // alone, unconditionally on that display setting.
+    // `enable_progress_bar_print=false` set *before* `enable_progress_bar=true`: setting it after
+    // left one incidental print -- `default_create_func`/`print_progress_bar` defaults to enabled,
+    // so the setup statement that ran between `enable_progress_bar=true` and this one (`SET
+    // progress_bar_time=0;` itself, a trivial single-statement query) got its own instant
+    // `ProgressBar`, printed once before the print-disable statement that followed it took effect.
     let setup_b = [
         "SET autoinstall_known_extensions=false;",
         "SET autoload_known_extensions=false;",
+        "SET enable_progress_bar_print=false;",
         "SET enable_progress_bar=true;",
         "SET progress_bar_time=0;",
     ];
@@ -388,17 +487,21 @@ fn main() {
         Ok(samples) => {
             print_samples("config B: enable_progress_bar, progress_bar_time=0", &samples);
             print_deduped_samples("config B: enable_progress_bar, progress_bar_time=0", &samples);
+            print_verdict("config B", &verdict(&samples));
         }
         Err(e) => println!("--- config B FAILED: {e} ---"),
     }
 
     // Configuration C: the deterministic pending-task driver (`run_one_pending_task`), same
     // progress-bar pragmas as B, default thread count. This is the gate's primary evidence: run at
-    // least three times, per the gate's own evidence requirement, and does not depend on OS
-    // page-cache warmth or wall-clock poll timing the way `run_one`'s background-thread race does.
+    // least three times, per the gate's own evidence requirement. Sampling `duckdb_query_progress`
+    // between `duckdb_pending_execute_task` calls removes *this probe's own* poll-vs-wall-clock
+    // race -- it does not mean the reading's population is guaranteed; see `verdict`'s
+    // `never_populated` arm.
     let setup_c = [
         "SET autoinstall_known_extensions=false;",
         "SET autoload_known_extensions=false;",
+        "SET enable_progress_bar_print=false;",
         "SET enable_progress_bar=true;",
         "SET progress_bar_time=0;",
     ];
@@ -408,23 +511,7 @@ fn main() {
                 let label = format!("config C run {run_idx}: pending-task driver");
                 print_samples(&label, &samples);
                 print_deduped_samples(&label, &samples);
-                // The last element is the deliberate post-completion sample taken after
-                // `duckdb_pending_execution_is_finished` -- the connection is idle again by then,
-                // and its own reading resets to the same sentinel (-1 / 0 / 0, or 0 / 0 / 0) as an
-                // untouched connection, which is a real, separate, and expected reset, not a
-                // monotonicity violation of the *running* sequence. Monotonicity is checked only
-                // over the running-phase samples, `samples[..len-1]`; the reset is reported next.
-                let running = &samples[..samples.len().saturating_sub(1)];
-                let mono_rows = rows_monotone_non_decreasing(running);
-                let mono_pct = percentage_monotone_non_decreasing(running);
-                let reset_after_completion = samples.last().is_some_and(|s| s.rows_processed == 0);
-                println!(
-                    "  run {run_idx}: over {} running-phase samples -- rows_processed monotone \
-                     non-decreasing = {mono_rows}, percentage monotone non-decreasing = {mono_pct}, \
-                     max rows_processed reached = {}, resets to 0 after completion = {reset_after_completion}",
-                    running.len(),
-                    running.iter().map(|s| s.rows_processed).max().unwrap_or(0)
-                );
+                print_verdict(&format!("run {run_idx}"), &verdict(&samples));
             }
             Err(e) => println!("--- config C run {run_idx} FAILED: {e} ---"),
         }
