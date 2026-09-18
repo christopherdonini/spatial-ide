@@ -749,16 +749,33 @@ export function renderSite(plan, health, options = {}) {
   return { html, planJson };
 }
 
+// RECORD-CAP FIX (round 15, item 3, "the site.mjs regression"; state/gate-log.json record 68, B4):
+// this function's catch branch briefly returned the string 'malformed' instead of `null`, a change
+// meant for readVerifyQuotesBaselineCount's OWN parsing (below) but landed here instead, on this
+// function's only caller, readHealth. renderHealthStrip's `health ? … : …` ternary treats any truthy
+// value -- including the string 'malformed' -- as a populated health object: `health.generated_at`,
+// `health.drift?.ok`, etc. all read `undefined` on a string, so a corrupt health.json rendered a
+// fully-populated-looking "From the custodian's machine — refreshed unknown" panel with every row
+// reading "unknown", indistinguishable from a genuine (if stale) refresh -- a fabricated panel, not a
+// disclosed fault. Reverted to the parsed form: a corrupt file reads the same as an absent one (`null`),
+// which is what this function returned before that change and what readHealth's only caller,
+// renderHealthStrip, already handles correctly (the "no site/data/health.json yet" branch).
 function readJsonIfPresent(p) {
   if (!fs.existsSync(p)) return null;
   try {
     return JSON.parse(fs.readFileSync(p, 'utf8'));
   } catch {
-    return 'malformed';
+    return null;
   }
 }
 
-function readHealth(outDir) {
+/**
+ * `site/data/health.json` if present and parseable; `null` if absent OR corrupt (see the comment on
+ * readJsonIfPresent above for why corrupt is not distinguished from absent here). Exported so a test
+ * can call it directly against a scratch `outDir`, the same pattern `readBuildHealth` below already
+ * uses -- its only real callers remain `checkSiteDrift` and `main()`, both in this file.
+ */
+export function readHealth(outDir) {
   return readJsonIfPresent(path.join(outDir, 'data', 'health.json'));
 }
 
@@ -776,14 +793,21 @@ const VERIFY_QUOTES_BASELINE_REL = 'scripts/plan/verify-quotes.baseline.json';
  * removal). Returns: a number when the file parses to that shape; the string `'malformed'` when the
  * file EXISTS but does not (invalid JSON, or the wrong shape) -- a fault, distinct from absence, so it
  * renders as one rather than silently reading the same as "the file was never created" (round-12 fix
- * round item (e)); `null` only when the file does not exist at all.
+ * round item (e)); `null` only when the file does not exist at all. Sums `entries.length` with
+ * `hashEntries.length` when the latter is present (round 15, item 3's hash-finding baseline route,
+ * state/gate-log.json records 66 and 68 -- verify-quotes.mjs's own `loadHashBaseline` reads the same
+ * sibling key; an absent `hashEntries` counts as zero, so every baseline.json before this round still
+ * reads exactly as it did): one debt number, the whole known baseline, not only the quote half of it.
  */
 export function readVerifyQuotesBaselineCount(root) {
   const p = path.join(root, VERIFY_QUOTES_BASELINE_REL);
   if (!fs.existsSync(p)) return null;
   try {
     const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
-    return Array.isArray(parsed?.entries) ? parsed.entries.length : 'malformed';
+    if (!Array.isArray(parsed?.entries)) return 'malformed';
+    const hashEntries = parsed.hashEntries;
+    if (hashEntries !== undefined && !Array.isArray(hashEntries)) return 'malformed';
+    return parsed.entries.length + (hashEntries?.length ?? 0);
   } catch {
     return 'malformed';
   }

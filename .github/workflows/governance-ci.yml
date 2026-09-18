@@ -27,7 +27,13 @@ name: Governance CI — plan, queue, site
 # marked verbatim that does not match its source byte-for-byte is a gate failure by name"; round 11's
 # ratchet: every baseline entry carries a disposition and a ruling, or the check fails by name). Every
 # `path:a-b @ <rev> sha256:<hex>` reference is recomputed against `git show <rev>:<path>` and fails by
-# name on a mismatch or an unresolvable rev, path or range (round 12's "quote by reference" mechanism).
+# name on a mismatch or an unresolvable rev, path or range (round 12's "quote by reference" mechanism)
+# -- or is a recorded, classified `hashEntries` baseline entry, advisory rather than gated the same way
+# a quote finding is (round 15, item 3's hash-finding baseline route: a hash reference sitting in text
+# this piece's own authority does not own, e.g. an already-landed, closed piece's append-only amendment,
+# that cannot be fixed in place). A `byte-copied from` marker's reproduction may sit on the marker's own
+# line (before or after it) as well as on the line after it, and a reference rustfmt has wrapped across
+# two `//`-commented lines is still recognized as one (see verify-quotes.mjs's own header for both).
 # For a passage with no `path:line` beside it this proves only that the words occur somewhere in the
 # tree's non-quotation text -- a floor, not proof the citing document's own claimed source is that
 # occurrence; a gate still resolves each passage against its named source. It does not recognize `…`

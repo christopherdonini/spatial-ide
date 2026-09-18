@@ -56,8 +56,11 @@
 // correcting piece in `corrected_by`) and a `ruling` naming what authorised it -- an entry missing
 // either is a baseline error and FAILS the check by name (`validateBaselineEntries`), never silently
 // accepted. Entries leave when corrected; none is added except by a ruling; a new mismatch always
-// fails. The baseline file itself may be a bare array (the pre-round-11 shape, still accepted) or
-// `{ $doc, entries }` (the current shape -- `$doc` documents this same ratchet at the file's own head).
+// fails. HEADER GAP CLOSED (round 15, item 3; the architect's attempt-4 should-fix, state/gate-log.json
+// record 66): the baseline file is `{ $doc, entries }` ONLY -- the pre-round-11 bare-array shape was
+// dropped in the round-12 fix round (no product caller, `loadBaseline`'s own docstring), not "still
+// accepted" as this banner previously, falsely, went on saying. A sibling top-level key, `hashEntries`,
+// carries the SAME ratchet for a hash-finding baseline (see loadHashBaseline, below).
 //
 // ADVISORY LISTING (--show-cites, never fails, computed only when passed): every path:line cite's
 // first cited line, trimmed, so a reader can eyeball whether the line says what the clause claims --
@@ -69,9 +72,18 @@
 // HASH-CHECKED REFERENCES (round 12's "quote by reference" mechanism, docs/PREREGISTRATION-TEMPLATE.md
 // §10; the human, 2026-09-17, round 12 item 1): `` `path:a-b` @ <rev> sha256:<hex> `` is GATED --
 // recomputed over `git show <rev>:<path>` lines a..b (each line with its LF) and failed by name on a
-// mismatch or an unresolvable rev, path or range; `@ <rev>` defaults to HEAD when absent. A `byte-copied
-// from ` prefix additionally requires the following blockquote or inline code span to be a byte-exact
-// substring of those lines, no normalization applied. See extractHashRefs/checkHashRef.
+// mismatch or an unresolvable rev, path or range; `@ <rev>` defaults to HEAD when absent. The reference
+// itself may be split across two physical lines by a rustfmt-wrapped `//` comment continuation (see
+// GAP); a reference broken across three or more lines is not recognized. A `byte-copied
+// from ` prefix additionally requires a reproduction near it -- same line after the marker, the next
+// non-blank line, or same line before the marker (see reproducedTextNear) -- to be a byte-exact
+// substring of those lines (or, for the same-line-before shape, to CONTAIN those lines byte-exact; see
+// reproducedTextNear's own comment), no presentation normalization applied. See
+// extractHashRefs/checkHashRef. A hash finding may itself be a recorded, classified `hashEntries`
+// baseline entry (round 15, item 3), advisory rather than gated -- the same {disposition, ruling,
+// corrected_by} shape and append-never discipline the quote baseline above uses, for a hash reference
+// sitting in text this piece's own authority does not own and cannot fix in place (see
+// loadHashBaseline/matchHashBaseline).
 //
 // DISCLOSED GAPS: a straight/curly/backtick quote spans at most one physical source line (this tree's
 // prose keeps a paragraph on one line; a hard-wrapped quote defeats the regex, the same limit
@@ -85,9 +97,9 @@
 // negation, condition or qualifier -- round 11 item 3's rider is a human-read rule, not yet a mechanical
 // one, so an elided quote is either baselined by hand or a false FAIL, never verified by construction
 // (the architect gate's N2, round-12 attempt); the `byte-copied from` reproduction check reads only the
-// FIRST following blockquote run or inline code span -- a reproduction split across both, or sitting
-// more than one blank line down, fails by name for lack of a resolvable reproduction rather than being
-// silently accepted.
+// FIRST candidate it finds, in the fixed order same-line-after / next-line / same-line-before -- a
+// reproduction split across more than one of those, or sitting more than one blank line down, is not
+// found and fails by name for lack of a resolvable reproduction rather than being silently accepted.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -416,6 +428,29 @@ function loadBaseline(root) {
   }
 }
 
+/**
+ * Round 15, item 3's hash-finding baseline route (state/gate-log.json records 66 and 68: "a route for
+ * hash findings in immutable text ... a baseline route for hash findings (the same {disposition,
+ * ruling, corrected_by} shape)"): the SAME file, a SIBLING top-level key, `hashEntries: [{file, line,
+ * reason, disposition, ruling, corrected_by?}]` -- for a hash reference this mechanism can never bind
+ * or reproduce, sitting in text this piece's own authority does not own (an already-landed, append-only
+ * amendment in a DIFFERENT piece's record, e.g. engine/LOD-PREREGISTRATION.md's Amendment 12, closed
+ * under the record cap). Absent `hashEntries` (every baseline.json before this round, and any file
+ * missing/unparsable) is an empty hash baseline, never fatal -- the same convention `loadBaseline`
+ * above uses for `entries`.
+ */
+function loadHashBaseline(root) {
+  const p = path.join(root, BASELINE_REL_PATH);
+  if (!fs.existsSync(p)) return [];
+  try {
+    const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (parsed && Array.isArray(parsed.hashEntries)) return parsed.hashEntries;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 const VALID_DISPOSITIONS = new Set(['unfindable-by-construction', 'tool-false-trigger', 'owed-correction']);
 
 /**
@@ -454,6 +489,23 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
   return null;
 }
 
+// (file, line, the entry's own `reason` as a PREFIX of the finding's actual reason) -- the same
+// stale-entry-matches-nothing discipline as matchBaseline above, adapted for a hash finding's `reason`
+// (a fixed diagnostic string `checkHashRef`/`findUnboundHashTokens` produce, not quoted prose): a
+// finding whose reason no longer starts with what the entry recorded -- the reference moved to a
+// DIFFERENT failure at the same line -- does not silently waive it.
+function matchHashBaseline(entries, used, relPath, line, reason) {
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (used.has(i) || e.file !== relPath || e.line !== line) continue;
+    if (typeof e.reason === 'string' && e.reason && reason.startsWith(e.reason)) {
+      used.add(i);
+      return e;
+    }
+  }
+  return null;
+}
+
 // HASH-CHECKED REFERENCES ("quote by reference", docs/PREREGISTRATION-TEMPLATE.md §10; the human,
 // 2026-09-17, round 12 item 1, applying entry 104's rider on (b)). Three shapes, all in the real record
 // corpus written under this same ruling (round-12 fix round, architect B1) -- each cited here by branch
@@ -483,8 +535,28 @@ function matchBaseline(entries, used, relPath, line, normalizedPassage) {
 // next non-blank line -- to be byte-identical to a contiguous substring of those same lines, with NONE of
 // normalizeText's presentation normalization applied (the rider: what is reproduced must be exact, not
 // merely equivalent after folding).
-const HASH_REF_RE =
-  /(byte-copied from\s+)?`?(?:([A-Za-z0-9_][A-Za-z0-9_./+-]*))?:(\d+)(?:-(\d+))?`?(?:\s*@\s*([^\s`]+))?\s*sha256:([0-9a-f]{64})`?/g;
+//
+// THE `//` CONTINUATION GRAMMAR (round 15, item 3; state/gate-log.json records 66 and 68): round 15's
+// own item 1, clause (d) states the rule a reference is written under going forward -- "a `path:line @
+// <rev> sha256:<hex>` reference is written contiguous on one line, even past 100 columns (rustfmt does
+// not reflow comments)" -- but one real, already-committed reference predates that rule and is recorded
+// as owed, not fixed in place (engine/LOD-PREREGISTRATION.md's Amendment 14, the row on
+// `engine/tests/lod_tier_builder.rs:190-191`): `` `engine/tests/common/mod.rs:55` @ 43a3039a3a4d ``,
+// rustfmt-wrapped, continues onto the NEXT `//`-commented line before `sha256:...` -- the two lines,
+// stripped of their own individual `// ` comment markers, form one contiguous reference. `GAP` (below)
+// matches ordinary horizontal whitespace OR exactly one such continuation (a newline, then a `//`
+// comment marker with its own optional leading/trailing horizontal whitespace) wherever the grammar
+// would otherwise only accept `\s*` -- deliberately not `\s` generally (which already matches `\n` on
+// its own, but not the literal `//` a Rust line comment repeats on every physical line) and deliberately
+// only ONE continuation, not several (the real case splits at exactly one point; a reference broken
+// across three or more physical lines is not a shape this grammar was built against and is left
+// unrecognized rather than guessed at).
+const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
+const HASH_REF_RE = new RegExp(
+  '(byte-copied from\\s+)?`?(?:([A-Za-z0-9_][A-Za-z0-9_./+-]*))?:(\\d+)(?:-(\\d+))?`?' +
+    `(?:${GAP}@${GAP}([^\\s\`]+))?${GAP}sha256:([0-9a-f]{64})\`?`,
+  'g',
+);
 
 // Every raw `sha256:<64 hex>` token, regardless of what (if anything) precedes it -- used to find one
 // the grammar above did NOT bind into any reference at all (round-12 fix round item (b): "never
@@ -572,24 +644,74 @@ function sha256Hex(s) {
   return crypto.createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 }
 
-// The reproduced text a `byte-copied from` marker requires: a `> ` blockquote run (prefix stripped per
-// line, content otherwise untouched) or a single inline `` `code span` `` -- whichever starts the next
-// non-blank line after the marker's own line. DISCLOSED GAP: only ONE such following element is read
-// (the first blockquote run or the first code span, whichever the text actually uses); a reproduction
-// split across a blockquote AND a trailing code span, or appearing more than one blank line down, is not
-// found and the marker fails by name for lack of a resolvable reproduction, not silently accepted.
-function reproducedTextAfter(text, matchEnd) {
-  const nl = text.indexOf('\n', matchEnd);
+// A straight- or curly-quoted span, whichever starts earliest in `s` -- used for the same-line search
+// below. Deliberately NOT also a backtick code span here: the rest of a marker's own line routinely
+// carries a SECOND `` `path:line` `` citation (a bare reference bound to the same paragraph, or a
+// second reference the same "byte-copied from" covers, as `` `path:206` @ rev sha256:hex and
+// `path:208` @ rev sha256:hex: "..." "..." `` does) -- a naive earliest-of-code-span-or-quote search
+// would find that citation's own backticks before ever reaching the actual quoted reproduction. The
+// next-line search below (shape 2) is unaffected: a code span there is never itself another reference,
+// by construction (a hash reference's own grammar requires a `:digit` before `sha256:`, and this
+// candidate is read starting fresh on its own line).
+function firstQuotedSpan(s) {
+  const straight = /"([^"\n]+)"/.exec(s);
+  const curly = /“([^”\n]+)”/.exec(s);
+  const candidates = [straight, curly].filter(Boolean);
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => a.index - b.index);
+  return candidates[0][1];
+}
+
+function stripBlockquotePrefix(s) {
+  const lines = s.split('\n').map((l) => l.replace(/^[ \t]*>[ \t]?/, ''));
+  if (lines[lines.length - 1] === '') lines.pop();
+  return lines.join('\n');
+}
+
+// The reproduced text a `byte-copied from` marker requires, and the direction to check it in. Three
+// shapes, all seen in the real record corpus this mechanism was built against (round 15, item 3; the
+// checker attempt-4 architect and reviewer reports, state/gate-log.json records 66 and 68): (1) SAME
+// LINE, AFTER the marker -- a straight/curly-quoted span later on the marker's
+// own line (`byte-copied from \`path:206\` @ rev sha256:hex and \`path:208\` @ rev sha256:hex: "..." "..."`,
+// docs/PREREGISTRATION-TEMPLATE.md:140's Clause (a') paragraph and its four siblings -- a SECOND
+// reference on the same line, with no "byte-copied from" of its own, binds to whichever quoted span
+// the first reference's own reproduction search does not consume, by simply being the FIRST one found
+// after each reference's own end). (2) the NEXT non-blank line -- a `> ` blockquote run or an inline
+// code span, the original, pre-round-15 shape (the shell/ADMISSION/LOD fixtures below). (3) SAME LINE,
+// BEFORE the marker -- the marker's own sentence describes the paragraph it closes as byte-copied FROM
+// its cited source, with no delimiting quote/code-span markup around the reproduced prose at all
+// (docs/PREREGISTRATION-TEMPLATE.md:132's class-7 definition). Checked in this order; the first shape
+// found wins -- a document is not expected to use more than one for the same reference. Returns
+// `{ text, reverse }` (`reverse: true` for shape 3, meaning the CANDIDATE must contain the SOURCE, not
+// the other way around -- shape 3's candidate is "everything on the line before the marker", which
+// necessarily also carries the marker's own framing prose the source itself never contains) or `null`.
+function reproducedTextNear(text, ref) {
+  const lineStart = text.lastIndexOf('\n', ref.start - 1) + 1;
+  let lineEnd = text.indexOf('\n', ref.end);
+  if (lineEnd === -1) lineEnd = text.length;
+
+  // Shape 1: same line, after the marker.
+  const sameLineAfter = firstQuotedSpan(text.slice(ref.end, lineEnd));
+  if (sameLineAfter !== null) return { text: sameLineAfter, reverse: false };
+
+  // Shape 2: the next non-blank line -- DISCLOSED GAP unchanged from the original mechanism: only ONE
+  // such following element is read (the first blockquote run or the first code span, whichever the
+  // text actually uses); a reproduction split across both, or appearing more than one blank line down,
+  // is not found and the marker fails by name for lack of a resolvable reproduction, not silently
+  // accepted.
+  const nl = text.indexOf('\n', ref.end);
   let rest = nl === -1 ? '' : text.slice(nl + 1);
   rest = rest.replace(/^(?:[ \t]*\n)*/, '');
   const bqRun = /^(?:[ \t]*>[ \t]?.*\n?)+/.exec(rest);
-  if (bqRun) {
-    const lines = bqRun[0].split('\n').map((l) => l.replace(/^[ \t]*>[ \t]?/, ''));
-    if (lines[lines.length - 1] === '') lines.pop();
-    return lines.join('\n');
-  }
+  if (bqRun) return { text: stripBlockquotePrefix(bqRun[0]), reverse: false };
   const codeSpan = /^[ \t]*`([^`\n]+)`/.exec(rest);
-  return codeSpan ? codeSpan[1] : null;
+  if (codeSpan) return { text: codeSpan[1], reverse: false };
+
+  // Shape 3: same line, before the marker -- reversed containment (see the comment above).
+  const beforeMarker = text.slice(lineStart, ref.start);
+  if (beforeMarker.trim()) return { text: beforeMarker, reverse: true };
+
+  return null;
 }
 
 /**
@@ -653,11 +775,19 @@ export function checkHashRef(root, index, relPath, text, ref, topDirs) {
     };
   }
   if (ref.reproduction) {
-    const repro = reproducedTextAfter(text, ref.end);
+    const repro = reproducedTextNear(text, ref);
     if (repro === null) {
-      return { ok: false, reason: `"byte-copied from" marker has no reproduced blockquote or code span following it` };
+      return {
+        ok: false,
+        reason: `"byte-copied from" marker has no reproduced blockquote, code span or quoted text near it`,
+      };
     }
-    if (!slice.includes(repro)) {
+    // Shape 1/2 (repro.reverse === false): the cited SOURCE lines must contain the candidate, byte-exact.
+    // Shape 3 (repro.reverse === true): the candidate is "everything on the marker's own line before it",
+    // which also carries the marker's own framing prose -- so the check runs the other way: the candidate
+    // must contain the (blockquote-prefix-stripped) SOURCE lines, byte-exact.
+    const ok = repro.reverse ? repro.text.includes(stripBlockquotePrefix(slice)) : slice.includes(repro.text);
+    if (!ok) {
       return {
         ok: false,
         reason: `reproduced text is not a byte-exact substring of "${resolvedPath}:${ref.startLine}-${ref.endLine}" @ ${ref.rev}`,
@@ -672,7 +802,8 @@ export function checkHashRef(root, index, relPath, text, ref, topDirs) {
  * need not be tracked -- a scratch copy of another branch's file is scannable) for verbatim-introduced
  * quotes and checks each against the tracked tree, excluding every extracted quotation (including the
  * baseline file itself) from the searchable text. Returns
- * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings }.
+ * { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings,
+ * hashBaselined, unmatchedHashBaseline, hashBaselineErrors }.
  */
 export function runVerifyQuotes({ repoRoot, files } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -689,6 +820,9 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const baselineErrors = validateBaselineEntries(baselineEntries);
   const usedBaseline = new Set();
   const baselineAbs = path.join(root, BASELINE_REL_PATH);
+  const hashBaselineEntries = loadHashBaseline(root);
+  const hashBaselineErrors = validateBaselineEntries(hashBaselineEntries);
+  const usedHashBaseline = new Set();
 
   const haystack = new Set(scanAbs);
   for (const rel of index.files) {
@@ -711,26 +845,36 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
   const advisories = [];
   const baselined = [];
   const hashFindings = [];
+  const hashBaselined = [];
   let checked = 0;
 
   // Hash-ref scanning: its own pass, its own (wider) file set, no quote-passage extraction on any file
-  // here that scanAbs does not also carry.
+  // here that scanAbs does not also carry. A finding the hash baseline below already carries (round 15,
+  // item 3; state/gate-log.json records 66 and 68) is reported as baselined, not gated -- the same
+  // append-never, new-mismatch-still-fails discipline the quote baseline uses (see matchHashBaseline).
   const hashScanSet = new Set(hashScanAbs);
   for (const abs of scanAbs) hashScanSet.add(abs);
   for (const absPath of hashScanSet) {
     const relPath = path.relative(root, absPath).split(path.sep).join('/');
     const text = fs.readFileSync(absPath, 'utf8');
     const refs = extractHashRefs(text);
+    const recordHashResult = (line, reason) => {
+      const known = matchHashBaseline(hashBaselineEntries, usedHashBaseline, relPath, line, reason);
+      if (known) {
+        hashBaselined.push({ relPath, line, reason });
+        return;
+      }
+      hashFindings.push({ relPath, line, reason });
+    };
     for (const tok of findUnboundHashTokens(text, refs)) {
-      hashFindings.push({
-        relPath,
-        line: tok.line,
-        reason: 'unbound hash reference -- a sha256:<hex> token not recognized as part of a `path:line @ rev sha256:hex` reference',
-      });
+      recordHashResult(
+        tok.line,
+        'unbound hash reference -- a sha256:<hex> token not recognized as part of a `path:line @ rev sha256:hex` reference',
+      );
     }
     for (const ref of refs) {
       const res = checkHashRef(root, index, relPath, text, ref, topDirs);
-      if (!res.ok) hashFindings.push({ relPath, line: ref.line, reason: res.reason });
+      if (!res.ok) recordHashResult(ref.line, res.reason);
     }
   }
 
@@ -791,7 +935,20 @@ export function runVerifyQuotes({ repoRoot, files } = {}) {
     }
   }
   const unmatchedBaseline = baselineEntries.filter((_, i) => !usedBaseline.has(i));
-  return { findings, advisories, baselined, checked, scanned: scanAbs.length, unmatchedBaseline, baselineErrors, hashFindings };
+  const unmatchedHashBaseline = hashBaselineEntries.filter((_, i) => !usedHashBaseline.has(i));
+  return {
+    findings,
+    advisories,
+    baselined,
+    checked,
+    scanned: scanAbs.length,
+    unmatchedBaseline,
+    baselineErrors,
+    hashFindings,
+    hashBaselined,
+    unmatchedHashBaseline,
+    hashBaselineErrors,
+  };
 }
 
 /**
@@ -869,7 +1026,19 @@ function pluralBaselineEntries(n) {
 function main() {
   const { showCites, files } = parseArgs(process.argv.slice(2));
   const opts = { repoRoot: REPO_ROOT, files: files.length ? files : undefined };
-  const { findings, advisories, baselined, checked, scanned, unmatchedBaseline, baselineErrors, hashFindings } = runVerifyQuotes(opts);
+  const {
+    findings,
+    advisories,
+    baselined,
+    checked,
+    scanned,
+    unmatchedBaseline,
+    baselineErrors,
+    hashFindings,
+    hashBaselined,
+    unmatchedHashBaseline,
+    hashBaselineErrors,
+  } = runVerifyQuotes(opts);
 
   console.log(
     `verify:quotes — scanned ${scanned} file(s) for verbatim-marked quotations and hash-checked references (--show-cites for the path:line cite listing).`,
@@ -906,15 +1075,36 @@ function main() {
     for (const e of baselineErrors) console.error(`  - ${e.file}:${e.line} — ${e.reason}`);
   }
 
+  // Round 15, item 3's hash-finding baseline route (state/gate-log.json records 66 and 68) -- reported
+  // the same way the quote baseline is, above: baselined findings and errors listed but not gated,
+  // stale entries surfaced rather than silently carried.
+  if (hashBaselined.length) {
+    console.error(`verify:quotes — ${hashBaselined.length} hash-baselined (pre-existing, ${BASELINE_REL_PATH}, still failing):`);
+    for (const b of hashBaselined) console.error(`  - ${b.relPath}:${b.line} — ${b.reason}`);
+  }
+  if (unmatchedHashBaseline.length) {
+    console.error(
+      `verify:quotes — ${pluralBaselineEntries(unmatchedHashBaseline.length)} matched nothing this run (stale ${BASELINE_REL_PATH} hashEntries).`,
+    );
+    for (const e of unmatchedHashBaseline) console.error(`  - ${e.file}:${e.line} — ${String(e.reason ?? '').slice(0, 80)}`);
+  }
+  if (hashBaselineErrors.length) {
+    console.error(
+      `verify:quotes — ${hashBaselineErrors.length} hash-baseline entry error(s) (round 11's ratchet applies to hashEntries too: every entry needs a valid "disposition" and a "ruling"):`,
+    );
+    for (const e of hashBaselineErrors) console.error(`  - ${e.file}:${e.line} — ${e.reason}`);
+  }
+
   const verified = checked - baselined.length - advisories.length - findings.length;
-  if (findings.length === 0 && baselineErrors.length === 0 && hashFindings.length === 0) {
+  const noHashErrors = hashFindings.length === 0 && hashBaselineErrors.length === 0;
+  if (findings.length === 0 && baselineErrors.length === 0 && noHashErrors) {
     console.log(
-      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors.`,
+      `verify:quotes PASS — ${checked} checked, ${verified} verified, ${baselined.length} baselined, ${advisories.length} advisory, 0 baseline entry errors, 0 hash-reference errors (${hashBaselined.length} hash-baselined), 0 hash-baseline entry errors.`,
     );
     return;
   }
   console.error(
-    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s):`,
+    `verify:quotes FAIL — ${findings.length} not found, ${baselineErrors.length} baseline entry error(s), ${hashFindings.length} hash-reference error(s), ${hashBaselineErrors.length} hash-baseline entry error(s):`,
   );
   for (const f of findings) console.error(`  FAIL — quote not found: ${f.relPath}:${f.line} "${f.snippet}…"`);
   for (const h of hashFindings) console.error(`  FAIL — hash reference: ${h.relPath}:${h.line} — ${h.reason}`);
