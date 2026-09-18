@@ -703,6 +703,13 @@ async function main() {
     if (!s2) throw new Error("S2 failed; the assertions below would be vacuous");
 
     observation.route = ROUTE;
+    // S5d (POST route) must not read a "tile-stream-mint-refused" line left over from an EARLIER
+    // run in the same still-running app's session log (the app is reused across runs, S1's own
+    // "attach or launch" discipline) -- a stale line from a PRIOR pre-check run would be a false
+    // failure that says nothing about THIS run. Recorded here, before either route mutates
+    // anything, as the line count every later read subtracts off.
+    const sessionLogBaselineLineCount = newestSessionLog().lineCount ?? 0;
+    observation.sessionLogBaselineLineCount = sessionLogBaselineLineCount;
 
     // ------------------------------------------------------------------------------------
     // S3: change the source underneath it -- mtime only, bytes untouched. PRE route only: the
@@ -927,29 +934,38 @@ async function main() {
       await runStep("S5d-post-check-route-confirmed", async () => {
         const log = newestSessionLog();
         if (log.error) throw new Error(`S5d: could not read the session log: ${log.error}`);
-        const mintRefused = log.tail.concat(log.sourceChangedLines).filter((l) => /tile-stream-mint-refused/.test(l));
-        const sessionEnded = log.sourceChangedLines.filter((l) => /tile-session-ended-source-changed/.test(l));
-        // `log.tail` is only the last 40 lines (`newestSessionLog`'s own bound) and may miss an
-        // early mint-refused line on a long run, so this also re-reads the FULL content directly --
-        // belt and braces, since this is the one assertion the whole POST route exists to make.
+        // **Scoped to THIS run's own lines only** -- everything appended since
+        // `sessionLogBaselineLineCount` (taken before S3/S4 touched anything). The app is reused
+        // across runs (S1's "attach or launch"), so the log can already carry an EARLIER run's own
+        // "tile-stream-mint-refused" line (a prior pre-route run, say); scanning the whole file
+        // would make that a false failure about a run that never produced it.
         const fullContent = readFileSync(log.path, "utf8");
-        const mintRefusedAnywhere = /tile-stream-mint-refused/.test(fullContent);
-        observation.postCheckLogEvidence = { mintRefused, sessionEnded, mintRefusedAnywhere };
+        const allLines = fullContent.split(/\r?\n/).filter((l) => l.length > 0);
+        const newLines = allLines.slice(sessionLogBaselineLineCount);
+        const mintRefused = newLines.filter((l) => /tile-stream-mint-refused/.test(l));
+        const sessionEnded = newLines.filter((l) => /tile-session-ended-source-changed/.test(l));
+        observation.postCheckLogEvidence = {
+          sessionLogBaselineLineCount,
+          newLineCount: newLines.length,
+          mintRefused,
+          sessionEnded,
+        };
         if (sessionEnded.length === 0) {
           throw new Error(
-            `S5d: no "tile-session-ended-source-changed" line in the session log -- the terminal route never fired`
+            `S5d: no "tile-session-ended-source-changed" line appeared in the session log after this run's own ` +
+              `baseline (line ${sessionLogBaselineLineCount}) -- the terminal route never fired`
           );
         }
-        if (mintRefusedAnywhere) {
+        if (mintRefused.length > 0) {
           throw new Error(
-            `S5d: a "tile-stream-mint-refused" line is present in the session log -- this run's touch lost the ` +
-              `race to a tile's PRE-check rather than landing on the POST-check route (see this file's header ` +
-              `note on what this does and does not guarantee). Not a silent pass: this is exactly the route this ` +
-              `assertion exists to distinguish. Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`
+            `S5d: a "tile-stream-mint-refused" line appeared after this run's own baseline -- this run's touch ` +
+              `lost the race to a tile's PRE-check rather than landing on the POST-check route (see this file's ` +
+              `header note on what this does and does not guarantee). Not a silent pass: this is exactly the ` +
+              `route this assertion exists to distinguish. Evidence: ${JSON.stringify(observation.postCheckLogEvidence)}`
           );
         }
-        return `"tile-session-ended-source-changed" present, no "tile-stream-mint-refused" anywhere in the log -- ` +
-          `the terminal (post-check) route ended this session, not the pre-check`;
+        return `"tile-session-ended-source-changed" present, no "tile-stream-mint-refused" since this run's own ` +
+          `baseline -- the terminal (post-check) route ended this session, not the pre-check`;
       });
     }
   } catch (e) {
