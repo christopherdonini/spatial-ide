@@ -132,7 +132,8 @@ health strip reports both drives"), stray process counts (`cargo`/`node`/`spatia
 name only — **this never kills anything**), and waiting-on-human ages (computed from each node's own
 `dates.opened`). Always timestamped (`generated_at`).
 
-Two governance metrics (the human, 2026-09-14: "median ready→done hours and gate first-pass rate")
+Three governance metrics (the human, 2026-09-14: "median ready→done hours and gate first-pass rate";
+the human, 2026-09-18, the record cap's point (4): a record-round count per piece, target zero)
 — operational counts, **not** docs/08 product perf, and labelled as such:
 
 - `median_opened_to_done: {days, n}` (`medianOpenedToDone(plan)`, pure): the median of
@@ -146,6 +147,17 @@ Two governance metrics (the human, 2026-09-14: "median ready→done hours and ga
   gates (earliest by date, then attempt, then log order) decides; rate = passed-first / nodes-with-
   any-record, always reported **with the N**. Absent file → `{present: false}` → the strip says "no
   gate log yet"; a present-but-empty log → "no gate records yet".
+- `record_rounds: {present, byNode, total}` (`recordRoundCounts(log)`, pure): counts, per node, the
+  number of DISTINCT gate attempts carrying `record: true` in `state/gate-log.json` (below) — an
+  attempt gated twice (e.g. both reviewer and architect) carries the tag on both gate records but
+  counts once for its node, never twice. A node with no `record: true` record is absent from
+  `byNode` — it is never listed at zero. `total` is the sum of every node's count. The strip's
+  "Record rounds per piece" row lists each non-zero node and its count, then the running total, and
+  always states the target of zero. Absent file → `{present: false}` → the row says "no gate log
+  yet", the same wording `gate_first_pass` uses; a present-but-empty log → `{present: true,
+  byNode: {}, total: 0}`, rendered "none (total 0, target 0)" — unlike `gate_first_pass`'s "no
+  gate records yet" for the same input, because a zero record-round count is the metric's own
+  target, not a missing measurement.
 
 It runs **no `gh` command and makes no network call**, and it has no `--offline` flag any more:
 CI on main, open PRs and the latest release are build-time facts, read from GitHub's API inside the
@@ -160,14 +172,22 @@ custodian **appends to after each gate**: a JSON array of entries, one per gate 
 
 ```json
 [
-  {"node": "<node-id>", "gate": "<gate path or name>", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"}
+  {"node": "<node-id>", "gate": "<gate path or name>", "attempt": 1, "verdict": "PASS", "date": "2026-09-14"},
+  {"node": "<node-id>", "gate": "architect", "attempt": 2, "verdict": "PASS", "record": true, "date": "2026-09-18"}
 ]
 ```
 
 `verdict` is `"PASS"` or `"FAIL"`; `attempt` counts from 1 for that node+gate; `date` is a plain
-`YYYY-MM-DD`. It is committed (plain text, diffable — a JSON array cannot carry a top-of-file
-comment, hence this note). It ships seeded as `[]`. `health.mjs`'s `readGateLog` treats an absent
-file as "no gate log yet" and a corrupt file as empty (degrade, never throw).
+`YYYY-MM-DD`. `note` is optional free text (the gate report's summary). `record` is optional and
+boolean: `true` marks an attempt that gated a round dispatched after the piece's first gate attempt
+whose work included the piece's record — writing or correcting an amendment, a mutation comment or
+a cite — whatever else the round carried and whatever the verdict. The custodian sets it by hand
+when appending the record. A piece's first gate attempt is never tagged, even when it fails on the
+record: the count is rounds spent on the record, the quantity the directive's point (3) caps
+(`state/directives/2026-09-18-record-cap.md`). Every gate of a tagged attempt carries the tag; the
+metric counts the attempt once. It is committed (plain text, diffable — a JSON array cannot carry
+a top-of-file comment, hence this note). It ships seeded as `[]`. `health.mjs`'s `readGateLog`
+treats an absent file as "no gate log yet" and a corrupt file as empty (degrade, never throw).
 
 ## `buildHealth.mjs` — the health strip's **build-time** facts (§5, §15)
 

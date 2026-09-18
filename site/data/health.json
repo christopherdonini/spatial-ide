@@ -1,17 +1,15 @@
 {
-  "generated_at": "2026-09-18T05:39:40.568Z",
+  "generated_at": "2026-09-18T05:42:40.648Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": false,
-    "failures": [
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\record-round-count\\site\\index.html differs from a fresh generation"
-    ]
+    "ok": true,
+    "failures": []
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 61347102720,
+        "bytes": 61344825344,
         "total": 510319915008
       },
       {
@@ -45,8 +43,9 @@
     "byNode": {
       "briefa-p3b-owner-side-invalidation": 5,
       "lod-tier-builder-route-b": 4,
-      "governance-verify-quotes": 3
+      "governance-verify-quotes": 3,
+      "governance-record-round-count": 1
     },
-    "total": 12
+    "total": 13
   }
 }
