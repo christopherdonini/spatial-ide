@@ -1156,8 +1156,8 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * still sets `viewportRefusal` exactly as before, that it additionally ends the session for this
    * ONE code, and that it matches on `.skpError.code` rather than on the message.
    *
-   * RECORDED MUTATION for "reportViewportOutcome keeps viewportRefusal and additionally ends the
-   * session, matched on the code": change the catch to `e.skpError.message.includes("source file
+   * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch":
+   * change the catch to `e.skpError.message.includes("source file
    * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
    * pinned message is the human's prose and is not required to contain the code (§4 T6's own
    * mutation).
@@ -1165,7 +1165,7 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
    * /if \(isSourceChangedRefusal\(e\)\) en…/`.
    */
-  it("reportViewportOutcome keeps viewportRefusal and additionally ends the session, matched on the code", () => {
+  it("the_pre_check_refusal_latches_the_session_in_the_untiled_catch", () => {
     const appSource = readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), "App.tsx"),
       "utf8"

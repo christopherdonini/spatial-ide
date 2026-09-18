@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T22:30:11.144Z",
+  "generated_at": "2026-09-18T23:05:10.376Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 31496507392,
+        "bytes": 31828381696,
         "total": 510319915008
       },
       {
@@ -23,9 +23,9 @@
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 1,
     "by_name": {
-      "cargo": 2,
+      "cargo": 0,
       "node": 1,
       "spatial-ide-shell": 0
     }
@@ -55,7 +55,7 @@
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 32
+    "n": 33
   },
   "gate_first_pass": {
     "present": true,
@@ -72,8 +72,9 @@
       "governance-record-round-count": 1,
       "briefa-p3b-test-names": 1,
       "briefa-p5-gate-tests": 1,
-      "briefa-p4-corpus-run": 1
+      "briefa-p4-corpus-run": 1,
+      "briefa-p6-describe-fields": 1
     },
-    "total": 16
+    "total": 17
   }
 }

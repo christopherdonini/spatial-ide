@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T22:30:13.971Z",
-  "plan_hash": "f93c63730d5760c457ec3f76904f5a70416fa29a863db7b7a75d9184dde2edf4",
+  "generated_at": "2026-09-18T23:05:11.840Z",
+  "plan_hash": "1fef85adff614bfbd19f5edc1c94442eb64811960290ae735dc05e08b4a5f0cc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2735,6 +2735,41 @@
       "dates": {
         "opened": null,
         "done": null
+      }
+    },
+    {
+      "id": "briefa-p3b-test-names",
+      "title": "P3b test-name alignment -- rename the six tests (T3-T7, T9) to the exact strings OWNER-INVALIDATION-PREREGISTRATION.md §4 declares, so verify:test-claims binds them once briefa-p3b-owner-side-invalidation is done (round 14 item 2's test-text exception)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "done",
+      "order": 5,
+      "depends_on": [
+        "briefa-p3b-owner-side-invalidation"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "frontends/shell/P3B-TEST-NAMES-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 90
+      },
+      "felt_verdict": false,
+      "entries": [
+        110
+      ],
+      "verdict": {
+        "by": "human",
+        "cite": "PR #90 merged 2026-09-18 (the click); felt_verdict false, done on merge"
+      },
+      "summary": "Short-form piece, dispatched 2026-09-18 (entry 110): rename one Rust fn and five vitest test titles in place; assertions untouched; two erratum amendments appended (shell 17, engine 14); one kernel doc-comment renamed; so the six §4 claims verify-test-claims.mjs currently reports as planned become binding matches",
+      "budget_minutes": 30,
+      "generation": 1,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": "2026-09-18"
       }
     },
     {
