@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T05:07:21.128Z",
-  "plan_hash": "7fd8be3629a2d67d66fe5bc0fd1a3d593464096a2ea57510f55c0ad32691c2ba",
+  "generated_at": "2026-09-18T05:24:09.058Z",
+  "plan_hash": "48df3b4e87860a7dfdec2fe2a6c3522b99fc8e9c6ffe0f5bad3951fb3a9d0702",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1440,7 +1440,7 @@
       },
       "gate": "frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p3b"
+        "pr": 86
       },
       "budget_minutes": 240,
       "generation": 1,

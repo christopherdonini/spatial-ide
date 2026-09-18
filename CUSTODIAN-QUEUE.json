@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T05:07:20.979Z",
-  "plan_hash": "7fd8be3629a2d67d66fe5bc0fd1a3d593464096a2ea57510f55c0ad32691c2ba",
+  "generated_at": "2026-09-18T05:24:08.945Z",
+  "plan_hash": "48df3b4e87860a7dfdec2fe2a6c3522b99fc8e9c6ffe0f5bad3951fb3a9d0702",
   "priorities_approved": true,
   "next": {
     "id": "adr-029-g1-feasibility",
@@ -307,14 +307,14 @@
         "minutes": 20
       },
       "evidence": {
-        "branch": "cut/briefa-p3b"
+        "pr": 86
       },
       "dates": {
         "opened": "2026-09-16",
         "done": null
       },
       "summary": "RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
-      "evidence_label": "branch `cut/briefa-p3b`"
+      "evidence_label": "PR #86"
     },
     {
       "id": "governance-verify-quotes",

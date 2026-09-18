@@ -893,7 +893,7 @@ nodes:
     depends_on: [briefa-p3-p6]
     needs_human: {kind: sight, minutes: 20}
     gate: frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md
-    evidence: {branch: cut/briefa-p3b}
+    evidence: {pr: 86}
     budget_minutes: 240
     generation: 1
     felt_verdict: false
