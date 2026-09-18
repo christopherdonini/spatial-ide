@@ -179,13 +179,15 @@ custodian **appends to after each gate**: a JSON array of entries, one per gate 
 
 `verdict` is `"PASS"` or `"FAIL"`; `attempt` counts from 1 for that node+gate; `date` is a plain
 `YYYY-MM-DD`. `note` is optional free text (the gate report's summary). `record` is optional and
-boolean: `true` marks an attempt that gated a round dispatched after the piece's first gate attempt
-whose work included the piece's record — writing or correcting an amendment, a mutation comment or
-a cite — whatever else the round carried and whatever the verdict. The custodian sets it by hand
-when appending the record. A piece's first gate attempt is never tagged, even when it fails on the
-record: the count is rounds spent on the record, the quantity the directive's point (3) caps
-(`state/directives/2026-09-18-record-cap.md`). Every gate of a tagged attempt carries the tag; the
-metric counts the attempt once. It is committed (plain text, diffable — a JSON array cannot carry
+boolean: `true` marks an attempt whose round was dispatched, in whole or in leading part, to correct
+or re-read the piece's record — the record-fidelity class: a quotation, a cite, a hash, an
+amendment's form or ordering, or a scoped re-read of record text appended after the build's gate —
+whatever else the round carried and whatever the verdict. A round dispatched for code, tests or
+operator text is not tagged even when its findings touch an amendment. The custodian sets it by
+hand from the dispatch when appending the record; the record's `note` names the round. A piece's
+first gate attempt is never tagged, even when it fails on the record: the count is rounds spent on
+the record, the quantity the directive's point (3) caps (`state/directives/2026-09-18-record-cap.md`).
+Every gate of a tagged attempt carries the tag; the metric counts the attempt once. It is committed (plain text, diffable — a JSON array cannot carry
 a top-of-file comment, hence this note). It ships seeded as `[]`. `health.mjs`'s `readGateLog`
 treats an absent file as "no gate log yet" and a corrupt file as empty (degrade, never throw).
 
