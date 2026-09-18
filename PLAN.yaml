@@ -1697,8 +1697,8 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
-    order: null
+    status: blocked
+    order: 1
     depends_on: []
     needs_human: {kind: ruling, minutes: 5}
     gate: none
@@ -1715,8 +1715,8 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: proposed
-    order: null
+    status: blocked
+    order: 1
     depends_on: []
     needs_human: {kind: ruling, minutes: 5}
     gate: none

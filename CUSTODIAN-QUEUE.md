@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a9ea8b2856ac253aa754a30f10740bbf5df58a1934c601a4a1013be1aae16683`) at `2026-09-18T12:00:50.804Z`.
+Generated from `PLAN.yaml` (sha256 `dc4b48fadd2579bc3836e78808ee4f5307f64c5ba2da382fb7384f3a1557539d`) at `2026-09-18T12:11:08.965Z`.
 
 ## 1. Next
 
@@ -12,9 +12,12 @@ Generated from `PLAN.yaml` (sha256 `a9ea8b2856ac253aa754a30f10740bbf5df58a1934c6
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) (lane `kernel-protocol`, order 5, budget 120 min)
 - **drill-clean-clone** — The drill — clean-directory clone, regenerated fixtures, full suite, release build (lane `governance`, order 3, budget 60 min)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 10 min)
 
-- (none)
+### ruling
+
+- **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (5 min)
+- **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (5 min)
 
 ## 4. Blocked on dependencies
 
@@ -57,8 +60,6 @@ Generated from `PLAN.yaml` (sha256 `a9ea8b2856ac253aa754a30f10740bbf5df58a1934c6
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **engine-source-change-watcher** — The advisory source-change watcher (phase `prototype`) — never queued until placed
-- **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (phase `prototype`) — never queued until placed
-- **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

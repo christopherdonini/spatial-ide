@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T12:02:54.572Z",
-  "plan_hash": "a9ea8b2856ac253aa754a30f10740bbf5df58a1934c601a4a1013be1aae16683",
+  "generated_at": "2026-09-18T12:11:18.710Z",
+  "plan_hash": "dc4b48fadd2579bc3836e78808ee4f5307f64c5ba2da382fb7384f3a1557539d",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2672,8 +2672,8 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "blocked",
+      "order": 1,
       "depends_on": [],
       "needs_human": {
         "kind": "ruling",
@@ -2697,8 +2697,8 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "blocked",
+      "order": 1,
       "depends_on": [],
       "needs_human": {
         "kind": "ruling",
