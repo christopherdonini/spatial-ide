@@ -719,12 +719,12 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    *
    * RECORDED MUTATION: remove the `this.clearResidency()` call from the source-changed branch in
    * `viewportStreamManager.ts` (P3a's shape: null `residentStreamHandle` without clearing).
-   * Expected failure: "a source-changed terminal clears the working canvas residency" fails on the
+   * Expected failure: "a_source_changed_terminal_clears_the_working_canvas_residency" fails on the
    * `onSuperseded` assertion.
    * OBSERVED (performed once on this branch, then reverted): FAILED --
    * `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
    */
-  it("a source-changed terminal clears the working canvas residency", async () => {
+  it("a_source_changed_terminal_clears_the_working_canvas_residency", async () => {
     mockStream("sh_a");
     const onBatch = vi.fn();
     const onSuperseded = vi.fn();

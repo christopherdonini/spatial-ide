@@ -377,10 +377,10 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 /// doc, and §7 declares the value as the existing sum rather than a second constant.
 ///
 /// RECORDED MUTATION: drop the `st.dead_tickets.retain(..)` line from `forget_dataset`. Expected
-/// failure: `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` fails on the
+/// failure: `the_dead_ticket_record_is_bounded` fails on the
 /// after-close count assertion.
 #[test]
-fn the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close() {
+fn the_dead_ticket_record_is_bounded() {
     let g = GenerationRegistry::new();
 
     g.mint_for_open("ds_a");

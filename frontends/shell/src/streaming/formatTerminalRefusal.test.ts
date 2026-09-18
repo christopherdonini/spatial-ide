@@ -8,12 +8,12 @@ import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes
 
 describe("formatTerminalRefusal", () => {
   /**
-   * Mutation: delete the `/^engine\.[a-z0-9_]+$/` branch. Expected failure: "strips the typed code
-   * the kernel prefixes, so no machine code reaches the operator" fails on both assertions -- which
-   * is the operator-visible regression this exists to close: `App.tsx`'s streaming banner
+   * Mutation: delete the `/^engine\.[a-z0-9_]+$/` branch. Expected failure:
+   * "a_terminal_refusal_reaches_the_operator_without_its_machine_prefix" fails on both assertions --
+   * which is the operator-visible regression this exists to close: `App.tsx`'s streaming banner
    * interpolates the detail whole, so the prefix would be read as part of the sentence.
    */
-  it("strips the typed code the kernel prefixes, so no machine code reaches the operator", () => {
+  it("a_terminal_refusal_reaches_the_operator_without_its_machine_prefix", () => {
     const f = formatTerminalRefusal(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
 
     expect(f.code).toBe("engine.source_changed");
