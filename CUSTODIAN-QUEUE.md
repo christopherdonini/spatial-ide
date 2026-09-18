@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3718034c2366d55a55864bc4dc8fe43939487ca81b3ccfc3368517fc39acfa98`) at `2026-09-18T23:04:15.027Z`.
+Generated from `PLAN.yaml` (sha256 `7369e8614a241392d088438092d39f0e67600b79f895f33f84d21bf7932c38ce`) at `2026-09-18T23:09:19.480Z`.
 
 ## 1. Next
 
@@ -43,7 +43,7 @@ Generated from `PLAN.yaml` (sha256 `3718034c2366d55a55864bc4dc8fe43939487ca81b3c
 - **briefa-p4-corpus-run** — Brief A P4 -- the compatibility-corpus run against the preregistered expectations (engine/ADMISSION-PREREGISTRATION.md sections 3-5, 8); the admission table generated; every deviation a recorded result, never an adjusted prediction (G-A5, G-A6) — evidence: branch `cut/briefa-p4`
 - **briefa-p5-gate-tests** — Brief A P5 -- the gate tests G-A1 to G-A4 and G-A6 of engine/ADMISSION-PREREGISTRATION.md section 12b, each with a recorded mutation; G-A2's post-check route end to end in the real app; late-generation rejection; the fast-admission distinction — evidence: branch `cut/briefa-p5`
 - **adr-029-g1-feasibility** — ADR-029 G1 — verify a monotone DuckDB scan-progress reading against the vendored crate (blocking feasibility gate) — evidence: PR #92
-- **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: branch `governance/verify-quotes`
+- **governance-verify-quotes** — verify-quotes -- a gated verbatim-quote check + an advisory cite-content listing (scripts/plan/verify-quotes.mjs), wired into CI beside verify:cites (RULED 2026-09-17, round 10); the Sonnet-default pilot — evidence: PR #91
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 
 ## 6. Proposed / unscheduled
