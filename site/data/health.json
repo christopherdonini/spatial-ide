@@ -1,16 +1,18 @@
 {
-  "generated_at": "2026-09-18T04:50:44.100Z",
+  "generated_at": "2026-09-18T05:39:40.568Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\record-round-count\\site\\index.html differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 61433114624,
-        "total": 510319849472
+        "bytes": 61347102720,
+        "total": 510319915008
       },
       {
         "drive": "D",
@@ -34,9 +36,9 @@
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 20,
+    "nodes": 21,
     "first_pass": 12,
-    "rate": 0.6
+    "rate": 0.5714285714285714
   },
   "record_rounds": {
     "present": true,
