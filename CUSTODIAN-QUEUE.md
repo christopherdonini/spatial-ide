@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0cd35ade559585810bf96702cefd9e3b2db14c14510fc06893d0685e48dc991a`) at `2026-09-19T05:32:27.489Z`.
+Generated from `PLAN.yaml` (sha256 `901d57ee95cae872486e0a29cfac95102abf253cd25c4bdc2d34ae0380f65cce`) at `2026-09-19T05:50:48.163Z`.
 
 ## 1. Next
 
@@ -47,6 +47,7 @@ Generated from `PLAN.yaml` (sha256 `0cd35ade559585810bf96702cefd9e3b2db14c14510f
 - **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
+- **governance-audit-npm-trees** — The dependency-licence audit scans frontends/shell and preserves the report's hand-maintained data-terms section (entry 116 finding (i); entry 117) — evidence: PR #99
 
 ## 6. Proposed / unscheduled
 

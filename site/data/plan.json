@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-19T05:32:29.071Z",
-  "plan_hash": "0cd35ade559585810bf96702cefd9e3b2db14c14510fc06893d0685e48dc991a",
+  "generated_at": "2026-09-19T05:50:49.702Z",
+  "plan_hash": "901d57ee95cae872486e0a29cfac95102abf253cd25c4bdc2d34ae0380f65cce",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2271,6 +2271,36 @@
         116
       ],
       "summary": "DECISIONS-PENDING.md entry 116: all six advisories dev-only or build-only by the notice generator's shipped-set definition; no patch-level fix exists; the forced fix (vitest 5, vite-node 6, esbuild 0.28) adds ten packages, two MPL-2.0, and breaks the shell's typecheck at two test call sites; the viewer's bump alone is clean. Options A (approve the majors + the licence decisions), B (accept the dev-only risk with a review date), C (the viewer's bump now, B for the shell) -- the custodian reads C. The licence audit's NPM_TREES omission of frontends/shell is a separate finding",
+      "dates": {
+        "opened": "2026-09-19",
+        "done": null
+      }
+    },
+    {
+      "id": "governance-audit-npm-trees",
+      "title": "The dependency-licence audit scans frontends/shell and preserves the report's hand-maintained data-terms section (entry 116 finding (i); entry 117)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "click",
+        "minutes": 5
+      },
+      "gate": "scripts/AUDIT-NPM-TREES-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 99
+      },
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        116,
+        117
+      ],
+      "summary": "Five-line piece under AUTONOMY.md section 21b: NPM_TREES gains frontends/shell; the regeneration proved DEPENDENCY-LICENSES.md carries a ~415-line hand-maintained EPSG/IOGP section no script emits, so the form widened before code (classes 2 and 6) and the writer re-emits it verbatim and fails closed without it; the shell tree's first audit shows one review row (caniuse-lite, CC-BY-4.0) for the human. Reviewer gate; PR for the click",
       "dates": {
         "opened": "2026-09-19",
         "done": null
