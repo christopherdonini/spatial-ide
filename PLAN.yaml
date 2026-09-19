@@ -956,7 +956,7 @@ nodes:
     generation: 1
     felt_verdict: true
     entries: [110]
-    summary: "Part N's rows are being drafted on docs/part-n-walkthrough with a blank result log (the sitting the human asked for on 2026-09-18, entry 110); the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
+    summary: "Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
     dates: {opened: 2026-09-18, done: null}
 
   - id: briefa-p6-describe-fields
