@@ -1697,3 +1697,56 @@ Amendment 7's `…` cut, on lines 2 and 3, removed the same clause both times: *
 | the driver header's "byte-for-byte" | class 3, test text: corrected at f41f678 | the pin two rows above |
 
 **Read this amendment first, for Amendments 1-19.**
+
+### Amendment 15 -- P4 record (2026-09-18, appended; re-appended after gate-log record 89)
+
+**Filed as 15, not the mechanically-next 14**: at this piece's `git merge origin/main` (`26f3154`),
+§12e ran through Amendment 13 only; Amendment 14 is reserved for the concurrent P3b test-names
+branch per the coordinator's instruction of 2026-09-18. Every pin names its commit; where the cited
+text is not on main, the commit named is the branch commit that carries it.
+
+| id | status | reference |
+| --- | --- | --- |
+| runner | recorded | `engine/tests/admission_p4_corpus.rs:661-664 @ df31363d1fdfa6075566c347d62e6b54599de917 sha256:cf524a0d4596c8ee9b42d7233077b69ab6fb68c97e357090ea14c459860569fa` |
+| results | recorded | `engine/ADMISSION-RESULTS.md:1 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:2eb8d0f50a9be0a1eaec1a11304dec4b8206f5bf97ce0fef8afd055511533ca0` |
+| deviation-M-4 | DEVIATION | results row `engine/ADMISSION-RESULTS.md:26 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:2b24ca6d4a94386745787677c279fb64055372749a268e9b789064bfa74eb877` vs §4 mutation table, M-4 |
+| not-comparable | recorded | rows `engine/ADMISSION-RESULTS.md:27-28 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:f6d9c3960045a8f4cb042fd3bd0cbf35c40c3eeb545c3120da58227e51b2dd6e`; notes `engine/ADMISSION-RESULTS.md:47-48 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:db61f52a29496a49dc296d8e708b770cc23ccc870732519361bd3b99e2665f7e` |
+| predictions | recorded | `engine/ADMISSION-RESULTS.md:59-68 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:8a1620cd2a5cccce058a82bc15c745cad082d3020209e5c3612581cd9ff3c7f4` |
+| G-A5 | recorded | `engine/ADMISSION-RESULTS.md:50-57 @ d2a5d39400b0244d795db5f71c84058773828b7f sha256:8db618538cddb9f674dc6cb2e8fdd96f8f1df5372d7aab53fd61c3c44680f9fa` |
+| G-A6 | recorded | `git diff --name-only origin/main...d2a5d39400b0244d795db5f71c84058773828b7f` -- 3 files (`engine/ADMISSION-PREREGISTRATION.md` appended, `engine/ADMISSION-RESULTS.md` new, `engine/tests/admission_p4_corpus.rs` new), no existing test file touched; `cargo test --workspace --locked @ d2a5d39400b0244d795db5f71c84058773828b7f` -- rc 0, 647 passed / 0 failed / 39 ignored, 0 warning lines |
+| attempt 1 | recorded | `state/gate-log.json` record 89 (on `origin/main`; not yet present on this branch's own copy) |
+
+**Read this amendment first.**
+
+### Amendment 18 -- P4 record, corrected (2026-09-19, appended; the architect's shape after gate-log record 95)
+
+**Written after the P4 run's results were seen.** Filed as 18, not the mechanically-next 16: 16 and 17 are carried by cut/briefa-p5, 14 by cut/briefa-p3b-test-names, per the coordinator's numbering of 2026-09-19; pins name their commits, and where the cited text is not on main the commit named is the branch commit that carries it. Amendment 15 was appended at bfda11e, restored at 2f6d399 and re-appended at 5d38ce0; append-only is proved against 26f3154, not the immediate parent. Classes: 1 (written after results; a withdrawal or narrowing row), 2 (deviation, Scope not edited), 3 (pointer rows).
+
+| id | status | reference |
+| --- | --- | --- |
+| runner (corrected) | recorded | `engine/tests/admission_p4_corpus.rs:753-756 @ f1b9c85d798ca9e4fc0409aea548ef887674bbb1 sha256:cf524a0d4596c8ee9b42d7233077b69ab6fb68c97e357090ea14c459860569fa` |
+| results (regenerated) | recorded | `engine/ADMISSION-RESULTS.md:1 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:2eb8d0f50a9be0a1eaec1a11304dec4b8206f5bf97ce0fef8afd055511533ca0` |
+| table | recorded | `engine/ADMISSION-RESULTS.md:10-28 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:697101152d70ef2d5d323826397cae6fc668c7fa70f0a3ffac60ab339953adf4` |
+| deviation-M-4 | DEVIATION | row `engine/ADMISSION-RESULTS.md:26 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:722cda4ce4d9a01329656e36d3b54ed1ecf1f727b11db4c208afae428479dae8` vs §4 mutation table, M-4 |
+| not-comparable | recorded | rows `engine/ADMISSION-RESULTS.md:27-28 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:3e80f2293b3b70e4e053dd1d9f1e6f93229ff3b7abdccb876c59a3ccc24fe0ad`; notes `engine/ADMISSION-RESULTS.md:47-48 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:533960730d26f3230dfe5c007bca99ab2ea4e834b3b925f60c70b8bf9764d6bb` |
+| unrun components (#3, #8 boundary 8) | unrun — reason | rows `engine/ADMISSION-RESULTS.md:14 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:1edd6201b0c2c70fddd652c273c2580941d97ea57832651cd9696ab561ebe570` (#3), `engine/ADMISSION-RESULTS.md:19 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:da0009efa2cb73e025aa963669e2682678d721ec381b3685ea506af36311eb87` (#8); notes `engine/ADMISSION-RESULTS.md:34 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:5284feac0d7ab9dea5764f83e3c0078c1e5a6d9119b93fa0165d3cbf47c5ce34` (#3), `engine/ADMISSION-RESULTS.md:39 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:61c6c6bbddf3de0a7458f7df0f886da2212163683828170095495c2abe87f054` (#8); predictions line `engine/ADMISSION-RESULTS.md:69 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:dd6137893236262fb53efb4791a49be2e3fbb373ff9f6e5c7521343064e0506d` vs §3 rows 3, 8 |
+| retention | recorded | row `engine/ADMISSION-RESULTS.md:14 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:1edd6201b0c2c70fddd652c273c2580941d97ea57832651cd9696ab561ebe570` vs §3 row 3 |
+| predictions | recorded | `engine/ADMISSION-RESULTS.md:59-69 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:304aefecf560df7f328e12ce9fc26c2eac89d794fe098f92e44244dc38707968` |
+| G-A5 | recorded | table + totals pins above (`engine/ADMISSION-RESULTS.md:50-57 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:8db618538cddb9f674dc6cb2e8fdd96f8f1df5372d7aab53fd61c3c44680f9fa`) vs §12b |
+| G-A6 | recorded | `git diff --name-only origin/main...ff1b48168f2d15ef8e56613113c0bb11a5d01556` -- 3 files (`engine/ADMISSION-PREREGISTRATION.md` appended, `engine/ADMISSION-RESULTS.md` new, `engine/tests/admission_p4_corpus.rs` new), no existing test file touched; `cargo test --workspace --locked @ ff1b48168f2d15ef8e56613113c0bb11a5d01556` -- rc 0, 647 passed / 0 failed / 39 ignored, 0 warning lines |
+| superseded | Amendment 15's `runner`, `results`, `deviation-M-4`, `not-comparable`, `predictions`, `G-A5`, `G-A6` rows | superseded by the rows above; and Amendment 15's first line, which lacks the written-after statement this amendment's first line carries |
+| attempts | recorded | `state/gate-log.json` records 89, 95, 96 and this round's (on `origin/main`) |
+
+**Read this amendment first, for Amendments 1-18.**
+
+### Amendment 20 -- the architect's reduction under the record cap (2026-09-19, appended)
+
+**Written after the attempt-3 gate's findings were seen.** Filed as 20: 19 is carried by `cut/briefa-p5`, per the coordinator's numbering of 2026-09-19. Classes: **1** (a gate round's findings are its results -- round 15, item 1, clause (g)); **3** (pointer and cite rows, `docs/PREREGISTRATION-TEMPLATE.md:110-114`). Rows only, under `state/directives/2026-09-18-record-cap.md`'s point (3); pins name their commits, and where the cited text is not on main the commit named is the branch commit that carries it. Amendments 16, 17 and 19 are `cut/briefa-p5`'s and are not in this file.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 18's closing line | narrowed: it resolves Amendment 15's rows and this branch's P4 record only, and says nothing about Amendments 16 and 17 | Amendment 18, closing line |
+| Amendment 18's class line, class 2 | corrected: class 2 is the deviation class at `docs/PREREGISTRATION-TEMPLATE.md:106-109` -- the prediction is never edited to match; "Scope not edited" is class 6's gloss (`docs/PREREGISTRATION-TEMPLATE.md:125-131`) and is withdrawn | Amendment 18, preamble |
+| `ADMISSION-RESULTS.md` row #8's verdict label | recorded defect, not regenerated here: the label names retention among the components compared and §3 row 8 registers no retained declared order; the row's own note is the authoritative record of what was compared, and the label is built from a fixed string rather than that note's list (`engine/tests/admission_p4_corpus.rs`, `verdict_label`) | row `engine/ADMISSION-RESULTS.md:19 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:da0009efa2cb73e025aa963669e2682678d721ec381b3685ea506af36311eb87`; note `engine/ADMISSION-RESULTS.md:39 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:61c6c6bbddf3de0a7458f7df0f886da2212163683828170095495c2abe87f054` |
+
+**Read this amendment first.**
