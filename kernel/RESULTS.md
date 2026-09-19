@@ -4671,3 +4671,193 @@ and 5 GB scored harnesses. `engine/tests/import_layout_fixtures.rs`,
 — ADR-017 §12. `kernel/tests/first_batch_factorial.rs` — extended with
 `cancellation_holds_with_pruning_in_the_path_on_h5` (phase 8), reusing that file's own `FileId::H5` and
 cancellation mechanism unchanged.
+
+
+## The drill — clean-directory clone, 2026-09-19
+
+A clean-directory clone (`D:\drill\spatial-ide-2026-09-19`, not the dev checkout's junction target),
+fixtures regenerated from `kernel/FIXTURES.md`, the full Rust suite (workspace + the ignored tier),
+the shell build/test, and the release builds. No timing number appears anywhere below — the repo's
+own rule (docs/01) is no perf claims without docs/08 measurement, and this drill makes none.
+
+### Clone and machine
+
+- Clone commit: `14c86128eca8ef6f1eb47f29df110cfc15a5d3b8` (origin/main at clone time; matches the
+  head of this same repository's `main` branch as observed at dispatch).
+- Machine: Windows 10 Pro 22H2 (build 19045). `rustc --version`: `rustc 1.97.1 (8bab26f4f 2026-07-14)`.
+  `cargo --version`: `cargo 1.97.1 (c980f4866 2026-06-30)`. `node --version`: `v24.18.1`. `npm --version`:
+  `11.16.0`.
+- Machine-rule disclosure: before starting, `tasklist /FI "IMAGENAME eq cargo.exe"` and
+  `tasklist /FI "IMAGENAME eq rustc.exe"` both returned "INFO: No tasks are running which match the
+  specified criteria." — clean on the first poll, so no repeat-poll loop was needed. One cargo
+  command was held at a time throughout (confirmed clean before every subsequent cargo invocation).
+  D: free space was checked repeatedly across the drill and never dropped below roughly 363 GB (start
+  ~415 GB per dispatch, end 390,614,978,560 B / 363.8 GB) — well above the 40 GiB stop floor.
+- `CARGO_TARGET_DIR` was not set; the clone built into its own `target/`. No junctions were created.
+
+### Step 2 — fixture regeneration (`kernel/FIXTURES.md`)
+
+`kernel/FIXTURES.md` documents exactly one fixture in scope: `parcels-5gb.parquet`. Its own
+"Regenerate" command was run verbatim: `cargo test --release -p spatial-kernel --test scale_pass --
+--ignored --nocapture`.
+
+- Generated: `target/slice-evidence/scale-pass/parcels-5gb.parquet` — size **5,004,376,705 B**,
+  SHA-256 **`5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788`**. Both figures match
+  FIXTURES.md's declared values exactly. The hash was computed independently with `sha256sum` on the
+  written file (not read from the test's own internal report), so this is a byte-for-byte-verified
+  match, not merely a repeated claim.
+- **Finding.** The regenerate command itself, run exactly as FIXTURES.md prescribes, exits with test
+  FAILURES on this machine even though the fixture it produces is correct:
+  - `measure_publish_at_five_gigabytes` FAILED immediately: `kernel/tests/scale_pass.rs:860` panicked
+    "the 5 GB fixture is absent ... Run `measure_the_five_gigabyte_scale_pass` first; this phase
+    deliberately does not generate one, so the two halves cannot measure different files." This is a
+    race inherent in the documented command: `cargo test ... --ignored` runs both ignored tests in
+    `scale_pass.rs` concurrently by default, and this half started before the generate half had
+    written anything.
+  - `measure_the_five_gigabyte_scale_pass` (the generate phase) also FAILED, but only after writing
+    all 3,300,000 features and reaching the fixture's final, correct byte count: the console log
+    shows `[generate] 3284992/3300000 features, 4980604339 B` as the last progress line, and the file
+    on disk was already 5,004,376,705 B (the exact final size) by the time the failure was observed.
+    `kernel\tests\scale_pass.rs:610` then panicked: "the generate-5gb watchdog fired; this phase is
+    unmeasured and is not re-run", with the watchdog's own line reading "[watchdog] phase
+    `generate-5gb` exceeded its declared silence ceiling after 101.7 s — firing the cancel token,
+    then aborting after the declared 60 s grace." The watchdog fired during a post-write phase (on
+    this clone, on D:, cold — no warm OS cache), not during the write itself; the fixture data is
+    intact and hash-verified regardless.
+  - Net: `test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 1 filtered out` for this
+    binary. `cargo`'s own exit code was not captured as a distinct number (the invocation was piped
+    through `tee` for live monitoring, which masked `cargo`'s own `$?`); the log's own
+    "error: test failed, to rerun pass ..." line and the standard Rust test-harness convention
+    indicate a non-zero exit, consistent with rc 101, but that exact number was not independently
+    verified and is not claimed as measured.
+
+### Step 3a — the full workspace test suite
+
+`cargo test --workspace --locked`: **rc=0**. 65 test binaries printed a `test result:` summary line.
+Summed across all of them: **647 passed, 0 failed, 38 ignored, 0 measured, 0 filtered out**. `grep -c
+"^warning:"` over the complete captured output: **0**.
+
+### Step 3b — the ignored tests, exactly as the brief's literal command
+
+`cargo test --workspace --locked -- --ignored`: **rc=101**. Cargo's own default (fail-fast across
+targets) stopped the whole invocation at the first binary with a failing ignored test. Eleven binaries
+before that point reported `0 tests` (every ignored test in them, if any, was filtered by the run's
+own `1 filtered out`/etc. counts — none had non-filtered ignored tests at that position in the build
+order). The twelfth, `engine/tests/import_layout_5gb_digest.rs`, ran its one ignored test,
+`the_5gb_cross_file_digest_correctness_pass`, which panicked (`import_layout_5gb_digest.rs:368`):
+"this phase's digests are compared for exact equality across files. Run with --release." — a stated,
+named reason (a machine/build-mode condition, not a missing fixture; the 5 GB fixture existed by this
+point). Totals for this literal run: 0 passed, 1 failed, 0 ignored, 0 measured. 0 warning lines.
+
+### Step 3c — a supplementary, non-literal diagnostic pass (beyond the brief's own command)
+
+The brief also asks this piece to "record the same, per binary where a binary fails, and which
+ignored tests were skipped for a stated reason" — the literal command in 3b cannot produce that by
+itself, since cargo's own fail-fast stops at the first failure. To get that fuller picture, an
+additional pass was run: `cargo test --workspace --locked --no-fail-fast -- --ignored`. This is
+**not** the literal command the brief names in step 3; its result is reported separately and does not
+replace 3b's rc=101, which stands as recorded above.
+
+This pass reached 23 binaries that printed a `test result:` summary line (covering the workspace from
+its build-order start through `lod_tier_cancellation.rs`, then continuing past the point described
+below through `lod_tier_preflight.rs`, `planner_seam.rs`, `predicate_admission.rs`,
+`publish_stream.rs`, `row_group_seam.rs`, and into the header of `session_identity.rs`, where it was
+cut short — see below). Passed: **2** (`two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file`
+in `lod_tier_builder.rs`; `cancel_observed_within_the_declared_ceiling_at_5gb` in
+`lod_tier_cancellation.rs`, which the console flagged as running over 60 s but which completed `ok`).
+Named FAILED tests with a stated reason, each quoted from the panic the run captured:
+
+- `the_5gb_cross_file_digest_correctness_pass` (`import_layout_5gb_digest.rs:368`) — "this phase's
+  digests are compared for exact equality across files. Run with --release."
+- `generate_the_5gb_fixture_set` (`import_layout_5gb_fixtures.rs:310`) — "this phase writes/verifies
+  fixtures other phases score against; a debug build's numbers are not measurements. Run with
+  --release."
+- `the_cross_file_digest_correctness_pass` (`import_layout_digest.rs:428`) — "this phase's digests
+  are compared for exact equality across files; nothing here is a timing, but every other pass in
+  this family refuses a debug build on principle. Run with --release."
+- `generate_the_145mb_fixture_matrix` (`import_layout_fixtures.rs:237`) — "this phase writes fixtures
+  other phases hash and time; a debug build's numbers (even the elapsed-time-only ones reported here)
+  are not measurements. Run with --release."
+- `the_5gb_ladder_under_disk_discipline` (`lod_tier_builder.rs:1163`) — "refusing to start below the
+  declared floor: 33772789760 B free (§5, I6)". This is a real, currently-true condition on this
+  machine's **C:** drive (31.5 GB free at the time, independently confirmed with `fsutil volume
+  diskfree C:`), not D: where the clone and its fixtures live — D: stayed at roughly 364–369 GB free
+  throughout this whole pass. This is the product's own disk-floor guard correctly refusing on a low
+  system drive; it is not a violation of this drill's own D:-monitoring rule and is recorded here as
+  a machine-condition finding, not a fixture or build defect.
+- `wall_time_arm_p_over_parcels_5gb`, `the_5gb_ladder_outcomes_o1_to_o4`,
+  `wall_time_arm_s_over_parcels_5gb` — all three printed `... FAILED` inside `lod_tier_measurements.rs`,
+  but that binary's process was terminated (see next paragraph) before it printed its own failures
+  summary, so their individual panic text was not captured this session.
+
+**Finding — a fourth test in the same binary lacks its siblings' release-only guard.** The fourth test
+in `lod_tier_measurements.rs`, `wall_time_arm_s_and_arm_p_over_polygons_100k`, does not fail fast the
+way its three siblings above do. It ran for over 90 minutes of wall time under this drill's
+monitoring. Repeated checks (roughly every 1–3 minutes, over 30 separate samples) of its process's
+`UserModeTime` via `wmic process where "ProcessId=... get UserModeTime"` showed continuously
+increasing CPU time at every single check — it was never observed stalled, and its own file activity
+(the test binary's own `target\...\deps` directory) showed matching mtimes. This is genuine,
+unbounded (no code-level timeout in this test) computation in an unoptimized debug build, not a hang.
+Because it never reached a natural stopping point and the drill needed to proceed, its process (and,
+inadvertently, the parent `cargo` process orchestrating this diagnostic pass) was terminated by the
+tester after 90+ minutes. Its own outcome is therefore **inconclusive — terminated by the tester,
+never evaluated to a pass or fail by the test itself** — it must not be read as a failure the codebase
+reported. After the termination, `cargo` (per `--no-fail-fast`) correctly logged "process didn't exit
+successfully ... (exit code: 1)" for that one binary and moved on to the next binaries in the
+workspace, which is why this pass's own five more binaries after it (all `0 tests`) are in the
+coverage list above; the diagnostic pass itself was then cut short mid-way through `session_identity.rs`
+by the same termination action, so **binaries after that point in workspace build order were not
+covered by either ignored-test pass** and this drill makes no claim about them. This pass's own trailing
+line was `DRILL_RC=1`, reflecting the tester's termination, not a natural exit code from `cargo`.
+
+### Step 4 — the shell build/test (`frontends/shell`)
+
+- `npm ci`: rc=0. "added 203 packages, and audited 204 packages in 22s". **Finding**: npm reported
+  "5 vulnerabilities (3 moderate, 1 high, 1 critical)" in the shell's dependency tree — recorded
+  plainly, not remediated by this drill.
+- `npm run build` (run alone, first, per `package.json`'s literal script text): **rc=1**. It failed at
+  `scripts/generateNotice.mjs`: "D:\...\renderer\bundle-viewer\dist-metafile.json does not exist --
+  run `npm run build` in renderer/bundle-viewer first." This is a genuine precondition-ordering
+  finding: `frontends/shell/package.json`'s own `"pretest": "npm --prefix ../../renderer/bundle-viewer
+  run build && npm run build"` states the correct order (bundle-viewer before shell), but the shell's
+  bare `"build"` script does not enforce or document that order itself — running it standalone, as a
+  reader following only the `"build"` script's own text would, fails.
+- Recovery, following `package.json`'s own `pretest` order: `renderer/bundle-viewer`: `npm ci` rc=0
+  ("added 31 packages, and audited 32 packages in 7s", no vulnerabilities reported); `npm run build`
+  rc=0 (writes `dist/index.html`, `dist/app.js`, `dist/NOTICE.txt`, `dist-metafile.json`). Then
+  `frontends/shell`: `npm run build` rc=0 (two `vite build` passes plus NOTICE regeneration, per the
+  script's own `tsc --noEmit && vite build && npm run generate:notice && vite build`).
+- `npm test` (triggers `pretest` automatically, rebuilding bundle-viewer and the shell, then
+  `vitest run`): **rc=0**. **Test Files: 70 passed (70). Tests: 1024 passed (1024).**
+
+### Step 5 — the release builds
+
+- `cargo build --release --workspace --locked`: **rc=0**. `grep -c "^warning:"`: **0**.
+- The Tauri release build, run exactly as `.github/workflows/tauri-build.yml`'s "tauri build (NSIS,
+  build-only, no signing)" job runs it: `renderer/bundle-viewer` (`npm ci`, `npm run build` — already
+  done and verified above, rc=0 both), `frontends/shell` (`npm ci` — already done, rc=0), then
+  `npm run tauri build` in `frontends/shell`: **rc=0**. `grep -c "^warning:"` over its full captured
+  output: **0**. NSIS was present on this machine (Tauri's own cached copy at
+  `%LOCALAPPDATA%\tauri\NSIS\Bin\makensis.exe`, not a system-wide install), so nothing had to be
+  recorded as "could not run".
+  - Installer: `frontends/shell/src-tauri/target/release/bundle/nsis/Spatial IDE_0.1.0_x64-setup.exe`
+  - Size: **10,599,293 B**
+  - SHA-256: **`20b00664c10839afa9fd3ebbe86c3d8b62db694f1ff577629e47bf646027b961`** (computed independently
+    with `sha256sum` on the built file)
+
+### Tracked-file state and what was restored
+
+`engine/ADMISSION-RESULTS.md`, named in the brief as a file some ignored tests rewrite, does not exist
+on this branch (`main` at the clone's commit) — it is only present on an unmerged feature branch/
+worktree elsewhere in this repository's history, not here. `git status --porcelain` in the clone was
+clean (no output) both mid-drill and at the end — no tracked file needed restoring with `git checkout
+--`.
+
+### What could not be measured or run, stated plainly
+
+- No timing, duration, or rate number is recorded anywhere above, per this drill's own scope.
+- `wall_time_arm_s_and_arm_p_over_polygons_100k`'s own pass/fail outcome could not be obtained within
+  this session; see the finding above.
+- Binaries in workspace build order after `session_identity.rs` were not reached by either ignored-test
+  pass in this session (3b stopped at the twelfth binary by cargo's own fail-fast; 3c was cut short by
+  the tester's termination action) — no claim is made about their ignored tests.
