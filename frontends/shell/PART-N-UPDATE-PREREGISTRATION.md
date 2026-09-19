@@ -13,3 +13,5 @@ Out-of-scope: no code, no wire, no ADR, no security, no guarantee; the operator-
 Budget: 24 of 40 lines across 1 file (git diff --numstat origin/main...HEAD, the form excluded).
 
 Correction round 1 (reviewer attempt 1, state/gate-log.json record 102): N2's and N6's pointers corrected (template §10 class 3); the two row labels added to N3's judgement clause (class 7, a sight-list addition); the preamble's third file and its known-gap sentence removed; budget after this round: 25 of 40 lines across 1 file (git diff --numstat origin/main...HEAD, the form excluded); commit 9d8c52b.
+
+Superseded (round 12 clause (e)): the Budget line above, 24 of 40, by the correction-round line, 25 of 40. Landing after reviewer attempt 2 PASS (state/gate-log.json record 103): the should-fix S1 phrase and nits 1 and 2 applied on lines already in the diff, budget unchanged at 25 of 40 (git diff --numstat origin/main...HEAD, the form excluded); no claim elsewhere changes; commit 7beada4.
