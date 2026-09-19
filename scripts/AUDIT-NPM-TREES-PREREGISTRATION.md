@@ -11,3 +11,5 @@ Out-of-scope: no dependency is added, removed or bumped; no PACKAGE_DECISIONS or
 ```
 
 Deviation (template section 10 classes 2 and 6, before code): the regeneration proved DEPENDENCY-LICENSES.md carries a hand-maintained section (heading line beginning ## Third-party data terms, tracked at 4455fc3, no script emits it); Scope widens to the script's report writer so that section is preserved verbatim and the run fails closed when it cannot be found; budget raised to <= 60 non-generated lines; the section's bytes are not edited; no ADR, wire, security or guarantee text.
+
+Budget: 44 of 60 non-generated lines across 1 file (git diff --numstat origin/main...HEAD, the report and the form excluded).
