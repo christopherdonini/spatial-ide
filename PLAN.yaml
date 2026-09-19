@@ -1219,7 +1219,7 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 6
     depends_on: [drill-clean-clone, site-bugs-first]
     needs_human: {kind: none, minutes: 0}
