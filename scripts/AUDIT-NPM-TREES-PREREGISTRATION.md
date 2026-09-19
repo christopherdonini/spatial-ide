@@ -13,3 +13,5 @@ Out-of-scope: no dependency is added, removed or bumped; no PACKAGE_DECISIONS or
 Deviation (template section 10 classes 2 and 6, before code): the regeneration proved DEPENDENCY-LICENSES.md carries a hand-maintained section (heading line beginning ## Third-party data terms, tracked at 4455fc3, no script emits it); Scope widens to the script's report writer so that section is preserved verbatim and the run fails closed when it cannot be found; budget raised to <= 60 non-generated lines; the section's bytes are not edited; no ADR, wire, security or guarantee text.
 
 Budget: 44 of 60 non-generated lines across 1 file (git diff --numstat origin/main...HEAD, the report and the form excluded).
+
+Landing after reviewer attempt 1 PASS (state/gate-log.json record 104): should-fixes S2 and S3 and nits N4 and N5 applied in the writer, the report regenerated with the preserved section unchanged (sha256 5533202c62f18449fd64735320b409c0cfa3277fc9f1a3306f1bfcddb2bbb9e1 on both sides); budget after landing: 52 of 60 non-generated lines across 1 file (git diff --numstat origin/main...HEAD, the form and the report excluded); no claim elsewhere changes; commit 862572e.
