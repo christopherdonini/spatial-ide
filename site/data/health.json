@@ -1,61 +1,104 @@
 {
-  "generated_at": "2026-09-18T23:54:11.170Z",
+  "generated_at": "2026-09-19T04:38:18.647Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\briefa-p6-describe-fields\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\briefa-p6-describe-fields\\site\\data\\plan.json differs from a fresh generation"
+      "node \"site-design-v1\": recorded status \"blocked\" does not agree with the derivation (\"ready\")",
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 31436615680,
+        "bytes": 29992259584,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 413716824064,
+        "bytes": 390613671936,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 2,
     "by_name": {
-      "cargo": 2,
-      "node": 1,
+      "cargo": 0,
+      "node": 2,
       "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [
     {
+      "id": "accept-adr-013-instance",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
+      "id": "accept-adr-015-a1",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
+      "id": "accept-adr-016-a1",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
+      "id": "accept-adr-028-qualification",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
+      "id": "accept-adr-032",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
+      "id": "briefa-p6-part-n-acceptances",
+      "kind": "sitting",
+      "minutes": 60,
+      "opened": "2026-09-18",
+      "age_days": 1
+    },
+    {
       "id": "decision-prepare-managed-selection-default",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-18",
-      "age_days": 0
+      "age_days": 1
     },
     {
       "id": "decision-watcher-scheduling",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-18",
-      "age_days": 0
+      "age_days": 1
     },
     {
       "id": "decision-generated-outputs-merge-strategy",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-19",
-      "age_days": -1
+      "age_days": 0
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 33
+    "n": 39
   },
   "gate_first_pass": {
     "present": true,

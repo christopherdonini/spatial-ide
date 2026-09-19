@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T23:54:15.031Z",
-  "plan_hash": "5991154dbc85fa7a472a308f7dfff691b4dfc2fd81192130c97473316084b0ca",
+  "generated_at": "2026-09-19T04:38:20.545Z",
+  "plan_hash": "c08303020ed35e6c570180d571e98b268c0ef3635425538044fb86fbcd110816",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1274,7 +1274,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 3,
       "depends_on": [],
       "needs_human": {
@@ -1288,13 +1288,17 @@
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #91 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [
         101
       ],
-      "summary": "The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
+      "summary": "DONE 2026-09-19 at PR #91 (the click; landed under the record cap after attempt 5 with the reduced Amendment 9; Amendments 10 and 11 by the human's round-16 item 5 and the line-912 supersession after PR #90). The human, round 10: 'verify-quotes lands on main as its own tooling PR, reviewer-gated, wired into CI beside verify:cites, and joins the gate checklists: a quote marked verbatim that does not match its source byte-for-byte is a gate failure by name.' Pilot of the worker's configured default (sonnet observed); 385 lines crosses section 21c so the architect gate is added per section 21b's mid-piece clause; one round to close the normalization gaps (more than a third of main's existing quotes flagged on the first run) before CI wiring",
       "dates": {
         "opened": "2026-09-17",
-        "done": null
+        "done": "2026-09-19"
       }
     },
     {
@@ -1472,7 +1476,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 5,
       "depends_on": [
         "briefa-p3-p6"
@@ -1483,19 +1487,23 @@
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p4"
+        "pr": 95
       },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #95 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [
         110,
         113
       ],
-      "summary": "Reviewer attempt 1 FAIL 2026-09-18 (gate-log 89; entry 113): the corpus result reproduced end to end, four blockers of record form and gate mechanism only; one correction round (the record re-appended whole under the unmerged-append revert, the runner's #[test] placement, the should-fixes batched), then both gates at attempt 2 -- the architect alongside the reviewer because the runner crosses AUTONOMY section 21c's bound (the custodian's dispatch had named the reviewer alone). Earlier: Dispatched 2026-09-18 on the human's word (entry 110): a tester runs every corpus and mutation file through the engine's real admission path, hash-verified before and after, and writes the admission table to engine/ADMISSION-RESULTS.md as generated evidence; the P4 record is Amendment 15 of the preregistration (numbered 3 at dispatch), references only (the record cap); correctness only, no timing",
+      "summary": "DONE 2026-09-19 at PR #95 (the click; attempt 3 reviewer PASS, record 101; the architect's reduction Amendment 20; row 8's verdict label to the next regeneration). Reviewer attempt 1 FAIL 2026-09-18 (gate-log 89; entry 113): the corpus result reproduced end to end, four blockers of record form and gate mechanism only; one correction round (the record re-appended whole under the unmerged-append revert, the runner's #[test] placement, the should-fixes batched), then both gates at attempt 2 -- the architect alongside the reviewer because the runner crosses AUTONOMY section 21c's bound (the custodian's dispatch had named the reviewer alone). Earlier: Dispatched 2026-09-18 on the human's word (entry 110): a tester runs every corpus and mutation file through the engine's real admission path, hash-verified before and after, and writes the admission table to engine/ADMISSION-RESULTS.md as generated evidence; the P4 record is Amendment 15 of the preregistration (numbered 3 at dispatch), references only (the record cap); correctness only, no timing",
       "dates": {
         "opened": "2026-09-18",
-        "done": null
+        "done": "2026-09-19"
       }
     },
     {
@@ -1504,7 +1512,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 5,
       "depends_on": [
         "briefa-p3-p6",
@@ -1516,18 +1524,22 @@
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/briefa-p5"
+        "pr": 94
       },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #94 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [
         110
       ],
-      "summary": "Dispatched 2026-09-18 on the human's word (entry 110): a worker builds the tests carrying the claims under the existing preregistration (section 6's declared instruments only); the P5 record is Amendment 4 of the engine preregistration and Amendment 17 of the P3b preregistration, references only; reviewer and architect gates",
+      "summary": "DONE 2026-09-19 at PR #94 (the click; reviewer attempt 2 PASS, record 99; the architect's reduction Amendments 17/19 and the narrowing Amendment 19). Dispatched 2026-09-18 on the human's word (entry 110): a worker builds the tests carrying the claims under the existing preregistration (section 6's declared instruments only); the P5 record is Amendment 4 of the engine preregistration and Amendment 17 of the P3b preregistration, references only; reviewer and architect gates",
       "dates": {
         "opened": "2026-09-18",
-        "done": null
+        "done": "2026-09-19"
       }
     },
     {
@@ -1568,7 +1580,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 5,
       "depends_on": [
         "briefa-p3-p6"
@@ -1584,14 +1596,18 @@
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #93 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [
         112,
         113
       ],
-      "summary": "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- the three fields round 16, item 1 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)",
+      "summary": "DONE 2026-09-19 at PR #93 (the click; attempt 3 architect PASS / reviewer FAIL on one line, reduced as Amendment 5; the N3 row, the Part N pin sentence and the label wording hand off to briefa-p6-part-n-acceptances). Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- the three fields round 16, item 1 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)",
       "dates": {
         "opened": "2026-09-18",
-        "done": null
+        "done": "2026-09-19"
       }
     },
     {
@@ -1900,7 +1916,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": 3,
       "depends_on": [
         "polish-engine-lease-class",
@@ -1911,15 +1927,21 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "pr": 96
+      },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #96 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [],
-      "summary": "The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)",
+      "summary": "DONE 2026-09-19 at PR #96 (docs-only, merged under delegation; kernel/RESULTS.md's dated section; the four findings are entry 115). The drill: a clean-directory clone, fixtures regenerated from kernel/FIXTURES.md, the full suite, a release build; the result recorded. Machine/disk-sequenced AFTER the sitting (2026-09-14): target/debug is held for the sitting launch, then deleted to re-fund the drill (the debug cache is regenerable, the human 2026-09-14). One heavy run at a time (the quiet-machine mechanics rule)",
       "dates": {
-        "opened": null,
-        "done": null
+        "opened": "2026-09-19",
+        "done": "2026-09-19"
       }
     },
     {
@@ -2135,7 +2157,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 5,
       "depends_on": [
         "adr-029-operation-lifecycle",
@@ -2152,15 +2174,19 @@
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #92 merged 2026-09-19 (the click); felt_verdict false, done on merge"
+      },
       "entries": [
         92,
         111,
         112
       ],
-      "summary": "PR #92 open for the click (2026-09-18): the architect's reduced README applied byte-exact at 2bc9756 (sha256 c1c6f705 over 273 lines). RULED 2026-09-18 (round 16, item 2): read 2 FAIL, STOPPED under Rule 7 (gate-log 80, 86) -- the architect reduces the README to the facts read 2 verified clean and the spike lands with the reduced record by a PR for the click; done on merge. What G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path and is fine-grained; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB reports an estimated denominator. The route: deferred to Brief B B2 (round 16, item 3; node decision-adr-029-scan-progress-route). Earlier: RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
+      "summary": "DONE 2026-09-19 at PR #92 (the click; the architect's reduced README, round 16 item 2). PR #92 open for the click (2026-09-18): the architect's reduced README applied byte-exact at 2bc9756 (sha256 c1c6f705 over 273 lines). RULED 2026-09-18 (round 16, item 2): read 2 FAIL, STOPPED under Rule 7 (gate-log 80, 86) -- the architect reduces the README to the facts read 2 verified clean and the spike lands with the reduced record by a PR for the click; done on merge. What G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path and is fine-grained; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB reports an estimated denominator. The route: deferred to Brief B B2 (round 16, item 3; node decision-adr-029-scan-progress-route). Earlier: RULED 2026-09-14 (question set C, C2): G1, first and blocking -- verify against the vendored duckdb crate that a monotone scan-progress reading in whole declared units exists; if none does, the quantity question RETURNS to the human rather than shipping a non-monotone one. Cargo-heavy; machine-sequenced after the sitting (one heavy run at a time). Its result returns to ADR-029 and, if it bounces, to the human",
       "dates": {
         "opened": "2026-09-18",
-        "done": null
+        "done": "2026-09-19"
       }
     },
     {
