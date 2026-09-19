@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-19T04:39:13.513Z",
-  "plan_hash": "d8ded6172d3976b813033de7ca52c0029f9acbdac36544ac3b10f6eb15974460",
+  "generated_at": "2026-09-19T04:58:34.336Z",
+  "plan_hash": "9f67dc42511d95dad41bd4b39f8028ed96fec53a390762c9328d8703d298e32f",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -62,7 +62,7 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 90,
+    "total_minutes": 100,
     "by_kind": {
       "click": [
         {
@@ -181,6 +181,27 @@
             "done": null
           },
           "summary": "Owner: briefb-b2-save-reopen -- decided at B2's preregistration sight (state/drafts/post-tag/DRAFT-3-BRIEF-B-recipe-replay-publish.md's Save vs Prepare amendment)."
+        },
+        {
+          "id": "decision-shell-dependency-audit-2026-09-19",
+          "title": "The shell's npm vulnerabilities (entry 115 (c), the human's ruling of 2026-09-19): nothing ships, every fix is a major bump with two MPL-2.0 packages -- draft PR #97 carries the applied fix for the human's word",
+          "lane": "shell",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 1,
+          "budget_minutes": 0,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 10
+          },
+          "evidence": {
+            "pr": 97
+          },
+          "dates": {
+            "opened": "2026-09-19",
+            "done": null
+          },
+          "summary": "DECISIONS-PENDING.md entry 116: all six advisories dev-only or build-only by the notice generator's shipped-set definition; no patch-level fix exists; the forced fix (vitest 5, vite-node 6, esbuild 0.28) adds ten packages, two MPL-2.0, and breaks the shell's typecheck at two test call sites; the viewer's bump alone is clean. Options A (approve the majors + the licence decisions), B (accept the dev-only risk with a review date), C (the viewer's bump now, B for the shell) -- the custodian reads C. The licence audit's NPM_TREES omission of frontends/shell is a separate finding"
         },
         {
           "id": "decision-watcher-scheduling",

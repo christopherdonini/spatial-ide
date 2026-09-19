@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d8ded6172d3976b813033de7ca52c0029f9acbdac36544ac3b10f6eb15974460`) at `2026-09-19T04:39:13.513Z`.
+Generated from `PLAN.yaml` (sha256 `9f67dc42511d95dad41bd4b39f8028ed96fec53a390762c9328d8703d298e32f`) at `2026-09-19T04:58:34.336Z`.
 
 ## 1. Next
 
@@ -11,7 +11,7 @@ Generated from `PLAN.yaml` (sha256 `d8ded6172d3976b813033de7ca52c0029f9acbdac365
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration (lane `engine`, order 6, budget 480 min)
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) (lane `governance`, order 6, budget 300 min)
 
-## 3. Waiting on the human (total: 90 min)
+## 3. Waiting on the human (total: 100 min)
 
 ### click
 
@@ -24,6 +24,7 @@ Generated from `PLAN.yaml` (sha256 `d8ded6172d3976b813033de7ca52c0029f9acbdac365
 ### ruling
 
 - **decision-prepare-managed-selection-default** — Whether "Prepare" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight. (5 min)
+- **decision-shell-dependency-audit-2026-09-19** — The shell's npm vulnerabilities (entry 115 (c), the human's ruling of 2026-09-19): nothing ships, every fix is a major bump with two MPL-2.0 packages -- draft PR #97 carries the applied fix for the human's word (10 min)
 - **decision-watcher-scheduling** — Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged). (5 min)
 - **decision-generated-outputs-merge-strategy** — Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge) (5 min)
 
