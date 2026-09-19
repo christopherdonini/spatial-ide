@@ -9,3 +9,5 @@ Change: Part N's preamble pin sentence is re-read and re-pinned at the current o
 Tests+mutation: no test -- a walkthrough script; the checks are verify-cites and the reviewer's byte comparison of every quoted on-screen string against its source
 Out-of-scope: no code, no wire, no ADR, no security, no guarantee; the operator-facing label wording (`CRS provenance`, `Session identity`) is the human's at the sitting (template §10 class 7) and is not changed or judged here
 ```
+
+Budget: 24 of 40 lines across 1 file (git diff --numstat origin/main...HEAD, the form excluded).
