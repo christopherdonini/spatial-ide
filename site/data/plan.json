@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-18T23:09:21.146Z",
-  "plan_hash": "7369e8614a241392d088438092d39f0e67600b79f895f33f84d21bf7932c38ce",
+  "generated_at": "2026-09-18T23:54:15.031Z",
+  "plan_hash": "5991154dbc85fa7a472a308f7dfff691b4dfc2fd81192130c97473316084b0ca",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1541,7 +1541,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "sitting-4-rows"
+        "sitting-4-rows",
+        "briefa-p6-describe-fields"
       ],
       "needs_human": {
         "kind": "sitting",
@@ -1556,6 +1557,38 @@
         110
       ],
       "summary": "Part N's rows are being drafted on docs/part-n-walkthrough with a blank result log (the sitting the human asked for on 2026-09-18, entry 110); the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      }
+    },
+    {
+      "id": "briefa-p6-describe-fields",
+      "title": "Brief A P6 -- render the three wire fields (crs.provenance, crs.axis_provenance, identity.session_statement) in the describe summary before Part N runs (round 16, item 1)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "depends_on": [
+        "briefa-p3-p6"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "frontends/shell/DESCRIBE-FIELDS-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 93
+      },
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        112,
+        113
+      ],
+      "summary": "Short-form piece dispatched under round 16, item 1's ruling (entry 112, 113): two pure functions render the CRS provenance pair and the session-identity statement verbatim in DescribeSummary -- the three fields round 16, item 1 names; N3's row and the sitting close the sight under briefa-p6-part-n-acceptances (round 16, item 1)",
       "dates": {
         "opened": "2026-09-18",
         "done": null

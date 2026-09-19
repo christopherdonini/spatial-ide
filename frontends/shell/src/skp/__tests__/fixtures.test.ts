@@ -22,6 +22,7 @@ import type {
 } from "../types";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
+import { crsProvenanceLine, sessionStatementLine } from "../../admission/describeSummaryText";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -183,6 +184,13 @@ describe("SKP v0 shared fixtures", () => {
     // A1: the statement says the identity does not outlive the open. It never says the open read
     // one snapshot, and no string on this response does.
     expect(res.identity.session_statement).toContain("does not survive this open");
+    // Cross-module seam, real shape (round 16, item 1; reviewer gate attempt 1, B1): the two
+    // describeSummaryText.ts render functions are pass-throughs of this fixture's own bytes, not a
+    // retyped sentence. `res.identity.session_statement` is asserted non-null above (`toBeTruthy`);
+    // this fixture's own JSON carries it at
+    // `protocol/skp/tests/data/v0-describe-response-session-ordinal.json:29`.
+    expect(sessionStatementLine(res.identity)).toBe(res.identity.session_statement);
+    expect(crsProvenanceLine(res.crs)).toBe("crs:format-default, axis:declared");
     // The equirectangular sentence travels over the wire from the Rust constant. This test asserts
     // its bytes are carried; it is deliberately the only place in this frontend that quotes it, and
     // it quotes it from the fixture rather than retyping it into rendering code.
