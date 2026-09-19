@@ -40,6 +40,9 @@ a changed expression, or the same package appearing in a different tree all retu
   package total overstates what actually ships. That is the conservative direction — a license
   question is raised about a build-time tool that may never be distributed — but it is not the
   shipped surface, and this report does not separate the two.
+- **The npm side counts dev- and build-dependencies too.** The `node_modules` walk reads every
+  installed package, so a build-time tool or a browser-support data table is a row here whether
+  or not it ships; the shipped surface is defined by the notice generators, not by this report.
 - **Nothing about the code itself** — vendored sources, copied snippets, or a dependency that
   bundles third-party code under a different license than its own. `engine/` builds DuckDB from
   vendored C++, which this sees as one crate.
@@ -86,6 +89,9 @@ Named rather than skipped: an audit that hides its own gaps is worth less than n
 | Tree | Package | Version | Declared | Why it is here |
 |---|---|---|---|---|
 | frontends/shell (the packaged app's frontend) | `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | not on the recognised list: CC-BY-4.0 |
+
+**This is not a statement that the dependency tree is legally clear**, and it must not be cited
+as one. Each row above is a question the mechanical check raised, over the coverage stated above.
 
 ## Third-party data terms (not a package): the EPSG Geodetic Parameter Dataset (IOGP)
 

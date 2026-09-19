@@ -469,6 +469,9 @@ w('- **The cargo side counts dev- and build-dependencies.** `cargo metadata` res
 w('  package total overstates what actually ships. That is the conservative direction — a license');
 w('  question is raised about a build-time tool that may never be distributed — but it is not the');
 w('  shipped surface, and this report does not separate the two.');
+w('- **The npm side counts dev- and build-dependencies too.** The `node_modules` walk reads every');
+w('  installed package, so a build-time tool or a browser-support data table is a row here whether');
+w('  or not it ships; the shipped surface is defined by the notice generators, not by this report.');
 w('- **Nothing about the code itself** — vendored sources, copied snippets, or a dependency that');
 w('  bundles third-party code under a different license than its own. `engine/` builds DuckDB from');
 w('  vendored C++, which this sees as one crate.');
@@ -553,6 +556,9 @@ if (flagged.length === 0) {
   for (const f of flagged) {
     w(`| ${f.tree} | \`${f.name}\` | ${f.version} | ${f.license ? `\`${f.license}\`` : '*(none)*'} | ${f.why} |`);
   }
+  w();
+  w('**This is not a statement that the dependency tree is legally clear**, and it must not be cited');
+  w('as one. Each row above is a question the mechanical check raised, over the coverage stated above.');
 }
 w();
 
@@ -564,7 +570,8 @@ w();
 // any of them. Overwriting it would silently delete that record, so it is read back from the report
 // this run is about to replace and re-emitted here, byte for byte, in the same position the tracked
 // file already carries it -- between "Needs human review" and "Full inventory". A run that cannot
-// find it fails closed: one line naming the missing heading, exit 1, nothing written.
+// find it fails closed: one line naming the missing heading, exit 1, nothing written. The block ends
+// at the next `## ` heading, so a `## ` heading added inside it would end it early; use `### ` inside.
 const EXISTING_REPORT_PATH = join(ROOT, 'DEPENDENCY-LICENSES.md');
 const THIRD_PARTY_HEADING = '## Third-party data terms';
 
@@ -572,7 +579,8 @@ function readHandMaintainedThirdPartySection() {
   if (!existsSync(EXISTING_REPORT_PATH)) {
     console.error(
       `DEPENDENCY-LICENSES.md does not exist yet, so the hand-maintained "${THIRD_PARTY_HEADING}" ` +
-        'section cannot be read back and preserved. Aborting without writing a report.',
+        'section cannot be read back and preserved. Aborting without writing a report; restore the ' +
+        'tracked file first (git checkout -- DEPENDENCY-LICENSES.md).',
     );
     process.exit(1);
   }
