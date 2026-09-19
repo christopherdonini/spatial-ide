@@ -4861,3 +4861,7 @@ clean (no output) both mid-drill and at the end — no tracked file needed resto
 - Binaries in workspace build order after `session_identity.rs` were not reached by either ignored-test
   pass in this session (3b stopped at the twelfth binary by cargo's own fail-fast; 3c was cut short by
   the tester's termination action) — no claim is made about their ignored tests.
+
+### Correction before merge (the custodian, 2026-09-19)
+
+The two sentences above stating that no timing, duration or rate number appears in this section are false against the section's own text: it quotes the fixture generator's watchdog message (`101.7 s`, the `60 s` grace), the console's `over 60 s` flag, npm's own `in 22s` / `in 7s` lines, and it records the elapsed clock of the unguarded `wall_time_arm_s_and_arm_p_over_polygons_100k` run (over 90 minutes; process samples every one to three minutes) before the tester terminated it. None of those is a measurement of the product against docs/08 and none is claimed as one: they are quoted tool output and the elapsed clock of a debug-mode test, recorded as the evidence that the test is unbounded. The rule this section honours is that no performance claim rests on them; the sentence that no such number appears is withdrawn by this paragraph, not edited.
