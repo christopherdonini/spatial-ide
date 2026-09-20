@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-20T15:32:28.664Z",
-  "plan_hash": "ac752b1df1908590a1775edfe92ae4a7697cb831130925ed2239039d6d2e48f7",
+  "generated_at": "2026-09-20T15:50:47.484Z",
+  "plan_hash": "fef052121fefe493ad3d50ad116edd02d236c29084447e14d0c218e4393a5426",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1236,7 +1236,7 @@
       "entries": [
         99
       ],
-      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it",
+      "summary": "RULED 2026-09-20 (the sitting-day message, verbatim in DECISIONS-PENDING.md): a total cache ceiling relative to free disk at its own site; delete-on-supersede, LRU only as fallback; the runner is the prepare machinery with the operation lifecycle as scheduler, background priority, the prepare token as cancellation owner; the operator view is tier count/size/state in describe and the status stack -- pre-committed for the tier-selection preregistration's sight; the ADR-031 amendment text is a gated piece, deferred until the sitting and acceptances close. Earlier: The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it",
       "dates": {
         "opened": "2026-09-17",
         "done": null
