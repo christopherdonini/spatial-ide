@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T05:50:48.247Z",
+  "generated_at": "2026-09-20T15:18:26.042Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 79212724224,
+        "bytes": 79549390848,
         "total": 510319915008
       },
       {
@@ -36,75 +36,75 @@
       "kind": "click",
       "minutes": 3,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "accept-adr-015-a1",
       "kind": "click",
       "minutes": 3,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "accept-adr-016-a1",
       "kind": "click",
       "minutes": 3,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "accept-adr-028-qualification",
       "kind": "click",
       "minutes": 3,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "accept-adr-032",
       "kind": "click",
       "minutes": 3,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "briefa-p6-part-n-acceptances",
       "kind": "sitting",
       "minutes": 60,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "decision-prepare-managed-selection-default",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "decision-shell-dependency-audit-2026-09-19",
       "kind": "ruling",
       "minutes": 10,
       "opened": "2026-09-19",
-      "age_days": 0
+      "age_days": 1
     },
     {
       "id": "decision-watcher-scheduling",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-18",
-      "age_days": 1
+      "age_days": 2
     },
     {
       "id": "decision-generated-outputs-merge-strategy",
       "kind": "ruling",
       "minutes": 5,
       "opened": "2026-09-19",
-      "age_days": 0
+      "age_days": 1
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 39
+    "n": 40
   },
   "gate_first_pass": {
     "present": true,

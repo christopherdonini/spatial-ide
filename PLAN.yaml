@@ -1382,18 +1382,19 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 1
     depends_on: []
-    needs_human: {kind: click, minutes: 5}
+    needs_human: {kind: none, minutes: 0}
     gate: scripts/AUDIT-NPM-TREES-PREREGISTRATION.md
     evidence: {pr: 99}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
+    verdict: {by: "human", cite: "PR #99 merged 2026-09-20 (the click); felt_verdict false, done on merge"}
     entries: [116, 117]
-    summary: "Five-line piece under AUTONOMY.md section 21b: NPM_TREES gains frontends/shell; the regeneration proved DEPENDENCY-LICENSES.md carries a ~415-line hand-maintained EPSG/IOGP section no script emits, so the form widened before code (classes 2 and 6) and the writer re-emits it verbatim and fails closed without it; the shell tree's first audit shows one review row (caniuse-lite, CC-BY-4.0) for the human. Reviewer gate; PR for the click"
-    dates: {opened: 2026-09-19, done: null}
+    summary: "DONE 2026-09-20 at PR #99 (the click; reviewer attempt 1 PASS, record 104; no correction round). Five-line piece under AUTONOMY.md section 21b: NPM_TREES gains frontends/shell; the regeneration proved DEPENDENCY-LICENSES.md carries a ~415-line hand-maintained EPSG/IOGP section no script emits, so the form widened before code (classes 2 and 6) and the writer re-emits it verbatim and fails closed without it; the shell tree's first audit shows one review row (caniuse-lite, CC-BY-4.0) for the human. Reviewer gate; PR for the click"
+    dates: {opened: 2026-09-19, done: 2026-09-20}
 
   # ============================== PROPOSED ==============================
 

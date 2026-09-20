@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-19T05:50:48.163Z",
-  "plan_hash": "901d57ee95cae872486e0a29cfac95102abf253cd25c4bdc2d34ae0380f65cce",
+  "generated_at": "2026-09-20T15:18:25.946Z",
+  "plan_hash": "74725b2c78e2fae310fd36aedfe7b854655d76a33636ee38f432b2b268232911",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -488,28 +488,6 @@
       },
       "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2",
       "evidence_label": "PR #87"
-    },
-    {
-      "id": "governance-audit-npm-trees",
-      "title": "The dependency-licence audit scans frontends/shell and preserves the report's hand-maintained data-terms section (entry 116 finding (i); entry 117)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 5
-      },
-      "evidence": {
-        "pr": 99
-      },
-      "dates": {
-        "opened": "2026-09-19",
-        "done": null
-      },
-      "summary": "Five-line piece under AUTONOMY.md section 21b: NPM_TREES gains frontends/shell; the regeneration proved DEPENDENCY-LICENSES.md carries a ~415-line hand-maintained EPSG/IOGP section no script emits, so the form widened before code (classes 2 and 6) and the writer re-emits it verbatim and fails closed without it; the shell tree's first audit shows one review row (caniuse-lite, CC-BY-4.0) for the human. Reviewer gate; PR for the click",
-      "evidence_label": "PR #99"
     }
   ],
   "proposed": [
