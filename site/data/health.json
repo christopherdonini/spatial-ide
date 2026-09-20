@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T15:18:26.042Z",
+  "generated_at": "2026-09-20T15:32:27.235Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 79549390848,
+        "bytes": 79541706752,
         "total": 510319915008
       },
       {
@@ -104,7 +104,7 @@
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 40
+    "n": 42
   },
   "gate_first_pass": {
     "present": true,

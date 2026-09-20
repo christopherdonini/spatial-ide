@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `74725b2c78e2fae310fd36aedfe7b854655d76a33636ee38f432b2b268232911`) at `2026-09-20T15:18:25.946Z`.
+Generated from `PLAN.yaml` (sha256 `ac752b1df1908590a1775edfe92ae4a7697cb831130925ed2239039d6d2e48f7`) at `2026-09-20T15:32:27.145Z`.
 
 ## 1. Next
 
@@ -40,13 +40,11 @@ Generated from `PLAN.yaml` (sha256 `74725b2c78e2fae310fd36aedfe7b854655d76a33636
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough — blocked by: lod-tier-builder-route-b, lod-tier-cache-lifecycle
+- **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough — blocked by: lod-tier-cache-lifecycle
 
 ## 5. In progress
 
-- **lod-tier-builder-route-b** — LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps — evidence: PR #84
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **governance-record-round-count** — health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4) — evidence: PR #87
 
 ## 6. Proposed / unscheduled
 
