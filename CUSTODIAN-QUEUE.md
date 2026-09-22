@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dbb3007ee1b309fcb378ce61ecfa74a1535aeae73644cffbebb9c308a3b772fc`) at `2026-09-22T19:51:42.907Z`.
+Generated from `PLAN.yaml` (sha256 `912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b20f71c2098778b9f65a06`) at `2026-09-22T21:26:57.070Z`.
 
 ## 1. Next
 
@@ -39,7 +39,7 @@ Generated from `PLAN.yaml` (sha256 `dbb3007ee1b309fcb378ce61ecfa74a1535aeae73644
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8: a successful same-file reopen clears the ended session's warning and hover latch and restores identification and Zoom to layer; a failed reopen or a late old-generation result never revives or contaminates — evidence: branch `fix/n8-reopen-reset`
+- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8: a successful same-file reopen clears the ended session's warning and hover latch and restores identification and Zoom to layer; a failed reopen or a late old-generation result never revives or contaminates — evidence: PR #100
 
 ## 6. Proposed / unscheduled
 

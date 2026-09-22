@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-22T19:51:42.907Z",
-  "plan_hash": "dbb3007ee1b309fcb378ce61ecfa74a1535aeae73644cffbebb9c308a3b772fc",
+  "generated_at": "2026-09-22T21:26:57.070Z",
+  "plan_hash": "912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b20f71c2098778b9f65a06",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -472,14 +472,14 @@
         "minutes": 5
       },
       "evidence": {
-        "branch": "fix/n8-reopen-reset"
+        "pr": 100
       },
       "dates": {
         "opened": "2026-09-22",
         "done": null
       },
-      "summary": "Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows",
-      "evidence_label": "branch `fix/n8-reopen-reset`"
+      "summary": "PR #100 for the click (reviewer a1 FAIL 105, architect a1 FAIL 106; one correction round; architect a2 PASS 108, reviewer a2 FAIL 107 on one mechanical item; closed under AI_DEVELOPMENT.md section A at de360e7, self-verified); the human's focused N8 retest follows the merge. Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows",
+      "evidence_label": "PR #100"
     }
   ],
   "proposed": [

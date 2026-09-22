@@ -1411,12 +1411,12 @@ nodes:
     depends_on: []
     needs_human: {kind: click, minutes: 5}
     gate: frontends/shell/N8-REOPEN-RESET-PREREGISTRATION.md
-    evidence: {branch: "fix/n8-reopen-reset"}
+    evidence: {pr: 100}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: [110]
-    summary: "Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows"
+    summary: "PR #100 for the click (reviewer a1 FAIL 105, architect a1 FAIL 106; one correction round; architect a2 PASS 108, reviewer a2 FAIL 107 on one mechanical item; closed under AI_DEVELOPMENT.md section A at de360e7, self-verified); the human's focused N8 retest follows the merge. Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows"
     dates: {opened: 2026-09-22, done: null}
 
   - id: shell-dependency-audit-piece
