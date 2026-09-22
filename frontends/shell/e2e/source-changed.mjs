@@ -225,9 +225,12 @@ const PRECONDITION_TIMEOUT_MS = 180_000;
 const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 600_000);
 
 // P5, G-A2's post-check half (see this file's own header note above `main`'s definition for what
-// "post" changes and does not guarantee). Unset or any value other than "post" is the ORIGINAL T10
-// route, unchanged.
-const ROUTE = process.env.SPATIAL_E2E_SOURCE_CHANGED_ROUTE === "post" ? "post" : "pre";
+// "post" changes and does not guarantee). Unset or any value other than "post"/"reopen" is the
+// ORIGINAL T10 route, unchanged. N8 (MANUAL-WALKTHROUGH.md, Part N run): "reopen" runs the
+// ORIGINAL pre-check route through S5c, then continues with R1-R4 below (N8-REOPEN-RESET-
+// PREREGISTRATION.md's Change line).
+const ENV_ROUTE = process.env.SPATIAL_E2E_SOURCE_CHANGED_ROUTE;
+const ROUTE = ENV_ROUTE === "post" || ENV_ROUTE === "reopen" ? ENV_ROUTE : "pre";
 // A tight poll: the whole point of racing `stream-issued` is to mutate as soon as possible after a
 // mint succeeds, before that stream's own drain and post-check. A bound, not a result (ADR-018).
 const STREAM_ISSUED_POLL_MS = 5;
@@ -427,6 +430,13 @@ function viewportQueryCount(consoleHandle) {
  * AFTER a real mint succeeds, unlike `viewport_query` above which fires before it. */
 function streamIssuedCount(consoleHandle) {
   return consoleHandle.renderTrace().filter((e) => /stream-issued/.test(e.text)).length;
+}
+
+/** How many `[render-trace] view-state` lines the trace carries -- N8's R3 reads this before/after
+ * a click; `fitToExtent` logs the line before writing the camera prop (`regression.mjs`'s own
+ * `viewStateLinesSince` established the reading), so a new one is evidence the fit ran. */
+function viewStateLineCount(consoleHandle) {
+  return consoleHandle.renderTrace().filter((e) => /view-state/.test(e.text)).length;
 }
 
 /**
@@ -719,11 +729,11 @@ async function main() {
     observation.sessionLogBaselineLineCount = sessionLogBaselineLineCount;
 
     // ------------------------------------------------------------------------------------
-    // S3: change the source underneath it -- mtime only, bytes untouched. PRE route only: the
-    // POST route (see this file's header note) must NOT mutate before a mint, so it defers the
+    // S3: change the source underneath it -- mtime only, bytes untouched. PRE and REOPEN routes:
+    // the POST route (see this file's header note) must NOT mutate before a mint, so it defers the
     // touch into S4 below, racing it against that gesture's own `stream-issued` line instead.
     // ------------------------------------------------------------------------------------
-    if (ROUTE === "pre") {
+    if (ROUTE !== "post") {
       await runStep("S3-touch-mtime", async () => {
         const later = new Date(Date.now() + 120_000);
         utimesSync(SCRATCH_COPY, later, later);
@@ -743,11 +753,11 @@ async function main() {
 
     // ------------------------------------------------------------------------------------
     // S4: one query. A pan is what an operator does; it is also what makes the client issue the
-    // next viewport_query, which is where the pre-check refuses (PRE route) or, on the POST
-    // route, where a tile's own mint succeeds against the still-unchanged file and this step
+    // next viewport_query, which is where the pre-check refuses (PRE and REOPEN routes) or, on the
+    // POST route, where a tile's own mint succeeds against the still-unchanged file and this step
     // mutates immediately afterward, racing the post-check that runs once that stream drains.
     // ------------------------------------------------------------------------------------
-    if (ROUTE === "pre") {
+    if (ROUTE !== "post") {
       await runStep("S4-issue-one-query", async () => {
         // **The QUERY is the assertion; the gesture is only recorded** (custodian's decision,
         // 2026-09-17, on run 4). Section 4 T10 says "trigger one query (a pan)": the requirement is
@@ -926,6 +936,83 @@ async function main() {
       }
       return "hover over the formerly-occupied pixel shows the session-ended refusal, no id";
     });
+
+    // R1-R4: REOPEN route only (N8-REOPEN-RESET-PREREGISTRATION.md's Change line; S1-S5c above
+    // established `.canvas-session-ended` and the hover latch on the ORIGINAL generation).
+    if (ROUTE === "reopen") {
+      // The cheapest honest failure this harness can produce: a path that never existed, so
+      // `open_dataset` returns a typed refusal (no byte edit, no mutation of SCRATCH_COPY).
+      const MISSING_PATH = `${SCRATCH_COPY}.reopen-missing-n8`;
+
+      await runStep("R1-failed-reopen-does-not-clear", async () => {
+        const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), MISSING_PATH);
+        if (outcome.kind !== "refused") {
+          throw new Error(`R1: openPath(a path that has never existed) returned ${JSON.stringify(outcome)}, expected {kind:"refused"}`);
+        }
+        const status = await statusStack(page);
+        if (!status.sessionEndedPresent) {
+          throw new Error("R1: a FAILED reopen cleared .canvas-session-ended; it must survive a refused admission");
+        }
+        const readout = await hoverAt(page, occupiedPoint.x, occupiedPoint.y);
+        if (readout === null || !readout.className.includes("hover-readout-session-ended")) {
+          throw new Error(`R1: after the failed reopen, the hover at the formerly-occupied pixel is ${JSON.stringify(readout)}, expected the session-ended refusal still latched`);
+        }
+        return `openPath refused (${outcome.code}); .canvas-session-ended and the hover latch both survived the failed reopen`;
+      });
+
+      await runStep("R2-successful-reopen-clears-and-identifies", async () => {
+        const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), SCRATCH_COPY);
+        if (outcome.kind !== "admitted") {
+          throw new Error(`R2: openPath(scratch copy) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+        }
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+        const status = await statusStack(page);
+        if (status.sessionEndedPresent) {
+          throw new Error("R2: .canvas-session-ended is still present after a successful reopen");
+        }
+        const counts = await residentCounts(page);
+        if (!(counts?.totalResidentVertices > 0)) {
+          throw new Error(`R2: residency did not repopulate after the reopen (totalResidentVertices=${counts?.totalResidentVertices})`);
+        }
+        // Same file, same bytes -> the same auto-fit camera as the original open, so the
+        // formerly-occupied CSS point should identify a feature again (not necessarily the same id).
+        const readout = await hoverAt(page, occupiedPoint.x, occupiedPoint.y);
+        if (readout === null || readout.className.includes("hover-readout-session-ended")) {
+          throw new Error(`R2: hover at the formerly-occupied pixel after the reopen is ${JSON.stringify(readout)}, expected ordinary identification`);
+        }
+        return `reopened; .canvas-session-ended cleared; ${counts.totalResidentVertices} vertices resident; hover reads ${JSON.stringify(readout.text)}`;
+      });
+
+      await runStep("R3-zoom-to-layer-clickable-and-effective", async () => {
+        const before = viewStateLineCount(consoleHandle);
+        // A real Playwright click: its own actionability check is what would time out here before
+        // the fix (`residency-harness.mjs`'s documented `.canvas-status-stack` interception finding).
+        await page.click(".zoom-to-layer", { timeout: 10_000 });
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 2000, timeoutMs: 30_000 });
+        const after = viewStateLineCount(consoleHandle);
+        if (after === before) {
+          throw new Error("R3: the \"Zoom to layer\" click produced no new [render-trace] view-state line -- fitToBounds did not run");
+        }
+        return `"Zoom to layer" click landed (not intercepted) and produced ${after - before} new view-state line(s)`;
+      });
+
+      await runStep("R4-second-source-change-ends-the-new-session", async () => {
+        const later = new Date(Date.now() + 120_000);
+        utimesSync(SCRATCH_COPY, later, later);
+        const hashAfterSecondTouch = sha256(SCRATCH_COPY);
+        if (hashAfterSecondTouch !== hashBefore) {
+          throw new Error(`R4: the scratch copy's bytes changed on the second touch (${hashBefore} -> ${hashAfterSecondTouch})`);
+        }
+        const rect = await requireCanvasRect(page);
+        await panByViewports(page, rect, 2);
+        await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+        const status = await statusStack(page);
+        if (!status.sessionEndedPresent) {
+          throw new Error("R4: a second source change on the reopened generation did not reproduce .canvas-session-ended");
+        }
+        return "second mtime touch + a pan beyond residency reproduced .canvas-session-ended on the new generation";
+      });
+    }
 
     // ------------------------------------------------------------------------------------
     // S5d: POST route only. The one assertion that distinguishes this run from a PRE-route one --
