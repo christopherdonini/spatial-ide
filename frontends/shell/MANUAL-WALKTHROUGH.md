@@ -1420,7 +1420,15 @@ Interrupted mid-sitting by the D: drive migration — the app closed during a ro
 
 ### Part N run (Brief A P6 — admission, provenance and the session identity tier)
 
-not yet run.
+**Run 1 — PARTIAL: N1–N7 and N9 as reported below; N8 deviated at its reopen step and its remainder is unverified.** Part N is not closed; no ADR is accepted by this record.
+
+- **Date run:** 2026-09-20 (the shell session log `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-1789929170.log`, first line 2026-09-20T18:32:50Z, last written 20:59:16Z; the human's report received 2026-09-22).
+- **Run by:** the human.
+- **Build/commit (and which build mode):** dev (`npm run tauri dev` from `frontends/shell`), the main checkout at `b7c6788` (no commit between the prep and the report); the shell debug binary rebuilt by the custodian's pre-warm at 2026-09-20T15:50Z from that tree. Unknown: whether the dev launch rebuilt anything further — the session log carries no commit field.
+- **The human's report, verbatim (2026-09-22):** “N1 to N7 is perfectly working, wording is fine also, N8 when i reopen the scratch copy it renders but the engine.source_changed + id text "The source file..." is still there. I can zoom in and out, zoom to layer is non clickable. If i CTRL + R the viewport text and id text disappear, but there's no N6 block starting fresh. N9 seems fine to me.”
+- **N1–N7:** PASS as reported by the human, with the human's wording verdicts: wording fine — N2's distinguishability, N3's identity statement and the two row labels, N5's guidance line. N6's `{detail}` as logged (session log line 613): `{"detail":"{mtime}"}`.
+- **N8:** DEVIATION at the reopen step (the human's words above: after reopening the scratch copy the view renders, but the `engine.source_changed` block and the session-ended hover text remain; Zoom to layer is not clickable; a Ctrl+R reload clears the texts but is not a recovery path and started no fresh N6 block). The row's remaining steps — the second touch, the small pan inside residency, the pan beyond it — were not verified. Log reading (the custodian's, not a diagnosis): after the reopen the data plane served a fresh first look and tiles (session log line 732 onward). A correction piece is authorized (the human, 2026-09-22); N8 is re-run after it.
+- **N9:** the human's words: “N9 seems fine to me.”
 
 Fill in once this Part is run: date, run by, build/commit, pass/fail per row N1–N9, N2's
 distinguishability verdict, N3's own red-line call (whether the human re-scoped the session-identity

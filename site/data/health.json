@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T15:50:45.732Z",
+  "generated_at": "2026-09-22T19:51:43.027Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,12 +12,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 78189768704,
+        "bytes": 75362254848,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 390399795200,
+        "bytes": 390400049152,
         "total": 500090007552
       }
     ]
@@ -25,86 +25,15 @@
   "stray_processes": {
     "total": 3,
     "by_name": {
-      "cargo": 2,
-      "node": 1,
+      "cargo": 0,
+      "node": 3,
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [
-    {
-      "id": "accept-adr-013-instance",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "accept-adr-015-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "accept-adr-016-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "accept-adr-028-qualification",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "accept-adr-032",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "briefa-p6-part-n-acceptances",
-      "kind": "sitting",
-      "minutes": 60,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "decision-prepare-managed-selection-default",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "decision-shell-dependency-audit-2026-09-19",
-      "kind": "ruling",
-      "minutes": 10,
-      "opened": "2026-09-19",
-      "age_days": 1
-    },
-    {
-      "id": "decision-watcher-scheduling",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-18",
-      "age_days": 2
-    },
-    {
-      "id": "decision-generated-outputs-merge-strategy",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-19",
-      "age_days": 1
-    }
-  ],
+  "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 42
+    "n": 47
   },
   "gate_first_pass": {
     "present": true,
