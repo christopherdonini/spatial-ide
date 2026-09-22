@@ -1170,12 +1170,34 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * still sets `viewportRefusal` exactly as before, that it additionally ends the session for this
    * ONE code, and that it matches on `.skpError.code` rather than on the message.
    *
+   * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch":
+   * change the catch to `e.skpError.message.includes("source file
+   * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
+   * pinned message is the human's prose and is not required to contain the code (§4 T6's own
+   * mutation).
+   *
+   * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
+   * /if \(isSourceChangedRefusal\(e\)\) en…/`.
+   *
+   * N8 correction round 1: the original record above was overwritten (not appended) by the N8
+   * piece's first commit; restored here verbatim from `git show origin/main:frontends/shell/src/
+   * App.test.ts`, kept beside the N8-specific record below rather than replacing it -- both
+   * mutations still fail this same test.
+   *
    * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch"
    * (re-verified for N8's `forDataset` threading): change the catch to
    * `endSession(refusalDetailOf(e))` (drop `forDataset`). Expected failure: the
    * `endSession(refusalDetailOf(e), forDataset)` pattern fails to match.
    * OBSERVED 2026-09-22: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…'
    * to match /if \(isSourceChangedRefusal\(e\)\) en…/`. Reverted after observing.
+   *
+   * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch"
+   * (correction round 1, both `viewportRefusal` writes guarded, not only `endSession`): remove the
+   * `if (forDataset !== admittedDatasetRef.current) return;` guard atop the reject arm (the second
+   * of the two occurrences the test below counts), leaving only the resolved arm's copy. Expected
+   * failure: the two-occurrence count assertion fails with a count of 1.
+   * OBSERVED 2026-09-22: FAILED -- `AssertionError: expected [ Array(1) ] to have a length of 2 but
+   * got 1`. Reverted after observing.
    */
   it("the_pre_check_refusal_latches_the_session_in_the_untiled_catch", () => {
     const appSource = readFileSync(
@@ -1186,6 +1208,10 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
     expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
     // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
     expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
+    // N8 correction round 1 (reviewer B1): a late arrival from a superseded generation must not
+    // write viewportRefusal on EITHER arm -- the same drop-not-act-on guard `endSessionForDataset`
+    // already applies to ending the session, atop both the resolved and the rejected arm.
+    expect(appSource.match(/if \(forDataset !== admittedDatasetRef\.current\) return;/g) ?? []).toHaveLength(2);
     // The one pick-latch site, covering both arms.
     expect(appSource).toMatch(
       /onHover=\{\(readout\) => setHover\(latchedHoverReadout\(readout, sessionEndedRef\.current\)\)\}/

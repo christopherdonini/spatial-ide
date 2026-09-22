@@ -652,7 +652,11 @@ export function handleSessionEnded(
 /** N8 fix: `App`'s own `endSession` generation guard, extracted so a unit test drives the SAME
  * function `App` calls. `forDataset` is whichever dataset the call site captured at issue time; a
  * mismatch against `getCurrentDataset()` is a late arrival from a generation `App` has moved past,
- * dropped rather than acted on. */
+ * dropped rather than acted on. The drop is correct even for a same-file reopen: `forDataset` and
+ * `getCurrentDataset()` are both kernel-minted `DatasetHandle` strings, and every successful
+ * `open_dataset` mints a fresh, distinct one, OS-CSPRNG, never reused (`protocol/skp/SKP-V0.md:145`;
+ * `kernel/src/skp.rs:731`'s `DatasetHandle::mint()`) -- so a stale generation's `forDataset` can
+ * never collide with the live one's, same file or not. */
 export function endSessionForDataset(
   detail: string,
   forDataset: string,
@@ -691,7 +695,7 @@ export default function App() {
    * **Not dismissible and cleared only by a successful reopen** -- §7 declares no timeout.
    * **N8 correction (2026-09-22):** App-owned, NOT part of `<WorkingCanvas key={admitted.dataset}>`
    * below -- an earlier version of this comment claimed that subtree's remount "takes this state
-   * with it," refuted live (Part N run 1, N8). The actual clear is `handleAdmitted`'s own
+   * with it", refuted live (Part N run 1, N8). The actual clear is `handleAdmitted`'s own
    * `admitAndResetStaleUiState` call below.
    */
   const [sessionEnded, setSessionEnded] = useState<FormattedRefusal | null>(null);
@@ -1049,6 +1053,11 @@ export default function App() {
   function reportViewportOutcome(promise: Promise<RequestOutcome>, forDataset: string) {
     promise.then(
       () => {
+        // N8 correction round 1: a late arrival from a generation `App` has moved past must not
+        // touch the LIVE generation's `viewportRefusal` either -- the same drop-not-act-on guard
+        // `endSessionForDataset` already applies to ending the session (its own doc comment has the
+        // full account), extended here to both of this arm's own writes.
+        if (forDataset !== admittedDatasetRef.current) return;
         // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
         // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
         // unconditionally -- so a pan after the latch silently wiped a source-change refusal off the
@@ -1061,6 +1070,10 @@ export default function App() {
       },
       (e: unknown) => {
         if (e instanceof SkpCallError) {
+          // N8 correction round 1: same drop-not-act-on guard as the resolved arm above -- a late
+          // rejection from a superseded generation (e.g. after `manager.stop()` or a rejection
+          // following `closeDataset(old)`) must not write the LIVE generation's `viewportRefusal`.
+          if (forDataset !== admittedDatasetRef.current) return;
           // Unchanged: the camera pre-check route still sets `viewportRefusal` exactly as before
           // (§2b: "It keeps `setViewportRefusal(formatRefusal(...))`").
           setViewportRefusal(formatRefusal(e.skpError));
@@ -1595,8 +1608,13 @@ export default function App() {
                   *
                   * **NOT dismissible** -- `RefusalBlock` renders no button by construction (its own
                   * doc comment), which is exactly right here: the state does not end until the
-                  * dataset is reopened, and a reopen remounts this subtree. The `.residency-status`
-                  * precedent below is the same reasoning for a weaker fact. */}
+                  * dataset is reopened. **N8 correction (2026-09-22):** it is NOT a remount that
+                  * clears this -- `.canvas-status-stack` sits beside the keyed `<WorkingCanvas
+                  * key={admitted.dataset}>` (below), not inside it, and renders from this
+                  * App-owned `sessionEnded` state. The actual clear is `handleAdmitted`'s own
+                  * `admitAndResetStaleUiState` call (`sessionEnded`'s own doc comment above has the
+                  * full account). The `.residency-status` precedent below is the same reasoning for
+                  * a weaker fact. */}
                 {sessionEnded && (
                   <div className="canvas-session-ended">
                     <RefusalBlock refusal={sessionEnded} />

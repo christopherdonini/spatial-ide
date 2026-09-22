@@ -939,6 +939,51 @@ async function main() {
 
     // R1-R4: REOPEN route only (N8-REOPEN-RESET-PREREGISTRATION.md's Change line; S1-S5c above
     // established `.canvas-session-ended` and the hover latch on the ORIGINAL generation).
+    //
+    // ----------------------------------------------------------------------------------------------
+    // RECORDED MUTATIONS for R1-R4 (correction round 1, item 4; run against the real app, one at a
+    // time, each reverted before the next -- never shipped).
+    //
+    //   Mutation for R2 (`App.tsx`): remove `setters.setSessionEnded(null);` from
+    //   `admitAndResetStaleUiState` (the line right after `setters.setHover(null);`). Expected
+    //   failure: R2 fails by name, because a successful reopen no longer clears the stale
+    //   `.canvas-session-ended` block.
+    //   OBSERVED 2026-09-22: R2-successful-reopen-clears-and-identifies FAILED -- "R2:
+    //   .canvas-session-ended is still present after a successful reopen". The SAME run also failed
+    //   R3-zoom-to-layer-clickable-and-effective (the uncleared block still covers `.zoom-to-layer`,
+    //   S2 of the architect's should-fix list) -- "page.click: Timeout 10000ms exceeded ... <div
+    //   class="canvas-session-ended">...</div> from <div class="canvas-status-stack">...</div>
+    //   subtree intercepts pointer events" -- which is this same mutation's real, observed R3
+    //   failure, recorded here rather than as a second dedicated R3 mutation. R1 and R4 still
+    //   PASSED under this one mutation (R1 is unaffected -- a failed reopen never reaches
+    //   `admitAndResetStaleUiState` at all; R4 passes vacuously, since `.canvas-session-ended` was
+    //   already, wrongly, still present going in). Reverted after observing.
+    //
+    //   Mutation for R4 (`App.tsx`): remove `admittedDatasetRef.current = next.dataset;` from
+    //   `handleAdmitted` (the line right after its own N8-fix comment). Expected failure (as named
+    //   in the architect's FAIL report): R4 fails by name.
+    //   OBSERVED 2026-09-22: R4-second-source-change-ends-the-new-session FAILED -- "R4: a second
+    //   source change on the reopened generation did not reproduce .canvas-session-ended", exactly
+    //   as named. The SAME run also failed EARLIER, at S5a-status ("S5a: no .canvas-session-ended
+    //   block in the status stack; stack text was null") and S5c-picks-refused and
+    //   R1-failed-reopen-does-not-clear -- because `admittedDatasetRef.current` never becomes
+    //   non-null anywhere else in `App.tsx`, so `endSessionForDataset`'s own generation guard drops
+    //   EVERY call for the run's whole lifetime, not only a reopened one; R4's own failure is real
+    //   and named, but the blast radius is wider than R4 alone. Reverted after observing.
+    //
+    //   R1: no dedicated mutation recorded. `AdmissionPanel.tsx`'s `admitPath` returns
+    //   (`return outcome;`, :251) BEFORE `deps.onAdmitted(outcome.admitted)` (:255) inside its
+    //   `if (outcome.kind === "refused")` branch (`AdmissionOutcome`, `admitDataset.ts:16-18`, is a
+    //   proper discriminated union). Removing that `return` does not isolate R1's guarantee: without
+    //   it, TypeScript does not narrow `outcome.kind` past the `if`, so the later
+    //   `outcome.admitted` (:254) fails to compile (`outcome` stays the full union) -- the build
+    //   this harness needs to even launch the app never produces an app to test against. No other
+    //   product code path reaches `onAdmitted` for a refused outcome (grepped: one call site,
+    //   `AdmissionPanel.tsx:255`), and the native file-picker path this hook mirrors
+    //   (`AdmissionPanel.tsx:295`'s `pickFile()`) is not reachable from this headless CDP driver
+    //   either. R1's own real-path assertion is otherwise unchanged from the architect's VERIFIED
+    //   CLEAN finding (`AdmissionPanel.tsx:214-252`, `App.tsx:647`).
+    // ----------------------------------------------------------------------------------------------
     if (ROUTE === "reopen") {
       // The cheapest honest failure this harness can produce: a path that never existed, so
       // `open_dataset` returns a typed refusal (no byte edit, no mutation of SCRATCH_COPY).
@@ -957,7 +1002,10 @@ async function main() {
         if (readout === null || !readout.className.includes("hover-readout-session-ended")) {
           throw new Error(`R1: after the failed reopen, the hover at the formerly-occupied pixel is ${JSON.stringify(readout)}, expected the session-ended refusal still latched`);
         }
-        return `openPath refused (${outcome.code}); .canvas-session-ended and the hover latch both survived the failed reopen`;
+        // N8 correction round 1 (reviewer nit): the FULL refusal, code and message both, not only
+        // `.code` -- a prior run's note ("engine.source") read as possibly truncated with no way
+        // to tell from the note alone; `outcome.message` removes that ambiguity.
+        return `openPath refused (code=${outcome.code}, message=${JSON.stringify(outcome.message)}); .canvas-session-ended and the hover latch both survived the failed reopen`;
       });
 
       await runStep("R2-successful-reopen-clears-and-identifies", async () => {
@@ -974,13 +1022,32 @@ async function main() {
         if (!(counts?.totalResidentVertices > 0)) {
           throw new Error(`R2: residency did not repopulate after the reopen (totalResidentVertices=${counts?.totalResidentVertices})`);
         }
-        // Same file, same bytes -> the same auto-fit camera as the original open, so the
-        // formerly-occupied CSS point should identify a feature again (not necessarily the same id).
-        const readout = await hoverAt(page, occupiedPoint.x, occupiedPoint.y);
-        if (readout === null || readout.className.includes("hover-readout-session-ended")) {
-          throw new Error(`R2: hover at the formerly-occupied pixel after the reopen is ${JSON.stringify(readout)}, expected ordinary identification`);
+        // N8 correction round 1 (reviewer/architect B2/B3): same file, same bytes -> the same
+        // auto-fit camera as the original open -- but S2 above needed `observation.notchesUsed`
+        // real zoom-in notch(es) from THAT auto-fit camera before the formerly-occupied pixel
+        // identified anything at all (`stepA9`'s loop). Hovering the bare post-reopen auto-fit view
+        // would accept a below-pick-resolution readout as "identification", which is not what §9
+        // requires. Reproduce S2's own camera state instead: the same number of notches, around the
+        // canvas centre, with the same `zoomInOneNotch` primitive S2 used.
+        let rect = await requireCanvasRect(page);
+        const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        for (let notch = 0; notch < observation.notchesUsed; notch++) {
+          await zoomInOneNotch(page, consoleHandle, center);
         }
-        return `reopened; .canvas-session-ended cleared; ${counts.totalResidentVertices} vertices resident; hover reads ${JSON.stringify(readout.text)}`;
+        const readout = await hoverAt(page, occupiedPoint.x, occupiedPoint.y);
+        observation.r2ReadoutAfterNotches = readout;
+        if (readout === null || !readoutShowsAnId(readout)) {
+          throw new Error(
+            `R2: after reproducing S2's ${observation.notchesUsed} zoom-in notch(es) around the canvas ` +
+              `centre, hover at the formerly-occupied pixel is ${JSON.stringify(readout)}, expected an ` +
+              `"id <number>" readout (ordinary identification)`
+          );
+        }
+        return (
+          `reopened; .canvas-session-ended cleared; ${counts.totalResidentVertices} vertices resident; ` +
+          `after reproducing S2's ${observation.notchesUsed} zoom-in notch(es), hover reads ` +
+          `${JSON.stringify(readout.text)} (an id)`
+        );
       });
 
       await runStep("R3-zoom-to-layer-clickable-and-effective", async () => {
