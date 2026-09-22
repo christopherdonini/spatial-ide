@@ -11,3 +11,5 @@ Out-of-scope: no wire (protocol/skp untouched), no ADR text, no security surface
 ```
 
 Budget: 244 of 250 non-generated lines across 3 files (git diff --numstat origin/main...HEAD, the form excluded); E2E evidence: frontends/shell/e2e/out/source-changed-1790108677871.json (reopen route, launched:true), frontends/shell/e2e/out/source-changed-1790108697242.json (default pre route, launched:false, same session); commit 804a64a.
+
+Deviation before correction round 1 (template section 10 classes 2 and 6; reviewer and architect attempt 1 FAIL, state/gate-log.json records 105 and 106): Scope widens to frontends/shell/src/canvas/pick.ts for its stale remount comment (the same false mechanism); the declared budget rises to <= 400 non-generated lines across <= 4 files, the form excluded; full gating unchanged.
