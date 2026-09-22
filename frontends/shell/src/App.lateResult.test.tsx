@@ -3,7 +3,7 @@
 
 /**
  * N8 late-result integration test (the human's word of 2026-09-22,
- * `state/directives/2026-09-22-part-n-n8-and-sequencing.md`; the preregistration's "Deviation before
+ * `state/directives/2026-09-22-n8-late-result-test.md` item 1; the preregistration's "Deviation before
  * the late-result integration test" line): a source-text assertion (`App.test.ts`'s
  * `the_pre_check_refusal_latches_the_session_in_the_untiled_catch`) does not prove the guard holds
  * under real delivery order. Mounts the REAL `App` (`App.tsx`'s default export) in jsdom and drives
@@ -23,13 +23,19 @@
  * Late-result correction round (`state/directives/2026-09-22-n8-late-result-test.md` item 1;
  * reviewer/architect FAIL, `state/gate-log.json` records 109-110): both gates found a real window
  * between `handleAdmitted(B)` writing `admittedDatasetRef.current` and A's own passive-effect cleanup
- * calling `stop()`, in which a still-live A can write B's scan/residency state unguarded (both arms).
- * `App.tsx` now guards that window; this file's own tests hold delivery to each producer's real
- * `stop()` contract and exercise the window itself, not only a delivery timed after it.
+ * calling `stop()`, in which a still-live A can write B's state. `App.tsx` now guards, in that window,
+ * the baseline issue path's `.then` and the candidate session's two App callbacks; this file's own
+ * tests hold delivery to each producer's real `stop()` contract and exercise the window itself.
+ * NOT guarded by this piece, and not tested here (named for the human, pre-existing): an in-flight
+ * filter Apply of A that succeeds in the window carries A's filter into B (both arms, via
+ * `applyFilter`); and, in the dev-gated baseline arm only, A's canvas-refusal, failure-terminal and
+ * resident-ceiling callbacks can write B's canvas refusal or residency status.
  *
  * **Generation A is live (not ended) when B is admitted, in every scenario below** -- no test here
- * first drives A to `engine.source_changed`/`sessionEnded` (that composition is `App.test.ts`'s own
- * coverage). The guards proved here key on the admitted dataset HANDLE (`admittedDatasetRef.current`,
+ * first drives A to `engine.source_changed`/`sessionEnded`. No unit test builds ended, then reopen,
+ * then a late result as one sequence: `App.test.ts` covers the pieces (the reset, and
+ * `endSessionForDataset` dropping a mismatched handle), and the E2E reopen route covers ended, reopen,
+ * a second change, with no late delivery. The guards proved here key on the admitted dataset HANDLE (`admittedDatasetRef.current`,
  * written synchronously the instant B is admitted), not on A's own `sessionEnded`/`stopped` flag, so
  * the same comparison holds whether A is live, mid-stop, or already ended -- the live case is the
  * narrower, more searching one.
@@ -116,8 +122,8 @@ function describeFixture(): import("./skp/types").DescribeResponse {
 }
 
 // The SKP transport boundary. `openDataset` mints a fresh handle every call, in the real wire shape
-// (`ds_` + 32 lowercase hex, `protocol/skp/SKP-V0.md:145`) -- the same "a fresh, distinct handle every
-// time, same file or not" contract the real kernel carries, so admitting the SAME path twice (a
+// (`ds_` + 32 lowercase hex, `protocol/skp/SKP-V0.md:145`) -- the same contract the real kernel carries, a fresh
+// distinct handle every time, same file or not, so admitting the SAME path twice (a
 // same-file reopen, this file's own scenario) still mints two distinct handles here. Counter-based
 // (never derived from `path` or `cancelKey`), so uniqueness never depends on either one's own shape.
 vi.mock("./skp/client", () => {
@@ -209,7 +215,7 @@ vi.mock("./residency/candidateArmSession", () => {
           reissueCount += 1;
           if (reissueCount === 1) {
             const deferred = candidateMockState.makeDeferred();
-            // Same "store the wrapped promise, not the raw one" discipline, and the same
+            // Same discipline as the baseline mock (store the wrapped promise), and the same
             // success-only conversion (no `onRejected` handler), as the baseline mock above.
             const wrapped = deferred.promise.then((value) => (candidateMockState.stoppedByDataset.get(dataset) ? { kind: "stopped" } : value));
             candidateMockState.firstReissueDeferreds.set(dataset, { ...deferred, promise: wrapped });
@@ -356,8 +362,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
     // A's own effect cleanup has already run by this point (the reopen above already flushed it) --
     // its manager is stopped, so the real contract (`viewportStreamManager.ts:417-421`) is that this
-    // still-pending first request resolves `superseded`, never the raw `issued` delivered below; the
-    // mock's own `stop()` handling enforces that conversion regardless of what is delivered here.
+    // still-pending first request resolves `superseded`, which is what is delivered below; the
+    // mock's own `stop()` handling would convert an `issued` delivery the same way.
     await settleFirstRequest(handleA, { kind: "superseded" });
 
     // B's standing refusal must survive untouched -- neither cleared nor overwritten.
@@ -587,7 +593,10 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   //     `setResidencyStatus` unconditionally, so `.residency-status` renders it on B.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, null/<div class="residency-status" role="status">Showing all 5 features in view</div>, summarized):
   //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
-  //   Reverted after observing.
+  //   Reverted after observing. Note: in the product this half would not stand on B -- the real
+  //   reissueUnrestricted emits B's own query-issued status on B's first reissue
+  //   (candidateArmSession.ts:1674-1675), which the mock does not; mutation (2)'s scan-state half is a
+  //   standing contamination in the product too.
   // (2) remove the `applyScanEvent` guard (same construction branch). Expected failure: A's late `{kind:"issued"}` scan event
   //     reaches `applyScanEvent` unconditionally, so `.filter-cancel` renders on B.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, null/<button class="filter-cancel" type="button">Cancel</button>, summarized):

@@ -1188,7 +1188,7 @@ export default function App() {
         // `candidate-fill-progress` event (baseline's `ceiling-refusal`/the shared clearing events below
         // are dispatched elsewhere and never need `current` -- they clear unconditionally either way).
         onResidencyStatusChange: (event) => {
-          // N8 late-result correction round: same guard as `issueViewportQuery`'s `.then` above --
+          // N8 late-result correction round: same guard as `issueViewportQuery`'s `.then` below --
           // this callback can fire from this session's own async work (`emitResidencyStatus`,
           // `candidateArmSession.ts`) before `stop()` has run, in the same pre-cleanup window.
           if (admitted.dataset !== admittedDatasetRef.current) return;
