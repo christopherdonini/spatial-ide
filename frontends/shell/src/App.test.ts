@@ -16,6 +16,7 @@ import {
   admitAndResetStaleUiState,
   ApplyFilterDeps,
   applyFilter,
+  endSessionForDataset,
   handleCanvasCeilingRefusal,
   handleSessionEnded,
   isScanInFlight,
@@ -135,6 +136,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setActiveFilter = vi.fn();
     const setLastViewportBbox = vi.fn();
     const setScanState = vi.fn();
+    const setSessionEnded = vi.fn();
     const setAdmitted = vi.fn();
     const next = admittedFixture("ds_b");
 
@@ -146,6 +148,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setActiveFilter,
       setLastViewportBbox,
       setScanState,
+      setSessionEnded,
       setAdmitted,
     });
 
@@ -169,6 +172,9 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     // Cancel affordance) and gets the identical D4-class reset every other per-dataset state does.
     expect(setScanState).toHaveBeenCalledTimes(1);
     expect(setScanState).toHaveBeenCalledWith({ kind: "idle" });
+    // N8 fix: App-owned, not cleared by any `<WorkingCanvas>` remount.
+    expect(setSessionEnded).toHaveBeenCalledTimes(1);
+    expect(setSessionEnded).toHaveBeenCalledWith(null);
     expect(setAdmitted).toHaveBeenCalledTimes(1);
     expect(setAdmitted).toHaveBeenCalledWith(next);
   });
@@ -185,6 +191,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       activeFilter: Filter | null;
       lastViewportBbox: Bbox | null;
       scanState: ScanState;
+      sessionEnded: FormattedRefusal | null;
     } = {
       canvasRefusal: "accepting this batch would carry 2012436 resident vertices...",
       viewportRefusal: refusalFixture(),
@@ -193,6 +200,8 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       activeFilter: filterFixture(),
       lastViewportBbox: bboxFixture(),
       scanState: { kind: "delivering", streamHandle: "sh_a", rows: 42 },
+      // N8: the ended-session block a PREVIOUS source change left standing (Part N run 1's N8).
+      sessionEnded: { code: "engine.source_changed", message: "refused: the source file changed", fields: [] },
     };
     const setCanvasRefusal = vi.fn((v: string | null) => (state.canvasRefusal = v));
     const setViewportRefusal = vi.fn((v: FormattedRefusal | null) => (state.viewportRefusal = v));
@@ -201,6 +210,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setActiveFilter = vi.fn((v: Filter | null) => (state.activeFilter = v));
     const setLastViewportBbox = vi.fn((v: Bbox | null) => (state.lastViewportBbox = v));
     const setScanState = vi.fn((v: ScanState) => (state.scanState = v));
+    const setSessionEnded = vi.fn((v: FormattedRefusal | null) => (state.sessionEnded = v));
     const setAdmitted = vi.fn();
 
     admitAndResetStaleUiState(admittedFixture("ds_b"), {
@@ -211,6 +221,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setActiveFilter,
       setLastViewportBbox,
       setScanState,
+      setSessionEnded,
       setAdmitted,
     });
 
@@ -221,6 +232,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     expect(state.activeFilter).toBeNull();
     expect(state.lastViewportBbox).toBeNull();
     expect(state.scanState).toEqual<ScanState>({ kind: "idle" });
+    expect(state.sessionEnded).toBeNull();
   });
 
   it("resets happen before setAdmitted is called, so a re-render never sees the new dataset alongside stale UI state", () => {
@@ -232,6 +244,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
     const setActiveFilter = vi.fn(() => order.push("activeFilter"));
     const setLastViewportBbox = vi.fn(() => order.push("lastViewportBbox"));
     const setScanState = vi.fn(() => order.push("scanState"));
+    const setSessionEnded = vi.fn(() => order.push("sessionEnded"));
     const setAdmitted = vi.fn(() => order.push("admitted"));
 
     admitAndResetStaleUiState(admittedFixture("ds_c"), {
@@ -242,6 +255,7 @@ describe("admitAndResetStaleUiState (D4: a stale refusal/hover must not survive 
       setActiveFilter,
       setLastViewportBbox,
       setScanState,
+      setSessionEnded,
       setAdmitted,
     });
 
@@ -1156,14 +1170,12 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * still sets `viewportRefusal` exactly as before, that it additionally ends the session for this
    * ONE code, and that it matches on `.skpError.code` rather than on the message.
    *
-   * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch":
-   * change the catch to `e.skpError.message.includes("source file
-   * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
-   * pinned message is the human's prose and is not required to contain the code (§4 T6's own
-   * mutation).
-   *
-   * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
-   * /if \(isSourceChangedRefusal\(e\)\) en…/`.
+   * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch"
+   * (re-verified for N8's `forDataset` threading): change the catch to
+   * `endSession(refusalDetailOf(e))` (drop `forDataset`). Expected failure: the
+   * `endSession(refusalDetailOf(e), forDataset)` pattern fails to match.
+   * OBSERVED 2026-09-22: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…'
+   * to match /if \(isSourceChangedRefusal\(e\)\) en…/`. Reverted after observing.
    */
   it("the_pre_check_refusal_latches_the_session_in_the_untiled_catch", () => {
     const appSource = readFileSync(
@@ -1171,14 +1183,55 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
       "utf8"
     );
     expect(appSource).toMatch(/setViewportRefusal\(formatRefusal\(e\.skpError\)\);/);
-    expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\)\);/);
+    expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
     // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
     expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
     // The one pick-latch site, covering both arms.
     expect(appSource).toMatch(
       /onHover=\{\(readout\) => setHover\(latchedHoverReadout\(readout, sessionEndedRef\.current\)\)\}/
     );
-    // And both construction sites subscribe the same handler.
-    expect(appSource.match(/onSessionEnded: endSession,/g) ?? []).toHaveLength(2);
+    // N8: both construction sites now bind `endSession` to THIS effect run's own `admitted.dataset`.
+    expect(appSource.match(/onSessionEnded: \(detail\) => endSession\(detail, admitted\.dataset\),/g) ?? []).toHaveLength(2);
+  });
+});
+
+describe("endSessionForDataset (N8: a late callback from an ended generation must not act on the live one)", () => {
+  function deps(ended: { current: boolean }, current: { value: string | null }) {
+    const calls: { setSessionEnded: FormattedRefusal[]; setHover: HoverReadout[] } = { setSessionEnded: [], setHover: [] };
+    const d = {
+      getCurrentDataset: () => current.value,
+      isAlreadyEnded: () => ended.current,
+      setSessionEnded: (r: FormattedRefusal) => { ended.current = true; calls.setSessionEnded.push(r); },
+      setHover: (h: HoverReadout) => calls.setHover.push(h),
+    };
+    return { calls, d };
+  }
+  const DETAIL = "engine.source_changed: refused: the source file changed";
+
+  // RECORDED MUTATION for "a call for a dataset that is no longer current is dropped, not acted
+  // on": remove the `forDataset !== deps.getCurrentDataset()` guard. Expected failure: a late call
+  // for "ds_old" would end the (unrelated) current "ds_new" generation instead of being dropped.
+  // OBSERVED 2026-09-22: FAILED -- `AssertionError: expected [ { …(3) } ] to deeply equal []`.
+  it("a call for a dataset that is no longer current is dropped, not acted on", () => {
+    const ended = { current: false };
+    const { calls, d } = deps(ended, { value: "ds_new" });
+    endSessionForDataset(DETAIL, "ds_old", d);
+    expect(calls.setSessionEnded).toEqual([]);
+    expect(calls.setHover).toEqual([]);
+    expect(ended.current).toBe(false);
+  });
+
+  // RECORDED MUTATION for "a call for the current dataset ends the session exactly as
+  // handleSessionEnded does": add an unconditional `return;` right after the guard. Expected
+  // failure: a call for the CURRENT dataset would never end the session at all.
+  // OBSERVED 2026-09-22: FAILED -- `AssertionError: expected [] to have a length of 1 but got +0`.
+  it("a call for the current dataset ends the session exactly as handleSessionEnded does", () => {
+    const ended = { current: false };
+    const { calls, d } = deps(ended, { value: "ds_a" });
+    endSessionForDataset(DETAIL, "ds_a", d);
+    expect(calls.setSessionEnded).toHaveLength(1);
+    expect(calls.setSessionEnded[0].code).toBe("engine.source_changed");
+    expect(calls.setHover).toEqual([{ kind: "session-ended" }]);
+    expect(ended.current).toBe(true);
   });
 });
