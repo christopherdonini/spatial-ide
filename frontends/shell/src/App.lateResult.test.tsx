@@ -301,10 +301,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     __resetResidencyArmForTests();
   });
 
-  // RECORDED MUTATION for "a late old-generation SUCCESS after a reopen does not clear the new
-  // generation's standing viewport refusal": remove the resolved arm's
-  // `if (forDataset !== admittedDatasetRef.current) return;` guard from `reportViewportOutcome`
-  // (App.tsx). Expected failure: dataset A's late `{kind:"issued"}` outcome then falls through to
+  // RECORDED MUTATION for "a late old-generation SUCCESS after a reopen does not clear the new generation's standing viewport refusal":
+  // remove the resolved arm's `if (forDataset !== admittedDatasetRef.current) return;` guard from
+  // `reportViewportOutcome` (App.tsx). Expected failure: dataset A's late `{kind:"issued"}` outcome then falls through to
   // `setViewportRefusal(null)` unconditionally, wiping B's standing refusal -- the
   // `.canvas-refusal .admission-refusal-code` assertion after the late delivery fails (becomes
   // `null` instead of `"engine.no_covering_bbox"`).
@@ -368,9 +367,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".hover-readout-session-ended")).toBeNull();
   });
 
-  // RECORDED MUTATION for "a late old-generation REJECTION carrying a different refusal code after
-  // a reopen does not write the new generation's viewport refusal either": identical guard removal
-  // as the previous test's mutation, observed against a non-ending code so the write-guard's reach
+  // RECORDED MUTATION for "a late old-generation REJECTION carrying a different refusal code after a reopen does not write the new generation's viewport refusal either":
+  // identical guard removal as the previous test's mutation, observed against a non-ending code so the write-guard's reach
   // (every rejection, not only the session-ending one) is itself proven, not assumed. Expected
   // failure: the `.canvas-refusal .admission-refusal-code` assertion after the late delivery fails
   // (becomes `"engine.connections_exhausted"` instead of `null`).
@@ -404,9 +402,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // guard's own discriminating fact (`forDataset === admittedDatasetRef.current`) from everything
   // else in the sequence.
   //
-  // RECORDED MUTATION for "an engine.source_changed rejection issued FOR the live generation still
-  // ends it -- the guard is generation-specific, not a dead path": remove
-  // `if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e), forDataset);` from
+  // RECORDED MUTATION for "an engine.source_changed rejection issued FOR the live generation still ends it -- the guard is generation-specific, not a dead path":
+  // remove `if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e), forDataset);` from
   // `reportViewportOutcome`'s rejected arm entirely (App.tsx). Expected failure: B's own
   // `engine.source_changed` rejection no longer ends B's session at all -- the
   // `.canvas-session-ended` assertion fails (becomes `null`).
