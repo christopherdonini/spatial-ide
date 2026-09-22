@@ -1187,7 +1187,13 @@ export default function App() {
         // `candidate-relinquished`/`candidate-within-budget`/`candidate-over-budget`/
         // `candidate-fill-progress` event (baseline's `ceiling-refusal`/the shared clearing events below
         // are dispatched elsewhere and never need `current` -- they clear unconditionally either way).
-        onResidencyStatusChange: (event) => setResidencyStatus((current) => nextResidencyStatus(event, current)),
+        onResidencyStatusChange: (event) => {
+          // N8 late-result correction round: same guard as `issueViewportQuery`'s `.then` above --
+          // this callback can fire from this session's own async work (`emitResidencyStatus`,
+          // `candidateArmSession.ts`) before `stop()` has run, in the same pre-cleanup window.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
+          setResidencyStatus((current) => nextResidencyStatus(event, current));
+        },
         // P5f complex-gate should-fix 3: wires this session into the SAME scan-liveness state machine
         // baseline's own manager already drives (`applyScanEvent`'s own doc comment above) -- before
         // this, `scanState` stayed `{kind:"idle"}` for a candidate-arm session's entire life, so
@@ -1195,7 +1201,12 @@ export default function App() {
         // untiled work was in flight. `applyScanEvent` itself accepts the FULL `ScanEvent` union;
         // `CandidateArmSessionDeps.applyScanEvent`'s own narrower type is a safe target by function-
         // parameter contravariance (that field's own doc comment has the full account).
-        applyScanEvent,
+        applyScanEvent: (event) => {
+          // N8 late-result correction round: same guard immediately above -- `syncScanLiveness`
+          // (`candidateArmSession.ts`) can fire in the identical pre-cleanup window.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
+          applyScanEvent(event);
+        },
         // **P3b §2a(iii): the candidate arm's owner reaches the same App-level handler.** The
         // session has already cleared its own tile residency by the time this fires; what is added
         // here is the status and the pick latch, which are the App's surfaces.
@@ -1284,6 +1295,11 @@ export default function App() {
     });
     managerRef.current = manager;
 
+    // N8 late-result correction round: captured once, here, so the guard inside `issueViewportQuery`'s
+    // `.then` below reads a value TS can see is never reassigned (a nested `function` declaration
+    // does not inherit `admitted`'s own non-null narrowing from the top-level check above).
+    const forThisEffect = admitted.dataset;
+
     /**
      * The ONE choke point every `manager.requestViewport` call in this effect (and, via
      * `issueQueryRef`, `handleApplyFilter`'s Apply/refusal-recovery calls too) goes through --
@@ -1299,6 +1315,12 @@ export default function App() {
     ): Promise<RequestOutcome> {
       const promise = manager.requestViewport(bbox, bboxCrs, undefined, filter);
       promise.then((outcome) => {
+        // N8 late-result correction round: same drop-not-act-on guard `reportViewportOutcome`
+        // already applies to the resolved/rejected arms, extended here -- this `.then` can still
+        // run for a generation this effect's own `admitted.dataset` has moved past, in the window
+        // between a later dataset's admission (which writes `admittedDatasetRef.current` first,
+        // `handleAdmitted`'s own doc comment) and this effect's cleanup calling `manager.stop()`.
+        if (forThisEffect !== admittedDatasetRef.current) return;
         if (outcome.kind === "issued") {
           scanRowsAccumulator = { streamHandle: outcome.streamHandle, rows: 0 };
           applyScanEvent({ kind: "issued", streamHandle: outcome.streamHandle });

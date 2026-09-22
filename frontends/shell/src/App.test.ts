@@ -1069,12 +1069,13 @@ describe("makeCandidateViewportDispatcher (P5f complex-gate must-fix 4: the doub
 // uses to pin a fact about compiled/source text no runtime test surface in this package can observe.
 // Genuinely fails on the revert described above (either dropping the functional form, or dropping the
 // `current` argument), which is the property this guard exists for.
+// N8 late-result correction round: widened for the call site's own new guard body, never loosening what it asserts.
 describe("S-2: App.tsx's own functional-updater call site for onResidencyStatusChange, pinned", () => {
   it("candidateArmSession's onResidencyStatusChange call site passes the useState functional updater, threading `current` into nextResidencyStatus", () => {
     const appSourcePath = join(dirname(fileURLToPath(import.meta.url)), "App.tsx");
     const appSource = readFileSync(appSourcePath, "utf8");
     const callSitePattern =
-      /onResidencyStatusChange:\s*\(event\)\s*=>\s*setResidencyStatus\(\s*\(current\)\s*=>\s*nextResidencyStatus\(event,\s*current\)\s*\)/;
+      /onResidencyStatusChange:\s*\(event\)\s*=>\s*\{[\s\S]*?setResidencyStatus\(\s*\(current\)\s*=>\s*nextResidencyStatus\(event,\s*current\)\s*\)/;
     expect(appSource).toMatch(callSitePattern);
   });
 });
