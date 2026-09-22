@@ -97,9 +97,9 @@ export function isPickSessionEnded(value: HoverReadout): value is PickSessionEnd
  * **N8 correction (2026-09-22):** the latch is App-owned `sessionEndedRef.current` (`App.tsx`, this
  * function's `sessionEnded` argument), not something a `WorkingCanvas` remount clears -- a reopen
  * clears it because `handleAdmitted`'s own `admitAndResetStaleUiState` call resets it, the same
- * clear the session-ended status block above relies on (`App.tsx`'s own doc comment on
- * `sessionEnded` has the full account); `WorkingCanvas` keyed on `admitted.dataset` rebuilds the
- * managers, a separate mechanism from this latch's own reset.
+ * clear App's session-ended status block relies on (`App.tsx`'s own doc comment on
+ * `sessionEnded` has the full account); App's `useEffect([admitted])` rebuilds the managers and the
+ * keyed `WorkingCanvas` remount discards canvas-side refs, both separate from this latch's reset.
  */
 export function latchedHoverReadout(readout: HoverReadout, sessionEnded: boolean): HoverReadout {
   return sessionEnded ? { kind: "session-ended" } : readout;

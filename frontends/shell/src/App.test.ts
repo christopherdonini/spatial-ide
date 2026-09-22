@@ -1211,7 +1211,9 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
     // N8 correction round 1 (reviewer B1): a late arrival from a superseded generation must not
     // write viewportRefusal on EITHER arm -- the same drop-not-act-on guard `endSessionForDataset`
     // already applies to ending the session, atop both the resolved and the rejected arm.
-    expect(appSource.match(/if \(forDataset !== admittedDatasetRef\.current\) return;/g) ?? []).toHaveLength(2);
+    const rvoStart = appSource.indexOf("function reportViewportOutcome(");
+    const rvoBody = appSource.slice(rvoStart, appSource.indexOf("\n  useEffect(", rvoStart));
+    expect(rvoBody.match(/if \(forDataset !== admittedDatasetRef\.current\) return;/g) ?? []).toHaveLength(2);
     // The one pick-latch site, covering both arms.
     expect(appSource).toMatch(
       /onHover=\{\(readout\) => setHover\(latchedHoverReadout\(readout, sessionEndedRef\.current\)\)\}/

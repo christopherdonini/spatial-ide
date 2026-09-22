@@ -1056,7 +1056,7 @@ export default function App() {
         // N8 correction round 1: a late arrival from a generation `App` has moved past must not
         // touch the LIVE generation's `viewportRefusal` either -- the same drop-not-act-on guard
         // `endSessionForDataset` already applies to ending the session (its own doc comment has the
-        // full account), extended here to both of this arm's own writes.
+        // full account), extended here to this arm's write (the rejected arm below carries the same guard).
         if (forDataset !== admittedDatasetRef.current) return;
         // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
         // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
@@ -1610,7 +1610,7 @@ export default function App() {
                   * doc comment), which is exactly right here: the state does not end until the
                   * dataset is reopened. **N8 correction (2026-09-22):** it is NOT a remount that
                   * clears this -- `.canvas-status-stack` sits beside the keyed `<WorkingCanvas
-                  * key={admitted.dataset}>` (below), not inside it, and renders from this
+                  * key={admitted.dataset}>` (above), not inside it, and renders from this
                   * App-owned `sessionEnded` state. The actual clear is `handleAdmitted`'s own
                   * `admitAndResetStaleUiState` call (`sessionEnded`'s own doc comment above has the
                   * full account). The `.residency-status` precedent below is the same reasoning for

@@ -971,18 +971,15 @@ async function main() {
     //   EVERY call for the run's whole lifetime, not only a reopened one; R4's own failure is real
     //   and named, but the blast radius is wider than R4 alone. Reverted after observing.
     //
-    //   R1: no dedicated mutation recorded. `AdmissionPanel.tsx`'s `admitPath` returns
-    //   (`return outcome;`, :251) BEFORE `deps.onAdmitted(outcome.admitted)` (:255) inside its
-    //   `if (outcome.kind === "refused")` branch (`AdmissionOutcome`, `admitDataset.ts:16-18`, is a
-    //   proper discriminated union). Removing that `return` does not isolate R1's guarantee: without
-    //   it, TypeScript does not narrow `outcome.kind` past the `if`, so the later
-    //   `outcome.admitted` (:254) fails to compile (`outcome` stays the full union) -- the build
-    //   this harness needs to even launch the app never produces an app to test against. No other
-    //   product code path reaches `onAdmitted` for a refused outcome (grepped: one call site,
-    //   `AdmissionPanel.tsx:255`), and the native file-picker path this hook mirrors
-    //   (`AdmissionPanel.tsx:295`'s `pickFile()`) is not reachable from this headless CDP driver
-    //   either. R1's own real-path assertion is otherwise unchanged from the architect's VERIFIED
-    //   CLEAN finding (`AdmissionPanel.tsx:214-252`, `App.tsx:647`).
+    //   Mutation for R1 (`AdmissionPanel.tsx`): remove the refused branch's `return outcome;` (:251),
+    //   so a refused outcome falls through to `deps.onAdmitted(outcome.admitted)` (:255). It fails
+    //   `tsc --noEmit`, but this harness launches through `tauri dev` -> `vite`, which does not
+    //   type-check, so the app runs (an earlier version of this record said it could not; that
+    //   was false). OBSERVED 2026-09-22 (the custodian's closing attempt):
+    //   R1-failed-reopen-does-not-clear FAILED -- "page.evaluate: TypeError: Cannot read properties
+    //   of undefined (reading 'dataset')" at `onAdmitted` -- R1 fails by name, by exception (a
+    //   refused outcome carries no `admitted`), not by R1's own assertion; R2, R3 and R4 failed
+    //   after it in the same run, from the page state it left. Reverted after observing.
     // ----------------------------------------------------------------------------------------------
     if (ROUTE === "reopen") {
       // The cheapest honest failure this harness can produce: a path that never existed, so
@@ -1024,12 +1021,12 @@ async function main() {
         }
         // N8 correction round 1 (reviewer/architect B2/B3): same file, same bytes -> the same
         // auto-fit camera as the original open -- but S2 above needed `observation.notchesUsed`
-        // real zoom-in notch(es) from THAT auto-fit camera before the formerly-occupied pixel
-        // identified anything at all (`stepA9`'s loop). Hovering the bare post-reopen auto-fit view
-        // would accept a below-pick-resolution readout as "identification", which is not what §9
-        // requires. Reproduce S2's own camera state instead: the same number of notches, around the
+        // real zoom-in notch(es) from THAT auto-fit camera before it verified an interior pixel
+        // (`stepA9`'s loop; the recorded run read an id at that notch). Hovering the bare post-reopen auto-fit view
+        // would accept a below-pick-resolution readout as "identification", which is not what the form's
+        // Tests+mutation line (`N8-REOPEN-RESET-PREREGISTRATION.md:9`) requires. Reproduce S2's own camera state instead: the same number of notches, around the
         // canvas centre, with the same `zoomInOneNotch` primitive S2 used.
-        let rect = await requireCanvasRect(page);
+        const rect = await requireCanvasRect(page);
         const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
         for (let notch = 0; notch < observation.notchesUsed; notch++) {
           await zoomInOneNotch(page, consoleHandle, center);
