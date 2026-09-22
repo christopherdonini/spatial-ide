@@ -9,3 +9,5 @@ Change: a successful admission, including a same-file reopen after a source chan
 Tests+mutation: unit tests over the reset and the late-result guards, and an end-to-end reopen route driven through the real app (window.__SPATIAL_E2E__, not a helper with invented setters) asserting the four behaviours in Change; one recorded mutation per new test that fails it by name
 Out-of-scope: no wire (protocol/skp untouched), no ADR text, no security surface, no renderer redesign, no watcher, no governance change; the owner-side guarantee is restored as stated, not changed
 ```
+
+Budget: 244 of 250 non-generated lines across 3 files (git diff --numstat origin/main...HEAD, the form excluded); E2E evidence: frontends/shell/e2e/out/source-changed-1790108677871.json (reopen route, launched:true), frontends/shell/e2e/out/source-changed-1790108697242.json (default pre route, launched:false, same session); commit 804a64a.
