@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b20f71c2098778b9f65a06`) at `2026-09-22T21:26:57.070Z`.
+Generated from `PLAN.yaml` (sha256 `0d0c66ac01097479933aadf75208176d8bf5674adaefb823f2a836bd80f5e8e7`) at `2026-09-22T23:51:15.944Z`.
 
 ## 1. Next
 
@@ -10,9 +10,15 @@ Generated from `PLAN.yaml` (sha256 `912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b2
 
 - (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 8 min)
 
-- (none)
+### click
+
+- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 reopen reset, PR #100 FOR YOUR CLICK: a successful reopen clears the ended session; late results from the old generation are dropped (both gates PASS at b194aa7, landed as text at 68d81d4; your focused N8 retest follows the merge, under briefa-p6-part-n-acceptances) (5 min)
+
+### ruling
+
+- **decision-n8-residual-late-writes** — Whether the N8 residual late writes are fixed before or after the N8 retest -- an in-flight filter Apply of the old generation that succeeds in the reopen window carries its filter into the new session (both arms, probed); the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks (by reading) (3 min)
 
 ## 4. Blocked on dependencies
 
@@ -39,7 +45,6 @@ Generated from `PLAN.yaml` (sha256 `912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b2
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8: a successful same-file reopen clears the ended session's warning and hover latch and restores identification and Zoom to layer; a failed reopen or a late old-generation result never revives or contaminates — evidence: PR #100
 
 ## 6. Proposed / unscheduled
 

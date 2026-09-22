@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-22T21:26:58.684Z",
-  "plan_hash": "912133fea6afdff26ae1f85e1cb8ac924bfdb9e5a2b20f71c2098778b9f65a06",
+  "generated_at": "2026-09-22T23:51:17.544Z",
+  "plan_hash": "0d0c66ac01097479933aadf75208176d8bf5674adaefb823f2a836bd80f5e8e7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1573,7 +1573,7 @@
       ],
       "needs_human": {
         "kind": "sitting",
-        "minutes": 60
+        "minutes": 20
       },
       "gate": "engine/ADMISSION-PREREGISTRATION.md",
       "evidence": null,
@@ -1583,7 +1583,7 @@
       "entries": [
         110
       ],
-      "summary": "Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
+      "summary": "After PR #100 merges: the human's focused N8 retest (the retest text in the N8 hand-back), then the five acceptances as one question set. Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -2345,11 +2345,11 @@
     },
     {
       "id": "briefa-p6-n8-reopen-reset",
-      "title": "Brief A P6 -- N8: a successful same-file reopen clears the ended session's warning and hover latch and restores identification and Zoom to layer; a failed reopen or a late old-generation result never revives or contaminates",
+      "title": "Brief A P6 -- N8 reopen reset, PR #100 FOR YOUR CLICK: a successful reopen clears the ended session; late results from the old generation are dropped (both gates PASS at b194aa7, landed as text at 68d81d4; your focused N8 retest follows the merge, under briefa-p6-part-n-acceptances)",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "blocked",
       "order": 5,
       "depends_on": [],
       "needs_human": {
@@ -2366,7 +2366,7 @@
       "entries": [
         110
       ],
-      "summary": "PR #100 for the click (reviewer a1 FAIL 105, architect a1 FAIL 106; one correction round; architect a2 PASS 108, reviewer a2 FAIL 107 on one mechanical item; closed under AI_DEVELOPMENT.md section A at de360e7, self-verified); the human's focused N8 retest follows the merge. Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows",
+      "summary": "Waiting on the human: click PR #100 (head 68d81d4; CI on that head). Gates: reviewer a1 105 FAIL, architect a1 106 FAIL, correction round, architect a2 108 PASS, reviewer a2 107 FAIL, closed under AI_DEVELOPMENT.md section A at de360e7; then the human asked for a late-result integration test (2026-09-22): reviewer 109 FAIL, architect 110 FAIL, a correction round adding guards for the pre-cleanup window in both arms, reviewer 111 PASS, architect 112 PASS, landed as text at a687d0f/68d81d4. Residual, named for the human (decision-n8-residual-late-writes): an in-flight filter Apply of the old generation succeeding in the window carries its filter into the new session; the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks. After the click: node done on merge; the retest runs under briefa-p6-part-n-acceptances",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -2485,6 +2485,33 @@
       "summary": "A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
       "dates": {
         "opened": "2026-09-22",
+        "done": null
+      }
+    },
+    {
+      "id": "decision-n8-residual-late-writes",
+      "title": "Whether the N8 residual late writes are fixed before or after the N8 retest -- an in-flight filter Apply of the old generation that succeeds in the reopen window carries its filter into the new session (both arms, probed); the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks (by reading)",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 5,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 3
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        110
+      ],
+      "summary": "Found by the N8 late-result gates (records 111-112), pre-existing and outside PR #100's declared Change; the window is the interval between the new admission and the old stream's cleanup. The custodian's reading: a bounded follow-up piece with the same handle guard on the Apply path and the three baseline callbacks, after PR #100 merges and in parallel with nothing else; the N8 retest does not exercise filters",
+      "dates": {
+        "opened": "2026-09-23",
         "done": null
       }
     },
