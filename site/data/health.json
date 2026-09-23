@@ -1,18 +1,15 @@
 {
-  "generated_at": "2026-09-23T23:36:22.558Z",
+  "generated_at": "2026-09-23T23:42:53.735Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": false,
-    "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
-    ]
+    "ok": true,
+    "failures": []
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 76261306368,
+        "bytes": 76240171008,
         "total": 510319915008
       },
       {
@@ -32,16 +29,16 @@
   },
   "waiting_on_human": [
     {
-      "id": "adr-013-display-statement",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-23",
-      "age_days": 0
+      "id": "briefa-p6-part-n-acceptances",
+      "kind": "sitting",
+      "minutes": 20,
+      "opened": "2026-09-18",
+      "age_days": 5
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 49
+    "n": 50
   },
   "gate_first_pass": {
     "present": true,

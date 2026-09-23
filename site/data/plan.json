@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-23T23:36:24.129Z",
-  "plan_hash": "f627af2ae7c8e540a71d863436c6bbfe2ef9fd56924a23260133697a7ca1ecb8",
+  "generated_at": "2026-09-23T23:42:55.366Z",
+  "plan_hash": "4c87639d4aa53c0522a2f2760bad57747f27d888933ea65974492087faf4e370",
   "priorities_approved": true,
   "lanes": [
     {
@@ -923,7 +923,8 @@
         "adr-023-decision-text",
         "drill-fix-release-only-guard",
         "drill-fix-fixture-watchdog",
-        "drill-fix-viewer-build-order"
+        "drill-fix-viewer-build-order",
+        "crs-unit-fact-and-bounds"
       ],
       "needs_human": {
         "kind": "none",
@@ -1588,7 +1589,7 @@
         110,
         119
       ],
-      "summary": "RULED 2026-09-23 (late), entry 119: this node is now the short sitting -- N1 re-sighted after adr-013-display-statement lands, and the N8 rerun on the merged build, both recorded verbatim in Part N's run section; the five accept nodes follow as one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close",
+      "summary": "PR #102 merged 2026-09-23 (2beaa33): the sitting is ready -- N1 re-sighted (the Display convention row and its label), and the N8 rerun on the merged build. RULED 2026-09-23 (late), entry 119: this node is now the short sitting -- N1 re-sighted after adr-013-display-statement lands, and the N8 rerun on the merged build, both recorded verbatim in Part N's run section; the five accept nodes follow as one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1723,7 +1724,7 @@
         110,
         119
       ],
-      "summary": "RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "summary": "RULED 2026-09-23 (later), entry 120 (1): with a dated acceptance note naming item 6 (unit-aware bounds) as owed, scheduled as crs-unit-fact-and-bounds. RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -2397,12 +2398,12 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 5,
       "depends_on": [],
       "needs_human": {
-        "kind": "click",
-        "minutes": 3
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "frontends/shell/ADR-013-DISPLAY-STATEMENT-PREREGISTRATION.md",
       "evidence": {
@@ -2411,11 +2412,48 @@
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "PR #102 merged 2026-09-23 (the click, 2beaa33); felt_verdict false, done on merge"
+      },
       "entries": [
         113,
         119
       ],
-      "summary": "PR #102 FOR YOUR CLICK (head 6daaad8; every CI run green on push and pull_request; mergeable, clean); closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger). RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
+      "summary": "DONE 2026-09-23 at PR #102 (the click, 2beaa33). Closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger); the architect found ADR-013 A1 item 5 true of the build. Migration-inventory item 1 (shell direction item (d)): the Display convention row in DescribeSummary. N1 is re-sighted under briefa-p6-part-n-acceptances",
+      "dates": {
+        "opened": "2026-09-23",
+        "done": "2026-09-23"
+      }
+    },
+    {
+      "id": "crs-unit-fact-and-bounds",
+      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 1,
+      "depends_on": [
+        "accept-adr-013-instance",
+        "accept-adr-015-a1",
+        "accept-adr-016-a1",
+        "accept-adr-028-qualification",
+        "accept-adr-032"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 300,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        120
+      ],
+      "summary": "PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one) and, on the custodian's reading of first, ahead of shell-dependency-audit-piece too. Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement",
       "dates": {
         "opened": "2026-09-23",
         "done": null
@@ -2442,7 +2480,7 @@
       "entries": [
         119
       ],
-      "summary": "RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))",
+      "summary": "Migration requirement, RULED 2026-09-23 (later), entry 120 item (2), the human's words: every fact display binds to the dataset on the canvas, never to an in-flight open attempt. RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))",
       "dates": {
         "opened": "2026-09-23",
         "done": null
@@ -2462,7 +2500,8 @@
         "accept-adr-015-a1",
         "accept-adr-016-a1",
         "accept-adr-028-qualification",
-        "accept-adr-032"
+        "accept-adr-032",
+        "crs-unit-fact-and-bounds"
       ],
       "needs_human": {
         "kind": "click",
@@ -2476,7 +2515,7 @@
       "entries": [
         110
       ],
-      "summary": "After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch",
+      "summary": "RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch",
       "dates": {
         "opened": "2026-09-22",
         "done": null
