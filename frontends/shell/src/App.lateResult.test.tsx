@@ -943,7 +943,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // RECORDED MUTATION for "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)":
   // extends this file's own second RECORDED MUTATION (`reportViewportOutcome`'s rejected-arm guard, App.tsx) to the full ended -> reopen composition.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
-  //   AssertionError: expected null not to be null
+  //   AssertionError: expected 'engine.source_changed' to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
   it("the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)", async () => {
     const deliver = (handle: string) =>
@@ -1290,7 +1290,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // RECORDED MUTATION for "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (candidate arm)":
   // extends this file's own candidate-arm REJECTION RECORDED MUTATION (`reportViewportOutcome`'s rejected-arm guard, App.tsx) to the full ended -> reopen composition.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
-  //   AssertionError: expected null not to be null
+  //   AssertionError: expected 'engine.source_changed' to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
   it("the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (candidate arm)", async () => {
     const deliver = (handle: string) =>
