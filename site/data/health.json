@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T23:00:53.868Z",
+  "generated_at": "2026-09-23T23:18:12.212Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,7 +9,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 76584349696,
+        "bytes": 76298436608,
         "total": 510319915008
       },
       {
@@ -34,9 +34,9 @@
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 30,
+    "nodes": 31,
     "first_pass": 13,
-    "rate": 0.43333333333333335
+    "rate": 0.41935483870967744
   },
   "record_rounds": {
     "present": true,
@@ -48,8 +48,9 @@
       "briefa-p3b-test-names": 1,
       "briefa-p5-gate-tests": 1,
       "briefa-p4-corpus-run": 2,
-      "briefa-p6-describe-fields": 1
+      "briefa-p6-describe-fields": 1,
+      "adr-013-display-statement": 1
     },
-    "total": 18
+    "total": 19
   }
 }
