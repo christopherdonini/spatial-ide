@@ -518,7 +518,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // never calls `commitActiveFilter`/`resetFitForNewGeneration` on any outcome but `"issued"`. The
   // three baseline callbacks, delivered post-cleanup, have no other protection at any point.
   //
-  // RECORDED MUTATION for "A's late filter-Apply completion and the dev-gated baseline arm's own three callbacks do not contaminate B (baseline arm)":
+  // RECORDED MUTATION for "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)":
   // (1) THIS test drives Apply through the dev-only `queryWithFilter` E2E hook, so its own two new
   //     `if (forThisEffect !== admittedDatasetRef.current) return;` guards (App.tsx's baseline
   //     `registerE2eHook("queryWithFilter", ...)` block) are what it exercises -- remove both.
@@ -612,7 +612,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // constructs its OWN, separate `applyFilter` deps, so this drives the real
   // `.filter-predicate`/`.filter-apply` DOM instead, proving `handleApplyFilter`'s own guards.
   //
-  // RECORDED MUTATION for "the real FilterPanel Apply button's own late completion does not contaminate B (baseline arm)":
+  // RECORDED MUTATION for "the real FilterPanel Apply button's own late completion, delivered in the pre-cleanup window after ended -> reopen, does not contaminate B (baseline arm)":
   // remove `handleApplyFilter`'s two new `if (forThisApply !== admittedDatasetRef.current) return;` guards (App.tsx).
   // Expected failure: `.filter-active` renders "Applied: zone = 'residential'" on B.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
@@ -819,7 +819,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // `onFailureTerminal`/`onCanvasRefusal`/`onResidentCeilingExceeded` (no `ViewportStreamManager`
   // exists for this arm; `WorkingCanvas.tsx:186-190`'s `pushTileBatch` calls neither).
   //
-  // RECORDED MUTATION for "A's late filter-Apply completion (candidate arm's reissueUnrestricted) does not contaminate B (candidate arm)":
+  // RECORDED MUTATION for "A's ended -> reopen sequence: the late filter-Apply completion (reissueUnrestricted) does not contaminate B -- B's own Apply still works (candidate arm)":
   // remove the candidate-arm dev hook's two new `if (admitted.dataset !== admittedDatasetRef.current) return;` guards (App.tsx).
   // Expected failure: `.filter-active` renders "Applied: zone = 'residential'" on B.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
