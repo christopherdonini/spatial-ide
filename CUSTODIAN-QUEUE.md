@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7270fce11b5835ef0eb8322b8a9dc5cdb24e99a1fe6500b325f9e5add5f522a5`) at `2026-09-23T05:06:18.944Z`.
+Generated from `PLAN.yaml` (sha256 `2fc24a7608526256131f96269d39b25dd3fab9a5eaad02114e7da05683fa7b1d`) at `2026-09-23T06:24:33.747Z`.
 
 ## 1. Next
 
@@ -10,9 +10,11 @@ Generated from `PLAN.yaml` (sha256 `7270fce11b5835ef0eb8322b8a9dc5cdb24e99a1fe65
 
 - (none)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 5 min)
 
-- (none)
+### click
+
+- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 residual, PR #101 FOR YOUR CLICK (head 828fc34, every CI run green on the branch and the merge candidate): no late result of an ended generation changes the reopened session; your final N8 retest follows the merge, under briefa-p6-part-n-acceptances (5 min)
 
 ## 4. Blocked on dependencies
 
@@ -39,7 +41,6 @@ Generated from `PLAN.yaml` (sha256 `7270fce11b5835ef0eb8322b8a9dc5cdb24e99a1fe65
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 reopen reset (PR #100, not yet ready): a successful reopen clears the ended session; no late result of the old generation changes the new one -- the residual correction owed before the final retest — evidence: branch `fix/n8-reopen-reset`
 
 ## 6. Proposed / unscheduled
 

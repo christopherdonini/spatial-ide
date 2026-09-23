@@ -1402,21 +1402,21 @@ nodes:
     dates: {opened: 2026-09-19, done: 2026-09-20}
 
   - id: briefa-p6-n8-reopen-reset
-    title: "Brief A P6 -- N8 reopen reset (PR #100, not yet ready): a successful reopen clears the ended session; no late result of the old generation changes the new one -- the residual correction owed before the final retest"
+    title: "Brief A P6 -- N8 residual, PR #101 FOR YOUR CLICK (head 828fc34, every CI run green on the branch and the merge candidate): no late result of an ended generation changes the reopened session; your final N8 retest follows the merge, under briefa-p6-part-n-acceptances"
     kind: task
     lane: shell
     phase: prototype
-    status: in-progress
+    status: blocked
     order: 5
     depends_on: []
     needs_human: {kind: click, minutes: 5}
     gate: frontends/shell/N8-REOPEN-RESET-PREREGISTRATION.md
-    evidence: {branch: "fix/n8-reopen-reset"}
+    evidence: {pr: 101}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: [110]
-    summary: "PR #100 (the fix up to 1a346a9) MERGED by the human 2026-09-23T04:27Z at b500465; the residual correction (f2682c2..f5d91ee) is on the same branch ahead of main, under its gates, and goes to the human as a new PR. IN PROGRESS 2026-09-23 on the human's ruling: current main merged into the branch (no force push); a bounded correction guards the old filter Apply completion and the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks, with the full sequence (old generation ended, successful reopen, then old success, error and filter completion) through the real App wiring and positive controls; full gating; then the E2E, CI on the branch and on the merge candidate, and PR #100 handed back for the click and the final N8 retest. Gate history: records 105-112 (the fix closed under AI_DEVELOPMENT.md section A; the late-result round passed both gates)"
+    summary: "Waiting on the human: click PR #101. PR #100 (the reopen reset) merged at b500465 on 2026-09-23. The residual correction the human ruled on 2026-09-23: attempt 1 reviewer and architect FAIL (113-114), one correction round, attempt 2 PASS on both (115-116), landing 2218d4a and 828fc34; npm test 71/1047; both E2E routes launched fresh at f42799c (product code unchanged since apart from comments); CI on 828fc34 green for push and pull_request. After the click: node done on merge; the final N8 retest runs under briefa-p6-part-n-acceptances"
     dates: {opened: 2026-09-22, done: null}
 
   - id: shell-dependency-audit-piece
