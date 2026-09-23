@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2d1b29c4d6544aa0f9146c30fccebc9d048bc98f63b5d9fd0fa7885a44607a53`) at `2026-09-23T23:18:12.126Z`.
+Generated from `PLAN.yaml` (sha256 `f2010df45f111718c2efe6591b73c1dc91f55b4b902b93cf390eb47cde01ea7a`) at `2026-09-23T23:28:11.866Z`.
 
 ## 1. Next
 
@@ -39,7 +39,7 @@ Generated from `PLAN.yaml` (sha256 `2d1b29c4d6544aa0f9146c30fccebc9d048bc98f63b5
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **adr-013-display-statement** — ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface — evidence: branch `fix/adr-013-display-statement`
+- **adr-013-display-statement** — ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface — evidence: PR #102
 
 ## 6. Proposed / unscheduled
 

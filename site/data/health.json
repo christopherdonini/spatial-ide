@@ -1,15 +1,18 @@
 {
-  "generated_at": "2026-09-23T23:18:12.212Z",
+  "generated_at": "2026-09-23T23:28:11.949Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 76298436608,
+        "bytes": 76266315776,
         "total": 510319915008
       },
       {
@@ -49,8 +52,8 @@
       "briefa-p5-gate-tests": 1,
       "briefa-p4-corpus-run": 2,
       "briefa-p6-describe-fields": 1,
-      "adr-013-display-statement": 1
+      "adr-013-display-statement": 2
     },
-    "total": 19
+    "total": 20
   }
 }
