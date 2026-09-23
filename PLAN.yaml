@@ -949,18 +949,19 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: done
     order: 6
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, sitting-4-rows, briefa-p6-describe-fields, briefa-p6-n8-reopen-reset, adr-013-display-statement]
-    needs_human: {kind: sitting, minutes: 20}
+    needs_human: {kind: none, minutes: 0}
     gate: engine/ADMISSION-PREREGISTRATION.md
-    evidence: null
+    evidence: {path: "frontends/shell/MANUAL-WALKTHROUGH.md"}
     budget_minutes: 60
     generation: 1
     felt_verdict: true
+    verdict: {by: "human", cite: "DECISIONS-PENDING.md FELT VERDICTS 2026-09-20/23 — Part N, Brief A P6"}
     entries: [110, 119]
-    summary: "PR #102 merged 2026-09-23 (2beaa33): the sitting is ready -- N1 re-sighted (the Display convention row and its label), and the N8 rerun on the merged build. RULED 2026-09-23 (late), entry 119: this node is now the short sitting -- N1 re-sighted after adr-013-display-statement lands, and the N8 rerun on the merged build, both recorded verbatim in Part N's run section; the five accept nodes follow as one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close"
-    dates: {opened: 2026-09-18, done: null}
+    summary: "DONE 2026-09-23: Part N operator-verified (G-A7) -- run 1 (2026-09-20: N1-N7 PASS, N9 as given), the N8 retest (7301dc6) and the N1 re-sight with the N8 rerun on the merged build (8704535), each recorded verbatim in Part N's run section; the admission preregistration's Amendment 21 references them. The five acceptances follow as one appending PR for the click (the accept nodes). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file; items 17-18 were added on 2026-09-23 under entry 120. B1 of Brief B waits on the acceptances through its other dependencies"
+    dates: {opened: 2026-09-18, done: 2026-09-23}
 
   - id: briefa-p6-describe-fields
     title: "Brief A P6 -- render the three wire fields (crs.provenance, crs.axis_provenance, identity.session_statement) in the describe summary before Part N runs (round 16, item 1)"

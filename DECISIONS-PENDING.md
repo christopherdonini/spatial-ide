@@ -5,6 +5,12 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 ## Pending
 
+**FELT VERDICTS 2026-09-20/23 — Part N, Brief A P6 (human-present, dev app; the human's words verbatim, each recorded with its build in `frontends/shell/MANUAL-WALKTHROUGH.md`'s Part N run section; Part N now CLOSED, N1–N9 given):**
+
+- *Run 1, 2026-09-20 (build b7c6788; `state/directives/2026-09-22-part-n-n8-and-sequencing.md`):* **“N1 to N7 is perfectly working, wording is fine also, N8 when i reopen the scratch copy it renders but the engine.source_changed + id text "The source file..." is still there. I can zoom in and out, zoom to layer is non clickable. If i CTRL + R the viewport text and id text disappear, but there's no N6 block starting fresh. N9 seems fine to me.”** — N1–N7 PASS, N9 as given, N8 deviated.
+- *N8 retest, 2026-09-23 (7301dc6, PR #100 without PR #101; `state/directives/2026-09-23-n8-retest-and-handoff.md`):* **“I've tried N8 and it's honetly perfect, now it handles everything really well!”** — PASS as reported.
+- *N1 re-sight and N8 rerun, 2026-09-23 (8704535, with PR #101 and PR #102; `state/directives/2026-09-23-sitting-n1-n8.md`):* **“N1, the wording does read well. N8 works perfectly now.”** — PASS.
+
 **FELT VERDICTS 2026-09-14/15 — sitting (human-present, dev app; the human's words verbatim; the 2026-09-14 rows are below, Rows 4 and 6 completed on 2026-09-15 after the D: migration — sitting-4-rows now CLOSED, all six rows given):**
 
 - *Row 1 — K7, entry 66 (b):* **"Row 1 is fine"** — PASS.

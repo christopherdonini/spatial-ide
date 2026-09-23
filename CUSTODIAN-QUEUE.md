@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4c87639d4aa53c0522a2f2760bad57747f27d888933ea65974492087faf4e370`) at `2026-09-23T23:42:53.651Z`.
+Generated from `PLAN.yaml` (sha256 `9e408fd7e8f24f0b56d90419194b1b5550e884a987dd7001f0d3d932f363ec19`) at `2026-09-23T23:51:59.838Z`.
 
 ## 1. Next
 
@@ -10,26 +10,28 @@ Generated from `PLAN.yaml` (sha256 `4c87639d4aa53c0522a2f2760bad57747f27d888933e
 
 - (none)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 30 min)
 
-### sitting
+### click
 
-- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click (20 min)
+- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) (3 min)
+- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) (3 min)
+- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) (3 min)
+- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) (3 min)
+- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) (3 min)
+
+### sight
+
+- **engine-source-change-watcher** — The advisory source-change watcher (15 min)
 
 ## 4. Blocked on dependencies
 
-- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) — blocked by: briefa-p6-part-n-acceptances
-- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) — blocked by: briefa-p6-part-n-acceptances
-- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) — blocked by: briefa-p6-part-n-acceptances
-- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) — blocked by: briefa-p6-part-n-acceptances
-- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) — blocked by: briefa-p6-part-n-acceptances
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: briefa-p6-part-n-acceptances, b1-engine-kernel-half
-- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: briefa-p6-part-n-acceptances
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: b1-engine-kernel-half
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — blocked by: accept-adr-013-instance, accept-adr-015-a1, accept-adr-016-a1, accept-adr-028-qualification, accept-adr-032
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order, crs-unit-fact-and-bounds
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order, crs-unit-fact-and-bounds
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
-- **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions — blocked by: briefa-p6-part-n-acceptances, accept-adr-013-instance, accept-adr-015-a1, accept-adr-016-a1, accept-adr-028-qualification, accept-adr-032, crs-unit-fact-and-bounds
+- **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions — blocked by: accept-adr-013-instance, accept-adr-015-a1, accept-adr-016-a1, accept-adr-028-qualification, accept-adr-032, crs-unit-fact-and-bounds
 - **drill-fix-viewer-build-order** — Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115) — blocked by: shell-dependency-audit-piece
 - **drill-fix-release-only-guard** — Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115) — blocked by: shell-dependency-audit-piece
 - **drill-fix-fixture-watchdog** — Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115) — blocked by: shell-dependency-audit-piece

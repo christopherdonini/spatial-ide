@@ -1,15 +1,18 @@
 {
-  "generated_at": "2026-09-23T23:42:53.735Z",
+  "generated_at": "2026-09-23T23:51:59.925Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 76240171008,
+        "bytes": 76498644992,
         "total": 510319915008
       },
       {
@@ -20,25 +23,60 @@
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 10,
     "by_name": {
-      "cargo": 0,
-      "node": 3,
-      "spatial-ide-shell": 0
+      "cargo": 2,
+      "node": 7,
+      "spatial-ide-shell": 1
     }
   },
   "waiting_on_human": [
     {
-      "id": "briefa-p6-part-n-acceptances",
-      "kind": "sitting",
-      "minutes": 20,
+      "id": "accept-adr-013-instance",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 5
+    },
+    {
+      "id": "accept-adr-015-a1",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 5
+    },
+    {
+      "id": "accept-adr-016-a1",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 5
+    },
+    {
+      "id": "accept-adr-028-qualification",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 5
+    },
+    {
+      "id": "accept-adr-032",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-18",
+      "age_days": 5
+    },
+    {
+      "id": "engine-source-change-watcher",
+      "kind": "sight",
+      "minutes": 15,
       "opened": "2026-09-18",
       "age_days": 5
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 50
+    "n": 51
   },
   "gate_first_pass": {
     "present": true,

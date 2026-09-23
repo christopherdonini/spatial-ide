@@ -1434,6 +1434,13 @@ Interrupted mid-sitting by the D: drive migration — the app closed during a ro
 
 **N8 retest, 2026-09-23 (PASS as reported, on a build with PR #100 and without PR #101):** the human's words, verbatim: “I've tried N8 and it's honetly perfect, now it handles everything really well!” Build: dev, the main checkout at 7301dc6, which contains PR #100's reopen reset (b500465) and not PR #101's residual guards. PR #101 had merged at 2026-09-23T21:32:41Z (f6d888e), but the checkout was not pulled before the run; its reflog has no entry after 7301dc6. The dev launch wrote `frontends/shell/src-tauri/target/debug/spatial-ide-shell.d` at 22:15:41Z, and the session log `session-1790201742.log` runs from 22:15:42Z to 22:29:41Z. Log reading (the custodian's): two sessions ended on `engine.source_changed` (22:16:26Z and 22:19:09Z); each was followed by a successful reopen under a fresh dataset handle (22:16:32Z and 22:19:31Z), with no reload between the end and the reopen. There were two `engine.crs_undeclared` refusals (22:18:04Z and 22:19:18Z). The candidate arm logs no filter Apply, so the log does not show whether the slow-fixture Apply step ran. N8's reopen reset: PASS as reported. PR #101's residual is carried by its tests and its E2E routes; this run did not exercise it.
 
+**N1 re-sight and N8 rerun, 2026-09-23 (PASS as reported, on the merged build):** the human's words, verbatim: “N1, the wording does read well. N8 works perfectly now.”
+- **Build:** dev, the main checkout at 8704535. Its product code is PR #102's merge, 2beaa33, which contains PR #101. The dev launch wrote `frontends/shell/src-tauri/target/debug/spatial-ide-shell.d` at 23:44:38Z, and the session log `session-1790207079.log` begins at 23:44:39Z.
+- **Log reading (the custodian's):** compat-corpus #8 was admitted at 23:45:05Z. Its grid frame reads `baseSpan=2` over an observed extent of about 0.40 by 0.40 degree: the metre-basis minimum anchor span of 1, padded twice, applied in degrees. That is the gap `KNOWN-LIMITATIONS.md` item 17 names. The scratch copy's sessions ended on `engine.source_changed` at 23:45:53Z and 23:46:39Z, and each was followed by a reopen under a fresh dataset handle (23:46:08Z and 23:46:55Z). The candidate arm logs no filter Apply.
+- **N1:** PASS, and the Display convention label reads well, in the human's words above.
+- **N8:** PASS as reported, on a build carrying PR #100 and PR #101.
+- **Part N:** N1–N9 are now operator-verified (G-A7).
+
 Fill in once this Part is run: date, run by, build/commit, pass/fail per row N1–N9, N2's
 distinguishability verdict, N3's own red-line call (whether the human re-scoped the session-identity
 sight or a component now renders it), N5's guidance-wording verdict, N6's `{detail}` text as actually
