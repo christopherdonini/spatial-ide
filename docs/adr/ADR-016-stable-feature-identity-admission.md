@@ -176,3 +176,65 @@ record) — the shipped envelope, in `describe.identity`'s own field names:**
 > settled before any identity is persisted or used to address a feature across sessions.**
 
 > **OPEN:** *Composite and non-integer keys*, per "does not decide" above.
+
+## Amendment 1 — three tiers, named, with the session tier defined and bounded (2026-09-23, appended — Accepted)
+
+
+This ADR admits identity through one door (a native `id` column, §2) or a declared mapping (§3).
+**Three tiers are named instead, and the session tier is defined here.**
+
+**1. The session tier.** Identity is the pair **(dataset-session generation G, physical file-row
+ordinal read via DuckDB `file_row_number`)**. It is **generation-namespaced**: an ordinal has no
+meaning outside the G it was minted under, and no comparison across two G values is defined.
+
+- **It is never a snapshot claim.** No text, comment, status string or test name may say or imply
+  that one open reads one snapshot.
+- **G is minted per open, lives in kernel and client state, and is never persisted and never
+  published.** G is not a ResourceRef field: it is neither logical URI, content hash, source
+  revision, locator, cache status nor portability policy (ADR-005; `docs/11:21-33`). No ADR-005
+  amendment is needed or implied — nothing is persisted and no grade is claimed.
+- **Uniqueness is by construction within a generation**, not by scan. `file_row_number` names a
+  physical row position, so within one G it is distinct by construction and is a pure function of
+  file content in §4's own sense — **not** scan order, not arrival order, not a dictionary index.
+  That `file_row_number` is physical rather than scan-ordered is the assumption this tier rests on
+  and is **verified against the corpus, never assumed**.
+- **§1's "no synthesis, no row ordinals" is not contradicted, and the reason is the namespacing.**
+  §1 refuses a synthesized ordinal offered as *stable feature identity*. This tier claims no
+  stability: it does not survive an open, a reopen, or a change, and it refuses to cross either
+  boundary. The ADR-010 rule 2 hazard — a wrong-but-plausible coordinate — is closed by
+  construction, because the space dies with G rather than outliving it silently.
+- **§5's full-column uniqueness scan does not run on this path** and must not be reported as
+  though it had. The §6 record gains a third what-was-checked value naming this basis
+  (`by-construction-within-generation`); the bare word "unique" still appears nowhere.
+
+**2. The structural descriptor is a change detector, not the uniqueness basis.** Byte size, mtime,
+footer length and footer hash. Its only job is to **invalidate G**. The footer read is bounded by a
+**declared ceiling** (ADR-010 rule 6; the value is set by the architect and recorded in
+`engine/ADMISSION-PREREGISTRATION.md`, not fixed in this ADR); past the ceiling the descriptor
+degrades to size + mtime + footer length and **the degradation is shown**. Footer bytes read are
+reported per open, reported-only, never gated. No number appears in this ADR text.
+
+**3. Change handling — the read-around policy, declared.** Checks run **before every query issue
+and after every stream terminal**. A detected change invalidates G: new tickets refused under G,
+in-flight producer streams cancelled through the **existing** cancel, residency cleared, picks
+refused until reopen, and a typed status "source changed during use". Its limitation, stated here
+and in KNOWN-LIMITATIONS in these words: the policy **"does not establish snapshot consistency,
+cannot detect every in-place modification, and may detect a change during a query only at the
+post-check"** **[Brief A boundary 4, verbatim]**.
+
+**4. The verified tier — defined here, landing later.** Identity pinned to a **content-addressed
+revision**: a content hash over the source, recorded, so two opens can be compared and two files
+presenting the same identities can be told apart. **It is not built in this cut**; it lands with
+Brief B, and no claim about it may be made before it exists.
+
+**5. Single file only.** A partitioned source is refused for session-ordinal identity **by name** —
+`engine.identity_ordinal_partitioned_unsupported`. Its existing declared-mapping route is
+untouched. No file-list or packing contract is introduced here.
+
+**6. Native and mapped identity are unchanged.** §1-§7 continue to govern them in full, including
+§5's whole-file verification scan with its liveness and Cancel. Additive fields only; existing
+tests stay green unmodified.
+
+**Acceptance (2026-09-23).** Amendment 1 is accepted on the human's word, with this dated note naming item 2's degradation display as owed: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (3). Its text above is appended verbatim from the Proposed text block of `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` as it stood at 433413a, which this commit deletes: the blockquote markers are removed and the heading's date is filled; nothing else changes. Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N3 and N6-N8, operator-verified in its Part N run section.
+
+**Owed at acceptance.** Item 2's display of the descriptor's degradation is not met by the build (`engine/ADMISSION-PREREGISTRATION.md` Amendment 4 (ii)). It is delivered by the source-change watcher piece's detection-state field on describe, with degradation as one of its values; no separate wire field carries degradation alone (entry 119 item (3); PLAN node `engine-source-change-watcher`).
