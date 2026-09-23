@@ -817,9 +817,18 @@ export default function App() {
   // now-removed placeholder comment in git history).
 
   /**
-   * `FilterPanel`'s own `onApply` prop -- the SAME function the dev-only `queryWithFilter` E2E hook
-   * calls (NEXT-CUT.md filter-panel cut, deviation-3 retrofit: "hook and panel drive the identical
-   * seam"). `requestViewport` here reaches into `issueQueryRef.current` -- set by the `[admitted]`
+   * `FilterPanel`'s own `onApply` prop. NOT the same function object the dev-only `queryWithFilter`
+   * E2E hook calls -- this callback and each hook (candidate-arm, baseline-arm) are three SEPARATE
+   * `applyFilter(...)` calls, each building its own `ApplyFilterDeps` (this one below;
+   * the hooks' own, this file, `registerE2eHook("queryWithFilter", ...)`) -- but all three route
+   * through the identical `applyFilter` seam (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
+   * "hook and panel drive the identical seam"), and, as of the N8 residual correction round 1,
+   * `handleApplyFilter`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
+   * hook's `requestViewport` each carry the same admitted-generation guard. The baseline arm's own dev
+   * `queryWithFilter` hook needs none: its `requestViewport` is bound to THIS effect's own
+   * `issueViewportQuery` (below), whose `manager.requestViewport` already returns `{kind: "stopped"}`
+   * once `manager.stop()` has run, and whose own `.then` carries the identical guard.
+   * `requestViewport` here reaches into `issueQueryRef.current` -- set by the `[admitted]`
    * effect below -- rather than closing over `managerRef.current` directly, so that every query this
    * function issues (including the refusal-recovery re-issue `applyFilter` performs internally) also
    * feeds the scan-liveness machine and the rider-1 `"query-issued"` clear exactly like the initial
@@ -829,8 +838,18 @@ export default function App() {
    */
   const handleApplyFilter = useCallback(
     (filter: Filter | null): Promise<ApplyFilterOutcome> => {
+      // N8 residual correction: captured at issue time, the same "which generation was this FOR"
+      // key `reportViewportOutcome`'s `forDataset`/`issueViewportQuery`'s `forThisEffect` already
+      // use -- a completion arriving after a later admission must not commit A's filter/fit onto B.
+      const forThisApply = admittedDatasetRef.current;
       return applyFilter(filter, {
+        // N8 residual correction round 1: guards the WHOLE issue seam this deps field is -- both
+        // `applyFilter`'s primary attempt and its throttled single retry (`requestViewportWithSingleRetry`,
+        // this file, above), AND the refusal-recovery re-issue and ITS retry (`applyFilter`'s own
+        // `catch` block, same helper) -- every one of those four calls funnels through this one
+        // closure, so keying it here is sufficient without a second guard at each call site.
         requestViewport: (bbox, f) => {
+          if (forThisApply !== admittedDatasetRef.current) return Promise.resolve({ kind: "stopped" });
           const issue = issueQueryRef.current;
           if (!issue) {
             return Promise.resolve({ kind: "stopped" });
@@ -840,10 +859,16 @@ export default function App() {
         cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
         getLastViewportBbox: () => lastViewportBboxRef.current,
         getActiveFilter: () => activeFilterRef.current,
-        commitActiveFilter,
+        commitActiveFilter: (f) => {
+          if (forThisApply !== admittedDatasetRef.current) return;
+          commitActiveFilter(f);
+        },
         // Human-approved design revision, 2026-08-15 walkthrough Part E E5 -- see `applyFilter`'s own
         // doc comment and `WorkingCanvasHandle.resetFitForNewGeneration`'s own doc comment.
-        resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+        resetFitForNewGeneration: () => {
+          if (forThisApply !== admittedDatasetRef.current) return;
+          canvasRef.current?.resetFitForNewGeneration();
+        },
       });
     },
     [commitActiveFilter]
@@ -1221,12 +1246,27 @@ export default function App() {
       if (isInstrumentedBuild()) {
         registerE2eHook("queryWithFilter", (predicate: string) =>
           applyFilter(predicateTextToFilter(predicate), {
-            requestViewport: (bbox, f) => (issueQueryRef.current ? issueQueryRef.current(bbox, null, f) : Promise.resolve({ kind: "stopped" })),
+            // N8 residual correction round 1: same whole-seam guard as `handleApplyFilter`'s own
+            // `requestViewport` above -- covers this hook's primary attempt, its throttled retry, and
+            // the refusal-recovery re-issue and its retry, all four funneled through this one closure.
+            requestViewport: (bbox, f) => {
+              if (admitted.dataset !== admittedDatasetRef.current) return Promise.resolve({ kind: "stopped" });
+              return issueQueryRef.current ? issueQueryRef.current(bbox, null, f) : Promise.resolve({ kind: "stopped" });
+            },
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
-            commitActiveFilter,
-            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+            // N8 residual correction: same "keyed on this effect's own generation" guard as
+            // `onResidencyStatusChange`/`applyScanEvent` immediately above -- a completion arriving
+            // after a later admission must not commit A's filter/fit onto B.
+            commitActiveFilter: (f) => {
+              if (admitted.dataset !== admittedDatasetRef.current) return;
+              commitActiveFilter(f);
+            },
+            resetFitForNewGeneration: () => {
+              if (admitted.dataset !== admittedDatasetRef.current) return;
+              canvasRef.current?.resetFitForNewGeneration();
+            },
           })
         );
       }
@@ -1264,6 +1304,13 @@ export default function App() {
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
       onStreamOpened: (streamHandle) => {
+        // N8 residual correction round 1 (item 7 probe): for consistency with `onFailureTerminal`/
+        // `onDeliveryCompleted`/`onBatchRows` immediately below, not because this one is independently
+        // load-bearing -- a stale open for a dataset this effect's own `admitted.dataset` has moved
+        // past is already dropped by `nextScanState`'s own stream-handle check (this file, the
+        // `"streamOpened"` case), which no-ops unless `scanState` is still `issuing` for that exact
+        // handle.
+        if (admitted.dataset !== admittedDatasetRef.current) return;
         applyScanEvent({ kind: "streamOpened", streamHandle });
       },
       // **P3b §2a(ii): the baseline arm's owner.** The manager has already cleared the canvas's
@@ -1272,7 +1319,13 @@ export default function App() {
       onSessionEnded: (detail) => endSession(detail, admitted.dataset), // N8: bound to this generation
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
+          // N8 residual correction round 1: logged FIRST, then guarded -- ADR-010 rule 8's
+          // logged-not-silently-dropped (this file's own comment above, `applyFilter`'s doc comment:
+          // "Logged, not silently dropped ... and not re-thrown"), so a terminal for a generation this
+          // effect's own `admitted.dataset` has moved past is still recorded before being dropped
+          // rather than bannering it onto the live one.
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
+          if (admitted.dataset !== admittedDatasetRef.current) return;
           // P3a: the detail now opens with its typed code (`kernel/src/skp.rs::terminal_detail_of`),
           // which is for the client to match on and not for the operator to read. `message` is the
           // refusal's own text with that prefix removed; nothing else about this banner changes.
@@ -1280,11 +1333,24 @@ export default function App() {
           applyScanEvent({ kind: "failed" });
         },
         onDeliveryCompleted: () => {
+          // N8 residual correction round 1 (item 7 probe): same key as `onFailureTerminal` above --
+          // `setResidencyStatus`/`applyScanEvent` are both single App-level state. NOT because a
+          // pre-cleanup delivery would otherwise clear the live (B) generation's own standing ceiling
+          // status or in-flight scan -- before A's own cleanup has run, B holds only its own freshly
+          // admitted, reset state, nothing this write could clear. The guard drops the write for the
+          // non-current generation (A) itself.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
           // Rider 1: "a later stream completes fully without a ceiling refusal" clears the status.
           setResidencyStatus(nextResidencyStatus({ kind: "delivery-complete" }));
           applyScanEvent({ kind: "completed" });
         },
         onBatchRows: (streamHandle, rowsInBatch) => {
+          // N8 residual correction round 1 (item 7 probe): same key immediately above -- NOT because a
+          // batch arriving pre-cleanup would otherwise report progress on the live (B) generation's own
+          // scan-liveness indicator for a stream it never issued -- before A's own cleanup has run, B
+          // holds only its own freshly admitted, reset state. The guard drops the write for the
+          // non-current generation (A) itself.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
           if (scanRowsAccumulator.streamHandle !== streamHandle) {
             scanRowsAccumulator = { streamHandle, rows: 0 };
           }
@@ -1350,10 +1416,19 @@ export default function App() {
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
-            commitActiveFilter,
+            // N8 residual correction: same "keyed on this effect's own generation" guard
+            // `issueViewportQuery`'s own `.then` below carries -- a completion arriving after a
+            // later admission must not commit A's filter/fit onto B.
+            commitActiveFilter: (f) => {
+              if (forThisEffect !== admittedDatasetRef.current) return;
+              commitActiveFilter(f);
+            },
             // Same-seam doctrine (deviation-3 retrofit): this hook drives the IDENTICAL applyFilter
             // seam a real Apply click does, including the new-generation fit reset.
-            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+            resetFitForNewGeneration: () => {
+              if (forThisEffect !== admittedDatasetRef.current) return;
+              canvasRef.current?.resetFitForNewGeneration();
+            },
           }
         )
       );
@@ -1556,6 +1631,14 @@ export default function App() {
                * deck.gl's own render path. */
               onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
               onCanvasRefusal={(streamHandle, message) => {
+                // N8 residual correction round 1: bound to the `admitted` this render built it for --
+                // a call arriving from a superseded instance must not run `handleCanvasCeilingRefusal`
+                // below. Unguarded, it would set the LIVE generation's `canvasRefusal` banner to A's
+                // own message and dispatch `{kind:"failed"}` onto the live scan-liveness state -- real
+                // contamination. Its `cancelStream(streamHandle)` call, by contrast, targets B's own
+                // manager with A's `streamHandle`, naming none of B's streams -- a no-op, not a
+                // correctness guarantee this guard relies on.
+                if (admitted.dataset !== admittedDatasetRef.current) return;
                 // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
                 // comment above has the full account -- a declared-ceiling refusal must dispatch a
                 // scan event AT the cancel call site, or the liveness indicator lies forever after.
@@ -1569,6 +1652,8 @@ export default function App() {
                 });
               }}
               onResidentCeilingExceeded={(_streamHandle, residentFeatureCount) => {
+                // N8 residual correction: same guard as `onCanvasRefusal` immediately above.
+                if (admitted.dataset !== admittedDatasetRef.current) return;
                 setResidencyStatus(
                   nextResidencyStatus({
                     kind: "ceiling-refusal",
