@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T23:28:11.949Z",
+  "generated_at": "2026-09-23T23:36:22.558Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 76266315776,
+        "bytes": 76261306368,
         "total": 510319915008
       },
       {
@@ -30,7 +30,15 @@
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [],
+  "waiting_on_human": [
+    {
+      "id": "adr-013-display-statement",
+      "kind": "click",
+      "minutes": 3,
+      "opened": "2026-09-23",
+      "age_days": 0
+    }
+  ],
   "median_opened_to_done": {
     "days": 1,
     "n": 49

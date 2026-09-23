@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-23T23:28:13.675Z",
-  "plan_hash": "f2010df45f111718c2efe6591b73c1dc91f55b4b902b93cf390eb47cde01ea7a",
+  "generated_at": "2026-09-23T23:36:24.129Z",
+  "plan_hash": "f627af2ae7c8e540a71d863436c6bbfe2ef9fd56924a23260133697a7ca1ecb8",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2397,12 +2397,12 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "blocked",
       "order": 5,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "click",
+        "minutes": 3
       },
       "gate": "frontends/shell/ADR-013-DISPLAY-STATEMENT-PREREGISTRATION.md",
       "evidence": {
@@ -2415,7 +2415,7 @@
         113,
         119
       ],
-      "summary": "PR #102 open, CI running; closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger). RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
+      "summary": "PR #102 FOR YOUR CLICK (head 6daaad8; every CI run green on push and pull_request; mergeable, clean); closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger). RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
       "dates": {
         "opened": "2026-09-23",
         "done": null

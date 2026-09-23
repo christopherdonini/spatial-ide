@@ -1,13 +1,35 @@
 {
-  "generated_at": "2026-09-23T23:28:11.866Z",
-  "plan_hash": "f2010df45f111718c2efe6591b73c1dc91f55b4b902b93cf390eb47cde01ea7a",
+  "generated_at": "2026-09-23T23:36:22.472Z",
+  "plan_hash": "f627af2ae7c8e540a71d863436c6bbfe2ef9fd56924a23260133697a7ca1ecb8",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 0,
+    "total_minutes": 3,
     "by_kind": {
-      "click": [],
+      "click": [
+        {
+          "id": "adr-013-display-statement",
+          "title": "ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface",
+          "lane": "shell",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 5,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 3
+          },
+          "evidence": {
+            "pr": 102
+          },
+          "dates": {
+            "opened": "2026-09-23",
+            "done": null
+          },
+          "summary": "PR #102 FOR YOUR CLICK (head 6daaad8; every CI run green on push and pull_request; mergeable, clean); closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger). RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))"
+        }
+      ],
       "sight": [],
       "ruling": [],
       "sitting": []
@@ -465,28 +487,6 @@
       },
       "summary": "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
       "evidence_label": "PR #86"
-    },
-    {
-      "id": "adr-013-display-statement",
-      "title": "ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 5,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 102
-      },
-      "dates": {
-        "opened": "2026-09-23",
-        "done": null
-      },
-      "summary": "PR #102 open, CI running; closed under AI_DEVELOPMENT.md section A at 6daaad8 (attempts 1 and 2 FAIL/FAIL on record items only, gate-log 117-120; the design affirmed by both gates on both attempts; the root-cause note in the ledger). RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
-      "evidence_label": "PR #102"
     }
   ],
   "proposed": [
