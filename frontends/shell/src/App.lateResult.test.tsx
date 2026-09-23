@@ -26,19 +26,19 @@
  * calling `stop()`, in which a still-live A can write B's state. `App.tsx` now guards, in that window,
  * the baseline issue path's `.then` and the candidate session's two App callbacks; this file's own
  * tests hold delivery to each producer's real `stop()` contract and exercise the window itself.
- * NOT guarded by this piece, and not tested here (named for the human, pre-existing): an in-flight
- * filter Apply of A that succeeds in the window carries A's filter into B (both arms, via
- * `applyFilter`); and, in the dev-gated baseline arm only, A's canvas-refusal, failure-terminal and
- * resident-ceiling callbacks can write B's canvas refusal or residency status.
  *
- * **Generation A is live (not ended) when B is admitted, in every scenario below** -- no test here
- * first drives A to `engine.source_changed`/`sessionEnded`. No unit test builds ended, then reopen,
- * then a late result as one sequence: `App.test.ts` covers the pieces (the reset, and
- * `endSessionForDataset` dropping a mismatched handle), and the E2E reopen route covers ended, reopen,
- * a second change, with no late delivery. The guards proved here key on the admitted dataset HANDLE (`admittedDatasetRef.current`,
- * written synchronously the instant B is admitted), not on A's own `sessionEnded`/`stopped` flag, so
- * the same comparison holds whether A is live, mid-stop, or already ended -- the live case is the
- * narrower, more searching one.
+ * N8 residual correction (`state/directives/2026-09-23-n8-residual-and-sequence.md`, section 1):
+ * `App.tsx` now also guards, on the same admitted-handle key, the old generation's in-flight filter
+ * Apply completion (`handleApplyFilter` and both arms' own dev-only `queryWithFilter` hooks) and, in
+ * the dev-gated baseline arm only, its `onFailureTerminal`/`onCanvasRefusal`/
+ * `onResidentCeilingExceeded` callbacks. The blocks below prove the full sequence: A admitted, an
+ * in-flight filter Apply, A ended by `engine.source_changed`, a successful reopen, then A's late
+ * filter completion and (baseline arm) its three own callbacks -- none contaminate B, whose own
+ * equivalents still work (positive controls in the same tests). Elsewhere in this file, **generation
+ * A is live (not ended) when B is admitted**; `App.test.ts` covers the reset and
+ * `endSessionForDataset` dropping a mismatched handle in isolation, and the E2E reopen route covers
+ * ended, reopen, a second change, with no late delivery. The guards proved here key on the admitted
+ * dataset HANDLE (`admittedDatasetRef.current`), not on A's own `sessionEnded`/`stopped` flag.
  */
 
 import { act, forwardRef, useImperativeHandle } from "react";
@@ -63,10 +63,15 @@ const viewportMockState = vi.hoisted(() => {
     return { promise, resolve, reject };
   }
   // Keyed by dataset handle -- one entry per manager's FIRST `requestViewport` call (the baseline
-  // arm's untiled first look, issued immediately). This suite never drives a pan/zoom, so no
-  // manager instance here ever issues a second request.
+  // arm's untiled first look, issued immediately).
   const firstRequestDeferreds = new Map<string, Deferred>();
-  return { firstRequestDeferreds, makeDeferred };
+  // N8 residual correction: the manager's SECOND call -- App's own filter-Apply issue -- controlled
+  // independently of the first (this suite never drives a pan/zoom, so nothing else reaches it).
+  const secondRequestDeferreds = new Map<string, Deferred>();
+  // The `onTerminal` callback captured off App's own `ViewportStreamManager` construction, keyed by
+  // dataset -- the render-prop analogue of `candidateMockState.depsByDataset` below.
+  const onTerminalByDataset = new Map<string, (streamHandle: string, terminal: { kind: string; detail: string }) => void>();
+  return { firstRequestDeferreds, secondRequestDeferreds, onTerminalByDataset, makeDeferred };
 });
 
 // Candidate-arm registry, the identical shape as `viewportMockState` above, for the
@@ -92,10 +97,23 @@ const candidateMockState = vi.hoisted(() => {
   // in for this module's own internal async callers of those two callbacks (mocked away entirely at
   // this boundary).
   const firstReissueDeferreds = new Map<string, Deferred>();
+  // N8 residual correction: the session's SECOND `reissueUnrestricted` call -- App's own filter-Apply
+  // issue -- mirroring `viewportMockState.secondRequestDeferreds` above.
+  const secondReissueDeferreds = new Map<string, Deferred>();
   const depsByDataset = new Map<string, CandidateArmSessionDeps>();
   const stoppedByDataset = new Map<string, boolean>();
-  return { firstReissueDeferreds, depsByDataset, stoppedByDataset, makeDeferred };
+  return { firstReissueDeferreds, secondReissueDeferreds, depsByDataset, stoppedByDataset, makeDeferred };
 });
+
+// N8 residual correction: the mocked `WorkingCanvas`'s own props, captured by dataset -- lets a test
+// invoke a SPECIFIC (possibly superseded) instance's `onCanvasRefusal`/`onResidentCeilingExceeded`/
+// `onHover` directly, the render-prop analogue of `candidateMockState.depsByDataset` above.
+// `resetFitForNewGenerationCalls` is a single running count (never per-dataset): the real
+// `canvasRef.current?.resetFitForNewGeneration()` always targets whichever instance is mounted.
+const workingCanvasMockState = vi.hoisted(() => ({
+  propsByDataset: new Map<string, import("./canvas/WorkingCanvas").WorkingCanvasProps>(),
+  resetFitForNewGenerationCalls: 0,
+}));
 
 // A function DECLARATION (hoisted by the language, independent of `vi.mock`'s own hoisting below)
 // so the `./skp/client` mock can reference it regardless of textual order. Field-for-field identical
@@ -164,27 +182,30 @@ vi.mock("./streaming/viewportStreamManager", () => {
     private readonly dataset: string;
     private requestCount = 0;
     private stoppedFlag = false;
-    constructor(opts: { dataset: string }) {
+    constructor(opts: { dataset: string; onTerminal?: (streamHandle: string, terminal: { kind: string; detail: string }) => void }) {
       this.dataset = opts.dataset;
+      // N8 residual correction: captured so a test can invoke `onFailureTerminal` directly (via
+      // `makeManagerCallbacks`'s own `onTerminal` routing, `App.tsx`).
+      if (opts.onTerminal) viewportMockState.onTerminalByDataset.set(opts.dataset, opts.onTerminal);
     }
     requestViewport(): Promise<unknown> {
       this.requestCount += 1;
-      if (this.requestCount === 1) {
-        const deferred = viewportMockState.makeDeferred();
-        // The map stores the WRAPPED promise as `.promise` (not the raw settle-only promise `resolve`/
-        // `reject` close over) -- `issueViewportQuery`'s own `.then` is attached to exactly this
-        // wrapped promise, and a `.then` attached later (a test's own `await deferred.promise`) must
-        // resolve AFTER it, in attachment order, or a test could observe state from before that
-        // callback ran.
-        // Only the SUCCESS path is converted -- no `onRejected` handler, so a rejection propagates
-        // through `.then` unchanged (ordinary promise chaining), matching the real manager exactly.
-        const wrapped = deferred.promise.then((value) => (this.stoppedFlag ? { kind: "superseded" } : value));
-        viewportMockState.firstRequestDeferreds.set(this.dataset, { ...deferred, promise: wrapped });
-        return wrapped;
-      }
-      // Not exercised by this suite (no pan/zoom is ever driven) -- left permanently pending so an
-      // unexpected second call hangs this file's own tests rather than silently misreporting.
-      return new Promise(() => {});
+      // N8 residual correction: the SECOND call (App's own filter-Apply issue) is controlled the
+      // same way as the first, in its own registry.
+      const registry =
+        this.requestCount === 1 ? viewportMockState.firstRequestDeferreds : this.requestCount === 2 ? viewportMockState.secondRequestDeferreds : null;
+      if (!registry) return new Promise(() => {});
+      const deferred = viewportMockState.makeDeferred();
+      // The map stores the WRAPPED promise as `.promise` (not the raw settle-only promise `resolve`/
+      // `reject` close over) -- `issueViewportQuery`'s own `.then` is attached to exactly this
+      // wrapped promise, and a `.then` attached later (a test's own `await deferred.promise`) must
+      // resolve AFTER it, in attachment order, or a test could observe state from before that
+      // callback ran.
+      // Only the SUCCESS path is converted -- no `onRejected` handler, so a rejection propagates
+      // through `.then` unchanged (ordinary promise chaining), matching the real manager exactly.
+      const wrapped = deferred.promise.then((value) => (this.stoppedFlag ? { kind: "superseded" } : value));
+      registry.set(this.dataset, { ...deferred, promise: wrapped });
+      return wrapped;
     }
     async cancelStream(): Promise<void> {}
     async stop(): Promise<void> {
@@ -213,15 +234,17 @@ vi.mock("./residency/candidateArmSession", () => {
         cancelPendingViewportChange: () => {},
         reissueUnrestricted: (): Promise<unknown> => {
           reissueCount += 1;
-          if (reissueCount === 1) {
-            const deferred = candidateMockState.makeDeferred();
-            // Same discipline as the baseline mock (store the wrapped promise), and the same
-            // success-only conversion (no `onRejected` handler), as the baseline mock above.
-            const wrapped = deferred.promise.then((value) => (candidateMockState.stoppedByDataset.get(dataset) ? { kind: "stopped" } : value));
-            candidateMockState.firstReissueDeferreds.set(dataset, { ...deferred, promise: wrapped });
-            return wrapped;
-          }
-          return new Promise(() => {});
+          // N8 residual correction: the SECOND reissue (App's own filter-Apply issue), mirroring the
+          // baseline mock's own split above.
+          const registry =
+            reissueCount === 1 ? candidateMockState.firstReissueDeferreds : reissueCount === 2 ? candidateMockState.secondReissueDeferreds : null;
+          if (!registry) return new Promise(() => {});
+          const deferred = candidateMockState.makeDeferred();
+          // Same discipline as the baseline mock (store the wrapped promise), and the same
+          // success-only conversion (no `onRejected` handler), as the baseline mock above.
+          const wrapped = deferred.promise.then((value) => (candidateMockState.stoppedByDataset.get(dataset) ? { kind: "stopped" } : value));
+          registry.set(dataset, { ...deferred, promise: wrapped });
+          return wrapped;
         },
         stop: async (): Promise<void> => {
           candidateMockState.stoppedByDataset.set(dataset, true);
@@ -240,13 +263,18 @@ vi.mock("./canvas/WorkingCanvas", () => {
     import("./canvas/WorkingCanvas").WorkingCanvasHandle,
     import("./canvas/WorkingCanvas").WorkingCanvasProps
   >(function MockWorkingCanvas(props, ref) {
+    // N8 residual correction: `workingCanvasMockState.propsByDataset`'s own doc comment above has
+    // the full account.
+    workingCanvasMockState.propsByDataset.set(props.dataset, props);
     useImperativeHandle(
       ref,
       () => ({
         pushBatch: () => 0,
         clearStream: () => {},
         fitToBounds: () => false,
-        resetFitForNewGeneration: () => {},
+        resetFitForNewGeneration: () => {
+          workingCanvasMockState.resetFitForNewGenerationCalls += 1;
+        },
         getResidentCounts: () => ({ totalResidentVertices: 0, totalResidentFeatures: 0 }),
         armFirstPixelRenderHook: () => false,
         disarmFirstPixelRenderHook: () => true,
@@ -321,6 +349,10 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
   beforeEach(() => {
     viewportMockState.firstRequestDeferreds.clear();
+    viewportMockState.secondRequestDeferreds.clear();
+    viewportMockState.onTerminalByDataset.clear();
+    workingCanvasMockState.propsByDataset.clear();
+    workingCanvasMockState.resetFitForNewGenerationCalls = 0;
     // Baseline arm: the vitest suite's shipped default is `"candidate"` (`residencyArm.ts`), which
     // would construct `startCandidateArmSession` instead of the `ViewportStreamManager` mocked above.
     setResidencyArm("baseline");
@@ -474,6 +506,162 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".canvas-session-ended")).toBeNull();
     expect(container.querySelector(".hover-readout-session-ended")).toBeNull();
   });
+
+  // N8 residual correction (state/directives/2026-09-23-n8-residual-and-sequence.md, section 1): the
+  // full ended -> reopen -> late-arrival sequence, for A's in-flight filter Apply and the dev-gated
+  // baseline arm's three own callbacks. The filter completion is delivered PRE-cleanup (A's manager
+  // not yet stopped): post-cleanup, the mock's own `stop()` conversion (matching
+  // `viewportStreamManager.ts:417-421`) already turns a genuinely ISSUED delivery into
+  // `{kind:"superseded"}`, which never reaches `commitActiveFilter` regardless of this piece's guard
+  // -- so PRE-cleanup is the one window where the vulnerability, and the fix, is observable. A
+  // rejected filter completion is not separately reproduced: `applyFilter`'s own catch (App.tsx)
+  // never calls `commitActiveFilter`/`resetFitForNewGeneration` on any outcome but `"issued"`. The
+  // three baseline callbacks, delivered post-cleanup, have no other protection at any point.
+  //
+  // RECORDED MUTATION for "A's late filter-Apply completion and the dev-gated baseline arm's own three callbacks do not contaminate B (baseline arm)":
+  // (1) THIS test drives Apply through the dev-only `queryWithFilter` E2E hook, so its own two new
+  //     `if (forThisEffect !== admittedDatasetRef.current) return;` guards (App.tsx's baseline
+  //     `registerE2eHook("queryWithFilter", ...)` block) are what it exercises -- remove both.
+  // Expected failure: `.filter-active` renders "Applied: zone = 'residential'" on B.
+  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
+  //   AssertionError: expected <p class="filter-active">Applied: zone = 'residential'</p> to be null
+  // Reverted after observing. (`handleApplyFilter`'s own, structurally identical guards -- the ones
+  // the real FilterPanel Apply button reaches -- are proven load-bearing by the separate real-DOM
+  // test below instead.)
+  // (2) remove the three new `if (admitted.dataset !== admittedDatasetRef.current) return;` guards (App.tsx:
+  //     `onFailureTerminal`, `onCanvasRefusal`, `onResidentCeilingExceeded`), one at a time.
+  // Expected failure: each of A's three late callbacks writes onto B in turn.
+  // OBSERVED 2026-09-23: FAILED, `onFailureTerminal` -- vitest's printed bytes (first line):
+  //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-09-23: FAILED, `onCanvasRefusal` -- vitest's printed bytes (first line):
+  //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-09-23: FAILED, `onResidentCeilingExceeded` -- vitest's printed bytes (first line):
+  //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
+  // Each reverted after observing.
+  it("A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)", async () => {
+    const handleA = await openPathAndCaptureHandle();
+    const canvasA = workingCanvasMockState.propsByDataset.get(handleA);
+    if (!canvasA) throw new Error(`no captured WorkingCanvas props for dataset ${handleA}`);
+    const onTerminalA = viewportMockState.onTerminalByDataset.get(handleA);
+    if (!onTerminalA) throw new Error(`no captured onTerminal for dataset ${handleA}`);
+
+    act(() => {
+      void window.__SPATIAL_E2E__!.queryWithFilter!("zone = 'residential'");
+    });
+    expect(viewportMockState.secondRequestDeferreds.has(handleA)).toBe(true);
+
+    await rejectFirstRequest(handleA, new SkpCallError({ code: "engine.source_changed", message: "the source file changed", fields: {} }));
+    expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
+
+    const hook = window.__SPATIAL_E2E__!.openPath!;
+    const beforeB = new Set(viewportMockState.firstRequestDeferreds.keys());
+    await act(async () => {
+      // Same act()-deferred-flush mechanics as this file's own earlier pre-cleanup tests: A's manager
+      // is not yet stopped right here.
+      const outcome = await hook(REOPEN_PATH);
+      if (outcome.kind !== "admitted") throw new Error(`openPath(${REOPEN_PATH}) was refused: ${JSON.stringify(outcome)}`);
+      const deferred = viewportMockState.secondRequestDeferreds.get(handleA);
+      if (!deferred) throw new Error(`no second-request deferred recorded for dataset ${handleA}`);
+      deferred.resolve({ kind: "issued", streamHandle: "a-filter-late" });
+      await deferred.promise;
+    });
+    const handleB = [...viewportMockState.firstRequestDeferreds.keys()].find((k) => !beforeB.has(k));
+    if (!handleB) throw new Error("expected exactly one new dataset to have issued its first request");
+
+    expect(container.querySelector(".filter-active")).toBeNull();
+    expect(container.querySelector(".canvas-session-ended")).toBeNull();
+    expect(container.querySelector(".hover-readout-session-ended")).toBeNull();
+    expect(container.querySelector(".filter-cancel")).toBeNull();
+    expect(container.querySelector(".scan-liveness")).toBeNull();
+    expect(container.querySelector(".residency-status")).toBeNull();
+    expect(workingCanvasMockState.resetFitForNewGenerationCalls).toBe(0);
+
+    act(() => onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" }));
+    expect(container.querySelector(".canvas-refusal")).toBeNull();
+    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal"));
+    expect(container.querySelector(".canvas-refusal")).toBeNull();
+    act(() => canvasA.onResidentCeilingExceeded("a-stream-ceiling-2", 999999));
+    expect(container.querySelector(".residency-status")).toBeNull();
+
+    // Positive controls: B's own equivalents still work.
+    const canvasB = workingCanvasMockState.propsByDataset.get(handleB);
+    if (!canvasB) throw new Error(`no captured WorkingCanvas props for dataset ${handleB}`);
+    const onTerminalB = viewportMockState.onTerminalByDataset.get(handleB);
+    if (!onTerminalB) throw new Error(`no captured onTerminal for dataset ${handleB}`);
+
+    act(() => {
+      void window.__SPATIAL_E2E__!.queryWithFilter!("zone = 'commercial'");
+    });
+    const deferredB = viewportMockState.secondRequestDeferreds.get(handleB);
+    if (!deferredB) throw new Error(`no second-request deferred recorded for dataset ${handleB}`);
+    await act(async () => {
+      deferredB.resolve({ kind: "issued", streamHandle: "b-filter" });
+      await deferredB.promise;
+    });
+    expect(container.querySelector(".filter-active")?.textContent).toBe("Applied: zone = 'commercial'");
+    expect(workingCanvasMockState.resetFitForNewGenerationCalls).toBe(1);
+
+    act(() => onTerminalB("b-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: B's own stream" }));
+    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+    act(() => canvasB.onResidentCeilingExceeded("b-stream-ceiling", 42));
+    expect(container.querySelector(".residency-status")).not.toBeNull();
+  });
+
+  // N8 residual correction: `handleApplyFilter` (App.tsx) is what `FilterPanel`'s own `onApply` prop
+  // binds to for a real Apply click -- the dev-only `queryWithFilter` hook exercised above
+  // constructs its OWN, separate `applyFilter` deps, so this drives the real
+  // `.filter-predicate`/`.filter-apply` DOM instead, proving `handleApplyFilter`'s own guards.
+  //
+  // RECORDED MUTATION for "the real FilterPanel Apply button's own late completion does not contaminate B (baseline arm)":
+  // remove `handleApplyFilter`'s two new `if (forThisApply !== admittedDatasetRef.current) return;` guards (App.tsx).
+  // Expected failure: `.filter-active` renders "Applied: zone = 'residential'" on B.
+  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
+  //   AssertionError: expected <p class="filter-active">Applied: zone = 'residential'</p> to be null
+  // Reverted after observing.
+  it("the real FilterPanel Apply button's own late completion, delivered in the pre-cleanup window after ended -> reopen, does not contaminate B (baseline arm)", async () => {
+    function typeAndApply(predicate: string): void {
+      const input = container.querySelector(".filter-predicate") as HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
+      act(() => {
+        setter.call(input, predicate);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      act(() => {
+        (container.querySelector(".filter-apply") as HTMLButtonElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    const handleA = await openPathAndCaptureHandle();
+    typeAndApply("zone = 'residential'");
+    expect(viewportMockState.secondRequestDeferreds.has(handleA)).toBe(true);
+
+    await rejectFirstRequest(handleA, new SkpCallError({ code: "engine.source_changed", message: "the source file changed", fields: {} }));
+
+    const hook = window.__SPATIAL_E2E__!.openPath!;
+    const beforeB = new Set(viewportMockState.firstRequestDeferreds.keys());
+    await act(async () => {
+      const outcome = await hook(REOPEN_PATH);
+      if (outcome.kind !== "admitted") throw new Error(`openPath(${REOPEN_PATH}) was refused: ${JSON.stringify(outcome)}`);
+      const deferred = viewportMockState.secondRequestDeferreds.get(handleA);
+      if (!deferred) throw new Error(`no second-request deferred recorded for dataset ${handleA}`);
+      deferred.resolve({ kind: "issued", streamHandle: "a-button-late" });
+      await deferred.promise;
+    });
+    const handleB = [...viewportMockState.firstRequestDeferreds.keys()].find((k) => !beforeB.has(k));
+    if (!handleB) throw new Error("expected exactly one new dataset to have issued its first request");
+
+    expect(container.querySelector(".filter-active")).toBeNull();
+
+    // Positive control: B's own Apply, through the SAME real button, still works.
+    typeAndApply("zone = 'commercial'");
+    const deferredB = viewportMockState.secondRequestDeferreds.get(handleB);
+    if (!deferredB) throw new Error(`no second-request deferred recorded for dataset ${handleB}`);
+    await act(async () => {
+      deferredB.resolve({ kind: "issued", streamHandle: "b-button" });
+      await deferredB.promise;
+    });
+    expect(container.querySelector(".filter-active")?.textContent).toBe("Applied: zone = 'commercial'");
+  });
 });
 
 describe("App: a late old-generation viewport outcome, after a reopen, through the real product wiring (N8) -- candidate arm", () => {
@@ -482,8 +670,11 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
   beforeEach(() => {
     candidateMockState.firstReissueDeferreds.clear();
+    candidateMockState.secondReissueDeferreds.clear();
     candidateMockState.depsByDataset.clear();
     candidateMockState.stoppedByDataset.clear();
+    workingCanvasMockState.propsByDataset.clear();
+    workingCanvasMockState.resetFitForNewGenerationCalls = 0;
     // The product ships this arm by default (`residencyArm.ts`'s `DEFAULT_RESIDENCY_ARM`) -- set
     // explicitly anyway so this block's own intent reads plainly.
     setResidencyArm("candidate");
@@ -620,5 +811,59 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".residency-status")).toBeNull();
     expect(container.querySelector(".filter-cancel")).toBeNull();
     expect(container.querySelector(".scan-incomplete")).toBeNull();
+  });
+
+  // N8 residual correction: the candidate-arm analogue of the baseline block's own full-sequence
+  // test above (its doc comment has the full pre-cleanup-window reasoning). The dev-gated baseline
+  // arm's own three callbacks do not apply here -- the shipped candidate arm never reaches
+  // `onFailureTerminal`/`onCanvasRefusal`/`onResidentCeilingExceeded` (no `ViewportStreamManager`
+  // exists for this arm; `WorkingCanvas.tsx:186-190`'s `pushTileBatch` calls neither).
+  //
+  // RECORDED MUTATION for "A's late filter-Apply completion (candidate arm's reissueUnrestricted) does not contaminate B (candidate arm)":
+  // remove the candidate-arm dev hook's two new `if (admitted.dataset !== admittedDatasetRef.current) return;` guards (App.tsx).
+  // Expected failure: `.filter-active` renders "Applied: zone = 'residential'" on B.
+  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
+  //   AssertionError: expected <p class="filter-active">Applied: zone = 'residential'</p> to be null
+  // Reverted after observing.
+  it("A's ended -> reopen sequence: the late filter-Apply completion (reissueUnrestricted) does not contaminate B -- B's own Apply still works (candidate arm)", async () => {
+    const handleA = await openPathAndCaptureCandidateHandle();
+
+    act(() => {
+      void window.__SPATIAL_E2E__!.queryWithFilter!("zone = 'residential'");
+    });
+    expect(candidateMockState.secondReissueDeferreds.has(handleA)).toBe(true);
+
+    await rejectFirstReissue(handleA, new SkpCallError({ code: "engine.source_changed", message: "the source file changed", fields: {} }));
+    expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
+
+    const hook = window.__SPATIAL_E2E__!.openPath!;
+    const beforeB = new Set(candidateMockState.firstReissueDeferreds.keys());
+    await act(async () => {
+      const outcome = await hook(REOPEN_PATH);
+      if (outcome.kind !== "admitted") throw new Error(`openPath(${REOPEN_PATH}) was refused: ${JSON.stringify(outcome)}`);
+      const deferred = candidateMockState.secondReissueDeferreds.get(handleA);
+      if (!deferred) throw new Error(`no second-reissue deferred recorded for dataset ${handleA}`);
+      deferred.resolve({ kind: "issued", streamHandle: "a-filter-late" });
+      await deferred.promise;
+    });
+    const handleB = [...candidateMockState.firstReissueDeferreds.keys()].find((k) => !beforeB.has(k));
+    if (!handleB) throw new Error("expected exactly one new dataset to have issued its first reissue");
+
+    expect(container.querySelector(".filter-active")).toBeNull();
+    expect(container.querySelector(".canvas-session-ended")).toBeNull();
+    expect(workingCanvasMockState.resetFitForNewGenerationCalls).toBe(0);
+
+    // Positive control: B's own Apply still works.
+    act(() => {
+      void window.__SPATIAL_E2E__!.queryWithFilter!("zone = 'commercial'");
+    });
+    const deferredB = candidateMockState.secondReissueDeferreds.get(handleB);
+    if (!deferredB) throw new Error(`no second-reissue deferred recorded for dataset ${handleB}`);
+    await act(async () => {
+      deferredB.resolve({ kind: "issued", streamHandle: "b-filter" });
+      await deferredB.promise;
+    });
+    expect(container.querySelector(".filter-active")?.textContent).toBe("Applied: zone = 'commercial'");
+    expect(workingCanvasMockState.resetFitForNewGenerationCalls).toBe(1);
   });
 });
