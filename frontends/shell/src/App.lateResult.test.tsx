@@ -556,17 +556,19 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // N8 residual correction round 1, item 7 probe: the dev-gated baseline arm's own
   // `onStreamOpened`/`onDeliveryCompleted`/`onBatchRows` (App.tsx, the `ViewportStreamManager`
   // construction) write the SAME single App-level `scanState`/`residencyStatus` `onFailureTerminal`
-  // already guards. None of the three is a promise the mock's `stop()` conversion could intercept --
-  // each is a raw closure call reachable at any time after A's effect captured it, so this probe
-  // delivers them well after A's own effect cleanup has already run (both admissions below fully
-  // flush), the same reachability window `onFailureTerminal`'s own full-sequence test above already
-  // exercises. `nextScanState`'s transitions gate `streamOpened` on a matching `streamHandle`, so a
-  // stale open naming A's own (necessarily different) handle is already a structural no-op regardless
-  // of any App-level guard -- its guard stays for defensive consistency, but is not what this test
-  // demonstrates. `batch` and `completed`, by contrast, read only the CURRENT scan state's `kind`,
-  // never the event's stream identity, so an unguarded late arrival of either DOES overwrite whatever
-  // B is currently showing (probed rather than assumed: the reviewer's S4 and the architect's "no-ops
-  // pre-cleanup" disagreed -- resolved here: B's rendered state DOES change, for both).
+  // already guards. This probe is a guard proof only, the same as this file's own full-sequence
+  // header below states -- the real manager does not deliver any of the three after `stop()` (`onBatch` drops a non-current
+  // batch, `viewportStreamManager.ts:249-258`; a self-cancelled stream's terminal is suppressed via
+  // `stop()`, `:332-338`/`:417-420`), so this probe calls A's captured raw closures directly, well
+  // after A's own effect cleanup has already run (both admissions below fully flush), bypassing that
+  // producer-level suppression on purpose to prove the App-level guard itself carries the whole weight
+  // in the window the producer does NOT cover. `nextScanState`'s transitions gate `streamOpened` on a
+  // matching `streamHandle`, so a stale open naming A's own (necessarily different) handle is already
+  // a structural no-op regardless of any App-level guard -- its guard stays for defensive consistency,
+  // but is not what this test demonstrates. `batch` and `completed`, by contrast, read only the
+  // CURRENT scan state's `kind`, never the event's stream identity, so an unguarded late arrival of
+  // either DOES overwrite whatever B is currently showing (probed rather than assumed: the guard proof
+  // holds for both).
   //
   // RECORDED MUTATION for "A's late onBatchRows/onDeliveryCompleted, delivered well after A's own effect cleanup has run, do not overwrite B's own in-flight scan state (baseline arm, item 7 probe)":
   // remove the two new `if (admitted.dataset !== admittedDatasetRef.current) return;` guards (App.tsx:
@@ -848,6 +850,11 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     typeAndApply("zone = 'residential'");
     expect(viewportMockState.secondRequestDeferreds.has(handleA)).toBe(true);
 
+    // End A through the SAME owner route the real manager fires, before reopening.
+    const onSessionEndedA = viewportMockState.onSessionEndedByDataset.get(handleA);
+    if (!onSessionEndedA) throw new Error(`no captured onSessionEnded for dataset ${handleA}`);
+    act(() => onSessionEndedA("engine.source_changed: the source file changed"));
+
     const hook = window.__SPATIAL_E2E__!.openPath!;
     const beforeB = new Set(viewportMockState.firstRequestDeferreds.keys());
     await act(async () => {
@@ -881,7 +888,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   //
   // RECORDED MUTATION for "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)":
   // extends this file's own first RECORDED MUTATION (`reportViewportOutcome`'s resolved-arm guard, App.tsx) to the full ended -> reopen composition.
-  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line, summarized):
+  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
   it("the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)", async () => {
@@ -1073,7 +1080,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   }
 
   // N8 residual correction round 1, item 1 (B1): the candidate arm's OWN dev-only `queryWithFilter`
-  // hook (App.tsx, ~:1234) builds a SEPARATE `applyFilter` deps object from `handleApplyFilter`'s own
+  // hook (App.tsx, `registerE2eHook("queryWithFilter", ...)`'s own `requestViewport` guard, inside the
+  // candidate-arm branch) builds a SEPARATE `applyFilter` deps object from `handleApplyFilter`'s own
   // (this file's own baseline-block test above proves that one, reached by the real button
   // regardless of arm) -- guarded independently, so proven independently.
   //
@@ -1090,6 +1098,11 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
       void window.__SPATIAL_E2E__!.queryWithFilter!("zone = 'residential'");
     });
     expect(candidateMockState.secondReissueDeferreds.has(handleA)).toBe(true);
+
+    // End A through the SAME owner route the real session fires, before reopening.
+    const depsA = candidateMockState.depsByDataset.get(handleA);
+    if (!depsA) throw new Error(`no captured deps for dataset ${handleA}`);
+    act(() => depsA.onSessionEnded?.("engine.source_changed: the source file changed"));
 
     const hook = window.__SPATIAL_E2E__!.openPath!;
     const beforeB = new Set(candidateMockState.firstReissueDeferreds.keys());
@@ -1273,13 +1286,14 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
   // N8 residual correction round 1, item 2 (B2): the candidate-arm analogue of the baseline block's
   // own full-sequence test above (its doc comment has the full ruling/reasoning). A ends here through
-  // its own owner route -- `depsA.onSessionEnded`, the same callback `session.stop()`'s real caller
-  // fires (`candidateArmSession.ts`'s own `onSessionEnded` field) -- with A's first reissue still
-  // pending.
+  // its own owner route -- `depsA.onSessionEnded`, fired by `endCandidateSession` via
+  // `TileViewportStreamManager.endSession`'s own `onSessionEnded` callback
+  // (`residency/candidateArmSession.ts:1046, :1076-1082`), NOT by `session.stop()` -- with A's first
+  // reissue still pending.
   //
   // RECORDED MUTATION for "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (candidate arm)":
   // extends this file's own candidate-arm SUCCESS RECORDED MUTATION (`reportViewportOutcome`'s resolved-arm guard, App.tsx) to the full ended -> reopen composition.
-  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line, summarized):
+  // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
   it("the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (candidate arm)", async () => {

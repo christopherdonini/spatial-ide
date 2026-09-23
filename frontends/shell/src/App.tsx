@@ -822,9 +822,12 @@ export default function App() {
    * `applyFilter(...)` calls, each building its own `ApplyFilterDeps` (this one below;
    * the hooks' own, this file, `registerE2eHook("queryWithFilter", ...)`) -- but all three route
    * through the identical `applyFilter` seam (NEXT-CUT.md filter-panel cut, deviation-3 retrofit:
-   * "hook and panel drive the identical seam"), and, as of the N8 residual correction round 1, each
-   * deps construction's own `requestViewport` now carries the same admitted-generation guard, so a
-   * late completion on any of the three still cannot reach a later generation's writes.
+   * "hook and panel drive the identical seam"), and, as of the N8 residual correction round 1,
+   * `handleApplyFilter`'s own `requestViewport` here and the candidate arm's dev-only `queryWithFilter`
+   * hook's `requestViewport` each carry the same admitted-generation guard. The baseline arm's own dev
+   * `queryWithFilter` hook needs none: its `requestViewport` is bound to THIS effect's own
+   * `issueViewportQuery` (below), whose `manager.requestViewport` already returns `{kind: "stopped"}`
+   * once `manager.stop()` has run, and whose own `.then` carries the identical guard.
    * `requestViewport` here reaches into `issueQueryRef.current` -- set by the `[admitted]`
    * effect below -- rather than closing over `managerRef.current` directly, so that every query this
    * function issues (including the refusal-recovery re-issue `applyFilter` performs internally) also
@@ -1301,11 +1304,12 @@ export default function App() {
     const manager = new ViewportStreamManager({
       dataset: admitted.dataset,
       onStreamOpened: (streamHandle) => {
-        // N8 residual correction round 1 (item 7 probe): same key as `onFailureTerminal` immediately
-        // below -- `applyScanEvent` writes the single App-level `scanState`, not one per generation,
-        // so an open arriving in the pre-cleanup window for a dataset this effect's own
-        // `admitted.dataset` has moved past would otherwise render on the live generation's own
-        // scan-liveness indicator.
+        // N8 residual correction round 1 (item 7 probe): for consistency with `onFailureTerminal`/
+        // `onDeliveryCompleted`/`onBatchRows` immediately below, not because this one is independently
+        // load-bearing -- a stale open for a dataset this effect's own `admitted.dataset` has moved
+        // past is already dropped by `nextScanState`'s own stream-handle check (this file, the
+        // `"streamOpened"` case), which no-ops unless `scanState` is still `issuing` for that exact
+        // handle.
         if (admitted.dataset !== admittedDatasetRef.current) return;
         applyScanEvent({ kind: "streamOpened", streamHandle });
       },
@@ -1330,18 +1334,22 @@ export default function App() {
         },
         onDeliveryCompleted: () => {
           // N8 residual correction round 1 (item 7 probe): same key as `onFailureTerminal` above --
-          // `setResidencyStatus`/`applyScanEvent` are both single App-level state, so a completion
-          // arriving pre-cleanup for a moved-past `admitted.dataset` would otherwise clear the live
-          // generation's own standing ceiling status and mark its own scan-liveness "completed".
+          // `setResidencyStatus`/`applyScanEvent` are both single App-level state. NOT because a
+          // pre-cleanup delivery would otherwise clear the live (B) generation's own standing ceiling
+          // status or in-flight scan -- before A's own cleanup has run, B holds only its own freshly
+          // admitted, reset state, nothing this write could clear. The guard drops the write for the
+          // non-current generation (A) itself.
           if (admitted.dataset !== admittedDatasetRef.current) return;
           // Rider 1: "a later stream completes fully without a ceiling refusal" clears the status.
           setResidencyStatus(nextResidencyStatus({ kind: "delivery-complete" }));
           applyScanEvent({ kind: "completed" });
         },
         onBatchRows: (streamHandle, rowsInBatch) => {
-          // N8 residual correction round 1 (item 7 probe): same key immediately above -- a batch
-          // arriving pre-cleanup for a moved-past `admitted.dataset` would otherwise report progress
-          // on the live generation's own scan-liveness indicator for a stream it never issued.
+          // N8 residual correction round 1 (item 7 probe): same key immediately above -- NOT because a
+          // batch arriving pre-cleanup would otherwise report progress on the live (B) generation's own
+          // scan-liveness indicator for a stream it never issued -- before A's own cleanup has run, B
+          // holds only its own freshly admitted, reset state. The guard drops the write for the
+          // non-current generation (A) itself.
           if (admitted.dataset !== admittedDatasetRef.current) return;
           if (scanRowsAccumulator.streamHandle !== streamHandle) {
             scanRowsAccumulator = { streamHandle, rows: 0 };
