@@ -204,8 +204,7 @@ describe("SKP v0 shared fixtures", () => {
     // RECORDED MUTATION for this seam assertion: displayConventionLine mutated to
     // `return null;` unconditionally. Observed failure (applied and reverted, worker run):
     // "AssertionError: expected null to be 'no coordinate value is transformed; t…' // Object.is
-    // equality -- Expected: \"no coordinate value is transformed; the display convention is
-    // equirectangular\" -- Received: null" at this file's
+    // equality" at this file's
     // `expect(displayConventionLine(res.crs)).toBe(res.crs.display_convention)` line.
     expect(displayConventionLine(res.crs)).toBe(res.crs.display_convention);
     expect(res.crs.provenance).toBe("crs:format-default");
