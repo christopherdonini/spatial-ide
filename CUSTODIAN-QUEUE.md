@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2fc24a7608526256131f96269d39b25dd3fab9a5eaad02114e7da05683fa7b1d`) at `2026-09-23T06:24:33.747Z`.
+Generated from `PLAN.yaml` (sha256 `ff7415c8c4112028ac8d108a58887b5f02ea56e653c74879464dba0c736b7cbe`) at `2026-09-23T22:42:45.844Z`.
 
 ## 1. Next
 
@@ -10,22 +10,24 @@ Generated from `PLAN.yaml` (sha256 `2fc24a7608526256131f96269d39b25dd3fab9a5eaad
 
 - (none)
 
-## 3. Waiting on the human (total: 5 min)
+## 3. Waiting on the human (total: 35 min)
 
 ### click
 
-- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 residual, PR #101 FOR YOUR CLICK (head 828fc34, every CI run green on the branch and the merge candidate): no late result of an ended generation changes the reopened session; your final N8 retest follows the merge, under briefa-p6-part-n-acceptances (5 min)
+- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) (3 min)
+- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) (3 min)
+- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) (3 min)
+- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) (3 min)
+- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) (3 min)
+
+### sitting
+
+- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click (20 min)
 
 ## 4. Blocked on dependencies
 
-- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) — blocked by: briefa-p6-n8-reopen-reset
-- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) — blocked by: briefa-p6-n8-reopen-reset
-- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) — blocked by: briefa-p6-n8-reopen-reset
-- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) — blocked by: briefa-p6-n8-reopen-reset
-- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) — blocked by: briefa-p6-n8-reopen-reset
-- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: briefa-p6-n8-reopen-reset
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: briefa-p6-part-n-acceptances, b1-engine-kernel-half
-- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: briefa-p6-part-n-acceptances, briefa-p6-n8-reopen-reset
+- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: briefa-p6-part-n-acceptances
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons

@@ -958,8 +958,8 @@ nodes:
     budget_minutes: 60
     generation: 1
     felt_verdict: true
-    entries: [110]
-    summary: "After PR #100 merges: the human's focused N8 retest (the retest text in the N8 hand-back), then the five acceptances as one question set. Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
+    entries: [110, 119]
+    summary: "The five acceptances are presented together as entry 119 (2026-09-23), waiting on the human's word. Two proposed texts are not yet true of the build: ADR-013 A1 item 5's status-at-open surface and ADR-016 A1 item 2's shown degradation. The recommended route is a short-form piece for ADR-013's statement, then one short sitting (N1 re-sight, N8 rerun on the merged build), then one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close"
     dates: {opened: 2026-09-18, done: null}
 
   - id: briefa-p6-describe-fields
@@ -995,7 +995,7 @@ nodes:
     budget_minutes: 5
     generation: 1
     felt_verdict: false
-    entries: [110]
+    entries: [110, 119]
     summary: "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
     dates: {opened: 2026-09-18, done: null}
 
@@ -1013,7 +1013,7 @@ nodes:
     budget_minutes: 5
     generation: 1
     felt_verdict: false
-    entries: [110]
+    entries: [110, 119]
     summary: "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
@@ -1031,7 +1031,7 @@ nodes:
     budget_minutes: 5
     generation: 1
     felt_verdict: false
-    entries: [110]
+    entries: [110, 119]
     summary: "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
@@ -1049,7 +1049,7 @@ nodes:
     budget_minutes: 5
     generation: 1
     felt_verdict: false
-    entries: [110]
+    entries: [110, 119]
     summary: "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
@@ -1067,7 +1067,7 @@ nodes:
     budget_minutes: 5
     generation: 1
     felt_verdict: false
-    entries: [110]
+    entries: [110, 119]
     summary: "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
     dates: {opened: 2026-09-18, done: null}
 
@@ -1402,22 +1402,23 @@ nodes:
     dates: {opened: 2026-09-19, done: 2026-09-20}
 
   - id: briefa-p6-n8-reopen-reset
-    title: "Brief A P6 -- N8 residual, PR #101 FOR YOUR CLICK (head 828fc34, every CI run green on the branch and the merge candidate): no late result of an ended generation changes the reopened session; your final N8 retest follows the merge, under briefa-p6-part-n-acceptances"
+    title: "Brief A P6 -- N8, the reopen reset (PR #100) and its residual (PR #101): a reopen clears the ended session, and no late result of an ended generation changes the reopened one"
     kind: task
     lane: shell
     phase: prototype
-    status: blocked
+    status: done
     order: 5
     depends_on: []
-    needs_human: {kind: click, minutes: 5}
+    needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/N8-REOPEN-RESET-PREREGISTRATION.md
     evidence: {pr: 101}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
+    verdict: {by: "human", cite: "PR #101 merged 2026-09-23 (the click, f6d888e); felt_verdict false, done on merge"}
     entries: [110]
-    summary: "Waiting on the human: click PR #101. PR #100 (the reopen reset) merged at b500465 on 2026-09-23. The residual correction the human ruled on 2026-09-23: attempt 1 reviewer and architect FAIL (113-114), one correction round, attempt 2 PASS on both (115-116), landing 2218d4a and 828fc34; npm test 71/1047; both E2E routes launched fresh at f42799c (product code unchanged since apart from comments); CI on 828fc34 green for push and pull_request. After the click: node done on merge; the final N8 retest runs under briefa-p6-part-n-acceptances"
-    dates: {opened: 2026-09-22, done: null}
+    summary: "DONE 2026-09-23 at PR #101 (the click, f6d888e; PR #100 at b500465). Gates: records 105-116 (the reopen reset closed via section A; the late-result test; the residual attempt 2 PASS on both, 115-116). The human's N8 retest of 2026-09-23 is recorded in Part N's run section: PASS as reported, run on 7301dc6 (PR #100, not PR #101); the rerun on the merged build is part of entry 119, under briefa-p6-part-n-acceptances"
+    dates: {opened: 2026-09-22, done: 2026-09-23}
 
   - id: shell-dependency-audit-piece
     title: "PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions"

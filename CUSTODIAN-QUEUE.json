@@ -1,173 +1,135 @@
 {
-  "generated_at": "2026-09-23T06:24:33.747Z",
-  "plan_hash": "2fc24a7608526256131f96269d39b25dd3fab9a5eaad02114e7da05683fa7b1d",
+  "generated_at": "2026-09-23T22:42:45.844Z",
+  "plan_hash": "ff7415c8c4112028ac8d108a58887b5f02ea56e653c74879464dba0c736b7cbe",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 5,
+    "total_minutes": 35,
     "by_kind": {
       "click": [
         {
-          "id": "briefa-p6-n8-reopen-reset",
-          "title": "Brief A P6 -- N8 residual, PR #101 FOR YOUR CLICK (head 828fc34, every CI run green on the branch and the merge candidate): no late result of an ended generation changes the reopened session; your final N8 retest follows the merge, under briefa-p6-part-n-acceptances",
-          "lane": "shell",
+          "id": "accept-adr-013-instance",
+          "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
+          "lane": "engine",
           "phase": "prototype",
           "status": "blocked",
-          "order": 5,
-          "budget_minutes": 180,
+          "order": 6,
+          "budget_minutes": 5,
           "needs_human": {
             "kind": "click",
-            "minutes": 5
+            "minutes": 3
           },
-          "evidence": {
-            "pr": 101
-          },
+          "evidence": null,
           "dates": {
-            "opened": "2026-09-22",
+            "opened": "2026-09-18",
             "done": null
           },
-          "summary": "Waiting on the human: click PR #101. PR #100 (the reopen reset) merged at b500465 on 2026-09-23. The residual correction the human ruled on 2026-09-23: attempt 1 reviewer and architect FAIL (113-114), one correction round, attempt 2 PASS on both (115-116), landing 2218d4a and 828fc34; npm test 71/1047; both E2E routes launched fresh at f42799c (product code unchanged since apart from comments); CI on 828fc34 green for push and pull_request. After the click: node done on merge; the final N8 retest runs under briefa-p6-part-n-acceptances"
+          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
+        },
+        {
+          "id": "accept-adr-015-a1",
+          "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 5,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 3
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
+        },
+        {
+          "id": "accept-adr-016-a1",
+          "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 5,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 3
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
+        },
+        {
+          "id": "accept-adr-028-qualification",
+          "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 5,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 3
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
+        },
+        {
+          "id": "accept-adr-032",
+          "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 5,
+          "needs_human": {
+            "kind": "click",
+            "minutes": 3
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
         }
       ],
       "sight": [],
       "ruling": [],
-      "sitting": []
+      "sitting": [
+        {
+          "id": "briefa-p6-part-n-acceptances",
+          "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 6,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "sitting",
+            "minutes": 20
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "The five acceptances are presented together as entry 119 (2026-09-23), waiting on the human's word. Two proposed texts are not yet true of the build: ADR-013 A1 item 5's status-at-open surface and ADR-016 A1 item 2's shown degradation. The recommended route is a short-form piece for ADR-013's statement, then one short sitting (N1 re-sight, N8 rerun on the merged build), then one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close"
+        }
+      ]
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "accept-adr-013-instance",
-      "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 5,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 3
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
-    {
-      "id": "accept-adr-015-a1",
-      "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 5,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 3
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
-    {
-      "id": "accept-adr-016-a1",
-      "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 5,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 3
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
-    {
-      "id": "accept-adr-028-qualification",
-      "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 5,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 3
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
-    {
-      "id": "accept-adr-032",
-      "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 5,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 3
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
-    {
-      "id": "briefa-p6-part-n-acceptances",
-      "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 6,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "sitting",
-        "minutes": 20
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "After PR #100 merges: the human's focused N8 retest (the retest text in the N8 hand-back), then the five acceptances as one question set. Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close",
-      "blocked_by": [
-        "briefa-p6-n8-reopen-reset"
-      ]
-    },
     {
       "id": "geometry-types-beyond-polygons",
       "title": "Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration",
@@ -210,8 +172,7 @@
       },
       "summary": "PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing.",
       "blocked_by": [
-        "briefa-p6-part-n-acceptances",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-part-n-acceptances"
       ]
     },
     {
