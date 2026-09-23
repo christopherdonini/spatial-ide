@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0d0c66ac01097479933aadf75208176d8bf5674adaefb823f2a836bd80f5e8e7`) at `2026-09-22T23:51:15.944Z`.
+Generated from `PLAN.yaml` (sha256 `6cb1288d617ce3f142dbe3c8cc11fa0df61c602666556d311375e71543fd05f8`) at `2026-09-23T04:09:42.421Z`.
 
 ## 1. Next
 
@@ -10,15 +10,9 @@ Generated from `PLAN.yaml` (sha256 `0d0c66ac01097479933aadf75208176d8bf5674adaef
 
 - (none)
 
-## 3. Waiting on the human (total: 8 min)
+## 3. Waiting on the human (total: 0 min)
 
-### click
-
-- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 reopen reset, PR #100 FOR YOUR CLICK: a successful reopen clears the ended session; late results from the old generation are dropped (both gates PASS at b194aa7, landed as text at 68d81d4; your focused N8 retest follows the merge, under briefa-p6-part-n-acceptances) (5 min)
-
-### ruling
-
-- **decision-n8-residual-late-writes** — Whether the N8 residual late writes are fixed before or after the N8 retest -- an in-flight filter Apply of the old generation that succeeds in the reopen window carries its filter into the new session (both arms, probed); the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks (by reading) (3 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
@@ -30,10 +24,10 @@ Generated from `PLAN.yaml` (sha256 `0d0c66ac01097479933aadf75208176d8bf5674adaef
 - **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: briefa-p6-n8-reopen-reset
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: briefa-p6-part-n-acceptances, b1-engine-kernel-half
 - **engine-source-change-watcher** — The advisory source-change watcher — blocked by: briefa-p6-part-n-acceptances, briefa-p6-n8-reopen-reset
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
-- **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions — blocked by: briefa-p6-part-n-acceptances
+- **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions — blocked by: briefa-p6-part-n-acceptances, accept-adr-013-instance, accept-adr-015-a1, accept-adr-016-a1, accept-adr-028-qualification, accept-adr-032
 - **drill-fix-viewer-build-order** — Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115) — blocked by: shell-dependency-audit-piece
 - **drill-fix-release-only-guard** — Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115) — blocked by: shell-dependency-audit-piece
 - **drill-fix-fixture-watchdog** — Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115) — blocked by: shell-dependency-audit-piece
@@ -45,6 +39,7 @@ Generated from `PLAN.yaml` (sha256 `0d0c66ac01097479933aadf75208176d8bf5674adaef
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
+- **briefa-p6-n8-reopen-reset** — Brief A P6 -- N8 reopen reset (PR #100, not yet ready): a successful reopen clears the ended session; no late result of the old generation changes the new one -- the residual correction owed before the final retest — evidence: branch `fix/n8-reopen-reset`
 
 ## 6. Proposed / unscheduled
 

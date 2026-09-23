@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T23:51:16.033Z",
+  "generated_at": "2026-09-23T04:09:42.506Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 76408016896,
+        "bytes": 76358553600,
         "total": 510319915008
       },
       {
@@ -30,25 +30,10 @@
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [
-    {
-      "id": "briefa-p6-n8-reopen-reset",
-      "kind": "click",
-      "minutes": 5,
-      "opened": "2026-09-22",
-      "age_days": 0
-    },
-    {
-      "id": "decision-n8-residual-late-writes",
-      "kind": "ruling",
-      "minutes": 3,
-      "opened": "2026-09-23",
-      "age_days": -1
-    }
-  ],
+  "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 47
+    "n": 48
   },
   "gate_first_pass": {
     "present": true,

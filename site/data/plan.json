@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-22T23:51:17.544Z",
-  "plan_hash": "0d0c66ac01097479933aadf75208176d8bf5674adaefb823f2a836bd80f5e8e7",
+  "generated_at": "2026-09-23T04:09:44.133Z",
+  "plan_hash": "6cb1288d617ce3f142dbe3c8cc11fa0df61c602666556d311375e71543fd05f8",
   "priorities_approved": true,
   "lanes": [
     {
@@ -920,7 +920,10 @@
       "order": 2,
       "depends_on": [
         "briefa-p6-part-n-acceptances",
-        "adr-023-decision-text"
+        "adr-023-decision-text",
+        "drill-fix-release-only-guard",
+        "drill-fix-fixture-watchdog",
+        "drill-fix-viewer-build-order"
       ],
       "needs_human": {
         "kind": "none",
@@ -2345,11 +2348,11 @@
     },
     {
       "id": "briefa-p6-n8-reopen-reset",
-      "title": "Brief A P6 -- N8 reopen reset, PR #100 FOR YOUR CLICK: a successful reopen clears the ended session; late results from the old generation are dropped (both gates PASS at b194aa7, landed as text at 68d81d4; your focused N8 retest follows the merge, under briefa-p6-part-n-acceptances)",
+      "title": "Brief A P6 -- N8 reopen reset (PR #100, not yet ready): a successful reopen clears the ended session; no late result of the old generation changes the new one -- the residual correction owed before the final retest",
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "in-progress",
       "order": 5,
       "depends_on": [],
       "needs_human": {
@@ -2358,7 +2361,7 @@
       },
       "gate": "frontends/shell/N8-REOPEN-RESET-PREREGISTRATION.md",
       "evidence": {
-        "pr": 100
+        "branch": "fix/n8-reopen-reset"
       },
       "budget_minutes": 180,
       "generation": 1,
@@ -2366,7 +2369,7 @@
       "entries": [
         110
       ],
-      "summary": "Waiting on the human: click PR #100 (head 68d81d4; CI on that head). Gates: reviewer a1 105 FAIL, architect a1 106 FAIL, correction round, architect a2 108 PASS, reviewer a2 107 FAIL, closed under AI_DEVELOPMENT.md section A at de360e7; then the human asked for a late-result integration test (2026-09-22): reviewer 109 FAIL, architect 110 FAIL, a correction round adding guards for the pre-cleanup window in both arms, reviewer 111 PASS, architect 112 PASS, landed as text at a687d0f/68d81d4. Residual, named for the human (decision-n8-residual-late-writes): an in-flight filter Apply of the old generation succeeding in the window carries its filter into the new session; the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks. After the click: node done on merge; the retest runs under briefa-p6-part-n-acceptances",
+      "summary": "IN PROGRESS 2026-09-23 on the human's ruling: current main merged into the branch (no force push); a bounded correction guards the old filter Apply completion and the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks, with the full sequence (old generation ended, successful reopen, then old success, error and filter completion) through the real App wiring and positive controls; full gating; then the E2E, CI on the branch and on the merge candidate, and PR #100 handed back for the click and the final N8 retest. Gate history: records 105-112 (the fix closed under AI_DEVELOPMENT.md section A; the late-result round passed both gates)",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -2381,7 +2384,12 @@
       "status": "blocked",
       "order": 6,
       "depends_on": [
-        "briefa-p6-part-n-acceptances"
+        "briefa-p6-part-n-acceptances",
+        "accept-adr-013-instance",
+        "accept-adr-015-a1",
+        "accept-adr-016-a1",
+        "accept-adr-028-qualification",
+        "accept-adr-032"
       ],
       "needs_human": {
         "kind": "click",
@@ -2494,25 +2502,31 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "done",
       "order": 5,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 3
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "state/directives/2026-09-23-n8-residual-and-sequence.md"
+      },
       "budget_minutes": 0,
       "generation": 1,
       "felt_verdict": false,
+      "verdict": {
+        "by": "human",
+        "cite": "RULED 2026-09-23 (DECISIONS-PENDING.md); the fix is owed on briefa-p6-n8-reopen-reset"
+      },
       "entries": [
         110
       ],
-      "summary": "Found by the N8 late-result gates (records 111-112), pre-existing and outside PR #100's declared Change; the window is the interval between the new admission and the old stream's cleanup. The custodian's reading: a bounded follow-up piece with the same handle guard on the Apply path and the three baseline callbacks, after PR #100 merges and in parallel with nothing else; the N8 retest does not exercise filters",
+      "summary": "RULED 2026-09-23: fix the old filter Apply contamination and the three named baseline callbacks before the final N8 retest, a bounded correction under the existing gates. Earlier: Found by the N8 late-result gates (records 111-112), pre-existing and outside PR #100's declared Change; the window is the interval between the new admission and the old stream's cleanup. The custodian's reading: a bounded follow-up piece with the same handle guard on the Apply path and the three baseline callbacks, after PR #100 merges and in parallel with nothing else; the N8 retest does not exercise filters",
       "dates": {
         "opened": "2026-09-23",
-        "done": null
+        "done": "2026-09-23"
       }
     },
     {
@@ -2630,7 +2644,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes",
+      "summary": "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes",
       "dates": {
         "opened": null,
         "done": null
