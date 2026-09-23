@@ -4,7 +4,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { CrsInfo, IdentityInfo } from "../skp/types";
-import { crsProvenanceLine, crsSummaryLine, identitySummaryLine, sessionStatementLine } from "./describeSummaryText";
+import {
+  crsProvenanceLine,
+  crsSummaryLine,
+  displayConventionLine,
+  identitySummaryLine,
+  sessionStatementLine,
+} from "./describeSummaryText";
 
 function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
   return {
@@ -134,5 +140,26 @@ describe("sessionStatementLine (round 16, item 1: identity.session_statement ren
       session_statement: null,
     };
     expect(sessionStatementLine(native)).toBeNull();
+  });
+});
+
+describe("displayConventionLine (DECISIONS-PENDING.md RULED 2026-09-23 (late), entry 119 item (5): crs.display_convention rendered verbatim, only when non-null)", () => {
+  // displayConventionLine is a pass-through (describeSummaryText.ts:67-69); this unit test drives it
+  // from a plainly-marked placeholder, not the wire's sentence (the same discipline
+  // sessionStatementLine's test above uses, and for the same reason -- the real sentence is never
+  // retyped as a TypeScript literal, types.ts:93-99). The real fixture's own bytes reach this
+  // function unchanged, proven by the seam assertion in fixtures.test.ts.
+  //
+  // RECORDED MUTATION for "displayConventionLine renders crs.display_convention verbatim, and null when the dataset has none":
+  // replace the returned value with a fixed paraphrase (`return crs.display_convention === null ? null : "a display convention applies";`).
+  // Observed failure (applied and reverted, worker run): "AssertionError: expected 'a display
+  // convention applies' to be '<display convention placeholder>' // Object.is equality" at this
+  // file's `expect(displayConventionLine(degrees)).toBe("<display convention placeholder>")` line.
+  it("displayConventionLine renders crs.display_convention verbatim, and null when the dataset has none", () => {
+    const degrees = fileCrs({ display_convention: "<display convention placeholder>" });
+    expect(displayConventionLine(degrees)).toBe("<display convention placeholder>");
+
+    const projected = fileCrs({ display_convention: null });
+    expect(displayConventionLine(projected)).toBeNull();
   });
 });
