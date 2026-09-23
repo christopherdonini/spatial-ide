@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-23T22:42:47.802Z",
-  "plan_hash": "ff7415c8c4112028ac8d108a58887b5f02ea56e653c74879464dba0c736b7cbe",
+  "generated_at": "2026-09-23T23:00:55.434Z",
+  "plan_hash": "2d1b29c4d6544aa0f9146c30fccebc9d048bc98f63b5d9fd0fa7885a44607a53",
   "priorities_approved": true,
   "lanes": [
     {
@@ -935,7 +935,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -1572,7 +1572,8 @@
         "briefa-p5-gate-tests",
         "sitting-4-rows",
         "briefa-p6-describe-fields",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "adr-013-display-statement"
       ],
       "needs_human": {
         "kind": "sitting",
@@ -1587,7 +1588,7 @@
         110,
         119
       ],
-      "summary": "The five acceptances are presented together as entry 119 (2026-09-23), waiting on the human's word. Two proposed texts are not yet true of the build: ADR-013 A1 item 5's status-at-open surface and ADR-016 A1 item 2's shown degradation. The recommended route is a short-form piece for ADR-013's statement, then one short sitting (N1 re-sight, N8 rerun on the merged build), then one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close",
+      "summary": "RULED 2026-09-23 (late), entry 119: this node is now the short sitting -- N1 re-sighted after adr-013-display-statement lands, and the N8 rerun on the merged build, both recorded verbatim in Part N's run section; the five accept nodes follow as one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1640,7 +1641,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
         "kind": "click",
@@ -1655,7 +1657,7 @@
         110,
         119
       ],
-      "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (1): accepted as it stands; appended in the one PR with the other four. A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1672,7 +1674,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
         "kind": "click",
@@ -1687,7 +1690,7 @@
         110,
         119
       ],
-      "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (3): accepted with a dated acceptance note naming item 2's degradation display as owed, delivered by the watcher piece's detection-state field on describe; in the one PR with the other four. A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1704,7 +1707,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
         "kind": "click",
@@ -1719,7 +1723,7 @@
         110,
         119
       ],
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1736,7 +1740,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
         "kind": "click",
@@ -1751,7 +1756,7 @@
         110,
         119
       ],
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (4): after the short N8 rerun on the merged build, in the same sitting as N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1768,7 +1773,8 @@
       "depends_on": [
         "briefa-p4-corpus-run",
         "briefa-p5-gate-tests",
-        "briefa-p6-n8-reopen-reset"
+        "briefa-p6-n8-reopen-reset",
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
         "kind": "click",
@@ -1783,7 +1789,7 @@
         110,
         119
       ],
-      "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (2): accepted as it stands; its Status line changes in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -2386,6 +2392,63 @@
       }
     },
     {
+      "id": "adr-013-display-statement",
+      "title": "ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "frontends/shell/ADR-013-DISPLAY-STATEMENT-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "fix/adr-013-display-statement"
+      },
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        113,
+        119
+      ],
+      "summary": "RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      }
+    },
+    {
+      "id": "shell-redesign-map-studio",
+      "title": "Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled)",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        119
+      ],
+      "summary": "RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))",
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      }
+    },
+    {
       "id": "shell-dependency-audit-piece",
       "title": "PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions",
       "kind": "task",
@@ -2654,7 +2717,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes",
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes",
       "dates": {
         "opened": null,
         "done": null
@@ -3121,7 +3184,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing.",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing.",
       "dates": {
         "opened": "2026-09-18",
         "done": null

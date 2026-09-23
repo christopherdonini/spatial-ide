@@ -1,135 +1,151 @@
 {
-  "generated_at": "2026-09-23T22:42:45.844Z",
-  "plan_hash": "ff7415c8c4112028ac8d108a58887b5f02ea56e653c74879464dba0c736b7cbe",
+  "generated_at": "2026-09-23T23:00:53.784Z",
+  "plan_hash": "2d1b29c4d6544aa0f9146c30fccebc9d048bc98f63b5d9fd0fa7885a44607a53",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 35,
+    "total_minutes": 0,
     "by_kind": {
-      "click": [
-        {
-          "id": "accept-adr-013-instance",
-          "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-015-a1",
-          "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
-        },
-        {
-          "id": "accept-adr-016-a1",
-          "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-028-qualification",
-          "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-032",
-          "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
-        }
-      ],
+      "click": [],
       "sight": [],
       "ruling": [],
-      "sitting": [
-        {
-          "id": "briefa-p6-part-n-acceptances",
-          "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 60,
-          "needs_human": {
-            "kind": "sitting",
-            "minutes": 20
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "The five acceptances are presented together as entry 119 (2026-09-23), waiting on the human's word. Two proposed texts are not yet true of the build: ADR-013 A1 item 5's status-at-open surface and ADR-016 A1 item 2's shown degradation. The recommended route is a short-form piece for ADR-013's statement, then one short sitting (N1 re-sight, N8 rerun on the merged build), then one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close"
-        }
-      ]
+      "sitting": []
     }
   },
   "blocked_on_dependencies": [
+    {
+      "id": "accept-adr-013-instance",
+      "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "blocked_by": [
+        "briefa-p6-part-n-acceptances"
+      ]
+    },
+    {
+      "id": "accept-adr-015-a1",
+      "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (1): accepted as it stands; appended in the one PR with the other four. A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed",
+      "blocked_by": [
+        "briefa-p6-part-n-acceptances"
+      ]
+    },
+    {
+      "id": "accept-adr-016-a1",
+      "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (3): accepted with a dated acceptance note naming item 2's degradation display as owed, delivered by the watcher piece's detection-state field on describe; in the one PR with the other four. A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "blocked_by": [
+        "briefa-p6-part-n-acceptances"
+      ]
+    },
+    {
+      "id": "accept-adr-028-qualification",
+      "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (4): after the short N8 rerun on the merged build, in the same sitting as N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)",
+      "blocked_by": [
+        "briefa-p6-part-n-acceptances"
+      ]
+    },
+    {
+      "id": "accept-adr-032",
+      "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 5,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 3
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (2): accepted as it stands; its Status line changes in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0",
+      "blocked_by": [
+        "briefa-p6-part-n-acceptances"
+      ]
+    },
+    {
+      "id": "briefa-p6-part-n-acceptances",
+      "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "sitting",
+        "minutes": 20
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119: this node is now the short sitting -- N1 re-sighted after adr-013-display-statement lands, and the N8 rerun on the merged build, both recorded verbatim in Part N's run section; the five accept nodes follow as one appending PR for the click. Part N run 1 (2026-09-20): N1-N7 PASS, N9 as given. N8 retest (2026-09-23): PASS as reported, on 7301dc6 (PR #100 without PR #101). The KNOWN-LIMITATIONS rows (N9's five) are owed to the next release revising that file. B1 of Brief B is blocked on this node, Brief A's close",
+      "blocked_by": [
+        "adr-013-display-statement"
+      ]
+    },
     {
       "id": "geometry-types-beyond-polygons",
       "title": "Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration",
@@ -170,7 +186,7 @@
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing.",
+      "summary": "RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing.",
       "blocked_by": [
         "briefa-p6-part-n-acceptances"
       ]
@@ -192,7 +208,7 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "blocked_by": [
         "briefa-p6-part-n-acceptances",
         "drill-fix-release-only-guard",
@@ -449,6 +465,28 @@
       },
       "summary": "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
       "evidence_label": "PR #86"
+    },
+    {
+      "id": "adr-013-display-statement",
+      "title": "ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "fix/adr-013-display-statement"
+      },
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), entry 119 item (5): the short-form piece comes first, then N1's re-sight; ADR-013 A1 is accepted once item 5 is true of the build. The wire field is display_convention (frontends/shell/src/skp/types.ts:100), which no component rendered before (entry 113 (3)). Reviewer and architect, as for PR #93. A migration-inventory item for the shell redesign when it lands (shell direction item (d))",
+      "evidence_label": "branch `fix/adr-013-display-statement`"
     }
   ],
   "proposed": [
@@ -567,6 +605,25 @@
       "summary": "Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
     },
     {
+      "id": "shell-redesign-map-studio",
+      "title": "Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      },
+      "summary": "RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))"
+    },
+    {
       "id": "release-v0-1-1",
       "title": "v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it",
       "lane": "release",
@@ -621,7 +678,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
     },
     {
       "id": "briefb-b3-publish-v2",

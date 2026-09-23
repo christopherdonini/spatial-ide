@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T22:42:45.967Z",
+  "generated_at": "2026-09-23T23:00:53.868Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,7 +9,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 76602011648,
+        "bytes": 76584349696,
         "total": 510319915008
       },
       {
@@ -27,50 +27,7 @@
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [
-    {
-      "id": "accept-adr-013-instance",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 5
-    },
-    {
-      "id": "accept-adr-015-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 5
-    },
-    {
-      "id": "accept-adr-016-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 5
-    },
-    {
-      "id": "accept-adr-028-qualification",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 5
-    },
-    {
-      "id": "accept-adr-032",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 5
-    },
-    {
-      "id": "briefa-p6-part-n-acceptances",
-      "kind": "sitting",
-      "minutes": 20,
-      "opened": "2026-09-18",
-      "age_days": 5
-    }
-  ],
+  "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
     "n": 49

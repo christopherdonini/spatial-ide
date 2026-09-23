@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ff7415c8c4112028ac8d108a58887b5f02ea56e653c74879464dba0c736b7cbe`) at `2026-09-23T22:42:45.844Z`.
+Generated from `PLAN.yaml` (sha256 `2d1b29c4d6544aa0f9146c30fccebc9d048bc98f63b5d9fd0fa7885a44607a53`) at `2026-09-23T23:00:53.784Z`.
 
 ## 1. Next
 
@@ -10,22 +10,18 @@ Generated from `PLAN.yaml` (sha256 `ff7415c8c4112028ac8d108a58887b5f02ea56e653c7
 
 - (none)
 
-## 3. Waiting on the human (total: 35 min)
+## 3. Waiting on the human (total: 0 min)
 
-### click
-
-- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) (3 min)
-- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) (3 min)
-- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) (3 min)
-- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) (3 min)
-- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) (3 min)
-
-### sitting
-
-- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click (20 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
+- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) — blocked by: briefa-p6-part-n-acceptances
+- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) — blocked by: briefa-p6-part-n-acceptances
+- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) — blocked by: briefa-p6-part-n-acceptances
+- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) — blocked by: briefa-p6-part-n-acceptances
+- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) — blocked by: briefa-p6-part-n-acceptances
+- **briefa-p6-part-n-acceptances** — Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click — blocked by: adr-013-display-statement
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: briefa-p6-part-n-acceptances, b1-engine-kernel-half
 - **engine-source-change-watcher** — The advisory source-change watcher — blocked by: briefa-p6-part-n-acceptances
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: briefa-p6-part-n-acceptances, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order
@@ -43,6 +39,7 @@ Generated from `PLAN.yaml` (sha256 `ff7415c8c4112028ac8d108a58887b5f02ea56e653c7
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
+- **adr-013-display-statement** — ADR-013 Amendment 1 item 5 made true of the build -- the equirectangular statement rendered in the existing DescribeSummary, which shows at open; no new status surface — evidence: branch `fix/adr-013-display-statement`
 
 ## 6. Proposed / unscheduled
 
@@ -54,6 +51,7 @@ Generated from `PLAN.yaml` (sha256 `ff7415c8c4112028ac8d108a58887b5f02ea56e653c7
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (phase `prototype`) — never queued until placed
 - **governance-verify-gate-file-exists** — verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18) (phase `prototype`) — never queued until placed
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (phase `prototype`) — never queued until placed
+- **shell-redesign-map-studio** — Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
