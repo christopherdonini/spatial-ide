@@ -829,6 +829,10 @@ export default function App() {
    */
   const handleApplyFilter = useCallback(
     (filter: Filter | null): Promise<ApplyFilterOutcome> => {
+      // N8 residual correction: captured at issue time, the same "which generation was this FOR"
+      // key `reportViewportOutcome`'s `forDataset`/`issueViewportQuery`'s `forThisEffect` already
+      // use -- a completion arriving after a later admission must not commit A's filter/fit onto B.
+      const forThisApply = admittedDatasetRef.current;
       return applyFilter(filter, {
         requestViewport: (bbox, f) => {
           const issue = issueQueryRef.current;
@@ -840,10 +844,16 @@ export default function App() {
         cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
         getLastViewportBbox: () => lastViewportBboxRef.current,
         getActiveFilter: () => activeFilterRef.current,
-        commitActiveFilter,
+        commitActiveFilter: (f) => {
+          if (forThisApply !== admittedDatasetRef.current) return;
+          commitActiveFilter(f);
+        },
         // Human-approved design revision, 2026-08-15 walkthrough Part E E5 -- see `applyFilter`'s own
         // doc comment and `WorkingCanvasHandle.resetFitForNewGeneration`'s own doc comment.
-        resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+        resetFitForNewGeneration: () => {
+          if (forThisApply !== admittedDatasetRef.current) return;
+          canvasRef.current?.resetFitForNewGeneration();
+        },
       });
     },
     [commitActiveFilter]
@@ -1225,8 +1235,17 @@ export default function App() {
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
-            commitActiveFilter,
-            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+            // N8 residual correction: same "keyed on this effect's own generation" guard as
+            // `onResidencyStatusChange`/`applyScanEvent` immediately above -- a completion arriving
+            // after a later admission must not commit A's filter/fit onto B.
+            commitActiveFilter: (f) => {
+              if (admitted.dataset !== admittedDatasetRef.current) return;
+              commitActiveFilter(f);
+            },
+            resetFitForNewGeneration: () => {
+              if (admitted.dataset !== admittedDatasetRef.current) return;
+              canvasRef.current?.resetFitForNewGeneration();
+            },
           })
         );
       }
@@ -1272,6 +1291,10 @@ export default function App() {
       onSessionEnded: (detail) => endSession(detail, admitted.dataset), // N8: bound to this generation
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
+          // N8 residual correction: the dev-gated baseline arm's own late-window guard -- same key
+          // as `issueViewportQuery`'s `.then` below, dropping a terminal for a generation this
+          // effect's own `admitted.dataset` has moved past rather than bannering it onto the live one.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
           // P3a: the detail now opens with its typed code (`kernel/src/skp.rs::terminal_detail_of`),
           // which is for the client to match on and not for the operator to read. `message` is the
@@ -1350,10 +1373,19 @@ export default function App() {
             cancelPendingDebounce: () => viewportDebounceRef.current?.cancel(),
             getLastViewportBbox: () => lastViewportBboxRef.current,
             getActiveFilter: () => activeFilterRef.current,
-            commitActiveFilter,
+            // N8 residual correction: same "keyed on this effect's own generation" guard
+            // `issueViewportQuery`'s own `.then` below carries -- a completion arriving after a
+            // later admission must not commit A's filter/fit onto B.
+            commitActiveFilter: (f) => {
+              if (forThisEffect !== admittedDatasetRef.current) return;
+              commitActiveFilter(f);
+            },
             // Same-seam doctrine (deviation-3 retrofit): this hook drives the IDENTICAL applyFilter
             // seam a real Apply click does, including the new-generation fit reset.
-            resetFitForNewGeneration: () => canvasRef.current?.resetFitForNewGeneration(),
+            resetFitForNewGeneration: () => {
+              if (forThisEffect !== admittedDatasetRef.current) return;
+              canvasRef.current?.resetFitForNewGeneration();
+            },
           }
         )
       );
@@ -1556,6 +1588,11 @@ export default function App() {
                * deck.gl's own render path. */
               onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
               onCanvasRefusal={(streamHandle, message) => {
+                // N8 residual correction: the dev-gated baseline arm's own late-window guard --
+                // this prop closure is bound to the `admitted` this render built it for, so a call
+                // arriving from an instance React has already superseded must not write the live
+                // generation's canvas refusal, nor cancel the live generation's own live stream.
+                if (admitted.dataset !== admittedDatasetRef.current) return;
                 // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
                 // comment above has the full account -- a declared-ceiling refusal must dispatch a
                 // scan event AT the cancel call site, or the liveness indicator lies forever after.
@@ -1569,6 +1606,8 @@ export default function App() {
                 });
               }}
               onResidentCeilingExceeded={(_streamHandle, residentFeatureCount) => {
+                // N8 residual correction: same guard as `onCanvasRefusal` immediately above.
+                if (admitted.dataset !== admittedDatasetRef.current) return;
                 setResidencyStatus(
                   nextResidencyStatus({
                     kind: "ceiling-refusal",
