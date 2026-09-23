@@ -567,7 +567,7 @@ nodes:
     phase: prototype
     status: blocked
     order: 2
-    depends_on: [briefa-p6-part-n-acceptances, adr-023-decision-text]
+    depends_on: [briefa-p6-part-n-acceptances, adr-023-decision-text, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -952,14 +952,14 @@ nodes:
     status: blocked
     order: 6
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, sitting-4-rows, briefa-p6-describe-fields, briefa-p6-n8-reopen-reset]
-    needs_human: {kind: sitting, minutes: 60}
+    needs_human: {kind: sitting, minutes: 20}
     gate: engine/ADMISSION-PREREGISTRATION.md
     evidence: null
     budget_minutes: 60
     generation: 1
     felt_verdict: true
     entries: [110]
-    summary: "Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
+    summary: "After PR #100 merges: the human's focused N8 retest (the retest text in the N8 hand-back), then the five acceptances as one question set. Part N run 1 (2026-09-20, recorded 2026-09-22): N1-N7 PASS as reported, N9 as given, N8 deviated at reopen -- the N8 piece, then a focused N8 retest; then the five acceptances as one question set. Not closed. Part N's rows updated for PR #93's two rendered rows (N1 the CRS provenance line, N3 the Session identity sentence byte-copied from the fixture, the preamble re-pinned; PR #98, docs-only under delegation after reviewer attempt 2 PASS, gate-log 102-103; round 16 item 1) -- the sitting can run as written once #98 is on main; the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
     dates: {opened: 2026-09-18, done: null}
 
   - id: briefa-p6-describe-fields
@@ -1402,7 +1402,7 @@ nodes:
     dates: {opened: 2026-09-19, done: 2026-09-20}
 
   - id: briefa-p6-n8-reopen-reset
-    title: "Brief A P6 -- N8: a successful same-file reopen clears the ended session's warning and hover latch and restores identification and Zoom to layer; a failed reopen or a late old-generation result never revives or contaminates"
+    title: "Brief A P6 -- N8 reopen reset (PR #100, not yet ready): a successful reopen clears the ended session; no late result of the old generation changes the new one -- the residual correction owed before the final retest"
     kind: task
     lane: shell
     phase: prototype
@@ -1416,7 +1416,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [110]
-    summary: "Authorized by the human 2026-09-22 after Part N run 1's N8 deviation; its own branch and worktree; five-line form, full gating (reviewer and architect); exercised through the real app wiring; the misleading remount comment corrected; no renderer redesign, watcher or governance change; a focused N8 retest follows"
+    summary: "IN PROGRESS 2026-09-23 on the human's ruling: current main merged into the branch (no force push); a bounded correction guards the old filter Apply completion and the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks, with the full sequence (old generation ended, successful reopen, then old success, error and filter completion) through the real App wiring and positive controls; full gating; then the E2E, CI on the branch and on the merge candidate, and PR #100 handed back for the click and the final N8 retest. Gate history: records 105-112 (the fix closed under AI_DEVELOPMENT.md section A; the late-result round passed both gates)"
     dates: {opened: 2026-09-22, done: null}
 
   - id: shell-dependency-audit-piece
@@ -1426,7 +1426,7 @@ nodes:
     phase: prototype
     status: blocked
     order: 6
-    depends_on: [briefa-p6-part-n-acceptances]
+    depends_on: [briefa-p6-part-n-acceptances, accept-adr-013-instance, accept-adr-015-a1, accept-adr-016-a1, accept-adr-028-qualification, accept-adr-032]
     needs_human: {kind: click, minutes: 5}
     gate: none
     evidence: null
@@ -1490,6 +1490,25 @@ nodes:
     entries: [110]
     summary: "A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
     dates: {opened: 2026-09-22, done: null}
+
+  - id: decision-n8-residual-late-writes
+    title: "Whether the N8 residual late writes are fixed before or after the N8 retest -- an in-flight filter Apply of the old generation that succeeds in the reopen window carries its filter into the new session (both arms, probed); the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks (by reading)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: done
+    order: 5
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: {path: "state/directives/2026-09-23-n8-residual-and-sequence.md"}
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    verdict: {by: "human", cite: "RULED 2026-09-23 (DECISIONS-PENDING.md); the fix is owed on briefa-p6-n8-reopen-reset"}
+    entries: [110]
+    summary: "RULED 2026-09-23: fix the old filter Apply contamination and the three named baseline callbacks before the final N8 retest, a bounded correction under the existing gates. Earlier: Found by the N8 late-result gates (records 111-112), pre-existing and outside PR #100's declared Change; the window is the interval between the new admission and the old stream's cleanup. The custodian's reading: a bounded follow-up piece with the same handle guard on the Apply path and the three baseline callbacks, after PR #100 merges and in parallel with nothing else; the N8 retest does not exercise filters"
+    dates: {opened: 2026-09-23, done: 2026-09-23}
 
   # ============================== PROPOSED ==============================
 
@@ -1564,7 +1583,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
+    summary: "The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
     dates: {opened: null, done: null}
 
   - id: briefb-b3-publish-v2
