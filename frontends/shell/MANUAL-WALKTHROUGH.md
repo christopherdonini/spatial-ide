@@ -1430,6 +1430,8 @@ Interrupted mid-sitting by the D: drive migration — the app closed during a ro
 - **N8:** DEVIATION at the reopen step (the human's words above: after reopening the scratch copy the view renders, but the `engine.source_changed` block and the session-ended hover text remain; Zoom to layer is not clickable; a Ctrl+R reload clears the texts but is not a recovery path and started no fresh N6 block). The row's remaining steps — the second touch, the small pan inside residency, the pan beyond it — were not verified. Log reading (the custodian's, not a diagnosis): after the reopen the data plane served a fresh first look and tiles (session log line 732 onward). A correction piece is authorized (the human, 2026-09-22); N8 is re-run after it.
 - **N9:** the human's words: “N9 seems fine to me.”
 
+**N8 observation, 2026-09-23 (not the candidate):** the human's words, verbatim: “N8 has still the same problem, when i reopen the geoparquet it doesn't remove the viewport text nor the id text”. Build: dev, the main checkout at 8380f34, its shell binary rebuilt at the launch (2026-09-23T04:10:55Z); the session log `session-1790136658.log` begins 04:10:58Z. That build did not contain the N8 fix: PR #100 was merged later, at 04:27:16Z (b500465), and the residual correction the human ruled on is not yet on main. Recorded as a run of main's build, not as a retest of the fix; N8's retest on the final candidate is still owed.
+
 Fill in once this Part is run: date, run by, build/commit, pass/fail per row N1–N9, N2's
 distinguishability verdict, N3's own red-line call (whether the human re-scoped the session-identity
 sight or a component now renders it), N5's guidance-wording verdict, N6's `{detail}` text as actually

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-23T04:09:42.421Z",
-  "plan_hash": "6cb1288d617ce3f142dbe3c8cc11fa0df61c602666556d311375e71543fd05f8",
+  "generated_at": "2026-09-23T05:06:18.944Z",
+  "plan_hash": "7270fce11b5835ef0eb8322b8a9dc5cdb24e99a1fe6500b325f9e5add5f522a5",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -486,7 +486,7 @@
         "opened": "2026-09-22",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-09-23 on the human's ruling: current main merged into the branch (no force push); a bounded correction guards the old filter Apply completion and the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks, with the full sequence (old generation ended, successful reopen, then old success, error and filter completion) through the real App wiring and positive controls; full gating; then the E2E, CI on the branch and on the merge candidate, and PR #100 handed back for the click and the final N8 retest. Gate history: records 105-112 (the fix closed under AI_DEVELOPMENT.md section A; the late-result round passed both gates)",
+      "summary": "PR #100 (the fix up to 1a346a9) MERGED by the human 2026-09-23T04:27Z at b500465; the residual correction (f2682c2..f5d91ee) is on the same branch ahead of main, under its gates, and goes to the human as a new PR. IN PROGRESS 2026-09-23 on the human's ruling: current main merged into the branch (no force push); a bounded correction guards the old filter Apply completion and the dev-gated baseline arm's canvas-refusal, failure-terminal and resident-ceiling callbacks, with the full sequence (old generation ended, successful reopen, then old success, error and filter completion) through the real App wiring and positive controls; full gating; then the E2E, CI on the branch and on the merge candidate, and PR #100 handed back for the click and the final N8 retest. Gate history: records 105-112 (the fix closed under AI_DEVELOPMENT.md section A; the late-result round passed both gates)",
       "evidence_label": "branch `fix/n8-reopen-reset`"
     }
   ],
