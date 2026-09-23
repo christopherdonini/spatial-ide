@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { DescribeResponse } from "../skp/types";
-import { crsProvenanceLine, crsSummaryLine, identitySummaryLine, sessionStatementLine } from "./describeSummaryText";
+import { crsProvenanceLine, crsSummaryLine, displayConventionLine, identitySummaryLine, sessionStatementLine } from "./describeSummaryText";
 
 /** Success shows schema, identity, row count and license as `describe` actually established them
  * -- never a dataset extent or an unqualified feature count (NEXT-CUT.md's brief said "bounds,
@@ -50,6 +50,13 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
           <>
             <dt>Session identity</dt>
             <dd>{sessionStatementLine(describe.identity)}</dd>
+          </>
+        )}
+
+        {displayConventionLine(describe.crs) !== null && (
+          <>
+            <dt>Display convention</dt>
+            <dd>{displayConventionLine(describe.crs)}</dd>
           </>
         )}
       </dl>
