@@ -180,12 +180,16 @@ export function admitAndResetStaleUiState(
      * other piece of per-dataset UI state already gets here -- a `.scan-incomplete` naming one
      * dataset's cancelled scan must not survive into the next dataset's UI. */
     setScanState: (value: ScanState) => void;
+    /** N8 fix: App-owned (`sessionEnded`'s own doc comment below); the same D4-class reset every
+     * other per-dataset field gets. Always `null`; `App`'s closure also flips `sessionEndedRef`. */
+    setSessionEnded: (value: FormattedRefusal | null) => void;
     setAdmitted: (value: Admitted) => void;
   }
 ): void {
   setters.setCanvasRefusal(null);
   setters.setViewportRefusal(null);
   setters.setHover(null);
+  setters.setSessionEnded(null);
   // A status naming one dataset's row counts must never survive into another's UI -- the same D4
   // class of bug rider 1 (DECISIONS-PENDING.md entry 0, option (a)) explicitly calls out ("It
   // clears when ... (b) the dataset changes").
@@ -645,6 +649,28 @@ export function handleSessionEnded(
   deps.setHover({ kind: "session-ended" });
 }
 
+/** N8 fix: `App`'s own `endSession` generation guard, extracted so a unit test drives the SAME
+ * function `App` calls. `forDataset` is whichever dataset the call site captured at issue time; a
+ * mismatch against `getCurrentDataset()` is a late arrival from a generation `App` has moved past,
+ * dropped rather than acted on. The drop is correct even for a same-file reopen: `forDataset` and
+ * `getCurrentDataset()` are both kernel-minted `DatasetHandle` strings, and every successful
+ * `open_dataset` mints a fresh, distinct one, OS-CSPRNG, never reused (`protocol/skp/SKP-V0.md:145`;
+ * `kernel/src/skp.rs:731`'s `DatasetHandle::mint()`) -- so a stale generation's `forDataset` can
+ * never collide with the live one's, same file or not. */
+export function endSessionForDataset(
+  detail: string,
+  forDataset: string,
+  deps: {
+    getCurrentDataset: () => string | null;
+    isAlreadyEnded: () => boolean;
+    setSessionEnded: (refusal: FormattedRefusal) => void;
+    setHover: (value: HoverReadout) => void;
+  }
+): void {
+  if (forDataset !== deps.getCurrentDataset()) return;
+  handleSessionEnded(detail, deps);
+}
+
 /**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
  * supersede-on-pan, a filter panel, a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
@@ -666,16 +692,20 @@ export default function App() {
    * (baseline terminal, tile terminal, untiled first-look terminal, either arm's pre-check refusal)
    * gets there first.
    *
-   * **Not dismissible and never cleared by anything short of a reopen** -- the `.residency-status`
-   * precedent (`App.tsx`'s own rider-1 block below), and for a stronger reason: the state it names
-   * does not end until the dataset is reopened, which remounts this whole subtree
-   * (`key={admitted.dataset}`) and takes this state with it. §7 declares that lifetime: no timeout.
+   * **Not dismissible and cleared only by a successful reopen** -- §7 declares no timeout.
+   * **N8 correction (2026-09-22):** App-owned, NOT part of `<WorkingCanvas key={admitted.dataset}>`
+   * below -- an earlier version of this comment claimed that subtree's remount "takes this state
+   * with it", refuted live (Part N run 1, N8). The actual clear is `handleAdmitted`'s own
+   * `admitAndResetStaleUiState` call below.
    */
   const [sessionEnded, setSessionEnded] = useState<FormattedRefusal | null>(null);
   /** The same fact, readable synchronously. `onHover` fires from deck.gl's own render path and must
    * be able to refuse a pick in the tick the session ended, before React has re-rendered anything --
    * the identical "ref mirrors state" discipline `WorkingCanvas.tsx`'s own `onHoverRef` uses. */
   const sessionEndedRef = useRef(false);
+  /** N8 fix: the CURRENT admitted generation, written by `handleAdmitted` -- `endSessionForDataset`
+   * compares a late callback's own captured `forDataset` against this ref to spot a stale one. */
+  const admittedDatasetRef = useRef<string | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
   // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
   // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
@@ -842,6 +872,8 @@ export default function App() {
    */
   const handleAdmitted = useCallback(
     (next: Admitted): void => {
+      // N8 fix: written FIRST, synchronously -- see `admittedDatasetRef`'s own doc comment above.
+      admittedDatasetRef.current = next.dataset;
       admitAndResetStaleUiState(next, {
         setCanvasRefusal,
         setViewportRefusal,
@@ -856,6 +888,10 @@ export default function App() {
           setHasSettledView(value !== null);
         },
         setScanState: commitScanState,
+        setSessionEnded: (value) => {
+          sessionEndedRef.current = value !== null;
+          setSessionEnded(value);
+        },
         setAdmitted,
       });
     },
@@ -999,10 +1035,12 @@ export default function App() {
    * **P3b §2a(ii): the one binding both arms' `onSessionEnded` and both catches reach.** Writes the
    * ref synchronously (so a hover in this same tick is already refused) and then runs the exported
    * pure handler over React's own setters. `useCallback([])`: every setter it closes over is a React
-   * identity-stable setter or a ref, so this never needs to change identity.
-   */
-  const endSession = useCallback((detail: string) => {
-    handleSessionEnded(detail, {
+   * identity-stable setter or a ref, so this never needs to change identity. N8 fix: `forDataset`
+   * -- every call site below passes ITS OWN effect run's `admitted.dataset` (`endSessionForDataset`'s
+   * own doc comment has the full account). */
+  const endSession = useCallback((detail: string, forDataset: string) => {
+    endSessionForDataset(detail, forDataset, {
+      getCurrentDataset: () => admittedDatasetRef.current,
       isAlreadyEnded: () => sessionEndedRef.current,
       setSessionEnded: (refusal) => {
         sessionEndedRef.current = true;
@@ -1012,9 +1050,14 @@ export default function App() {
     });
   }, []);
 
-  function reportViewportOutcome(promise: Promise<RequestOutcome>) {
+  function reportViewportOutcome(promise: Promise<RequestOutcome>, forDataset: string) {
     promise.then(
       () => {
+        // N8 correction round 1: a late arrival from a generation `App` has moved past must not
+        // touch the LIVE generation's `viewportRefusal` either -- the same drop-not-act-on guard
+        // `endSessionForDataset` already applies to ending the session (its own doc comment has the
+        // full account), extended here to this arm's write (the rejected arm below carries the same guard).
+        if (forDataset !== admittedDatasetRef.current) return;
         // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
         // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
         // unconditionally -- so a pan after the latch silently wiped a source-change refusal off the
@@ -1027,6 +1070,10 @@ export default function App() {
       },
       (e: unknown) => {
         if (e instanceof SkpCallError) {
+          // N8 correction round 1: same drop-not-act-on guard as the resolved arm above -- a late
+          // rejection from a superseded generation (e.g. after `manager.stop()` or a rejection
+          // following `closeDataset(old)`) must not write the LIVE generation's `viewportRefusal`.
+          if (forDataset !== admittedDatasetRef.current) return;
           // Unchanged: the camera pre-check route still sets `viewportRefusal` exactly as before
           // (§2b: "It keeps `setViewportRefusal(formatRefusal(...))`").
           setViewportRefusal(formatRefusal(e.skpError));
@@ -1034,7 +1081,7 @@ export default function App() {
           // both arms' untiled issues land in -- baseline's `issueViewportQuery`, and the candidate
           // session's `reissueUnrestricted`, which rejects with the real `SkpCallError`
           // (`candidateArmSession.ts:282-284`). Matched on `.skpError.code`, never on prose.
-          if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e));
+          if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e), forDataset);
           return;
         }
         throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers
@@ -1140,7 +1187,13 @@ export default function App() {
         // `candidate-relinquished`/`candidate-within-budget`/`candidate-over-budget`/
         // `candidate-fill-progress` event (baseline's `ceiling-refusal`/the shared clearing events below
         // are dispatched elsewhere and never need `current` -- they clear unconditionally either way).
-        onResidencyStatusChange: (event) => setResidencyStatus((current) => nextResidencyStatus(event, current)),
+        onResidencyStatusChange: (event) => {
+          // N8 late-result correction round: same guard as `issueViewportQuery`'s `.then` below --
+          // this callback can fire from this session's own async work (`emitResidencyStatus`,
+          // `candidateArmSession.ts`) before `stop()` has run, in the same pre-cleanup window.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
+          setResidencyStatus((current) => nextResidencyStatus(event, current));
+        },
         // P5f complex-gate should-fix 3: wires this session into the SAME scan-liveness state machine
         // baseline's own manager already drives (`applyScanEvent`'s own doc comment above) -- before
         // this, `scanState` stayed `{kind:"idle"}` for a candidate-arm session's entire life, so
@@ -1148,11 +1201,16 @@ export default function App() {
         // untiled work was in flight. `applyScanEvent` itself accepts the FULL `ScanEvent` union;
         // `CandidateArmSessionDeps.applyScanEvent`'s own narrower type is a safe target by function-
         // parameter contravariance (that field's own doc comment has the full account).
-        applyScanEvent,
+        applyScanEvent: (event) => {
+          // N8 late-result correction round: same guard immediately above -- `syncScanLiveness`
+          // (`candidateArmSession.ts`) can fire in the identical pre-cleanup window.
+          if (admitted.dataset !== admittedDatasetRef.current) return;
+          applyScanEvent(event);
+        },
         // **P3b §2a(iii): the candidate arm's owner reaches the same App-level handler.** The
         // session has already cleared its own tile residency by the time this fires; what is added
         // here is the status and the pick latch, which are the App's surfaces.
-        onSessionEnded: endSession,
+        onSessionEnded: (detail) => endSession(detail, admitted.dataset), // N8: bound to this generation
       });
       managerRef.current = null; // no baseline ViewportStreamManager exists for this arm
       candidateManagerRef.current = session.manager;
@@ -1176,7 +1234,7 @@ export default function App() {
       // The dataset's own "first look" -- the SAME unrestricted (`bbox: null`) shape baseline's own
       // initial issue uses, immediately, not debounced (see this module's own doc comment for why
       // this is what establishes the tile grid's own anchor).
-      reportViewportOutcome(session.reissueUnrestricted(null, activeFilterRef.current));
+      reportViewportOutcome(session.reissueUnrestricted(null, activeFilterRef.current), admitted.dataset);
 
       return () => {
         viewportDebounceRef.current?.cancel();
@@ -1211,7 +1269,7 @@ export default function App() {
       // **P3b §2a(ii): the baseline arm's owner.** The manager has already cleared the canvas's
       // residency through `onSuperseded`→`clearStream` by the time this fires; what is added here
       // is the status and the pick latch.
-      onSessionEnded: endSession,
+      onSessionEnded: (detail) => endSession(detail, admitted.dataset), // N8: bound to this generation
       ...makeManagerCallbacks(canvas, {
         onFailureTerminal: (streamHandle, terminal) => {
           logSessionEvent("stream-terminal-failure", `${streamHandle}: ${terminal.kind} — ${terminal.detail}`);
@@ -1237,6 +1295,11 @@ export default function App() {
     });
     managerRef.current = manager;
 
+    // N8 late-result correction round: captured once, here, so the guard inside `issueViewportQuery`'s
+    // `.then` below reads a value TS can see is never reassigned (a nested `function` declaration
+    // does not inherit `admitted`'s own non-null narrowing from the top-level check above).
+    const forThisEffect = admitted.dataset;
+
     /**
      * The ONE choke point every `manager.requestViewport` call in this effect (and, via
      * `issueQueryRef`, `handleApplyFilter`'s Apply/refusal-recovery calls too) goes through --
@@ -1252,6 +1315,12 @@ export default function App() {
     ): Promise<RequestOutcome> {
       const promise = manager.requestViewport(bbox, bboxCrs, undefined, filter);
       promise.then((outcome) => {
+        // N8 late-result correction round: same drop-not-act-on guard `reportViewportOutcome`
+        // already applies to the resolved/rejected arms, extended here -- this `.then` can still
+        // run for a generation this effect's own `admitted.dataset` has moved past, in the window
+        // between a later dataset's admission (which writes `admittedDatasetRef.current` first,
+        // `handleAdmitted`'s own doc comment) and this effect's cleanup calling `manager.stop()`.
+        if (forThisEffect !== admittedDatasetRef.current) return;
         if (outcome.kind === "issued") {
           scanRowsAccumulator = { streamHandle: outcome.streamHandle, rows: 0 };
           applyScanEvent({ kind: "issued", streamHandle: outcome.streamHandle });
@@ -1305,7 +1374,7 @@ export default function App() {
       makeDebouncedViewportQuery(
         (bbox, bboxCrs, filter) => {
           const p = issueViewportQuery(bbox, bboxCrs, filter);
-          reportViewportOutcome(p);
+          reportViewportOutcome(p, admitted.dataset);
           return p;
         },
         activeFilterRef,
@@ -1323,7 +1392,7 @@ export default function App() {
     // `admitAndResetStaleUiState` call already cleared it before this effect re-runs, but reading the
     // ref rather than hardcoding `null` keeps this call uniform with the other two issue sites
     // instead of a special case that would silently stop being true if that ordering ever changed.
-    reportViewportOutcome(issueViewportQuery(null, null, activeFilterRef.current));
+    reportViewportOutcome(issueViewportQuery(null, null, activeFilterRef.current), admitted.dataset);
 
     return () => {
       debounced.cancel();
@@ -1561,8 +1630,13 @@ export default function App() {
                   *
                   * **NOT dismissible** -- `RefusalBlock` renders no button by construction (its own
                   * doc comment), which is exactly right here: the state does not end until the
-                  * dataset is reopened, and a reopen remounts this subtree. The `.residency-status`
-                  * precedent below is the same reasoning for a weaker fact. */}
+                  * dataset is reopened. **N8 correction (2026-09-22):** it is NOT a remount that
+                  * clears this -- `.canvas-status-stack` sits beside the keyed `<WorkingCanvas
+                  * key={admitted.dataset}>` (above), not inside it, and renders from this
+                  * App-owned `sessionEnded` state. The actual clear is `handleAdmitted`'s own
+                  * `admitAndResetStaleUiState` call (`sessionEnded`'s own doc comment above has the
+                  * full account). The `.residency-status` precedent below is the same reasoning for
+                  * a weaker fact. */}
                 {sessionEnded && (
                   <div className="canvas-session-ended">
                     <RefusalBlock refusal={sessionEnded} />

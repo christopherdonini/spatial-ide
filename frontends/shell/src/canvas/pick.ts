@@ -91,11 +91,15 @@ export function isPickSessionEnded(value: HoverReadout): value is PickSessionEnd
  * it *carries a standing id* (`pick.ts:44-47`) and rendering an id after the identities behind it
  * were voided is precisely the stale-service ADR-010 rule 5 forbids.
  *
- * **The latch is permanent for the session.** It is cleared only by reopening the dataset, which
- * remounts `WorkingCanvas` and rebuilds both managers (`App.tsx:1477`, keyed on
- * `admitted.dataset`) -- boundary 4's own "until reopen" (`state/NEXT-CUT.md:58-59`), and §7's
- * declared lifetime: no timeout, because a timeout would resurrect exactly what the never-resurrect
- * rule prevents.
+ * **The latch is permanent for the session.** It is cleared only by reopening the dataset --
+ * boundary 4's own "until reopen" (`state/NEXT-CUT.md:58-59`), and §7's declared lifetime: no
+ * timeout, because a timeout would resurrect exactly what the never-resurrect rule prevents.
+ * **N8 correction (2026-09-22):** the latch is App-owned `sessionEndedRef.current` (`App.tsx`, this
+ * function's `sessionEnded` argument), not something a `WorkingCanvas` remount clears -- a reopen
+ * clears it because `handleAdmitted`'s own `admitAndResetStaleUiState` call resets it, the same
+ * clear App's session-ended status block relies on (`App.tsx`'s own doc comment on
+ * `sessionEnded` has the full account); App's `useEffect([admitted])` rebuilds the managers and the
+ * keyed `WorkingCanvas` remount discards canvas-side refs, both separate from this latch's reset.
  */
 export function latchedHoverReadout(readout: HoverReadout, sessionEnded: boolean): HoverReadout {
   return sessionEnded ? { kind: "session-ended" } : readout;
