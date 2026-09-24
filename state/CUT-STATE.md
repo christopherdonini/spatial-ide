@@ -97,3 +97,19 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
       - #108's five rows citing ruling round 20 item 1 and carrier round 18 item 4, pinned at the merge-base.
     - Worker dispatched in `.claude/worktrees/test-claims-withdrawn`. The form is committed before any code, and #108's node flips to done in the same PR.
   - **Context: 371.4k of 800k (46%),** measured by the human's `/context` at about 21:55Z. The first measured reading this session.
+- 2026-09-24T22:52Z - **ADR-035 ready and accepted as merged (round 21, red line, typed). #118 failed its first gates; one correction round granted. Main briefly red.**
+  - **ADR-035 (PR #114):**
+    - Fresh count under round 19 item 1:
+      - Attempt 1: the architect FAILED on close-time ordering (a data-plane-thread end recorded before `forget_dataset`, whose enqueue follows it); the reviewer PASSED.
+      - The drafter's ten edits at ce5b8e2.
+      - Attempt 2: PASS/PASS.
+      - Three custodian wording fixes at f8e77ad, with the architect's scoped PASS.
+    - CI 5/5. Marked ready: merge commit, Status Proposed.
+  - **PR #118 (the withdrawn marker), attempt 1: both gates FAILED on the same substance item.** Rider (a)'s "fails by name" was built weaker: a row with an unresolvable citation is checked only when its claimed test is missing. The reviewer's probe passed a row citing `round 99, item 1` with carrier `nonsense`. There was record-only residue besides. Verified as sound: #108's five pins, 15 withdrawn, and SUPERSEDED unchanged.
+  - **Round 21** (f086085), both answers typed and verbatim in the RULED block:
+    - Item 1, a red line: ADR-035 is accepted as merged, and Decision 4's reading is confirmed with rider (a)-(c).
+      - After #114 merges, one fully gated docs piece: Status Accepted, an Acceptance section with the words byte-copied by script, and the SKP-V0 §8 dated note (rider (c)). The architect is pre-drafting the texts.
+      - Riders (a) and (b) bind the watcher's preregistration.
+    - Item 2: one correction round for #118. The reviewer's probe becomes a named regression test. If the round fails again, Rule 7 stops the piece.
+    - A worker-high round was dispatched.
+  - **Main red for one run.** The round-21 PLAN commit f086085 was pushed by a chain whose `;` bypassed a failed `site.mjs`. The PLAN summary's "SKP-V0 section 8" had tripped the duration pattern. It was fixed at 618dada (reworded, regenerated), and Governance is green again. The lesson is appended to the gate-on-exit-code memory.
