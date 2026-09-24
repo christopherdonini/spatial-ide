@@ -71,3 +71,31 @@ commit): 418 (mjs 166+28, test 216+0, README 8+0). Reason: nine tests each need 
 fixture (a temp repo per test, matching this file's existing SUPERSEDED-test style) plus the
 riders'-mechanics code (two resolver functions, two regexes, the generalized `markedSpans`); the
 §7 figure did not anticipate the per-test fixture cost. The §7 line is not edited to match.
+
+## Amendment 2 — post-result correction (class 5, round 21 item 2)
+
+Ruling: round 21, item 2 (entry 136), on both gates' attempt-1 B1 finding (`state/gate-log.json`,
+node `governance-test-claims-withdrawn-marker`, attempt 1).
+
+Correction: §2's design is superseded by this rule — every `withdrawn-test` row is checked on its
+own (`runVerifyTestClaims`'s row-level loop, `scripts/plan/verify-test-claims.mjs`), independent of
+the per-claim exemption path; a row whose `ruling:` or `carrier:` does not resolve is a binding
+finding naming the row and the unresolved citation (or "no carrier"), whatever the state of the
+claim on its own line and whatever its node's status. Exemption via the per-claim path is
+unchanged: pin conditions (a), (c), (d), (e) plus both riders resolving.
+
+Class correction: Amendment 1's "(class 6)" label is relabeled "(class 2)" — §10 limits class 6 to
+the short form (`docs/PREREGISTRATION-TEMPLATE.md` §10, item 6); this piece is the full form.
+
+Final figure, restated with its command: `git diff --numstat origin/main...HEAD -- scripts/plan/verify-test-claims.mjs scripts/plan/verify-test-claims.test.mjs scripts/plan/README.md`
+at this commit: 672 (insertions 639, deletions 33; mjs 237+33, test 386+0, README 16+0). The §7
+line is not edited to match.
+
+Discharged: `node scripts/plan/verify-test-claims.mjs` at this piece's HEAD reads 15 withdrawn, 0
+findings — the same registered prediction, unchanged by this correction — proven by
+`a_withdrawn_test_row_pinning_a_line_whose_claimed_test_exists_still_fails_by_name` and the other
+fourteen tests in `scripts/plan/verify-test-claims.test.mjs`'s withdrawn-test section.
+
+Superseded index (this amendment): §2's exemption-only design paragraph; Amendment 1's "(class 6)"
+label; Amendment 1's 418 final-figure total, now stale — the current total across all commits is
+restated above.
