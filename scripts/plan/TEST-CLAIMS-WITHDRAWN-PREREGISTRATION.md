@@ -64,4 +64,10 @@ Budget: <= 280 insertions plus deletions over `scripts/plan/verify-test-claims.m
 
 ## §10. Amendments — opens empty, append-only
 
-(none yet)
+**Amendment 1 — budget deviation (class 6), Scope not edited.** Declared budget (§7): <= 280
+insertions plus deletions over `verify-test-claims.mjs`, `verify-test-claims.test.mjs` and
+`README.md`. Final figure (`git diff --numstat origin/main...HEAD` on those three files, this
+commit): 418 (mjs 166+28, test 216+0, README 8+0). Reason: nine tests each need their own git-tree
+fixture (a temp repo per test, matching this file's existing SUPERSEDED-test style) plus the
+riders'-mechanics code (two resolver functions, two regexes, the generalized `markedSpans`); the
+§7 figure did not anticipate the per-test fixture cost. The §7 line is not edited to match.
