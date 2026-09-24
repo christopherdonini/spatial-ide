@@ -523,3 +523,43 @@ cap form: references and hashes, no prose restating them.
   superseded by this round's own `KNOWN-LIMITATIONS.md` commit (RULED 2026-09-24, question round 17,
   item 1: the render-precision bound restated, the anchor span per-unit, `MAX_ZOOM`/`extent.ts`
   named open).
+
+### Amendment 4 — record reduction (the record cap, point (3))
+
+Written after this node's fresh-count attempt-1 gate records were seen (`state/gate-log.json`,
+architect and reviewer, @ `e39d791`). Classes 1 and 3 (`docs/PREREGISTRATION-TEMPLATE.md` §10).
+Authority: RULED 2026-09-24, question round 17, item 1 (entry 128); the record cap
+(`state/directives/2026-09-18-record-cap.md`), point (3). References only; this Amendment governs
+where Amendments 1-3 disagree with it.
+
+- **Row, class 1.** `KNOWN-LIMITATIONS.md` item 17, text and comment, is replaced in this commit
+  (architect S1, R4, R6; reviewer D-1, D-2, D-4; the process-wording note). Proof: that item
+  against the docs of `RECENTER_MAX_DRIFT` and `MIN_ANCHOR_SPAN` and the consult's sections P0 and
+  DECLARED VALUE.
+- **Results** (tools @ `e39d791`, run by the custodian on the tree this Amendment's commit carries): `cargo test -p spatial-skp` rc 0 (40 passed); `cargo test -p spatial-kernel` rc 0 (241 passed, 0 failed); `cargo clippy -p spatial-skp -p spatial-kernel --all-targets` rc 0 (warnings only); `rustfmt --edition 2021 --check` diff blocks, `kernel/src/skp.rs` 58 against main's 58 and `protocol/skp/tests/fixtures.rs` 11 against main's 11; `git diff --name-only origin/main...HEAD -- protocol/skp/tests/data/` 10 files; `npm run verify` in `frontends/shell` rc 0 (71 files, 1055 tests); the `node --test` scripts suite rc 0 (256 pass); `verify-cites`, `verify-quotes`, `verify-test-claims`, `verify-mutation --base origin/main --head HEAD` (12 named) and `verify.mjs --offline` each rc 0.
+
+**Superseded index (as of this Amendment).**
+- Amendment 1's cargo clippy bullet (R1, D-3), and every suite or command result in Amendment 1's
+  Suites list, Amendment 2 items 6-8 and 10, Amendment 3 items 2, 5 and 6 and Amendment 3's suite
+  run, its verify-quotes and clippy lines included (E-1, E-2, E-3): superseded by the Results line.
+- Amendment 3 item 1: (b)'s proof is `protocol/skp/SKP-V0.md`'s §1 `describe` block, §4 items 3
+  and 13, and §8's `skp/0.4` entry, with test 2 for the literal (D-5); (d)'s is `fixtures.test.ts`'s
+  tests `open_dataset request/response` and
+  `open_dataset request with crs_assertion and identity present (skp/0.2)`; (h) is the deck
+  trailing-tick comment in `WorkingCanvas`'s `onViewStateChange`, and the four-call-sites text is
+  its `crsUnit` prop doc.
+- Amendment 3 item 2's five blocks lie in `describe_dataset` and
+  `the_real_describe_crs_shape_matches_the_shared_fixture` (`kernel/src/skp.rs`) and in
+  `crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other`
+  (`protocol/skp/tests/fixtures.rs`); item 6's warning is on `StreamRegistry::redeem`'s signature.
+- The quoted fixture-count phrase of Amendment 2's index (second entry) and Amendment 3's index
+  (fifth entry) is withdrawn as a quote; its reference is Amendment 1's Files-touched paragraph,
+  corrected by Amendment 2 item 7.
+- Amendment 3's opening paragraph: its quoted answer is withdrawn (the ruling is round 17, item 1)
+  and its finding count yields to the architect's attempt-2 record for this node @ `25333d0`.
+- Amendment 3's bare self-lines (items 3-6 and its index) read as: the Header's Aim bullet; §1's
+  Claimable-at-landing bullet; Amendment 1's opening paragraph, §3-table Row 9 bullet (by test
+  name), cargo clippy bullet and Files-touched paragraph; Amendment 2's index, second entry.
+- Amendment 3 item 7: Amendment 2 items 8-10 stand as the class-3 rows, by item; their superseded
+  spans exist only on branch commits and are not pinned (round 15 (e)). Every commit id in
+  Amendments 1-3 is a branch-history reference, not a pin (Amendment 2 item 5).
