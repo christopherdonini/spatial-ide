@@ -413,6 +413,23 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+134. **[FOR YOUR WORD — PR #108's node cannot close as done when the scanner lands; entry 133's premise was wrong.]** Round 19 item 2 closes `governance-verify-mutation-multiline-attrs` as done when the superseded-name scanner (PR #117) lands. That rested on entry 133's statement that the scanner would neutralise #108's twelve historical test names. The statement was the custodian's error.
+- **Why it fails.** The scanner exempts only a renamed claim whose replacement exists (`scripts/plan/README.md`, section "The boundary"). #108's twelve names are tests the round-18 union design removed with no replacement.
+- **The evidence.** PR #117's reviewer checked this on a scratch clone of main plus #117 (gate-log array index 172):
+  - With P3b and #108 both set to done, `verify:test-claims` fails on the twelve names (15 claim sites in `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md`).
+  - With P3b alone done, it passes. P3b's closure is unaffected.
+- **The architect's position** (gate-log array index 171): a removal is not a supersession. It would need a distinct marker that you approve.
+- **Options:**
+  - (1) **A withdrawal marker** (Recommended). One small governance piece, fully gated after #117 lands, teaches `verify-test-claims` a distinct `withdrawn` marker:
+    - It uses the same hash-pinned row at a main commit as `superseded`.
+    - It names the ruling that removed the test, and requires no replacement.
+    - #108's record then gains its withdrawn rows, and the node closes as done.
+    - Every future design change that removes a claimed test uses the same path.
+  - (2) **A disclosed known limit.** No tool change.
+    - The node stays not-done indefinitely, with a note, and the twelve names stay advisory.
+    - The next removal meets the same wall.
+- **Touches:** PLAN node `governance-verify-mutation-multiline-attrs`; for option (1), a new proposed governance node.
+
 133. **[RULED 2026-09-24 — question round 19; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, with the click — PR #108's landing condition.]** The union design (round 18 item 4) passed on the code in both gates. Both gates failed on the record only; no finding is semantic. The architect is reducing the record under the record cap's point (3), which restores five amendment lines that were edited in place and appends a superseded index naming the twelve removed tests.
 - **The landing problem.** After the restore, the record's committed amendments still name those twelve tests. `verify-test-claims` binds a gate file's claims once its node is done, so merging with the node `done` would turn main's CI red. No append-only text neutralises them; the held superseded-name scanner would.
 - **The custodian's reading, for you to confirm or reject.** Round 18 item 4 drops #108 if that round stops. The custodian reads a record-only FAIL, with the code passing both gates, as not a stop. The record cap's point (3) therefore governs, and the piece lands after the reduction. If you read it otherwise, option (3) applies.
