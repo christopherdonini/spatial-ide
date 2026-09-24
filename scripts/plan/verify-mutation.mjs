@@ -123,6 +123,30 @@ function netBracketDelta(l, state) {
   return d;
 }
 
+/**
+ * Re-read `lines[fromIdx..toIdx]` (inclusive) under `origin/main`'s own single-line rules — no
+ * attribute-depth tracking at all — starting from `startPending`. Pushes any test this window
+ * contains into `tests`. Returns the resulting `pending` state for the caller to resume with.
+ * This is the REWIND used when the bounded look-ahead gives up on an unterminated attribute: the
+ * window is re-read, not skipped, so a test that fell inside it is not lost.
+ */
+function rewindWindowUnderMainRules(rel, lines, fromIdx, toIdx, startPending, tests) {
+  let p = startPending;
+  for (let j = fromIdx; j <= toIdx; j++) {
+    const lj = lines[j];
+    const fn = RUST_FN.exec(lj);
+    if (fn) {
+      if (p) tests.push({ name: fn[1], line: j + 1, kind: 'rust' });
+      p = false;
+      continue;
+    }
+    if (RUST_TEST_ATTR.test(lj)) { p = true; continue; }
+    if (/^\s*#!?\[/.test(lj) || /^\s*\/\//.test(lj) || lj.trim() === '') continue;
+    p = false;
+  }
+  return p;
+}
+
 /** Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`. */
 export function findTestsInFile(rel, content) {
   // survive a CRLF checkout (AI_DEVELOPMENT.md eol class): normalise before line-splitting.
@@ -132,6 +156,8 @@ export function findTestsInFile(rel, content) {
     let pending = false;
     let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
     let attrStartLine = 0;
+    let attrStartIdx = 0;
+    let pendingBeforeAttr = false; // `pending` as it stood right before this attribute opened
     let strState = { inString: false, rawHashes: null };
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i];
@@ -139,13 +165,11 @@ export function findTestsInFile(rel, content) {
         // a continuation line of an unterminated attribute (e.g. a multi-line `#[ignore = "..."]`
         // string) is part of that attribute, not "any other code line" — it never clears `pending` —
         // for at most MULTILINE_ATTR_LOOKAHEAD continuation lines. If it is still open after that
-        // many lines, the scanner gives up tracking it (a finding is printed, naming the attribute's
-        // own opening line) and falls back to today's single-line handling: the NEXT line onward is
-        // read under the normal per-line rules below, exactly as `origin/main`'s scanner (with no
-        // multi-line tracking at all) reads every line. This bounds every way an unclosed attribute
-        // can otherwise swallow the rest of the file (an unbalanced bracket in a string, a trailing
-        // line comment, a char literal holding `[` or `"`, a raw-string line starting `#[` inside a
-        // test body) to one fixed-size window, never the file's remainder.
+        // many lines, the scanner does not simply resume after the window (that would still lose any
+        // test the window itself contains): it REWINDS to the attribute's own opening line and
+        // re-reads the whole window under `origin/main`'s single-line rules, starting from the
+        // `pending` value that held before the attribute opened, printing a finding naming the
+        // opening line either way.
         attrDepth += netBracketDelta(l, strState);
         if (attrDepth <= 0) {
           attrDepth = 0;
@@ -154,8 +178,9 @@ export function findTestsInFile(rel, content) {
           );
         } else if (i + 1 - attrStartLine >= MULTILINE_ATTR_LOOKAHEAD) {
           console.error(
-            `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close within ${MULTILINE_ATTR_LOOKAHEAD} line(s); falling back to single-line handling from the next line`,
+            `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close within ${MULTILINE_ATTR_LOOKAHEAD} line(s); rewinding to re-read the window under single-line rules`,
           );
+          pending = rewindWindowUnderMainRules(rel, lines, attrStartIdx, i, pendingBeforeAttr, tests);
           attrDepth = 0;
         }
         continue;
@@ -170,7 +195,12 @@ export function findTestsInFile(rel, content) {
       if (/^\s*#!?\[/.test(l)) {
         strState = { inString: false, rawHashes: null };
         const delta = netBracketDelta(l, strState);
-        if (delta > 0) { attrDepth = delta; attrStartLine = i + 1; }
+        if (delta > 0) {
+          attrDepth = delta;
+          attrStartLine = i + 1;
+          attrStartIdx = i;
+          pendingBeforeAttr = pending;
+        }
         // stay "pending" across this attribute line whether it closed on this line or not.
         continue;
       }
@@ -180,7 +210,12 @@ export function findTestsInFile(rel, content) {
       pending = false;
     }
     if (attrDepth > 0) {
-      console.error(`verify:mutation note — ${rel}:${attrStartLine} multi-line attribute never closed by end of file`);
+      // end of file reached inside the window: the same rewind, over the window that remains
+      // (attrStartIdx..last line), not a note — this is a finding, the same as the bound case.
+      console.error(
+        `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close by end of file; rewinding to re-read the window under single-line rules`,
+      );
+      rewindWindowUnderMainRules(rel, lines, attrStartIdx, lines.length - 1, pendingBeforeAttr, tests);
     }
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
     for (let i = 0; i < lines.length; i++) {
