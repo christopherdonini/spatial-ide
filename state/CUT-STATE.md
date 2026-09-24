@@ -349,7 +349,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
   - (2) Literals follow merge order: crs-unit-fact-and-bounds, then the watcher, then B1. The watcher's branch is cut from the unit piece's branch. `b1-engine-prereg-draft` and `engine-source-change-watcher` summaries now say so; the morning question on B1's literal leaves the round.
   - Next: night item 2, PR #97's full gate.
 
-- 2026-09-24T02:30Z - **Night program, first pass: items 2, 3, 4, 4b and 7 dispatched, their first results in.**
+- 2026-09-24T01:30Z - **Night program, first pass: items 2, 3, 4, 4b and 7 dispatched, their first results in.**
   - **Item 2 (PR #97):** main merged in (30cb23c), two test typing sites fixed (682fb4c), three dated decisions (49f0568), Amendment 2 (f1b71ab). The package delta matches the ruled set. Both NOTICE files are byte-identical. CI is green on f1b71ab, including the shell vitest job. Locally, `npm run verify` is rc 1: four cargo-invoking notice tests time out at vitest's 5000 ms default. Worktree location is ruled out: it was moved to `C:\dev\wt\`. An A/B against main (vitest 2) is running. `DEPENDENCY-LICENSES.md` is not yet regenerated on the branch.
   - **Item 3:**
     - PR #104 (release-only guard): reviewer attempt 1 FAIL on Documentation only; one correction round by a fresh worker, then a scoped re-read running.

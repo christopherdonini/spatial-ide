@@ -355,6 +355,12 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+125. **[FOR YOUR WORD, the morning round — `test-claims-landedness-bound` STOPPED before code: every candidate design collides with your P3b hold.]** The node lets planned test claims bind when their piece lands, not only when PLAN says done. Its three candidates (the custodian's choice) are: (a) key the exemption on the piece being unlanded; (b) a staleness window; (c) verify fails a node whose evidence PR is merged but which is not done. On main today the only planned claims are P3b's three historical mentions of `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` (`frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`). PR #86 has merged, and the node is held in progress by your round-16 item-4 ruling exactly so that those mentions stay advisory until the superseded-name scanner is scheduled at the weekly window. Each of (a)–(c) would make them binding and turn main's CI red, which overrides that hold.
+- **Recommendation:** sequence this node after the superseded-name scanner (`governance/test-claims-superseded`, weekly-window list), then implement (c), with the scanner retiring the three mentions first.
+- **Alternative:** (c) now, with an explicit `held` exemption for nodes you hold (a new PLAN field — your call).
+
+Touches: PLAN node `test-claims-landedness-bound` (blocked on this ruling).
+
 124. **[FOR YOUR WORD, the morning round — crs-unit-fact-and-bounds: four questions outside its ruled scope, queued; none stops the piece.]** The architect's consult (`state/consults/2026-09-24-crs-unit-fact-and-bounds.md`, STOP LIST) found no choice beyond entry 120's scope. The piece continues on `cut/crs-unit-fact-and-bounds` under full gating. P0's bound shows no visible render-precision defect in degrees: at most 1/32 px at zoom 21, and 0.5 px in the worst state, as for metres. The unit defect that acts is the tile grid's anchor span: a 2° frame where the file's own 0.40° extent gives 0.80°. Four questions are yours:
 - **Q1:** values for a unit recorded as `other` or `unestablished`. Recommendation: keep today's one-unit values, and declare `other`'s when such a dataset enters a slice corpus.
 - **Q2:** `MAX_ZOOM = 21` and the fit zoom constants are the same item-6 class. Recommendation: a follow-on node.

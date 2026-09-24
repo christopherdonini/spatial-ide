@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9be66dac27af740bc74624a82d3acdc7303ad73b61889ed9bebdd10d8edab3b7`) at `2026-09-24T01:30:29.728Z`.
+Generated from `PLAN.yaml` (sha256 `b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc6271f920f7bb6262c43d457`) at `2026-09-24T01:36:08.465Z`.
 
 ## 1. Next
 
@@ -14,13 +14,13 @@ Generated from `PLAN.yaml` (sha256 `9be66dac27af740bc74624a82d3acdc7303ad73b6188
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (lane `governance`, order 4, budget 60 min)
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (lane `governance`, order 5, budget 60 min)
 - **governance-verify-gate-file-exists** — verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18) (lane `governance`, order 7, budget 45 min)
-- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 8, budget 90 min)
 
-## 3. Waiting on the human (total: 15 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### ruling
 
 - **engine-source-change-watcher** — The advisory source-change watcher (15 min)
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (5 min)
 
 ## 4. Blocked on dependencies
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T01:30:29.882Z",
-  "plan_hash": "9be66dac27af740bc74624a82d3acdc7303ad73b61889ed9bebdd10d8edab3b7",
+  "generated_at": "2026-09-24T01:36:08.677Z",
+  "plan_hash": "b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc6271f920f7bb6262c43d457",
   "priorities_approved": true,
   "lanes": [
     {
@@ -761,22 +761,24 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "blocked",
       "order": 8,
       "depends_on": [
         "self-check-false-readings"
       ],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": null,
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
-      "entries": [],
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form",
+      "entries": [
+        125
+      ],
+      "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form",
       "dates": {
         "opened": null,
         "done": null
