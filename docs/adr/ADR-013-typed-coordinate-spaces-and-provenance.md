@@ -261,3 +261,68 @@ anchor-precision measurement.
    equivalent), with **CRS instance and provenance determining trust at runtime, never the type
    name** — §1's own rule ("class answers *what shape*; instance and provenance answer *what may be
    trusted*") applied to the code that will implement it.
+
+## Amendment 1 — a geographic-degrees CRS instance, and how it is displayed (2026-09-23, appended — Accepted)
+
+
+**1. No new compile-time class.** §1 already rules: *"Space **class** is a compile-time
+discrimination. Space **instance** — which CRS, which render frame, which framebuffer, which
+pipeline — is **runtime data** carried with the value and validated at every conversion. CRS
+identifiers are **not** baked into the type system."* (`ADR-013:27-29`.) A geographic CRS in
+degrees is therefore an **instance** of the existing **Authoritative project-CRS coordinate**
+class, not a fifth class. There is nothing for a compile-time class to discriminate: the shape is
+f64, and the boundary permission is row 1's — the two columns rule 1's table exists to fix.
+
+**2. The instance carries its declared unit.** The unit is **read from the CRS definition** and
+recorded as a fact of the instance — never inferred from the identifier string (`docs/05`: CRS
+identity is decided by comparing normalized definitions and never by name-string comparison), and
+never defaulted. A definition from which no unit can be established does not yield this instance.
+
+**3. §1's trust clause governs, unchanged.** *"Class answers what shape; instance and provenance
+answer what may be trusted."* A degrees instance carries row 1's ground-truth permission only on
+§1's own terms, and this amendment grants nothing further.
+
+**4. The display convention.** For a dataset in a geographic CRS this project states, in the
+human's binding wording: **"no coordinate value is transformed; the display convention is
+equirectangular"** **[the human's words, verbatim; ruled on 2026-09-08 (evening) on DECISIONS-PENDING
+entry 59 — the RULED block at `DECISIONS-PENDING.md:37`, "equirectangular wording binding for future
+geographic entries" — and carried in the quoted form at `RELEASE-0.1.md:1041`]**. It is a statement
+about the **display** only. `axis_normalization` stays `none-performed`, no reprojection occurs, and
+this amendment licenses none: `docs/05`'s definitional-equivalence machinery and the transform
+service (§2) stay owed and unbuilt.
+
+**5. The surfaces that must carry it, this cut.** (i) the **shell's own status** at open, and (ii)
+**`describe`**. Without (i), a geographic dataset would draw on the canvas with the statement made
+nowhere before publish, which is what `docs/01:21` forbids. **Publish is deferred**: a degrees
+dataset **refuses at preflight, by name**, until Brief B's reader change (Brief A boundary 8) —
+never a dead artifact. The bundle manifest and reference viewer surfaces are Brief B's to add with
+that change; this amendment does not pre-empt them.
+
+**6. Declared bounds must be unit-aware (ADR-010 rule 6).** A declared constant whose value was
+chosen in metres does not silently apply to degrees. `MIN_ANCHOR_SPAN = 1` —
+`frontends/shell/src/canvas/tileGrid.ts:78`, justified at `:73-77` as *"One authoritative-CRS unit
+(e.g. one metre for a projected CRS)"* — is a declared bound that **stops being true** under
+degrees, where one unit is a degree. Every such constant either takes a **declared, unit-aware
+value** read from the instance's unit, or it does not run. Rule 6's discipline is that the value is
+declared, not discovered; a metre-shaped constant reused under degrees is discovered.
+
+**7. No measurement readout in degrees.** `docs/05:24`: *"Measurements are units-aware (geodesic
+where appropriate); 'area in degrees²' is unrepresentable."* No metre-denominated distance, area,
+scalebar or coordinate readout is produced for a degrees dataset. A readout that cannot be produced
+units-aware is **absent or refused, never rendered in metres**.
+
+**8. No number is carried across.** ADR-003's and ADR-010 rule 3's evidence is EPSG:2056 on
+Windows/WebView2 (`ADR-010:11`, `:51`, `:103`). No precision, frame-time or rendering-quality
+figure attaches to a geographic instance, in either direction.
+
+### Clarification appended 2026-09-11 on the human's ruling (DECISIONS-PENDING entry 81 = (b)), part of Amendment 1 at acceptance
+
+**Context.** §2 requires the unit to be read from the CRS definition. The format-default admission (Brief A boundary 1, rule R-C2 — an absent `crs` key under a pinned GeoParquet version) deliberately carries **no** definition: the engine never writes a definition it did not read. Read strictly, §2 left a CRS84-by-absent-key dataset with no unit, therefore no instance, no display statement, and no publish preflight refusal — the geographic bundle boundary 8 exists to prevent — and it left the preregistration's §3 row 8 prediction unmet.
+
+**Decision.** The **pinned format rule** is a second admissible source of the unit fact, beside the definition. GeoParquet 1.1.0's absent-key default names OGC:CRS84, whose axes are longitude and latitude in degrees; an admission under that rule records the unit `degree` on both axes with the source `unit:format-rule` (and the rule's reference the envelope already carries), where a unit read from a definition records `unit:definition`. The identifier string remains forbidden as a source (block-on-sight 8 unchanged); no PROJJSON is invented; P1's "never write a definition it did not read" stands. §2's sentence "A definition from which no unit can be established does not yield this instance" applies to definitions; a rule-sourced unit is a distinct, recorded source.
+
+**Consequences.** Corpus #8 (the ogr2ogr CRS84 file) reaches the degrees instance, the display statement and the publish preflight refusal as §3 row 8 predicted. The record shows which of the two sources supplied the unit, so a reader can tell a declared-degrees file from a rule-defaulted one. Nothing changes for a file with a definition, for explicit `null`, or for an unpinned version (which takes no format rule).
+
+**Acceptance (2026-09-23).** Amendment 1, with the clarification above, is accepted on the human's word, with this dated note naming item 6 as owed: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (5), and `DECISIONS-PENDING.md`, the RULED 2026-09-23 (later) block, entry 120 item (1). Its text above is appended verbatim from the Proposed text block of `docs/adr/PROPOSED-amendment-to-ADR-013-geographic-degrees-instance.md` as it stood at 433413a, which this commit deletes: the blockquote markers are removed and the heading's date is filled; nothing else changes. The clarification is appended from the same file's section of 2026-09-11 (entry 81 = (b)), without that section's italic drafting note. Item 5 is true of the build since PR #102 (the architect's gate, gate-log record 118). Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N1 and N5, operator-verified in its Part N run section.
+
+**Owed at acceptance.** Item 6 is not true of the build: the tile grid's minimum anchor span and the re-centering drift bound are declared in metres and apply unchanged under degrees (`frontends/shell/src/canvas/tileGrid.ts:78`, `frontends/shell/src/canvas/offsetFrame.ts:37`; `KNOWN-LIMITATIONS.md` item 17). It is scheduled, not parked: PLAN node `crs-unit-fact-and-bounds` (entry 120 item (1)). Separately, a later failed or cancelled open can leave a degrees dataset drawn without the statement item 5 requires (`KNOWN-LIMITATIONS.md` item 18; entry 120 item (2)).

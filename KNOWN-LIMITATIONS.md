@@ -170,7 +170,7 @@ header above describes. They move into the next release's list when that release
     unchanged when a dataset's coordinates are in degrees. The effect at close zoom is bounded as
     stated in the owed piece's record: that piece's first step computes the bound, and this line will
     then state it.
-    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/PROPOSED-amendment-to-ADR-013-geographic-degrees-instance.md, item 6; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
+    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
