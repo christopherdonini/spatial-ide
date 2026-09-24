@@ -52,6 +52,22 @@ test('findTestsInFile finds a Rust #[test] fn (through intervening attributes) a
   assert.deepEqual(jsTests.map((t) => t.name), ['does a thing', 'does another']);
 });
 
+// RECORDED MUTATION (multi-line attribute fix): reverting the `attrDepth > 0` branch in
+// findTestsInFile back to "any other code line clears pending" (i.e. deleting that branch so a
+// continuation line of an unterminated attribute falls through to the final `pending = false;`)
+// makes `finds_a_test_behind_a_multiline_ignore_attribute` FAIL — the test would no longer be
+// listed at all.
+test('finds_a_test_behind_a_multiline_ignore_attribute', () => {
+  const rust = [
+    '#[test]',
+    '#[ignore = "flaky because of reason \\',
+    '    that continues onto the next line"]',
+    'fn a_multiline_ignored_test() {}',
+  ].join('\n');
+  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  assert.deepEqual(rustTests.map((t) => [t.name, t.line]), [['a_multiline_ignored_test', 4]]);
+});
+
 test('a_name_next_to_the_word_mutation_is_counted', () => {
   const near = 'Results: the mutation reverts admit; `a_rust_test_here` fails by name.';
   const far = 'a_rust_test_here is described here. '.padEnd(1200, 'x') + ' mutation happened elsewhere.';

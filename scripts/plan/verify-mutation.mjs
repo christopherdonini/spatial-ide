@@ -76,14 +76,39 @@ const RUST_TEST_ATTR = /#\[[^\]]*\btest\b[^\]]*\]/;
 const RUST_FN = /^\s*(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+([a-z_][A-Za-z0-9_]*)/;
 const JS_TEST = /^\s*(?:await\s+)?(?:test|it)\s*\(\s*(['"`])(.+?)\1/;
 
+/** Net count of `[` minus `]` on a line — used to track an attribute across line continuations. */
+function netBracketDelta(l) {
+  let d = 0;
+  for (const ch of l) {
+    if (ch === '[') d++;
+    else if (ch === ']') d--;
+  }
+  return d;
+}
+
 /** Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`. */
 export function findTestsInFile(rel, content) {
-  const lines = content.split('\n');
+  // survive a CRLF checkout (AI_DEVELOPMENT.md eol class): normalise before line-splitting.
+  const lines = String(content).replace(/\r\n/g, '\n').split('\n');
   const tests = [];
   if (rel.endsWith('.rs')) {
     let pending = false;
+    let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
+    let attrStartLine = 0;
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i];
+      if (attrDepth > 0) {
+        // a continuation line of an unterminated attribute (e.g. a multi-line `#[ignore = "..."]`
+        // string) is part of that attribute, not "any other code line" — it never clears `pending`.
+        attrDepth += netBracketDelta(l);
+        if (attrDepth <= 0) {
+          attrDepth = 0;
+          console.error(
+            `verify:mutation note — ${rel}:${attrStartLine} multi-line attribute closed at line ${i + 1}; kept pending test state across it`,
+          );
+        }
+        continue;
+      }
       const fn = RUST_FN.exec(l);
       if (fn) {
         if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
@@ -91,9 +116,15 @@ export function findTestsInFile(rel, content) {
         continue;
       }
       if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
-      // stay "pending" across other attributes, doc/line comments, and blank lines between the
-      // `#[test]` and its `fn`; any other code line clears it.
-      if (/^\s*#!?\[/.test(l) || /^\s*\/\//.test(l) || l.trim() === '') continue;
+      if (/^\s*#!?\[/.test(l)) {
+        const delta = netBracketDelta(l);
+        if (delta > 0) { attrDepth = delta; attrStartLine = i + 1; }
+        // stay "pending" across this attribute line whether it closed on this line or not.
+        continue;
+      }
+      // stay "pending" across doc/line comments and blank lines between the `#[test]` and its
+      // `fn`; any other code line clears it.
+      if (/^\s*\/\//.test(l) || l.trim() === '') continue;
       pending = false;
     }
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
