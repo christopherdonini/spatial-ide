@@ -374,11 +374,26 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
-129. **[FOR YOUR WORD, the next round — ADR-035's Open item 1: the session reference's wire form (round 17 item 2, rider (b)).]** ADR-035 (`dataset_session_ended`, Proposed) is drafted with a payload of exactly two members, `session` and `reason`. The drafts are at `state/consults/2026-09-24-adr-021-023-and-035-drafts.md`, and the file is on branch `docs/adr-035-dataset-session-ended`. Rider (b) excludes a handle, but the only per-session identifier on the wire today is the `DatasetHandle`, which SKP-V0 §3 calls a handle and which still authorises `describe` and `close_dataset` after the generation ends. Options:
-- (i) Echo the `DatasetHandle` the client already holds. No new wire value, but it is literally a handle.
-- (ii) A kernel-minted, non-authorising session reference, returned by `open_dataset` beside the handle and accepted by no command. It rides the watcher's literal and adds one response member.
+129. **[FOR YOUR WORD, the next round — ADR-035's two Open items (round 17 item 2, riders (a) and (b)); revised 2026-09-24 after PR #114's first full gate found the first filing incomplete.]** ADR-035 (`dataset_session_ended`, Proposed, binds nothing until accepted, not architect-blockable) is on PR #114, redrafted once after its first full gate. Its payload is exactly two members, `session` and `reason`. Emission is at most once, gated on a transition-reporting end that the watcher piece builds. The watcher's preregistration cannot fix its payload until item 1 is answered.
 
-**Recommendation (the architect's):** (ii), the form that meets rider (b) as written. The watcher's preregistration cannot fix its payload until this is answered. Touches: ADR-035's Decision item 3 and its Open item; PLAN node `engine-source-change-watcher`.
+**Item 1 — the session reference's wire form (rider (b)).** Rider (b) excludes a handle. The only per-session identifier on the wire today is the `DatasetHandle`: a handle by SKP-V0 §3, which after the end still authorises `describe` and `close_dataset`, and which already maps one-to-one onto an SKP open's generation. Options:
+- **(i) Echo the `DatasetHandle`.**
+  - For: the shell's stale-generation guard (`endSessionForDataset` in `App.tsx`) keys on exactly this value and stays unchanged. The one recipient already holds it. There is no new wire value, no `open_dataset` member and no §3 change.
+  - Against: it is literally a handle. It needs your reading that rider (b) excludes only authority the recipient does not already hold.
+- **(ii) A kernel-minted, non-authorising reference,** returned by `open_dataset` and accepted by no command.
+  - For: it meets rider (b) as written, and it keeps the guard's kernel CSPRNG collision-freedom.
+  - Against: it fits neither §3 minting rule, so §3 gains a rule and §4 item 10 a fourth kind. It adds an `open_dataset` response member, listed in §8. The shell needs a session-to-handle map or a re-keyed guard. It maps one-to-one onto a generation, which sits against `skp/0.3`'s no-generation-value rule and ADR-035's own not-decided entry (the architect reads it as not engaged, since the handle has the same cardinality; yours to confirm).
+- **(iii) A client-minted correlation value** supplied on `open_dataset` (the `CancelKey` precedent).
+  - For: the kernel mints nothing non-authorising.
+  - Against: an `open_dataset` request member and a §3 value kind. Client-chosen text is held in the kernel. The guard's collision-freedom moves to the client. It has the same map/guard change and the same generation question as (ii).
+
+**Recommendation (the architect's):** (ii).
+
+**Item 2 — the reading of rider (a)'s "every later call."** ADR-035 reads it as every later generation-scoped call: `viewport_query`, and redemption of a ticket from the ended generation (refused by name within the dead-ticket record's bound, after which it degrades to `redeem`'s own refusal, never an admission). `describe`, `cancel` and `close_dataset` are not generation-scoped and answer after the end by design today.
+
+**Recommendation (the architect's):** confirm. Refusing `describe` or `close_dataset` would strand the handle with no ordinary way to close it.
+
+Touches: ADR-035's Decision items 2, 4, 5 and 6 and its Open items; PLAN node `engine-source-change-watcher`.
 
 128. **[RULED 2026-09-24 — question round 17; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the morning round — `crs-unit-fact-and-bounds` (PR #112) STOPPED under Rule 7: full-gate attempt 2 failed in both gates on one semantic item; the code, wire and scope pass.]**
 - **Root cause.** Attempt 1 failed on the record only: a false `cargo fmt` claim, a fixture count, the Part P literal, a discharge by commit, and item 17's comment. Attempt 2 failed on the record again, plus one semantic item (authority). Item 17 no longer states entry 120 (1)(c)'s bound. Its comment hands the bound to PR #109 and says that bound stops describing the build when this piece lands. That is false for the render-precision clause: re-centring is unchanged for degrees (the drift cap and `MAX_ZOOM` are the same), so the 1/32 px at zoom 21 and 0.5 px bound still holds, and only the anchor-span clause changes. **The custodian's record-round brief prescribed that hand-off, so the brief seeded the semantic item.**
