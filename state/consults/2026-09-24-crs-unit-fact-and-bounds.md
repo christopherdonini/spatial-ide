@@ -16,7 +16,7 @@
 **Step 3: the file.** These are evidence, not Authority:
 - The corpus manifest's observed bbox is [7.240571429126995, 46.75066015564145, 7.640829137765396, 47.14887620788085] with 240 rows. The manifest is untracked (`target/fixtures/compat-corpus/MANIFEST.json`); its tracked, elided mirror is `engine/ADMISSION-PREREGISTRATION.md:91`.
 - 240 rows is at most `UNTILED_FIRST_LOOK_ROW_LIMIT` = 10,000 (`tileGridConstants.ts:185`), so the anchor is the whole file.
-- That agrees with the live frame, baseSpan=2 (`session-1790207079.log`, recorded in `state/CUT-STATE.md:8`).
+- That agrees with the live frame, baseSpan=2 (`session-1790207079.log`, recorded in `state/CUT-STATE.md` line 8 at 464a6a1).
 - Centre ≈ (7.4407002834461955, 46.94976818176115). Half-spans ≈ 0.2001288543 and 0.1991080261.
 
 **Step 4: what bounds the offset when the drift bound is never reached.**
