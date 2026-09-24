@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T11:32:29.171Z",
-  "plan_hash": "e65135613f582f728955e7695b4ced2f6ccbba64b93130d5f3f0bf3af328500a",
+  "generated_at": "2026-09-24T11:54:36.578Z",
+  "plan_hash": "da60c04ace44686dbbe08cda60f63b3d503d2dad3cb3f3ccf433367d73884ab0",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1383,12 +1383,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "blocked",
       "order": 4,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": {
@@ -1398,7 +1398,8 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [
-        127
+        127,
+        131
       ],
       "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding.",
       "dates": {

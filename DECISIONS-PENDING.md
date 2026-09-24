@@ -374,6 +374,22 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+131. **[FOR YOUR WORD, the next round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed in both gates on one semantic item.]**
+- **Root cause.** Fresh-count attempt 1 failed on the fallback, which consumed the look-ahead window instead of re-reading it. The correction's rewind fixed that, and both gates confirmed it on 25+ inputs against main's tool (0 lost everywhere except the disclosed false-close case).
+- Attempt 2 failed on the correction's own property test. It builds main's tool from `origin/main` and asserts one exact loss. After merge, `origin/main` is this tool, so the assertion fails and main's governance CI turns red on merge and on every later run. That test also carries no recorded mutation of its own.
+- **What holds.** The rewind is correct. The no-regression proof over today's tree is main 2240, branch 2253, 0 lost, 13 gained. The bound's headroom is measured: the longest real continuation is 7 lines. Every other recorded mutation fails by name.
+- **Record residue (record-only):**
+  - The false-close residual's stated cause is narrower than what triggers it: a string-parity flip also reaches it, and it is reported only as a note.
+  - The superseded index is incomplete.
+  - Two gate-log line cites are unhashed.
+  - One discharge claim does not resolve.
+- **Options:**
+  - (1) **Continue, one round under a fresh count (Recommended).** Pin the property test's baseline to a fixed commit on main before the piece (or assert the six fixtures' lists directly), give it a recorded mutation, and clean up its scratch directory. The architect reduces the record under the record cap. Both gates then run.
+  - (2) **Continue with the reviewer's structural design:** return the union of main's per-line scan and the tracked scan. Every file then lists a superset of main's by construction, which also closes the false-close residual. This departs from the ruled fallback design, so it is your word.
+  - (3) **Drop:** the 13 real tests behind multi-line `#[ignore]` attributes stay invisible to the tool.
+
+Touches: PLAN node `governance-verify-mutation-multiline-attrs` (blocked on this ruling); PR #108 stays draft.
+
 130. **[FOR YOUR WORD, the next round — ADR-035 (PR #114) STOPPED under Rule 7: gate attempt 2 failed in both gates on one semantic item. Entry 129 holds the ADR's Open items.]**
 - **Root cause.** Attempt 1 failed on four semantic items: Open item 1 incomplete, the consumer seam, rider (a) narrowed without a mark, and the emission scope. The redraft resolved all four in both gates' reading. Attempt 2 then failed on a sentence the redraft added: an end made by the post-check reaches the shell on its own call. That holds only for a clean run. A cancelled or failed stream keeps its own terminal, and a drop-path end delivers none, so such an end reaches the shell only at its next generation-scoped call's refusal. Rider (a) keeps this correct, but the ADR stated it did not happen.
 - **What holds (both gates).** Every attempt-1 finding is resolved. All quotes are byte-exact, the index is regenerated (adrIndex 26/26), and the checks are green. No decision goes beyond the ruling, the skeleton and the preregistration body except as an Open item.
