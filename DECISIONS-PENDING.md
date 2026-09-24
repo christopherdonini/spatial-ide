@@ -355,6 +355,14 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+127. **[FOR YOUR WORD, the morning round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 after two Correctness FAILs; PR #110 (stacked on it) waits with it.]**
+- **Root cause.** Attempt 1: the new multi-line-attribute tracking counted brackets inside strings, so an attribute string with an unbalanced `[` silently swallowed the rest of a file. Attempt 2, after string stripping: a trailing `//` comment or a char literal holding `[` or `"` in an attribute does the same, and a raw-string line starting `#[` inside a test body swallows the rest of the file. That last residual came from this piece but was recorded as pre-existing. Both attempts introduced a silent skip main does not have.
+- **What holds.** No real file regresses: over 250 files main lists 2238 tests and the branch 2251, 0 lost, 13 gained. All four mutations fail by name.
+- **Recommendation: continue, narrowed.** An attribute that does not close on its own line falls back to today's single-line handling after a bounded look-ahead, instead of scanning to the end of the file. That removes the whole class, with the unclosed case printed as a finding.
+- **Alternative: drop.** The 13 gained tests stay invisible to the tool.
+
+Touches: PLAN nodes `governance-verify-mutation-multiline-attrs` and `governance-verify-mutation-header-token` (the latter's own gate result is recorded separately).
+
 126. **[FOR YOUR WORD, the morning round — MultiPolygon: the architect's assessment and eight decisions (night program item 8, consult only).]** `state/consults/2026-09-24-multipolygon-assessment.md`. The corpus problem is 5 of 12 files refused on geometry type, not B4's conditional 8 (checked against `engine/ADMISSION-RESULTS.md`). Only #11 and #12 involve MultiPolygon, and both mix Polygon and MultiPolygon rows. The cut crosses three wires: the data-plane envelope, SKP describe, and the bundle partition schema of ADR-017 §4, which is a red line. The architect proposes MP-1 as one vertical cut after crs-unit, the watcher and B1, with bundle partitions riding B3 (MP-2). Your eight decisions, each recommended in the consult's §5:
 1. Mixed columns admit, with Polygon rows promoted to one-part MultiPolygons (yes).
 2. The encoding is chosen per dataset (yes).

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T02:04:04.027Z",
-  "plan_hash": "4d1b8221994a3d7e7458975de1a6637be97faa284a6fae1faad78768cd09878a",
+  "generated_at": "2026-09-24T02:14:20.608Z",
+  "plan_hash": "dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d3d974a2ff502b5e7d468",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1324,12 +1324,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "blocked",
       "order": 4,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": {
@@ -1338,8 +1338,10 @@
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
-      "entries": [],
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
+      "entries": [
+        127
+      ],
+      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
