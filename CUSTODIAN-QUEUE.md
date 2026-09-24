@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6faecffa4840154f3943cfc6eb7c3225c65b54d06c6d32cd592cbaff99c55567`) at `2026-09-24T19:03:21.275Z`.
+Generated from `PLAN.yaml` (sha256 `14eb83a67e98fdfbeabc19d281dfd0db31f16187288d6aef9bed4ac83492a677`) at `2026-09-24T19:08:03.832Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (lane `governance`, order 1, budget 120 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -41,7 +41,6 @@ Generated from `PLAN.yaml` (sha256 `6faecffa4840154f3943cfc6eb7c3225c65b54d06c6d
 
 ### Proposed
 
-- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed
