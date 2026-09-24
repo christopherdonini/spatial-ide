@@ -11,3 +11,5 @@ Out-of-scope: kernel/SCALE-PASS-PREREGISTRATION.md is not amended (its header's 
 ```
 
 Budget: 9 of 12 changed lines across 1 file (kernel/FIXTURES.md; git diff --numstat origin/main...HEAD, this form excluded); the --exact filter checked by `--list` (1 test selected against 2 without it), neither test run; commit 5f52a67.
+
+Closing round after reviewer attempt 1 PASS-with-notes (2026-09-24): the Authority line's cite is pinned as `state/directives/2026-09-22-part-n-n8-and-sequencing.md:159 @ eab8e82 sha256:a815f8782a3b4cd7d909f7a588e27e75fcb611e60d114e2fca0ceaf6721769e4`; the note now says the silence ceiling fires after the final chunk's progress event and tells an operator to check the file against the table's Size and SHA-256 whenever that watchdog fires; budget after the round: 10 of 12 changed lines across 1 file (kernel/FIXTURES.md; git diff --numstat origin/main...HEAD, this form excluded).
