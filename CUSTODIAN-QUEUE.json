@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-24T02:14:20.405Z",
-  "plan_hash": "dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d3d974a2ff502b5e7d468",
+  "generated_at": "2026-09-24T02:17:57.430Z",
+  "plan_hash": "69b93b3e48421c7d9ee0b62d80999d8392de47dedc7409d00a5e0f8b78965c12",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 25,
+    "total_minutes": 30,
     "by_kind": {
       "click": [],
       "sight": [],
@@ -49,6 +49,27 @@
             "done": null
           },
           "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate"
+        },
+        {
+          "id": "governance-verify-mutation-header-token",
+          "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 5,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 5
+          },
+          "evidence": {
+            "pr": 110
+          },
+          "dates": {
+            "opened": "2026-09-17",
+            "done": null
+          },
+          "summary": "STOPPED 2026-09-24 under Rule 7 after two failed attempts on Correctness (DECISIONS-PENDING.md entry 127; PR #110, stacked on PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate"
         },
         {
           "id": "test-claims-landedness-bound",
@@ -431,28 +452,6 @@
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
       "evidence_label": "PR #109"
-    },
-    {
-      "id": "governance-verify-mutation-header-token",
-      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 5,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 110
-      },
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
-      "evidence_label": "PR #110"
     },
     {
       "id": "governance-verify-gate-file-exists",

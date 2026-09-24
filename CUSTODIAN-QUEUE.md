@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d3d974a2ff502b5e7d468`) at `2026-09-24T02:14:20.405Z`.
+Generated from `PLAN.yaml` (sha256 `69b93b3e48421c7d9ee0b62d80999d8392de47dedc7409d00a5e0f8b78965c12`) at `2026-09-24T02:17:57.430Z`.
 
 ## 1. Next
 
@@ -10,12 +10,13 @@ Generated from `PLAN.yaml` (sha256 `dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d
 
 - (none)
 
-## 3. Waiting on the human (total: 25 min)
+## 3. Waiting on the human (total: 30 min)
 
 ### ruling
 
 - **engine-source-change-watcher** — The advisory source-change watcher (15 min)
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (5 min)
+- **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (5 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (5 min)
 
 ## 4. Blocked on dependencies
@@ -39,7 +40,6 @@ Generated from `PLAN.yaml` (sha256 `dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d
 - **drill-fix-release-only-guard** — Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115) — evidence: PR #104
 - **drill-fix-fixture-watchdog** — Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115) — evidence: PR #105
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
-- **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own — evidence: PR #110
 - **governance-verify-gate-file-exists** — verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18) — evidence: PR #107
 
 ## 6. Proposed / unscheduled

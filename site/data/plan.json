@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T02:14:20.608Z",
-  "plan_hash": "dc4847990b82f33f6f0c3ba95b4789d7a8c52b5c995d3d974a2ff502b5e7d468",
+  "generated_at": "2026-09-24T02:17:57.601Z",
+  "plan_hash": "69b93b3e48421c7d9ee0b62d80999d8392de47dedc7409d00a5e0f8b78965c12",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1353,12 +1353,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "blocked",
       "order": 5,
       "depends_on": [],
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "gate": "none",
       "evidence": {
@@ -1367,8 +1367,10 @@
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
-      "entries": [],
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
+      "entries": [
+        127
+      ],
+      "summary": "STOPPED 2026-09-24 under Rule 7 after two failed attempts on Correctness (DECISIONS-PENDING.md entry 127; PR #110, stacked on PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
