@@ -68,6 +68,47 @@ test('finds_a_test_behind_a_multiline_ignore_attribute', () => {
   assert.deepEqual(rustTests.map((t) => [t.name, t.line]), [['a_multiline_ignored_test', 4]]);
 });
 
+// RECORDED MUTATION (bracket-in-string fix): reverting netBracketDelta to count raw `[`/`]` chars
+// (i.e. calling it on `l` instead of `stripStringLiterals(l)`) makes
+// `an_unbalanced_bracket_inside_an_attribute_string_does_not_swallow_later_tests` FAIL — the second
+// test would vanish (falsely treated as inside a still-open attribute).
+test('an_unbalanced_bracket_inside_an_attribute_string_does_not_swallow_later_tests', () => {
+  const rust = [
+    '#[ignore = "a [b"]',
+    '#[test]',
+    'fn a_test_after_an_unbalanced_bracket_string() {}',
+  ].join('\n');
+  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_an_unbalanced_bracket_string']);
+});
+
+// RECORDED MUTATION (same fix): the same reversion makes
+// `a_raw_string_bracket_inside_an_attribute_does_not_swallow_later_tests` FAIL for the raw-string form.
+test('a_raw_string_bracket_inside_an_attribute_does_not_swallow_later_tests', () => {
+  const rust = [
+    String.raw`#[doc = r#"a ["#]`,
+    '#[test]',
+    'fn a_test_after_a_raw_string_bracket() {}',
+  ].join('\n');
+  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_raw_string_bracket']);
+});
+
+// RECORDED MUTATION (EOF diagnostic): removing the post-loop `if (attrDepth > 0)` diagnostic block
+// makes `an_unterminated_attribute_at_eof_prints_a_diagnostic` FAIL — no note is printed.
+test('an_unterminated_attribute_at_eof_prints_a_diagnostic', () => {
+  const rust = ['#[test]', '#[ignore = "never closes'].join('\n');
+  const orig = console.error;
+  const seen = [];
+  console.error = (msg) => seen.push(msg);
+  try {
+    findTestsInFile('engine/src/lib.rs', rust);
+  } finally {
+    console.error = orig;
+  }
+  assert.ok(seen.some((m) => /never closed by end of file/.test(m)), JSON.stringify(seen));
+});
+
 test('a_name_next_to_the_word_mutation_is_counted', () => {
   const near = 'Results: the mutation reverts admit; `a_rust_test_here` fails by name.';
   const far = 'a_rust_test_here is described here. '.padEnd(1200, 'x') + ' mutation happened elsewhere.';
