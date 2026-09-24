@@ -20,8 +20,16 @@ file is for fixtures where losing the file would be expensive or slow to recover
 | **Size** | 5,004,376,705 bytes |
 | **SHA-256** | `5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` |
 | **Generator** | `kernel/tests/scale_pass.rs` |
-| **Regenerate** | `cargo test --release -p spatial-kernel --test scale_pass -- --ignored --nocapture` |
+| **Regenerate** | `cargo test --release -p spatial-kernel --test scale_pass -- --ignored --exact measure_the_five_gigabyte_scale_pass --nocapture` |
 | **Writer** | `spatial_engine::fixture::write_geoparquet_cancellable` (arrow-rs — never DuckDB `COPY`; `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` names this fixture as a read-only source, never a layout-writer comparison arm) |
+
+**Why `--exact` (2026-09-24).** The binary's other ignored test, `measure_publish_at_five_gigabytes`,
+needs the fixture this one writes, and a bare `--ignored` run starts both at once (the clean-clone
+drill, `kernel/RESULTS.md`, "Step 2 — fixture regeneration"). **Known, pending the human's decision
+(`DECISIONS-PENDING.md` entry 121):** on a cold disk the generate phase's silence ceiling can fire
+after the final chunk's progress event, while the writer closes the file; the drill recorded a
+complete file of the declared size and SHA-256 in that case. Whenever that watchdog fires, check the
+file against this table's Size and SHA-256 before using it.
 
 **Exact generation spec** (`spec_5gb()`, `kernel/tests/scale_pass.rs`, backed by named constants —
 this is the complete parameter set, not a summary):
