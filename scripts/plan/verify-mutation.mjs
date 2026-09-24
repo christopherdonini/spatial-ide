@@ -39,12 +39,6 @@ export const REPO_ROOT = path.resolve(here, '..', '..');
 
 const MUTATION_WINDOW = 500;
 
-// Bounded look-ahead for an unterminated `#[...]` attribute (governance/verify-mutation-multiline-attrs
-// Amendment 2, on RULED 2026-09-24 round 17 item 9): this repo's multi-line attributes (an
-// `#[ignore = "..."]` reason wrapped once or twice) never run past a handful of lines, so 20 gives
-// generous headroom while bounding the worst case to a fixed window instead of the rest of the file.
-const MULTILINE_ATTR_LOOKAHEAD = 20;
-
 function git(args, cwd) {
   try {
     return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -124,27 +118,82 @@ function netBracketDelta(l, state) {
 }
 
 /**
- * Re-read `lines[fromIdx..toIdx]` (inclusive) under `origin/main`'s own single-line rules — no
- * attribute-depth tracking at all — starting from `startPending`. Pushes any test this window
- * contains into `tests`. Returns the resulting `pending` state for the caller to resume with.
- * This is the REWIND used when the bounded look-ahead gives up on an unterminated attribute: the
- * window is re-read, not skipped, so a test that fell inside it is not lost.
+ * `origin/main`'s own per-line Rust scan (RULED 2026-09-24 round 18 item 4), reproduced here
+ * unmodified: no attribute-depth or bracket tracking at all, so it is exactly as reliable (and as
+ * limited — it misses a test behind a genuinely multi-line attribute) as the tool on `main`. The
+ * union in `findTestsInFile` below relies on this to guarantee no loss relative to `origin/main`'s
+ * own scan, by construction: every test this finds is included whatever `trackedRustScan` does.
  */
-function rewindWindowUnderMainRules(rel, lines, fromIdx, toIdx, startPending, tests) {
-  let p = startPending;
-  for (let j = fromIdx; j <= toIdx; j++) {
-    const lj = lines[j];
-    const fn = RUST_FN.exec(lj);
+function mainStyleRustScan(lines) {
+  const tests = [];
+  let pending = false;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const fn = RUST_FN.exec(l);
     if (fn) {
-      if (p) tests.push({ name: fn[1], line: j + 1, kind: 'rust' });
-      p = false;
+      if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
+      pending = false;
       continue;
     }
-    if (RUST_TEST_ATTR.test(lj)) { p = true; continue; }
-    if (/^\s*#!?\[/.test(lj) || /^\s*\/\//.test(lj) || lj.trim() === '') continue;
-    p = false;
+    if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
+    if (/^\s*#!?\[/.test(l) || /^\s*\/\//.test(l) || l.trim() === '') continue;
+    pending = false;
   }
-  return p;
+  return tests;
+}
+
+/**
+ * The multi-line-attribute-aware scan (this piece's addition, ADDITIVE only — see
+ * `findTestsInFile`): tracks a `#[...]` attribute left unclosed on its opening line across
+ * continuation lines (e.g. a wrapped `#[ignore = "..."]` reason), so a test declared behind it is
+ * still found even though `mainStyleRustScan` misses it. Because attribute-depth tracking can
+ * misjudge a bracket-in-a-comment or a string-parity flip as a close (or never see a genuine close),
+ * this scan alone can both miss a test `mainStyleRustScan` already covers (harmless: the union below
+ * still has it) and add a false entry — a `fn` treated as still "pending" across code the tracker
+ * mistook for attribute continuation. No bound or rewind is needed for safety: only for this scan's
+ * own completeness, which is disclosed, not guaranteed.
+ */
+function trackedRustScan(rel, lines) {
+  const tests = [];
+  let pending = false;
+  let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
+  let attrStartLine = 0;
+  let strState = { inString: false, rawHashes: null };
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (attrDepth > 0) {
+      attrDepth += netBracketDelta(l, strState);
+      if (attrDepth <= 0) {
+        attrDepth = 0;
+        console.error(
+          `verify:mutation note — ${rel}:${attrStartLine} multi-line attribute closed at line ${i + 1}`,
+        );
+      }
+      continue;
+    }
+    const fn = RUST_FN.exec(l);
+    if (fn) {
+      if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
+      pending = false;
+      continue;
+    }
+    if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
+    if (/^\s*#!?\[/.test(l)) {
+      strState = { inString: false, rawHashes: null };
+      const delta = netBracketDelta(l, strState);
+      if (delta > 0) {
+        attrDepth = delta;
+        attrStartLine = i + 1;
+      }
+      // stay "pending" across this attribute line whether it closed on this line or not.
+      continue;
+    }
+    // stay "pending" across doc/line comments and blank lines between the `#[test]` and its
+    // `fn`; any other code line clears it.
+    if (/^\s*\/\//.test(l) || l.trim() === '') continue;
+    pending = false;
+  }
+  return tests;
 }
 
 /** Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`. */
@@ -153,70 +202,26 @@ export function findTestsInFile(rel, content) {
   const lines = String(content).replace(/\r\n/g, '\n').split('\n');
   const tests = [];
   if (rel.endsWith('.rs')) {
-    let pending = false;
-    let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
-    let attrStartLine = 0;
-    let attrStartIdx = 0;
-    let pendingBeforeAttr = false; // `pending` as it stood right before this attribute opened
-    let strState = { inString: false, rawHashes: null };
-    for (let i = 0; i < lines.length; i++) {
-      const l = lines[i];
-      if (attrDepth > 0) {
-        // a continuation line of an unterminated attribute (e.g. a multi-line `#[ignore = "..."]`
-        // string) is part of that attribute, not "any other code line" — it never clears `pending` —
-        // for at most MULTILINE_ATTR_LOOKAHEAD continuation lines. If it is still open after that
-        // many lines, the scanner does not simply resume after the window (that would still lose any
-        // test the window itself contains): it REWINDS to the attribute's own opening line and
-        // re-reads the whole window under `origin/main`'s single-line rules, starting from the
-        // `pending` value that held before the attribute opened, printing a finding naming the
-        // opening line either way.
-        attrDepth += netBracketDelta(l, strState);
-        if (attrDepth <= 0) {
-          attrDepth = 0;
-          console.error(
-            `verify:mutation note — ${rel}:${attrStartLine} multi-line attribute closed at line ${i + 1}; kept pending test state across it`,
-          );
-        } else if (i + 1 - attrStartLine >= MULTILINE_ATTR_LOOKAHEAD) {
-          console.error(
-            `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close within ${MULTILINE_ATTR_LOOKAHEAD} line(s); rewinding to re-read the window under single-line rules`,
-          );
-          pending = rewindWindowUnderMainRules(rel, lines, attrStartIdx, i, pendingBeforeAttr, tests);
-          attrDepth = 0;
-        }
-        continue;
+    // The union (RULED 2026-09-24 round 18 item 4): `mainStyleRustScan` guarantees no loss relative
+    // to `origin/main`'s own scan by construction; `trackedRustScan` is additive-only, contributing
+    // any test found behind a genuinely multi-line attribute (and, as disclosed above, occasionally a
+    // false entry). Deduplicated by (name, line); a name found by both scans is listed once.
+    const mainTests = mainStyleRustScan(lines);
+    const trackedTests = trackedRustScan(rel, lines);
+    const mainKeys = new Set(mainTests.map((t) => `${t.name}:${t.line}`));
+    const seen = new Set();
+    for (const t of [...mainTests, ...trackedTests]) {
+      const key = `${t.name}:${t.line}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      tests.push(t);
+      if (!mainKeys.has(key)) {
+        console.error(
+          `verify:mutation note — ${rel}:${t.line} test ${JSON.stringify(t.name)} found only by the multi-line-attribute-tracked scan (not by main's per-line scan) — verify by eye; the tracker can misjudge where an attribute closes.`,
+        );
       }
-      const fn = RUST_FN.exec(l);
-      if (fn) {
-        if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
-        pending = false;
-        continue;
-      }
-      if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
-      if (/^\s*#!?\[/.test(l)) {
-        strState = { inString: false, rawHashes: null };
-        const delta = netBracketDelta(l, strState);
-        if (delta > 0) {
-          attrDepth = delta;
-          attrStartLine = i + 1;
-          attrStartIdx = i;
-          pendingBeforeAttr = pending;
-        }
-        // stay "pending" across this attribute line whether it closed on this line or not.
-        continue;
-      }
-      // stay "pending" across doc/line comments and blank lines between the `#[test]` and its
-      // `fn`; any other code line clears it.
-      if (/^\s*\/\//.test(l) || l.trim() === '') continue;
-      pending = false;
     }
-    if (attrDepth > 0) {
-      // end of file reached inside the window: the same rewind, over the window that remains
-      // (attrStartIdx..last line), not a note — this is a finding, the same as the bound case.
-      console.error(
-        `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close by end of file; rewinding to re-read the window under single-line rules`,
-      );
-      rewindWindowUnderMainRules(rel, lines, attrStartIdx, lines.length - 1, pendingBeforeAttr, tests);
-    }
+    tests.sort((a, b) => a.line - b.line);
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
     for (let i = 0; i < lines.length; i++) {
       const m = JS_TEST.exec(lines[i]);

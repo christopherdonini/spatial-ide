@@ -14,13 +14,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
 import {
   parseAddedRanges,
   findTestsInFile,
   hasMutationMention,
   runVerifyMutation,
-  REPO_ROOT as REPO_ROOT_FOR_TEST,
 } from './verify-mutation.mjs';
 
 test('parseAddedRanges extracts added new-file ranges from a unified=0 diff', () => {
@@ -54,11 +52,10 @@ test('findTestsInFile finds a Rust #[test] fn (through intervening attributes) a
   assert.deepEqual(jsTests.map((t) => t.name), ['does a thing', 'does another']);
 });
 
-// RECORDED MUTATION (multi-line attribute fix): reverting the `attrDepth > 0` branch in
-// findTestsInFile back to "any other code line clears pending" (i.e. deleting that branch so a
-// continuation line of an unterminated attribute falls through to the final `pending = false;`)
-// makes `finds_a_test_behind_a_multiline_ignore_attribute` FAIL — the test would no longer be
-// listed at all.
+// RECORDED MUTATION (the union's whole point, round 18 item 4): replacing findTestsInFile's Rust
+// branch with `mainStyleRustScan(lines)` alone (i.e. dropping `trackedRustScan`'s contribution from
+// the union) makes `finds_a_test_behind_a_multiline_ignore_attribute` FAIL — a genuinely multi-line
+// `#[ignore = "..."]` is exactly the case `mainStyleRustScan` alone cannot see.
 test('finds_a_test_behind_a_multiline_ignore_attribute', () => {
   const rust = [
     '#[test]',
@@ -70,80 +67,51 @@ test('finds_a_test_behind_a_multiline_ignore_attribute', () => {
   assert.deepEqual(rustTests.map((t) => [t.name, t.line]), [['a_multiline_ignored_test', 4]]);
 });
 
-// RECORDED MUTATION (bracket-in-string fix): reverting netBracketDelta to count raw `[`/`]` chars
-// (i.e. calling it on `l` instead of `stripStringLiterals(l)`) makes
-// `an_unbalanced_bracket_inside_an_attribute_string_does_not_swallow_later_tests` FAIL — the second
-// test would vanish (falsely treated as inside a still-open attribute).
-test('an_unbalanced_bracket_inside_an_attribute_string_does_not_swallow_later_tests', () => {
+// RECORDED MUTATION (string-stripping inside the gain): reverting `stripStringLiterals` to return
+// `l` unchanged (i.e. no string-content stripping before bracket-counting) makes
+// `finds_a_test_behind_a_multiline_ignore_attribute_holding_an_unmatched_bracket` FAIL — the
+// unmatched `[` inside the attribute's own (still-open) string would be counted as a real bracket,
+// so `trackedRustScan` never sees the attribute close and the trailing test is lost from the union.
+test('finds_a_test_behind_a_multiline_ignore_attribute_holding_an_unmatched_bracket', () => {
   const rust = [
-    '#[ignore = "a [b"]',
     '#[test]',
-    'fn a_test_after_an_unbalanced_bracket_string() {}',
+    '#[ignore = "flaky because of an unbalanced [ bracket that continues',
+    '    onto the next line"]',
+    'fn a_multiline_ignored_test_with_a_bracket_in_its_reason() {}',
   ].join('\n');
   const rustTests = findTestsInFile('engine/src/lib.rs', rust);
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_an_unbalanced_bracket_string']);
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_multiline_ignored_test_with_a_bracket_in_its_reason']);
 });
-
-// RECORDED MUTATION (same fix): the same reversion makes
-// `a_raw_string_bracket_inside_an_attribute_does_not_swallow_later_tests` FAIL for the raw-string form.
-test('a_raw_string_bracket_inside_an_attribute_does_not_swallow_later_tests', () => {
-  const rust = [
-    String.raw`#[doc = r#"a ["#]`,
-    '#[test]',
-    'fn a_test_after_a_raw_string_bracket() {}',
-  ].join('\n');
-  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_raw_string_bracket']);
-});
-
-// RECORDED MUTATION (EOF diagnostic): removing the post-loop `if (attrDepth > 0)` block makes
-// `an_unterminated_attribute_at_eof_prints_a_diagnostic` FAIL — no finding is printed.
-test('an_unterminated_attribute_at_eof_prints_a_diagnostic', () => {
-  const rust = ['#[test]', '#[ignore = "never closes'].join('\n');
-  const orig = console.error;
-  const seen = [];
-  console.error = (msg) => seen.push(msg);
-  try {
-    findTestsInFile('engine/src/lib.rs', rust);
-  } finally {
-    console.error = orig;
-  }
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — ') && /did not close by end of file/.test(m)),
-    JSON.stringify(seen),
-  );
-});
-
-// Helper for the bounded-look-ahead tests below: capture console.error output around a call.
-function capturingErrors(fn) {
-  const orig = console.error;
-  const seen = [];
-  console.error = (msg) => seen.push(msg);
-  try {
-    return { result: fn(), seen };
-  } finally {
-    console.error = orig;
-  }
-}
 
 // The six reviewer-named fixtures (state/gate-log.json, node governance-verify-mutation-multiline-attrs,
 // reviewer attempt 1 @ 28fef8e: "trailing comment, char literal, raw-string body, test inside the
-// window, false close, pending carried across"), named here so both the individual tests below and
-// the no-loss property test (against `origin/main`'s own tool) exercise the identical fixture text.
-const REVIEWER_FIXTURES = {
-  trailingComment: [
+// window, false close, pending carried across"). Under the union design each fixture's expected list
+// is asserted directly (fixed names/lines), never by comparison to another build of the tool: on
+// every one of these six, `mainStyleRustScan` alone already finds every test a human would expect,
+// because each fixture keeps a real single-line `#[test]` immediately before its `fn` — the union
+// guarantees these six are found (RULED 2026-09-24 round 18 item 4), whatever `trackedRustScan` does.
+test('the_six_reviewer_fixtures_are_found_by_the_union_no_loss_by_construction', () => {
+  const trailingComment = [
     '#[allow(clippy::something)] // note: an unmatched [ bracket in a trailing comment',
     ...Array.from({ length: 25 }, (_, k) => `// filler ${k}`),
     '#[test]',
     'fn a_test_after_a_trailing_comment_bracket() {}',
-  ].join('\n'),
-  charLiteral: [
+  ].join('\n');
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', trailingComment).map((t) => t.name), [
+    'a_test_after_a_trailing_comment_bracket',
+  ]);
+
+  const charLiteral = [
     "#[allow(clippy::something)] let c = '['; // a char literal holding a bracket, not a string",
     ...Array.from({ length: 25 }, (_, k) => `// filler ${k}`),
     '#[test]',
     'fn a_test_after_a_char_literal_bracket() {}',
-  ].join('\n'),
-  rawStringBody: [
+  ].join('\n');
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', charLiteral).map((t) => t.name), [
+    'a_test_after_a_char_literal_bracket',
+  ]);
+
+  const rawStringBody = [
     '#[test]',
     'fn a_real_test_with_a_raw_string_body() {',
     '    let generated = r#"',
@@ -155,229 +123,127 @@ const REVIEWER_FIXTURES = {
     '}',
     '#[test]',
     'fn a_test_after_the_raw_string_body() {}',
-  ].join('\n'),
-  testInsideTheWindow: [
+  ].join('\n');
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', rawStringBody).map((t) => t.name), [
+    'a_real_test_with_a_raw_string_body',
+    'a_test_after_the_raw_string_body',
+  ]);
+
+  const testInsideTheWindow = [
     '#[allow(clippy::something)] // unmatched [ bracket opens here',
     '#[test]',
     'fn a_test_inside_the_lookahead_window() {}',
     ...Array.from({ length: 18 }, (_, k) => `// filler ${k}`),
     '#[test]',
     'fn a_test_after_the_window() {}',
-  ].join('\n'),
-  falseClose: [
+  ].join('\n');
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', testInsideTheWindow).map((t) => [t.name, t.line]), [
+    ['a_test_inside_the_lookahead_window', 3],
+    ['a_test_after_the_window', 23],
+  ]);
+
+  const falseClose = [
     '#[allow(clippy::something)] // note: an unmatched [ bracket opens here',
     '#[test]',
     'fn a_test_lost_between_open_and_a_false_close() {}',
     '// closing the false attribute here ]',
     '#[test]',
     'fn a_test_after_the_false_close() {}',
-  ].join('\n'),
-  pendingCarriedAcross: [
+  ].join('\n');
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', falseClose).map((t) => t.name), [
+    'a_test_lost_between_open_and_a_false_close',
+    'a_test_after_the_false_close',
+  ]);
+
+  const pendingCarriedAcross = [
     '#[test]',
     '#[allow(clippy::something)] // unmatched [ opens here, right after a preceding pending attribute',
     ...Array.from({ length: 19 }, (_, k) => `// filler ${k}`),
     'fn a_test_using_pending_carried_through_the_window() {}',
-  ].join('\n'),
-};
-
-// RECORDED MUTATION (bounded look-ahead, Amendment 2): removing the `else if (i + 1 - attrStartLine
-// >= MULTILINE_ATTR_LOOKAHEAD)` branch (reverting to unbounded tracking) makes
-// `a_trailing_line_comment_bracket_past_the_lookahead_falls_back` FAIL — the fixture's attribute never
-// re-balances to 0 on its own, so unbounded tracking would swallow the trailing test entirely instead
-// of recovering after the finding.
-test('a_trailing_line_comment_bracket_past_the_lookahead_falls_back', () => {
-  const { result: rustTests, seen } = capturingErrors(() =>
-    findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.trailingComment),
-  );
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_trailing_comment_bracket']);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(seen),
-  );
-});
-
-// RECORDED MUTATION (same bound): the same reversion makes
-// `a_char_literal_bracket_past_the_lookahead_falls_back` FAIL for the char-literal form (a `'['` is
-// not a string literal `stripStringLiterals` strips, so its bracket is counted as real).
-test('a_char_literal_bracket_past_the_lookahead_falls_back', () => {
-  const { result: rustTests, seen } = capturingErrors(() =>
-    findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.charLiteral),
-  );
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_char_literal_bracket']);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(seen),
-  );
-});
-
-// RECORDED MUTATION (same bound): the same reversion makes
-// `a_raw_string_line_starting_the_attribute_opener_in_a_test_body_falls_back` FAIL — a line inside a
-// test's own raw-string body that starts `#[` is misread as a real attribute opening (the scanner
-// does not track raw-string state outside of an already-open attribute), and unbounded tracking would
-// swallow `a_test_after_the_raw_string_body` entirely.
-test('a_raw_string_line_starting_the_attribute_opener_in_a_test_body_falls_back', () => {
-  const { result: rustTests, seen } = capturingErrors(() =>
-    findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.rawStringBody),
-  );
-  assert.deepEqual(rustTests.map((t) => t.name), [
-    'a_real_test_with_a_raw_string_body',
-    'a_test_after_the_raw_string_body',
-  ]);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:5 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(seen),
-  );
-});
-
-// RECORDED MUTATION (the rewind, architect attempt 1 S1 @ 28fef8e): replacing the
-// `pending = rewindWindowUnderMainRules(...)` call at the bound site with the pre-rewind fallback
-// (bare `attrDepth = 0;`, resuming after the window instead of re-reading it) makes
-// `a_test_placed_inside_the_lookahead_window_is_still_found` FAIL — the window's own `#[test]`/`fn`
-// pair is swallowed as attribute continuation and never reaches the per-line rules at all.
-test('a_test_placed_inside_the_lookahead_window_is_still_found', () => {
-  const { result: rustTests, seen } = capturingErrors(() =>
-    findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.testInsideTheWindow),
-  );
-  assert.deepEqual(rustTests.map((t) => [t.name, t.line]), [
-    ['a_test_inside_the_lookahead_window', 3],
-    ['a_test_after_the_window', 23],
-  ]);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(seen),
-  );
-});
-
-// RECORDED MUTATION (the rewind at end of file): the same fallback reversion at the post-loop
-// `attrDepth > 0` site makes `a_file_ending_inside_the_window_still_finds_its_test` FAIL — the test
-// declared in the file's last lines, inside the still-open attribute's window, is never scanned.
-test('a_file_ending_inside_the_window_still_finds_its_test', () => {
-  const rust = ['#[test]', '#[ignore = "never closes', 'fn a_test_lost_at_eof() {}'].join('\n');
-  const { result: rustTests, seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
-  assert.deepEqual(rustTests.map((t) => [t.name, t.line]), [['a_test_lost_at_eof', 3]]);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:2 ') && /did not close by end of file/.test(m)),
-    JSON.stringify(seen),
-  );
-});
-
-// RECORDED MUTATION (restoring the pre-attribute `pending`): replacing `pendingBeforeAttr` with a
-// hardcoded `false` in the bound-site `rewindWindowUnderMainRules(...)` call makes
-// `the_pending_state_before_the_attribute_carries_through_the_rewound_window` FAIL — the real
-// `#[test]` that preceded the unclosed attribute would no longer reach the `fn` after the window,
-// since the rewound window itself contains no attribute (nothing there would set `pending` again).
-test('the_pending_state_before_the_attribute_carries_through_the_rewound_window', () => {
-  const { result: rustTests, seen } = capturingErrors(() =>
-    findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.pendingCarriedAcross),
-  );
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_using_pending_carried_through_the_window']);
-  assert.ok(
-    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:2 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(seen),
-  );
-});
-
-// Known residual (disclosed, not fixed — per the piece's ruling, the rewind is scoped to the bound
-// and end-of-file sites only): a FALSE close — a stray `]` in a plain comment, not the attribute's
-// own closing bracket — still ends `attrDepth` tracking early, on the `attrDepth <= 0` branch, which
-// has no rewind. A test declared between the attribute's open and that false close is lost; only the
-// test after the false close is found. This pins today's behaviour, not a passing guarantee.
-//
-// RECORDED MUTATION (residual pin): extending the `attrDepth <= 0` branch to also call
-// `rewindWindowUnderMainRules` (matching the bound/EOF sites) makes this test FAIL — the lost test
-// would then be found too, changing the asserted list — which is exactly why that extension is out of
-// this piece's scope and the residual is disclosed instead of silently fixed.
-test('a_false_close_before_the_bound_can_still_lose_a_test_in_between_open_and_close', () => {
-  const rustTests = findTestsInFile('engine/src/lib.rs', REVIEWER_FIXTURES.falseClose);
-  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_the_false_close']);
-});
-
-// No-loss property check (RULED 2026-09-24 round 17 item 9's fresh count; the reviewer's six named
-// fixtures above): the branch's `findTestsInFile` lists a superset of `origin/main`'s own tool's names
-// on each fixture — never fewer. `origin/main`'s tool is built from `git show` into a scratch
-// directory OUTSIDE this worktree (`os.tmpdir()`), never written inside it.
-test('the branch lists a superset of origin/main\'s tests on each of the six reviewer fixtures', async () => {
-  const mainSrc = execFileSync('git', ['show', 'origin/main:scripts/plan/verify-mutation.mjs'], {
-    cwd: REPO_ROOT_FOR_TEST,
-    encoding: 'utf8',
-  });
-  const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-mutation-main-'));
-  const scratchFile = path.join(scratchDir, 'verify-mutation-main.mjs');
-  fs.writeFileSync(scratchFile, mainSrc);
-  const mainMod = await import(pathToFileURL(scratchFile).href);
-
-  for (const [label, fixture] of Object.entries(REVIEWER_FIXTURES)) {
-    const mainNames = new Set(mainMod.findTestsInFile('engine/src/lib.rs', fixture).map((t) => t.name));
-    const branchNames = new Set(findTestsInFile('engine/src/lib.rs', fixture).map((t) => t.name));
-    if (label === 'falseClose') {
-      // The one disclosed exception (this form's Amendment 4, the false-close residual): a stray `]`
-      // in a comment closes `attrDepth` early, on a branch with no rewind by this piece's own ruling
-      // (item 2). Assert the gap is EXACTLY that one disclosed name — any other loss still fails here.
-      const missing = [...mainNames].filter((n) => !branchNames.has(n));
-      assert.deepEqual(missing, ['a_test_lost_between_open_and_a_false_close'], `fixture "${label}"`);
-      continue;
-    }
-    for (const name of mainNames) {
-      assert.ok(branchNames.has(name), `fixture "${label}": main found "${name}", branch lost it`);
-    }
-  }
-});
-
-// RECORDED MUTATION (the bound's own value): changing the bound check's `>=` to `>` (an off-by-one
-// widening the window to 21 lines) makes `the_lookahead_bound_gives_exactly_20_lines_before_falling_back`
-// FAIL on its second fixture — the finding would no longer be printed at continuation line 20.
-test('the_lookahead_bound_gives_exactly_20_lines_before_falling_back', () => {
-  // An attribute that closes ON its 20th continuation line: still a normal close, no finding.
-  const closesAtBound = [
-    '#[doc = "note: opens with an unmatched [ bracket',
-    ...Array.from({ length: 19 }, (_, k) => `line ${k} of the doc comment`),
-    'line 19 of the doc comment, and now it closes"]',
-    '#[test]',
-    'fn a_test_closing_exactly_at_the_lookahead_bound() {}',
   ].join('\n');
-  const at = capturingErrors(() => findTestsInFile('engine/src/lib.rs', closesAtBound));
-  assert.deepEqual(at.result.map((t) => t.name), ['a_test_closing_exactly_at_the_lookahead_bound']);
-  assert.ok(!at.seen.some((m) => m.includes('did not close within 20 line(s)')), JSON.stringify(at.seen));
-
-  // The same attribute needing one more continuation line to close: the bound gives up one line
-  // early (at continuation line 20), then recovers and still finds the trailing test.
-  const closesPastBound = [
-    '#[doc = "note: opens with an unmatched [ bracket',
-    ...Array.from({ length: 20 }, (_, k) => `line ${k} of the doc comment`),
-    'line 20 of the doc comment, and now it closes"]',
-    '#[test]',
-    'fn a_test_closing_past_the_lookahead_bound() {}',
-  ].join('\n');
-  const past = capturingErrors(() => findTestsInFile('engine/src/lib.rs', closesPastBound));
-  assert.deepEqual(past.result.map((t) => t.name), ['a_test_closing_past_the_lookahead_bound']);
-  assert.ok(
-    past.seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
-    JSON.stringify(past.seen),
-  );
+  assert.deepEqual(findTestsInFile('engine/src/lib.rs', pendingCarriedAcross).map((t) => t.name), [
+    'a_test_using_pending_carried_through_the_window',
+  ]);
 });
 
-// RECORDED MUTATION (the finding line itself): removing the `console.error(...)` call in the
-// bound-exceeded branch (leaving `attrDepth = 0` in place, so recovery still happens silently) makes
-// `an_attribute_past_the_lookahead_prints_a_finding_naming_the_file_and_line` FAIL — no finding is
-// printed, though the trailing test is still found.
-test('an_attribute_past_the_lookahead_prints_a_finding_naming_the_file_and_line', () => {
+// RECORDED MUTATION (deleting the per-line half of the union): replacing findTestsInFile's Rust
+// branch with `trackedRustScan(rel, lines)` alone (dropping `mainStyleRustScan` from the union) makes
+// `deleting_the_per_line_half_of_the_union_loses_a_test_main_finds` FAIL — on this exact fixture
+// `trackedRustScan` alone never sees the attribute close (it is swallowed to end of file), so it finds
+// neither test, while `mainStyleRustScan` (and hence today's `origin/main`) finds both.
+test('deleting_the_per_line_half_of_the_union_loses_a_test_main_finds', () => {
   const rust = [
-    '#[doc = "opens with an unmatched [ bracket',
-    ...Array.from({ length: 25 }, (_, k) => `line ${k} of the doc comment`),
-    '"]',
+    '#[allow(clippy::something)] // note: an unmatched [ bracket opens here',
     '#[test]',
-    'fn a_test_after_the_unclosed_doc_comment() {}',
+    'fn a_test_lost_between_open_and_a_false_close() {}',
+    '// closing the false attribute here ]',
+    '#[test]',
+    'fn a_test_after_the_false_close() {}',
   ].join('\n');
-  const { seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
+  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  // Both tests are present only because mainStyleRustScan (the per-line half) finds them; pinned here
+  // as the union's own no-loss guarantee, not the tracked scan's.
+  assert.deepEqual(rustTests.map((t) => t.name), [
+    'a_test_lost_between_open_and_a_false_close',
+    'a_test_after_the_false_close',
+  ]);
+});
+
+// The false-entry risk this design discloses (Amendment 5): a stray bracket the tracker mistakes for
+// part of an already-open attribute can keep `pending` true across a real, unrelated `fn` in between,
+// so a later `fn` gets falsely listed as a test though no `#[test]` directly precedes it. The union
+// still lists it (this is a known limit of the heuristic, not silently hidden) but flags it in stderr.
+//
+// RECORDED MUTATION (the false-entry flag): removing the `!mainKeys.has(key)` diagnostic block in
+// findTestsInFile makes `a_false_entry_from_a_misjudged_attribute_close_is_flagged_and_still_listed`
+// FAIL — the false entry would still be listed, but no note would name it.
+test('a_false_entry_from_a_misjudged_attribute_close_is_flagged_and_still_listed', () => {
+  const rust = [
+    '#[test]',
+    '#[allow(clippy::something)] // begins with a stray [ in this comment',
+    'fn setup_helper() {}',
+    '// closes here ]',
+    'fn not_actually_a_test() {}',
+  ].join('\n');
+  const orig = console.error;
+  const seen = [];
+  console.error = (msg) => seen.push(msg);
+  let rustTests;
+  try {
+    rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  } finally {
+    console.error = orig;
+  }
+  assert.deepEqual(rustTests.map((t) => t.name), ['setup_helper', 'not_actually_a_test']);
   assert.ok(
     seen.some(
       (m) =>
-        m ===
-        'verify:mutation finding — engine/src/lib.rs:1 attribute did not close within 20 line(s); rewinding to re-read the window under single-line rules',
+        m.startsWith('verify:mutation note — engine/src/lib.rs:5 ') &&
+        m.includes('"not_actually_a_test"') &&
+        m.includes('found only by the multi-line-attribute-tracked scan'),
     ),
     JSON.stringify(seen),
   );
 });
+
+// The string-parity case from the attempt-2 record ("the false-close class ... reached also by a
+// string-parity flip"): an odd, unescaped `"` on a continuation line flips `stripStringLiterals`'s
+// `inString` state, which can swallow a real closing `]` (or, as here, run to end of file). This is a
+// LOST GAIN (the multi-line test is not found), never a lost main-coverage test: the fixture's other
+// test, preceded by its own real `#[test]`, is still found by `mainStyleRustScan`.
+test('a_string_parity_flip_can_lose_the_gain_but_never_loses_what_main_finds', () => {
+  const rust = [
+    '#[test]',
+    '#[allow(clippy::something)] // note [ this one',
+    "it's a comment with \" a quote that flips parity, and here is a real closer ]",
+    'fn a_test_lost_to_a_string_parity_flip() {}',
+    '#[test]',
+    'fn a_test_after_the_string_parity_flip() {}',
+  ].join('\n');
+  const rustTests = findTestsInFile('engine/src/lib.rs', rust);
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_the_string_parity_flip']);
+});
+
 
 test('a_name_next_to_the_word_mutation_is_counted', () => {
   const near = 'Results: the mutation reverts admit; `a_rust_test_here` fails by name.';
