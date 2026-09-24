@@ -539,3 +539,20 @@ scripts/audit-dependency-licenses.mjs` shows the array with `frontends/shell` pr
   Amendment 2 merge).
 
 Read the last amendment first.
+
+## Amendment 5 — record reduction (the record cap, point (3))
+
+References only, under `state/directives/2026-09-18-record-cap.md`, point (3), after two record-correction rounds (Amendment 4; the "Closing commit (AI_DEVELOPMENT.md Amendment 1 §A)" block).
+
+**R1. The verbatim rule's round.** Defect: the closing block's item 3 credits the verbatim-quote rule to round 17 (its closing parenthetical), and no question round 17 exists. Corrected reference: `DECISIONS-PENDING.md`, RULED 2026-09-17 — question round 10, item 1. Proof: the gate resolves round 10, item 1 against the ledger's RULED block.
+
+**R2. An unpinned line range.** Defect: the closing block's item 8 cites `NPM_TREES` by a bare line range, in both its corrected reference and its proof, without a pin. Corrected reference: the `NPM_TREES` declaration in `scripts/audit-dependency-licenses.mjs`. It is cited by identifier, so it needs no line or hash. Proof: `grep -n "const NPM_TREES" scripts/audit-dependency-licenses.mjs` finds exactly one declaration, and the array it opens lists `frontends/shell`.
+
+No other clause in the closing block is reduced.
+
+### Superseded as of this amendment
+
+- The closing block's item 3, its "round 17" attribution. Superseded by R1 (question round 10, item 1).
+- The closing block's item 8, its line range for `NPM_TREES` and the `sed` proof over that range. Superseded by R2 (the identifier and the `grep` proof).
+
+Read the last amendment first.
