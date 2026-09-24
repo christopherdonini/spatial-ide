@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T00:51:11.715Z",
-  "plan_hash": "60f9cfde3752fcd186161259c189003535f1cf9276f102006b52e8a4960873e7",
+  "generated_at": "2026-09-24T01:30:29.728Z",
+  "plan_hash": "9be66dac27af740bc74624a82d3acdc7303ad73b61889ed9bebdd10d8edab3b7",
   "priorities_approved": true,
   "next": {
     "id": "engine-tests-configured-connections",
@@ -42,25 +42,6 @@
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
     },
     {
-      "id": "engine-source-change-watcher",
-      "title": "The advisory source-change watcher",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 7,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
-    },
-    {
       "id": "multipolygon-assessment-consult",
       "title": "MultiPolygon support -- the architect's assessment, consult only (if time remains)",
       "lane": "engine",
@@ -78,120 +59,6 @@
         "done": null
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round"
-    },
-    {
-      "id": "crs-unit-fact-and-bounds",
-      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-23",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement"
-    },
-    {
-      "id": "b1-engine-prereg-draft",
-      "title": "Brief B, stage B1's engine/kernel half -- the preregistration draft and the architect consult only; no code; the draft comes to the human's morning sight",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 3,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7: the preregistration and the architect consult only, on a branch; no code. B1 follows crs-unit-fact-and-bounds on the wire (entry 120); the watcher's describe fields also take the literal after crs-unit (RULED 2026-09-24, the watcher sight), and RULED 2026-09-24 (night) item (2) fixes the order: the watcher takes the literal after crs-unit-fact-and-bounds and B1 the one after the watcher's, which the draft states rather than leaving open. The draft goes to the human's morning sight, in the one question round"
-    },
-    {
-      "id": "shell-dependency-audit-piece",
-      "title": "PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 6,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-22",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 2: the full gate on its branch, as ruled. Merge order, not work order: after PR #103 (the acceptances); the click when gated and green. The earlier custodian reading that put crs-unit-fact-and-bounds ahead of it is superseded by the program's order. RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch"
-    },
-    {
-      "id": "drill-fix-viewer-build-order",
-      "title": "Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-22",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Stacked on PR #97's branch if it touches the same scripts. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
-    },
-    {
-      "id": "drill-fix-release-only-guard",
-      "title": "Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 7,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-22",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
-    },
-    {
-      "id": "drill-fix-fixture-watchdog",
-      "title": "Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 8,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-22",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
     },
     {
       "id": "known-limitations-owed-rows",
@@ -290,11 +157,31 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 0,
+    "total_minutes": 15,
     "by_kind": {
       "click": [],
       "sight": [],
-      "ruling": [],
+      "ruling": [
+        {
+          "id": "engine-source-change-watcher",
+          "title": "The advisory source-change watcher",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 7,
+          "budget_minutes": 240,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 15
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-18",
+            "done": null
+          },
+          "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
+        }
+      ],
       "sitting": []
     }
   },
@@ -343,8 +230,7 @@
         "drill-fix-release-only-guard",
         "drill-fix-fixture-watchdog",
         "drill-fix-viewer-build-order",
-        "crs-unit-fact-and-bounds",
-        "b1-engine-prereg-draft"
+        "crs-unit-fact-and-bounds"
       ]
     },
     {
@@ -503,6 +389,116 @@
       },
       "summary": "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
       "evidence_label": "PR #86"
+    },
+    {
+      "id": "crs-unit-fact-and-bounds",
+      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/crs-unit-fact-and-bounds"
+      },
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement",
+      "evidence_label": "branch `cut/crs-unit-fact-and-bounds`"
+    },
+    {
+      "id": "shell-dependency-audit-piece",
+      "title": "PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 97
+      },
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 2: the full gate on its branch, as ruled. Merge order, not work order: after PR #103 (the acceptances); the click when gated and green. The earlier custodian reading that put crs-unit-fact-and-bounds ahead of it is superseded by the program's order. RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch",
+      "evidence_label": "PR #97"
+    },
+    {
+      "id": "drill-fix-viewer-build-order",
+      "title": "Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 106
+      },
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Stacked on PR #97's branch if it touches the same scripts. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "evidence_label": "PR #106"
+    },
+    {
+      "id": "drill-fix-release-only-guard",
+      "title": "Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 7,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 104
+      },
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "evidence_label": "PR #104"
+    },
+    {
+      "id": "drill-fix-fixture-watchdog",
+      "title": "Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 8,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 105
+      },
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "evidence_label": "PR #105"
     }
   ],
   "proposed": [
