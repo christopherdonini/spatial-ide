@@ -109,6 +109,37 @@ test('runVerifyMutation flags a new test with no named mutation and passes one t
   assert.equal(findings[0].name, 'a_second_new_test');
 });
 
+// RECORDED MUTATION (header-token fix): passing `content` (the whole file) instead of
+// `blockText(content, t)` for the changed-test-file check in runVerifyMutation restores the old
+// fixed-window distance match, which makes `a_test_credited_by_a_header_token_is_now_a_miss` FAIL
+// — the bare test below would again be wrongly credited by the header's "mutation" mention.
+test('a_test_credited_by_a_header_token_is_now_a_miss', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-mutation-header-'));
+  gitInit(dir);
+  write(dir, 'README.md', 'base\n');
+  const base = commit(dir, 'base');
+
+  write(
+    dir,
+    'engine/src/header_token.rs',
+    [
+      '// SPDX-License-Identifier: AGPL-3.0-or-later',
+      '// header note: mutation lives at the top of every generated fixture in this suite',
+      '',
+      '#[test]',
+      'fn an_unguarded_bare_test_near_the_header() {}',
+      '',
+    ].join('\n'),
+  );
+  commit(dir, 'add bare test behind a header token');
+
+  const { error, tests, findings } = runVerifyMutation({ repoRoot: dir, base, head: 'HEAD' });
+  assert.equal(error, null);
+  assert.equal(tests.length, 1, JSON.stringify(tests));
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].name, 'an_unguarded_bare_test_near_the_header');
+});
+
 test('runVerifyMutation skips (no gate) when the base ref does not resolve', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-mutation-noref-'));
   gitInit(dir);

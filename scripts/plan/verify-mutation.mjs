@@ -16,19 +16,26 @@
 // declaration line falls inside an added range of `git diff base...head`. For each new test it looks
 // for a recorded MUTATION that NAMES it: the test's name (or description) appearing within 500
 // characters of the word "mutation" in EITHER (1) a preregistration changed in the same diff (the
-// product-test convention: a "Mutation" line in a Results section), OR (2) the changed test file
-// itself (this repo's convention for stdlib scripts: a `RECORDED MUTATION` comment naming a test).
-// It prints every new test and whether a mutation names it, and exits non-zero when ANY new test has
-// NO such mention.
+// product-test convention: a "Mutation" line in a Results section — whole-text proximity, since a
+// Results section is prose, not a per-test comment block), OR (2) the changed test file itself
+// (this repo's convention for stdlib scripts: a `RECORDED MUTATION` comment naming a test) — for
+// (2) the token must fall inside the test's OWN block (the span from the previous item's end, or
+// the file header's end for the first item, through this test's own declaration line), not merely
+// within 500 characters anywhere in the file: a token in a file header or a neighbouring test's
+// comment credits no test but its own. It prints every new test and whether a mutation names it,
+// and exits non-zero when ANY new test has NO such mention.
 //
 // WHAT THIS DOES NOT GUARANTEE (disclosed, load-bearing): it does NOT run the mutation, so it cannot
 // confirm the test actually FAILS under it — only that a mutation is recorded by name. It does not
 // understand one-mutation-per-file batching: if a file's mutation names only one of several new
 // tests, the others are reported as lacking a mutation (which is the strict reading of "per new
 // test"; treat the report as a checklist, not a verdict). It only sees mutations recorded in a
-// CHANGED preregistration or the changed test file — a mutation logged elsewhere is invisible. When
-// the base ref cannot be resolved (a shallow clone), it reports that and exits 0 rather than failing
-// a gate it could not compute. Node's standard library only.
+// CHANGED preregistration or the changed test file — a mutation logged elsewhere is invisible. A
+// file's own leading header (a run of `//` comment/blank lines) is skipped when computing the
+// first test's own block, but a non-header block that happens to contain no other code between an
+// earlier unrelated comment and the first test is not otherwise distinguished — disclosed, not
+// solved. When the base ref cannot be resolved (a shallow clone), it reports that and exits 0
+// rather than failing a gate it could not compute. Node's standard library only.
 
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -86,7 +93,23 @@ function netBracketDelta(l) {
   return d;
 }
 
-/** Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`. */
+/**
+ * Count of leading comment/blank lines at the top of a file (a copyright/SPDX header) — a test's
+ * OWN block never reaches back across this boundary, even when it is the file's first test.
+ */
+function headerLineCount(lines) {
+  let i = 0;
+  while (i < lines.length && (/^\s*\/\//.test(lines[i]) || lines[i].trim() === '')) i++;
+  return i;
+}
+
+/**
+ * Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`.
+ * Each entry also carries `blockStart`/`blockEnd` (1-based, inclusive) — the span from the
+ * previous item's end (or the file header's end, for the first item) through this test's own
+ * declaration line. A RECORDED MUTATION token only counts for a test when it falls in that span
+ * (§`hasOwnMutationMention` below) — not anywhere in the file within a fixed character window.
+ */
 export function findTestsInFile(rel, content) {
   // survive a CRLF checkout (AI_DEVELOPMENT.md eol class): normalise before line-splitting.
   const lines = String(content).replace(/\r\n/g, '\n').split('\n');
@@ -95,6 +118,7 @@ export function findTestsInFile(rel, content) {
     let pending = false;
     let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
     let attrStartLine = 0;
+    let lastItemEndLine = headerLineCount(lines); // 1-based line of the previous item's end
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i];
       if (attrDepth > 0) {
@@ -111,8 +135,9 @@ export function findTestsInFile(rel, content) {
       }
       const fn = RUST_FN.exec(l);
       if (fn) {
-        if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
+        if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust', blockStart: lastItemEndLine + 1, blockEnd: i + 1 });
         pending = false;
+        lastItemEndLine = i + 1;
         continue;
       }
       if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
@@ -128,12 +153,22 @@ export function findTestsInFile(rel, content) {
       pending = false;
     }
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
+    let lastItemEndLine = headerLineCount(lines);
     for (let i = 0; i < lines.length; i++) {
       const m = JS_TEST.exec(lines[i]);
-      if (m) tests.push({ name: m[2], line: i + 1, kind: 'js' });
+      if (m) {
+        tests.push({ name: m[2], line: i + 1, kind: 'js', blockStart: lastItemEndLine + 1, blockEnd: i + 1 });
+        lastItemEndLine = i + 1;
+      }
     }
   }
   return tests;
+}
+
+/** The 1-based-inclusive line span `[t.blockStart, t.blockEnd]` of `content`, joined back to text. */
+export function blockText(content, t) {
+  const lines = String(content).replace(/\r\n/g, '\n').split('\n');
+  return lines.slice(t.blockStart - 1, t.blockEnd).join('\n');
 }
 
 /** True if `name` occurs within MUTATION_WINDOW chars of the word "mutation" in any source text. */
@@ -177,10 +212,22 @@ export function runVerifyMutation({ repoRoot, base, head } = {}) {
     const fileTests = findTestsInFile(rel, content);
     for (const t of fileTests) {
       if (!rs.some(([a, e]) => t.line >= a && t.line <= e)) continue;
-      const has = hasMutationMention(t.name, [content, ...pregTexts]);
+      // the changed-test-file convention (2) requires the token inside THIS test's own block —
+      // not anywhere in the file within a fixed character window (that let a header or a
+      // neighbouring test's comment green a test with no mutation of its own). Convention (1),
+      // a changed preregistration's Results section, is unchanged: it is prose, not a per-test
+      // comment block, so it keeps the whole-text proximity match.
+      const has = hasMutationMention(t.name, [blockText(content, t), ...pregTexts]);
       const entry = { relPath: rel, name: t.name, line: t.line, kind: t.kind, hasMutation: has };
       tests.push(entry);
       if (!has) findings.push(entry);
+    }
+    // diagnostic: a "mutation" mention that falls outside every test's own block credits no test.
+    const lines = String(content).replace(/\r\n/g, '\n').split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (!/mutation/i.test(lines[i])) continue;
+      const owned = fileTests.some((t) => i + 1 >= t.blockStart && i + 1 <= t.blockEnd);
+      if (!owned) console.error(`verify:mutation note — ${rel}:${i + 1} mentions "mutation" outside every test's own block; it credits no test`);
     }
   }
   return { error: null, tests, findings, base: b, head: h };
