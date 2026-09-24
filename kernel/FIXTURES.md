@@ -28,10 +28,11 @@ file is for fixtures where losing the file would be expensive or slow to recover
 The scale pass's own `generate()` (`kernel/tests/scale_pass.rs`) wraps the write in a measurement
 watchdog: on a cold disk its 60 s silence ceiling can fire while the writer's `close()` flushes the
 final row group and footer, with no progress event in that window — a measurement-harness artifact,
-not a defect in the fixture (`write_geoparquet_cancellable`'s `writer.close()`,
-`engine/src/fixture.rs`). Whenever the scale pass's own watchdog fires, check the resulting file
-against this table's Size and SHA-256 before using it — the pass's own guardrail, unchanged by this
-entry point. `kernel/tests/regenerate_fixture.rs`'s `regenerate_parcels_5gb_fixture` regenerates the
+not a defect in the fixture (the `writer.close()` call lives in `engine/src/fixture.rs`'s private
+`generate()`, which `write_geoparquet_cancellable` calls). Whenever the scale pass's own watchdog
+fires, check the resulting file against this table's Size and SHA-256 before using it — an operator
+check this entry point does not change or replace.
+`kernel/tests/regenerate_fixture.rs`'s `regenerate_parcels_5gb_fixture` regenerates the
 identical bytes (same spec, same writer, see above) with **no watchdog and no measurement**, so it
 cannot spuriously time out. It refuses to overwrite an existing file, exactly as `generate()` does —
 delete the target path yourself first. Byte-identity against this table's Size and SHA-256 was
@@ -75,11 +76,11 @@ re-running the command above; the test will not do it for you, and will not sile
 fixture a running campaign might still be reading.
 
 **Determinism — confirmed empirically, twice, not merely claimed from a fixed seed.**
-`kernel/CANCEL-RESCORE-PREREGISTRATION.md` records a SECOND independent generation (forced by an
-unrelated canary invalidation of the first) producing the **exact same SHA-256** as the original.
-Quoted: *"The fixture is byte-identical across attempts 1 and 2... from independent generations.
-The generator is deterministic under its seed."* This is a real, already-run confirmation on this
-machine, not a hope resting on the seed alone.
+`kernel/SCALE-PASS-PREREGISTRATION.md:570-572` records a SECOND independent generation (forced by an
+unrelated canary invalidation of the first) producing the **exact same SHA-256** as the original —
+byte-identical across attempts 1 and 2, from independent generations, the generator deterministic
+under its seed. This is a real, already-run confirmation on this machine, not a hope resting on the
+seed alone.
 
 **Honest gap, not glossed over:** both confirmed generations ran on this same machine, in the same
 or a near-same session. **Cross-machine or cross-toolchain-version determinism is NOT

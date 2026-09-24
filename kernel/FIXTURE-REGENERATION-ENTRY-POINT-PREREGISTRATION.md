@@ -33,3 +33,19 @@ Written after attempt 1's results were seen: `state/gate-log.json`, node `fixtur
    - `kernel/FIXTURES.md` corrected in this same commit: the spec's home (`kernel/tests/support/mod.rs`, not `scale_pass.rs`); the five omitted fields (`domain`, `with_geo_bbox`, `statistics`, `covering_names_absent_column`, `geo_version`) added to the spec table; the stale line-numbered `engine/src/fixture.rs` cite (formerly lines 803 through 806) replaced by the symbol (`write_geoparquet_cancellable`'s `writer.close()`); the operator's size-and-hash check on a scale-pass watchdog firing restored; the Guardrail paragraph now quotes the new entry point's own refusal message.
 
 6. **Superseded index.** Nothing in Amendment 1 is superseded; item 5's first bullet corrects Amendment 1's own cite without altering its budget-deviation claim.
+
+## Closing commit — AI_DEVELOPMENT.md Amendment 1 §A (attempt-2 findings; references and results only)
+
+1. **E1 / R-a.** `git diff f7bb537 41aa209 -- kernel/tests/support engine` is empty: the generation spec and the writer are byte-identical at both commits, so the byte-identity proof built and run at `f7bb537` (Amendment 2 item 4) still holds at `41aa209`. Item 4's "re-run after the refactor" heading is superseded: the refactor it followed is `regenerate_fixture.rs`'s S1/S2 fix (`resolve_out_path`/`regenerate`, landed in `41aa209`), not the spec/writer this proof measures.
+
+2. **R-b.** The clause is `AUTONOMY.md:345 @ ac5a154 sha256:ac3b30f25e10d5a8efd8202a960e95a02e00672d5d5b9faf9226c8216b2456c3` (§21b's size-overrun paragraph). Amendment 2 item 5's pin, `docs/PREREGISTRATION-TEMPLATE.md:130-131 @ 6195d5a sha256:2f2ef9f9cc7878f97a7eba577ee62b1c7f35d374f3a9ac40e5bf979d116a8317`, names §21b's own mid-piece clause (its order and hash already correct) and stands beside this one rather than in its place.
+
+3. **R-c.** Four tests, all in `kernel/tests/regenerate_fixture.rs`: `regenerate_parcels_5gb_fixture`, `refuses_to_overwrite_an_existing_output_path`, `relative_out_path_resolves_under_the_workspace_root_not_kernel`, `spec_5gb_matches_the_scale_pass` (`cargo test -p spatial-kernel --test regenerate_fixture` rc 0: 3 passed, 1 ignored).
+
+4. **Reviewer record commit.** `e7a05c7` records both attempt-1 findings (architect and reviewer), per `state/gate-log.json` node `fixture-regeneration-entry-point`.
+
+5. **Amendment 1's landed-diff figure, restated.** `git diff --shortstat origin/main...HEAD -- . ':!kernel/FIXTURE-REGENERATION-ENTRY-POINT-PREREGISTRATION.md'` at `41aa209`: 5 files changed, 285 insertions(+), 71 deletions(-).
+
+6. **R-d and R-e.** Both corrected in `kernel/FIXTURES.md` by this commit: the determinism paragraph now cites `kernel/SCALE-PASS-PREREGISTRATION.md:570-572` (not `CANCEL-RESCORE`), reproducing only the byte-exact opening clause `verify-quotes.mjs --show-cites` checks; the operator-check sentence no longer calls itself "the pass's own guardrail"; the `writer.close()` reference now names `engine/src/fixture.rs`'s private `generate()`, called by `write_geoparquet_cancellable`.
+
+7. **Superseded index.** Amendment 2 item 4's "re-run after the refactor" heading is superseded by item 1 above. Amendment 2 item 5's `docs/PREREGISTRATION-TEMPLATE.md` pin is not superseded, only supplemented by item 2's `AUTONOMY.md` pin.
