@@ -24,3 +24,26 @@ stated guarantee: never block the canvas (docs/01), the cancellation guarantee A
 ADR-019's admission-ticket mechanism. Full gating applies; the single combined-gate route (§21b)
 does not.
 Budget: 120 minutes (PLAN.yaml `budget_minutes` for this node).
+
+## Results
+
+Fix + tests at `kernel/src/skp.rs` @ 8ff2875ce9486c3e2bf528ebc9d51fa9b255c472.
+
+- Before the fix (this branch's prior tree state, uncommitted): the four new tests, run once,
+  FAILED by name — `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`,
+  `sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang`,
+  `cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`,
+  `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name` — each
+  panicking on its own "did not return within 5s" message.
+- After the fix @ 8ff2875: `cargo test -p spatial-kernel --lib skp::` — 28 passed, 0 failed.
+  `cargo test -p spatial-kernel` — rc 0. `cargo test -p spatial-engine` — rc 0.
+  `cargo clippy -p spatial-kernel --all-targets` — rc 0; the one warning naming `kernel/src/skp.rs`
+  (`:197`, `type_complexity` on `redeem`'s return type) is unchanged text at
+  `kernel/src/skp.rs:172` @ 96d8668 (origin/main before this piece) — not new.
+- Each of the first three tests' RECORDED MUTATION was performed and reverted on this branch before
+  8ff2875: each reintroduction made exactly its own named test FAIL by timeout, and left the other
+  three passing.
+- `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` — 256 passed, 0 failed, rc 0.
+- `node scripts/plan/verify-quotes.mjs` — rc 0. `verify-cites.mjs` — rc 0. `verify-test-claims.mjs`
+  — rc 0. `verify-mutation.mjs --base origin/main --head HEAD` — rc 0, all 4 new tests named.
+  `verify.mjs --offline` — rc 0.
