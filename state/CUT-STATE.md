@@ -74,3 +74,26 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - ADR-035's redraft. It states round 19 item 1 and the constraints in gate-log index 173, corrects the premises the kernel fix changed, and names the watcher's literal from `protocol/` on main.
     - The withdrawn marker's design: the row grammar, riders (a) and (b) as mechanical checks, #108's fifteen rows, and the budget.
   - **Worktrees swept.** 13 removed, each verified merged, pushed and clean, with no process running in it. C: went from 39 to 69 GB free. Kept: `C:/dev/wt/adr-035-dataset-session-ended` (active) and `.claude/worktrees/verify-mutation-header-token` (dropped, unmerged).
+- 2026-09-24T22:01Z - **ADR-035 redrafted and at its fresh-count gates; the withdrawn marker dispatched.**
+  - **ADR-035 (PR #114):**
+    - Main merged in at 1f96ba1, with no conflicts.
+    - The architect's round-19 redraft was applied byte-exact at 8d4b13d, with the ADR index row regenerated. It covers:
+      - round 19 item 1 as Decision text: a single end point, every end emitting, at most once, keyed on the live generation removed;
+      - a non-blocking enqueue, with close-time ends emitted before `forget_dataset`;
+      - the Open item removed;
+      - the tree described as main after #116;
+      - the watcher's literal, `skp/0.5`.
+    - The drafter's gate-log index note was wrong: it counted file lines. Array index 173 is file line 175, #116's architect attempt 2. The note is not carried anywhere.
+    - Attempt 1 of the fresh count dispatched: reviewer and architect in parallel. The PR body was updated.
+    - The drafter suggested one follow-up node, owed. It covers two items:
+      - a post-close `invalidate` leaves a never-removed `invalidated` entry;
+      - a `viewport_query` racing `close_dataset` can mint a generation for a closed name.
+  - **The withdrawn marker:**
+    - The architect's pre-work consult is filed at `state/consults/2026-09-24-withdrawn-marker.md` (90de3e9). Its design:
+      - token `withdrawn-test`;
+      - rider (a) resolved against the current ledger's RULED blocks, by round/item or by entry;
+      - rider (b)'s carrier required on every row;
+      - the full form, with a ≤280-line budget;
+      - #108's five rows citing ruling round 20 item 1 and carrier round 18 item 4, pinned at the merge-base.
+    - Worker dispatched in `.claude/worktrees/test-claims-withdrawn`. The form is committed before any code, and #108's node flips to done in the same PR.
+  - **Context: 371.4k of 800k (46%),** measured by the human's `/context` at about 21:55Z. The first measured reading this session.
