@@ -425,3 +425,117 @@ piece, not an audit-semantics change here.
 - §0's P-011 quote's "..." elision mark — superseded by finding 6 above ("…").
 
 Read the last amendment first.
+
+## Closing commit (AI_DEVELOPMENT.md Amendment 1 §A)
+
+References and results only (the record cap, `state/directives/2026-09-18-record-cap.md`), after
+full-gating attempt 2 (reviewer: Documentation FAIL only; architect: record-only FAIL, no semantic
+item).
+
+**1. A ledger cite by line.** Defect: Amendment 4 finding 6's proof cited `DECISIONS-PENDING.md:28
+@ fc65d83`, a line cite into the ledger (round 12, item (a); round 14, item (a')). Corrected
+reference: `DECISIONS-PENDING.md`, RULED 2026-09-19, entry 115, item (c) -- the same passage §0
+already cites by entry. Proof: `grep -n "RULED 2026-09-19" DECISIONS-PENDING.md` resolves to the sole
+block carrying item (c)'s text.
+
+**2. Branch-commit hashes in an append-only record.** Defect: Amendment 4 pinned the lockfile at
+`frontends/shell/package-lock.json:3993-4003 @ bb49f80` and the retyped parameters at
+`candidateArmSession.test.ts:2270`/`:3334 @ 682fb4c`, both commits absent from `origin/main` (round
+15, item (e)). Corrected reference: the lockfile entry is `node_modules/vite-node/node_modules/vite`'s
+`lightningcss` dependency (a package-lock.json key, no hash needed); the two parameters are the ones
+`bootstrapAndArmOverBudget` and `armOneTile` declare in
+`frontends/shell/src/residency/candidateArmSession.test.ts` (function names, no hash needed). Proof:
+`node -e "console.log(require('./frontends/shell/package-lock.json').packages['node_modules/vite-node/node_modules/vite'].dependencies.lightningcss)"`
+prints `^1.33.0`; `grep -n "function bootstrapAndArmOverBudget\|function armOneTile"
+frontends/shell/src/residency/candidateArmSession.test.ts` resolves both names uniquely at the lines
+finding 6 already names.
+
+**3. Two non-byte-exact quotations.** Defect: the superseded index quoted the timeout commit's
+delegation line with an elided ASCII "..." (the quote read "Timeout commit ... delegation
+PRECEDENTS.md P-005"), and findings 1/2 quoted the pre-`fa5d3a6` caniuse-lite comment's "bumped by
+the same forced audit fix" across a `//`-continued line, dropping the comment marker (round 17's
+verbatim rule). Corrected reference, unquoted: the delegation sentence is `5f8dbba`'s commit message,
+the paragraph opening "Delegation for this timeout change"; the old comment is
+`scripts/audit-dependency-licenses.mjs` at `bb49f80`, the three `//` lines immediately above the
+`caniuse-lite` entry in `PACKAGE_DECISIONS`. Proof: `git show -s --format=%B 5f8dbba` shows the
+paragraph; `git show bb49f80:scripts/audit-dependency-licenses.mjs | sed -n '195,197p'` shows the
+three lines.
+
+**4. The superseded index's own gap.** Defect: the superseded index credits finding 4 with
+superseding Amendment 2's environment-only cause but never names the sentence. Corrected reference:
+Amendment 2, "Suites and builds" bullet, `frontends/shell` sub-bullet, the clause beginning "Confirmed
+environment-only, not a consequence of this piece's dependency" (a self-reference by section and
+amendment, not by line, per the same-commit rule). Proof: that clause is finding 4's own subject; the
+superseded-index row below names it directly instead of by inference.
+
+**5. The caniuse-lite comment's commit.** Defect: `scripts/audit-dependency-licenses.mjs`'s
+caniuse-lite comment cited `e04ccc4`, this branch's own preregistration commit, for a value stated to
+hold "on `origin/main`". Corrected reference: commit `d99d87c` (this closing round, comment-only)
+recites the same comment against `eab8e82`, the merge-base of this branch with `origin/main`. Proof:
+`git merge-base HEAD origin/main` = `eab8e82`; `git show eab8e82:frontends/shell/package-lock.json`
+gives `node_modules/caniuse-lite`'s version as `1.0.30001809`; `git show d99d87c --stat` shows one
+file, one line changed, and `node scripts/audit-dependency-licenses.mjs` still exits 0 with
+`DEPENDENCY-LICENSES.md` byte-unchanged (`git status --porcelain -- DEPENDENCY-LICENSES.md` empty).
+
+**6. The solo-run timing proof, and finding 5's overclaim.** Defect: finding 4's proof was one
+unlogged solo run of `noticeDeterminism.test.ts`, and finding 5 stated vitest 2.1.9 "never enforced" a
+timeout at all. Corrected reference: a deterministic probe -- a test that busy-waits 1500ms under a
+1000ms timeout -- run once on this branch (vitest 5.0.1) and once in a detached `git worktree add
+--detach <path> origin/main` outside `.claude/worktrees/` (vitest 2.1.9), each against the same
+`withTimeout` findings 4/6 already cite (untracked build output, `@vitest/runner/dist/index.js`,
+function `withTimeout`, lines 32 through 50 for 2.1.9; untracked build output,
+`vitest/dist/chunks/run.C5UmxDPh.js`, the whole `withTimeout` function, lines 3251 through 3311 for
+5.0.1, the `resolve` closure's post-settle check already at lines 3277 through 3288 per finding 4);
+finding 5's "never enforced" narrows to "no
+post-settle deadline check" -- vitest 2.1.9 does enforce the timeout via `Promise.race`, it just
+never re-checks elapsed time once a blocking synchronous call has already returned. Proof: this
+branch, `npx vitest run` on the probe -- 1 failed, `Error: Test timed out in 1000ms`; the detached
+`origin/main` worktree, same probe (old `test(name, fn, timeout)` form) -- 1 passed, 1500ms. Both
+probe files were deleted after the runs (`git status --porcelain` clean in both trees; recorded, not
+committed).
+
+**7. Two mis-attributions.** Defect: finding 7 attributed the word "regenerated" to "the ruling"
+without saying which text, and finding 6's pre-gate proof (`git log --oneline` places `49f0568`
+before `f1b71ab`) proves only commit order, not that the pre-gate ran there. Corrected reference: the
+word is in `DECISIONS-PENDING.md`, entry 116's Applied text, the clause "`DEPENDENCY-LICENSES.md`
+regenerated"; finding 6's pre-gate claim narrows to commit order only -- the commands and rc's that
+actually ran are Amendment 2's own "Governance pre-gate" bullet, at the commit finding 6 corrects
+(`49f0568`). Proof: `grep -n "Applied: PR #97" DECISIONS-PENDING.md` finds entry 116's block, which
+contains "regenerated"; Amendment 2's "Governance pre-gate" bullet lists each command with its rc.
+
+**8. Stale line cites the tree has moved (architect's optional item).** Defect: §8 cites
+`scripts/audit-dependency-licenses.mjs:210-215` for `NPM_TREES` and states the audit "never covers
+the shell tree"; both are stale on this branch's current tree. Corrected reference: `NPM_TREES` is
+now at `scripts/audit-dependency-licenses.mjs:247-253`, and it already lists `frontends/shell` (this
+branch's own Amendment 2 merge of `origin/main` at `30cb23c` brought in PR #99's change, per
+`DECISIONS-PENDING.md` entry 117's Applied text) -- §8's "never covers" claim is overtaken on this
+branch's own tree as of that merge, not merely on `origin/main`. Proof: `sed -n '247,253p'
+scripts/audit-dependency-licenses.mjs` shows the array with `frontends/shell` present; §2's
+`:75-91`/`:120-179` cites (Amendment 1) still resolve to `RECOGNISED_PERMISSIVE` and
+`PACKAGE_DECISIONS` respectively and need no correction.
+
+### Superseded as of this amendment
+
+- Amendment 4 finding 6's proof clause `DECISIONS-PENDING.md:28 @ fc65d83` -- superseded by item 1
+  above (entry 115, item (c), by entry).
+- Amendment 4 finding 6's pins `frontends/shell/package-lock.json:3993-4003 @ bb49f80` (both
+  occurrences) and `candidateArmSession.test.ts:2270`/`:3334 @ 682fb4c` (both occurrences) --
+  superseded by item 2 above (package key; function names).
+- The superseded index's elided quote of the timeout commit's delegation line -- superseded by item 3
+  above (unquoted reference to `5f8dbba`).
+- Amendment 4 findings 1/2's quote of the pre-`fa5d3a6` caniuse-lite comment -- superseded by item 3
+  above (unquoted reference to `bb49f80`'s comment).
+- The superseded index's rows for Amendment 2's and Amendment 3's causal claims -- extended by item 4
+  above to name the specific clause (Amendment 2, "Suites and builds", `frontends/shell` sub-bullet).
+- `scripts/audit-dependency-licenses.mjs`'s caniuse-lite comment as it read before commit `d99d87c`
+  (cited `e04ccc4`) -- superseded by item 5 above (`eab8e82`, commit `d99d87c`).
+- Amendment 4 finding 4's proof (the solo `noticeDeterminism.test.ts` run) and finding 5's "never
+  enforced" wording -- superseded by item 6 above (the probe; "no post-settle deadline check").
+- Amendment 4 finding 7's unattributed "the ruling's 'regenerated' instruction", and finding 6's
+  `git log --oneline` clause read as proof the pre-gate ran -- superseded by item 7 above (entry 116's
+  Applied text; commit-order-only, Amendment 2's own pre-gate bullet is the run record).
+- §8's `scripts/audit-dependency-licenses.mjs:210-215` cite and its "never covers the shell tree"
+  claim -- superseded by item 8 above (`:247-253`; overtaken on this branch's own tree since the
+  Amendment 2 merge).
+
+Read the last amendment first.
