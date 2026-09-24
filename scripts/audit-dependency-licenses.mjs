@@ -206,7 +206,7 @@ const PACKAGE_DECISIONS = [
     source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 116',
   },
   // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 117: caniuse-lite. Already at
-  // 1.0.30001809 on `origin/main` before this piece's fix (`git show e04ccc4:frontends/shell/package-
+  // 1.0.30001809 on `origin/main` before this piece's fix (`git show eab8e82:frontends/shell/package-
   // lock.json`) — not bumped by the forced audit fix; the entry approves the existing version rather
   // than a new one. Build-time-only (browserslist/tooling data, not in any shipped set). A fresh
   // decision is required if it ever enters a shipped set.
