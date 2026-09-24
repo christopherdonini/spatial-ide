@@ -423,6 +423,43 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+136. **[FOR YOUR WORD — PR #118, the withdrawn marker: a second round, beyond round 20 item 1's one round.]** Both gates failed attempt 1 on the same substance item (`state/gate-log.json`, node `governance-test-claims-withdrawn-marker`, attempt 1).
+- **What fails.** Rider (a) says verify fails an unresolvable citation by name, and rider (b) likewise says verify fails. As built, neither holds:
+  - A `withdrawn-test` row is checked only when a claim on its pinned line is missing, and then the failure names the claim, not the citation.
+  - The reviewer probed it: a row with ruling `round 99, item 1` and carrier `nonsense`, and a row with no carrier, both pass silently.
+  - The citation parser is also unanchored. A cited ruling resolves even when the text around it says "not round 20, item 1".
+- **What stands.** Four record-only items (a ledger line cite in a test comment, false recorded-mutation outcomes, and two in #108's Amendment 7) and several should-fixes. Everything else is verified:
+  - all five of #108's pins recompute;
+  - 15 withdrawn, 0 findings, and 3 superseded, unchanged;
+  - SUPERSEDED's behaviour unchanged.
+- **Options:**
+  - (1) **One correction round, fully gated** (Recommended). A fresh worker does four things:
+    - checks every `withdrawn-test` row on its own, naming the unresolved ruling or carrier, or a missing carrier, and exiting 1, whatever the claim's state;
+    - anchors the citation grammar;
+    - applies the should-fixes;
+    - corrects the record by references only (record cap).
+    If it fails again, the architect reduces the record, or the piece stops under Rule 7.
+  - (2) **Drop the piece.** #108's node stays not-done and its twelve names stay advisory. This is round 20's option (2) in effect.
+- **Touches:** PR #118; PLAN nodes `governance-test-claims-withdrawn-marker` and `governance-verify-mutation-multiline-attrs`.
+
+135. **[FOR YOUR WORD — RED LINE (an ADR status): accepting ADR-035, `dataset_session_ended`.]** PR #114 carries ADR-035 as Proposed. It passed its fresh count under round 19 item 1:
+- attempt 1: architect FAIL (close-time ordering), reviewer PASS;
+- attempt 2 at ce5b8e2: PASS/PASS;
+- three wording fixes at f8e77ad, which the architect confirmed in a scoped re-read (`state/gate-log.json`, node `engine-source-change-watcher`).
+
+Merging it keeps it Proposed. The Decision states round 19 item 1:
+- the event is emitted where the kernel records a generation's end, so every end emits, at most once, keyed on the live generation removed;
+- emission is a non-blocking enqueue that takes no lock;
+- the transition report carries the session reference, so every end recorded before `forget_dataset` emits;
+- a generation with no reference still emits.
+
+One reading is yours at acceptance: Decision 4 reads the session reference as not engaging `SKP-V0.md` §8's `skp/0.3` rule of no generation value on the wire.
+- **Options:**
+  - (1) **Accept ADR-035 as merged,** confirming Decision 4's reading. The custodian sets its Status to Accepted, citing your words, after #114 merges.
+  - (2) **Keep it Proposed for now.** The watcher's preregistration proceeds under rounds 17–19, which bind whatever the ADR's status.
+  - (3) **Refuse Decision 4's reading.** The ADR is redrafted for the reference's wire form.
+- **Touches:** `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` (the Status line only); the ADR index.
+
 134. **[RULED 2026-09-24 — question round 20; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — PR #108's node cannot close as done when the scanner lands; entry 133's premise was wrong.]** Round 19 item 2 closes `governance-verify-mutation-multiline-attrs` as done when the superseded-name scanner (PR #117) lands. That rested on entry 133's statement that the scanner would neutralise #108's twelve historical test names. The statement was the custodian's error.
 - **Why it fails.** The scanner exempts only a renamed claim whose replacement exists (`scripts/plan/README.md`, section "The boundary"). #108's twelve names are tests the round-18 union design removed with no replacement.
 - **The evidence.** PR #117's reviewer checked this on a scratch clone of main plus #117 (gate-log array index 172):
