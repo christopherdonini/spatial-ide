@@ -11,3 +11,5 @@ Out-of-scope: no dependency added/removed/bumped; no ADR, wire, security or guar
 ```
 
 Budget: 43 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
+
+Amendment 1 (sibling per AUTONOMY.md sec14): pretypecheck (frontends/shell/package.json:11) shared the same generate:notice precondition prebuild had; fixed the same way in commit 6554b96. Budget after: 45 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
