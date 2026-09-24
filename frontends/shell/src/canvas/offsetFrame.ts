@@ -82,12 +82,12 @@ export const RECENTER_MAX_DRIFT: Record<CrsUnit, number> = {
  * every dataset; callers select it from `RECENTER_MAX_DRIFT[unit]`.
  */
 export function recenterThresholdForBudget(
-  pixelsPerMetre: number,
+  pixelsPerAuthoritativeUnit: number,
   budgetPx: number = RECENTER_BUDGET_PX,
   maxUnit: number
 ): number {
   const f32RelativePrecision = Math.pow(2, -24);
-  return Math.min(maxUnit, budgetPx / (f32RelativePrecision * pixelsPerMetre));
+  return Math.min(maxUnit, budgetPx / (f32RelativePrecision * pixelsPerAuthoritativeUnit));
 }
 
 /**

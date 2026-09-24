@@ -1383,6 +1383,13 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // `startCandidateArmSession` instead of `admitted.describe.crs.unit` (App.tsx).
   // Expected failure: this test's two `toBe("degree")` assertions both fail, observing `"metre"`.
   it("App threads describe's unit to the canvas and the candidate session", async () => {
+    // This mock pairs unit "degree" with `describeFixture()`'s own EPSG:2056 identifier and null
+    // `display_convention` -- a shape the real engine never admits (§5's falsification condition:
+    // `unit == "degree"` iff `display_convention` is `Some`). It is deliberate here: this test
+    // proves only that the wire's `unit` value threads to `WorkingCanvas` and the candidate session
+    // unchanged, so the mock's only job is to carry a `unit` distinct from the file's "metre"
+    // default -- the identifier and `display_convention` fields are irrelevant to that seam and are
+    // left at their default values on purpose.
     crsUnitMockState.current = "degree";
     const handle = await openPathAndCaptureCandidateHandle();
 

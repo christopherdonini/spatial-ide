@@ -28,13 +28,15 @@ fn fixture(name: &str, spec: &FixtureSpec) -> PathBuf {
 }
 
 fn small_spec() -> FixtureSpec {
-    FixtureSpec { features: 20, avg_vertices: 6, hole_every: 0, ..Default::default() }
+    FixtureSpec {
+        features: 20,
+        avg_vertices: 6,
+        hole_every: 0,
+        ..Default::default()
+    }
 }
 
-fn open_and_describe(
-    name: &str,
-    spec: &FixtureSpec,
-) -> spatial_skp::v0::DescribeResponse {
+fn open_and_describe(name: &str, spec: &FixtureSpec) -> spatial_skp::v0::DescribeResponse {
     let path = fixture(name, spec);
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new());
     let open = host
@@ -46,8 +48,11 @@ fn open_and_describe(
             identity: None,
         })
         .unwrap_or_else(|e| panic!("{name}: open must succeed: {e:?}"));
-    host.describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
-        .unwrap_or_else(|e| panic!("{name}: describe must succeed: {e:?}"))
+    host.describe(DescribeRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: open.dataset,
+    })
+    .unwrap_or_else(|e| panic!("{name}: describe must succeed: {e:?}"))
 }
 
 /// §3, rows 1-8. Asserts `unit` per the table, and — the falsification condition §5 names — that
@@ -65,11 +70,18 @@ fn describe_carries_the_unit_the_engine_recorded_for_each_admission_route() {
 
     let rows = vec![
         // Row 1: DeclaredLv95 x Lv95Metres.
-        Row { name: "row1-declared-lv95", spec: FixtureSpec { ..small_spec() }, expect_unit: CrsUnit::Metre },
+        Row {
+            name: "row1-declared-lv95",
+            spec: FixtureSpec { ..small_spec() },
+            expect_unit: CrsUnit::Metre,
+        },
         // Row 2: DeclaredLv95ObjectUnit x Lv95Metres.
         Row {
             name: "row2-declared-lv95-object-unit",
-            spec: FixtureSpec { crs_mode: CrsMode::DeclaredLv95ObjectUnit, ..small_spec() },
+            spec: FixtureSpec {
+                crs_mode: CrsMode::DeclaredLv95ObjectUnit,
+                ..small_spec()
+            },
             expect_unit: CrsUnit::Metre,
         },
         // Row 3: AbsentKey x Wgs84Degrees (unit:format-rule).

@@ -89,6 +89,10 @@ export interface TileKey {
  *   because no fixture in this cut's declared scope establishes any other value for either (this
  *   piece's preregistration §7 and §8 item 8). **The attach point if Q1 is ever ruled** (the
  *   consult's STOP LIST, Q1: declared values for a unit recorded as `other` or `unestablished`).
+ *
+ * Exported for `tileGrid.test.ts`'s own "declares metre 1, degree 1e-6, other 1, unestablished 1"
+ * test, its only outside importer; the value's product reader is `deriveTileGridFrame` below, in
+ * this same module.
  */
 export const MIN_ANCHOR_SPAN: Record<CrsUnit, number> = {
   metre: 1,
