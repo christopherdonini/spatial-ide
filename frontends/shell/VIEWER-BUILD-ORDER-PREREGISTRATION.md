@@ -36,3 +36,26 @@ Superseded index (each entry: superseded text, its pin, what supersedes it):
 3. Amendment 2's sibling (b) quoted phrase, pinned at frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:19 @ c93c05a sha256:7408ceb679269db3cd33be36f82c6e57572aebbe4096d72388e9d6360877875a, is superseded by this amendment's Finding A, which replaces the quotation with a path:line pin.
 4. Amendment 2's four "this commit" references, pinned above in Finding B (frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md lines :18, :20, :21, :22 @ c93c05a with the same hashes there), are superseded by this amendment's Finding B, which corrects each to 7edaf71.
 5. Amendment 2's no-supersession sentence, pinned above in Finding C (frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:23 @ c93c05a sha256:0354c0bd929b76f50e44a7e928556156a8114b4c02fd8a307b043cf72d53f31a), is superseded by this superseded index.
+
+Amendment 4 — record reduction (the record cap, point (3))
+
+Superseded index. Every pin below is historical, and the branch head's tree is authoritative for what ships.
+1. Amendment 2 is superseded in whole by this amendment. Its rows are pinned at:
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:18 @ c93c05a sha256:643961ec9981bbb0c61d4ac498f1311e7c66c7912d68ab347f3a9f6bc1a8ad39
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:19 @ c93c05a sha256:7408ceb679269db3cd33be36f82c6e57572aebbe4096d72388e9d6360877875a
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:20 @ c93c05a sha256:744aad0982bc31cbf77f75f45f606d08a995efeaaf055be684abe5064c2ef1ad
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:21 @ c93c05a sha256:470c73624dc096b15800b3758a768bebe05ca0ffb7bee67de5bbaa0002324ea0
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:22 @ c93c05a sha256:69b633b4a13e73192e4d4e4e7c86f83b03d67daf09973ccb83127eff5a35b5bc
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:23 @ c93c05a sha256:0354c0bd929b76f50e44a7e928556156a8114b4c02fd8a307b043cf72d53f31a
+2. Amendment 3 (commit 18f1fbe) is superseded in whole by this amendment.
+3. The form's Scope and Change lines are superseded, as to the scripts and files changed, by `git diff origin/main...HEAD -- frontends/shell/package.json frontends/shell/scripts/buildViewerFirst.mjs`. They are pinned at:
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:7 @ d0d0a5d sha256:160d98598c47b3ddef92dd5217923c9ffd52964089243aa914c7a80583575df1
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:8 @ d0d0a5d sha256:d538e4c907293d9883943bc3a1615c92f136ea996309b36269cc46ddd256bdfe
+4. Amendment 1's cite of frontends/shell/package.json:11 is superseded by the same diff.
+5. The Budget line after the form, Amendment 1's Budget sentence and the Budget line after Amendment 2 are superseded by the Budget below.
+
+`dev` stays out of scope because a `predev` hook would add a cargo-backed notice build, never measured or budgeted by this piece, to every `vite` dev start (state/directives/2026-09-22-part-n-n8-and-sequencing.md:159 @ eddc4851bd38384803f8c7b3c1d955465631d088 sha256:a815f8782a3b4cd7d909f7a588e27e75fcb611e60d114e2fca0ceaf6721769e4).
+
+Commits d0d0a5d, 6554b96, c93c05a, 7edaf71 and 18f1fbe are on branch fix/drill-viewer-build-order and not on main. Every pin or cite at them resolves on main only after PR #106 lands by a merge commit.
+
+Budget: 54 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
