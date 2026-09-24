@@ -456,3 +456,51 @@ pub fn summarize(label: &str, samples: &[f64]) -> String {
         json_f64s(samples)
     )
 }
+
+// ---------------------------------------------------------------------------------------------
+// The 5 GB fixture's generation spec — moved here (2026-09-24, `fixture-regeneration-entry-point`,
+// `DECISIONS-PENDING.md` RULED 2026-09-24, question round 17 item 6) so `scale_pass.rs` and the
+// regeneration entry point (`regenerate_fixture.rs`) build the identical `FixtureSpec` from one
+// definition, rather than two copies that could silently drift apart. A pure move: every field
+// value below is unchanged from `scale_pass.rs`'s prior local `spec_5gb()`, and
+// `regenerate_fixture.rs`'s `spec_5gb_matches_the_scale_pass` test pins these exact literals against
+// `kernel/FIXTURES.md`'s documented spec table.
+// ---------------------------------------------------------------------------------------------
+
+/// Pre-registered, from `SCALE-PASS-PREREGISTRATION.md` §1a.
+pub const FIVE_GB_FEATURES: usize = 3_300_000;
+pub const FIVE_GB_AVG_VERTICES: usize = 100;
+pub const FIVE_GB_HOLE_EVERY: usize = 7;
+pub const FIVE_GB_SEED: u64 = 0x5EED_2056_0000_0005;
+pub const FIVE_GB_CHUNK: usize = 8_192;
+pub const FIVE_GB_ROW_GROUP_ROWS: usize = 8_192;
+
+/// The docs/07 hero-slice 5 GB fixture's exact generation spec (`kernel/FIXTURES.md`, "Exact
+/// generation spec"). The single definition both the scale pass and the regeneration entry point
+/// build from.
+pub fn spec_5gb() -> spatial_engine::fixture::FixtureSpec {
+    spatial_engine::fixture::FixtureSpec {
+        features: FIVE_GB_FEATURES,
+        avg_vertices: FIVE_GB_AVG_VERTICES,
+        hole_every: FIVE_GB_HOLE_EVERY,
+        seed: FIVE_GB_SEED,
+        crs_mode: spatial_engine::fixture::CrsMode::DeclaredLv95,
+        with_covering_bbox: true,
+        chunk: FIVE_GB_CHUNK,
+        row_group_rows: FIVE_GB_ROW_GROUP_ROWS,
+        identity: spatial_engine::fixture::IdentityMode::NativeUnique,
+        attributes: spatial_engine::fixture::AttributeMode::None,
+        // Determinism-critical: a source-declared license needs no `--license-at`, and an
+        // operator-declared instant is a semantic input inside ADR-017 §12's determinism surface.
+        license: spatial_engine::fixture::LicenseMode::DeclaredBySource,
+        // Every value below **is** the generator's default, so this fixture's bytes are unchanged
+        // by the fields Brief A P1 added to `FixtureSpec`: the metre domain every earlier fixture
+        // drew in, no `geo` `bbox` member, the writer's own statistics behaviour, a covering that
+        // names the column it actually has, and the `geo.version` this generator has always written.
+        domain: spatial_engine::fixture::CoordinateDomain::Lv95Metres,
+        with_geo_bbox: false,
+        statistics: spatial_engine::fixture::StatisticsMode::WriterDefault,
+        covering_names_absent_column: false,
+        geo_version: "1.1.0".to_string(),
+    }
+}

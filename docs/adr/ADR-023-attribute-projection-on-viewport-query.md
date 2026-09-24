@@ -40,7 +40,7 @@ Status stays Proposed until B1's close.*
 
 ### 2. The admitted-type allowlist
 
-**One admission function, shared with the publish path** — `engine::attributes::admit_attribute_type` (`engine/src/attributes.rs:58-97`). A second admissible set for the live path would be a second policy over the same question; the decision is that there is exactly one.
+**One admission function, shared with the publish path** — `engine::attributes::admit_attribute_type` (`engine/src/attributes.rs:58-97`). A second admissible set for the live path would be a second policy over the same question; the decision is that there is exactly one. *(clarified by the human's ruling of 2026-09-24, question round 17, item 3)* — Publishing's check against ADR-017 §4's closed type list is not a second admission policy: admission, which decides whether a type is meaningful, stays this one function, while the bundle check, which decides whether `bundle_version` 1 can carry an admitted column, is owned by the bundle format and enforced at the publish site as a named bundle-format restriction that refuses `Float32` and dictionary-encoded columns at preflight with today's refusal text, byte for byte, until B3's `bundle_version`-2 ADR decides, ADR-017 §4 itself staying byte-identical.
 
 Admitted, in Arrow terms (DuckDB's Arrow output types for this reader):
 

@@ -406,3 +406,30 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
     - `fixture-regeneration-entry-point`: its five-line form first, then the byte-identity proof written to D: scratch, never touching the canonical fixture.
     - #108's narrowed fix under a fresh count.
     - The architect drafting ADR-021's dated note, ADR-023's clarifying sentence, and ADR-035 (Proposed; the watcher's `dataset_session_ended`, reconciled with riders (a) and (b)). ADR-031 and ADR-034 are reserved.
+
+- 2026-09-24T11:55Z - **Round 17's ruled work: two Rule 7 stops, one PR ready, three in gate.**
+  - **PR #113** (ADR-021's dated note and ADR-023's clarifying sentence; round 17 item 3): full gate PASS in both gates at attempt 1, with record-only notes disclosed in the body rather than edited (to keep the byte-copy). Marked ready for the click.
+  - **PR #114** (ADR-035 filed Proposed, `dataset_session_ended`; round 17 item 2): attempt 1 failed with four semantic items; the architect's redraft resolved all of them. Attempt 2 failed in both gates on a sentence the redraft added: the post-check residual. It is **STOPPED under Rule 7**: entry 130, with the ADR's Open items revised as entry 129.
+  - **PR #108** (the verify-mutation narrowing; round 17 item 9): fresh-count attempt 1 failed on the window rewind, and the correction fixed it. Attempt 2 failed on the correction's own property test, which reads a moving `origin/main` baseline and would turn main red on merge. It is **STOPPED under Rule 7 a second time**: entry 131, with options pin / union design / drop.
+  - **PR #112** (crs-unit; round 17 item 1, fresh count): attempt 1 failed on one semantic item (item 17 claimed every drift value was derived); the rest were record-only. The architect's item 17 text and its record reduction (Amendment 4, the record cap point (3)) are applied byte-exact at 01e9ca4, with the custodian's suite run as the Results line. Attempt 2 is running.
+  - **PR #115** (the fixture regeneration entry point; round 17 item 6): the byte-identity proof matched (5,004,376,705 B, SHA-256 5ae955c5…1788; the scratch copy was deleted, and both real copies are untouched). Attempt 1 failed in both gates: the Regenerate row's relative path resolves under `kernel/`, the refusal test is tautological, and the provenance is stale. A correction round is running.
+  - **Mechanics:**
+    - My brief asked for a ledger line cite, and the architect refused under rounds 12 (a) and 14 (a′); memory updated.
+    - A reviewer killed a node process it had not started (a verify-quotes run); later briefs forbid it.
+    - The property test's runs left 19 scratch directories in %TEMP%, removed after inspection.
+    - Two timing tests flaked once under load: `cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory` and `cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock`. Both pass in isolation, and they are filed for the weekly window.
+  - **Waiting on the human:** the click on #109 (it lands before #112 merges main) and #113; entries 129, 130 and 131 for the next round.
+
+- 2026-09-24T13:45Z - **PR #112 passes its fresh count; PR #115 closed under section A; round 18 filed.**
+  - **PR #112 (crs-unit):** fresh-count attempt 2 PASSED in both gates at 01e9ca4. The architect's item 17 text and its record reduction (Amendment 4) land under the record cap, point (3); the residue is record-only and disclosed in the PR body. `main` was merged at 9e4163f (generated files regenerated). Marked ready; it merges after #109, and the custodian merges `main` again after #109 lands.
+  - **PR #115 (fixture regeneration entry point): closed under section A.**
+    - Root-cause note: attempt 1 failed in both gates on three semantic items (the relative path landing under `kernel/`, a refusal test that never called the entry point, stale provenance), and the correction round fixed all three. Attempt 2: the architect passed; the reviewer failed on record only (the re-proof named f7bb537, a commit without the refactor). Class at close: mechanical.
+    - The custodian verified closing commit d1eec2b mechanically:
+      - `git diff f7bb537 41aa209 -- kernel/tests/support engine` is empty, so the spec and writer are unchanged and the bytes hold.
+      - The pin `AUTONOMY.md:345 @ ac5a154` recomputes, and ac5a154 is on main; line 345 is §21b's size-overrun paragraph. The template pin recomputes at 6195d5a.
+      - The commit touches two files, with only three spots in `FIXTURES.md`.
+      - The determinism text is now a reference without quotation marks to `kernel/SCALE-PASS-PREREGISTRATION.md:570-572`, whose content it matches.
+      - `writer.close()` is in the private `generate()` at `engine/src/fixture.rs:826`.
+      - CI is 9/9 green on d1eec2b. Marked ready.
+    - Both byte-identity runs matched the table: 5,004,376,705 B, SHA-256 5ae955c5…1788. Both real copies are untouched.
+  - **Round 18:** `state/questions/round-18.md` carries entries 129 (ADR-035's two Open items), 130 (ADR-035's Rule 7 stop) and 131 (#108's second Rule 7 stop): four items, one question set, no red line.
