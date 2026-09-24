@@ -51,3 +51,14 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - (1) the `withdrawn` marker piece (round 20);
     - (2) #116's follow-up: the rest of N3 with the swept/retired declaration order, the `debug_assert` with `prev` kept alive past `drop(tickets)`, the R-S5 text and N4. Full gating, because the unwind reordering changes drop order on a never-block path;
     - (3) the process note from the #116 architect: when a piece's Out-of-scope line names a §21a category at dispatch, it takes the full form.
+- 2026-09-24T21:35Z - **#112 merged by the human (8c58596, 21:14Z). PLAN made true on main. #117 re-merged.**
+  - **PLAN (d818c5a):**
+    - Done: crs-unit-fact-and-bounds (#112), known-limitations-owed-rows (#109), adr-021-023-b1-notes (#113) and fixture-regeneration-entry-point (#115).
+    - The scanner node is in progress (PR #117, waiting on the click). It is the branch's block, except that main keeps `gate: none`, because the form is not on main yet.
+    - Added: `governance-test-claims-withdrawn-marker` (round 20) and `kernel-ticket-drop-followups`. #108's node is noted with entry 134.
+    - `b1-engine-kernel-half` now depends on `engine-source-change-watcher`. With its other dependencies done, it derived ready, and RULED 2026-09-24 (night) item (2) gives B1 the literal after the watcher's, so it lands after the watcher. Its human sight happened in round 17.
+    - The ready set is empty.
+    - The Stop hook had blocked twice on the stale ready scanner node. The hold on main PLAN commits had kept main untrue; it is lifted, and the custodian re-merges open PRs promptly instead.
+  - **#117:** re-merged at c25efd5. One PLAN conflict, the scanner node's gate line, was resolved to the branch's side. The generated files were regenerated from the LF file; plan_hash equals the staged PLAN.yaml. 270/0 tests, and cites, quotes and test-claims PASS. CI is watched.
+  - **#116:** touches no generated file; it waits on the click as is.
+  - **Correction:** the 21:20Z flush (a21c92a) still listed #112 as waiting. It had merged six minutes earlier.
