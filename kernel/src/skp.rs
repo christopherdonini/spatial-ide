@@ -24,9 +24,9 @@ use spatial_engine::{
 };
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, CrsInfo,
-    DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo, GeometryInfo,
-    IdentityInfo, LicenseInfo, OpenDatasetRequest, OpenDatasetResponse, RowCount, SkpError,
-    SourceInfo, StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
+    CrsUnit, DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo,
+    GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest, OpenDatasetResponse, RowCount,
+    SkpError, SourceInfo, StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
 };
 
 use crate::{open_engine_stream, wrap_for_data_plane, Catalog};
@@ -1009,6 +1009,21 @@ fn build_viewport_query(
     }
 }
 
+/// **`skp/0.4`, crs-unit-fact-and-bounds.** Projects the engine's recorded
+/// `spatial_engine::CoordinateUnit` onto the wire's closed four-value `CrsUnit`. Exhaustive, no
+/// wildcard arm: a fifth engine variant is a compile error here, not a silent default (§8 item 2
+/// of this piece's preregistration). The CRS identifier is never consulted.
+fn crs_unit_of(unit: &spatial_engine::CoordinateUnit) -> CrsUnit {
+    match unit {
+        spatial_engine::CoordinateUnit::Degree => CrsUnit::Degree,
+        spatial_engine::CoordinateUnit::Metre => CrsUnit::Metre,
+        // A named unit that is neither degree nor metre is a real, established fact — never
+        // folded into `Unestablished`, which means no unit was established at all.
+        spatial_engine::CoordinateUnit::Named(_) => CrsUnit::Other,
+        spatial_engine::CoordinateUnit::Unestablished => CrsUnit::Unestablished,
+    }
+}
+
 fn describe_dataset(ds: &Dataset) -> DescribeResponse {
     let crs = ds.crs();
     let identity = ds.identity();
@@ -1058,6 +1073,11 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             display_convention: ds
                 .is_geographic_degrees_instance()
                 .then(|| spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION.to_string()),
+            // **`skp/0.4`, crs-unit-fact-and-bounds.** Read from the same admission record as the
+            // two provenance fields above, never re-derived and never read from the CRS
+            // identifier. `admission() == None` is the same unreachable arm the two fields above
+            // already treat as "not established" — here that is `CrsUnit::Unestablished`.
+            unit: ds.admission().map_or(CrsUnit::Unestablished, |a| crs_unit_of(&a.coordinate_unit)),
         },
         geometry: GeometryInfo {
             column: ds.geometry_column().to_string(),
@@ -1701,5 +1721,91 @@ mod tests {
         }));
         assert_eq!(e.code, "skp.filter_not_boolean");
         assert_eq!(e.fields.get("inferred_type").map(String::as_str), Some("BIGINT"));
+    }
+
+    /// **`skp/0.4`, crs-unit-fact-and-bounds**, §3 row 9: a named unit that is neither degree nor
+    /// metre is a real, established fact (`Other`), never folded into `Unestablished`, which means
+    /// no unit was established at all — the two are different facts and must stay apart.
+    ///
+    /// Mutation: `Named(_) => CrsUnit::Unestablished` in `crs_unit_of`. Expected failure: this test
+    /// fails by name.
+    #[test]
+    fn named_unit_projects_to_other_never_to_unestablished() {
+        let named = spatial_engine::CoordinateUnit::Named("US survey foot".to_string());
+        assert_eq!(crs_unit_of(&named), CrsUnit::Other);
+        assert_ne!(crs_unit_of(&named), CrsUnit::Unestablished);
+    }
+
+    /// **`skp/0.4`, crs-unit-fact-and-bounds.** The real `describe` response for §3 row 3
+    /// (`AbsentKey` x `Wgs84Degrees`, `unit:format-rule`) carries the same `crs` key set and the
+    /// same `unit` value as the shared shell/Rust fixture
+    /// `protocol/skp/tests/data/v0-describe-response-session-ordinal.json` — the same real-shape
+    /// discipline `an_engine_produced_lod_refusal_reaches_the_wire_as_engine_dot_lod_refused` above
+    /// follows: a real `SkpHost::open_dataset` + `describe` round trip, not a hand-built value.
+    ///
+    /// Mutation: that fixture's `unit` set to `"metre"`. Expected failure: this test fails by name.
+    #[test]
+    fn the_real_describe_crs_shape_matches_the_shared_fixture() {
+        use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
+
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("target/fixtures/skp-crs-unit-seam");
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join("row3-absent-key-degrees.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 20,
+                avg_vertices: 6,
+                hole_every: 0,
+                crs_mode: CrsMode::AbsentKey,
+                domain: CoordinateDomain::Wgs84Degrees,
+                with_geo_bbox: true,
+                ..Default::default()
+            },
+        )
+        .expect("write fixture");
+
+        let catalog = Arc::new(Catalog::new());
+        let host = SkpHost::new(catalog, StreamRegistry::new());
+        let open = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "row3-crs-unit-seam".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect("open");
+        let describe = host
+            .describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
+            .expect("describe");
+
+        let real_crs = serde_json::to_value(&describe.crs).unwrap();
+        let real_keys: std::collections::BTreeSet<String> =
+            real_crs.as_object().unwrap().keys().cloned().collect();
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response-session-ordinal.json");
+        let fixture_raw = std::fs::read_to_string(&fixture_path).expect("read shared fixture");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&fixture_raw).expect("shared fixture is valid JSON");
+        let fixture_crs = fixture_json.get("crs").expect("shared fixture has a crs object");
+        let fixture_keys: std::collections::BTreeSet<String> =
+            fixture_crs.as_object().unwrap().keys().cloned().collect();
+
+        assert_eq!(
+            real_keys, fixture_keys,
+            "the real describe crs key set must match the shared fixture's"
+        );
+        assert_eq!(
+            real_crs.get("unit"),
+            fixture_crs.get("unit"),
+            "the real describe unit value must match the shared fixture's"
+        );
     }
 }
