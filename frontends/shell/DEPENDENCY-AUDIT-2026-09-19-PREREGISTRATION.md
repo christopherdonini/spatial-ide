@@ -298,3 +298,36 @@ scripts/plan/verify-quotes.mjs` rc 0 PASS; `node scripts/plan/verify-test-claims
 claimed, 3 pre-existing planned/advisory, unrelated to this piece); `node scripts/plan/verify.mjs
 --offline` rc 0 PASS; `node scripts/plan/queue.mjs --check` rc 0, current; `node scripts/plan/site.mjs
 --check` rc 0, current. No drift; nothing regenerated.
+
+## Amendment 3 -- the timeout fix and full-provisioning audit (references only, record cap)
+
+Corrects Amendment 2's attribution: the 4-of-1048 timeout failures are cargo package-cache lock
+contention across concurrently running test files (vitest 5's default equals vitest 2's), not the
+worktree's location -- observed directly this pass on a quiet machine (see below), superseding
+Amendment 2's `.claude/worktrees/`-location explanation in its "Suites and builds" bullet for
+`frontends/shell`.
+
+**Timeout commit:** `5f8dbba`, delegation PRECEDENTS.md P-005. Ceiling and API cite are in that
+commit's message.
+
+**Runs (quiet machine, `tasklist` showed no cargo.exe/rustc.exe before each start):** the four files
+together, 3/3 runs, 32/32 tests passing each run (13.32s, 17.24s, 15.00s).
+
+**`npm run verify` at `5f8dbba`:** rc 0. Summary: `Test Files 4 passed (4)` /
+`Tests 32 passed (32)` for the four notice files within the full suite; full-suite summary line
+`== 76 passed, 0 failed ==` (test:residency-trace) and `== 30 passed, 0 failed ==`
+(test:citation-integrity).
+
+**Audit:** `node scripts/audit-dependency-licenses.mjs` at `60f56e1`, rc 0 --
+`989 packages audited, 12 decided by a human, 0 need human review, 0 tree(s) not auditable`. REVIEW-line
+delta vs `origin/main`: `caniuse-lite` moved from **Needs human review** to **Decided** (dated
+2026-09-20, per Amendment 2); no other package entered or left review. Lockfiles unchanged by `npm ci`
+/ `cargo fetch --locked` (clean `git status` before the audit commit).
+
+**Governance pre-gate at `60f56e1` (rc recorded, all from the worktree root):**
+`node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` rc 0 (251 pass);
+`node scripts/plan/verify-cites.mjs` rc 0 PASS; `node scripts/plan/verify-quotes.mjs` rc 0 PASS;
+`node scripts/plan/verify-test-claims.mjs` rc 0 PASS (108 claimed, 3 pre-existing planned/advisory,
+unrelated to this piece); `node scripts/plan/verify.mjs --offline` rc 0 PASS;
+`node scripts/plan/queue.mjs --check` rc 0, current; `node scripts/plan/site.mjs --check` rc 0,
+current.
