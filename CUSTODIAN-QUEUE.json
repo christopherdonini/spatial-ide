@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T00:16:01.876Z",
-  "plan_hash": "f1837a5b69d013f133bd281e674ca505bf45c1db97489bc37829a2397cd5be7e",
+  "generated_at": "2026-09-24T00:45:26.478Z",
+  "plan_hash": "7e1a3be5d79ad1dc32a4c2a4ead65a35ba6abc9cb29d62db77505457f8a84b4a",
   "priorities_approved": true,
   "next": {
     "id": "engine-tests-configured-connections",
@@ -40,6 +40,25 @@
         "done": null
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
+    },
+    {
+      "id": "engine-source-change-watcher",
+      "title": "The advisory source-change watcher",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 7,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
     },
     {
       "id": "multipolygon-assessment-consult",
@@ -96,7 +115,7 @@
         "opened": "2026-09-24",
         "done": null
       },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7: the preregistration and the architect consult only, on a branch; no code. B1 takes the SKP literal after crs-unit-fact-and-bounds. The draft goes to the human's morning sight, in the one question round"
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7: the preregistration and the architect consult only, on a branch; no code. B1 follows crs-unit-fact-and-bounds on the wire (entry 120); the watcher's describe fields also take the literal after crs-unit (RULED 2026-09-24, the watcher sight), so B1's literal relative to the watcher's is stated as open for the morning round, not decided. The draft goes to the human's morning sight, in the one question round"
     },
     {
       "id": "shell-dependency-audit-piece",
@@ -271,136 +290,10 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 30,
+    "total_minutes": 0,
     "by_kind": {
-      "click": [
-        {
-          "id": "accept-adr-013-instance",
-          "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": {
-            "pr": 103
-          },
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (later), entry 120 (1): with a dated acceptance note naming item 6 (unit-aware bounds) as owed, scheduled as crs-unit-fact-and-bounds. RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-015-a1",
-          "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": {
-            "pr": 103
-          },
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (1): accepted as it stands; appended in the one PR with the other four. A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
-        },
-        {
-          "id": "accept-adr-016-a1",
-          "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": {
-            "pr": 103
-          },
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (3): accepted with a dated acceptance note naming item 2's degradation display as owed, delivered by the watcher piece's detection-state field on describe; in the one PR with the other four. A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-028-qualification",
-          "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": {
-            "pr": 103
-          },
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (4): after the short N8 rerun on the merged build, in the same sitting as N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-032",
-          "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": {
-            "pr": 103
-          },
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (2): accepted as it stands; its Status line changes in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
-        }
-      ],
-      "sight": [
-        {
-          "id": "engine-source-change-watcher",
-          "title": "The advisory source-change watcher",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 7,
-          "budget_minutes": 240,
-          "needs_human": {
-            "kind": "sight",
-            "minutes": 15
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
-        }
-      ],
+      "click": [],
+      "sight": [],
       "ruling": [],
       "sitting": []
     }

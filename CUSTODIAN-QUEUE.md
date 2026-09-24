@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f1837a5b69d013f133bd281e674ca505bf45c1db97489bc37829a2397cd5be7e`) at `2026-09-24T00:16:01.876Z`.
+Generated from `PLAN.yaml` (sha256 `7e1a3be5d79ad1dc32a4c2a4ead65a35ba6abc9cb29d62db77505457f8a84b4a`) at `2026-09-24T00:45:26.478Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `f1837a5b69d013f133bd281e674ca505bf45c1db9748
 ## 2. Ready
 
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (lane `engine`, order 2, budget 60 min)
+- **engine-source-change-watcher** — The advisory source-change watcher (lane `engine`, order 7, budget 240 min)
 - **multipolygon-assessment-consult** — MultiPolygon support -- the architect's assessment, consult only (if time remains) (lane `engine`, order 9, budget 45 min)
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests (lane `kernel-protocol`, order 1, budget 300 min)
 - **b1-engine-prereg-draft** — Brief B, stage B1's engine/kernel half -- the preregistration draft and the architect consult only; no code; the draft comes to the human's morning sight (lane `kernel-protocol`, order 3, budget 90 min)
@@ -22,19 +23,9 @@ Generated from `PLAN.yaml` (sha256 `f1837a5b69d013f133bd281e674ca505bf45c1db9748
 - **governance-verify-gate-file-exists** — verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18) (lane `governance`, order 7, budget 45 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 8, budget 90 min)
 
-## 3. Waiting on the human (total: 30 min)
+## 3. Waiting on the human (total: 0 min)
 
-### click
-
-- **accept-adr-013-instance** — Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification) (3 min)
-- **accept-adr-015-a1** — Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5) (3 min)
-- **accept-adr-016-a1** — Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86) (3 min)
-- **accept-adr-028-qualification** — Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7) (3 min)
-- **accept-adr-032** — Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision) (3 min)
-
-### sight
-
-- **engine-source-change-watcher** — The advisory source-change watcher (15 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
