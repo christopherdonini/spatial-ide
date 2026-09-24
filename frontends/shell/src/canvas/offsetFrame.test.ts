@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { OffsetFrame, offsetPositions, recenterThresholdForBudget } from "./offsetFrame";
+import { OffsetFrame, offsetPositions, RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT, recenterThresholdForBudget } from "./offsetFrame";
 
 // Ported from the concluded ADR-003 spike's offset-frame.test.ts. Pure logic, no DOM/GPU -- this
 // validates the CPU-side arithmetic ADR-010 rule 3 depends on, not what a real WebGL2 upload does
@@ -19,6 +19,21 @@ describe("recenterThresholdForBudget", () => {
 
   it("caps at maxM regardless of how generous the budget is", () => {
     expect(recenterThresholdForBudget(0.001, 1000, 131_072)).toBe(131_072);
+  });
+});
+
+// `skp/0.4`, crs-unit-fact-and-bounds, §4 item 9.
+describe("RECENTER_MAX_DRIFT (skp/0.4, crs-unit-fact-and-bounds)", () => {
+  // Mutation: degree 131_072 -> 65_536. Expected failure: this test fails by name (the z=6 handover
+  // assertion, which the metre value alone would not catch since it never binds at that zoom).
+  it("declares 131072 for every unit; degree hands over at zoom 6", () => {
+    expect(RECENTER_MAX_DRIFT).toEqual({ metre: 131_072, degree: 131_072, other: 131_072, unestablished: 131_072 });
+
+    const cap = RECENTER_MAX_DRIFT.degree;
+    // T(z) = min(cap, budgetPx / (2^-24 * 2^z)); the handover from budget-bound to cap-bound is at
+    // z=6 for cap = 2^17 (the consult's own DECLARED VALUE derivation, step 4).
+    expect(recenterThresholdForBudget(2 ** 6, RECENTER_BUDGET_PX, cap)).toBe(2 ** 17);
+    expect(recenterThresholdForBudget(2 ** 7, RECENTER_BUDGET_PX, cap)).toBe(2 ** 16);
   });
 });
 

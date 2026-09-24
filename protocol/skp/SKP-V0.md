@@ -57,20 +57,29 @@ Pure, in-memory, no IO beyond what `Dataset::open` already did, no lease taken, 
 (ADR-006 class 1 — a pure transformation over already-resident state). Every field maps to an
 existing `engine::Dataset` accessor; none of them runs a new query:
 
+**Brought current (a disclosed currency fix, `skp/0.4` — this block had fallen behind the members
+`skp/0.3`'s own §8 entry already added): the block below carries every `skp/0.3` and `skp/0.4`
+member.**
+
 ```
 source   { path_display, geoparquet_version }
-crs      { identifier, definition_json, source: "file"|"caller_asserted",
-           asserted_by, asserted_at, axis_order, axis_normalization: "none-performed" }
+crs      { identifier, definition_json, source: "file"|"caller_asserted"|"format-rule",
+           asserted_by, asserted_at, definition_provenance,
+           axis_order, axis_normalization: "none-performed",
+           provenance, axis_provenance, display_convention: Option<String>,
+           unit: "degree"|"metre"|"other"|"unestablished" }
 geometry { column, encoding: "geoarrow.polygon", coordinate_layout: "interleaved-xy",
            frame: "authoritative-project-crs" }
-identity { source: "file:id"|"mapped:<col>",
-           uniqueness: "verified-at-open-full-file"|"declared-not-verified",
-           verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool> }
+identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
+           uniqueness: "verified-at-open-full-file"|"declared-not-verified"|"by-construction-within-generation",
+           verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool>,
+           class: "native"|"mapped"|"session-ordinal", session_statement: Option<String> }
 schema   [ { name, arrow_type, nullable } ]
 covering_bbox: bool
 row_count { basis, value: Option<DecU64> }
 extent    { basis: "not-established-at-open", value: null }
 license  { license, attribution, redistribution, declares_anything }
+sanity   { level: "metadata"|"sample"|"none", reason }
 ```
 
 `duckdb_version()` is deliberately **not** in `describe`: it runs a query and can fail on connection
@@ -183,7 +192,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    min/max, no handshake; a v0-only client and a v0.1 host fail on the first call exactly as any two
    disagreeing literals always have here. **`skp/0.2` (§8) bumps the compared literal again, `==`
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
-   `skp/0.2` host fail on the first call.
+   `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
+   literal again**, and `==` is unchanged.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -249,7 +259,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     recorded in that version's own §8 entry **before** merge; (iii) both-side fixtures in the same
     commit as each addition; (iv) **the version freezes at merge** — any later change is a new
     literal. Condition (iv) is what makes (ii) load-bearing: the §8 entry is the version's full
-    field set, and after merge it is a historical record, not a growing one.
+    field set, and after merge it is a historical record, not a growing one. **`skp/0.4` is a
+    further instance of this rule**, and it freezes at merge exactly as `skp/0.2` and `skp/0.3` did.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -680,3 +691,34 @@ and one value-domain widening, all still inside `skp/0.3` while it is unmerged (
   binds nothing until the human accepts it; it is emitted because this cut implements the session
   tier, not because the accepted ADR lists it. The accepted ADR-016 §6 lists two, and nothing in
   this cut treats the amendment as settled.
+
+### skp/0.4 — crs-unit-fact-and-bounds
+
+**The version's FULL field set, as §8's own discipline requires — every field `skp/0.4` adds, in
+one list.**
+
+`describe` **response** gains one member:
+
+- **`crs.unit: "degree" | "metre" | "other" | "unestablished"`** — the engine's recorded
+  `AdmissionRecord::coordinate_unit` class (`engine/src/geoparquet.rs`), read through the kernel's
+  private `crs_unit_of`. `"other"` means both axes named one unit that is neither degree nor
+  metre; its name is not carried. The unit's *source* — which of `CoordinateUnitSource::Definition`
+  or `::FormatRule` established it — is not carried either; this field states only the class.
+
+**What `skp/0.4` deliberately does not add.** No unit *source* field. No `other` unit's name. No
+new request member on `open_dataset`, `describe`, or any other command. No new refusal code.
+`protocol/data-plane/` has an empty diff for this version.
+
+Mechanics, the `skp/0.2`/`skp/0.3` precedent above followed exactly: one literal bumped
+once, `"skp/0.3"` → `"skp/0.4"`; plain `==` comparison retained (`kernel/src/skp.rs`'s
+`check_version`); `deny_unknown_fields` kept both directions; every fixture on both the Rust
+(`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`) and TypeScript
+(`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire updated in the same
+commit as the literal bump.
+
+**The literal follows merge order** (RULED 2026-09-24 (night) item (2),
+`state/directives/2026-09-24-program-order-and-literals.md:5`): the watcher piece takes `skp/0.5`
+and stacks its branch on this one, and B1 takes the literal after the watcher's. While this is
+unmerged, further additions to it are appended addenda, the `skp/0.2`/`skp/0.3` precedent. Once
+this piece merges to `main`, `skp/0.4`'s field set is closed and the next version bumps in the
+stated order. **`skp/1` stays RESERVED** and must not be used for any interim version.

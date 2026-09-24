@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T19:09:01.210Z",
-  "plan_hash": "afbc0f6eab87ce412ff7eb21c2e8b0984c1d182268b324b16e2190ee59a42e3a",
+  "generated_at": "2026-09-24T19:40:46.504Z",
+  "plan_hash": "5fbbe7ad4e33007fe77909de4e4c85061bfdbfa5f0d1b40112eb39a3becff136",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2583,7 +2583,7 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md",
       "evidence": {
         "pr": 112
       },

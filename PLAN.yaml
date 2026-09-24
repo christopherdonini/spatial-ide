@@ -1510,7 +1510,7 @@ nodes:
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md
     evidence: {pr: 112}
     budget_minutes: 300
     generation: 1

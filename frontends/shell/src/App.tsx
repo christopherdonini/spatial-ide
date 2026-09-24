@@ -1191,6 +1191,7 @@ export default function App() {
     if (shouldConstructCandidateSession()) {
       const session = startCandidateArmSession({
         dataset: admitted.dataset,
+        crsUnit: admitted.describe.crs.unit,
         canvas,
         // P7: the tile-size sweep selector's own dev-gated read, at the exact point the candidate
         // session is constructed -- `getResidencyTileSizeLevel()` returns `null` (unset) unless a
@@ -1622,6 +1623,7 @@ export default function App() {
               dataset={admitted.dataset}
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
+              crsUnit={admitted.describe.crs.unit}
               style={style}
               /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is
                * arm-independent. Once the session has ended, every readout the canvas resolves --

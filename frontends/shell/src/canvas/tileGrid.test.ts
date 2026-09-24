@@ -15,6 +15,7 @@ import {
   coverMembershipFor,
   coveringCellCount,
   deriveTileGridFrame,
+  MIN_ANCHOR_SPAN,
   tileBbox,
   tileCentre,
   tileCoverForBbox,
@@ -28,33 +29,67 @@ const ANCHOR: AuthoritativeBbox = { xmin: 0, ymin: 0, xmax: 100, ymax: 100 };
 
 describe("deriveTileGridFrame", () => {
   it("pads x2 (doubles the anchor's own square span) and centres on the anchor's centre", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     expect(frame.baseSpan).toBe(200); // 2x the 100-unit anchor span
     expect(frame.originX).toBe(-50); // centred: centre 50, half-span 100 -> origin 50-100
     expect(frame.originY).toBe(-50);
   });
 
   it("uses the larger of the two axis spans for a non-square anchor", () => {
-    const frame = deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 40 });
+    const frame = deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 40 }, "metre");
     expect(frame.baseSpan).toBe(200); // still the 100-unit X span doubled, not the 40-unit Y span
   });
 
   it("falls back to a declared minimum span for a degenerate (zero-area) anchor", () => {
-    const frame = deriveTileGridFrame({ xmin: 5, ymin: 5, xmax: 5, ymax: 5 });
+    const frame = deriveTileGridFrame({ xmin: 5, ymin: 5, xmax: 5, ymax: 5 }, "metre");
     expect(frame.baseSpan).toBeGreaterThan(0);
     expect(Number.isFinite(frame.baseSpan)).toBe(true);
   });
 
   it("is deterministic -- the same anchor always derives the same frame", () => {
-    const a = deriveTileGridFrame(ANCHOR);
-    const b = deriveTileGridFrame(ANCHOR);
+    const a = deriveTileGridFrame(ANCHOR, "metre");
+    const b = deriveTileGridFrame(ANCHOR, "metre");
     expect(a).toEqual(b);
+  });
+});
+
+// `skp/0.4`, crs-unit-fact-and-bounds, §4 items 7-8.
+describe("MIN_ANCHOR_SPAN (skp/0.4, crs-unit-fact-and-bounds)", () => {
+  // Mutation: degree 1e-6 -> 1. Expected failure: this test fails by name.
+  it("declares metre 1, degree 1e-6, other 1, unestablished 1", () => {
+    expect(MIN_ANCHOR_SPAN).toEqual({ metre: 1, degree: 1e-6, other: 1, unestablished: 1 });
+  });
+});
+
+describe("deriveTileGridFrame selects the anchor floor from the unit (skp/0.4, crs-unit-fact-and-bounds)", () => {
+  // Corpus #8's own bbox (`engine/ADMISSION-PREREGISTRATION.md:91`; this piece's own
+  // preregistration §3 row C8): degrees, span under one degree on both axes.
+  const CORPUS_8_BBOX: AuthoritativeBbox = {
+    xmin: 7.240571429126995,
+    ymin: 46.75066015564145,
+    xmax: 7.640829137765396,
+    ymax: 47.14887620788085,
+  };
+
+  // Mutation: `deriveTileGridFrame` ignores `unit` and uses the metre entry. Expected failure: this
+  // test fails by name (the degree and zero-span-under-degree assertions below).
+  it("metre gives baseSpan 2, degree gives 2*max(span) ~= 0.800515417276802 for corpus #8's bbox", () => {
+    expect(deriveTileGridFrame(CORPUS_8_BBOX, "metre").baseSpan).toBe(2);
+    expect(deriveTileGridFrame(CORPUS_8_BBOX, "degree").baseSpan).toBeCloseTo(0.800515417276802, 12);
+  });
+
+  it("a zero-span anchor gives 2e-6 under degree and 2 under the other three units", () => {
+    const point: AuthoritativeBbox = { xmin: 5, ymin: 5, xmax: 5, ymax: 5 };
+    expect(deriveTileGridFrame(point, "degree").baseSpan).toBeCloseTo(2e-6, 15);
+    expect(deriveTileGridFrame(point, "metre").baseSpan).toBe(2);
+    expect(deriveTileGridFrame(point, "other").baseSpan).toBe(2);
+    expect(deriveTileGridFrame(point, "unestablished").baseSpan).toBe(2);
   });
 });
 
 describe("cellSizeForLevel", () => {
   it("divides the frame's base span by each level's own dimension", () => {
-    const frame = deriveTileGridFrame(ANCHOR); // baseSpan = 200
+    const frame = deriveTileGridFrame(ANCHOR, "metre"); // baseSpan = 200
     expect(cellSizeForLevel(frame, "coarse")).toBeCloseTo(200 / 8);
     expect(cellSizeForLevel(frame, "medium")).toBeCloseTo(200 / 16);
     expect(cellSizeForLevel(frame, "fine")).toBeCloseTo(200 / 32);
@@ -78,7 +113,7 @@ describe("tileKeyToString", () => {
 
 describe("tileBbox / round-trip", () => {
   it("round-trips through tilesCoveringBbox: querying exactly one cell's own bbox covers only that cell", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const key = { row: 3, col: -2 };
     const bbox = tileBbox(frame, "medium", key);
     const covering = tilesCoveringBbox(frame, "medium", bbox);
@@ -86,7 +121,7 @@ describe("tileBbox / round-trip", () => {
   });
 
   it("adjacent cells share exactly one edge, no gap and no overlap", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const a = tileBbox(frame, "medium", { row: 0, col: 0 });
     const b = tileBbox(frame, "medium", { row: 0, col: 1 });
     expect(a.xmax).toBeCloseTo(b.xmin);
@@ -97,7 +132,7 @@ describe("tileBbox / round-trip", () => {
 
 describe("tileCentre / tileDistanceToPoint", () => {
   it("centre sits at the bbox midpoint", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const key = { row: 0, col: 0 };
     const bbox = tileBbox(frame, "coarse", key);
     const centre = tileCentre(frame, "coarse", key);
@@ -106,14 +141,14 @@ describe("tileCentre / tileDistanceToPoint", () => {
   });
 
   it("distance to the tile's own centre is 0", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const key = { row: 2, col: 2 };
     const centre = tileCentre(frame, "medium", key);
     expect(tileDistanceToPoint(frame, "medium", key, centre)).toBeCloseTo(0);
   });
 
   it("a farther tile reports a larger distance", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const near = tileDistanceToPoint(frame, "medium", { row: 0, col: 0 }, { x: 0, y: 0 });
     const far = tileDistanceToPoint(frame, "medium", { row: 10, col: 10 }, { x: 0, y: 0 });
     expect(far).toBeGreaterThan(near);
@@ -122,7 +157,7 @@ describe("tileCentre / tileDistanceToPoint", () => {
 
 describe("tilesCoveringBbox: cover", () => {
   it("covers a bbox spanning multiple cells with exactly the intersecting cells", () => {
-    const frame = deriveTileGridFrame(ANCHOR); // baseSpan 200, origin (-50,-50)
+    const frame = deriveTileGridFrame(ANCHOR, "metre"); // baseSpan 200, origin (-50,-50)
     const cellSize = cellSizeForLevel(frame, "coarse"); // 25
     // A query bbox spanning cells (0,0)-(1,1) at coarse level, offset from the origin.
     const bbox: AuthoritativeBbox = {
@@ -141,14 +176,14 @@ describe("tilesCoveringBbox: cover", () => {
   });
 
   it("a degenerate (zero-width/height) bbox resolves to exactly one cell", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const point: AuthoritativeBbox = { xmin: 10, ymin: 10, xmax: 10, ymax: 10 };
     const covering = tilesCoveringBbox(frame, "fine", point);
     expect(covering).toHaveLength(1);
   });
 
   it("a bbox exactly aligned to cell boundaries does not spill an extra empty cell (misalignment case)", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cellSize = cellSizeForLevel(frame, "medium");
     // Exactly two cells wide, boundary-aligned on every edge.
     const bbox: AuthoritativeBbox = {
@@ -165,7 +200,7 @@ describe("tilesCoveringBbox: cover", () => {
   });
 
   it("a bbox entirely outside the padded anchor square still resolves via plain cell arithmetic (no hard boundary)", () => {
-    const frame = deriveTileGridFrame(ANCHOR); // baseSpan 200
+    const frame = deriveTileGridFrame(ANCHOR, "metre"); // baseSpan 200
     const farAway: AuthoritativeBbox = { xmin: 100_000, ymin: 100_000, xmax: 100_050, ymax: 100_050 };
     const covering = tilesCoveringBbox(frame, "medium", farAway);
     expect(covering.length).toBeGreaterThan(0);
@@ -176,7 +211,7 @@ describe("tilesCoveringBbox: cover", () => {
 
 describe("tilesCoveringBbox: determinism and row-major order", () => {
   it("returns the same tiles in the same order across repeated calls", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const bbox: AuthoritativeBbox = { xmin: -10, ymin: -10, xmax: 60, ymax: 60 };
     const a = tilesCoveringBbox(frame, "fine", bbox);
     const b = tilesCoveringBbox(frame, "fine", bbox);
@@ -184,7 +219,7 @@ describe("tilesCoveringBbox: determinism and row-major order", () => {
   });
 
   it("is row-major: ascending row outer, ascending col inner", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cellSize = cellSizeForLevel(frame, "coarse");
     const bbox: AuthoritativeBbox = {
       xmin: frame.originX,
@@ -275,7 +310,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   });
 
   it("the zoom -64 viewport (the wedge that produced entry 60): counts the cover from the span, then allocates nothing beyond the bound", () => {
-    const frame = deriveTileGridFrame(ANCHOR); // baseSpan 200, origin (-50,-50); medium cell 12.5
+    const frame = deriveTileGridFrame(ANCHOR, "metre"); // baseSpan 200, origin (-50,-50); medium cell 12.5
     const bbox = viewportBboxAtZoom(-64, { x: 0, y: 0 });
 
     // (a) The pre-check itself: rows x cols from the span, no allocation, no loop. The number is
@@ -305,7 +340,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   });
 
   it("a cover just past the bound is truncated to the window and says by how much", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cellSize = cellSizeForLevel(frame, "medium"); // 12.5
     const n = 300; // 300 x 300 = 90,000 cells > MAX_COVERING_TILES (65,536)
     const bbox: AuthoritativeBbox = {
@@ -334,7 +369,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   });
 
   it("a cover AT or under the bound is complete and identical to what it always was", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cellSize = cellSizeForLevel(frame, "medium");
     const n = 100; // 10,000 cells, under the 65,536 bound (`MAX_COVERING_TILES`)
     const bbox: AuthoritativeBbox = {
@@ -355,7 +390,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
     // Reviewer gate should-fix 2: the `<=` in `tileCoverForBbox`'s own pre-check, pinned from below.
     // Nothing else in this file exercises the boundary itself -- the cases either side of it are
     // 10,000 and 90,000 cells.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const bbox = bboxOfCells(frame, COVER_WINDOW_CELLS_PER_AXIS, COVER_WINDOW_CELLS_PER_AXIS); // 256 x 256
     expect(coveringCellCount(frame, "medium", bbox)).toBe(MAX_COVERING_TILES);
 
@@ -374,7 +409,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   it("ONE cell past the bound (65,537) is truncated -- so the comparison is `<=`, not `<`", () => {
     // The same boundary from above. 65,537 is prime, so the only cell rectangle with exactly
     // MAX_COVERING_TILES + 1 cells is 65,537 x 1 -- which is what this builds.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const bbox = bboxOfCells(frame, MAX_COVERING_TILES + 1, 1);
     expect(coveringCellCount(frame, "medium", bbox)).toBe(MAX_COVERING_TILES + 1);
 
@@ -391,7 +426,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
     // Reviewer gate should-fix 3: `tileGrid.ts:286-287` claims exactly this ("intersected with the
     // real cover, so a cover overrunning the bound on one axis only keeps the other axis whole") and
     // nothing pinned it.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const flat = tileCoverForBbox(frame, "medium", bboxOfCells(frame, 100_000, 1));
     expect(flat.kind).toBe("truncated");
     expect(flat.keys.length).toBe(COVER_WINDOW_CELLS_PER_AXIS); // the column axis alone is windowed
@@ -407,7 +442,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
   });
 
   it("a non-finite bbox is truncated with nothing kept -- and, above all, RETURNS", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cover = tileCoverForBbox(frame, "medium", {
       xmin: Number.NEGATIVE_INFINITY,
       ymin: Number.NEGATIVE_INFINITY,
@@ -423,7 +458,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
     // i++)` loop over such a range never terminates however few cells it nominally spans
     // (`isEnumerableRange`). One cell, 1e30 units from the frame origin: bounded by COUNT alone this
     // would still have hung.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cover = tileCoverForBbox(frame, "medium", { xmin: 1e30, ymin: 1e30, xmax: 1e30 + 1, ymax: 1e30 + 1 });
     expect(cover.kind).toBe("truncated");
     expect(cover.keys).toEqual([]);
@@ -433,7 +468,7 @@ describe("the declared enumeration bound (DECISIONS-PENDING entry 60): the cover
 describe("misaligned grid (RESIDENCY-PREREGISTRATION.md's own deliberate-misalignment fixture case)", () => {
   it("a grid frame derived from an anchor NOT aligned to a round number still covers deterministically", () => {
     const oddAnchor: AuthoritativeBbox = { xmin: 17.3, ymin: -4.9, xmax: 233.1, ymax: 88.6 };
-    const frame = deriveTileGridFrame(oddAnchor);
+    const frame = deriveTileGridFrame(oddAnchor, "metre");
     const bbox: AuthoritativeBbox = { xmin: 50, ymin: 10, xmax: 90, ymax: 40 };
     const a = tilesCoveringBbox(frame, "fine", bbox);
     const b = tilesCoveringBbox(frame, "fine", bbox);
@@ -475,7 +510,7 @@ describe("coverMembershipFor (entry 66 (b)): agreement with the cover at or unde
   }
 
   it("the predicate's key set EQUALS tilesCoveringBbox's, over a sweep of bboxes at or under the bound", () => {
-    const frame = deriveTileGridFrame(ANCHOR); // baseSpan 200, origin (-50,-50); medium cell 12.5
+    const frame = deriveTileGridFrame(ANCHOR, "metre"); // baseSpan 200, origin (-50,-50); medium cell 12.5
     const cellSize = cellSizeForLevel(frame, "medium");
     const cases: { name: string; bbox: AuthoritativeBbox }[] = [
       {
@@ -532,7 +567,7 @@ describe("coverMembershipFor (entry 66 (b)): agreement with the cover at or unde
     // cell whose MIN edge it is (`coveringIndexRange`'s own doc comment). A closed-bbox intersection
     // (`tileBbox(key)` overlapping the query with `<=`/`>=`) would admit the next column -- one extra
     // ring the cover never names, so a tile the eviction rule keeps and no round ever refreshes.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const cellSize = cellSizeForLevel(frame, "medium");
     const bbox: AuthoritativeBbox = {
       xmin: frame.originX,
@@ -557,7 +592,7 @@ describe("coverMembershipFor (entry 66 (b)): agreement with the cover at or unde
     // The declared-superset half of the same contract, and the case entry 66 (b) exists for:
     // `tileCoverForBbox` reports `"truncated"` and keeps the centred window, while the predicate
     // still answers `true` for a covered cell that window omits.
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const bbox = bboxOfCells(frame, 300, 300); // 90,000 cells > MAX_COVERING_TILES (65,536)
     const cover = tileCoverForBbox(frame, "medium", bbox);
     expect(cover.kind).toBe("truncated");
@@ -572,7 +607,7 @@ describe("coverMembershipFor (entry 66 (b)): agreement with the cover at or unde
 
 describe("coverMembershipFor: totality (entry 66 (b), block-on-sight 7)", () => {
   it("answers false -- and never throws -- for any string that is not a row:col cell", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const membership = coverMembershipFor(frame, "medium", { xmin: -50, ymin: -50, xmax: 50, ymax: 50 });
     // `INITIAL_TILE_KEY` genuinely reaches this predicate in the product (`planTileEviction`'s own
     // filter and `evictTile`'s own guard both test the protection set with it), and the two
@@ -585,7 +620,7 @@ describe("coverMembershipFor: totality (entry 66 (b), block-on-sight 7)", () => 
   });
 
   it("a non-finite bbox protects nothing", () => {
-    const frame = deriveTileGridFrame(ANCHOR);
+    const frame = deriveTileGridFrame(ANCHOR, "metre");
     const nonFinite: AuthoritativeBbox = {
       xmin: Number.NEGATIVE_INFINITY,
       ymin: Number.NEGATIVE_INFINITY,

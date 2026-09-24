@@ -21,7 +21,7 @@ import { fillActivity, settledState } from "./residencyStatus";
 import type { ResidencyStatusEvent } from "./residencyStatus";
 import { encodeDecU64 } from "../skp/codec";
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
-import type { Bbox, Filter } from "../skp/types";
+import type { Bbox, CrsUnit, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
 import { dataPlaneAttach } from "../streaming/dataPlaneClient";
 import { debounce } from "../streaming/debounce";
@@ -91,6 +91,13 @@ export { INITIAL_TILE_KEY };
 
 export interface CandidateArmSessionDeps {
   dataset: string;
+  /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact, threaded
+   * straight to `establishFrameFromExtent` -> `manager.establishGridFrame` ->
+   * `deriveTileGridFrame`'s own required `unit` parameter (`tileGrid.ts`). REQUIRED, with no
+   * default: this piece's preregistration §8 item 2 names a defaulted unit block-on-sight, and
+   * every other dep on this interface that could safely default already does (see their own doc
+   * comments); this one cannot. */
+  crsUnit: CrsUnit;
   /** Rider 3 discipline (`App.tsx`'s own `makeManagerCallbacks` doc comment): captured ONCE, at
    * construction, never re-read from a mutable ref later -- the same reason that fix exists for the
    * baseline manager applies here identically. `null` is handled (every call below is optional-
@@ -1192,7 +1199,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (frameEstablished || !extent) return;
     const target = chooseFitTarget(extent);
     if (!target) return;
-    manager.establishGridFrame(target);
+    manager.establishGridFrame(target, deps.crsUnit);
     const frame = manager.gridFrame;
     if (frame) {
       canvas?.establishTileGridContext(frame, manager.activeLevel);

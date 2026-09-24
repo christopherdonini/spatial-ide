@@ -115,6 +115,7 @@ function describeFixture(): DescribeResponse {
       provenance: "crs:declared",
       axis_provenance: "axis:declared",
       display_convention: null,
+      unit: "metre",
     },
     geometry: {
       column: "geometry",

@@ -618,7 +618,7 @@ describe("planTileEviction (item D)", () => {
 
 describe("protection past the enumeration bound (entry 66 (b))", () => {
   it("a cell tileCoverForBbox OMITS is still protected: neither planned for eviction nor evicted", () => {
-    const frame = deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 });
+    const frame = deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 }, "metre");
     const cellSize = cellSizeForLevel(frame, "medium");
     // 300 x 300 = 90,000 cells, past MAX_COVERING_TILES (65,536): the cover is the centred window.
     const bbox = {

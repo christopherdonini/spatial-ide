@@ -165,16 +165,23 @@ queried again. The app cannot know whether those areas are empty.
 *The lines below are true of `main`'s build after the v0.1.0 tag, not of the v0.1.0 artifact the
 header above describes. They move into the next release's list when that release is cut.*
 
-17. **A dataset in degrees uses tile and render-precision bounds declared for metres.** The tile
-    grid's minimum anchor span and the re-centering drift bound are declared in metres, and they apply
-    unchanged when a dataset's coordinates are in degrees. For the CRS84 corpus file the float32
-    rounding of drawn coordinates is at most 1/32 pixel per axis at zoom 21, the deepest a fit reaches,
-    while the render origin lies inside the file's extent, and at most half a pixel at any zoom and
-    origin — the bound a dataset in metres has, because the re-centering threshold is computed per
-    screen pixel — so the metre-declared bound that acts on this file is the tile grid's minimum anchor
-    span, which puts its 0.40-degree extent in a grid frame 2 degrees across where its own extent would
-    give 0.80.
-    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a) (this row) and item (1)(c) (the P0 arithmetic bound and the revision it requires); the revision sentence above matches, word for word, the sentence pinned at `state/consults/2026-09-24-crs-unit-fact-and-bounds.md:77 @ 464a6a1 sha256:c587eab650a7e2e9396861e67c5749ee4f5aba505de4a5b93dc18a5004c0cf6b`, its "KNOWN-LIMITATIONS item 17 revision" section -->
+17. **A dataset in degrees has its own declared tile-grid anchor span and re-centering drift cap,
+    but `MAX_ZOOM` and the fit and degenerate-zoom constants stay declared for metres.** The tile
+    grid's minimum anchor span is declared per coordinate unit: metre 1, degree 1e-6, other 1,
+    unestablished 1. The re-centering drift cap is 131 072 in every unit, and only the degree value
+    is derived: 131 072 degrees is the cap at which the re-centering threshold passes from the cap to
+    the half-pixel float32 budget at zoom 6, the same zoom as for the metre value. The metre, other
+    and unestablished values are the original sanity ceiling, unchanged and not derived from
+    precision. For the CRS84 corpus file the float32 rounding of drawn coordinates is at most 1/32
+    pixel per axis at zoom 21, the deepest a fit reaches, while the render origin lies inside the
+    file's extent, and at most half a pixel at any zoom and origin — the same bound a dataset in
+    metres has, because the re-centering threshold is computed per screen pixel and its cap is the
+    same number in every unit. `MAX_ZOOM` and `extent.ts`'s fit and degenerate-zoom constants remain
+    declared for metres only (PLAN.yaml node `crs-zoom-constants-per-unit`). A dataset the engine
+    records as `other` (a named unit that is neither degree nor metre) or `unestablished` still
+    keeps the one-unit minimum anchor span and the unchanged 131 072 drift cap, with no declared
+    value of its own for either bound.
+    <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md §2 (i), §7, §8 item 8, Amendment 4). This text replaces the item 17 text main carries when it lands. Authority: RULED 2026-09-23 (later), item (1)(b) (the node: the per-unit anchor span and the degrees drift value) and item (1)(c) (this line states the P0 bound); RULED 2026-09-24, question round 17, item 1 and item 5 (Q1, Q2, Q4). Anchor span: frontends/shell/src/canvas/tileGrid.ts's MIN_ANCHOR_SPAN, pinned by tileGrid.test.ts's "declares metre 1, degree 1e-6, other 1, unestablished 1". Drift cap: frontends/shell/src/canvas/offsetFrame.ts's RECENTER_MAX_DRIFT and its doc (metre, other and unestablished: the unchanged sanity ceiling; degree: derived), pinned by offsetFrame.test.ts's "declares 131072 for every unit; degree hands over at zoom 6"; the metre value's basis and the degree derivation are state/consults/2026-09-24-crs-unit-fact-and-bounds.md, section DECLARED VALUE, steps 1 and 3-4. The render bound: the same consult, section P0, steps 6-7. ADR-013 Amendment 1 item 6 is true of the build for degree and metre for MIN_ANCHOR_SPAN and RECENTER_MAX_DRIFT only; MAX_ZOOM and extent.ts's fit and degenerate-zoom constants are the same item-6 class and stay declared for metres (the consult's STOP LIST Q2; PLAN.yaml node crs-zoom-constants-per-unit). -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe

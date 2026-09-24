@@ -11,7 +11,8 @@
     "axis_normalization": "none-performed",
     "provenance": "crs:format-default",
     "axis_provenance": "axis:declared",
-    "display_convention": "no coordinate value is transformed; the display convention is equirectangular"
+    "display_convention": "no coordinate value is transformed; the display convention is equirectangular",
+    "unit": "degree"
   },
   "geometry": {
     "column": "geometry",

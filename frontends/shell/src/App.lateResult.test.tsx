@@ -137,6 +137,15 @@ const workingCanvasMockState = vi.hoisted(() => ({
   resetFitForNewGenerationCalls: 0,
 }));
 
+// `skp/0.4`, crs-unit-fact-and-bounds: lets one test set the mocked `describe`'s `crs.unit` to
+// something other than this file's own `describeFixture()` default ("metre"), so
+// "App threads describe's unit to the canvas and the candidate session" (this piece's own
+// preregistration §4 item 11) can prove the real threading without a second, hand-built fixture.
+// Reset to "metre" in both describe blocks' own `beforeEach` below, so no other test observes it.
+const crsUnitMockState = vi.hoisted(() => ({
+  current: "metre" as "degree" | "metre" | "other" | "unestablished",
+}));
+
 // A function DECLARATION (hoisted by the language, independent of `vi.mock`'s own hoisting below)
 // so the `./skp/client` mock can reference it regardless of textual order. Field-for-field identical
 // to `admitDataset.test.ts`'s own `describeFixture()` -- a known-good shape, not re-derived by hand.
@@ -147,6 +156,7 @@ function describeFixture(): import("./skp/types").DescribeResponse {
       identifier: "EPSG:2056", definition_json: null, source: "file", asserted_by: null, asserted_at: null,
       definition_provenance: null, axis_order: "easting,northing", axis_normalization: "none-performed",
       provenance: "crs:declared", axis_provenance: "axis:declared", display_convention: null,
+      unit: crsUnitMockState.current,
     },
     geometry: { column: "geometry", encoding: "geoarrow.polygon", coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" },
     identity: {
@@ -399,6 +409,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     viewportMockState.onBatchByDataset.clear();
     workingCanvasMockState.propsByDataset.clear();
     workingCanvasMockState.resetFitForNewGenerationCalls = 0;
+    crsUnitMockState.current = "metre";
     // Baseline arm: the vitest suite's shipped default is `"candidate"` (`residencyArm.ts`), which
     // would construct `startCandidateArmSession` instead of the `ViewportStreamManager` mocked above.
     setResidencyArm("baseline");
@@ -1021,6 +1032,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     candidateMockState.stoppedByDataset.clear();
     workingCanvasMockState.propsByDataset.clear();
     workingCanvasMockState.resetFitForNewGenerationCalls = 0;
+    crsUnitMockState.current = "metre";
     // The product ships this arm by default (`residencyArm.ts`'s `DEFAULT_RESIDENCY_ARM`) -- set
     // explicitly anyway so this block's own intent reads plainly.
     setResidencyArm("candidate");
@@ -1361,4 +1373,32 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     });
     expect(container.querySelector(".filter-active")?.textContent).toBe("Applied: zone = 'commercial'");
   }
+
+  // `skp/0.4`, crs-unit-fact-and-bounds, §4 item 11: the real seam from `describe`'s wire shape,
+  // through `App.tsx`, to both the canvas prop and the candidate session dep -- not a hand-built
+  // value at either destination.
+  //
+  // RECORDED MUTATION for "App threads describe's unit to the canvas and the candidate session":
+  // App passes the literal `"metre"` as `crsUnit` to both `WorkingCanvas` and
+  // `startCandidateArmSession` instead of `admitted.describe.crs.unit` (App.tsx).
+  // Expected failure: this test's two `toBe("degree")` assertions both fail, observing `"metre"`.
+  it("App threads describe's unit to the canvas and the candidate session", async () => {
+    // This mock pairs unit "degree" with `describeFixture()`'s own EPSG:2056 identifier and null
+    // `display_convention` -- a shape the real engine never admits (§5's falsification condition:
+    // `unit == "degree"` iff `display_convention` is `Some`). It is deliberate here: this test
+    // proves only that the wire's `unit` value threads to `WorkingCanvas` and the candidate session
+    // unchanged, so the mock's only job is to carry a `unit` distinct from the file's "metre"
+    // default -- the identifier and `display_convention` fields are irrelevant to that seam and are
+    // left at their default values on purpose.
+    crsUnitMockState.current = "degree";
+    const handle = await openPathAndCaptureCandidateHandle();
+
+    const canvasProps = workingCanvasMockState.propsByDataset.get(handle);
+    if (!canvasProps) throw new Error(`no captured WorkingCanvas props for dataset ${handle}`);
+    expect(canvasProps.crsUnit).toBe("degree");
+
+    const deps = candidateMockState.depsByDataset.get(handle);
+    if (!deps) throw new Error(`no captured deps for dataset ${handle}`);
+    expect(deps.crsUnit).toBe("degree");
+  });
 });
