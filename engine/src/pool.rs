@@ -192,7 +192,9 @@ const CONFIGURE_SQL: &str = "SET autoinstall_known_extensions=false; \
 /// DuckDB connections — this module's [`ConnectionPool::configure_new`] and `layout.rs`'s variant
 /// rewriter — and before this function existed the second carried its own copy of the statement,
 /// which is exactly how a security-relevant setting goes missing from one path. One function, one
-/// spelling, both sites (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 3).
+/// spelling, both product sites (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 3).
+/// `fixture::configured_connection` is a third, test-support-only caller, added so
+/// `engine/tests/*.rs` fixture-reading connections carry the same configuration.
 ///
 /// Failure is `ConnectionSetup`, naming the phase, so a configuration that does not apply is a
 /// typed refusal and never a connection that quietly runs unconfigured.
