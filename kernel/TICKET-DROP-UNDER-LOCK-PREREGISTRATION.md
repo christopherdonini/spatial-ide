@@ -47,3 +47,81 @@ Fix + tests at `kernel/src/skp.rs` @ 8ff2875ce9486c3e2bf528ebc9d51fa9b255c472.
 - `node scripts/plan/verify-quotes.mjs` — rc 0. `verify-cites.mjs` — rc 0. `verify-test-claims.mjs`
   — rc 0. `verify-mutation.mjs --base origin/main --head HEAD` — rc 0, all 4 new tests named.
   `verify.mjs --offline` — rc 0.
+
+## Amendment 1 (correction round 1 — PR #116 attempt 1: architect PASS/S1/R1–R5, reviewer FAIL/D1–D5
+record-only; commits below not yet on main are disclosed as branch commits)
+
+(a) Class 1 (post-result). S1 discharged at `6b94f1e` (branch commit): `StreamRegistry::tickets`'s
+field doc comment states the no-drop-under-guard invariant and names `mint`'s and `redeem`'s
+`insert()` return values (always `None`) by symbol.
+
+(b) Class 4 (mutation added after a gate finding). Reviewer should-fix discharged at `6b94f1e`
+(branch commit): `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` and
+`cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` each gain
+a `ticket_liveness == EndedBySourceChange` assertion and RECORDED MUTATION (B) — forgetting the
+retired value instead of dropping it after release; observed on this branch (performed once each,
+reverted): (B) on `cancel` fails only the new assertion in its own test, (B) on
+`cancel_all_for_dataset` fails only the new assertion in its own test (confirming the reviewer's
+finding that the pre-existing assertions alone let it pass).
+
+(c) Class 1. D1 corrected: RECORDED MUTATION (A) on `cancel` (drop-in-place under the lock,
+pre-existing) was re-run on this branch and observed to also fail
+`after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`, not only
+`cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` as the Results section
+above says. The Results section stands unedited (append-only); this row supersedes its "left the
+other three passing" clause for mutation (A) on `cancel` only — the `sweep_locked` and
+`cancel_all_for_dataset` mutations' isolation from the other three tests was re-confirmed unaffected.
+
+(d) Class 4. D3 discharged at `9ab46fe` (branch commit):
+`after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`'s doc
+comment now names both of `cancel`'s RECORDED MUTATIONs it is not free of — (A), per (c), and (B),
+added at `6b94f1e` (branch commit) alongside (b) — each observed once on this branch and reverted.
+Its "cancelled … real end-to-end via `SkpHost`" clause is also corrected there: the cancel this test
+drives is `StreamRegistry::cancel` directly, and only the test's own final `viewport_query` goes
+through a real `SkpHost`.
+
+(e) Class 3. D4 corrected: the Results section's clippy bullet's bare `:197` line pin is superseded
+below by a symbol cite (`type_complexity` on `redeem`'s return type) — the line had already moved to
+`:207` by (a)'s insertion alone, which is why a line pin was the wrong shape here. This round's tool
+runs are named by commit in the Checks row below, closing the "tool results without a commit" half
+of D4/R3/R4.
+
+(f) Class 1. R5 corrected: the Scope line's "ADR-019's admission-ticket mechanism" clause does not,
+alone, justify full gating —
+`docs/adr/ADR-019-control-plane-admission-tickets.md:3 @ d4362bd sha256:fc621681dcff98bdcf336c62d8c7aecf99fcecd4535f1c0256ecaac550823d61`
+states ADR-019 is Proposed and binds nothing until accepted. Full gating rests on docs/01's
+never-block-the-canvas rule and the Accepted ADR-018 alone, both already named on the same Scope
+line; ADR-019 stays named there only as the mechanism this fix's code belongs to, not as an
+independent gating reason.
+
+(g) Class 6 (budget deviation, Scope not edited). Declared figure: <= 250 non-generated lines.
+Final figure under §21c's counting rule (insertions + deletions over `kernel/src/skp.rs`, this
+preregistration excluded): 488 at `7744fbd` (undeclared at that commit — D2/R1), 535 at `9ab46fe`
+(branch commit) after this round's items (a)–(e). Reason: the fix moves four call sites' drop point
+under a real, drained end-to-end chain and this round adds a second recorded mutation and a doc
+correction to three of the four regression tests; the Out-of-scope line already routed this piece to
+full gating at commit, so §21b's mid-piece route-closure does not additionally apply.
+
+(h) D5 resolved, no new class: the five-line form is kept under full gating on the precedent of
+round 16, item 1 — byte-copied, "rendering is new user-visible behaviour, which crosses §21c's
+bound, so the architect reads alongside the reviewer with the five-line form kept" — which this
+piece's own architect attempt-1 PASS already applied without blocking on the form's shape.
+
+Checks this round, all at `9ab46fe` (branch commit) unless named otherwise: `cargo test -p
+spatial-kernel --lib skp::` — rc 0, 28 passed (re-run at `9ab46fe`). `cargo test -p spatial-kernel` —
+rc 0 (at `6b94f1e`, unaffected by `9ab46fe`'s doc-only change). `cargo test -p spatial-engine` — rc 0
+(at `6b94f1e`). `cargo clippy -p spatial-kernel --all-targets` — rc 0 (at `6b94f1e`), no new warning
+(the pre-existing `type_complexity` note on `redeem`'s return type — cited by symbol, not line, per
+(e)). `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` — rc 0, 256 passed (at
+`6b94f1e`). `verify-quotes.mjs` — rc 0. `verify-cites.mjs` — rc 0. `verify-test-claims.mjs` — rc 0
+(all three re-run at `9ab46fe`). `verify-mutation.mjs --base origin/main --head HEAD` — rc 0, all 4
+tests named (re-run at `9ab46fe`). `verify.mjs --offline` — rc 0 (at `6b94f1e`).
+
+### Superseded index (as of Amendment 1) — read this amendment first
+
+- Results section: "each reintroduction made exactly its own named test FAIL by timeout, and left
+  the other three passing" is superseded for mutation (A) on `cancel` by (c); unaffected for the
+  `sweep_locked` and `cancel_all_for_dataset` mutations.
+- Results section: the clippy bullet's `:197` line pin is superseded by (e)'s symbol cite.
+- Scope line: the "ADR-019's admission-ticket mechanism" clause, read as an independent full-gating
+  justification, is superseded by (f); it stands only as a mechanism reference.
