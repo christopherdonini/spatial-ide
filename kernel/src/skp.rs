@@ -102,6 +102,16 @@ enum TicketState {
 /// to each.
 #[derive(Default)]
 pub struct StreamRegistry {
+    /// **Invariant (architect, PR #116 attempt 1, S1): no `TicketState` is ever dropped while this
+    /// guard is held.** Every method below that removes or replaces an entry (`sweep_locked`,
+    /// `cancel`'s and `cancel_all_for_dataset`'s `Pending` arms) moves the retired value out —
+    /// `sweep_locked` into its returned `Vec`, `cancel`/`cancel_all_for_dataset` via
+    /// `mem::replace` — and every caller drops that moved-out value only after this guard is
+    /// released, before the method itself returns (see each method's own `// Entry 132` comment).
+    /// `mint` and `redeem` also call `insert` under this guard: `mint` always inserts a
+    /// freshly-minted [`StreamHandle`]'s key, and `redeem` inserts only immediately after removing
+    /// the same key — both calls' returned `Option<TicketState>` is therefore always `None`, so
+    /// neither call drops a live value via `insert`'s return.
     tickets: Mutex<HashMap<String, TicketState>>,
 }
 
@@ -260,7 +270,8 @@ impl StreamRegistry {
                     // ADR-019's Consequences: reaches the producer's own CancelToken directly, the
                     // same one a data-plane CANCEL frame would reach — the two mechanisms converge.
                     // `cancel.cancel()` sets a flag and interrupts DuckDB (`engine/src/cancel.rs`);
-                    // it does not drop the `TicketState` and does not re-lock anything.
+                    // it does not drop the `TicketState`, and this arm takes no registry lock (it
+                    // mutates the entry already held under this call's own guard).
                     cancel.cancel();
                     *cancelled = true;
                     CancelOutcome::Requested
@@ -1786,8 +1797,9 @@ mod tests {
 /// (`engine/src/cancel.rs`) is the default (no user impl) and touches nothing beyond its own
 /// `Arc<Inner>`. `StreamRegistry::cancel`'s and `cancel_all_for_dataset`'s `Redeemed` arms call
 /// `cancel.cancel()` (`EngineCancel` → `CancelToken::cancel`, `kernel/src/lib.rs:571-575`), which
-/// sets an atomic flag and interrupts DuckDB — it does not drop the `TicketState` and does not
-/// re-lock anything. `StreamRegistry::redeem` removes a `Pending` entry too, but **moves** its
+/// sets an atomic flag and interrupts DuckDB — it does not drop the `TicketState`, and neither arm
+/// takes a registry lock beyond the one its own call already holds. `StreamRegistry::redeem`
+/// removes a `Pending` entry too, but **moves** its
 /// `built.source`/`built.cancel` out into its `Ok(..)` return value rather than dropping them under
 /// the lock — the caller (outside any lock) owns the drop, so `redeem` was never part of this
 /// defect; it is exercised here only via the `sweep_locked` call at its own top.
@@ -1926,16 +1938,27 @@ mod ticket_drop_under_lock_regression {
         (tickets, generations, handle)
     }
 
-    /// RECORDED MUTATION: in the fixed `StreamRegistry::cancel`, replace
+    /// RECORDED MUTATION (A): in the fixed `StreamRegistry::cancel`, replace
     /// `retired = Some(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` with
     /// the pre-fix `*state = TicketState::CancelledBeforeRedeem { .. }` (dropping the old value in
-    /// place, under the lock). Observed failure (performed once on this branch, then reverted):
-    /// `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` FAILED — panicked
-    /// on the "did not return within" message below.
+    /// place, under the lock). Observed failure (performed once on this branch, then reverted): this
+    /// test FAILED by timeout, on the "did not return within" message below — and so did
+    /// `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`,
+    /// which drives the same `StreamRegistry::cancel` call on a similarly-seeded ticket (correcting
+    /// this preregistration's Results section, which had said only this test failed).
+    ///
+    /// RECORDED MUTATION (B, reviewer should-fix, PR #116 attempt 1): replace the same line with
+    /// `std::mem::forget(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` —
+    /// retiring the entry without ever dropping the moved-out `EngineSource`, so `end_generation`
+    /// never runs. Does not hang (nothing is dropped under the lock). Observed failure (performed
+    /// once on this branch, then reverted): the `ticket_liveness` assertion below FAILED (`Live`,
+    /// not `EndedBySourceChange`) — and so did
+    /// `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`
+    /// (its `viewport_query` stopped refusing, because the generation was never ended).
     #[test]
     fn cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
         let path = fixture("cancel-path");
-        let (tickets, _generations, handle) = seeded_pending_ticket("ds_cancel_path", &path);
+        let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_path", &path);
 
         let outcome = run_with_timeout(HANG_TIMEOUT, {
             let tickets = tickets.clone();
@@ -1952,6 +1975,10 @@ mod ticket_drop_under_lock_regression {
             )
         });
         assert!(matches!(outcome, CancelOutcome::Requested));
+        // Reviewer should-fix (PR #116 attempt 1): the hang-avoidance assertion above cannot see a
+        // fix that avoids the hang by forgetting the retired value instead of dropping it after
+        // release — only this generation-liveness check can.
+        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
     }
 
     /// RECORDED MUTATION: in the fixed `StreamRegistry::sweep_locked`, replace the collect-and-remove
@@ -2004,16 +2031,24 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
     }
 
-    /// RECORDED MUTATION: in the fixed `StreamRegistry::cancel_all_for_dataset`, replace
+    /// RECORDED MUTATION (A): in the fixed `StreamRegistry::cancel_all_for_dataset`, replace
     /// `retired.push(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` with the
     /// pre-fix `*state = TicketState::CancelledBeforeRedeem { .. }`. Observed failure (performed once
-    /// on this branch, then reverted):
-    /// `cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang`
-    /// FAILED — panicked on the "did not return within" message below.
+    /// on this branch, then reverted): this test FAILED by timeout, on the "did not return within"
+    /// message below.
+    ///
+    /// RECORDED MUTATION (B, reviewer should-fix, PR #116 attempt 1): replace the same line with
+    /// `retired.push`'s argument wrapped in `std::mem::forget` applied to the replaced value instead
+    /// of pushed (retiring the entry without ever dropping the moved-out `EngineSource`, so
+    /// `end_generation` never runs). Does not hang. Observed failure (performed once on this branch,
+    /// then reverted): this test's old assertions (`n == 1`) still PASSED — the reviewer's finding
+    /// that "forgetting the retired value passes the whole suite on the cancel_all path" — and only
+    /// the `ticket_liveness` assertion below, added for this finding, FAILED (`Live`, not
+    /// `EndedBySourceChange`).
     #[test]
     fn cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
         let path = fixture("cancel-all-for-dataset-path");
-        let (tickets, _generations, _handle) = seeded_pending_ticket("ds_cancel_all_path", &path);
+        let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_all_path", &path);
 
         let n = run_with_timeout(HANG_TIMEOUT, {
             let tickets = tickets.clone();
@@ -2028,15 +2063,24 @@ mod ticket_drop_under_lock_regression {
             )
         });
         assert_eq!(n, 1);
+        // Reviewer should-fix (PR #116 attempt 1): `n == 1` alone cannot see a fix that avoids the
+        // hang by forgetting the retired value instead of dropping it after release.
+        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
     }
 
     /// **No behaviour change, asserted as an outcome.** After a ticket whose source changed is
-    /// cancelled (through the fixed path, real end-to-end via `SkpHost`), the next `viewport_query`
-    /// on that dataset refuses by its typed code — the same refusal
+    /// cancelled — through `StreamRegistry::cancel` directly, the same call this module's `cancel`
+    /// test drives; only the `viewport_query` below goes through a real `SkpHost` — the next
+    /// `viewport_query` on that dataset refuses by its typed code, the same refusal
     /// `kernel/tests/session_generation.rs`'s pre-check test already asserts for the *pre-check*
-    /// path; this is the same claim on the *post-check* / drop path the fix touches. Carries no
-    /// drop-under-lock mutation of its own: it is the fix's "same outcomes" claim, not a new lock
-    /// path.
+    /// path; this is the same claim on the *post-check* / drop path the fix touches.
+    ///
+    /// **Not free of a drop-under-lock mutation, corrected (reviewer, PR #116 attempt 1).** This
+    /// test carries no *hang* mutation of its own, but `cancel`'s RECORDED MUTATION (B) above
+    /// (forgetting the retired value instead of dropping it after release) also fails this test's
+    /// `refused.code` assertion below when reintroduced, because a forgotten `EngineSource` never
+    /// ends the generation this test's `viewport_query` depends on refusing against — observed
+    /// (performed once on this branch, then reverted) alongside (B)'s own run.
     #[test]
     fn after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name() {
         let dataset_handle = DatasetHandle::mint();
