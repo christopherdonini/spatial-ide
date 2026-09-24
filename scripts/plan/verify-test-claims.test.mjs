@@ -459,15 +459,33 @@ function nthLineOf(content, n) {
 // Test 1's own fixture ledger is the REAL RULED header and item lines from DECISIONS-PENDING.md,
 // byte-copied by script (not retyped) from this piece's own base commit, `git merge-base HEAD
 // origin/main` at authoring time -- round 20 item 1's own header/item (ruling) and round 18 item 4's
-// own header/item (carrier), the same pairing PR #108's own rows use.
+// own header/item (carrier), the same pairing PR #108's own rows use. Built INSIDE test 1, not here at
+// module top level (reviewer gate attempt 1 S4: a module-level `git show` kills every test in this
+// file in a shallow clone) -- see `realLedgerFixture` below. The four lines are selected by CONTENT,
+// never by line number (round 12(a); round 14(a')): the round-20 and round-18 RULED headers, then
+// each one's own `- *Item 1 —` / `- *Item 4 —` line, matched by their own leading text -- provenance is
+// round 20 item 1 and round 18 item 4 at 90de3e9, with no line numbers.
 const WITHDRAWN_BASE_COMMIT = '90de3e94924f8d4d7a0307de0092fe5b5fc61095';
-function ledgerLineAtBase(lineNo) {
-  const text = execFileSync('git', ['show', `${WITHDRAWN_BASE_COMMIT}:DECISIONS-PENDING.md`], { cwd: REPO_ROOT, encoding: 'utf8' });
-  return `${text.split('\n')[lineNo - 1]}\n`;
+
+/** The header line starting `**RULED ... question round N` plus its own `- *Item M —` line, found by
+ * content within `N`'s own block (up to the next `**`/`## ` boundary) -- never by line number. */
+function ruledBlockLines(ledgerText, round, item) {
+  const lines = ledgerText.split('\n');
+  const headerIdx = lines.findIndex((l) => l.startsWith('**RULED') && l.includes(`question round ${round}`));
+  if (headerIdx === -1) throw new Error(`fixture ledger: round ${round} header not found`);
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    if (lines[i].startsWith('**RULED') || lines[i].startsWith('## ')) break;
+    if (lines[i].startsWith(`- *Item ${item} —`)) return `${lines[headerIdx]}\n${lines[i]}\n`;
+  }
+  throw new Error(`fixture ledger: round ${round} item ${item} not found`);
 }
-// byte-copied from DECISIONS-PENDING.md:32, :34 (round 20 item 1) and :58, :76 (round 18 item 4) at
-// 90de3e94924f8d4d7a0307de0092fe5b5fc61095, via `ledgerLineAtBase` above (a script, not retyping).
-const REAL_LEDGER = ledgerLineAtBase(32) + ledgerLineAtBase(34) + ledgerLineAtBase(58) + ledgerLineAtBase(76);
+
+/** Reads DECISIONS-PENDING.md at the base commit and returns round 20 item 1 + round 18 item 4's own
+ * header/item lines, byte-copied by this script (not retyped). */
+function realLedgerFixture() {
+  const text = execFileSync('git', ['show', `${WITHDRAWN_BASE_COMMIT}:DECISIONS-PENDING.md`], { cwd: REPO_ROOT, encoding: 'utf8' });
+  return ruledBlockLines(text, 20, 1) + ruledBlockLines(text, 18, 4);
+}
 
 // A small synthetic ledger fixture for the remaining tests below (they do not need to be Authority,
 // only well-formed).
@@ -511,13 +529,26 @@ function withdrawnFixture({
 }
 
 // RECORDED MUTATION: in runVerifyTestClaims, delete the `if (withdrawnSpans.length) { ... }` branch
-// entirely (the withdrawn-test check dropped, every claim falls straight to superseded/planned/
-// findings) -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then
-// reverted; fails: "AssertionError [ERR_ASSERTION]: no binding finding expected:
-// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\"}]" then
-// "1 !== 0" (the claim lands in `findings` instead of `withdrawn`; the other 27 tests pass).
+// entirely (the withdrawn-test check, and the `invalidRowLines` suppression inside it, both dropped;
+// every unmatched claim falls straight to superseded/planned/findings) -- applied for real, run against
+// the FULL file (`node --test scripts/plan/verify-test-claims.test.mjs`, no `--test-name-pattern`), then
+// reverted. This mutation is NOT isolated to this one test -- it fails 11 of the 35: this test (fails:
+// "AssertionError [ERR_ASSERTION]: no binding finding expected:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"kind\":\"claim\"}]"
+// then "1 !== 0"); `a_withdrawn_test_row_whose_ruling_does_not_resolve_fails_by_name`,
+// `a_withdrawn_test_row_without_a_carrier_fails_by_name`, `a_withdrawn_test_row_whose_carrier_does_not_resolve_fails_by_name`,
+// `a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded`, and
+// `a_row_key_overruling_is_not_recognized_as_a_ruling_key` / `..._miscarrier_...` /
+// `..._backtick_span_is_not_recognized` / `a_ruling_citation_with_a_leading_not_does_not_resolve` (each
+// now double-counts: the row-level finding plus the un-suppressed ordinary claim finding, "2 !== 1");
+// `a_withdrawn_test_row_citing_an_entry_id_instead_of_round_item_resolves` (the valid row no longer
+// exempts, "1 !== 0"); and `a_withdrawn_test_row_in_a_planned_gate_file_still_fails_by_name` (the
+// un-suppressed claim lands in `planned`, "a bad withdrawn-test row must not be merely planned:
+// [...] 1 !== 0"). The other 24 tests, including
+// `a_withdrawn_test_row_pinning_a_line_whose_claimed_test_exists_still_fails_by_name` (its claim already
+// exists, so this deleted branch was never on its path), pass.
 test('a_withdrawn_test_row_with_a_resolving_ruling_and_carrier_is_advisory_not_a_failure', () => {
-  const { dir } = withdrawnFixture({ ruling: 'round 20, item 1', carrier: 'round 18, item 4', ledger: REAL_LEDGER });
+  const { dir } = withdrawnFixture({ ruling: 'round 20, item 1', carrier: 'round 18, item 4', ledger: realLedgerFixture() });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
   assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
@@ -526,59 +557,76 @@ test('a_withdrawn_test_row_with_a_resolving_ruling_and_carrier_is_advisory_not_a
   assert.equal(withdrawn[0].carrier, 'round 18, item 4');
 });
 
+// Round 21 item 2 (entry 136): checked at the ROW level now, independent of any specific claim --
+// tests 2-4 assert the per-row finding BY CITATION TEXT (`findings[0].message`), not by the claim's
+// own name (a broken row's finding no longer carries a `name` at all; see `runVerifyTestClaims`'s own
+// doc comment).
 // RECORDED MUTATION: in resolveCitation, add `return true;` as the function's first line (every
-// citation resolves) -- applied for real, run via `node --test --test-name-pattern=... scripts/plan/
-// verify-test-claims.test.mjs`, then reverted; fails: "AssertionError [ERR_ASSERTION]: an unresolvable
-// ruling must not exempt: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3`
+// citation resolves) -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`,
+// then reverted; fails: "AssertionError [ERR_ASSERTION]: an unresolvable ruling must not exempt:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3`
 // @ <sha> sha256:<hash>\",\"ruling\":\"round 99, item 1\",\"carrier\":\"round 2, item 5\"}]" then
-// "1 !== 0" (`<sha>`/`<hash>` elided, the temp repo's own commit and content hash differing every run).
+// "1 !== 0" (the row's own riders now both resolve, so the claim is wrongly exempted as withdrawn
+// instead of failing; `<sha>`/`<hash>` elided, the temp repo's own commit and content hash differing
+// every run).
 test('a_withdrawn_test_row_whose_ruling_does_not_resolve_fails_by_name', () => {
   const { dir } = withdrawnFixture({ ruling: 'round 99, item 1' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `an unresolvable ruling must not exempt: ${JSON.stringify(withdrawn)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
-  assert.equal(findings[0].name, WITHDRAWN_CLAIM_NAME);
+  assert.equal(findings[0].kind, 'withdrawn-row', JSON.stringify(findings));
+  assert.equal(findings[0].message, 'unresolvable ruling: round 99, item 1', JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: in withdrawnRiders, delete `if (!carrierMatch) return { ok: false };` (the
-// carrier-presence check) -- applied for real, run, then reverted; fails: "TypeError: Cannot read
-// properties of null (reading '1')" at the `resolveCitation(loadDecisionsPending(root),
-// carrierMatch[1])` line (carrierMatch is null; the other 27 tests pass).
+// RECORDED MUTATION: in withdrawnRiders, change `if (!carrierMatch) return { ok: false, failure: 'no
+// carrier' };` to `if (!carrierMatch) return { ok: true, ruling: rulingText, carrier: undefined };`
+// (the stronger mutation: missing carrier is treated as VALID, rather than merely dropping the check
+// and crashing on the next line) -- applied for real, run, then reverted; fails at the assertion, not
+// a crash: "AssertionError [ERR_ASSERTION]: a row without a carrier must not exempt: [{...,\"ruling\":
+// \"round 1, item 1\",\"carrier\":undefined}]" then "AssertionError [ERR_ASSERTION]: Expected values to
+// be strictly equal: + 0 - 1" (`withdrawn.length` becomes 1, `findings.length` becomes 0).
 test('a_withdrawn_test_row_without_a_carrier_fails_by_name', () => {
   const { dir } = withdrawnFixture({ omitCarrier: true });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `a row without a carrier must not exempt: ${JSON.stringify(withdrawn)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
-  assert.equal(findings[0].name, WITHDRAWN_CLAIM_NAME);
+  assert.equal(findings[0].message, 'no carrier', JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: in withdrawnRiders, delete the carrier `resolveCitation` check (keep only the
-// carrier-presence check) -- applied for real, run, then reverted; fails: "AssertionError
-// [ERR_ASSERTION]: an unresolvable carrier must not exempt: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3`
+// RECORDED MUTATION: in withdrawnRiders, delete the carrier `CITATION_EXACT_RE`/`resolveCitation` check
+// (`if (!CITATION_EXACT_RE.test(carrierText) || !resolveCitation(...)) { return { ok: false, ... }; }`
+// removed, so only carrier PRESENCE is checked) -- applied for real, run, then reverted; fails:
+// "AssertionError [ERR_ASSERTION]: an unresolvable carrier must not exempt:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3`
 // @ <sha> sha256:<hash>\",\"ruling\":\"round 1, item 1\",\"carrier\":\"round 2, item 99\"}]" then
-// "1 !== 0" (`<sha>`/`<hash>` elided, the temp repo's own commit and content hash differing every run).
+// "1 !== 0" (the claim is wrongly exempted as withdrawn instead of failing; `<sha>`/`<hash>` elided).
 test('a_withdrawn_test_row_whose_carrier_does_not_resolve_fails_by_name', () => {
   const { dir } = withdrawnFixture({ carrier: 'round 2, item 99' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(withdrawn.length, 0, `an unresolvable carrier must not exempt: ${JSON.stringify(withdrawn)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
-  assert.equal(findings[0].name, WITHDRAWN_CLAIM_NAME);
+  assert.equal(findings[0].message, 'unresolvable carrier: round 2, item 99', JSON.stringify(findings));
 });
 
-// A row carrying both markers ("superseded" as a word, "withdrawn-test" as the token) with an
-// unresolvable ruling: the withdrawn-test riders fail, and the precedence rule (supersededSpans skips
-// a withdrawn-test-marked line) must stop it falling back to SUPERSEDED, which asks nothing of a
-// ruling or a carrier.
+// A row carrying both markers ("superseded" as a word, "withdrawn-test" as the token), as a RANGE
+// reference: refused as a withdrawn-test SPAN outright (round 15(d)'s "one row, one line" --
+// `withdrawnTestSpans` filters any range via `singleLineOnly`), so the row-level check never even sees
+// it and cannot suppress anything for it (round 21 item 2's `invalidRowLines` mechanism only ever fires
+// for a reference `withdrawnTestSpans` accepts as a span in the first place). The only thing standing
+// between this claim and a wrongful SUPERSEDED exemption (which asks nothing of a ruling or a carrier)
+// is `supersededSpans`'s own precedence exclusion of any line ALSO carrying the `withdrawn-test` token.
 // RECORDED MUTATION: in supersededSpans, drop the `&& !containsWithdrawnTestOutsideBackticks(lineText)`
 // exclusion -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: must not
-// exempt as superseded: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3
-// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 27 tests pass).
+// exempt as superseded: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3-4
+// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the claim wrongly lands in `superseded`; the other 34
+// tests pass).
 test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded', () => {
+  const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-both-'));
-  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
-  const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
-  const row = `- superseded, withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; ruling: round 99, item 1; carrier: round 2, item 5\n`;
-  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
+  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, v1);
+  const hash = sha256Hex(nthLineOf(v1, 3) + nthLineOf(v1, 4));
+  const row = `- superseded, withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${v1Rev} sha256:${hash}\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${v1}\n${row}`);
   fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
   commitAll(dir, 'v2');
   const { findings, superseded, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -589,9 +637,9 @@ test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded'
 
 // One row, one pinned line (round 15(d)): a range reference is refused outright, never exempting.
 // RECORDED MUTATION: in markedSpans, drop `if (singleLineOnly && startLine !== endLine) continue;` --
-// applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: a line-range pin must
-// not exempt: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3-4
-// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 27 tests pass).
+// applied for real, run against the full file, then reverted; fails: "AssertionError [ERR_ASSERTION]: a
+// line-range pin must not exempt: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3-4
+// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 34 tests pass).
 test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
   const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-range-'));
@@ -610,10 +658,10 @@ test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
 // must not exempt a claim in the file that actually carries the row, even when the row's rev/hash
 // happen to check out against that file's own history (isolates the path-match check alone: every
 // other condition here would otherwise pass).
-// RECORDED MUTATION: in markedSpans, delete `if (m[2] !== relPath) continue;` -- applied for real, run,
-// then reverted; fails: "AssertionError [ERR_ASSERTION]: a row naming a different path must not exempt
-// this file's claim: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`Y-PREREGISTRATION.md:3
-// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 27 tests pass).
+// RECORDED MUTATION: in markedSpans, delete `if (m[2] !== relPath) continue;` -- applied for real, run
+// against the full file, then reverted; fails: "AssertionError [ERR_ASSERTION]: a row naming a different
+// path must not exempt this file's claim: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`Y-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 34 tests pass).
 test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-otherpath-'));
   const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
@@ -632,9 +680,15 @@ test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
 // that word on lines pinning their own file; a bare-word marker would turn main red).
 // RECORDED MUTATION: replace `WITHDRAWN_TEST_TOKEN_RE` with
 // `/(?<![A-Za-z0-9_-])withdrawn(?![A-Za-z0-9_-])/` (the token relaxed to the bare word) -- applied for
-// real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: a bare `withdrawn` word must not
-// exempt: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3
-// @ <sha> sha256:<hash>`\"}]" then "1 !== 0" (the other 27 tests pass).
+// real, run against the full file, then reverted. This mutation is NOT isolated to this one test: since
+// the negative lookahead `(?![A-Za-z0-9_-])` still refuses a match immediately before the `-` of
+// `-test`, the relaxed regex no longer matches a genuine `withdrawn-test` token AT ALL, so it fails 13 of
+// the 35 -- this test (fails: "AssertionError [ERR_ASSERTION]: a bare `withdrawn` word must not exempt:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`\"}]" then "1 !== 0") plus every other test whose fixture relies on a genuine
+// `withdrawn-test` row being recognized at all (the five original riders tests, the entry-id test, and
+// the four should-fix (a)/regression tests added this round). The two tests whose fixture is refused for
+// an UNRELATED reason (the line-range pin, the wrong-path pin) are unaffected and still pass.
 test('the_bare_word_withdrawn_on_a_pinned_line_is_not_a_withdrawn_test_row', () => {
   const { dir } = withdrawnFixture({ marker: 'withdrawn' });
   const { findings, withdrawn, superseded } = runVerifyTestClaims({ repoRoot: dir });
@@ -646,13 +700,174 @@ test('the_bare_word_withdrawn_on_a_pinned_line_is_not_a_withdrawn_test_row', () 
 // Custodian's note 1 (the rider's "or entry id"): a `ruling:` (or `carrier:`) citation may name a
 // ledger entry number instead of a round/item pair, resolving against a line `K. **[RULED`.
 // RECORDED MUTATION: in resolveCitation, delete the `if (m[3] !== undefined) return
-// ledgerEntryResolves(...)` branch (the entry-id form no longer resolves) -- applied for real, run,
-// then reverted; fails: "AssertionError [ERR_ASSERTION]: an entry-id ruling must resolve: [] / 0 !== 1"
-// (the claim wrongly lands in `findings`; the other 27 tests pass).
+// ledgerEntryResolves(...)` branch (the entry-id form no longer resolves) -- applied for real, run
+// against the full file, then reverted; fails: "AssertionError [ERR_ASSERTION]: an entry-id ruling must
+// resolve: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":5,\"kind\":\"withdrawn-row\",\"message\":\"unresolvable
+// ruling: entry 3\"}]" then "1 !== 0" (the row-level check now names the row itself; the other 34 tests
+// pass).
 test('a_withdrawn_test_row_citing_an_entry_id_instead_of_round_item_resolves', () => {
   const { dir } = withdrawnFixture({ ruling: 'entry 3' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(findings.length, 0, `an entry-id ruling must resolve: ${JSON.stringify(findings)}`);
   assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
   assert.equal(withdrawn[0].ruling, 'entry 3');
+});
+
+// Round 21 item 2 (entry 136), the human's own named regression test: "a row citing `round 99, item 1`
+// with carrier `nonsense`" -- but this time pinning a line whose claimed test EXISTS in the tree, so
+// the per-claim loop never even looks at it (`testExists` short-circuits before any withdrawn-span
+// check runs). Only the ROW-level check (independent of any specific claim) can catch this: the row is
+// checked "whatever the state of the claim on its line" (round 21 item 2's own words), and must fail by
+// name, naming the unresolved `ruling:` citation.
+// RECORDED MUTATION: in runVerifyTestClaims, delete the row-level validation loop (`for (const span of
+// withdrawnSpans) { const riders = withdrawnRiders(root, span.lineText); ... }`, leaving
+// `invalidRowLines` permanently empty) -- applied for real, run against the full file, then reverted.
+// This mutation is NOT isolated to this one test: it fails 9 of the 35. This test (fails: "AssertionError
+// [ERR_ASSERTION]: a bad row pinning an existing claim must still fail: [] / 0 !== 1": no finding at all,
+// since the claim exists so the per-claim loop never visits this line, and with the row-level loop gone
+// nothing else does either). The other three riders tests (`a_withdrawn_test_row_whose_ruling_does_not_resolve_fails_by_name`,
+// `..._without_a_carrier_fails_by_name`, `..._whose_carrier_does_not_resolve_fails_by_name`) and the four
+// should-fix (a) probes (`a_row_key_overruling_is_not_recognized_as_a_ruling_key`,
+// `..._miscarrier_is_not_recognized_as_a_carrier_key`, `..._backtick_span_is_not_recognized`,
+// `a_ruling_citation_with_a_leading_not_does_not_resolve`) each still get exactly one finding (their
+// claim, no longer suppressed by `invalidRowLines`, falls through to the ordinary per-claim path) but
+// that finding is now `{..., "kind":"claim"}` instead of the row-level `{..., "kind":"withdrawn-row",
+// "message": ...}` they assert on, so each fails its own `findings[0].kind`/`findings[0].message`
+// assertion (e.g. "+ 'claim' - 'withdrawn-row'", or "+ undefined - 'no carrier'").
+// `a_withdrawn_test_row_in_a_planned_gate_file_still_fails_by_name` fails differently: its claim, no
+// longer suppressed, falls through to the ordinary per-claim path -- and because that fixture's file IS
+// planned, the unmatched claim lands in `planned`, not `findings`: "AssertionError [ERR_ASSERTION]: a bad
+// withdrawn-test row must not be merely planned: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"kind\":\"claim\"}]"
+// then "1 !== 0" (`planned.length` becomes 1, failing the very assertion this test exists to make: a bad
+// row must never be merely advisory). The other 26 tests pass.
+test('a_withdrawn_test_row_pinning_a_line_whose_claimed_test_exists_still_fails_by_name', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-existing-'));
+  const pregV1 = '# Doc\n\nVerified by test `a_real_test_that_exists`.\n';
+  const claimLine = 3;
+  fs.mkdirSync(path.join(dir, 'engine', 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), pregV1);
+  fs.writeFileSync(path.join(dir, 'engine/src/lib.rs'), '#[test]\nfn a_real_test_that_exists() { assert!(true); }\n');
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['config', 'user.email', 't@e.com'], { cwd: dir });
+  execFileSync('git', ['config', 'user.name', 'T'], { cwd: dir });
+  execFileSync('git', ['add', '-A'], { cwd: dir });
+  execFileSync('git', ['commit', '-q', '-m', 'v1'], { cwd: dir });
+  const v1Rev = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  const hash = sha256Hex(nthLineOf(pregV1, claimLine));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${claimLine}\` @ ${v1Rev} sha256:${hash}; ruling: round 99, item 1; carrier: nonsense\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${pregV1}\n${row}`);
+  commitAll(dir, 'v2');
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, `a bad row must not exempt anything: ${JSON.stringify(withdrawn)}`);
+  assert.equal(findings.length, 1, `a bad row pinning an existing claim must still fail: ${JSON.stringify(findings)}`);
+  assert.equal(findings[0].kind, 'withdrawn-row', JSON.stringify(findings));
+  assert.equal(findings[0].message, 'unresolvable ruling: round 99, item 1', JSON.stringify(findings));
+});
+
+// Round 21 item 2: "whatever its node's status" -- a broken withdrawn-test row fails even in a file
+// that is itself PLANNED (its node not `done`); it is never merely advisory the way a genuinely
+// planned, not-yet-written test claim is.
+// RECORDED MUTATION: in runVerifyTestClaims, route the row-level finding through the same planned/
+// binding gate as a claim finding (`(isPlanned ? planned : findings).push({ relPath: rel, line:
+// span.refLine, kind: 'withdrawn-row', message: riders.failure });` in place of the unconditional
+// `findings.push(...)`) -- applied for real, run against the full file, then reverted; fails:
+// "AssertionError [ERR_ASSERTION]: a bad withdrawn-test row must not be merely planned:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":5,\"kind\":\"withdrawn-row\",\"message\":\"unresolvable
+// ruling: round 99, item 1\"}]" then "1 !== 0" (the row's finding wrongly lands in `planned` instead of
+// `findings`, failing on the `planned.length` assertion before the `findings.length` one below it is
+// even reached; the other 34 tests pass).
+test('a_withdrawn_test_row_in_a_planned_gate_file_still_fails_by_name', () => {
+  const { dir } = withdrawnFixture({ ruling: 'round 99, item 1' });
+  const { findings, withdrawn, planned } = runVerifyTestClaims({ repoRoot: dir, plannedGates: new Set([WITHDRAWN_DOC]) });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  assert.equal(planned.length, 0, `a bad withdrawn-test row must not be merely planned: ${JSON.stringify(planned)}`);
+  assert.equal(findings.length, 1, `a bad row must still be a binding finding even when its file is planned: ${JSON.stringify(findings)}`);
+  assert.equal(findings[0].message, 'unresolvable ruling: round 99, item 1', JSON.stringify(findings));
+});
+
+// Should-fix (a): `ruling:`/`carrier:` are matched as WHOLE keys, never a substring of a longer
+// identifier -- `overruling:` must not be read as carrying a `ruling:` key.
+// RECORDED MUTATION: in withdrawnRiders, drop the `(?<![A-Za-z0-9_-])` lookbehind from
+// WITHDRAWN_RULING_RE/WITHDRAWN_CARRIER_RE (both regexes read `ruling:\s*([^;]*)` / `carrier:\s*(.*)$`
+// with no word-boundary guard) -- applied for real, run, then reverted; fails: "AssertionError
+// [ERR_ASSERTION]: overruling: must not be read as a ruling: key: [{...,\"ruling\":\"round 1, item
+// 1\",\"carrier\":\"round 2, item 5\"}] / 1 !== 0" (`overruling: round 1, item 1` is wrongly recognized
+// and the claim wrongly exempted as withdrawn; `a_row_key_miscarrier_is_not_recognized_as_a_carrier_key`
+// below also fails under this same mutation).
+test('a_row_key_overruling_is_not_recognized_as_a_ruling_key', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-overruling-'));
+  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
+  const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; overruling: round 1, item 1; carrier: round 2, item 5\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  commitAll(dir, 'v2');
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, `overruling: must not be read as a ruling: key: ${JSON.stringify(withdrawn)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].message, 'no ruling', JSON.stringify(findings));
+});
+
+// Should-fix (a), the carrier half of the same guard: `miscarrier:` must not be read as a `carrier:` key.
+// RECORDED MUTATION: the same lookbehind drop as the test above (one guard, shared by both regexes) --
+// applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: miscarrier: must not be
+// read as a carrier: key: [{...,\"ruling\":\"round 1, item 1\",\"carrier\":\"round 2, item 5\"}] / 1 !== 0"
+// (`miscarrier: round 2, item 5` is wrongly recognized and the claim wrongly exempted as withdrawn).
+test('a_row_key_miscarrier_is_not_recognized_as_a_carrier_key', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-miscarrier-'));
+  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
+  const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; miscarrier: round 2, item 5\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  commitAll(dir, 'v2');
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, `miscarrier: must not be read as a carrier: key: ${JSON.stringify(withdrawn)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].message, 'no carrier', JSON.stringify(findings));
+});
+
+// Should-fix (a): `ruling:`/`carrier:` are matched OUTSIDE any backtick span -- a row that wraps the
+// whole `ruling: ...; carrier: ...` clause in its own backtick span (quoting it, not directing it) must
+// not resolve.
+// RECORDED MUTATION: in withdrawnRiders, drop the `.replace(BACKTICK_SPAN_RE, '')` (match against the
+// raw `lineText` instead of the backtick-stripped `outside`) -- applied for real, run against the full
+// file, then reverted; fails: "AssertionError [ERR_ASSERTION]:
+// [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":5,\"kind\":\"withdrawn-row\",\"message\":\"unresolvable
+// carrier: round 2, item 5`\"}]" then "+ 'unresolvable carrier: round 2, item 5\`' - 'no ruling'" (the
+// un-stripped backtick still lets `ruling:`/`carrier:` match -- `carrier:`'s own greedy `(.*)$` now also
+// swallows the closing backtick into its capture, so `CITATION_EXACT_RE` refuses it and the row still
+// gets a finding, but the WRONG one: "unresolvable carrier: ..." rather than the expected "no ruling";
+// the other 34 tests pass).
+test('a_withdrawn_test_row_with_ruling_and_carrier_only_inside_a_backtick_span_is_not_recognized', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-backtick-'));
+  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
+  const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${v1Rev} sha256:${hash}; \`ruling: round 1, item 1; carrier: round 2, item 5\`\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  commitAll(dir, 'v2');
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, `a backticked ruling/carrier clause must not resolve: ${JSON.stringify(withdrawn)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].message, 'no ruling', JSON.stringify(findings));
+});
+
+// Should-fix (a): the citation text must be EXACTLY `round N, item M` or `entry K`, nothing on either
+// side -- `not round 20, item 1` must not resolve even though it CONTAINS a real, resolvable citation.
+// RECORDED MUTATION: in withdrawnRiders, drop the `CITATION_EXACT_RE.test(rulingText) ||` half of the
+// ruling check (keep only `!resolveCitation(...)`, resolveCitation's own unanchored `CITATION_RE` then
+// finds "round 20, item 1" embedded inside "not round 20, item 1") -- applied for real, run against the
+// full file, then reverted; fails: "AssertionError [ERR_ASSERTION]: \"not round 20, item 1\" must not
+// resolve: [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\",\"reference\":\"`X-PREREGISTRATION.md:3`
+// @ <sha> sha256:<hash>\",\"ruling\":\"not round 20, item 1\",\"carrier\":\"round 2, item 5\"}]" then
+// "1 !== 0" (the claim wrongly lands in `withdrawn`; the other 34 tests pass).
+test('a_ruling_citation_with_a_leading_not_does_not_resolve', () => {
+  const ledgerWithRound20 = `${SYNTH_LEDGER}\n**RULED 2026-01-04 — question round 20 (fixture):**\n\n- *Item 1 — entry 4, a fixture ruling:* **"ruled"** Applied: nothing.\n`;
+  const { dir } = withdrawnFixture({ ruling: 'not round 20, item 1', ledger: ledgerWithRound20 });
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, `"not round 20, item 1" must not resolve: ${JSON.stringify(withdrawn)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].message, 'unresolvable ruling: not round 20, item 1', JSON.stringify(findings));
 });

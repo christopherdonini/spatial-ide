@@ -224,7 +224,11 @@ function markedSpans(relPath, text, containsMarker, { singleLineOnly = false } =
     const startLine = Number(m[3]);
     const endLine = m[4] !== undefined ? Number(m[4]) : Number(m[3]);
     if (singleLineOnly && startLine !== endLine) continue;
-    out.push({ startLine, endLine, rev, hash: m[6].toLowerCase(), reference: m[0], lineText });
+    // `refLine`: the ROW's own line (where the reference itself sits), not the pinned target line --
+    // round 21 item 2 (entry 136)'s row-level check reports a bad withdrawn-test row at the row's own
+    // file:line, which for an appended-at-the-end row (the common case) differs from `startLine`/
+    // `endLine` (the historical line elsewhere that the row pins).
+    out.push({ startLine, endLine, rev, hash: m[6].toLowerCase(), reference: m[0], lineText, refLine });
   }
   return out;
 }
@@ -404,23 +408,46 @@ function resolveCitation(ledgerText, citationText) {
   return ledgerRoundItemResolves(ledgerText, Number(m[1]), Number(m[2]));
 }
 
-const WITHDRAWN_RULING_RE = /ruling:\s*([^;]+)/i;
-const WITHDRAWN_CARRIER_RE = /carrier:\s*(.+)$/i;
+// Round 21 item 2 (entry 136), should-fix (a): `ruling:`/`carrier:` are matched as WHOLE keys --
+// `(?<![A-Za-z0-9_-])` refuses a match starting mid-word (`overruling:`, `miscarrier:`) -- outside any
+// backtick span (`withdrawnRiders` strips `BACKTICK_SPAN_RE` before matching, the same discipline
+// `containsSupersededOutsideBackticks` uses), and the citation text after the key must be EXACTLY
+// `round N, item M` or `entry K` with nothing else on either side (`CITATION_EXACT_RE`, anchored with
+// `^`/`$`): a leading `not `, or trailing prose, is refused rather than read as containing a valid
+// citation -- anchored to the consult's own row grammar (`state/consults/2026-09-24-withdrawn-marker.md`
+// §1: "ruling: round N, item M; carrier: round N, item M").
+const CITATION_TEXT_SRC = '(?:round\\s+\\d+\\s*,\\s*item\\s+\\d+|entry\\s+\\d+)';
+const CITATION_EXACT_RE = new RegExp(`^${CITATION_TEXT_SRC}$`, 'i');
+const KEY_NOT_MIDWORD = '(?<![A-Za-z0-9_-])';
+const WITHDRAWN_RULING_RE = new RegExp(`${KEY_NOT_MIDWORD}ruling:\\s*([^;]*)`, 'i');
+const WITHDRAWN_CARRIER_RE = new RegExp(`${KEY_NOT_MIDWORD}carrier:\\s*(.*)$`, 'i');
 
 /**
- * Riders (a) and (b): the withdrawn-test row's own line must carry a `ruling:` citation that resolves,
- * and a `carrier:` citation that also resolves (the tool checks presence and resolution; whether the
- * carrier actually carries the evidence is the gate's to read -- consult §3). Returns
- * `{ ok, ruling, carrier }`.
+ * Riders (a) and (b) (round 20 item 1; anchoring per round 21 item 2): the withdrawn-test row's own
+ * line must carry a whole `ruling:` key outside any backtick span, whose citation text is EXACTLY
+ * `round N, item M` or `entry K` and resolves against the current tree's `DECISIONS-PENDING.md`; the
+ * same for `carrier:`. Returns `{ ok: true, ruling, carrier }` when both hold, or `{ ok: false,
+ * failure }` naming exactly what's wrong -- `no ruling` / `unresolvable ruling: <text>` / `no carrier`
+ * / `unresolvable carrier: <text>` -- so a caller can name the row's own file:line and the unresolved
+ * citation text (or "no carrier") in a finding, round 20 item 1's own words: "No ruling, no
+ * withdrawal." (rider (a)) and "the row must name what now carries that evidence, or verify fails"
+ * (rider (b)).
  */
 function withdrawnRiders(root, lineText) {
-  const rulingMatch = WITHDRAWN_RULING_RE.exec(lineText);
-  if (!rulingMatch) return { ok: false };
-  if (!resolveCitation(loadDecisionsPending(root), rulingMatch[1])) return { ok: false };
-  const carrierMatch = WITHDRAWN_CARRIER_RE.exec(lineText);
-  if (!carrierMatch) return { ok: false };
-  if (!resolveCitation(loadDecisionsPending(root), carrierMatch[1])) return { ok: false };
-  return { ok: true, ruling: rulingMatch[1].trim(), carrier: carrierMatch[1].trim() };
+  const outside = lineText.replace(BACKTICK_SPAN_RE, '');
+  const rulingMatch = WITHDRAWN_RULING_RE.exec(outside);
+  if (!rulingMatch) return { ok: false, failure: 'no ruling' };
+  const rulingText = rulingMatch[1].trim();
+  if (!CITATION_EXACT_RE.test(rulingText) || !resolveCitation(loadDecisionsPending(root), rulingText)) {
+    return { ok: false, failure: `unresolvable ruling: ${rulingText}` };
+  }
+  const carrierMatch = WITHDRAWN_CARRIER_RE.exec(outside);
+  if (!carrierMatch) return { ok: false, failure: 'no carrier' };
+  const carrierText = carrierMatch[1].trim();
+  if (!CITATION_EXACT_RE.test(carrierText) || !resolveCitation(loadDecisionsPending(root), carrierText)) {
+    return { ok: false, failure: `unresolvable carrier: ${carrierText}` };
+  }
+  return { ok: true, ruling: rulingText, carrier: carrierText };
 }
 
 /** withdrawn-test's own (c)-(e) plus riders (a)/(b); attaches `ruling`/`carrier` onto the winning span. */
@@ -511,19 +538,33 @@ export function plannedGateFiles(plan) {
 }
 
 /**
- * Returns { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked }.
- * Each entry: { relPath, line, name } (`superseded`/`withdrawn` entries additionally carry
- * `reference`, the matched pin text; `withdrawn` entries also carry `ruling` and `carrier`, the two
- * resolved citations). `plannedGates` is a Set of repo-relative paths whose unmatched claims are
- * advisory, not binding (see PLANNED vs BINDING above); anything not in it is binding. A claim that
- * does not exist is SUPERSEDED, and reported under that heading instead of `planned`/`findings`, when
- * the claiming file's own text pins that exact line as historical and proves it (see the module's own
- * SUPERSEDED disclosure above and `supersededSpans`/`findSupersededSpan`) — checked whether or not the
- * file is also planned. A claim pinned by a `withdrawn-test` reference is WITHDRAWN instead, when its
- * own line's `ruling:`/`carrier:` citations both resolve against `DECISIONS-PENDING.md` (round 20 item
- * 1; see `withdrawnTestSpans`/`findWithdrawnTestSpan`); a withdrawn-test line is never also read as
+ * Returns { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked,
+ * withdrawnMainUnchecked }. A claim entry is { relPath, line, name, kind: 'claim' } (`superseded`/
+ * `withdrawn` entries additionally carry `reference`, the matched pin text; `withdrawn` entries also
+ * carry `ruling` and `carrier`, the two resolved citations). `plannedGates` is a Set of repo-relative
+ * paths whose unmatched claims are advisory, not binding (see PLANNED vs BINDING above); anything not
+ * in it is binding. A claim that does not exist is SUPERSEDED, and reported under that heading instead
+ * of `planned`/`findings`, when the claiming file's own text pins that exact line as historical and
+ * proves it (see the module's own SUPERSEDED disclosure above and `supersededSpans`/
+ * `findSupersededSpan`) — checked whether or not the file is also planned. A claim pinned by a
+ * `withdrawn-test` reference is WITHDRAWN instead, when its own line's `ruling:`/`carrier:` citations
+ * both resolve against `DECISIONS-PENDING.md` (round 20 item 1; see
+ * `withdrawnTestSpans`/`findWithdrawnTestSpan`); a withdrawn-test line is never also read as
  * superseded. `supersededMainUnchecked` is true when at least one superseded claim's condition (e)
- * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim.
+ * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim;
+ * `withdrawnMainUnchecked` is the same surfacing for a withdrawn claim's own condition (e).
+ *
+ * Round 21 item 2 (entry 136): every `withdrawn-test` row is ALSO checked ON ITS OWN, independent of
+ * the per-claim loop above (which only ever runs for a claim that does not already exist, and only
+ * ever asks whether THIS ONE claim is exempted) — whatever the state of the claim on its pinned line
+ * (even a claim that still exists, or no claim at all) and whatever its node's status (planned claims
+ * are never exempt from this). A row whose `withdrawnRiders` fails is a `kind: 'withdrawn-row'` finding
+ * naming the ROW's own file:line (`refLine`, not the pinned target line) and the unresolved citation
+ * text (`riders.failure`: `no ruling` / `unresolvable ruling: <text>` / `no carrier` / `unresolvable
+ * carrier: <text>`) — always pushed to `findings` (never `planned`), one per invalid row, since a row
+ * "covers every claim on its pinned line" (consult §1) rather than being reported once per claim: a
+ * name on an invalid row's own pinned line is therefore never ALSO reported as an ordinary "not found"
+ * finding by the per-claim loop below (it would be the same defect reported twice).
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -537,17 +578,33 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const withdrawn = [];
   let claims = 0;
   let supersededMainUnchecked = false;
+  let withdrawnMainUnchecked = false;
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
     const isPlanned = exempt.has(rel);
     const withdrawnSpans = withdrawnTestSpans(rel, text);
     const spans = supersededSpans(rel, text);
+
+    // Every withdrawn-test row, checked on its own (round 21 item 2). `invalidRowLines` is the Set of
+    // pinned target lines (`span.startLine`) whose row already produced a finding here, so the
+    // per-claim loop below does not report the same row's defect a second time.
+    const invalidRowLines = new Set();
+    for (const span of withdrawnSpans) {
+      const riders = withdrawnRiders(root, span.lineText);
+      if (riders.ok) continue;
+      invalidRowLines.add(span.startLine);
+      findings.push({ relPath: rel, line: span.refLine, kind: 'withdrawn-row', message: riders.failure });
+    }
+
     for (const c of extractClaimedTests(text)) {
       claims++;
       if (testExists(c.name, index)) continue;
       if (withdrawnSpans.length) {
-        const { span } = findWithdrawnTestSpan(root, rel, c.line, c.name, withdrawnSpans);
+        const coveringSpan = withdrawnSpans.find((s) => c.line >= s.startLine && c.line <= s.endLine);
+        if (coveringSpan && invalidRowLines.has(coveringSpan.startLine)) continue; // reported once, at row level
+        const { span, mainUnchecked } = findWithdrawnTestSpan(root, rel, c.line, c.name, withdrawnSpans);
         if (span) {
+          if (mainUnchecked) withdrawnMainUnchecked = true;
           withdrawn.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference, ruling: span.ruling, carrier: span.carrier });
           continue;
         }
@@ -560,10 +617,10 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
         superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference });
         continue;
       }
-      (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name });
+      (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name, kind: 'claim' });
     }
   }
-  return { findings, planned, superseded, withdrawn, scanned: targets.length, claims, supersededMainUnchecked };
+  return { findings, planned, superseded, withdrawn, scanned: targets.length, claims, supersededMainUnchecked, withdrawnMainUnchecked };
 }
 
 function main() {
@@ -578,7 +635,7 @@ function main() {
     // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
     console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
   }
-  const { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked } = runVerifyTestClaims({
+  const { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked, withdrawnMainUnchecked } = runVerifyTestClaims({
     repoRoot: REPO_ROOT,
     plannedGates,
   });
@@ -602,16 +659,25 @@ function main() {
     for (const w of withdrawn) {
       console.error(`  - ${w.relPath}:${w.line} — claims test \`${w.name}\` — withdrawn — pinned by ${w.reference} — ruling: ${w.ruling}; carrier: ${w.carrier}`);
     }
+    if (withdrawnMainUnchecked) {
+      console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim above.');
+    }
   }
   if (findings.length === 0) {
     console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned, superseded or withdrawn (${planned.length} planned, ${superseded.length} superseded, ${withdrawn.length} withdrawn, advisory).`);
     return;
   }
   if (!quiet) {
-    console.error(`verify:test-claims FAIL — ${findings.length} claimed test(s) with no matching test:`);
-    for (const f of findings) console.error(`  - ${f.relPath}:${f.line} — claims test \`${f.name}\` — not found in any test file`);
+    console.error(`verify:test-claims FAIL — ${findings.length} finding(s):`);
+    for (const f of findings) {
+      if (f.kind === 'withdrawn-row') {
+        console.error(`  - ${f.relPath}:${f.line} — withdrawn-test row invalid — ${f.message}`);
+      } else {
+        console.error(`  - ${f.relPath}:${f.line} — claims test \`${f.name}\` — not found in any test file`);
+      }
+    }
   } else {
-    console.error(`verify:test-claims FAIL — ${findings.length} unmatched claim(s) across ${scanned} file(s).`);
+    console.error(`verify:test-claims FAIL — ${findings.length} finding(s) across ${scanned} file(s).`);
   }
   process.exitCode = 1;
 }

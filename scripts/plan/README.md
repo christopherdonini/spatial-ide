@@ -156,11 +156,19 @@ heading, the same way the planned set is, and never counts toward the exit code.
 
 **WITHDRAWN** (round 20 item 1): a claim reads the same reference grammar again, this time marked
 `withdrawn-test` (never a bare `withdrawn`, which already means something else on a round-15(g)
-withdrawal row) and restricted to one pinned line. The gate reads two distinct semantic halves here,
-same as SUPERSEDED's own boundary above: this tool proves only that the named ruling and carrier
-citations *resolve* to a RULED block or an entry line in the current `DECISIONS-PENDING.md` — never
-that the cited ruling actually *names the removal*, and never that the named carrier actually *carries
-the evidence* the withdrawn test once did. Both of those readings are the gate's, not this check's.
+withdrawal row) and restricted to one pinned line. Every `withdrawn-test` row is checked on its own
+(round 21 item 2), whatever the state of the claim on its pinned line and whatever its node's status: an
+unresolvable `ruling:`, a missing `carrier:`, or an unresolvable carrier each fails the run by name,
+naming the row and the unresolved citation (or "no carrier"). The gate reads two distinct semantic
+halves here, same as SUPERSEDED's own boundary above: this tool proves only that the named ruling and
+carrier citations *resolve* to a RULED block or an entry line in the current `DECISIONS-PENDING.md` —
+never that the cited ruling actually *names the removal*, and never that the named carrier actually
+*carries the evidence* the withdrawn test once did. Both of those readings are the gate's, not this
+check's. **Outside this tool's reach** (rider (b)'s own boundary): `PLAN.yaml`'s acceptance text, the
+gate log and commit messages are not scanned — a claim's evidence can live there, and the gate reads it,
+not this check. **`carrier:` accepts only a ledger citation** — `round N, item M` or `entry K`, resolved
+the same way `ruling:` is; it never accepts a path, a section number or any other reference into a
+preregistration or ADR, however the evidence is actually carried there.
 
 ## `health.mjs` — the health strip's **machine** facts (§5, §15)
 
