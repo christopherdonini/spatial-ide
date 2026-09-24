@@ -892,12 +892,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: [governance-test-claims-superseded-scanner]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: scripts/plan/TEST-CLAIMS-WITHDRAWN-PREREGISTRATION.md
+    evidence: {branch: governance/test-claims-withdrawn}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

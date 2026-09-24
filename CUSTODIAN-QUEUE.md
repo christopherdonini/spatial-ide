@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0275e7f652a99d69d46ab037b943105a8b82803500260720d7e0a0a6bfbe7f7b`) at `2026-09-24T21:48:09.459Z`.
+Generated from `PLAN.yaml` (sha256 `09d0ef9af3281863bb8bede86877e69a5b5dcf4a639ffce7dc51a61100c82cf2`) at `2026-09-24T22:05:06.586Z`.
 
 ## 1. Next
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`)
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`)
 
 ## 2. Ready
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`, order 1, budget 90 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `0275e7f652a99d69d46ab037b943105a8b8280350026
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
+- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement — evidence: branch `governance/test-claims-withdrawn`
 
 ## 6. Proposed / unscheduled
 

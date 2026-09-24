@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T21:48:09.586Z",
-  "plan_hash": "0275e7f652a99d69d46ab037b943105a8b82803500260720d7e0a0a6bfbe7f7b",
+  "generated_at": "2026-09-24T22:05:06.696Z",
+  "plan_hash": "09d0ef9af3281863bb8bede86877e69a5b5dcf4a639ffce7dc51a61100c82cf2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1478,7 +1478,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [
         "governance-test-claims-superseded-scanner"
@@ -1487,8 +1487,10 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "scripts/plan/TEST-CLAIMS-WITHDRAWN-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "governance/test-claims-withdrawn"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
