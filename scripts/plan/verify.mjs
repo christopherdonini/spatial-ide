@@ -195,6 +195,16 @@ export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
       );
     }
 
+    // §1's gate field: "a path, or the literal string 'none'". plan.mjs only checks the field is a
+    // non-empty string; a path that names a file only present on the node's own branch (not on the
+    // tree being verified) must fail here, or a node can be set in-progress/ready against a
+    // preregistration nobody can actually read (found by the record-round-count gate, 2026-09-18).
+    if ((node.status === 'in-progress' || node.status === 'ready') && node.gate !== 'none') {
+      if (!trackedPathExists(repoRoot, node.gate)) {
+        failures.push(`node "${node.id}": gate "${node.gate}" is not a tracked file`);
+      }
+    }
+
     if (node.status === 'done') {
       failures.push(...verifyEvidence(node, { repoRoot, offline, slug }));
       if (node.felt_verdict === true) {

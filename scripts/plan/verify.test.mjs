@@ -116,6 +116,49 @@ test('runVerify FAIL: queue drift is reported when CUSTODIAN-QUEUE.md is stale',
   assert.ok(result.failures.some((f) => f.startsWith('queue drift:')));
 });
 
+test('verifyStatusAgreement fails by name when a ready node\'s gate names a path that is not tracked', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  // n-ready-b is status "ready" in the fixture; point its gate at a file that does not exist.
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/NO-SUCH-PREREGISTRATION.md' } : n)),
+  };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    failures.some((f) => f.includes('n-ready-b') && f.includes('gate') && f.includes('NO-SUCH-PREREGISTRATION.md')),
+    `expected a named gate failure, got: ${JSON.stringify(failures)}`,
+  );
+});
+
+test('verifyStatusAgreement passes when a ready node\'s gate names a real tracked file', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  // This preregistration file is tracked in the real repository at repoRoot.
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) =>
+      n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/VERIFY-GATE-FILE-EXISTS-PREREGISTRATION.md' } : n,
+    ),
+  };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    !failures.some((f) => f.includes('n-ready-b') && f.includes('gate')),
+    `expected no gate failure for n-ready-b, got: ${JSON.stringify(failures)}`,
+  );
+
+  // Recorded mutation: break the path (misspell it) -- the check must fail it by name again.
+  const broken = {
+    ...plan,
+    nodes: plan.nodes.map((n) =>
+      n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/VERIFY-GATE-FILE-EXITS-PREREGISTRATION.md' } : n,
+    ),
+  };
+  const brokenFailures = verifyStatusAgreement(broken, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    brokenFailures.some((f) => f.includes('n-ready-b') && f.includes('gate') && f.includes('EXITS')),
+    `mutation did not fail by name, got: ${JSON.stringify(brokenFailures)}`,
+  );
+});
+
 test('runVerify: --offline note is present and PR/release evidence does not fail solely for being unchecked', () => {
   const dir = makeTempDir('verify-offline-note-');
   const planPath = path.join(dir, 'PLAN.yaml');
