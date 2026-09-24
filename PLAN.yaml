@@ -1516,7 +1516,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [124]
-    summary: "RULED 2026-09-24, question round 17, item 5 (entry 124, Q2): a follow-on node. MAX_ZOOM = 21 and the fit zoom constants are the same item-6 class as the two constants crs-unit-fact-and-bounds declares per unit (state/consults/2026-09-24-crs-unit-fact-and-bounds.md, STOP LIST Q2). Proposed; placed by the human."
+    summary: "RULED 2026-09-24, question round 17, item 5 (entry 124, Q2): a follow-on node. MAX_ZOOM = 21 and the fit zoom constants are the same item-6 class as the two constants crs-unit-fact-and-bounds declares per unit (state/consults/2026-09-24-crs-unit-fact-and-bounds.md, STOP LIST Q2). Proposed; placed by the human. A pre-existing doc drift for this node, from PR #112's architect gate: extent.ts's doc says a zero-area bbox falls back to MAX_ZOOM, while the code uses DEGENERATE_FALLBACK_ZOOM, which is 0."
     dates: {opened: 2026-09-24, done: null}
 
   - id: interactive-zoom-ceiling
