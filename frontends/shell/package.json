@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "generate:notice": "node scripts/generateNotice.mjs",
-    "pretypecheck": "npm run generate:notice",
+    "pretypecheck": "node scripts/buildViewerFirst.mjs && npm run generate:notice",
     "prebuild": "node scripts/buildViewerFirst.mjs && npm run generate:notice",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build && npm run generate:notice && vite build",
