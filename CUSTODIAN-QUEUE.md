@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a28b043977af1c59b4ca9a1f29ff678745ce4402f5ce4186e87180afd0abd343`) at `2026-09-24T12:15:48.074Z`.
+Generated from `PLAN.yaml` (sha256 `2891068c55f97dd1e0ef8d526287de7c77eee90a9e1ad84ccf5693cfbf4e3700`) at `2026-09-24T17:35:08.820Z`.
 
 ## 1. Next
 
@@ -10,11 +10,9 @@ Generated from `PLAN.yaml` (sha256 `a28b043977af1c59b4ca9a1f29ff678745ce4402f5ce
 
 - (none)
 
-## 3. Waiting on the human (total: 5 min)
+## 3. Waiting on the human (total: 0 min)
 
-### ruling
-
-- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (5 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
@@ -36,6 +34,7 @@ Generated from `PLAN.yaml` (sha256 `a28b043977af1c59b4ca9a1f29ff678745ce4402f5ce
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: PR #112
 - **fixture-regeneration-entry-point** — The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half) — evidence: PR #115
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
+- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
 
 ## 6. Proposed / unscheduled
 

@@ -29,6 +29,29 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-09-24 — question round 18 (AskUserQuestion, one set, mirrored to Telegram first as `state/questions/round-18.md`). Items 1 and 2 were answered by option label. The human then replaced the selections for items 3 and 4 with a typed message sent while the custodian was recording the round; each of those is quoted verbatim from that message, and the typed word governs:**
+
+- *Item 1 — entry 130, ADR-035 under Rule 7:* **"Continue (Recommended)"** Applied: one text round on PR #114 under a fresh count, then both gates. The architect redrafts:
+  - the post-check clause cut to what the tree does, with the residual named;
+  - whether post-check ends should also emit becomes the ADR's one remaining Open item;
+  - Open items 1 and 2 become Decision text as ruled in items 2 and 3 below;
+  - the second gate's record-only notes corrected.
+
+  The fourth form is not added, because item 2 chooses (ii).
+- *Item 2 — entry 129, ADR-035's Open item 1:* **"(ii) Kernel-minted ref (Recommended)"** Applied:
+  - The event's `session` member is a kernel-minted, non-authorising reference, returned by `open_dataset` beside the handle and accepted by no command.
+  - ADR-035's Decision states it, with the SKP-V0 §3 minting rule, the `open_dataset` response member in the §8 entry, and the shell's session-to-handle map.
+  - The watcher's preregistration fixes its payload to it. ADR-035 stays Proposed; its acceptance is the human's.
+- *Item 3 — entry 129, ADR-035's Open item 2 (typed):* **"About the 3rd question: (1), with a rider: describe answered after the end carries the ended state and its typed reason, so no client can read an ended generation's facts as current."** Applied:
+  - Rider (a)'s every-later-call reads as every later generation-scoped call: `viewport_query`, and redemption of a ticket from the ended generation.
+  - `describe`, `cancel` and `close_dataset` still answer after the end.
+  - Under this item's rider, `describe` answered after the end carries the ended state and its typed reason.
+  - ADR-035's Decision states the reading and the rider. The watcher's preregistration carries the `describe` change on the watcher's literal.
+- *Item 4 — entry 131, PR #108 (typed):* **"About the 4th question: (2): the union design replaces my round-17 fallback: no loss relative to main's scan by construction, so no self-comparing no-loss test. One round under a fresh count; if it stops again, #108 is dropped and the 13 tests behind multi-line ignore attributes are listed as a known limit of the tool"** Applied: one round on PR #108 under a fresh count, then both gates.
+  - The tool returns the union of main's per-line scan and the multi-line-tracked scan, replacing round 17 item 9's bounded fallback.
+  - The self-comparing no-loss property test is removed; the fixtures' expected lists are asserted directly.
+  - If that round stops, PR #108 is closed unmerged, the node is dropped, and the 13 tests are listed as a known limit of the tool.
+
 **RULED 2026-09-24 — question round 17 (AskUserQuestion in three sets, mirrored to Telegram first as `state/questions/round-17.md`; each answer verbatim, as an option label or the human's typed text; the human's message opening the round: "Merged, start with the questions"):**
 
 - *Item 1 — entry 128, PR #112 under Rule 7:* **"Continue (Recommended)"** Applied: one text-only round under a fresh count on `cut/crs-unit-fact-and-bounds`. Item 17 keeps a degrees sentence: the Q2 constants are still declared for metres, and the P0 render bound still holds. The anchor-span clause becomes the declared per-unit value. PR #109's item 17 text is carried through the merge with main, after #109 lands. The five rustfmt blocks are formatted and the record residue both gates named is corrected, then both gates run. A record-only failure after that goes to the architect's reduction under the record cap. Node `crs-unit-fact-and-bounds` ready.
@@ -374,7 +397,7 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
-131. **[FOR YOUR WORD, the next round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed in both gates on one semantic item.]**
+131. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed in both gates on one semantic item.]**
 - **Root cause.** Fresh-count attempt 1 failed on the fallback, which consumed the look-ahead window instead of re-reading it. The correction's rewind fixed that, and both gates confirmed it on 25+ inputs against main's tool (0 lost everywhere except the disclosed false-close case).
 - Attempt 2 failed on the correction's own property test. It builds main's tool from `origin/main` and asserts one exact loss. After merge, `origin/main` is this tool, so the assertion fails and main's governance CI turns red on merge and on every later run. That test also carries no recorded mutation of its own.
 - **What holds.** The rewind is correct. The no-regression proof over today's tree is main 2240, branch 2253, 0 lost, 13 gained. The bound's headroom is measured: the longest real continuation is 7 lines. Every other recorded mutation fails by name.
@@ -390,7 +413,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
 Touches: PLAN node `governance-verify-mutation-multiline-attrs` (blocked on this ruling); PR #108 stays draft.
 
-130. **[FOR YOUR WORD, the next round — ADR-035 (PR #114) STOPPED under Rule 7: gate attempt 2 failed in both gates on one semantic item. Entry 129 holds the ADR's Open items.]**
+130. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — ADR-035 (PR #114) STOPPED under Rule 7: gate attempt 2 failed in both gates on one semantic item. Entry 129 holds the ADR's Open items.]**
 - **Root cause.** Attempt 1 failed on four semantic items: Open item 1 incomplete, the consumer seam, rider (a) narrowed without a mark, and the emission scope. The redraft resolved all four in both gates' reading. Attempt 2 then failed on a sentence the redraft added: an end made by the post-check reaches the shell on its own call. That holds only for a clean run. A cancelled or failed stream keeps its own terminal, and a drop-path end delivers none, so such an end reaches the shell only at its next generation-scoped call's refusal. Rider (a) keeps this correct, but the ADR stated it did not happen.
 - **What holds (both gates).** Every attempt-1 finding is resolved. All quotes are byte-exact, the index is regenerated (adrIndex 26/26), and the checks are green. No decision goes beyond the ruling, the skeleton and the preregistration body except as an Open item.
 - **Recommendation: continue, one text round under a fresh count, then both gates.** The round makes these changes:
@@ -403,7 +426,7 @@ Touches: PLAN node `governance-verify-mutation-multiline-attrs` (blocked on this
 
 Touches: PR #114 (stays draft); `DECISIONS-PENDING.md` entry 129; PLAN node `engine-source-change-watcher`.
 
-129. **[FOR YOUR WORD, the next round — ADR-035's two Open items (round 17 item 2, riders (a) and (b)); revised 2026-09-24 after PR #114's first full gate found the first filing incomplete.]** ADR-035 (`dataset_session_ended`, Proposed, binds nothing until accepted, not architect-blockable) is on PR #114, redrafted once after its first full gate. Its payload is exactly two members, `session` and `reason`. Emission is at most once, gated on a transition-reporting end that the watcher piece builds. The watcher's preregistration cannot fix its payload until item 1 is answered.
+129. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — ADR-035's two Open items (round 17 item 2, riders (a) and (b)); revised 2026-09-24 after PR #114's first full gate found the first filing incomplete.]** ADR-035 (`dataset_session_ended`, Proposed, binds nothing until accepted, not architect-blockable) is on PR #114, redrafted once after its first full gate. Its payload is exactly two members, `session` and `reason`. Emission is at most once, gated on a transition-reporting end that the watcher piece builds. The watcher's preregistration cannot fix its payload until item 1 is answered.
 
 **Item 1 — the session reference's wire form (rider (b)).** Rider (b) excludes a handle. The only per-session identifier on the wire today is the `DatasetHandle`: a handle by SKP-V0 §3, which after the end still authorises `describe` and `close_dataset`, and which already maps one-to-one onto an SKP open's generation. Options:
 - **(i) Echo the `DatasetHandle`.**
