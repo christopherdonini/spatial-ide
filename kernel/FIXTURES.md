@@ -19,51 +19,68 @@ file is for fixtures where losing the file would be expensive or slow to recover
 | **Path** | `target/slice-evidence/scale-pass/parcels-5gb.parquet` |
 | **Size** | 5,004,376,705 bytes |
 | **SHA-256** | `5ae955c5fb7ee4d3f10436df271e19361d84f0845fbaa69dc60516f1b60c1788` |
-| **Generator** | `kernel/tests/scale_pass.rs` |
-| **Regenerate** | `cargo test --release -p spatial-kernel --test scale_pass -- --ignored --exact measure_the_five_gigabyte_scale_pass --nocapture` |
+| **Generator** | `kernel/tests/scale_pass.rs` (spec shared via `kernel/tests/support/mod.rs`'s `spec_5gb()`) |
+| **Regenerate** | `SPATIAL_REGEN_OUT=target/slice-evidence/scale-pass/parcels-5gb.parquet cargo test --release -p spatial-kernel --test regenerate_fixture -- --ignored --exact regenerate_parcels_5gb_fixture --nocapture` |
 | **Writer** | `spatial_engine::fixture::write_geoparquet_cancellable` (arrow-rs — never DuckDB `COPY`; `kernel/IMPORT-LAYOUT-PREREGISTRATION.md` names this fixture as a read-only source, never a layout-writer comparison arm) |
 
-**Why `--exact` (2026-09-24).** The binary's other ignored test, `measure_publish_at_five_gigabytes`,
-needs the fixture this one writes, and a bare `--ignored` run starts both at once (the clean-clone
-drill, `kernel/RESULTS.md`, "Step 2 — fixture regeneration"). **Known, pending the human's decision
-(`DECISIONS-PENDING.md` entry 121):** on a cold disk the generate phase's silence ceiling can fire
-after the final chunk's progress event, while the writer closes the file; the drill recorded a
-complete file of the declared size and SHA-256 in that case. Whenever that watchdog fires, check the
-file against this table's Size and SHA-256 before using it.
+**Why the Regenerate command is a separate entry point, not the scale pass itself (2026-09-24,
+`DECISIONS-PENDING.md` RULED 2026-09-24, question round 17 item 6, applying entry 121 option (c)).**
+The scale pass's own `generate()` (`kernel/tests/scale_pass.rs`) wraps the write in a measurement
+watchdog: on a cold disk its 60 s silence ceiling can fire while the writer's `close()` flushes the
+final row group and footer, with no progress event in that window — a measurement-harness artifact,
+not a defect in the fixture (the `writer.close()` call lives in `engine/src/fixture.rs`'s private
+`generate()`, which `write_geoparquet_cancellable` calls). Whenever the scale pass's own watchdog
+fires, check the resulting file against this table's Size and SHA-256 before using it — an operator
+check this entry point does not change or replace.
+`kernel/tests/regenerate_fixture.rs`'s `regenerate_parcels_5gb_fixture` regenerates the
+identical bytes (same spec, same writer, see above) with **no watchdog and no measurement**, so it
+cannot spuriously time out. It refuses to overwrite an existing file, exactly as `generate()` does —
+delete the target path yourself first. Byte-identity against this table's Size and SHA-256 was
+confirmed by an independent run to a scratch path (see the node's record,
+`kernel/FIXTURE-REGENERATION-ENTRY-POINT-PREREGISTRATION.md`). `--exact` above names the one
+`#[ignore]`d generation test in this binary, matching this file's existing convention for an
+`--ignored` command.
 
-**Exact generation spec** (`spec_5gb()`, `kernel/tests/scale_pass.rs`, backed by named constants —
-this is the complete parameter set, not a summary):
+**Exact generation spec** (`spec_5gb()`, `kernel/tests/support/mod.rs` — moved there 2026-09-24,
+`fixture-regeneration-entry-point`, from its prior home in `kernel/tests/scale_pass.rs` — backed by
+named constants; this is the complete parameter set, not a summary):
 
 ```
-features:            3_300_000
-avg_vertices:         100
-hole_every:            7
-seed:                 0x5EED_2056_0000_0005
-chunk:               8_192
-row_group_rows:      8_192
-crs_mode:            CrsMode::DeclaredLv95
-with_covering_bbox:  true
-identity:            IdentityMode::NativeUnique
-attributes:          AttributeMode::None
-license:             LicenseMode::DeclaredBySource
+features:                       3_300_000
+avg_vertices:                    100
+hole_every:                       7
+seed:                            0x5EED_2056_0000_0005
+chunk:                          8_192
+row_group_rows:                 8_192
+crs_mode:                       CrsMode::DeclaredLv95
+with_covering_bbox:             true
+identity:                       IdentityMode::NativeUnique
+attributes:                     AttributeMode::None
+license:                        LicenseMode::DeclaredBySource
+domain:                         CoordinateDomain::Lv95Metres
+with_geo_bbox:                  false
+statistics:                     StatisticsMode::WriterDefault
+covering_names_absent_column:   false
+geo_version:                    "1.1.0"
 ```
 
 **Preregistered before the file or the test existed**: `kernel/SCALE-PASS-PREREGISTRATION.md`
 states the number/ceiling provenance rule this spec follows.
 
-**Guardrail — deliberately manual, not automatic.** `scale_pass.rs`'s own `generate()` asserts the
-target path does NOT already exist and refuses to overwrite it. Quote: *"This pass generates once
-and records the facts from that generation. Remove the file to re-run the phase — deliberately
-manual, because it is 5 GB."* Delete the file yourself before re-running the command above; the
-test will not do it for you, and will not silently regenerate a fixture a running campaign might
-still be reading.
+**Guardrail — deliberately manual, not automatic.** The Regenerate command above
+(`kernel/tests/regenerate_fixture.rs`) refuses to write if the target path already exists — the same
+refusal `scale_pass.rs`'s own `generate()` uses, for the same reason. Quote
+(`regenerate_fixture.rs`): *"already exists. This entry point generates once; remove the file
+yourself to regenerate — deliberately manual, because it is 5 GB."* Delete the file yourself before
+re-running the command above; the test will not do it for you, and will not silently regenerate a
+fixture a running campaign might still be reading.
 
 **Determinism — confirmed empirically, twice, not merely claimed from a fixed seed.**
-`kernel/CANCEL-RESCORE-PREREGISTRATION.md` records a SECOND independent generation (forced by an
-unrelated canary invalidation of the first) producing the **exact same SHA-256** as the original.
-Quoted: *"The fixture is byte-identical across attempts 1 and 2... from independent generations.
-The generator is deterministic under its seed."* This is a real, already-run confirmation on this
-machine, not a hope resting on the seed alone.
+`kernel/SCALE-PASS-PREREGISTRATION.md:570-572` records a SECOND independent generation (forced by an
+unrelated canary invalidation of the first) producing the **exact same SHA-256** as the original —
+byte-identical across attempts 1 and 2, from independent generations, the generator deterministic
+under its seed. This is a real, already-run confirmation on this machine, not a hope resting on the
+seed alone.
 
 **Honest gap, not glossed over:** both confirmed generations ran on this same machine, in the same
 or a near-same session. **Cross-machine or cross-toolchain-version determinism is NOT
