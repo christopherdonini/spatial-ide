@@ -355,6 +355,61 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+127. **[FOR YOUR WORD, the morning round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 after two Correctness FAILs; PR #110 (stacked on it) waits with it.]**
+- **Root cause.** Attempt 1: the new multi-line-attribute tracking counted brackets inside strings, so an attribute string with an unbalanced `[` silently swallowed the rest of a file. Attempt 2, after string stripping: a trailing `//` comment or a char literal holding `[` or `"` in an attribute does the same, and a raw-string line starting `#[` inside a test body swallows the rest of the file. That last residual came from this piece but was recorded as pre-existing. Both attempts introduced a silent skip main does not have.
+- **What holds.** No real file regresses: over 250 files main lists 2238 tests and the branch 2251, 0 lost, 13 gained. All four mutations fail by name.
+- **Recommendation: continue, narrowed.** An attribute that does not close on its own line falls back to today's single-line handling after a bounded look-ahead, instead of scanning to the end of the file. That removes the whole class, with the unclosed case printed as a finding.
+- **Alternative: drop.** The 13 gained tests stay invisible to the tool.
+
+**PR #110 (`governance-verify-mutation-header-token`) is STOPPED under Rule 7 too:** reviewer attempt 1 and the full gate that followed (reviewer and architect) each failed on Correctness. Its own-block boundary ends a test's body early at a `)` or `}` inside a JS single-quoted or template string, and reads a body opened and closed on its declaration line as never opened. Over main's tree, at least 2 of the 22 predicted MISSes would therefore be false. **Recommendation: continue, narrowed** — character-level open tracking, JS and Rust quote forms stripped, one-line and single-quote neighbour tests, after #108's narrowed fix lands. Alternative: drop (the whole-file window stays). The rule's requirement itself is unchanged by either piece (the architect's reading), and the 22 MISSes are the rule's intent, for your information, not a question.
+
+Touches: PLAN nodes `governance-verify-mutation-multiline-attrs` and `governance-verify-mutation-header-token`.
+
+126. **[FOR YOUR WORD, the morning round — MultiPolygon: the architect's assessment and eight decisions (night program item 8, consult only).]** `state/consults/2026-09-24-multipolygon-assessment.md`. The corpus problem is 5 of 12 files refused on geometry type, not B4's conditional 8 (checked against `engine/ADMISSION-RESULTS.md`). Only #11 and #12 involve MultiPolygon, and both mix Polygon and MultiPolygon rows. The cut crosses three wires: the data-plane envelope, SKP describe, and the bundle partition schema of ADR-017 §4, which is a red line. The architect proposes MP-1 as one vertical cut after crs-unit, the watcher and B1, with bundle partitions riding B3 (MP-2). Your eight decisions, each recommended in the consult's §5:
+1. Mixed columns admit, with Polygon rows promoted to one-part MultiPolygons (yes).
+2. The encoding is chosen per dataset (yes).
+3. An empty `geometry_types` gets the MultiPolygon encoding.
+4. New refusal wording (for your sight).
+5. Publishing in B3, not MP-1: MP-1's preflight refuses by name.
+6. MP-1 takes the literal after B1's and adds `describe.declared_types` (yes).
+7. LOD stays out, since it has no product caller (yes).
+8. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration (yes).
+
+A latent defect is noted: the shell's `decodeBatch.ts` never checks `geometry_encoding`. Touches: PLAN node `geometry-types-beyond-polygons` (its summary should cite the P4 table), a proposed ADR-034, and B3's preregistration.
+
+125. **[FOR YOUR WORD, the morning round — `test-claims-landedness-bound` STOPPED before code: every candidate design collides with your P3b hold.]** The node lets planned test claims bind when their piece lands, not only when PLAN says done. Its three candidates (the custodian's choice) are: (a) key the exemption on the piece being unlanded; (b) a staleness window; (c) verify fails a node whose evidence PR is merged but which is not done. On main today the only planned claims are P3b's three historical mentions of `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` (`frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`). PR #86 has merged, and the node is held in progress by your round-16 item-4 ruling exactly so that those mentions stay advisory until the superseded-name scanner is scheduled at the weekly window. Each of (a)–(c) would make them binding and turn main's CI red, which overrides that hold.
+- **Recommendation:** sequence this node after the superseded-name scanner (`governance/test-claims-superseded`, weekly-window list), then implement (c), with the scanner retiring the three mentions first.
+- **Alternative:** (c) now, with an explicit `held` exemption for nodes you hold (a new PLAN field — your call).
+
+Touches: PLAN node `test-claims-landedness-bound` (blocked on this ruling).
+
+124. **[FOR YOUR WORD, the morning round — crs-unit-fact-and-bounds: four questions outside its ruled scope, queued; none stops the piece.]** The architect's consult (`state/consults/2026-09-24-crs-unit-fact-and-bounds.md`, STOP LIST) found no choice beyond entry 120's scope. The piece continues on `cut/crs-unit-fact-and-bounds` under full gating. P0's bound shows no visible render-precision defect in degrees: at most 1/32 px at zoom 21, and 0.5 px in the worst state, as for metres. The unit defect that acts is the tile grid's anchor span: a 2° frame where the file's own 0.40° extent gives 0.80°. Four questions are yours:
+- **Q1:** values for a unit recorded as `other` or `unestablished`. Recommendation: keep today's one-unit values, and declare `other`'s when such a dataset enters a slice corpus.
+- **Q2:** `MAX_ZOOM = 21` and the fit zoom constants are the same item-6 class. Recommendation: a follow-on node.
+- **Q3:** interactive zoom has no declared ceiling (ADR-010 rule 6). This is pre-existing and unit-independent. Recommendation: declare one.
+- **Q4:** the architect's degree drift cap is 2¹⁷ degree, equal to the metre value by derivation. Recommendation: accept it as declared.
+
+Q5–Q7 are record-only. Touches: PLAN nodes for Q2/Q3 if you rule them; nothing in this piece.
+
+123. **[FOR YOUR SIGHT, the morning round — B1's engine/kernel preregistration DRAFT and its eight stop items (red line on item 1: an accepted ADR).]** The draft is `state/consults/2026-09-24-b1-engine-prereg-draft.md`: no code, not a gate. It states B1's wire literal as the one after the watcher's, per RULED 2026-09-24 (night) item (2). Two conflicts cross accepted ADRs:
+- (1) ADR-017 §4's bundle type list refuses `float32` and dictionaries, which ADR-023 §2 as amended admits through the shared gate. Recommendation: publish keeps §4's list as a named bundle-format restriction, byte-identical, until B3's bundle-v2 ADR; an ADR-017 amendment skeleton is in the draft.
+- (2) The ADR-021 filter namespace widens by reference. Recommendation: `Float32` filterable; dictionaries not filterable in B1.
+
+Items (3)–(8) are the producer-before-consumer pre-commitment, what `projectable` means, condition (1) timing, dictionary reachability, B1's branch base, and names containing commas; each has a recommendation in the draft. A present-day defect (F1) becomes live when the gate widens: `bind_admit`'s `expect` on every admitted column. Its fix is compulsory in B1 whatever you rule. Touches: `b1-engine-kernel-half`'s gate (the draft is committed as its preregistration after your sight) and ADR-017/ADR-021 text if you rule (1) or (2).
+
+122. **[FOR YOUR WORD, the morning round — the watcher piece STOPPED at two points beyond the brief and the seven additions (night rule: stop the piece and queue it).]** The architect's preregistration (`state/consults/2026-09-24-source-change-watcher.md`) covers everything else, and marks where each stop item attaches. It is not committed as a gate, and no code exists.
+- **S1:** the sight's addition 4 needs an idle push, and none exists. SKP v0 declares no server-to-client push (`protocol/skp/SKP-V0.md:216`), and the only host-to-webview events are Tauri emits outside SKP. Recommendation: one SKP control-plane event, `dataset_session_ended`, carried by the watcher's own literal. An ADR skeleton is in the consult; this is a new ADR, so it is your ruling. Not recommended: a Tauri event outside SKP.
+- **S2:** addition 5 wants a rename of the watched directory to end the generation, but a directory watch does not see its own rename (H1, to be probed). The fix is a second watch on the grandparent, filtered to that directory's name. Recommendation: approve one level; ancestors above it become a KNOWN-LIMITATIONS line.
+
+Touches: PLAN node `engine-source-change-watcher` (blocked on this ruling); a new ADR for S1; the preregistration's attach points. The piece stacks on `cut/crs-unit-fact-and-bounds` when it resumes.
+
+121. **[FOR YOUR WORD, the morning round — the 5 GB fixture's post-write watchdog firing (entry 115 (a), second half).]** The regeneration race is fixed in PR #105 (`kernel/FIXTURES.md`'s command now names the generating test with `--exact`). The other half is not fixed. On a cold disk, the generate phase's 60 s silence ceiling fires while the writer's `close()` flushes the final partial row group and the footer, with no progress event in that window (diagnosis: `engine/src/fixture.rs:803-806`, the Watchdog in `kernel/tests/support/mod.rs`). The fixture is still correct. Any change to what that ceiling measures amends `kernel/SCALE-PASS-PREREGISTRATION.md` §3, and its header's amendment rule (`:17`) would invalidate the recorded scale-pass run that docs/08 rows rest on. Options:
+- (a) Accept as is. A spurious firing costs a retry, and FIXTURES.md now tells the operator to check the file's size and hash.
+- (b) A dated §10 amendment adding a close-phase beat, accepting the invalidation and a re-run.
+- (c) A separate regeneration entry point outside the measurement harness, byte-identical output; about 30 lines of new test code.
+
+Recommendation: (c) as a bounded piece, or (a) if you prefer no new code. Touches: PLAN node `drill-fix-fixture-watchdog` (its first half in PR #105).
+
 120. **[RULED 2026-09-23 (later) — see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, before the acceptance PR — a third gap in ADR-013 Amendment 1, which entry 119 missed, and one disclosure on item 5.]** The architect's gate on `adr-013-display-statement` (gate-log record 118) found both; the custodian confirmed (1) directly. Entry 119 checked only item 5 and reported two gaps; this is a third.
 - **(1) Item 6 is false of the build.** It requires declared, unit-aware bounds (`docs/adr/PROPOSED-amendment-to-ADR-013-geographic-degrees-instance.md`, item 6). But `MIN_ANCHOR_SPAN = 1` applies with no unit input (`frontends/shell/src/canvas/tileGrid.ts:78`, used at `:94`). The declared degrees value, 1e-6 degree (`engine/ADMISSION-PREREGISTRATION.md:577-579`), is not in the code. `RECENTER_MAX_DRIFT_M` (`frontends/shell/src/canvas/offsetFrame.ts:37`) has no declared degrees value. `describe` carries no unit field (`frontends/shell/src/skp/types.ts` `CrsInfo`). Making item 6 true therefore needs a wire unit fact (a wire change, full gating), the declared value, and an architect-declared degrees value or a guard that keeps the drift bound from running under degrees. The visible effect today is unmeasured.
 - **(2) Disclosure on item 5, which the architect otherwise finds true.** A later open attempt removes the summary, whether it is in flight, cancelled or refused (`frontends/shell/src/admission/AdmissionPanel.tsx:206-209`, `:230`, `:240-249`). The earlier dataset stays drawn (`frontends/shell/src/App.tsx:898-921`). So a degrees dataset can stay on the canvas with no statement shown. This predates the piece.
