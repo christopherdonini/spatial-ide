@@ -9,3 +9,5 @@ Change: prebuild first runs buildViewerFirst.mjs (builds renderer/bundle-viewer,
 Tests+mutation: the check is a real clean run -- delete renderer/bundle-viewer/dist and dist-metafile.json, run `npm run build` in frontends/shell, record rc; the mutation is the change reverted and the same run recorded failing with generateNotice.mjs's existing "does not exist -- run `npm run build` in renderer/bundle-viewer first" message; both runs recorded in the hand-back.
 Out-of-scope: no dependency added/removed/bumped; no ADR, wire, security or guarantee text; no change to what ships -- frontends/shell/src/generated/NOTICE.txt and the viewer's dist/NOTICE.txt sha256 verified equal to main's build of them.
 ```
+
+Budget: 43 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
