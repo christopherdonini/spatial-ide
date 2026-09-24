@@ -29,6 +29,55 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-09-24 — question round 20 (AskUserQuestion, one item, mirrored to Telegram first as `state/questions/round-20.md`; the answer typed, verbatim):**
+
+- *Item 1 — entry 134, PR #108's node and the scanner:* **"Option 1, with two riders: (a) a withdrawn row is valid only if the ruling it names resolves: the round/item or entry id must exist as a RULED block that names the removal, and verify fails an unresolvable citation by name. No ruling, no withdrawal. (b) A withdrawn test may never be evidence that a gate, acceptance or preregistered claim still relies on. If one is, the row must name what now carries that evidence, or verify fails. For #108 that's the union design itself, which makes "no loss" true by construction. That's why its twelve property tests are obsolete rather than merely deleted. The piece is one round, fully gated, after #117 lands, and #108 closes as done when its rows are in."** Applied:
+  - A new governance piece, the `withdrawn` marker for `verify-test-claims`, is placed after PR #117 lands. It gets one round, fully gated, and carries both riders as its own requirements.
+    - Rider (a): the named ruling must resolve to a RULED block that names the removal, or verify fails the citation by name.
+    - Rider (b): a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, or verify fails.
+  - Its PLAN node is added to main after #112's click. Until then, main takes no PLAN commit.
+  - `governance-verify-mutation-multiline-attrs` stays in progress until its withdrawn rows are in. It then closes as done. For its twelve tests, the carrier of the evidence is the union design itself (the round-18 item-4 ruling).
+  - Round 19 item 2's closing of #108 on the scanner's landing is superseded by this item. P3b's closing on the scanner's landing stands.
+
+**RULED 2026-09-24 — question round 19 (AskUserQuestion, one set, mirrored to Telegram first as `state/questions/round-19.md`; both answers typed, verbatim):**
+
+- *Item 1 — entry 132, ADR-035 and the kernel defect:* **"(1), and the reviewer's point is ruled: the dataset_session_ended event is emitted at the single place the kernel records a generation's end, so every end emits, whichever check caused it (pre-check, post-check, drop path or watcher). Which paths emit then stops being a question. Rider (a) is unchanged: the event stays advisory, and the next generation-scoped call still refuses."** Applied:
+  - PR #116 (`kernel-ticket-drop-under-registry-lock`) lands through its full gate first.
+  - Then ADR-035 takes one read under a fresh count. Its redraft states the ruling as Decision text:
+    - emission at the single place the kernel records a generation's end, so every end emits, whatever caused it;
+    - the Open item on post-check emission resolved and removed;
+    - the at-most-once gate on the transition report kept as the single point's own precondition;
+    - rider (a) unchanged;
+    - the record nits corrected.
+  - The watcher's preregistration carries the emission point.
+- *Item 2 — entry 133, PR #108's landing:* **"(1). Also: the round-16 hold on the superseded-name scanner is lifted, since it now gates three nodes. Place it next in the governance lane, one round under a fresh count and the record cap. When it lands, P3b and #108 close as done."** Applied:
+  - PR #108 is marked ready for the click. Its node `governance-verify-mutation-multiline-attrs` stays in progress after merge, with its gate naming the form, so the historical names stay advisory. This confirms the custodian's reading that a record-only FAIL is not a stop under round 18 item 4.
+  - Round 16 item 4's hold is lifted. `governance-test-claims-superseded-scanner` (branch `governance/test-claims-superseded` @ 3100766) is placed next in the governance lane: one round under a fresh count and the record cap.
+  - When the scanner lands, `briefa-p3b-owner-side-invalidation` and `governance-verify-mutation-multiline-attrs` close as done. `test-claims-landedness-bound` follows the scanner (round 17 item 8).
+
+**RULED 2026-09-24 — question round 18 (AskUserQuestion, one set, mirrored to Telegram first as `state/questions/round-18.md`). Items 1 and 2 were answered by option label. The human then replaced the selections for items 3 and 4 with a typed message sent while the custodian was recording the round; each of those is quoted verbatim from that message, and the typed word governs:**
+
+- *Item 1 — entry 130, ADR-035 under Rule 7:* **"Continue (Recommended)"** Applied: one text round on PR #114 under a fresh count, then both gates. The architect redrafts:
+  - the post-check clause cut to what the tree does, with the residual named;
+  - whether post-check ends should also emit becomes the ADR's one remaining Open item;
+  - Open items 1 and 2 become Decision text as ruled in items 2 and 3 below;
+  - the second gate's record-only notes corrected.
+
+  The fourth form is not added, because item 2 chooses (ii).
+- *Item 2 — entry 129, ADR-035's Open item 1:* **"(ii) Kernel-minted ref (Recommended)"** Applied:
+  - The event's `session` member is a kernel-minted, non-authorising reference, returned by `open_dataset` beside the handle and accepted by no command.
+  - ADR-035's Decision states it, with the SKP-V0 §3 minting rule, the `open_dataset` response member in the §8 entry, and the shell's session-to-handle map.
+  - The watcher's preregistration fixes its payload to it. ADR-035 stays Proposed; its acceptance is the human's.
+- *Item 3 — entry 129, ADR-035's Open item 2 (typed):* **"About the 3rd question: (1), with a rider: describe answered after the end carries the ended state and its typed reason, so no client can read an ended generation's facts as current."** Applied:
+  - Rider (a)'s every-later-call reads as every later generation-scoped call: `viewport_query`, and redemption of a ticket from the ended generation.
+  - `describe`, `cancel` and `close_dataset` still answer after the end.
+  - Under this item's rider, `describe` answered after the end carries the ended state and its typed reason.
+  - ADR-035's Decision states the reading and the rider. The watcher's preregistration carries the `describe` change on the watcher's literal.
+- *Item 4 — entry 131, PR #108 (typed):* **"About the 4th question: (2): the union design replaces my round-17 fallback: no loss relative to main's scan by construction, so no self-comparing no-loss test. One round under a fresh count; if it stops again, #108 is dropped and the 13 tests behind multi-line ignore attributes are listed as a known limit of the tool"** Applied: one round on PR #108 under a fresh count, then both gates.
+  - The tool returns the union of main's per-line scan and the multi-line-tracked scan, replacing round 17 item 9's bounded fallback.
+  - The self-comparing no-loss property test is removed; the fixtures' expected lists are asserted directly.
+  - If that round stops, PR #108 is closed unmerged, the node is dropped, and the 13 tests are listed as a known limit of the tool.
+
 **RULED 2026-09-24 — question round 17 (AskUserQuestion in three sets, mirrored to Telegram first as `state/questions/round-17.md`; each answer verbatim, as an option label or the human's typed text; the human's message opening the round: "Merged, start with the questions"):**
 
 - *Item 1 — entry 128, PR #112 under Rule 7:* **"Continue (Recommended)"** Applied: one text-only round under a fresh count on `cut/crs-unit-fact-and-bounds`. Item 17 keeps a degrees sentence: the Q2 constants are still declared for metres, and the P0 render bound still holds. The anchor-span clause becomes the declared per-unit value. PR #109's item 17 text is carried through the merge with main, after #109 lands. The five rustfmt blocks are formatted and the record residue both gates named is corrected, then both gates run. A record-only failure after that goes to the architect's reduction under the record cap. Node `crs-unit-fact-and-bounds` ready.
@@ -374,11 +423,91 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
-129. **[FOR YOUR WORD, the next round — ADR-035's Open item 1: the session reference's wire form (round 17 item 2, rider (b)).]** ADR-035 (`dataset_session_ended`, Proposed) is drafted with a payload of exactly two members, `session` and `reason`. The drafts are at `state/consults/2026-09-24-adr-021-023-and-035-drafts.md`, and the file is on branch `docs/adr-035-dataset-session-ended`. Rider (b) excludes a handle, but the only per-session identifier on the wire today is the `DatasetHandle`, which SKP-V0 §3 calls a handle and which still authorises `describe` and `close_dataset` after the generation ends. Options:
-- (i) Echo the `DatasetHandle` the client already holds. No new wire value, but it is literally a handle.
-- (ii) A kernel-minted, non-authorising session reference, returned by `open_dataset` beside the handle and accepted by no command. It rides the watcher's literal and adds one response member.
+134. **[RULED 2026-09-24 — question round 20; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — PR #108's node cannot close as done when the scanner lands; entry 133's premise was wrong.]** Round 19 item 2 closes `governance-verify-mutation-multiline-attrs` as done when the superseded-name scanner (PR #117) lands. That rested on entry 133's statement that the scanner would neutralise #108's twelve historical test names. The statement was the custodian's error.
+- **Why it fails.** The scanner exempts only a renamed claim whose replacement exists (`scripts/plan/README.md`, section "The boundary"). #108's twelve names are tests the round-18 union design removed with no replacement.
+- **The evidence.** PR #117's reviewer checked this on a scratch clone of main plus #117 (gate-log array index 172):
+  - With P3b and #108 both set to done, `verify:test-claims` fails on the twelve names (15 claim sites in `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md`).
+  - With P3b alone done, it passes. P3b's closure is unaffected.
+- **The architect's position** (gate-log array index 171): a removal is not a supersession. It would need a distinct marker that you approve.
+- **Options:**
+  - (1) **A withdrawal marker** (Recommended). One small governance piece, fully gated after #117 lands, teaches `verify-test-claims` a distinct `withdrawn` marker:
+    - It uses the same hash-pinned row at a main commit as `superseded`.
+    - It names the ruling that removed the test, and requires no replacement.
+    - #108's record then gains its withdrawn rows, and the node closes as done.
+    - Every future design change that removes a claimed test uses the same path.
+  - (2) **A disclosed known limit.** No tool change.
+    - The node stays not-done indefinitely, with a note, and the twelve names stay advisory.
+    - The next removal meets the same wall.
+- **Touches:** PLAN node `governance-verify-mutation-multiline-attrs`; for option (1), a new proposed governance node.
 
-**Recommendation (the architect's):** (ii), the form that meets rider (b) as written. The watcher's preregistration cannot fix its payload until this is answered. Touches: ADR-035's Decision item 3 and its Open item; PLAN node `engine-source-change-watcher`.
+133. **[RULED 2026-09-24 — question round 19; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, with the click — PR #108's landing condition.]** The union design (round 18 item 4) passed on the code in both gates. Both gates failed on the record only; no finding is semantic. The architect is reducing the record under the record cap's point (3), which restores five amendment lines that were edited in place and appends a superseded index naming the twelve removed tests.
+- **The landing problem.** After the restore, the record's committed amendments still name those twelve tests. `verify-test-claims` binds a gate file's claims once its node is done, so merging with the node `done` would turn main's CI red. No append-only text neutralises them; the held superseded-name scanner would.
+- **The custodian's reading, for you to confirm or reject.** Round 18 item 4 drops #108 if that round stops. The custodian reads a record-only FAIL, with the code passing both gates, as not a stop. The record cap's point (3) therefore governs, and the piece lands after the reduction. If you read it otherwise, option (3) applies.
+- **Options:**
+  - (1) **Merge; keep the node in progress until the scanner lands** (Recommended). The node's `gate` names the form, so the names stay advisory. This extends your round-16 item-4 P3b precedent to this node.
+  - (2) **Scanner first:** schedule the superseded-name scanner, and #108 waits for it.
+  - (3) **Drop #108** despite the pass: the 13 tests are listed as a known limit of the tool.
+
+Touches: PLAN node `governance-verify-mutation-multiline-attrs`; PR #108.
+
+132. **[RULED 2026-09-24 — question round 19; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — ADR-035 (PR #114) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed on one semantic item, which is a kernel defect, not ADR text.]** The reviewer PASSED attempt 2: every earlier finding is resolved, and every tree claim is true. The architect FAILED it on S1′, a fourth route. A Pending ticket's `EngineSource` is dropped while `StreamRegistry`'s `std::sync::Mutex` is held. If its post-check has found a change, `Drop` ends the generation and re-locks that Mutex on the same thread, which hangs. The custodian confirmed the chain by reading `kernel/src/skp.rs` and `kernel/src/lib.rs`: `cancel`, `cancel_all_for_dataset` and `sweep_locked` replace a Pending state under the lock; `EngineSource::drop` leads to `end_session_if_source_changed`, then `end_generation`, then `StreamRegistry::cancel`. It is a latent defect on main, independent of ADR-035, and is filed as PLAN node `kernel-ticket-drop-under-registry-lock`, dispatched with a regression test first under full gating.
+- **Confirmed by test (added 2026-09-24, evening).** PR #116's four regression tests drive the real chain, and each failed by name on the unfixed tree: the call did not return within its 5-second bounded join. The fix drops retired ticket states after the guard is released, on every path, and its full gate is running.
+- **Recommendation:**
+  - Land the kernel fix first. That turns the sub-case into an ordinary drop-path end, which ADR-035's residual case 2 already names.
+  - Then one confirmation read under a fresh count. That read also carries the reviewer's non-blocking S1 (whether option (b)'s emission point includes pre-check ends) and the record nits.
+- **Alternative:** hold ADR-035.
+
+The watcher waits on it and on crs-unit either way. Touches: PR #114; PLAN nodes `engine-source-change-watcher` and `kernel-ticket-drop-under-registry-lock`.
+
+131. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed in both gates on one semantic item.]**
+- **Root cause.** Fresh-count attempt 1 failed on the fallback, which consumed the look-ahead window instead of re-reading it. The correction's rewind fixed that, and both gates confirmed it on 25+ inputs against main's tool (0 lost everywhere except the disclosed false-close case).
+- Attempt 2 failed on the correction's own property test. It builds main's tool from `origin/main` and asserts one exact loss. After merge, `origin/main` is this tool, so the assertion fails and main's governance CI turns red on merge and on every later run. That test also carries no recorded mutation of its own.
+- **What holds.** The rewind is correct. The no-regression proof over today's tree is main 2240, branch 2253, 0 lost, 13 gained. The bound's headroom is measured: the longest real continuation is 7 lines. Every other recorded mutation fails by name.
+- **Record residue (record-only):**
+  - The false-close residual's stated cause is narrower than what triggers it: a string-parity flip also reaches it, and it is reported only as a note.
+  - The superseded index is incomplete.
+  - Two gate-log line cites are unhashed.
+  - One discharge claim does not resolve.
+- **Options:**
+  - (1) **Continue, one round under a fresh count (Recommended).** Pin the property test's baseline to a fixed commit on main before the piece (or assert the six fixtures' lists directly), give it a recorded mutation, and clean up its scratch directory. The architect reduces the record under the record cap. Both gates then run.
+  - (2) **Continue with the reviewer's structural design:** return the union of main's per-line scan and the tracked scan. Every file then lists a superset of main's by construction, which also closes the false-close residual. This departs from the ruled fallback design, so it is your word.
+  - (3) **Drop:** the 13 real tests behind multi-line `#[ignore]` attributes stay invisible to the tool.
+
+Touches: PLAN node `governance-verify-mutation-multiline-attrs` (blocked on this ruling); PR #108 stays draft.
+
+130. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — ADR-035 (PR #114) STOPPED under Rule 7: gate attempt 2 failed in both gates on one semantic item. Entry 129 holds the ADR's Open items.]**
+- **Root cause.** Attempt 1 failed on four semantic items: Open item 1 incomplete, the consumer seam, rider (a) narrowed without a mark, and the emission scope. The redraft resolved all four in both gates' reading. Attempt 2 then failed on a sentence the redraft added: an end made by the post-check reaches the shell on its own call. That holds only for a clean run. A cancelled or failed stream keeps its own terminal, and a drop-path end delivers none, so such an end reaches the shell only at its next generation-scoped call's refusal. Rider (a) keeps this correct, but the ADR stated it did not happen.
+- **What holds (both gates).** Every attempt-1 finding is resolved. All quotes are byte-exact, the index is regenerated (adrIndex 26/26), and the checks are green. No decision goes beyond the ruling, the skeleton and the preregistration body except as an Open item.
+- **Recommendation: continue, one text round under a fresh count, then both gates.** The round makes these changes:
+  - It reduces the post-check clause to what the tree does and names the residual.
+  - Whether post-check ends should also emit is posed as an Open item, not decided.
+  - It corrects the record-only notes: the dead-ticket bound also ends on reopen or close; the exact-key claim; the routes' inputs; an unused Related cite; the latency sentence's principle-8 cite; and the rider quote's trailing period.
+  - It adds to Open item 1 the fourth form the architect found: a non-invertible digest of the `DatasetHandle`, with no new member or mint.
+  - It revises entry 129 to match: the fourth form, the reopen/close bound, and the quote.
+- **Alternative:** hold ADR-035; the watcher waits with it (it also waits on crs-unit and entry 129).
+
+Touches: PR #114 (stays draft); `DECISIONS-PENDING.md` entry 129; PLAN node `engine-source-change-watcher`.
+
+129. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — ADR-035's two Open items (round 17 item 2, riders (a) and (b)); revised 2026-09-24 after PR #114's first full gate found the first filing incomplete.]** ADR-035 (`dataset_session_ended`, Proposed, binds nothing until accepted, not architect-blockable) is on PR #114, redrafted once after its first full gate. Its payload is exactly two members, `session` and `reason`. Emission is at most once, gated on a transition-reporting end that the watcher piece builds. The watcher's preregistration cannot fix its payload until item 1 is answered.
+
+**Item 1 — the session reference's wire form (rider (b)).** Rider (b) excludes a handle. The only per-session identifier on the wire today is the `DatasetHandle`: a handle by SKP-V0 §3, which after the end still authorises `describe` and `close_dataset`, and which already maps one-to-one onto an SKP open's generation. Options:
+- **(i) Echo the `DatasetHandle`.**
+  - For: the shell's stale-generation guard (`endSessionForDataset` in `App.tsx`) keys on exactly this value and stays unchanged. The one recipient already holds it. There is no new wire value, no `open_dataset` member and no §3 change.
+  - Against: it is literally a handle. It needs your reading that rider (b) excludes only authority the recipient does not already hold.
+- **(ii) A kernel-minted, non-authorising reference,** returned by `open_dataset` and accepted by no command.
+  - For: it meets rider (b) as written, and it keeps the guard's kernel CSPRNG collision-freedom.
+  - Against: it fits neither §3 minting rule, so §3 gains a rule and §4 item 10 a fourth kind. It adds an `open_dataset` response member, listed in §8. The shell needs a session-to-handle map or a re-keyed guard. It maps one-to-one onto a generation, which sits against `skp/0.3`'s no-generation-value rule and ADR-035's own not-decided entry (the architect reads it as not engaged, since the handle has the same cardinality; yours to confirm).
+- **(iii) A client-minted correlation value** supplied on `open_dataset` (the `CancelKey` precedent).
+  - For: the kernel mints nothing non-authorising.
+  - Against: an `open_dataset` request member and a §3 value kind. Client-chosen text is held in the kernel. The guard's collision-freedom moves to the client. It has the same map/guard change and the same generation question as (ii).
+
+**Recommendation (the architect's):** (ii).
+
+**Item 2 — the reading of rider (a)'s "every later call."** ADR-035 reads it as every later generation-scoped call: `viewport_query`, and redemption of a ticket from the ended generation (refused by name within the dead-ticket record's bound, after which it degrades to `redeem`'s own refusal, never an admission). `describe`, `cancel` and `close_dataset` are not generation-scoped and answer after the end by design today.
+
+**Recommendation (the architect's):** confirm. Refusing `describe` or `close_dataset` would strand the handle with no ordinary way to close it.
+
+Touches: ADR-035's Decision items 2, 4, 5 and 6 and its Open items; PLAN node `engine-source-change-watcher`.
 
 128. **[RULED 2026-09-24 — question round 17; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the morning round — `crs-unit-fact-and-bounds` (PR #112) STOPPED under Rule 7: full-gate attempt 2 failed in both gates on one semantic item; the code, wire and scope pass.]**
 - **Root cause.** Attempt 1 failed on the record only: a false `cargo fmt` claim, a fixture count, the Part P literal, a discharge by commit, and item 17's comment. Attempt 2 failed on the record again, plus one semantic item (authority). Item 17 no longer states entry 120 (1)(c)'s bound. Its comment hands the bound to PR #109 and says that bound stops describing the build when this piece lands. That is false for the render-precision clause: re-centring is unchanged for degrees (the drift cap and `MAX_ZOOM` are the same), so the 1/32 px at zoom 21 and 0.5 px bound still holds, and only the anchor-span clause changes. **The custodian's record-round brief prescribed that hand-off, so the brief seeded the semantic item.**

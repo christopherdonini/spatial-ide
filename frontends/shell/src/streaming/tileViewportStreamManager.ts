@@ -12,7 +12,7 @@ import { recordResidencyBatchArrived } from "../instrument/residencyInstrument";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { encodeHexF64 } from "../skp/codec";
 import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client";
-import type { Bbox, Filter } from "../skp/types";
+import type { Bbox, CrsUnit, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
 import {
   isSourceChangedRefusal,
@@ -449,10 +449,13 @@ export class TileViewportStreamManager {
 
   /** Declares the frame frozen for this dataset's session (item A) -- a no-op past the first call,
    * by design: the frame does not move mid-session (`tileGrid.ts`'s own top doc comment has the full
-   * "no dataset extent at open" account). */
-  establishGridFrame(anchor: AuthoritativeBbox): void {
+   * "no dataset extent at open" account).
+   *
+   * `unit` is the dataset's own `describe.crs.unit` fact (`skp/0.4`, crs-unit-fact-and-bounds) --
+   * REQUIRED, with no default, threaded straight to `deriveTileGridFrame`'s own required parameter. */
+  establishGridFrame(anchor: AuthoritativeBbox, unit: CrsUnit): void {
     if (this.frame !== null) return;
-    this.frame = deriveTileGridFrame(anchor);
+    this.frame = deriveTileGridFrame(anchor, unit);
   }
 
   /**

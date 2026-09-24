@@ -37,4 +37,11 @@ pub use handles::{CancelKey, DatasetHandle, StreamHandle};
 /// and `protocol/data-plane/` has an empty diff. Same discipline for the fourth time:
 /// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
 /// updated in this commit (`SKP-V0.md` §8's `skp/0.3` entry lists the full field set).
-pub const SKP_VERSION: &str = "skp/0.3";
+///
+/// `skp/0.4` (crs-unit-fact-and-bounds): `describe` gains one member, `crs.unit`, a closed
+/// four-value enum (`CrsUnit`) carrying the engine's recorded `AdmissionRecord::coordinate_unit`
+/// class. No request member, no command, no refusal code; `protocol/data-plane/` has an empty
+/// diff; no MCP surface. Same discipline again: `deny_unknown_fields` both directions, `==`
+/// unchanged, every fixture on both sides of the wire updated in this commit (`SKP-V0.md` §8's
+/// `skp/0.4` entry lists the full field set).
+pub const SKP_VERSION: &str = "skp/0.4";

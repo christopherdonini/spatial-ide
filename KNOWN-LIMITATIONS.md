@@ -165,15 +165,84 @@ queried again. The app cannot know whether those areas are empty.
 *The lines below are true of `main`'s build after the v0.1.0 tag, not of the v0.1.0 artifact the
 header above describes. They move into the next release's list when that release is cut.*
 
-17. **A dataset in degrees uses tile and render-precision bounds declared for metres.** The tile
-    grid's minimum anchor span and the re-centering drift bound are declared in metres, and they apply
-    unchanged when a dataset's coordinates are in degrees. The effect at close zoom is bounded as
-    stated in the owed piece's record: that piece's first step computes the bound, and this line will
-    then state it.
-    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
+17. **A dataset in degrees has its own declared tile-grid anchor span and re-centering drift cap,
+    but `MAX_ZOOM` and the fit and degenerate-zoom constants stay declared for metres.** The tile
+    grid's minimum anchor span is declared per coordinate unit: metre 1, degree 1e-6, other 1,
+    unestablished 1. The re-centering drift cap is 131 072 in every unit, and only the degree value
+    is derived: 131 072 degrees is the cap at which the re-centering threshold passes from the cap to
+    the half-pixel float32 budget at zoom 6, the same zoom as for the metre value. The metre, other
+    and unestablished values are the original sanity ceiling, unchanged and not derived from
+    precision. For the CRS84 corpus file the float32 rounding of drawn coordinates is at most 1/32
+    pixel per axis at zoom 21, the deepest a fit reaches, while the render origin lies inside the
+    file's extent, and at most half a pixel at any zoom and origin — the same bound a dataset in
+    metres has, because the re-centering threshold is computed per screen pixel and its cap is the
+    same number in every unit. `MAX_ZOOM` and `extent.ts`'s fit and degenerate-zoom constants remain
+    declared for metres only (PLAN.yaml node `crs-zoom-constants-per-unit`). A dataset the engine
+    records as `other` (a named unit that is neither degree nor metre) or `unestablished` still
+    keeps the one-unit minimum anchor span and the unchanged 131 072 drift cap, with no declared
+    value of its own for either bound.
+    <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md §2 (i), §7, §8 item 8, Amendment 4). This text replaces the item 17 text main carries when it lands. Authority: RULED 2026-09-23 (later), item (1)(b) (the node: the per-unit anchor span and the degrees drift value) and item (1)(c) (this line states the P0 bound); RULED 2026-09-24, question round 17, item 1 and item 5 (Q1, Q2, Q4). Anchor span: frontends/shell/src/canvas/tileGrid.ts's MIN_ANCHOR_SPAN, pinned by tileGrid.test.ts's "declares metre 1, degree 1e-6, other 1, unestablished 1". Drift cap: frontends/shell/src/canvas/offsetFrame.ts's RECENTER_MAX_DRIFT and its doc (metre, other and unestablished: the unchanged sanity ceiling; degree: derived), pinned by offsetFrame.test.ts's "declares 131072 for every unit; degree hands over at zoom 6"; the metre value's basis and the degree derivation are state/consults/2026-09-24-crs-unit-fact-and-bounds.md, section DECLARED VALUE, steps 1 and 3-4. The render bound: the same consult, section P0, steps 6-7. ADR-013 Amendment 1 item 6 is true of the build for degree and metre for MIN_ANCHOR_SPAN and RECENTER_MAX_DRIFT only; MAX_ZOOM and extent.ts's fit and degenerate-zoom constants are the same item-6 class and stay declared for metres (the consult's STOP LIST Q2; PLAN.yaml node crs-zoom-constants-per-unit). -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
     summary, but the dataset already on the canvas stays drawn. Its equirectangular statement is then
     shown nowhere until the next successful open.
     <!-- frontends/shell/src/admission/AdmissionPanel.tsx:206-209 (an attempt replaces the admitted state), :230 (a cancel ends idle), :240-249 (a refusal); :411 (the summary renders only for the admitted state); the earlier dataset stays drawn: the human's N8 retest session log session-1790201742.log, where the earlier dataset's tiles are still delivered after the 22:18:04Z refusal; DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2) -->
+
+19. **The change detector is heuristic, not a snapshot check.** The open dataset is checked by a
+    structural descriptor only — byte size, modification time, footer length and footer hash when all
+    four are available; a file whose footer exceeds the declared ceiling, or whose filesystem reports
+    no modification time, is described by fewer — re-read before every query and after every stream
+    terminal; a difference in any component present ends the session. ADR-016 states this policy's
+    limit in these words, byte-copied from `docs/adr/ADR-016-stable-feature-identity-admission.md:221-223 @ 6030dfd sha256:dcab43a957daf486b4130b8b25eb2f78a1bdf72171d6988afa42ab44e464829a` (the hash covers the whole cited lines; the quoted text is a sub-line span of them):
+
+    > does not establish snapshot consistency,
+    > cannot detect every in-place modification, and may detect a change during a query only at the
+    > post-check
+
+    That reduced-component degradation (fewer than four components, on the footer-ceiling or
+    no-modification-time branch above) is shown nowhere in this build today: the display ADR-016
+    Amendment 1 item 2 requires of it is owed to a later piece.
+    <!-- engine/src/descriptor.rs:1-24 (the type's own doc comment); engine/src/descriptor.rs:42 (FOOTER_DESCRIPTOR_MAX_BYTES, the footer-exceeds-ceiling degradation); engine/src/descriptor.rs:54-56 (the no-modification-time degradation); engine/src/error.rs:342-347 (SourceChanged Display); engine/ADMISSION-PREREGISTRATION.md:72-73 (R-D1, R-D2); docs/adr/ADR-016-stable-feature-identity-admission.md:240 (Amendment 1, "Owed at acceptance", item 2's degradation display not met by the build); MANUAL-WALKTHROUGH.md Part N row N6, N9 -->
+
+20. **A partitioned source is refused; only a single file is admitted — including a single file whose
+    own path contains a glob metacharacter.** A directory of Parquet parts is a real dataset this
+    engine will not admit, refused by name before anything is read (code
+    `engine.identity_ordinal_partitioned_unsupported`): *"refused: this source is partitioned across
+    more than one file (`<detail>`), and session identity is a row's position within one file. Open a
+    single file, or declare an identity column that is carried in the data"*. The same code and
+    message are reached by a single file whose path contains `*`, `?`, `[`, `]`, `{` or `}` — read as
+    naming a pattern rather than one file, even where exactly one file exists at that path — with
+    `<detail>` naming the metacharacter found.
+    <!-- engine/src/dataset.rs:283-291 (the gate, run before the file is opened); engine/src/dataset.rs:1356-1396 (partitioned_source_detail: the directory case and the glob-metacharacter case, GLOB_METACHARACTERS `* ? [ ] { }`); engine/src/error.rs:348-352 (the Display); kernel/src/skp.rs:1187-1189 (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+21. **A dataset in degrees cannot be published.** The bundled viewer has no degrees path — it renders
+    in the dataset's own CRS, and this shell's degrees display is a view-time convention a static
+    bundle does not carry — so publish is refused at preflight, before the native destination picker's
+    result is used further: *"refused: `<crs>` is a geographic CRS whose coordinates are in degrees
+    (`<unit source>`), and the bundled viewer has no degrees path — it renders in the dataset's own
+    CRS, while this shell's degrees display is a view-time convention a bundle does not carry.
+    Publishing it would hand a recipient a bundle nothing can render correctly. Reproject the source to
+    a projected CRS and open that, or wait for the reader change that adds the degrees path"*.
+    <!-- kernel/src/publish/mod.rs:435-443 (the preflight check, run before the pin/execute phases); kernel/src/publish/error.rs:129, :201, :223, :323-331 (GeographicCrsNotPublishable, its code and Display); MANUAL-WALKTHROUGH.md Part N row N5 (the message and the panel rendering it verbatim) -->
+
+22. **A sanity check convicts, never confirms.** It runs wherever a format rule applied — including
+    where the file declares its own CRS and the rule only supplies the data's axis order — and where
+    it runs it reads only a bbox or covering statistics already resident in the footer (or, absent
+    those, the first row group's covering columns). It can flag a coordinate outside plus-or-minus
+    180/90 as contradicting the assumed CRS only where the format's default supplied that CRS;
+    elsewhere it still runs and records a level, but takes no range verdict, because the CRS is the
+    file's own. It can also land at level `none`, when neither footer-resident statistics nor a usable
+    covering is available. A file whose coordinates lie inside that domain is not thereby shown
+    correct — a projected file may sit inside it too. Its stated limit, byte-copied from `docs/adr/ADR-015-source-crs-requirement-and-caller-assertion.md:197 @ 6030dfd sha256:e1a6e6e1daa245bd1d002127451311c973c2ce8765865f70aff01f48c61aab10` (the hash covers the whole cited line; the quoted text is a sub-line span of it): "A projected file inside ±180/±90 is NOT detected by it".
+    <!-- engine/ADMISSION-PREREGISTRATION.md:59-60 (R-S1 level selection; R-S2, the condition and the not-thereby-correct finding); engine/src/geoparquet.rs:499-508 (R-C4: format_rule_reference is set for a declared, non-x-first CRS under a pinned spec version, the axis-order rule, even though the CRS is the file's own); engine/src/dataset.rs:1021-1038 (sanity_check: `rule` is read from format_rule_reference regardless of provenance except Asserted, so it runs under R-C4 too; `convicts` is true only for CrsProvenance::FormatDefault); engine/src/dataset.rs:1162-1171 (convict_or_record's non-convicting branch: level and reason recorded, "no range check applies"); engine/src/dataset.rs:981-1031 (sanity_check's doc comment and the NotChecked branch reached when no format rule applies at all); MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+23. **For a change the detector (item 19) can see, a pan that stays inside what is already resident
+    issues no fresh query, so the change goes unnoticed until a query is next issued.** The change
+    detector runs only against a query that is actually issued; a small pan well inside the resident
+    tiles triggers none, so the canvas keeps showing what it showed before the pan and a hover there
+    still answers normally. Where the change is one the detector can see, the refusal arrives once a
+    query is issued — panning further out shows it — so for that case this is a delay in noticing, not
+    a missed detection; it says nothing about a change item 19 itself records as undetectable, which no
+    later query surfaces either.
+    <!-- frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:954 (Amendment 11 (b), the small-pan/no-query finding; reproduced here only as "until a query is next issued", its own framing, not a verbatim quote); frontends/shell/MANUAL-WALKTHROUGH.md:951 (Part N row N8, "This is not a missed detection" stated verbatim, sourcing the closing sentence); engine/src/descriptor.rs:13-18 (the module doc: "may detect a change during a query only after that query has finished reading" and the same-size, four-component-match file the preregistration registers as not detected — the case this item's scope excludes) -->

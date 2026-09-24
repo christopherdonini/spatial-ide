@@ -1,9 +1,66 @@
 {
-  "generated_at": "2026-09-24T10:47:33.620Z",
-  "plan_hash": "d485d1dbc2d4b107c950e4d39edc0abae63c90879c6bb00321de9714e9a257a5",
+  "generated_at": "2026-09-24T21:48:09.459Z",
+  "plan_hash": "0275e7f652a99d69d46ab037b943105a8b82803500260720d7e0a0a6bfbe7f7b",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "governance-test-claims-withdrawn-marker",
+    "title": "verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 1,
+    "budget_minutes": 90,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-24",
+      "done": null
+    },
+    "summary": "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done."
+  },
+  "ready": [
+    {
+      "id": "governance-test-claims-withdrawn-marker",
+      "title": "verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done."
+    },
+    {
+      "id": "test-claims-landedness-bound",
+      "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -33,31 +90,8 @@
       },
       "summary": "RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider RULED 2026-09-24, question round 17, item 7 (entry 126): MP-1 as one vertical cut after crs-unit, the watcher and B1, all eight decisions as recommended (the P4 table: 5 of 12 corpus files refused on geometry type), with two riders verbatim in the RULED block -- an empty geometry_types admits under the MultiPolygon encoding but a row of an unread type is refused by name or counted as unread and shown, never silently dropped; Polygon promotion is declared as an encoding in describe.declared_types, never as the file's own type. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration; publishing rides B3; LOD stays out.",
       "blocked_by": [
-        "crs-unit-fact-and-bounds",
         "engine-source-change-watcher",
         "b1-engine-kernel-half"
-      ]
-    },
-    {
-      "id": "engine-source-change-watcher",
-      "title": "The advisory source-change watcher",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 7,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds.",
-      "blocked_by": [
-        "crs-unit-fact-and-bounds"
       ]
     },
     {
@@ -77,10 +111,9 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's.",
+      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher.",
       "blocked_by": [
-        "crs-unit-fact-and-bounds",
-        "adr-021-023-b1-notes"
+        "engine-source-change-watcher"
       ]
     },
     {
@@ -215,140 +248,30 @@
       "blocked_by": [
         "governance-ci-built-site"
       ]
-    },
-    {
-      "id": "test-claims-landedness-bound",
-      "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 8,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions.",
-      "blocked_by": [
-        "governance-test-claims-superseded-scanner"
-      ]
     }
   ],
   "in_progress": [
     {
-      "id": "briefa-p3b-owner-side-invalidation",
-      "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
+      "id": "engine-source-change-watcher",
+      "title": "The advisory source-change watcher",
       "lane": "engine",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 5,
+      "order": 7,
       "budget_minutes": 240,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "pr": 86
+        "pr": 114
       },
       "dates": {
-        "opened": "2026-09-16",
+        "opened": "2026-09-18",
         "done": null
       },
-      "summary": "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
-      "evidence_label": "PR #86"
-    },
-    {
-      "id": "adr-021-023-b1-notes",
-      "title": "ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 2,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "docs/adr-021-023-b1-notes"
-      },
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "RULED 2026-09-24, question round 17, item 3 (entry 123, a red line ruled by the human's typed word, verbatim in the RULED block): the architect drafts ADR-021's dated note and ADR-023's clarifying sentence from the ruling; reviewer and architect gate; the human's click. No status line changes; ADR-017 is not edited.",
-      "evidence_label": "branch `docs/adr-021-023-b1-notes`"
-    },
-    {
-      "id": "crs-unit-fact-and-bounds",
-      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 112
-      },
-      "dates": {
-        "opened": "2026-09-23",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement RULED 2026-09-24, question round 17, item 1 (entry 128): continue -- one text-only round under a fresh count (item 17 keeps a degrees sentence: the Q2 constants still metre-declared, the P0 render bound still holds; the anchor-span clause becomes the per-unit value; PR #109's item 17 text carried through the merge after #109 lands; the five rustfmt blocks formatted; the record residue corrected), then both gates; a record-only failure after that goes to the architect's reduction.",
-      "evidence_label": "PR #112"
-    },
-    {
-      "id": "fixture-regeneration-entry-point",
-      "title": "The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "fix/fixture-regeneration-entry-point"
-      },
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece.",
-      "evidence_label": "branch `fix/fixture-regeneration-entry-point`"
-    },
-    {
-      "id": "known-limitations-owed-rows",
-      "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 109
-      },
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
-      "evidence_label": "PR #109"
+      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged. 2026-09-24, after PR #116 merged: ADR-035's read under a fresh count (round 19 item 1) dispatched on PR #114.",
+      "evidence_label": "PR #114"
     },
     {
       "id": "governance-verify-mutation-multiline-attrs",
@@ -369,19 +292,38 @@
         "opened": "2026-09-17",
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding.",
+      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding. RULED 2026-09-24, question round 18, item 4 (entry 131): the union design replaces round 17 item 9's fallback -- the tool returns the union of main's per-line scan and the tracked scan, no self-comparing no-loss test; one round under a fresh count; if it stops again the PR is closed unmerged, the node dropped, and the 13 tests behind multi-line ignore attributes listed as a known limit of the tool. RULED 2026-09-24, question round 19, item 2 (entry 133): merge; the node stays in progress (its gate naming the form) until the superseded-name scanner lands, then closes as done. RULED 2026-09-24, question round 20, item 1 (entry 134): closes as done when its withdrawn rows are in (governance-test-claims-withdrawn-marker); round 19 item 2's closing on the scanner's landing is superseded.",
       "evidence_label": "PR #108"
     }
   ],
   "proposed": [
     {
-      "id": "governance-test-claims-superseded-scanner",
-      "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
+      "id": "governance-hash-grammar-shared",
+      "title": "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs",
       "lane": "governance",
       "phase": "prototype",
       "status": "proposed",
-      "order": 2,
-      "budget_minutes": 120,
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix)."
+    },
+    {
+      "id": "governance-test-claims-superseded-followups",
+      "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -391,7 +333,7 @@
         "opened": "2026-09-24",
         "done": null
       },
-      "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR."
+      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id."
     },
     {
       "id": "lod-tier-selection",
@@ -413,6 +355,25 @@
       "summary": "RETURNED TO PROPOSED 2026-09-22 (the custodian, reconciling the human's separate-tracks direction): its dependencies are done, but its preregistration is not drafted and the LOD track is not scheduled among the product priorities -- the human places it. The human, 2026-09-22: the lifecycle design completes before any product caller serves tiers, reconciled with Prepare's artifact ownership, cancellation and retention; a saved-work input is never deleted under a render-cache eviction rule; the integrated benefit measured, no carried-over speed claim; basic Save never waits for LOD; no renderer rewrite. Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here"
     },
     {
+      "id": "kernel-ticket-drop-followups",
+      "title": "StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a)."
+    },
+    {
       "id": "crs-zoom-constants-per-unit",
       "title": "ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2)",
       "lane": "shell",
@@ -429,7 +390,7 @@
         "opened": "2026-09-24",
         "done": null
       },
-      "summary": "RULED 2026-09-24, question round 17, item 5 (entry 124, Q2): a follow-on node. MAX_ZOOM = 21 and the fit zoom constants are the same item-6 class as the two constants crs-unit-fact-and-bounds declares per unit (state/consults/2026-09-24-crs-unit-fact-and-bounds.md, STOP LIST Q2). Proposed; placed by the human."
+      "summary": "RULED 2026-09-24, question round 17, item 5 (entry 124, Q2): a follow-on node. MAX_ZOOM = 21 and the fit zoom constants are the same item-6 class as the two constants crs-unit-fact-and-bounds declares per unit (state/consults/2026-09-24-crs-unit-fact-and-bounds.md, STOP LIST Q2). Proposed; placed by the human. A pre-existing doc drift for this node, from PR #112's architect gate: extent.ts's doc says a zero-area bbox falls back to MAX_ZOOM, while the code uses DEGENERATE_FALLBACK_ZOOM, which is 0."
     },
     {
       "id": "interactive-zoom-ceiling",
