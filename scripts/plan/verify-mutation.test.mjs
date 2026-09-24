@@ -109,6 +109,142 @@ test('an_unterminated_attribute_at_eof_prints_a_diagnostic', () => {
   assert.ok(seen.some((m) => /never closed by end of file/.test(m)), JSON.stringify(seen));
 });
 
+// Helper for the bounded-look-ahead tests below: capture console.error output around a call.
+function capturingErrors(fn) {
+  const orig = console.error;
+  const seen = [];
+  console.error = (msg) => seen.push(msg);
+  try {
+    return { result: fn(), seen };
+  } finally {
+    console.error = orig;
+  }
+}
+
+// RECORDED MUTATION (bounded look-ahead, Amendment 2): removing the `else if (i + 1 - attrStartLine
+// >= MULTILINE_ATTR_LOOKAHEAD)` branch (reverting to unbounded tracking) makes
+// `a_trailing_line_comment_bracket_past_the_lookahead_falls_back` FAIL — the fixture's attribute never
+// re-balances to 0 on its own, so unbounded tracking would swallow the trailing test entirely instead
+// of recovering after the finding.
+test('a_trailing_line_comment_bracket_past_the_lookahead_falls_back', () => {
+  const rust = [
+    '#[allow(clippy::something)] // note: an unmatched [ bracket in a trailing comment',
+    ...Array.from({ length: 25 }, (_, k) => `// filler ${k}`),
+    '#[test]',
+    'fn a_test_after_a_trailing_comment_bracket() {}',
+  ].join('\n');
+  const { result: rustTests, seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_trailing_comment_bracket']);
+  assert.ok(
+    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
+    JSON.stringify(seen),
+  );
+});
+
+// RECORDED MUTATION (same bound): the same reversion makes
+// `a_char_literal_bracket_past_the_lookahead_falls_back` FAIL for the char-literal form (a `'['` is
+// not a string literal `stripStringLiterals` strips, so its bracket is counted as real).
+test('a_char_literal_bracket_past_the_lookahead_falls_back', () => {
+  const rust = [
+    "#[allow(clippy::something)] let c = '['; // a char literal holding a bracket, not a string",
+    ...Array.from({ length: 25 }, (_, k) => `// filler ${k}`),
+    '#[test]',
+    'fn a_test_after_a_char_literal_bracket() {}',
+  ].join('\n');
+  const { result: rustTests, seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
+  assert.deepEqual(rustTests.map((t) => t.name), ['a_test_after_a_char_literal_bracket']);
+  assert.ok(
+    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
+    JSON.stringify(seen),
+  );
+});
+
+// RECORDED MUTATION (same bound): the same reversion makes
+// `a_raw_string_line_starting_the_attribute_opener_in_a_test_body_falls_back` FAIL — a line inside a
+// test's own raw-string body that starts `#[` is misread as a real attribute opening (the scanner
+// does not track raw-string state outside of an already-open attribute), and unbounded tracking would
+// swallow `a_test_after_the_raw_string_body` entirely.
+test('a_raw_string_line_starting_the_attribute_opener_in_a_test_body_falls_back', () => {
+  const rust = [
+    '#[test]',
+    'fn a_real_test_with_a_raw_string_body() {',
+    '    let generated = r#"',
+    '    generated fixture source below:',
+    '#[ignore = "this looks like a real attribute opening but is raw-string content',
+    ...Array.from({ length: 25 }, (_, k) => `    filler line ${k} of the fixture source`),
+    '    "#;',
+    '    assert!(!generated.is_empty());',
+    '}',
+    '#[test]',
+    'fn a_test_after_the_raw_string_body() {}',
+  ].join('\n');
+  const { result: rustTests, seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
+  assert.deepEqual(rustTests.map((t) => t.name), [
+    'a_real_test_with_a_raw_string_body',
+    'a_test_after_the_raw_string_body',
+  ]);
+  assert.ok(
+    seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:5 ') && m.includes('did not close within 20 line(s)')),
+    JSON.stringify(seen),
+  );
+});
+
+// RECORDED MUTATION (the bound's own value): changing the bound check's `>=` to `>` (an off-by-one
+// widening the window to 21 lines) makes `the_lookahead_bound_gives_exactly_20_lines_before_falling_back`
+// FAIL on its second fixture — the finding would no longer be printed at continuation line 20.
+test('the_lookahead_bound_gives_exactly_20_lines_before_falling_back', () => {
+  // An attribute that closes ON its 20th continuation line: still a normal close, no finding.
+  const closesAtBound = [
+    '#[doc = "note: opens with an unmatched [ bracket',
+    ...Array.from({ length: 19 }, (_, k) => `line ${k} of the doc comment`),
+    'line 19 of the doc comment, and now it closes"]',
+    '#[test]',
+    'fn a_test_closing_exactly_at_the_lookahead_bound() {}',
+  ].join('\n');
+  const at = capturingErrors(() => findTestsInFile('engine/src/lib.rs', closesAtBound));
+  assert.deepEqual(at.result.map((t) => t.name), ['a_test_closing_exactly_at_the_lookahead_bound']);
+  assert.ok(!at.seen.some((m) => m.includes('did not close within 20 line(s)')), JSON.stringify(at.seen));
+
+  // The same attribute needing one more continuation line to close: the bound gives up one line
+  // early (at continuation line 20), then recovers and still finds the trailing test.
+  const closesPastBound = [
+    '#[doc = "note: opens with an unmatched [ bracket',
+    ...Array.from({ length: 20 }, (_, k) => `line ${k} of the doc comment`),
+    'line 20 of the doc comment, and now it closes"]',
+    '#[test]',
+    'fn a_test_closing_past_the_lookahead_bound() {}',
+  ].join('\n');
+  const past = capturingErrors(() => findTestsInFile('engine/src/lib.rs', closesPastBound));
+  assert.deepEqual(past.result.map((t) => t.name), ['a_test_closing_past_the_lookahead_bound']);
+  assert.ok(
+    past.seen.some((m) => m.startsWith('verify:mutation finding — engine/src/lib.rs:1 ') && m.includes('did not close within 20 line(s)')),
+    JSON.stringify(past.seen),
+  );
+});
+
+// RECORDED MUTATION (the finding line itself): removing the `console.error(...)` call in the
+// bound-exceeded branch (leaving `attrDepth = 0` in place, so recovery still happens silently) makes
+// `an_attribute_past_the_lookahead_prints_a_finding_naming_the_file_and_line` FAIL — no finding is
+// printed, though the trailing test is still found.
+test('an_attribute_past_the_lookahead_prints_a_finding_naming_the_file_and_line', () => {
+  const rust = [
+    '#[doc = "opens with an unmatched [ bracket',
+    ...Array.from({ length: 25 }, (_, k) => `line ${k} of the doc comment`),
+    '"]',
+    '#[test]',
+    'fn a_test_after_the_unclosed_doc_comment() {}',
+  ].join('\n');
+  const { seen } = capturingErrors(() => findTestsInFile('engine/src/lib.rs', rust));
+  assert.ok(
+    seen.some(
+      (m) =>
+        m ===
+        'verify:mutation finding — engine/src/lib.rs:1 attribute did not close within 20 line(s); falling back to single-line handling from the next line',
+    ),
+    JSON.stringify(seen),
+  );
+});
+
 test('a_name_next_to_the_word_mutation_is_counted', () => {
   const near = 'Results: the mutation reverts admit; `a_rust_test_here` fails by name.';
   const far = 'a_rust_test_here is described here. '.padEnd(1200, 'x') + ' mutation happened elsewhere.';

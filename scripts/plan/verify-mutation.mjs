@@ -39,6 +39,12 @@ export const REPO_ROOT = path.resolve(here, '..', '..');
 
 const MUTATION_WINDOW = 500;
 
+// Bounded look-ahead for an unterminated `#[...]` attribute (governance/verify-mutation-multiline-attrs
+// Amendment 2, on RULED 2026-09-24 round 17 item 9): this repo's multi-line attributes (an
+// `#[ignore = "..."]` reason wrapped once or twice) never run past a handful of lines, so 20 gives
+// generous headroom while bounding the worst case to a fixed window instead of the rest of the file.
+const MULTILINE_ATTR_LOOKAHEAD = 20;
+
 function git(args, cwd) {
   try {
     return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -131,13 +137,26 @@ export function findTestsInFile(rel, content) {
       const l = lines[i];
       if (attrDepth > 0) {
         // a continuation line of an unterminated attribute (e.g. a multi-line `#[ignore = "..."]`
-        // string) is part of that attribute, not "any other code line" — it never clears `pending`.
+        // string) is part of that attribute, not "any other code line" — it never clears `pending` —
+        // for at most MULTILINE_ATTR_LOOKAHEAD continuation lines. If it is still open after that
+        // many lines, the scanner gives up tracking it (a finding is printed, naming the attribute's
+        // own opening line) and falls back to today's single-line handling: the NEXT line onward is
+        // read under the normal per-line rules below, exactly as `origin/main`'s scanner (with no
+        // multi-line tracking at all) reads every line. This bounds every way an unclosed attribute
+        // can otherwise swallow the rest of the file (an unbalanced bracket in a string, a trailing
+        // line comment, a char literal holding `[` or `"`, a raw-string line starting `#[` inside a
+        // test body) to one fixed-size window, never the file's remainder.
         attrDepth += netBracketDelta(l, strState);
         if (attrDepth <= 0) {
           attrDepth = 0;
           console.error(
             `verify:mutation note — ${rel}:${attrStartLine} multi-line attribute closed at line ${i + 1}; kept pending test state across it`,
           );
+        } else if (i + 1 - attrStartLine >= MULTILINE_ATTR_LOOKAHEAD) {
+          console.error(
+            `verify:mutation finding — ${rel}:${attrStartLine} attribute did not close within ${MULTILINE_ATTR_LOOKAHEAD} line(s); falling back to single-line handling from the next line`,
+          );
+          attrDepth = 0;
         }
         continue;
       }
