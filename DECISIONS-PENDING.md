@@ -399,6 +399,7 @@ entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
 133. **[FOR YOUR WORD, with the click — PR #108's landing condition.]** The union design (round 18 item 4) passed on the code in both gates. Both gates failed on the record only; no finding is semantic. The architect is reducing the record under the record cap's point (3), which restores five amendment lines that were edited in place and appends a superseded index naming the twelve removed tests.
 - **The landing problem.** After the restore, the record's committed amendments still name those twelve tests. `verify-test-claims` binds a gate file's claims once its node is done, so merging with the node `done` would turn main's CI red. No append-only text neutralises them; the held superseded-name scanner would.
+- **The custodian's reading, for you to confirm or reject.** Round 18 item 4 drops #108 if that round stops. The custodian reads a record-only FAIL, with the code passing both gates, as not a stop. The record cap's point (3) therefore governs, and the piece lands after the reduction. If you read it otherwise, option (3) applies.
 - **Options:**
   - (1) **Merge; keep the node in progress until the scanner lands** (Recommended). The node's `gate` names the form, so the names stay advisory. This extends your round-16 item-4 P3b precedent to this node.
   - (2) **Scanner first:** schedule the superseded-name scanner, and #108 waits for it.
