@@ -231,3 +231,70 @@ vulnerabilities", rc 0. Both `npm ci` runs themselves: rc 0, clean installs. Bot
 unapproved install script each (`esbuild@0.25.12` in shell's tree, `esbuild@0.28.2` in the
 viewer's) under npm's `allow-scripts` mechanism -- noted, not acted on; approving or denying it is
 outside this piece's scope.
+
+## Amendment 2 -- the gated piece's results
+
+References and results only (the record cap, `state/directives/2026-09-18-record-cap.md`), per
+DECISIONS-PENDING.md RULED 2026-09-20, entries 116 and 117.
+
+**Merge:** `origin/main` merged at commit `30cb23c` (signed off; no lockfile/package.json conflict --
+neither `frontends/shell/package-lock.json` nor `renderer/bundle-viewer/package-lock.json` was
+touched by `origin/main` since this branch's base). `git diff --name-only --diff-filter=U` after the
+merge: empty.
+
+**Package delta vs. this document's own Amendment 1 lockfile-diff-summary table:** none. Recomputed
+from `node_modules/<name>` keys in commit `30cb23c`'s lockfiles against `origin/main`'s: shell tree
+35 added / 62 removed / 15 changed (same ten non-platform packages Amendment 1's table lists);
+viewer tree 1 added / 0 removed / 26 changed (`@esbuild/openharmony-arm64`, the same MIT platform
+stub). Resolved versions match exactly: `vitest` 5.0.1, `vite-node` 6.0.0, `esbuild` (viewer)
+0.28.2, `lightningcss`/`lightningcss-win32-x64-msvc` 1.33.0, `caniuse-lite` 1.0.30001809. No STOP
+condition.
+
+**Test typing (entry 116):** commit `682fb4c` -- `frontends/shell/src/residency/candidateArmSession.test.ts:2271`
+(`bootstrapAndArmOverBudget`) and `:3335` (`armOneTile`), each parameter retyped from
+`ReturnType<typeof vi.fn>` to the callee's own declared type, `(event: ResidencyStatusEvent) => void`
+(the callee: `frontends/shell/src/residency/candidateArmSession.ts:108`). `npx tsc --noEmit`: rc 2
+before, rc 0 after; no other error. File line count unchanged (`git diff --stat`: 2 insertions, 2
+deletions).
+
+**Audit-script decisions (entries 116, 117):** commit `49f0568` -- three `PACKAGE_DECISIONS` entries
+appended to `scripts/audit-dependency-licenses.mjs` for `lightningcss` 1.33.0,
+`lightningcss-win32-x64-msvc` 1.33.0 (tree `frontends/shell`, MPL-2.0) and `caniuse-lite` 1.0.30001809
+(tree `frontends/shell`, CC-BY-4.0), each dated 2026-09-20, build-time-only. `node
+scripts/audit-dependency-licenses.mjs`: rc 0; the three packages no longer need REVIEW (previously 1
+REVIEW line on `origin/main`, `caniuse-lite`; the `lightningcss` pair was absent from `origin/main`'s
+lockfile). The regenerated `DEPENDENCY-LICENSES.md` was not committed: this worktree's partial
+npm/cargo provisioning (2 cargo trees whose offline metadata call fails under `.claude/worktrees/`, 2
+npm trees with no `node_modules` installed here) produces a materially different package count than a
+fully-provisioned checkout's generation -- the same worktree artifact this document's own Amendment 1
+already recorded and reverted rather than committed.
+
+**Suites and builds (rc recorded):**
+
+- `renderer/bundle-viewer`: `npm ci` rc 0; `npm run build` rc 0 (`dist/app.js` 434.9kb); `npm test`
+  rc 0, 69/69 pass.
+- `frontends/shell`: `npm ci` rc 0; `npm run verify` rc 1 -- 4 of 1048 tests fail with vitest's
+  default 5000ms timeout, all in `src/notices/{duckdbAmalgamation,noticeByteIdentity,
+  noticeDeterminism,spdxTokenisation}.test.ts`, which call `cargo metadata`/`cargo tree` against
+  `frontends/shell/src-tauri` -- a crate this workspace's root `Cargo.toml` (`exclude`, line 27)
+  deliberately excludes. Confirmed environment-only, not a consequence of this piece's dependency
+  bump: (a) the same failing file run alone with `--testTimeout=30000` passes (21/21, 9.62s); (b) the
+  identical suite run from a separate `git worktree add` of `origin/main` outside `.claude/worktrees/`
+  passes 1048/1048 rc 0, with the same cargo calls individually taking 5-23s; (c) neither
+  `lightningcss` nor `caniuse-lite` nor any npm package touches `Cargo.lock`, so the Rust package
+  graph these tests read is identical before and after this piece's changes.
+- `npm audit` after `npm ci`, both trees: "found 0 vulnerabilities", rc 0.
+
+**Notice set (before/after, both trees):** `frontends/shell/src/generated/NOTICE.txt` sha256
+`18c71526fcf566d5640f13b3b06783b67008c1ba6233ce64b32b4bc0a20ac7de` on both `origin/main` (built in a
+separate `git worktree add` checkout) and commit `49f0568`'s tree -- byte-identical.
+`renderer/bundle-viewer/dist/NOTICE.txt` sha256
+`826e55d1f585edef8431791033a6beacd6379dc0615ad749a97a7467ab4805fb` on both -- byte-identical,
+matching this document's own Amendment 1 record of the same viewer hash.
+
+**Governance pre-gate (rc recorded, all from the worktree root):** `node --test "scripts/plan/*.test.mjs"
+"scripts/hooks/*.test.mjs"` rc 0 (251 pass); `node scripts/plan/verify-cites.mjs` rc 0 PASS; `node
+scripts/plan/verify-quotes.mjs` rc 0 PASS; `node scripts/plan/verify-test-claims.mjs` rc 0 PASS (108
+claimed, 3 pre-existing planned/advisory, unrelated to this piece); `node scripts/plan/verify.mjs
+--offline` rc 0 PASS; `node scripts/plan/queue.mjs --check` rc 0, current; `node scripts/plan/site.mjs
+--check` rc 0, current. No drift; nothing regenerated.
