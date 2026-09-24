@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T00:51:11.819Z",
-  "plan_hash": "60f9cfde3752fcd186161259c189003535f1cf9276f102006b52e8a4960873e7",
+  "generated_at": "2026-09-24T01:25:13.037Z",
+  "plan_hash": "25966289ce8846ab501e86a08e0c73247d9fa274b2fb81632fc77e40d9ac0da1",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2469,15 +2469,17 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/crs-unit-fact-and-bounds"
+      },
       "budget_minutes": 300,
       "generation": 1,
       "felt_verdict": false,

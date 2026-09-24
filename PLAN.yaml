@@ -1452,12 +1452,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md
+    evidence: {branch: cut/crs-unit-fact-and-bounds}
     budget_minutes: 300
     generation: 1
     felt_verdict: false

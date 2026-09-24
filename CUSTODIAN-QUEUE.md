@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `60f9cfde3752fcd186161259c189003535f1cf9276f102006b52e8a4960873e7`) at `2026-09-24T00:51:11.715Z`.
+Generated from `PLAN.yaml` (sha256 `25966289ce8846ab501e86a08e0c73247d9fa274b2fb81632fc77e40d9ac0da1`) at `2026-09-24T01:25:12.922Z`.
 
 ## 1. Next
 
@@ -11,7 +11,6 @@ Generated from `PLAN.yaml` (sha256 `60f9cfde3752fcd186161259c189003535f1cf9276f1
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (lane `engine`, order 2, budget 60 min)
 - **engine-source-change-watcher** — The advisory source-change watcher (lane `engine`, order 7, budget 240 min)
 - **multipolygon-assessment-consult** — MultiPolygon support -- the architect's assessment, consult only (if time remains) (lane `engine`, order 9, budget 45 min)
-- **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests (lane `kernel-protocol`, order 1, budget 300 min)
 - **b1-engine-prereg-draft** — Brief B, stage B1's engine/kernel half -- the preregistration draft and the architect consult only; no code; the draft comes to the human's morning sight (lane `kernel-protocol`, order 3, budget 90 min)
 - **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions (lane `shell`, order 6, budget 120 min)
 - **drill-fix-viewer-build-order** — Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115) (lane `shell`, order 9, budget 45 min)
@@ -41,6 +40,7 @@ Generated from `PLAN.yaml` (sha256 `60f9cfde3752fcd186161259c189003535f1cf9276f1
 ## 5. In progress
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
+- **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: branch `cut/crs-unit-fact-and-bounds`
 
 ## 6. Proposed / unscheduled
 
