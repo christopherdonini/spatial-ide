@@ -43,3 +43,11 @@ No-regression proof, redone against today's `origin/main` (`6430fc9`) per RULED 
 Checks at HEAD (`532c6e3`), each rc 0: `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` (265/265 pass); `node scripts/plan/verify-quotes.mjs`; `node scripts/plan/verify-cites.mjs`; `node scripts/plan/verify-test-claims.mjs`; `node scripts/plan/verify-mutation.mjs --base origin/main --head HEAD` (9/9 new tests named by a recorded mutation); `node scripts/plan/verify.mjs --offline`.
 
 The Correction round 1 "Known residual (disclosed, not fixed)" line above (the raw-string-in-test-body case) is superseded by this amendment's bound, which covers it (`a_raw_string_line_starting_the_attribute_opener_in_a_test_body_falls_back`, :167); the original line stays by append-only.
+
+## Amendment 3 — correction (class 3, §10)
+
+Defect: Amendment 2's Ruling line and its byte-copied clause cite the ledger by line and hash (`DECISIONS-PENDING.md:49`, `:388-392 @ 971d76e`), which round 12 item (a) and round 14 item (a′) forbid — a ledger ruling is cited by round and item, an entry by its number, never by line. Corrected reference: RULED 2026-09-24 — question round 17, item 9, applying entry 127's recommendation. Proof: `verify-quotes.mjs` and `verify-cites.mjs` pass at this commit with no `path:line` reference remaining into `DECISIONS-PENDING.md`.
+
+Superseded as of this amendment: Amendment 2's Ruling line (both `DECISIONS-PENDING.md` line+hash pins) and its byte-copied clause's source-line label.
+
+Fact: the piece's whole diff is now 332 lines across 3 files (form 45, mjs 94, tests 193), past §21c's 150-line bound, so it goes to full gating (reviewer and architect) under §21b.
