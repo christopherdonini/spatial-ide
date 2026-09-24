@@ -132,12 +132,11 @@ test('verifyStatusAgreement fails by name when a ready node\'s gate names a path
 
 test('verifyStatusAgreement passes when a ready node\'s gate names a real tracked file', () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
-  // This preregistration file is tracked in the real repository at repoRoot.
+  // CLAUDE.md is a stable, always-tracked root file (unlike this piece's own preregistration,
+  // which is specific to this branch) -- used the same way 'ADR-010' is used above.
   const mutated = {
     ...plan,
-    nodes: plan.nodes.map((n) =>
-      n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/VERIFY-GATE-FILE-EXISTS-PREREGISTRATION.md' } : n,
-    ),
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'CLAUDE.md' } : n)),
   };
   const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
   assert.ok(
@@ -148,15 +147,75 @@ test('verifyStatusAgreement passes when a ready node\'s gate names a real tracke
   // Recorded mutation: break the path (misspell it) -- the check must fail it by name again.
   const broken = {
     ...plan,
-    nodes: plan.nodes.map((n) =>
-      n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/VERIFY-GATE-FILE-EXITS-PREREGISTRATION.md' } : n,
-    ),
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'CLAUDE-EXITS.md' } : n)),
   };
   const brokenFailures = verifyStatusAgreement(broken, { repoRoot, offline: true, slug: null });
   assert.ok(
     brokenFailures.some((f) => f.includes('n-ready-b') && f.includes('gate') && f.includes('EXITS')),
     `mutation did not fail by name, got: ${JSON.stringify(brokenFailures)}`,
   );
+});
+
+test('verifyStatusAgreement fails by name when a ready node\'s gate names a directory, not a file', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan' } : n)),
+  };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    failures.some((f) => f.includes('n-ready-b') && f.includes('gate') && f.includes('scripts/plan')),
+    `expected a named gate failure for a directory gate, got: ${JSON.stringify(failures)}`,
+  );
+
+  // Recorded mutation: point the gate at a real file instead -- the failure must clear.
+  const fixed = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'CLAUDE.md' } : n)),
+  };
+  const fixedFailures = verifyStatusAgreement(fixed, { repoRoot, offline: true, slug: null });
+  assert.ok(!fixedFailures.some((f) => f.includes('n-ready-b') && f.includes('gate')));
+});
+
+test('verifyStatusAgreement fails by name when a ready node\'s gate is a glob pathspec, not a file', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'scripts/plan/*.mjs' } : n)),
+  };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    failures.some((f) => f.includes('n-ready-b') && f.includes('gate') && f.includes('*.mjs')),
+    `expected a named gate failure for a glob gate, got: ${JSON.stringify(failures)}`,
+  );
+
+  // Recorded mutation: point the gate at a real file instead -- the failure must clear.
+  const fixed = {
+    ...plan,
+    nodes: plan.nodes.map((n) => (n.id === 'n-ready-b' ? { ...n, gate: 'CLAUDE.md' } : n)),
+  };
+  const fixedFailures = verifyStatusAgreement(fixed, { repoRoot, offline: true, slug: null });
+  assert.ok(!fixedFailures.some((f) => f.includes('n-ready-b') && f.includes('gate')));
+});
+
+test('verifyStatusAgreement fails by name when an in-progress node\'s gate names an untracked path', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  // n-inprogress is status "in-progress" in the fixture with gate: none; point it at a dangling path.
+  const mutated = {
+    ...plan,
+    nodes: plan.nodes.map((n) =>
+      n.id === 'n-inprogress' ? { ...n, gate: 'scripts/plan/NO-SUCH-PREREGISTRATION.md' } : n,
+    ),
+  };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null });
+  assert.ok(
+    failures.some((f) => f.includes('n-inprogress') && f.includes('gate') && f.includes('NO-SUCH-PREREGISTRATION.md')),
+    `expected a named gate failure for an in-progress node, got: ${JSON.stringify(failures)}`,
+  );
+
+  // Recorded mutation: restore gate: none -- the failure must clear.
+  const fixedFailures = verifyStatusAgreement(plan, { repoRoot, offline: true, slug: null });
+  assert.ok(!fixedFailures.some((f) => f.includes('n-inprogress') && f.includes('gate')));
 });
 
 test('runVerify: --offline note is present and PR/release evidence does not fail solely for being unchecked', () => {
