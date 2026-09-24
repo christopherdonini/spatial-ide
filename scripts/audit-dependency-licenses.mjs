@@ -176,6 +176,30 @@ const PACKAGE_DECISIONS = [
     version: '0.36.1', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
   },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: lightningcss, pulled in
+  // transitively by the vitest 5 / vite 6 forced audit fix. Build-time-only (dev tooling, not in the
+  // Rollup module walk that defines frontends/shell's shipped set); not in any shipped set. A fresh
+  // decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'lightningcss', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: the platform binary for
+  // lightningcss on this machine. Same reasoning as the entry above.
+  {
+    tree: 'frontends/shell', name: 'lightningcss-win32-x64-msvc', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 117: caniuse-lite, bumped by the same
+  // forced audit fix. Build-time-only (browserslist/tooling data, not in any shipped set). A fresh
+  // decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'caniuse-lite', version: '1.0.30001809', license: 'CC-BY-4.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+  },
 ];
 
 /** The note every entry above cites, named once so the report can print the citation. */
