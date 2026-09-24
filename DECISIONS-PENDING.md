@@ -29,6 +29,16 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-09-24 — question round 20 (AskUserQuestion, one item, mirrored to Telegram first as `state/questions/round-20.md`; the answer typed, verbatim):**
+
+- *Item 1 — entry 134, PR #108's node and the scanner:* **"Option 1, with two riders: (a) a withdrawn row is valid only if the ruling it names resolves: the round/item or entry id must exist as a RULED block that names the removal, and verify fails an unresolvable citation by name. No ruling, no withdrawal. (b) A withdrawn test may never be evidence that a gate, acceptance or preregistered claim still relies on. If one is, the row must name what now carries that evidence, or verify fails. For #108 that's the union design itself, which makes "no loss" true by construction. That's why its twelve property tests are obsolete rather than merely deleted. The piece is one round, fully gated, after #117 lands, and #108 closes as done when its rows are in."** Applied:
+  - A new governance piece, the `withdrawn` marker for `verify-test-claims`, is placed after PR #117 lands. It gets one round, fully gated, and carries both riders as its own requirements.
+    - Rider (a): the named ruling must resolve to a RULED block that names the removal, or verify fails the citation by name.
+    - Rider (b): a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, or verify fails.
+  - Its PLAN node is added to main after #112's click. Until then, main takes no PLAN commit.
+  - `governance-verify-mutation-multiline-attrs` stays in progress until its withdrawn rows are in. It then closes as done. For its twelve tests, the carrier of the evidence is the union design itself (the round-18 item-4 ruling).
+  - Round 19 item 2's closing of #108 on the scanner's landing is superseded by this item. P3b's closing on the scanner's landing stands.
+
 **RULED 2026-09-24 — question round 19 (AskUserQuestion, one set, mirrored to Telegram first as `state/questions/round-19.md`; both answers typed, verbatim):**
 
 - *Item 1 — entry 132, ADR-035 and the kernel defect:* **"(1), and the reviewer's point is ruled: the dataset_session_ended event is emitted at the single place the kernel records a generation's end, so every end emits, whichever check caused it (pre-check, post-check, drop path or watcher). Which paths emit then stops being a question. Rider (a) is unchanged: the event stays advisory, and the next generation-scoped call still refuses."** Applied:
@@ -412,6 +422,23 @@ yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in
 re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #31; item 1 (b) and the
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
+
+134. **[RULED 2026-09-24 — question round 20; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — PR #108's node cannot close as done when the scanner lands; entry 133's premise was wrong.]** Round 19 item 2 closes `governance-verify-mutation-multiline-attrs` as done when the superseded-name scanner (PR #117) lands. That rested on entry 133's statement that the scanner would neutralise #108's twelve historical test names. The statement was the custodian's error.
+- **Why it fails.** The scanner exempts only a renamed claim whose replacement exists (`scripts/plan/README.md`, section "The boundary"). #108's twelve names are tests the round-18 union design removed with no replacement.
+- **The evidence.** PR #117's reviewer checked this on a scratch clone of main plus #117 (gate-log array index 172):
+  - With P3b and #108 both set to done, `verify:test-claims` fails on the twelve names (15 claim sites in `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md`).
+  - With P3b alone done, it passes. P3b's closure is unaffected.
+- **The architect's position** (gate-log array index 171): a removal is not a supersession. It would need a distinct marker that you approve.
+- **Options:**
+  - (1) **A withdrawal marker** (Recommended). One small governance piece, fully gated after #117 lands, teaches `verify-test-claims` a distinct `withdrawn` marker:
+    - It uses the same hash-pinned row at a main commit as `superseded`.
+    - It names the ruling that removed the test, and requires no replacement.
+    - #108's record then gains its withdrawn rows, and the node closes as done.
+    - Every future design change that removes a claimed test uses the same path.
+  - (2) **A disclosed known limit.** No tool change.
+    - The node stays not-done indefinitely, with a note, and the twelve names stay advisory.
+    - The next removal meets the same wall.
+- **Touches:** PLAN node `governance-verify-mutation-multiline-attrs`; for option (1), a new proposed governance node.
 
 133. **[RULED 2026-09-24 — question round 19; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, with the click — PR #108's landing condition.]** The union design (round 18 item 4) passed on the code in both gates. Both gates failed on the record only; no finding is semantic. The architect is reducing the record under the record cap's point (3), which restores five amendment lines that were edited in place and appends a superseded index naming the twelve removed tests.
 - **The landing problem.** After the restore, the record's committed amendments still name those twelve tests. `verify-test-claims` binds a gate file's claims once its node is done, so merging with the node `done` would turn main's CI red. No append-only text neutralises them; the held superseded-name scanner would.

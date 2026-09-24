@@ -268,3 +268,42 @@ fn every_request_fixture_carries_the_current_skp_version() {
         );
     }
 }
+
+/// `skp/0.4`, crs-unit-fact-and-bounds. `CrsUnit` is a closed, exhaustive four-value wire enum:
+/// round trip every declared value, and refuse every string that is not one of the four
+/// (`"Degree"` wrong case, `"degrees"` a plural, `"meter"` the US spelling, `""` empty).
+///
+/// Mutation: `#[serde(alias = "meter")]` on `Metre`. Expected failure: this test fails by name.
+#[test]
+fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
+    for (value, wire) in [
+        (CrsUnit::Degree, "degree"),
+        (CrsUnit::Metre, "metre"),
+        (CrsUnit::Other, "other"),
+        (CrsUnit::Unestablished, "unestablished"),
+    ] {
+        let serialized = serde_json::to_value(value).unwrap();
+        assert_eq!(
+            serialized,
+            serde_json::json!(wire),
+            "{wire}: serialized form"
+        );
+        let parsed: CrsUnit = serde_json::from_value(serde_json::json!(wire))
+            .unwrap_or_else(|e| panic!("{wire}: does not deserialize: {e}"));
+        assert_eq!(parsed, value, "{wire}: round trip");
+    }
+    for bad in ["Degree", "degrees", "meter", ""] {
+        let result: Result<CrsUnit, _> = serde_json::from_value(serde_json::json!(bad));
+        assert!(
+            result.is_err(),
+            "{bad:?} deserialized as a CrsUnit, but it is not one of the four declared strings"
+        );
+    }
+}
+
+/// `skp/0.4`, crs-unit-fact-and-bounds. Mutation: the literal back to `"skp/0.3"`. Expected
+/// failure: this test fails by name.
+#[test]
+fn skp_version_is_skp_0_4() {
+    assert_eq!(SKP_VERSION, "skp/0.4");
+}

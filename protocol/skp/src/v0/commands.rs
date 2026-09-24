@@ -137,6 +137,25 @@ pub struct CrsInfo {
     /// `axis_normalization` stays `"none-performed"`, and nothing here licenses a reprojection.
     /// It is never paraphrased, shortened or reworded.
     pub display_convention: Option<String>,
+    /// **`skp/0.4`, crs-unit-fact-and-bounds.** The engine's recorded
+    /// `AdmissionRecord::coordinate_unit` class, closed over exactly four values. `Other` means
+    /// both axes named one unit that is neither degree nor metre; its name is not carried. The
+    /// unit's source is not carried either — this field states only the class, never how it was
+    /// established.
+    pub unit: CrsUnit,
+}
+
+/// **`skp/0.4`, crs-unit-fact-and-bounds.** The four coordinate-unit classes a `describe` response
+/// can carry, a closed projection of `spatial_engine::CoordinateUnit` (`engine/src/geoparquet.rs`).
+/// Serialized lowercase; an unknown string fails to deserialize — there is no fifth value and no
+/// tolerant fallback.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CrsUnit {
+    Degree,
+    Metre,
+    Other,
+    Unestablished,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

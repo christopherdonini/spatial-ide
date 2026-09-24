@@ -26,6 +26,7 @@ function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
     provenance: "crs:declared",
     axis_provenance: "axis:declared",
     display_convention: null,
+    unit: "metre",
     ...overrides,
   };
 }
