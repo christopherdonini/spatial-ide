@@ -331,3 +331,97 @@ delta vs `origin/main`: `caniuse-lite` moved from **Needs human review** to **De
 unrelated to this piece); `node scripts/plan/verify.mjs --offline` rc 0 PASS;
 `node scripts/plan/queue.mjs --check` rc 0, current; `node scripts/plan/site.mjs --check` rc 0,
 current.
+
+## Amendment 4 — correction round after full gating attempt 1
+
+References and results only (the record cap, `state/directives/2026-09-18-record-cap.md`).
+
+**1/2. Per-decision `DECISION_SOURCE`; two false decision comments.** Defect: one hard-coded
+`DECISION_SOURCE` credited all three 2026-09-20 decisions to the 2026-08-07 checklist note, and two
+new entries' comments said lightningcss arrived via "vitest 5 / vite 6" and caniuse-lite was "bumped
+by the same forced audit fix". Corrected reference: `scripts/audit-dependency-licenses.mjs` @ `fa5d3a6`
+gives each `PACKAGE_DECISIONS` entry its own `source` (pre-existing entries keep
+`PRE-PUBLIC-CHECKLIST.md`'s 2026-08-07 item 1; the three new ones cite `DECISIONS-PENDING.md`, RULED
+2026-09-20, entry 116 for the lightningcss pair and entry 117 for caniuse-lite); lightningcss's
+comment now cites vite-node's nested vite@8.3.0's own direct dependency
+(`frontends/shell/package-lock.json:3993-4003 @ bb49f80 sha256:49cb6c57c6f986e2a2950ff54a900ca926d2233f1a96ed8b44482ae023207e5c`),
+and caniuse-lite's comment states it was already 1.0.30001809 on `origin/main` before this piece
+(`git show e04ccc4:frontends/shell/package-lock.json`). Proof: `node scripts/audit-dependency-licenses.mjs`
+rc 0 at `fa5d3a6`; the Decided-packages table prints each row's own Source column; the "Third-party
+data terms" section is byte-identical to `bb49f80`'s.
+
+**3. The nested vite, disclosed (no ruling claimed or needed, per both gates).** §2's row said the
+resulting nested vite is "6.x"; `frontends/shell/package-lock.json` resolves vite-node's nested vite
+to 8.3.0, a required consequence of the approved `vite-node@^6.0.0` (`vite-node@^6.0.0` requires
+`vite@^8`), bringing `rolldown@1.2.9` and `lightningcss@1.33.0` as vite 8's own dependencies and
+moving `postcss` 8.5.26→8.5.28
+(`frontends/shell/package-lock.json:3993-4003 @ bb49f80 sha256:49cb6c57c6f986e2a2950ff54a900ca926d2233f1a96ed8b44482ae023207e5c`).
+No decision beyond the three already in `PACKAGE_DECISIONS` is needed: `rolldown` and `postcss` are
+both MIT (`node_modules/rolldown/package.json`, `node_modules/postcss/package.json`, this worktree),
+already on `RECOGNISED_PERMISSIVE`.
+
+**4. Amendment 2's and Amendment 3's cause, both superseded.** Defect: Amendment 2 attributed the
+4-of-1048 failures to the `.claude/worktrees/` location; Amendment 3 attributed them to cargo
+package-cache lock contention; neither holds. Corrected cause: vitest 2's `withTimeout` is a plain
+`Promise.race` with no post-check (untracked build output, main checkout's install of vitest 2.1.9 --
+`@vitest/runner/dist/index.js`, function `withTimeout`, lines 32 through 50), so a test whose own
+promise settles via microtask ordering before the timer macrotask fires is credited on-time
+regardless of elapsed time; vitest 5's `withTimeout` explicitly checks `deadline.exceeded()` after the
+test settles and rejects it even then (untracked build output, this branch's install of vitest 5.0.1
+-- `vitest/dist/chunks/run.C5UmxDPh.js`, the `resolve` closure inside `withTimeout`, lines 3277
+through 3288) -- a real behaviour change the approved bump introduces, not an environment artifact.
+Proof: on `origin/main` at `fc65d83`, a quiet-machine (`tasklist` showed no cargo.exe/rustc.exe) solo
+run of `noticeDeterminism.test.ts` (`npx vitest run`, vitest 2.1.9) takes 5.70s test time against the
+unconfigured 5000ms default and still passes.
+
+**5. The timeout's authority, re-cited.** Defect: the timeout commit (`5f8dbba`) cited
+`PRECEDENTS.md` P-005, which is not about test timeouts. Corrected reference: `DECISIONS-PENDING.md`,
+RULED 2026-09-20, entry 116's suite-and-build-green step is the authority — the approved vitest
+5.0.1 enforces a timeout vitest 2.1.9 never enforced (finding 4, above), and raising it is part of
+making the suite green under that entry. No re-commit: the code at `5f8dbba` is unchanged; only the
+citation is corrected here.
+
+**6. Record hygiene.** Defect: Amendment 2's "Test typing (entry 116)" bullet named the tsc error
+lines (2271, 3335) as the retyped parameter lines, and its "Governance pre-gate" bullet named no
+commit; separately, §0's first bullet labels a paraphrase "the human's verbatim order" and its P-011
+quote elides with ASCII "..." rather than "…". Corrected reference: the retyped parameters are at
+frontends/shell/src/residency/candidateArmSession.test.ts:2270 @ 682fb4c sha256:4287c551ccd75fe244352539d937eb19c9038e5d46a8787b40ca250c81d5304d and frontends/shell/src/residency/candidateArmSession.test.ts:3334 @ 682fb4c sha256:cf1610f94b0aa44f6d5657bc5f5ada59754c309c860dd5611828aee2964604d3
+(matching entry 116's own text); the pre-gate ran at commit `49f0568` (HEAD when Amendment 2's `f1b71ab` was authored); the
+actual verbatim human order is `DECISIONS-PENDING.md`, RULED 2026-09-19, entry 115, item (c), not
+§0's paraphrase. Proof: `git show 682fb4c:frontends/shell/src/residency/candidateArmSession.test.ts`
+confirms both lines' content; `git log --oneline` places `49f0568` immediately before `f1b71ab`;
+`DECISIONS-PENDING.md:28 @ fc65d83` (main) carries the quoted human message in full.
+
+**7. Disclosure: `protocol/transport-bakeoff/web`'s count, and `origin/main`'s own report.** Kept in
+this PR per the ruling's "regenerated" instruction, about `origin/main`'s committed report, not this
+piece's change: `protocol/transport-bakeoff/web` audits at exactly 30 packages once its
+`node_modules` is provisioned (`npm ci` there: "added 30 packages"), and `origin/main`'s committed
+`DEPENDENCY-LICENSES.md` (966 packages, 1 not-auditable) is itself under-provisioned — running the
+audit against `origin/main` at `fc65d83` with that one tree's `node_modules` installed gives 996
+packages and 0 not-auditable. This branch's own fully-provisioned report already reflects the correct
+count (commit `fa5d3a6`, 989 packages including this piece's own dependency bump); `node_modules` was
+removed from the main checkout afterward and its regenerated `DEPENDENCY-LICENSES.md` reverted
+(`git checkout -- DEPENDENCY-LICENSES.md`), so `origin/main`'s tree is unchanged.
+
+**8. The architect's caveat, for the record only.** The three 2026-09-20 `PACKAGE_DECISIONS` entries'
+`why` text says "build-time-only", but `decisionFor()` keys only on tree/name/version/license
+(`scripts/audit-dependency-licenses.mjs`, `decisionFor`), so nothing mechanical re-flags any of the
+three if it enters a shipped set under the same tree key (`frontends/shell`) — a finding for a later
+piece, not an audit-semantics change here.
+
+### Superseded as of this amendment
+
+- Amendment 2, "Test typing (entry 116)" bullet: lines 2271/3335 — superseded by finding 6 above
+  (2270/3334).
+- Amendment 2, "Governance pre-gate" bullet: no commit named — superseded by finding 6 above
+  (commit `49f0568`).
+- Amendment 2, "Suites and builds" bullet's `.claude/worktrees/`-location cause — superseded by
+  finding 4 above.
+- Amendment 3's own "Corrects Amendment 2's attribution" cargo-lock-contention cause and its
+  "Timeout commit ... delegation PRECEDENTS.md P-005" line — superseded by findings 4 and 5 above.
+- §2's row: "resulting nested vite is 6.x" — superseded by finding 3 above (8.3.0).
+- §0's first bullet: "the human's verbatim order:" — superseded by finding 6 above (a paraphrase; the
+  verbatim text is at `DECISIONS-PENDING.md`, RULED 2026-09-19, entry 115, item (c)).
+- §0's P-011 quote's "..." elision mark — superseded by finding 6 above ("…").
+
+Read the last amendment first.
