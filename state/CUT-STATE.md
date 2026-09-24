@@ -419,3 +419,17 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
     - The property test's runs left 19 scratch directories in %TEMP%, removed after inspection.
     - Two timing tests flaked once under load: `cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory` and `cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock`. Both pass in isolation, and they are filed for the weekly window.
   - **Waiting on the human:** the click on #109 (it lands before #112 merges main) and #113; entries 129, 130 and 131 for the next round.
+
+- 2026-09-24T13:45Z - **PR #112 passes its fresh count; PR #115 closed under section A; round 18 filed.**
+  - **PR #112 (crs-unit):** fresh-count attempt 2 PASSED in both gates at 01e9ca4. The architect's item 17 text and its record reduction (Amendment 4) land under the record cap, point (3); the residue is record-only and disclosed in the PR body. `main` was merged at 9e4163f (generated files regenerated). Marked ready; it merges after #109, and the custodian merges `main` again after #109 lands.
+  - **PR #115 (fixture regeneration entry point): closed under section A.**
+    - Root-cause note: attempt 1 failed in both gates on three semantic items (the relative path landing under `kernel/`, a refusal test that never called the entry point, stale provenance), and the correction round fixed all three. Attempt 2: the architect passed; the reviewer failed on record only (the re-proof named f7bb537, a commit without the refactor). Class at close: mechanical.
+    - The custodian verified closing commit d1eec2b mechanically:
+      - `git diff f7bb537 41aa209 -- kernel/tests/support engine` is empty, so the spec and writer are unchanged and the bytes hold.
+      - The pin `AUTONOMY.md:345 @ ac5a154` recomputes, and ac5a154 is on main; line 345 is §21b's size-overrun paragraph. The template pin recomputes at 6195d5a.
+      - The commit touches two files, with only three spots in `FIXTURES.md`.
+      - The determinism text is now a reference without quotation marks to `kernel/SCALE-PASS-PREREGISTRATION.md:570-572`, whose content it matches.
+      - `writer.close()` is in the private `generate()` at `engine/src/fixture.rs:826`.
+      - CI is 9/9 green on d1eec2b. Marked ready.
+    - Both byte-identity runs matched the table: 5,004,376,705 B, SHA-256 5ae955c5…1788. Both real copies are untouched.
+  - **Round 18:** `state/questions/round-18.md` carries entries 129 (ADR-035's two Open items), 130 (ADR-035's Rule 7 stop) and 131 (#108's second Rule 7 stop): four items, one question set, no red line.
