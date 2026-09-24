@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T11:30:41.767Z",
-  "plan_hash": "19380737bbbad03caf939a7bfd6e80e8868eaa2d4d5634b217287e5e29f11f5b",
+  "generated_at": "2026-09-24T11:32:29.042Z",
+  "plan_hash": "e65135613f582f728955e7695b4ced2f6ccbba64b93130d5f3f0bf3af328500a",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -319,14 +319,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "fix/fixture-regeneration-entry-point"
+        "pr": 115
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece.",
-      "evidence_label": "branch `fix/fixture-regeneration-entry-point`"
+      "evidence_label": "PR #115"
     },
     {
       "id": "known-limitations-owed-rows",

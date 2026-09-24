@@ -1671,7 +1671,7 @@ nodes:
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: fix/fixture-regeneration-entry-point}
+    evidence: {pr: 115}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

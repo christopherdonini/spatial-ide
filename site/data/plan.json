@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T11:30:41.897Z",
-  "plan_hash": "19380737bbbad03caf939a7bfd6e80e8868eaa2d4d5634b217287e5e29f11f5b",
+  "generated_at": "2026-09-24T11:32:29.171Z",
+  "plan_hash": "e65135613f582f728955e7695b4ced2f6ccbba64b93130d5f3f0bf3af328500a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2845,7 +2845,7 @@
       },
       "gate": "none",
       "evidence": {
-        "branch": "fix/fixture-regeneration-entry-point"
+        "pr": 115
       },
       "budget_minutes": 90,
       "generation": 1,
