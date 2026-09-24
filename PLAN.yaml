@@ -485,21 +485,21 @@ nodes:
     dates: {opened: null, done: null}
 
   - id: governance-test-claims-superseded-scanner
-    title: "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)"
+    title: "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded)"
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    needs_human: {kind: click, minutes: 2}
+    gate: scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md
+    evidence: {branch: governance/test-claims-superseded}
     budget_minutes: 120
-    generation: 1
+    generation: 2
     felt_verdict: false
-    entries: [112, 125]
-    summary: "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR. RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap; when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done."
+    entries: [112, 125, 133]
+    summary: "RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap. This round (attempt-2 corrections; state/gate-log.json this node's attempt-2 records): reviewer attempt-2's four blockers and architect attempt-2's two residual items closed, per this node's gate file's own append-only Amendments. test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8); when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done. The merge is the human's click."
     dates: {opened: 2026-09-24, done: null}
 
   - id: site-bugs-first

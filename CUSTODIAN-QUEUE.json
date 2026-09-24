@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-09-24T19:08:03.832Z",
-  "plan_hash": "14eb83a67e98fdfbeabc19d281dfd0db31f16187288d6aef9bed4ac83492a677",
+  "generated_at": "2026-09-24T19:27:50.268Z",
+  "plan_hash": "9f462d422b6585dbd2f77fe75494fb86048116d969d502411f800bedb496f4c9",
   "priorities_approved": true,
-  "next": {
-    "id": "governance-test-claims-superseded-scanner",
-    "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 1,
-    "budget_minutes": 120,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-24",
-      "done": null
-    },
-    "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR. RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap; when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done."
-  },
-  "ready": [
-    {
-      "id": "governance-test-claims-superseded-scanner",
-      "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR. RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap; when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -410,6 +372,28 @@
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
       "evidence_label": "PR #109"
+    },
+    {
+      "id": "governance-test-claims-superseded-scanner",
+      "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "click",
+        "minutes": 2
+      },
+      "evidence": {
+        "branch": "governance/test-claims-superseded"
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap. This round (attempt-2 corrections; state/gate-log.json this node's attempt-2 records): reviewer attempt-2's four blockers and architect attempt-2's two residual items closed, per this node's gate file's own append-only Amendments. test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8); when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done. The merge is the human's click.",
+      "evidence_label": "branch `governance/test-claims-superseded`"
     },
     {
       "id": "governance-verify-mutation-multiline-attrs",
