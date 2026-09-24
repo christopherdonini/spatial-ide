@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T18:04:32.240Z",
-  "plan_hash": "dcd2350e1bf004da6d9930e17ed420969ec2da6ffd37db147faafb53562c6bfb",
+  "generated_at": "2026-09-24T18:05:22.280Z",
+  "plan_hash": "10d107c8327524b9f784837086bcb3a1f8822ea77e088e40c41443cb452c6c0b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2547,7 +2547,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -2555,7 +2555,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "fix/kernel-ticket-drop-under-registry-lock"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
