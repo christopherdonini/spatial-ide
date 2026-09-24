@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T19:11:16.370Z",
-  "plan_hash": "ec18f8a69b087a34bcc9e3fc3f36367567761c4fae2cb0fd7c6543fe17f2bc76",
+  "generated_at": "2026-09-24T19:40:46.370Z",
+  "plan_hash": "5fbbe7ad4e33007fe77909de4e4c85061bfdbfa5f0d1b40112eb39a3becff136",
   "priorities_approved": true,
   "next": {
     "id": "governance-test-claims-superseded-scanner",

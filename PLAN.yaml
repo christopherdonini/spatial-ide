@@ -842,7 +842,7 @@ nodes:
     order: 4
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md
     evidence: {pr: 108}
     budget_minutes: 60
     generation: 1

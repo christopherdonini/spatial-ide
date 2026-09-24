@@ -41,7 +41,7 @@
 
 ### Row 1 — Part K, K7: entry 66 (b), geometric protection at every zoom
 
-Queued by `state/CUT-STATE.md:17`:
+Queued by `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md:17`:
 ~~~
 - Entry 66 (b) — PR #45 (both batches gated; the fits latch inverted; drop-at-drain); the ADR-028 closing note on the human's word (Amendment 4's text with Amendment 5 (e)'s clause); the 13b line retires at its landing; its Part K row into the next sitting bundle.
 ~~~
@@ -77,7 +77,7 @@ M15, verbatim (`MANUAL-WALKTHROUGH.md:886`):
 
 ### Row 4 — Part G, entry 86: the bundle viewer's zoom anchored at the pointer (PR #53)
 
-Queued by `state/CUT-STATE.md:43`:
+Queued by `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md:43`:
 ~~~
 - 2026-09-13 — **Viewer piece (entry 86) built (worker, reported):** `viewer/zoom-anchor` 9e69f59 (E2E first, pre-fix readings: large window 110 px off, small 182 px off, forced 1280×900 exact) → 35763d1, e0558f7 (tolerance and DPR revisions AFTER results — a §3 deviation; Amendment 1 ordered to record it) → 95309d7 (the fix: `toStore` with the measured ratio; store sized to the client box × DPR on load and ResizeObserver; `zoomAt`/`panBy`/`resizeStore` pure; viewer-local `MAX_BACKING_STORE_DIM`/`PIXELS`; `ceilings.json` byte-identical) → 9c1064c (five unit tests; E2E wired as `test:e2e`, not in `verify` — CI has no playwright-core and no bundle; the `run-acceptance.mjs` precedent). Mutation: the wheel-site conversion reverted → all three E2E cases fail by name. `npm run verify` exit 0. Line-16 replacement drafted for the human's sight (appended to entry 86). Reviewer + architect gates to be routed after the amendment; the Part G row queued (sitting).
 ~~~

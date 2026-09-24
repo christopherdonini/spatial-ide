@@ -76,26 +76,152 @@ const RUST_TEST_ATTR = /#\[[^\]]*\btest\b[^\]]*\]/;
 const RUST_FN = /^\s*(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+([a-z_][A-Za-z0-9_]*)/;
 const JS_TEST = /^\s*(?:await\s+)?(?:test|it)\s*\(\s*(['"`])(.+?)\1/;
 
+/**
+ * Drop the contents of string literals before bracket-counting — a `"…"` (with `\` escapes) or a
+ * raw `r"…"`/`r#"…"#` — so a bracket inside an attribute's string value (e.g. `#[ignore = "a [b"]`)
+ * is never mistaken for the attribute's own delimiter. `state` (`{inString, rawHashes}`) is CARRIED
+ * across calls so a string that opens on one line and closes on a later one is still tracked.
+ */
+function stripStringLiterals(l, state) {
+  let out = '';
+  let i = 0;
+  while (i < l.length) {
+    if (state.rawHashes !== null) {
+      const close = l.indexOf(`"${'#'.repeat(state.rawHashes)}`, i);
+      if (close === -1) return out;
+      i = close + state.rawHashes + 1;
+      state.rawHashes = null;
+      continue;
+    }
+    if (state.inString) {
+      if (l[i] === '\\') { i += 2; continue; }
+      if (l[i] === '"') state.inString = false;
+      i++;
+      continue;
+    }
+    const raw = /^r(#*)"/.exec(l.slice(i));
+    if (raw) { i += raw[0].length; state.rawHashes = raw[1].length; continue; }
+    if (l[i] === '"') { state.inString = true; i++; continue; }
+    out += l[i];
+    i++;
+  }
+  return out;
+}
+
+function netBracketDelta(l, state) {
+  let d = 0;
+  for (const ch of stripStringLiterals(l, state)) {
+    if (ch === '[') d++;
+    else if (ch === ']') d--;
+  }
+  return d;
+}
+
+/**
+ * `origin/main`'s own per-line Rust scan (RULED 2026-09-24 round 18 item 4), reproduced here
+ * unmodified: no attribute-depth or bracket tracking at all, so it is exactly as reliable (and as
+ * limited — it misses a test behind a genuinely multi-line attribute) as the tool on `main`. The
+ * union in `findTestsInFile` below relies on this to guarantee no loss relative to `origin/main`'s
+ * own scan, by construction: every test this finds is included whatever `trackedRustScan` does.
+ */
+function mainStyleRustScan(lines) {
+  const tests = [];
+  let pending = false;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const fn = RUST_FN.exec(l);
+    if (fn) {
+      if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
+      pending = false;
+      continue;
+    }
+    if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
+    if (/^\s*#!?\[/.test(l) || /^\s*\/\//.test(l) || l.trim() === '') continue;
+    pending = false;
+  }
+  return tests;
+}
+
+/**
+ * The multi-line-attribute-aware scan (this piece's addition, ADDITIVE only — see
+ * `findTestsInFile`): tracks a `#[...]` attribute left unclosed on its opening line across
+ * continuation lines (e.g. a wrapped `#[ignore = "..."]` reason), so a test declared behind it is
+ * still found even though `mainStyleRustScan` misses it. Because attribute-depth tracking can
+ * misjudge a bracket-in-a-comment or a string-parity flip as a close (or never see a genuine close),
+ * this scan alone can both miss a test `mainStyleRustScan` already covers (harmless: the union below
+ * still has it) and add a false entry — a `fn` treated as still "pending" across code the tracker
+ * mistook for attribute continuation. No bound or rewind is needed for safety: only for this scan's
+ * own completeness, which is disclosed, not guaranteed.
+ */
+function trackedRustScan(rel, lines) {
+  const tests = [];
+  let pending = false;
+  let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
+  let attrStartLine = 0;
+  let strState = { inString: false, rawHashes: null };
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (attrDepth > 0) {
+      attrDepth += netBracketDelta(l, strState);
+      if (attrDepth <= 0) {
+        attrDepth = 0;
+        console.error(
+          `verify:mutation note — ${rel}:${attrStartLine} multi-line attribute closed at line ${i + 1}`,
+        );
+      }
+      continue;
+    }
+    const fn = RUST_FN.exec(l);
+    if (fn) {
+      if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
+      pending = false;
+      continue;
+    }
+    if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
+    if (/^\s*#!?\[/.test(l)) {
+      strState = { inString: false, rawHashes: null };
+      const delta = netBracketDelta(l, strState);
+      if (delta > 0) {
+        attrDepth = delta;
+        attrStartLine = i + 1;
+      }
+      // stay "pending" across this attribute line whether it closed on this line or not.
+      continue;
+    }
+    // stay "pending" across doc/line comments and blank lines between the `#[test]` and its
+    // `fn`; any other code line clears it.
+    if (/^\s*\/\//.test(l) || l.trim() === '') continue;
+    pending = false;
+  }
+  return tests;
+}
+
 /** Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`. */
 export function findTestsInFile(rel, content) {
-  const lines = content.split('\n');
+  // survive a CRLF checkout (AI_DEVELOPMENT.md eol class): normalise before line-splitting.
+  const lines = String(content).replace(/\r\n/g, '\n').split('\n');
   const tests = [];
   if (rel.endsWith('.rs')) {
-    let pending = false;
-    for (let i = 0; i < lines.length; i++) {
-      const l = lines[i];
-      const fn = RUST_FN.exec(l);
-      if (fn) {
-        if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust' });
-        pending = false;
-        continue;
+    // The union (RULED 2026-09-24 round 18 item 4): `mainStyleRustScan` guarantees no loss relative
+    // to `origin/main`'s own scan by construction; `trackedRustScan` is additive-only, contributing
+    // any test found behind a genuinely multi-line attribute (and, as disclosed above, occasionally a
+    // false entry). Deduplicated by (name, line); a name found by both scans is listed once.
+    const mainTests = mainStyleRustScan(lines);
+    const trackedTests = trackedRustScan(rel, lines);
+    const mainKeys = new Set(mainTests.map((t) => `${t.name}:${t.line}`));
+    const seen = new Set();
+    for (const t of [...mainTests, ...trackedTests]) {
+      const key = `${t.name}:${t.line}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      tests.push(t);
+      if (!mainKeys.has(key)) {
+        console.error(
+          `verify:mutation note — ${rel}:${t.line} test ${JSON.stringify(t.name)} found only by the multi-line-attribute-tracked scan (not by main's per-line scan) — verify by eye; the tracker can misjudge where an attribute closes.`,
+        );
       }
-      if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
-      // stay "pending" across other attributes, doc/line comments, and blank lines between the
-      // `#[test]` and its `fn`; any other code line clears it.
-      if (/^\s*#!?\[/.test(l) || /^\s*\/\//.test(l) || l.trim() === '') continue;
-      pending = false;
     }
+    tests.sort((a, b) => a.line - b.line);
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
     for (let i = 0; i < lines.length; i++) {
       const m = JS_TEST.exec(lines[i]);
