@@ -407,7 +407,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
     - #108's narrowed fix under a fresh count.
     - The architect drafting ADR-021's dated note, ADR-023's clarifying sentence, and ADR-035 (Proposed; the watcher's `dataset_session_ended`, reconciled with riders (a) and (b)). ADR-031 and ADR-034 are reserved.
 
-- 2026-09-24T12:10Z - **Round 17's ruled work: two Rule 7 stops, one PR ready, three in gate.**
+- 2026-09-24T11:55Z - **Round 17's ruled work: two Rule 7 stops, one PR ready, three in gate.**
   - **PR #113** (ADR-021's dated note and ADR-023's clarifying sentence; round 17 item 3): full gate PASS in both gates at attempt 1, with record-only notes disclosed in the body rather than edited (to keep the byte-copy). Marked ready for the click.
   - **PR #114** (ADR-035 filed Proposed, `dataset_session_ended`; round 17 item 2): attempt 1 failed with four semantic items; the architect's redraft resolved all of them. Attempt 2 failed in both gates on a sentence the redraft added: the post-check residual. It is **STOPPED under Rule 7**: entry 130, with the ADR's Open items revised as entry 129.
   - **PR #108** (the verify-mutation narrowing; round 17 item 9): fresh-count attempt 1 failed on the window rewind, and the correction fixed it. Attempt 2 failed on the correction's own property test, which reads a moving `origin/main` baseline and would turn main red on merge. It is **STOPPED under Rule 7 a second time**: entry 131, with options pin / union design / drop.
