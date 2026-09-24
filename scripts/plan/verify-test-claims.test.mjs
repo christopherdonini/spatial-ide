@@ -456,8 +456,21 @@ function nthLineOf(content, n) {
   return `${content.split('\n')[n - 1]}\n`;
 }
 
-// A small ledger fixture, not the real DECISIONS-PENDING.md (only the last two tests below need a
-// resolvable round/item/entry shape; they do not need to be Authority, only well-formed).
+// Test 1's own fixture ledger is the REAL RULED header and item lines from DECISIONS-PENDING.md,
+// byte-copied by script (not retyped) from this piece's own base commit, `git merge-base HEAD
+// origin/main` at authoring time -- round 20 item 1's own header/item (ruling) and round 18 item 4's
+// own header/item (carrier), the same pairing PR #108's own rows use.
+const WITHDRAWN_BASE_COMMIT = '90de3e94924f8d4d7a0307de0092fe5b5fc61095';
+function ledgerLineAtBase(lineNo) {
+  const text = execFileSync('git', ['show', `${WITHDRAWN_BASE_COMMIT}:DECISIONS-PENDING.md`], { cwd: REPO_ROOT, encoding: 'utf8' });
+  return `${text.split('\n')[lineNo - 1]}\n`;
+}
+// byte-copied from DECISIONS-PENDING.md:32, :34 (round 20 item 1) and :58, :76 (round 18 item 4) at
+// 90de3e94924f8d4d7a0307de0092fe5b5fc61095, via `ledgerLineAtBase` above (a script, not retyping).
+const REAL_LEDGER = ledgerLineAtBase(32) + ledgerLineAtBase(34) + ledgerLineAtBase(58) + ledgerLineAtBase(76);
+
+// A small synthetic ledger fixture for the remaining tests below (they do not need to be Authority,
+// only well-formed).
 const SYNTH_LEDGER = [
   '# Decisions pending the human',
   '',
@@ -504,13 +517,13 @@ function withdrawnFixture({
 // [{\"relPath\":\"X-PREREGISTRATION.md\",\"line\":3,\"name\":\"an_obsolete_test_name_here\"}]" then
 // "1 !== 0" (the claim lands in `findings` instead of `withdrawn`; the other 27 tests pass).
 test('a_withdrawn_test_row_with_a_resolving_ruling_and_carrier_is_advisory_not_a_failure', () => {
-  const { dir } = withdrawnFixture();
+  const { dir } = withdrawnFixture({ ruling: 'round 20, item 1', carrier: 'round 18, item 4', ledger: REAL_LEDGER });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
   assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
   assert.equal(withdrawn[0].name, WITHDRAWN_CLAIM_NAME);
-  assert.equal(withdrawn[0].ruling, 'round 1, item 1');
-  assert.equal(withdrawn[0].carrier, 'round 2, item 5');
+  assert.equal(withdrawn[0].ruling, 'round 20, item 1');
+  assert.equal(withdrawn[0].carrier, 'round 18, item 4');
 });
 
 // RECORDED MUTATION: in resolveCitation, add `return true;` as the function's first line (every
@@ -642,26 +655,4 @@ test('a_withdrawn_test_row_citing_an_entry_id_instead_of_round_item_resolves', (
   assert.equal(findings.length, 0, `an entry-id ruling must resolve: ${JSON.stringify(findings)}`);
   assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
   assert.equal(withdrawn[0].ruling, 'entry 3');
-});
-
-// This test's fixture ledger is the REAL RULED header and item lines from DECISIONS-PENDING.md, byte-
-// copied by script (not retyped) from this piece's own base commit, `git merge-base HEAD origin/main`
-// at authoring time -- round 20 item 1's own header/item (ruling) and round 18 item 4's own
-// header/item (carrier), the same pairing PR #108's own rows use.
-const WITHDRAWN_BASE_COMMIT = '90de3e94924f8d4d7a0307de0092fe5b5fc61095';
-function ledgerLineAtBase(lineNo) {
-  const text = execFileSync('git', ['show', `${WITHDRAWN_BASE_COMMIT}:DECISIONS-PENDING.md`], { cwd: REPO_ROOT, encoding: 'utf8' });
-  return `${text.split('\n')[lineNo - 1]}\n`;
-}
-
-test('a_withdrawn_test_row_using_the_real_round_20_and_round_18_ledger_text_resolves', () => {
-  // byte-copied from DECISIONS-PENDING.md:32, :34 (round 20 item 1) and :58, :76 (round 18 item 4) at
-  // 90de3e94924f8d4d7a0307de0092fe5b5fc61095, via `ledgerLineAtBase` above (a script, not retyping).
-  const realLedger = ledgerLineAtBase(32) + ledgerLineAtBase(34) + ledgerLineAtBase(58) + ledgerLineAtBase(76);
-  const { dir } = withdrawnFixture({ ruling: 'round 20, item 1', carrier: 'round 18, item 4', ledger: realLedger });
-  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
-  assert.equal(findings.length, 0, `no binding finding expected: ${JSON.stringify(findings)}`);
-  assert.equal(withdrawn.length, 1, JSON.stringify(withdrawn));
-  assert.equal(withdrawn[0].ruling, 'round 20, item 1');
-  assert.equal(withdrawn[0].carrier, 'round 18, item 4');
 });
