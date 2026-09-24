@@ -63,23 +63,23 @@ Each of these was flagged by the mechanical check and then **accepted by a human
 and for the reason shown. They are printed rather than merely omitted: a decision that only
 shows up as the absence of a review line is one nobody can audit.
 
-| Tree | Package | Version | Declared | Flagged because | Decided | Reason |
-|---|---|---|---|---|---|---|
-| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 | 2026-08-07 | CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set |
-| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| frontends/shell (the packaged app's frontend) | `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | not on the recognised list: CC-BY-4.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set |
-| frontends/shell (the packaged app's frontend) | `lightningcss` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set |
-| frontends/shell (the packaged app's frontend) | `lightningcss-win32-x64-msvc` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set |
+| Tree | Package | Version | Declared | Flagged because | Decided | Reason | Source |
+|---|---|---|---|---|---|---|---|
+| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 | 2026-08-07 | CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| frontends/shell (the packaged app's frontend) | `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | not on the recognised list: CC-BY-4.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 117 |
+| frontends/shell (the packaged app's frontend) | `lightningcss` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 116 |
+| frontends/shell (the packaged app's frontend) | `lightningcss-win32-x64-msvc` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 116 |
 
-Source for every decision above: **PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1**. Counsel confirms per ADR-009's Caveat
-before anything commercial; nothing here is a legal conclusion.
+Each row cites the note where a human accepted that exact package. Counsel confirms per
+ADR-009's Caveat before anything commercial; nothing here is a legal conclusion.
 
 ## Needs human review
 
