@@ -328,3 +328,97 @@ no `CoordinateUnit` variant differed from the four mapped; no existing assertion
 mechanical `"metre"`/literal additions §2 itself names, extended to every fixture the wire-literal
 bump actually touches — `admitDataset.test.ts`, `client.test.ts` — per §8 item 9's own both-side,
 same-commit rule); nothing outside §2-§7 was decided.
+
+### Amendment 2 — correction round after full gating attempt 1
+
+Written after PR #112's full gating attempt 1 was seen (reviewer: Correctness PASS, Evidence FAIL,
+Documentation FAIL; architect: the code passes, the record fails). Class 1 (post-result amendment)
+and class 3 (cite/line-number fixes, test-text exception) per `docs/PREREGISTRATION-TEMPLATE.md`
+§10. It also supplies, for Amendment 1 itself, the class declaration Amendment 1's own first line
+omitted: Amendment 1 is a class-1 post-result amendment.
+
+1. **§2 discharge-by-proof (architect §8 item 10).** Defect: Amendment 1 discharged §2 (a)-(i) by
+   commit only. Corrected reference: (a) test 1; (b) tests 2 and 6; (c) tests 3, 4 and 5; (d) test
+   6; (e) tests 7 and 8; (f) test 9; (g) tests 10 and 11; (h) the comment at the four
+   `recenterThresholdForBudget` call sites in `WorkingCanvas.tsx`, named by function, not by line;
+   (i) `KNOWN-LIMITATIONS.md` item 17, whose own comment now names tests 7 and 9 by name. Proof:
+   each test named exists in the tree and is green in this record's own suite run.
+
+2. **KNOWN-LIMITATIONS item 17's comment (both gates).** Defect: the comment attributed its text to
+   the human's wording though it is this piece's own DRAFT, and the visible item claimed the degree
+   value matches the metre value for both bounds, which is false for the anchor span (1e-6 against
+   1; true only for the drift cap, 131 072 against 131 072). Corrected reference:
+   `KNOWN-LIMITATIONS.md` item 17, this round's own commit. Proof: the item's text and comment as
+   committed this round.
+
+3. **Item 6's scope and Q2 (architect).** Defect: item 6 was claimed true of the build without
+   naming which constants it covers, alongside the metre-shaped `MAX_ZOOM` and `extent.ts` fit/
+   degenerate zoom constants of the same class. Corrected reference: `KNOWN-LIMITATIONS.md` item
+   17's comment and PR #112's own body now scope the claim to `MIN_ANCHOR_SPAN` and
+   `RECENTER_MAX_DRIFT` and name the consult's STOP LIST Q2,
+   `state/consults/2026-09-24-crs-unit-fact-and-bounds.md`, as open. Proof: both texts as committed/
+   edited this round.
+
+4. **Amendment 1's own first line (architect).** Defect: it did not say it was written after
+   results and named no class. Corrected reference: this Amendment 2, item preceding item 1, above,
+   supplies that declaration for Amendment 1. Proof: the sentence itself, this section.
+
+5. **Amendment 1's `path:line @ <branch commit>` pins (both gates).** Defect: the §4 tests 1-11 list
+   and the §3-table observed section cite `path:line @ <branch commit>` with no sha256, pinning
+   commits on a branch, not main. Corrected reference: those citations are superseded by test and
+   function name only (§10's superseded index below); any reference to a branch commit that remains
+   in this record is disclosed as a branch-commit reference, not a main-pinned one.
+
+6. **`cargo fmt --check` claim (reviewer E1, Evidence).** Defect: Amendment 1 said no diff was found
+   in a file this piece touches; false — default rustfmt reports diffs on lines this piece added in
+   `kernel/src/skp.rs` (the `the_real_describe_crs_shape_matches_the_shared_fixture` test) and
+   `protocol/skp/tests/fixtures.rs` (the `crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other`
+   test), alongside the 1748 pre-existing diff blocks repo-wide (no `rustfmt.toml`; main itself fails
+   `cargo fmt --check`). Corrected reference: `kernel/tests/describe_crs_unit.rs`, the one wholly new
+   file this piece adds, was reformatted this round (commit `8a237dd`) and now passes
+   `rustfmt --check` on its own; `kernel/src/skp.rs` and `protocol/skp/tests/fixtures.rs` are left as
+   they were, their diffs being the same repo-wide, pre-existing drift as the 1748 blocks, not caused
+   or fixed by this piece. Proof: `rustfmt --check kernel/tests/describe_crs_unit.rs` (rc 0, this
+   round) and `cargo fmt --check` (rc 1, 1748 diff blocks, unchanged in count for every other file
+   this piece touches).
+
+7. **Fixture count (reviewer D1).** Defect: Amendment 1 said "all nine"
+   `protocol/skp/tests/data/*.json` fixtures. Corrected reference: `git diff --name-only
+   origin/main...HEAD -- protocol/skp/tests/data/` lists ten files. Proof: that command's own output,
+   this round.
+
+8. **Part P's P1 literal and its item-17 cite (reviewer D2).** Defect: P1's expected `baseSpan`
+   literal (`0.800515417276802…`) did not match the JavaScript number the session log actually
+   prints, and P1 cited `KNOWN-LIMITATIONS.md` item 17 for the old `baseSpan=2` value, which neither
+   version of item 17 states. Corrected reference: `frontends/shell/MANUAL-WALKTHROUGH.md` Part P,
+   P1 (this round's own commit) now states the printed form, `0.8005154172768005…`, and cites the
+   consult's P0 Step 3 instead of item 17. Proof: `node -e "console.log(2*Math.max(0.40025770863840027,
+   0.39821605223940537))"` prints `0.8005154172768005`, this round.
+
+9. **Test-comment reasoning and export doc (architect notes).** Defect: `fixtures.test.ts`'s
+   per-fixture unit comments reasoned from the CRS identifier; test 11's mock paired degree with
+   EPSG:2056 and a null `display_convention` with no comment on why that is harmless;
+   `MIN_ANCHOR_SPAN`'s only outside importer (the test) had no doc line saying so. Corrected
+   reference: `fixtures.test.ts`'s three comments now cite the admission route
+   (`crs:declared`/`crs:format-default`/`caller_asserted`); `App.lateResult.test.tsx`'s test 11 now
+   has a comment naming the shape deliberate and harmless for a threading test; `tileGrid.ts`'s
+   `MIN_ANCHOR_SPAN` doc now names `tileGrid.test.ts` as its only outside importer and
+   `deriveTileGridFrame` as its product reader (commit `8a237dd`). Proof: the comments as committed.
+
+10. **`recenterThresholdForBudget`'s first parameter (reviewer nit).** Defect: named
+    `pixelsPerMetre` though the value is per-authoritative-unit. Corrected reference:
+    `offsetFrame.ts`, renamed to `pixelsPerAuthoritativeUnit` at its definition (commit `8a237dd`);
+    no caller referenced the old name (all four `WorkingCanvas.tsx` call sites pass positionally).
+    Proof: `grep -rn pixelsPerMetre frontends/shell/src/canvas/offsetFrame.ts` finds no match after
+    this round's commit.
+
+**Superseded index (as of this Amendment).**
+- Amendment 1's §4 tests 1-11 `path:line @ <branch commit>` citations: superseded by this round's
+  item 5 — cite by test/function name only from here on.
+- Amendment 1's "Files touched" sentence's "all nine `protocol/skp/tests/data/*.json`" count:
+  superseded by this round's item 7 — the count is ten.
+- Amendment 1's first line (no post-result/class declaration): superseded by this round's item 4.
+- `KNOWN-LIMITATIONS.md` item 17's pre-this-round text and comment: superseded by this round's items
+  2 and 3.
+- `frontends/shell/MANUAL-WALKTHROUGH.md` Part P's P1 pre-this-round expected-outcome text:
+  superseded by this round's item 8.
