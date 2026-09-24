@@ -188,3 +188,61 @@ header above describes. They move into the next release's list when that release
     summary, but the dataset already on the canvas stays drawn. Its equirectangular statement is then
     shown nowhere until the next successful open.
     <!-- frontends/shell/src/admission/AdmissionPanel.tsx:206-209 (an attempt replaces the admitted state), :230 (a cancel ends idle), :240-249 (a refusal); :411 (the summary renders only for the admitted state); the earlier dataset stays drawn: the human's N8 retest session log session-1790201742.log, where the earlier dataset's tiles are still delivered after the 22:18:04Z refusal; DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2) -->
+
+19. **The change detector is heuristic, not a snapshot check.** The open dataset is checked by a
+    structural descriptor only — byte size, modification time, footer length and footer hash when all
+    four are available; a file whose footer exceeds the declared ceiling, or whose filesystem reports
+    no modification time, is described by fewer — re-read before every query and after every stream
+    terminal; a difference in any component present ends the session. ADR-016 states this policy's
+    limit in these words, byte-copied from `docs/adr/ADR-016-stable-feature-identity-admission.md:221-223 @ 6030dfd sha256:dcab43a957daf486b4130b8b25eb2f78a1bdf72171d6988afa42ab44e464829a` (the hash covers the whole cited lines; the quoted text is a sub-line span of them):
+
+    > does not establish snapshot consistency,
+    > cannot detect every in-place modification, and may detect a change during a query only at the
+    > post-check
+
+    That reduced-component degradation (fewer than four components, on the footer-ceiling or
+    no-modification-time branch above) is shown nowhere in this build today: the display ADR-016
+    Amendment 1 item 2 requires of it is owed to a later piece.
+    <!-- engine/src/descriptor.rs:1-24 (the type's own doc comment); engine/src/descriptor.rs:42 (FOOTER_DESCRIPTOR_MAX_BYTES, the footer-exceeds-ceiling degradation); engine/src/descriptor.rs:54-56 (the no-modification-time degradation); engine/src/error.rs:342-347 (SourceChanged Display); engine/ADMISSION-PREREGISTRATION.md:72-73 (R-D1, R-D2); docs/adr/ADR-016-stable-feature-identity-admission.md:240 (Amendment 1, "Owed at acceptance", item 2's degradation display not met by the build); MANUAL-WALKTHROUGH.md Part N row N6, N9 -->
+
+20. **A partitioned source is refused; only a single file is admitted — including a single file whose
+    own path contains a glob metacharacter.** A directory of Parquet parts is a real dataset this
+    engine will not admit, refused by name before anything is read (code
+    `engine.identity_ordinal_partitioned_unsupported`): *"refused: this source is partitioned across
+    more than one file (`<detail>`), and session identity is a row's position within one file. Open a
+    single file, or declare an identity column that is carried in the data"*. The same code and
+    message are reached by a single file whose path contains `*`, `?`, `[`, `]`, `{` or `}` — read as
+    naming a pattern rather than one file, even where exactly one file exists at that path — with
+    `<detail>` naming the metacharacter found.
+    <!-- engine/src/dataset.rs:283-291 (the gate, run before the file is opened); engine/src/dataset.rs:1356-1396 (partitioned_source_detail: the directory case and the glob-metacharacter case, GLOB_METACHARACTERS `* ? [ ] { }`); engine/src/error.rs:348-352 (the Display); kernel/src/skp.rs:1187-1189 (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+21. **A dataset in degrees cannot be published.** The bundled viewer has no degrees path — it renders
+    in the dataset's own CRS, and this shell's degrees display is a view-time convention a static
+    bundle does not carry — so publish is refused at preflight, before the native destination picker's
+    result is used further: *"refused: `<crs>` is a geographic CRS whose coordinates are in degrees
+    (`<unit source>`), and the bundled viewer has no degrees path — it renders in the dataset's own
+    CRS, while this shell's degrees display is a view-time convention a bundle does not carry.
+    Publishing it would hand a recipient a bundle nothing can render correctly. Reproject the source to
+    a projected CRS and open that, or wait for the reader change that adds the degrees path"*.
+    <!-- kernel/src/publish/mod.rs:435-443 (the preflight check, run before the pin/execute phases); kernel/src/publish/error.rs:129, :201, :223, :323-331 (GeographicCrsNotPublishable, its code and Display); MANUAL-WALKTHROUGH.md Part N row N5 (the message and the panel rendering it verbatim) -->
+
+22. **A sanity check convicts, never confirms.** It runs wherever a format rule applied — including
+    where the file declares its own CRS and the rule only supplies the data's axis order — and where
+    it runs it reads only a bbox or covering statistics already resident in the footer (or, absent
+    those, the first row group's covering columns). It can flag a coordinate outside plus-or-minus
+    180/90 as contradicting the assumed CRS only where the format's default supplied that CRS;
+    elsewhere it still runs and records a level, but takes no range verdict, because the CRS is the
+    file's own. It can also land at level `none`, when neither footer-resident statistics nor a usable
+    covering is available. A file whose coordinates lie inside that domain is not thereby shown
+    correct — a projected file may sit inside it too. Its stated limit, byte-copied from `docs/adr/ADR-015-source-crs-requirement-and-caller-assertion.md:197 @ 6030dfd sha256:e1a6e6e1daa245bd1d002127451311c973c2ce8765865f70aff01f48c61aab10` (the hash covers the whole cited line; the quoted text is a sub-line span of it): "A projected file inside ±180/±90 is NOT detected by it".
+    <!-- engine/ADMISSION-PREREGISTRATION.md:59-60 (R-S1 level selection; R-S2, the condition and the not-thereby-correct finding); engine/src/geoparquet.rs:499-508 (R-C4: format_rule_reference is set for a declared, non-x-first CRS under a pinned spec version, the axis-order rule, even though the CRS is the file's own); engine/src/dataset.rs:1021-1038 (sanity_check: `rule` is read from format_rule_reference regardless of provenance except Asserted, so it runs under R-C4 too; `convicts` is true only for CrsProvenance::FormatDefault); engine/src/dataset.rs:1162-1171 (convict_or_record's non-convicting branch: level and reason recorded, "no range check applies"); engine/src/dataset.rs:981-1031 (sanity_check's doc comment and the NotChecked branch reached when no format rule applies at all); MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+23. **For a change the detector (item 19) can see, a pan that stays inside what is already resident
+    issues no fresh query, so the change goes unnoticed until a query is next issued.** The change
+    detector runs only against a query that is actually issued; a small pan well inside the resident
+    tiles triggers none, so the canvas keeps showing what it showed before the pan and a hover there
+    still answers normally. Where the change is one the detector can see, the refusal arrives once a
+    query is issued — panning further out shows it — so for that case this is a delay in noticing, not
+    a missed detection; it says nothing about a change item 19 itself records as undetectable, which no
+    later query surfaces either.
+    <!-- frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:954 (Amendment 11 (b), the small-pan/no-query finding; reproduced here only as "until a query is next issued", its own framing, not a verbatim quote); frontends/shell/MANUAL-WALKTHROUGH.md:951 (Part N row N8, "This is not a missed detection" stated verbatim, sourcing the closing sentence); engine/src/descriptor.rs:13-18 (the module doc: "may detect a change during a query only after that query has finished reading" and the same-size, four-component-match file the preregistration registers as not detected — the case this item's scope excludes) -->

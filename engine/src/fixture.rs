@@ -230,7 +230,7 @@ pub fn zone_for(seed: u64, id: u64) -> Option<&'static str> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct FixtureSpec {
     pub features: usize,
     /// Average vertices per feature; actual counts vary per feature around this value.

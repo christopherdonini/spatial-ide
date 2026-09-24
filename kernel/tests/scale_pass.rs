@@ -39,22 +39,17 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use spatial_engine::fixture::{
-    write_geoparquet_cancellable, AttributeMode, CoordinateDomain, CrsMode, FixtureFacts,
-    FixtureProgress, FixtureSpec, IdentityMode, LicenseMode, StatisticsMode,
-};
+use spatial_engine::fixture::{write_geoparquet_cancellable, FixtureFacts, FixtureProgress, FixtureSpec};
 use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use support::*;
 
 // ---- Pre-registered, from SCALE-PASS-PREREGISTRATION.md §1a ------------------------------------
-
-const FEATURES: usize = 3_300_000;
-const AVG_VERTICES: usize = 100;
-const HOLE_EVERY: usize = 7;
-const SEED: u64 = 0x5EED_2056_0000_0005;
-const CHUNK: usize = 8_192;
-const ROW_GROUP_ROWS: usize = 8_192;
+//
+// The generation spec itself (`FIVE_GB_*` constants and `spec_5gb()`) moved to
+// `kernel/tests/support/mod.rs` (2026-09-24, `fixture-regeneration-entry-point`) so this pass and
+// the regeneration entry point (`regenerate_fixture.rs`) share one definition. `use support::*`
+// above brings `spec_5gb`, `FIVE_GB_FEATURES` and friends into scope unchanged.
 
 /// The in-session control (§6). Same binary, same session, same `row_group_rows` — the second point
 /// the "flat with respect to file size" claim needs, since between-session comparison is forbidden.
@@ -164,35 +159,6 @@ fn fixture_path() -> PathBuf {
 
 fn control_path() -> PathBuf {
     evidence_dir().join("parcels-control-145mb.parquet")
-}
-
-fn spec_5gb() -> FixtureSpec {
-    FixtureSpec {
-        features: FEATURES,
-        avg_vertices: AVG_VERTICES,
-        hole_every: HOLE_EVERY,
-        seed: SEED,
-        crs_mode: CrsMode::DeclaredLv95,
-        with_covering_bbox: true,
-        chunk: CHUNK,
-        row_group_rows: ROW_GROUP_ROWS,
-        identity: IdentityMode::NativeUnique,
-        attributes: AttributeMode::None,
-        // Determinism-critical: a source-declared license needs no `--license-at`, and an
-        // operator-declared instant is a semantic input inside ADR-017 §12's determinism surface.
-        license: LicenseMode::DeclaredBySource,
-        // Brief A P1 added five fields to `FixtureSpec`. This initializer is deliberately
-        // exhaustive — a new field must be a conscious choice here rather than a silent default —
-        // and every value below **is** the generator's default, so this fixture's bytes are
-        // unchanged: the metre domain every earlier fixture drew in, no `geo` `bbox` member, the
-        // writer's own statistics behaviour, a covering that names the column it actually has, and
-        // the `geo.version` this generator has always written.
-        domain: CoordinateDomain::Lv95Metres,
-        with_geo_bbox: false,
-        statistics: StatisticsMode::WriterDefault,
-        covering_names_absent_column: false,
-        geo_version: "1.1.0".to_string(),
-    }
 }
 
 fn spec_control() -> FixtureSpec {
@@ -326,7 +292,7 @@ fn measure_the_five_gigabyte_scale_pass() {
 
     // **Predictions asserted, not recomputed.** A mismatch here is an instrument failure and stops
     // the pass; it is not a machine fact to be reported as a result.
-    assert_eq!(facts.features, FEATURES, "the generator wrote a different feature count");
+    assert_eq!(facts.features, FIVE_GB_FEATURES, "the generator wrote a different feature count");
     assert_eq!(facts.rings, PREDICTED_RINGS, "ring count differs from the pre-registered prediction");
     assert!(
         (4.0e9..=6.5e9).contains(&(facts.bytes as f64)),
@@ -383,7 +349,7 @@ fn measure_the_five_gigabyte_scale_pass() {
     let whole = ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None };
     let (whole_first, whole_total, whole_rows, whole_batches, whole_mem, whole_plan) =
         stream_phase(&ds, &whole, WHOLE_FILE_RUNS, CEIL_WHOLE_FILE, "whole-file");
-    assert_eq!(whole_rows, FEATURES as u64, "the whole-file stream did not return every row");
+    assert_eq!(whole_rows, FIVE_GB_FEATURES as u64, "the whole-file stream did not return every row");
 
     let e_lo = spatial_engine::fixture::E_LO;
     let n_lo = spatial_engine::fixture::N_LO;

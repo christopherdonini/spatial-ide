@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `396d543a017684a51ac6c75d42ab9e0fde67e4ecdbe872fa2ad63fec1dcf7b44`) at `2026-09-24T12:15:16.521Z`.
+Generated from `PLAN.yaml` (sha256 `d1d2c931488feb3ee1080ff25c1dfd1b9aac492269760568bb65cb023bacfa2a`) at `2026-09-24T18:55:20.609Z`.
 
 ## 1. Next
 
@@ -10,16 +10,14 @@ Generated from `PLAN.yaml` (sha256 `396d543a017684a51ac6c75d42ab9e0fde67e4ecdbe8
 
 - (none)
 
-## 3. Waiting on the human (total: 5 min)
+## 3. Waiting on the human (total: 0 min)
 
-### ruling
-
-- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (5 min)
+- (none)
 
 ## 4. Blocked on dependencies
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: crs-unit-fact-and-bounds, engine-source-change-watcher, b1-engine-kernel-half
-- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds
+- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds, kernel-ticket-drop-under-registry-lock
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: crs-unit-fact-and-bounds, adr-021-023-b1-notes
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
@@ -33,9 +31,11 @@ Generated from `PLAN.yaml` (sha256 `396d543a017684a51ac6c75d42ab9e0fde67e4ecdbe8
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **adr-021-023-b1-notes** — ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR — evidence: PR #113
+- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released — evidence: branch `fix/kernel-ticket-drop-under-registry-lock`
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: PR #112
 - **fixture-regeneration-entry-point** — The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half) — evidence: PR #115
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
+- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
 
 ## 6. Proposed / unscheduled
 
