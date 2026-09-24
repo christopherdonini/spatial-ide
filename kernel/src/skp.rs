@@ -102,6 +102,16 @@ enum TicketState {
 /// to each.
 #[derive(Default)]
 pub struct StreamRegistry {
+    /// **Invariant (architect, PR #116 attempt 1, S1): no `TicketState` is ever dropped while this
+    /// guard is held.** Every method below that removes or replaces an entry (`sweep_locked`,
+    /// `cancel`'s and `cancel_all_for_dataset`'s `Pending` arms) moves the retired value out —
+    /// `sweep_locked` into its returned `Vec`, `cancel`/`cancel_all_for_dataset` via
+    /// `mem::replace` — and every caller drops that moved-out value only after this guard is
+    /// released, before the method itself returns (see each method's own `// Entry 132` comment).
+    /// `mint` and `redeem` also call `insert` under this guard: `mint` always inserts a
+    /// freshly-minted [`StreamHandle`]'s key, and `redeem` inserts only immediately after removing
+    /// the same key — both calls' returned `Option<TicketState>` is therefore always `None`, so
+    /// neither call drops a live value via `insert`'s return.
     tickets: Mutex<HashMap<String, TicketState>>,
 }
 
@@ -110,14 +120,30 @@ impl StreamRegistry {
         Arc::new(Self::default())
     }
 
-    fn sweep_locked(tickets: &mut HashMap<String, TicketState>) {
-        tickets.retain(|_, state| match state {
-            TicketState::Pending { minted_at, .. } => minted_at.elapsed() <= TICKET_TTL,
-            TicketState::Redeemed { redeemed_at, .. } => redeemed_at.elapsed() <= TERMINAL_ENTRY_MAX_AGE,
-            TicketState::CancelledBeforeRedeem { cancelled_at } => {
-                cancelled_at.elapsed() <= TERMINAL_ENTRY_MAX_AGE
-            }
-        });
+    /// **DECISIONS-PENDING.md entry 132.** Returns the entries it swept instead of dropping them
+    /// in place: a swept `Pending` entry's `PendingBuilt.source` may be a real `EngineSource` whose
+    /// `Drop` re-enters `StreamRegistry::cancel` (via `SessionInvalidator::end_generation`) when its
+    /// post-check has already recorded a source change — dropping it here, under the lock every
+    /// caller below still holds when it calls this, would re-lock that same `Mutex` on the same
+    /// thread and hang. Every caller drops the returned `Vec` only after releasing its guard (each
+    /// one calls `drop(tickets)` before its own return path, and the swept entries fall out of scope
+    /// after that).
+    #[must_use]
+    fn sweep_locked(tickets: &mut HashMap<String, TicketState>) -> Vec<TicketState> {
+        let expired: Vec<String> = tickets
+            .iter()
+            .filter(|(_, state)| match state {
+                TicketState::Pending { minted_at, .. } => minted_at.elapsed() > TICKET_TTL,
+                TicketState::Redeemed { redeemed_at, .. } => {
+                    redeemed_at.elapsed() > TERMINAL_ENTRY_MAX_AGE
+                }
+                TicketState::CancelledBeforeRedeem { cancelled_at } => {
+                    cancelled_at.elapsed() > TERMINAL_ENTRY_MAX_AGE
+                }
+            })
+            .map(|(k, _)| k.clone())
+            .collect();
+        expired.into_iter().filter_map(|k| tickets.remove(&k)).collect()
     }
 
     /// Reclaim stale entries — a `Pending` ticket's leased connection among them — without waiting
@@ -132,7 +158,10 @@ impl StreamRegistry {
     /// than bounded by `TICKET_TTL`. Called at the top of `viewport_query`, before it leases.
     pub fn sweep_expired(&self) {
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
+        // Entry 132: release the lock before `swept`'s entries drop.
+        drop(tickets);
+        drop(swept);
     }
 
     /// Mint a ticket for an already-built, already-validated engine source. Refuses beyond
@@ -144,24 +173,30 @@ impl StreamRegistry {
         cancel: Arc<dyn SourceCancel>,
     ) -> Result<StreamHandle, SkpError> {
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         let pending_for_dataset = tickets
             .values()
             .filter(|s| matches!(s, TicketState::Pending { dataset: d, .. } if d == dataset))
             .count();
-        if pending_for_dataset >= MAX_PENDING_TICKETS {
-            return Err(SkpError::too_many_pending_streams(MAX_PENDING_TICKETS));
-        }
-        let handle = StreamHandle::mint();
-        tickets.insert(
-            handle.as_str().to_string(),
-            TicketState::Pending {
-                built: PendingBuilt { source, cancel },
-                dataset: dataset.to_string(),
-                minted_at: Instant::now(),
-            },
-        );
-        Ok(handle)
+        let result = if pending_for_dataset >= MAX_PENDING_TICKETS {
+            Err(SkpError::too_many_pending_streams(MAX_PENDING_TICKETS))
+        } else {
+            let handle = StreamHandle::mint();
+            tickets.insert(
+                handle.as_str().to_string(),
+                TicketState::Pending {
+                    built: PendingBuilt { source, cancel },
+                    dataset: dataset.to_string(),
+                    minted_at: Instant::now(),
+                },
+            );
+            Ok(handle)
+        };
+        // Entry 132: release the lock before `swept` (and, on the refusal arm, the un-inserted
+        // `source`/`cancel` this call was passed) drop.
+        drop(tickets);
+        drop(swept);
+        result
     }
 
     /// Redeem a ticket exactly once. Called by the data plane's `SourceFactory::create` — its
@@ -171,46 +206,61 @@ impl StreamRegistry {
         handle: &str,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        Self::sweep_locked(&mut tickets);
-        match tickets.get(handle) {
-            None => {
-                return Err(format!(
-                    "ticket `{handle}` is unknown: never minted, already redeemed and gone, or \
-                     expired after {TICKET_TTL:?}"
-                ))
-            }
+        let swept = Self::sweep_locked(&mut tickets);
+        let result = match tickets.get(handle) {
+            None => Err(format!(
+                "ticket `{handle}` is unknown: never minted, already redeemed and gone, or \
+                 expired after {TICKET_TTL:?}"
+            )),
             Some(TicketState::CancelledBeforeRedeem { .. }) => {
-                return Err(format!("ticket `{handle}` was cancelled before it was redeemed"))
+                Err(format!("ticket `{handle}` was cancelled before it was redeemed"))
             }
             Some(TicketState::Redeemed { .. }) => {
-                return Err(format!("ticket `{handle}` was already redeemed; a ticket is single-use"))
+                Err(format!("ticket `{handle}` was already redeemed; a ticket is single-use"))
             }
-            Some(TicketState::Pending { .. }) => {}
-        }
-        let Some(TicketState::Pending { built, dataset, .. }) = tickets.remove(handle) else {
-            unreachable!("state checked immediately above, under the same lock");
+            Some(TicketState::Pending { .. }) => {
+                let Some(TicketState::Pending { built, dataset, .. }) = tickets.remove(handle)
+                else {
+                    unreachable!("state checked immediately above, under the same lock");
+                };
+                // Not a drop-under-lock: `built.source`/`built.cancel` are moved out into `result`
+                // below, owned by this function's caller once it unlocks — never dropped here.
+                tickets.insert(
+                    handle.to_string(),
+                    TicketState::Redeemed {
+                        dataset,
+                        cancel: built.cancel.clone(),
+                        cancelled: false,
+                        redeemed_at: Instant::now(),
+                    },
+                );
+                Ok((built.source, built.cancel))
+            }
         };
-        tickets.insert(
-            handle.to_string(),
-            TicketState::Redeemed {
-                dataset,
-                cancel: built.cancel.clone(),
-                cancelled: false,
-                redeemed_at: Instant::now(),
-            },
-        );
-        Ok((built.source, built.cancel))
+        // Entry 132: release the lock before `swept`'s entries drop.
+        drop(tickets);
+        drop(swept);
+        result
     }
 
     /// Cancel one ticket by its [`StreamHandle`] string.
     pub fn cancel(&self, handle: &str) -> CancelOutcome {
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        Self::sweep_locked(&mut tickets);
-        match tickets.get_mut(handle) {
+        let swept = Self::sweep_locked(&mut tickets);
+        // Entry 132: the retired `Pending` state (if any) is moved out here via `mem::replace`
+        // rather than dropped by `*state = ..`'s implicit drop of the old value — the old value may
+        // be a real `EngineSource` whose `Drop` re-enters this same method (through
+        // `SessionInvalidator::end_generation`) when its post-check found a source change, and doing
+        // that under this call's own lock is exactly entry 132's hang.
+        let mut retired: Option<TicketState> = None;
+        let outcome = match tickets.get_mut(handle) {
             None => CancelOutcome::Unknown,
             Some(TicketState::CancelledBeforeRedeem { .. }) => CancelOutcome::AlreadyTerminal,
             Some(state @ TicketState::Pending { .. }) => {
-                *state = TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() };
+                retired = Some(std::mem::replace(
+                    state,
+                    TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() },
+                ));
                 CancelOutcome::Requested
             }
             Some(TicketState::Redeemed { cancel, cancelled, .. }) => {
@@ -219,23 +269,37 @@ impl StreamRegistry {
                 } else {
                     // ADR-019's Consequences: reaches the producer's own CancelToken directly, the
                     // same one a data-plane CANCEL frame would reach — the two mechanisms converge.
+                    // `cancel.cancel()` sets a flag and interrupts DuckDB (`engine/src/cancel.rs`);
+                    // it does not drop the `TicketState`, and this arm takes no registry lock (it
+                    // mutates the entry already held under this call's own guard).
                     cancel.cancel();
                     *cancelled = true;
                     CancelOutcome::Requested
                 }
             }
-        }
+        };
+        // Release the lock before `swept` and `retired` drop.
+        drop(tickets);
+        drop(swept);
+        drop(retired);
+        outcome
     }
 
     /// Cancel every ticket — pending or redeemed — for one dataset. Returns how many were.
     pub fn cancel_all_for_dataset(&self, dataset: &str) -> u32 {
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
+        // Entry 132: every retired `Pending` state is moved out here, for the same reason `cancel`
+        // above moves its single one out — see that method's comment.
+        let mut retired: Vec<TicketState> = Vec::new();
         let mut n = 0u32;
         for state in tickets.values_mut() {
             match state {
                 TicketState::Pending { dataset: d, .. } if d == dataset => {
-                    *state = TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() };
+                    retired.push(std::mem::replace(
+                        state,
+                        TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() },
+                    ));
                     n += 1;
                 }
                 TicketState::Redeemed { dataset: d, cancel, cancelled, .. } if d == dataset && !*cancelled => {
@@ -246,6 +310,10 @@ impl StreamRegistry {
                 _ => {}
             }
         }
+        // Release the lock before `swept` and `retired` drop.
+        drop(tickets);
+        drop(swept);
+        drop(retired);
         n
     }
 }
@@ -1814,5 +1882,366 @@ mod tests {
             fixture_crs.get("unit"),
             "the real describe unit value must match the shared fixture's"
         );
+    }
+}
+
+/// **DECISIONS-PENDING.md entry 132 — a `Pending` ticket's `EngineSource` dropped under
+/// `StreamRegistry`'s `Mutex`, whose `Drop` re-locks the same `Mutex` on the same thread.**
+///
+/// **The chain, read from the real code before this module was written.** A `Pending`
+/// [`TicketState`] owns a [`PendingBuilt`] whose `source` is a boxed real `crate::EngineSource`
+/// (built by `crate::wrap_for_data_plane`, the same function `SkpHost::viewport_query` calls).
+/// `StreamRegistry::cancel`'s `Pending` arm, `cancel_all_for_dataset`'s `Pending` arm, and
+/// `sweep_locked`'s `retain` (reached from `sweep_expired`, `mint`, `redeem`, `cancel` and
+/// `cancel_all_for_dataset`, each of which sweeps under its own lock before doing anything else)
+/// all replaced or removed a `Pending` entry **while the `tickets` `Mutex` guard was held** —
+/// dropping its `PendingBuilt.source` right there. `EngineSource::drop` calls
+/// `end_session_if_source_changed`, which — if the stream's post-check has already recorded a
+/// change (`StreamStats::source_changed_detail`, set by the producer thread before any terminal is
+/// sent, `engine/src/stream.rs:1190-1195`) — calls `SessionInvalidator::end_generation`, which
+/// calls `GenerationRegistry::invalidate` (a **different** `Mutex`, no conflict) and then, for
+/// every ticket handle that generation held, `StreamRegistry::cancel` again — **the same `Mutex`,
+/// on the same thread, already held**. `std::sync::Mutex` is not reentrant: the second `lock()`
+/// blocks forever.
+///
+/// **Every other lock in this file was read and ruled out.** `GenerationRegistry`'s own `Mutex`
+/// wraps only `String`/`u64`/`Instant` values with no `Drop` impl that reaches back anywhere
+/// (`GenerationState`, above). `OpenRegistry`'s `Mutex` holds `engine::CancelToken`s, whose `Drop`
+/// (`engine/src/cancel.rs`) is the default (no user impl) and touches nothing beyond its own
+/// `Arc<Inner>`. `StreamRegistry::cancel`'s and `cancel_all_for_dataset`'s `Redeemed` arms call
+/// `cancel.cancel()` (`EngineCancel` → `CancelToken::cancel`, `kernel/src/lib.rs:571-575`), which
+/// sets an atomic flag and interrupts DuckDB — it does not drop the `TicketState`, and neither arm
+/// takes a registry lock beyond the one its own call already holds. `StreamRegistry::redeem`
+/// removes a `Pending` entry too, but **moves** its
+/// `built.source`/`built.cancel` out into its `Ok(..)` return value rather than dropping them under
+/// the lock — the caller (outside any lock) owns the drop, so `redeem` was never part of this
+/// defect; it is exercised here only via the `sweep_locked` call at its own top.
+///
+/// **Reproducing the race deterministically.** A genuinely unredeemed `Pending` ticket only reaches
+/// this state by a real race against its own producer thread (ADR-019: the engine stream is built,
+/// and its producer thread started, synchronously and *before* the ticket is minted — nothing here
+/// waits for a consumer to call `next_into` even once). Waiting on that race would make these tests
+/// flaky. Instead, [`drained_stream_with_a_recorded_change`] drains the real `BatchStream` to its
+/// real terminal on the test's own thread first — the producer thread the real stream already
+/// started runs to completion and records its real post-check finding regardless of who reads the
+/// channel — and only then is the same, now-finished, stream wrapped into a real `EngineSource` and
+/// minted as `Pending`, exactly as `SkpHost::viewport_query` would have left it had the producer
+/// merely finished first. Every step after the drain is the real product call.
+///
+/// **Detecting a hang without hanging this suite.** Each of the first three tests below runs the
+/// suspect call (`cancel`, `sweep_expired`, `cancel_all_for_dataset`) on a spawned thread and waits
+/// on a bounded channel receive (see [`run_with_timeout`]). A pre-fix run blocks that spawned thread
+/// forever; the *test* thread does not block past the timeout and fails by name instead. **The
+/// spawned thread itself is not joined and is deliberately leaked on a real hang** — if the call
+/// really deadlocked, nothing can un-stick it, and joining it here would just move the hang into
+/// this test.
+#[cfg(test)]
+mod ticket_drop_under_lock_regression {
+    use super::*;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
+
+    /// Generous relative to any real lock hold in this registry (a handful of map operations); the
+    /// only thing this bounds is how long a pre-fix run of this suite waits before failing.
+    const HANG_TIMEOUT: Duration = Duration::from_secs(5);
+
+    fn fixture(name: &str) -> std::path::PathBuf {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../target/fixtures/ticket-drop-under-lock");
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join(format!("{name}.parquet"));
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 50,
+                avg_vertices: 8,
+                identity: IdentityMode::NativeUnique,
+                ..Default::default()
+            },
+        )
+        .expect("write fixture");
+        path
+    }
+
+    /// Move a file's modification time forward without touching a byte of it — the single-component
+    /// mutation `kernel/tests/session_generation.rs`'s `touch_modification_time` (`:251-259`) makes,
+    /// reproduced here for the same reason: it is a real, detectable source change that does not
+    /// make DuckDB fail on a truncated read.
+    fn touch_modification_time(path: &std::path::Path) {
+        let later = std::time::SystemTime::now() + Duration::from_secs(120);
+        std::fs::File::options()
+            .write(true)
+            .open(path)
+            .expect("reopen to set mtime")
+            .set_modified(later)
+            .expect("set mtime");
+    }
+
+    /// Build a real engine stream, let its pre-check pass, mutate the file, then drain the stream to
+    /// its real terminal on this thread — see this module's own doc comment for why the drain
+    /// replaces waiting on the real background-completion race. Asserts the post-check actually
+    /// found the change, so a future engine change that breaks this setup fails here loudly rather
+    /// than leaving every test below vacuously non-reproducing.
+    fn drained_stream_with_a_recorded_change(
+        path: &std::path::Path,
+    ) -> (spatial_engine::BatchStream, spatial_engine::CancelToken) {
+        let ds = spatial_engine::Dataset::open(path).expect("open dataset");
+        let query = spatial_engine::ViewportQuery::all();
+        let (mut stream, cancel) = crate::open_engine_stream(&ds, &query).expect("build stream");
+        // The pre-check already ran, synchronously, inside `open_engine_stream` above, and passed —
+        // mutating only now is what makes this the post-check's finding, not the pre-check's.
+        touch_modification_time(path);
+        let mut buf = Vec::new();
+        while stream.next_into(&mut buf).is_some() {
+            buf.clear();
+        }
+        assert!(
+            stream.stats().source_changed_detail().is_some(),
+            "setup did not force a real post-check finding — every test in this module would pass \
+             vacuously"
+        );
+        (stream, cancel)
+    }
+
+    /// Run `f` on a spawned thread; `None` means it did not finish within `timeout`. The defect this
+    /// module guards reproduces as exactly that — never a panic — so a bounded join turns a hang
+    /// into an ordinary, named test failure instead of hanging the whole suite.
+    fn run_with_timeout<T: Send + 'static>(
+        timeout: Duration,
+        f: impl FnOnce() -> T + Send + 'static,
+    ) -> Option<T> {
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = tx.send(f());
+        });
+        rx.recv_timeout(timeout).ok()
+    }
+
+    /// A real `Pending` ticket, minted and attributed exactly as `SkpHost::viewport_query` would
+    /// leave it, wrapping a stream already drained (see [`drained_stream_with_a_recorded_change`]).
+    /// Returns the registries and the handle so each test can drive its own suspect call.
+    fn seeded_pending_ticket(
+        dataset: &str,
+        path: &std::path::Path,
+    ) -> (Arc<StreamRegistry>, Arc<GenerationRegistry>, StreamHandle) {
+        let (stream, cancel) = drained_stream_with_a_recorded_change(path);
+        let ds = spatial_engine::Dataset::open(path).expect("reopen for connection config");
+        let reuses = ds.connections().config().reuses_connections();
+
+        let tickets = StreamRegistry::new();
+        let generations = GenerationRegistry::new();
+        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
+        let (source, source_cancel) = crate::wrap_for_data_plane(
+            stream,
+            cancel,
+            dataset.to_string(),
+            reuses,
+            None,
+            Some(invalidator),
+        );
+
+        generations.mint_for_open(dataset);
+        let handle = tickets.mint(dataset, source, source_cancel).expect("mint a pending ticket");
+        assert!(
+            generations.attribute_ticket(handle.as_str(), dataset),
+            "attribute under the live generation `mint_for_open` just minted"
+        );
+        (tickets, generations, handle)
+    }
+
+    /// RECORDED MUTATION (A): in the fixed `StreamRegistry::cancel`, replace
+    /// `retired = Some(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` with
+    /// the pre-fix `*state = TicketState::CancelledBeforeRedeem { .. }` (dropping the old value in
+    /// place, under the lock). Observed failure (performed once on this branch, then reverted): this
+    /// test FAILED by timeout, on the "did not return within" message below — and so did
+    /// `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`,
+    /// which drives the same `StreamRegistry::cancel` call on a similarly-seeded ticket (correcting
+    /// this preregistration's Results section, which had said only this test failed).
+    ///
+    /// RECORDED MUTATION (B, reviewer should-fix, PR #116 attempt 1): replace the same line with
+    /// `std::mem::forget(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` —
+    /// retiring the entry without ever dropping the moved-out `EngineSource`, so `end_generation`
+    /// never runs. Does not hang (nothing is dropped under the lock). Observed failure (performed
+    /// once on this branch, then reverted): the `ticket_liveness` assertion below FAILED (`Live`,
+    /// not `EndedBySourceChange`) — and so did
+    /// `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`
+    /// (its `viewport_query` stopped refusing, because the generation was never ended).
+    #[test]
+    fn cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
+        let path = fixture("cancel-path");
+        let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_path", &path);
+
+        let outcome = run_with_timeout(HANG_TIMEOUT, {
+            let tickets = tickets.clone();
+            let h = handle.as_str().to_string();
+            move || tickets.cancel(&h)
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang: \
+                 StreamRegistry::cancel did not return within {HANG_TIMEOUT:?} — its dropped \
+                 EngineSource re-locked the same Mutex from inside cancel() (DECISIONS-PENDING.md \
+                 entry 132; the spawned thread is leaked, not joined, so this test itself does not \
+                 hang)"
+            )
+        });
+        assert!(matches!(outcome, CancelOutcome::Requested));
+        // Reviewer should-fix (PR #116 attempt 1): the hang-avoidance assertion above cannot see a
+        // fix that avoids the hang by forgetting the retired value instead of dropping it after
+        // release — only this generation-liveness check can.
+        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+    }
+
+    /// RECORDED MUTATION: in the fixed `StreamRegistry::sweep_locked`, replace the collect-and-remove
+    /// form with the pre-fix `tickets.retain(|_, state| ...)` (dropping a swept value in place,
+    /// inside `retain`, under the caller's lock). Observed failure (performed once on this branch,
+    /// then reverted): `sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang`
+    /// FAILED — panicked on the "did not return within" message below.
+    #[test]
+    fn sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
+        let path = fixture("sweep-path");
+        let (tickets, generations, handle) = seeded_pending_ticket("ds_sweep_path", &path);
+
+        // Seeded directly past `TICKET_TTL` rather than waiting for real time to pass — ADR-018
+        // forbids a test spending a real 30-second wait to prove a lock-ordering property. `Instant`
+        // on this platform (Windows, backed by `QueryPerformanceCounter`) counts from system boot,
+        // not from process start, so subtracting `TICKET_TTL` is safe on any machine that has been
+        // up longer than that — `checked_sub` makes the (practically unreachable) alternative a
+        // clear test failure rather than a panic mid-arithmetic.
+        let expired_minted_at = std::time::Instant::now()
+            .checked_sub(TICKET_TTL + Duration::from_secs(1))
+            .expect("system uptime exceeds TICKET_TTL; re-run once the machine has been up longer");
+        {
+            let mut map = tickets.tickets.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(TicketState::Pending { built, dataset, .. }) = map.remove(handle.as_str())
+            else {
+                panic!("seeded_pending_ticket did not leave a Pending entry");
+            };
+            map.insert(
+                handle.as_str().to_string(),
+                TicketState::Pending { built, dataset, minted_at: expired_minted_at },
+            );
+        }
+
+        run_with_timeout(HANG_TIMEOUT, {
+            let tickets = tickets.clone();
+            move || tickets.sweep_expired()
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang: \
+                 StreamRegistry::sweep_expired did not return within {HANG_TIMEOUT:?} — the swept \
+                 EngineSource re-locked the same Mutex from inside sweep_locked's own drop \
+                 (DECISIONS-PENDING.md entry 132; the spawned thread is leaked, not joined)"
+            )
+        });
+        // No behaviour change from the fix: the sweep's drop still reaches
+        // `SessionInvalidator::end_generation`, which still records the handle as dead before
+        // pruning its attribution — this registry still knows the handle was ended by a source
+        // change, not merely swept away.
+        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+    }
+
+    /// RECORDED MUTATION (A): in the fixed `StreamRegistry::cancel_all_for_dataset`, replace
+    /// `retired.push(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` with the
+    /// pre-fix `*state = TicketState::CancelledBeforeRedeem { .. }`. Observed failure (performed once
+    /// on this branch, then reverted): this test FAILED by timeout, on the "did not return within"
+    /// message below.
+    ///
+    /// RECORDED MUTATION (B, reviewer should-fix, PR #116 attempt 1): replace the same line with
+    /// `retired.push`'s argument wrapped in `std::mem::forget` applied to the replaced value instead
+    /// of pushed (retiring the entry without ever dropping the moved-out `EngineSource`, so
+    /// `end_generation` never runs). Does not hang. Observed failure (performed once on this branch,
+    /// then reverted): this test's old assertions (`n == 1`) still PASSED — the reviewer's finding
+    /// that "forgetting the retired value passes the whole suite on the cancel_all path" — and only
+    /// the `ticket_liveness` assertion below, added for this finding, FAILED (`Live`, not
+    /// `EndedBySourceChange`).
+    #[test]
+    fn cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang() {
+        let path = fixture("cancel-all-for-dataset-path");
+        let (tickets, generations, handle) = seeded_pending_ticket("ds_cancel_all_path", &path);
+
+        let n = run_with_timeout(HANG_TIMEOUT, {
+            let tickets = tickets.clone();
+            move || tickets.cancel_all_for_dataset("ds_cancel_all_path")
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang: \
+                 StreamRegistry::cancel_all_for_dataset did not return within {HANG_TIMEOUT:?} — its \
+                 dropped EngineSource re-locked the same Mutex from inside cancel_all_for_dataset() \
+                 (DECISIONS-PENDING.md entry 132; the spawned thread is leaked, not joined)"
+            )
+        });
+        assert_eq!(n, 1);
+        // Reviewer should-fix (PR #116 attempt 1): `n == 1` alone cannot see a fix that avoids the
+        // hang by forgetting the retired value instead of dropping it after release.
+        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+    }
+
+    /// **No behaviour change, asserted as an outcome.** After a ticket whose source changed is
+    /// cancelled — through `StreamRegistry::cancel` directly, the same call this module's `cancel`
+    /// test drives; only the `viewport_query` below goes through a real `SkpHost` — the next
+    /// `viewport_query` on that dataset refuses by its typed code, the same refusal
+    /// `kernel/tests/session_generation.rs`'s pre-check test already asserts for the *pre-check*
+    /// path; this is the same claim on the *post-check* / drop path the fix touches.
+    ///
+    /// **Not free of `cancel`'s mutations, corrected (PR #116 attempt 1).** This test carries
+    /// no mutation of its own, but two of `cancel`'s RECORDED MUTATIONs above also fail it when
+    /// reintroduced, both observed once on this branch and reverted: (A) (drop-in-place under the
+    /// lock, the original hang) hangs this test's own `cancel` call exactly as it hangs
+    /// `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` — correcting this
+    /// preregistration's Results section, which said only that test failed; (B) (forgetting the
+    /// retired value) fails this test at its `expect_err` call below, where `viewport_query`
+    /// returns `Ok` so the `refused.code` assertion is never reached: a forgotten `EngineSource`
+    /// never ends the generation this test's `viewport_query` depends on refusing against.
+    #[test]
+    fn after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name() {
+        let dataset_handle = DatasetHandle::mint();
+        let name = dataset_handle.as_str().to_string();
+        let path = fixture("viewport-query-refusal-path");
+
+        let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
+        let reuses = spatial_engine::Dataset::open(&path)
+            .expect("reopen for connection config")
+            .connections()
+            .config()
+            .reuses_connections();
+
+        let catalog = Arc::new(Catalog::new());
+        // Opened after the mutation above — fine, because this test's refusal comes from
+        // `GenerationRegistry`'s `invalidated` set (set by the cancel below), never from this
+        // dataset's own pre-check descriptor.
+        catalog.open(&name, &path, None).expect("open dataset");
+        let tickets = StreamRegistry::new();
+        let host = SkpHost::new(catalog, tickets.clone());
+        let generations = host.generations();
+        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
+        let (source, source_cancel) =
+            crate::wrap_for_data_plane(stream, cancel, name.clone(), reuses, None, Some(invalidator));
+
+        generations.mint_for_open(&name);
+        let handle = tickets.mint(&name, source, source_cancel).expect("mint a pending ticket");
+        assert!(generations.attribute_ticket(handle.as_str(), &name));
+
+        run_with_timeout(HANG_TIMEOUT, {
+            let tickets = tickets.clone();
+            let h = handle.as_str().to_string();
+            move || tickets.cancel(&h)
+        })
+        .unwrap_or_else(|| panic!("StreamRegistry::cancel did not return within {HANG_TIMEOUT:?}"));
+
+        let request = ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: dataset_handle,
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        };
+        let refused = host.viewport_query(request).expect_err("the ended generation refuses");
+        assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
     }
 }
