@@ -374,6 +374,19 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+130. **[FOR YOUR WORD, the next round — ADR-035 (PR #114) STOPPED under Rule 7: gate attempt 2 failed in both gates on one semantic item. Entry 129 holds the ADR's Open items.]**
+- **Root cause.** Attempt 1 failed on four semantic items: Open item 1 incomplete, the consumer seam, rider (a) narrowed without a mark, and the emission scope. The redraft resolved all four in both gates' reading. Attempt 2 then failed on a sentence the redraft added: an end made by the post-check reaches the shell on its own call. That holds only for a clean run. A cancelled or failed stream keeps its own terminal, and a drop-path end delivers none, so such an end reaches the shell only at its next generation-scoped call's refusal. Rider (a) keeps this correct, but the ADR stated it did not happen.
+- **What holds (both gates).** Every attempt-1 finding is resolved. All quotes are byte-exact, the index is regenerated (adrIndex 26/26), and the checks are green. No decision goes beyond the ruling, the skeleton and the preregistration body except as an Open item.
+- **Recommendation: continue, one text round under a fresh count, then both gates.** The round makes these changes:
+  - It reduces the post-check clause to what the tree does and names the residual.
+  - Whether post-check ends should also emit is posed as an Open item, not decided.
+  - It corrects the record-only notes: the dead-ticket bound also ends on reopen or close; the exact-key claim; the routes' inputs; an unused Related cite; the latency sentence's principle-8 cite; and the rider quote's trailing period.
+  - It adds to Open item 1 the fourth form the architect found: a non-invertible digest of the `DatasetHandle`, with no new member or mint.
+  - It revises entry 129 to match: the fourth form, the reopen/close bound, and the quote.
+- **Alternative:** hold ADR-035; the watcher waits with it (it also waits on crs-unit and entry 129).
+
+Touches: PR #114 (stays draft); `DECISIONS-PENDING.md` entry 129; PLAN node `engine-source-change-watcher`.
+
 129. **[FOR YOUR WORD, the next round — ADR-035's two Open items (round 17 item 2, riders (a) and (b)); revised 2026-09-24 after PR #114's first full gate found the first filing incomplete.]** ADR-035 (`dataset_session_ended`, Proposed, binds nothing until accepted, not architect-blockable) is on PR #114, redrafted once after its first full gate. Its payload is exactly two members, `session` and `reason`. Emission is at most once, gated on a transition-reporting end that the watcher piece builds. The watcher's preregistration cannot fix its payload until item 1 is answered.
 
 **Item 1 — the session reference's wire form (rider (b)).** Rider (b) excludes a handle. The only per-session identifier on the wire today is the `DatasetHandle`: a handle by SKP-V0 §3, which after the end still authorises `describe` and `close_dataset`, and which already maps one-to-one onto an SKP open's generation. Options:
