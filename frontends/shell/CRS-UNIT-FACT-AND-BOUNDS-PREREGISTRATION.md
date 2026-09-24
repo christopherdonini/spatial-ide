@@ -211,3 +211,120 @@ Each value sits at its own site:
 ## §10. Amendments
 
 *Opens empty. Append-only.*
+
+### Amendment 1 — the build's results
+
+Record cap form (`state/directives/2026-09-18-record-cap.md`): references and hashes, no prose
+restating them. Commits on `cut/crs-unit-fact-and-bounds`, in order: `913059f` (protocol),
+`90ab7bf` (kernel), `c027d39` (shell), `6da9206` (Part P operator row), `a150790` (merge
+`origin/main`, no rebase; PLAN.yaml's own `gate` field for this node was the merge's only real
+conflict, resolved to this branch's value — the field origin/main had not yet learned), `e8ce6e9`
+(KNOWN-LIMITATIONS.md item 17). Suites run at `c027d39` (Rust, before the merge; no Rust file
+changed after it) and at `e8ce6e9` (`node`-based pre-gate self-checks and `npm run verify`, after
+it).
+
+**§4 tests → commit, mutation, observed result (each applied, observed FAILED by name, then
+reverted):**
+
+1. `crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other`
+   (`protocol/skp/tests/fixtures.rs:278` @ `913059f`) — `913059f`. Mutation: `#[serde(alias =
+   "meter")]` on `Metre`. FAILED by name (assertion: `"meter"` deserialized).
+2. `skp_version_is_skp_0_4` (`protocol/skp/tests/fixtures.rs:300` @ `913059f`) — `913059f`.
+   Mutation: literal back to `"skp/0.3"`. FAILED by name (`left: "skp/0.3", right: "skp/0.4"`).
+3. `describe_carries_the_unit_the_engine_recorded_for_each_admission_route`
+   (`kernel/tests/describe_crs_unit.rs:59` @ `90ab7bf`) — `90ab7bf`. Mutation:
+   `CoordinateUnit::Degree => CrsUnit::Metre` in `crs_unit_of`. FAILED by name, one panic naming
+   all four degree rows (3-6) via the test's own collected-failures assertion.
+4. `named_unit_projects_to_other_never_to_unestablished` (`kernel/src/skp.rs:1733` @ `90ab7bf`) —
+   `90ab7bf`. Mutation: `Named(_) => CrsUnit::Unestablished`. FAILED by name.
+5. `the_real_describe_crs_shape_matches_the_shared_fixture` (`kernel/src/skp.rs:1748` @ `90ab7bf`)
+   — `90ab7bf`. Mutation: the session-ordinal fixture's `unit` set to `"metre"`. FAILED by name.
+6. `describe fixtures carry the typed unit fact (skp/0.4)`
+   (`frontends/shell/src/skp/__tests__/fixtures.test.ts:176` @ `913059f`) — `913059f`. Mutation:
+   same fixture edit as test 5 (one shared JSON file). FAILED by name.
+7. `declares metre 1, degree 1e-6, other 1, unestablished 1`
+   (`frontends/shell/src/canvas/tileGrid.test.ts:59` @ `c027d39`) — `c027d39`. Mutation: degree
+   `1e-6` → `1`. FAILED by name.
+8. `metre gives baseSpan 2, degree gives 2*max(span) ~= 0.800515417276802 for corpus #8's bbox`
+   and `a zero-span anchor gives 2e-6 under degree and 2 under the other three units`
+   (`frontends/shell/src/canvas/tileGrid.test.ts:76,81` @ `c027d39`) — `c027d39`. Mutation:
+   `deriveTileGridFrame` ignores `unit`, uses `MIN_ANCHOR_SPAN.metre`. Both FAILED by name.
+9. `declares 131072 for every unit; degree hands over at zoom 6`
+   (`frontends/shell/src/canvas/offsetFrame.test.ts:29` @ `c027d39`) — `c027d39`. Mutation: degree
+   `131_072` → `65_536`. FAILED by name.
+10. `a degrees describe fixture's unit reaches the frozen grid frame`
+    (`frontends/shell/src/residency/candidateArmSession.test.ts:234` @ `c027d39`) — `c027d39`.
+    Mutation: the session passes `"metre"` instead of `deps.crsUnit` to `establishGridFrame`.
+    FAILED by name; the other 76 tests in the file unaffected.
+11. `App threads describe's unit to the canvas and the candidate session`
+    (`frontends/shell/src/App.lateResult.test.tsx:1385` @ `c027d39`) — `c027d39`. Mutation applied
+    and reverted at each of the two sites named in §2 (g) independently
+    (`frontends/shell/src/App.tsx`'s `WorkingCanvas` `crsUnit` prop, then its
+    `startCandidateArmSession` `crsUnit` dep): each FAILED this same test by name in isolation.
+
+**Suites, commands and rc:**
+
+- `cargo test -p spatial-skp` (`CARGO_TARGET_DIR=C:/dev/spatial-ide/target`) — rc 0, 40/40.
+- `cargo test -p spatial-kernel` (whole crate) — rc 0, every binary green (113 lib tests; every
+  integration-test binary 0 failures).
+- `cargo fmt --check` — rc 1: 1752 pre-existing diff blocks repo-wide, none in a file this piece
+  touches (`grep` of the fmt output against every `protocol/skp`, `kernel/src/skp.rs` and
+  `kernel/tests/describe_crs_unit.rs` path: zero matches) — pre-existing drift, not caused by or
+  fixed in this piece.
+- `cargo clippy -p spatial-skp -p spatial-kernel --all-targets` — rc 0; 36 pre-existing warnings,
+  none in a file this piece touches (same `grep` check, zero matches) — no new warning.
+- `frontends/shell`: `npm ci` (`node_modules` was absent), then `npm run verify` — rc 0. 71 test
+  files, 1055/1055 tests, including all four cargo-invoking notice tests
+  (`noticeByteIdentity.test.ts` 8, `spdxTokenisation.test.ts` 2, `noticeDeterminism.test.ts` 1,
+  `duckdbAmalgamation.test.ts` 21) green with no timeout on this run; `renderer/bundle-viewer`
+  built first (`npm ci` + `npm run build`) so `generate:notice` had its metafile.
+- `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` — rc 0, 251/251.
+- `node scripts/plan/verify-cites.mjs` — rc 0.
+- `node scripts/plan/verify-quotes.mjs` — rc 0.
+- `node scripts/plan/verify-test-claims.mjs` — rc 0.
+- `node scripts/plan/verify.mjs --offline` — rc 0.
+- `node scripts/plan/verify-mutation.mjs` — rc 0, 12/12 new tests named by a recorded mutation.
+- `node scripts/plan/queue.mjs --check` — rc 0.
+- `node scripts/plan/site.mjs --check` — rc 0.
+
+**§3 table, observed:**
+
+- Rows 1-8: matched, by `describe_carries_the_unit_the_engine_recorded_for_each_admission_route`
+  (`kernel/tests/describe_crs_unit.rs`) — every row's `unit` and the S5 falsification condition
+  (`unit == Degree` iff `display_convention` is `Some`).
+- Row 9: matched, by `named_unit_projects_to_other_never_to_unestablished`
+  (`kernel/src/skp.rs:1735-1736` @ `90ab7bf`).
+- Row C8: **not run by this piece** — it is §9's Operator gate, Part P
+  (`frontends/shell/MANUAL-WALKTHROUGH.md`), committed at `6da9206` with a blank result log,
+  queued for the next sitting. The `baseSpan ≈ 0.800515417276802` arithmetic itself is matched
+  independently by `tileGrid.test.ts`'s corpus-#8-bbox-literal test and by
+  `candidateArmSession.test.ts`'s real-fixture seam test (test 10 above), both using the identical
+  bbox literal Part P's own row cites — the live open-a-real-file check is what Part P still owes.
+- `v0-describe-response-caller-asserted.json`'s own `unit: "metre"` (added at `913059f`) is not
+  itself a §3 row — a bonus check on an existing caller-asserted fixture, exercised by
+  `describe fixtures carry the typed unit fact (skp/0.4)` (test 6).
+
+**Discharged/done clauses in this record, each naming its proof:** §2 (a)-(i) each land at the
+commit named beside it above; §7's four declared values are the `MIN_ANCHOR_SPAN`/
+`RECENTER_MAX_DRIFT` object literals tests 7 and 9 pin; §8's block-on-sight items are the
+architect's own gate, not self-certified here.
+
+**Files touched, this piece's own commits (excludes the merge's inherited main-side files):**
+`KNOWN-LIMITATIONS.md`; `PLAN.yaml` (one field, the merge's own conflict resolution);
+`frontends/shell/MANUAL-WALKTHROUGH.md`; `frontends/shell/src/App.tsx`,
+`src/App.test.ts`, `src/App.lateResult.test.tsx`; `frontends/shell/src/admission/`
+`AdmissionPanel.test.ts`, `admitDataset.test.ts`, `describeSummaryText.test.ts`;
+`frontends/shell/src/canvas/` `WorkingCanvas.tsx`, `offsetFrame.ts`, `offsetFrame.test.ts`,
+`tileGrid.ts`, `tileGrid.test.ts`, `tileIngest.test.ts`, `tileResidentSet.test.ts`;
+`frontends/shell/src/residency/candidateArmSession.ts`, `candidateArmSession.test.ts`;
+`frontends/shell/src/skp/types.ts`, `skp/client.test.ts`, `skp/__tests__/fixtures.test.ts`;
+`frontends/shell/src/streaming/tileViewportStreamManager.ts`, `tileViewportStreamManager.test.ts`;
+`kernel/src/skp.rs`; `kernel/tests/describe_crs_unit.rs` (new); `protocol/skp/SKP-V0.md`,
+`src/v0/commands.rs`, `src/v0/mod.rs`, `tests/fixtures.rs`, and all nine
+`protocol/skp/tests/data/*.json` request/response fixtures.
+
+**Deviations from §2-§7:** none. Every choice this record's own runs required was named in §2-§7;
+no `CoordinateUnit` variant differed from the four mapped; no existing assertion changed (only the
+mechanical `"metre"`/literal additions §2 itself names, extended to every fixture the wire-literal
+bump actually touches — `admitDataset.test.ts`, `client.test.ts` — per §8 item 9's own both-side,
+same-commit rule); nothing outside §2-§7 was decided.
