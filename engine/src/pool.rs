@@ -192,7 +192,9 @@ const CONFIGURE_SQL: &str = "SET autoinstall_known_extensions=false; \
 /// DuckDB connections — this module's [`ConnectionPool::configure_new`] and `layout.rs`'s variant
 /// rewriter — and before this function existed the second carried its own copy of the statement,
 /// which is exactly how a security-relevant setting goes missing from one path. One function, one
-/// spelling, both sites (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 3).
+/// spelling, both product sites (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md` §2 item 3).
+/// `fixture::configured_connection` is a third, test-support-only caller, added so
+/// `engine/tests/*.rs` fixture-reading connections carry the same configuration.
 ///
 /// Failure is `ConnectionSetup`, naming the phase, so a configuration that does not apply is a
 /// typed refusal and never a connection that quietly runs unconfigured.
@@ -882,6 +884,30 @@ mod tests {
             setting(&conn, "enable_geoparquet_conversion"),
             "false",
             "the retained setting must survive every edit to the statement"
+        );
+    }
+
+    /// `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`'s test. `engine/tests/*.rs`
+    /// integration tests read fixtures back through `fixture::configured_connection` rather than a
+    /// raw `Connection::open_in_memory()`; this asserts that helper carries the same fail-closed
+    /// configuration T1 asserts on the pool's own leases.
+    ///
+    /// RECORDED MUTATION: `fixture::configured_connection` skips the
+    /// `pool::configure_connection` call and returns the bare connection ->
+    /// `a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off`
+    /// fails by name (both settings read `true`).
+    #[test]
+    fn a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off() {
+        let conn = crate::fixture::configured_connection().expect("configured connection");
+        assert_eq!(
+            setting(&conn, "autoinstall_known_extensions"),
+            "false",
+            "the fixture test-support helper must not permit runtime extension install"
+        );
+        assert_eq!(
+            setting(&conn, "autoload_known_extensions"),
+            "false",
+            "the fixture test-support helper must not permit runtime extension autoload"
         );
     }
 

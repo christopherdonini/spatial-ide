@@ -43,7 +43,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use spatial_engine::fixture::{write_geoparquet, FixtureSpec, LicenseMode};
+use spatial_engine::fixture::{configured_connection, write_geoparquet, FixtureSpec, LicenseMode};
 use spatial_engine::layout::{write_clustered_variant, ClusterOrder, DeclaredExtent, VariantSpec};
 use spatial_engine::CancelToken;
 
@@ -163,7 +163,7 @@ fn file_facts(p: &Path) -> (u64, String) {
 /// parallel scan's scheduling happened to produce) — the row-order digest prediction 2's fallback
 /// clause names.
 fn ids_in_file_order(path: &Path) -> Vec<u64> {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let mut stmt = conn.prepare("SELECT id FROM read_parquet(?)").expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
     let mut out = Vec::new();
@@ -177,7 +177,7 @@ fn ids_in_file_order(path: &Path) -> Vec<u64> {
 /// on a fresh connection, for the case a matrix cell is already on disk from an earlier run of this
 /// same phase and was not rewritten (so `LayoutFacts` is not available to read it from).
 fn row_groups_of(path: &Path) -> u64 {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let path_sql = path.to_str().unwrap().replace('\'', "''");
     spatial_engine::layout::row_group_row_counts(&conn, &path_sql).expect("row groups").len() as u64
 }

@@ -16,7 +16,7 @@
 
 use std::path::PathBuf;
 
-use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{configured_connection, write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_engine::identity::IdSource;
 use spatial_engine::{Dataset, EngineError, SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
 
@@ -74,7 +74,7 @@ fn keyless() -> FixtureSpec {
 fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
     let path = write("frn-probe", &keyless());
     let p = path.to_str().unwrap().replace('\\', "/");
-    let conn = duckdb::Connection::open_in_memory().expect("in-memory connection");
+    let conn = configured_connection().expect("configured connection");
 
     let mut stmt = conn
         .prepare(&format!(
@@ -126,7 +126,7 @@ fn the_vendored_duckdb_exposes_file_row_number_on_read_parquet() {
 fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture() {
     let path = write("frn-physical", &keyless());
     let p = path.to_str().unwrap().replace('\\', "/");
-    let conn = duckdb::Connection::open_in_memory().expect("in-memory connection");
+    let conn = configured_connection().expect("configured connection");
 
     // **The check lives here, not in the shipped engine.** It was a `pub fn` in `dataset.rs` with
     // no product caller, and the instrument-accessor exemption does not cover it: it is not a
