@@ -165,30 +165,46 @@ queried again. The app cannot know whether those areas are empty.
 *The lines below are true of `main`'s build after the v0.1.0 tag, not of the v0.1.0 artifact the
 header above describes. They move into the next release's list when that release is cut.*
 
-17. **A dataset whose unit is neither degrees nor metres uses tile and drift bounds declared for
-    metres.** `skp/0.4` (crs-unit-fact-and-bounds) gives the tile grid's minimum anchor span and the
-    re-centering drift cap their own declared value for degrees: the drift cap's declared value
-    happens to equal the metre value (131 072, by derivation); the minimum anchor span's does not
-    (1e-6 against 1). A dataset the engine records as `other` (a named unit that is neither) or
-    `unestablished` still keeps the one-unit minimum anchor span and the same 131 072 drift cap
-    every unit shares, with no declared value of its own for either bound.
+17. **A dataset in degrees has its own declared tile-grid anchor value and shares the drift cap
+    every unit shares, but `MAX_ZOOM` and the fit and degenerate-zoom constants stay declared for
+    metres.** `skp/0.4` (crs-unit-fact-and-bounds) gives the tile grid's minimum anchor span a
+    declared value per unit: metre 1, degree 1e-6, other 1, unestablished 1. The re-centering drift
+    cap is one declared value, 131 072, that every unit shares by derivation from the same float32
+    precision requirement, not by coincidence. For the CRS84 corpus file the float32 rounding of
+    drawn coordinates is at most 1/32 pixel per axis at zoom 21, the deepest a fit reaches, while the
+    render origin lies inside the file's extent, and at most half a pixel at any zoom and origin —
+    the same bound a dataset in metres has, because the re-centering threshold is computed per screen
+    pixel and this piece leaves re-centering unchanged. `MAX_ZOOM` and `extent.ts`'s fit and
+    degenerate-zoom constants remain declared for metres only (PLAN.yaml node
+    `crs-zoom-constants-per-unit`). A dataset the engine records as `other` (a named unit that is
+    neither degree nor metre) or `unestablished` still keeps the one-unit minimum anchor span and
+    the same 131 072 drift cap every unit shares, with no declared value of its own for either bound.
     <!-- DRAFT wording, for the human's sight, written by this piece (crs-unit-fact-and-bounds); not
     the human's own wording. frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md §2 (i), §7,
     §8 item 8, and the STOP LIST's Q1 attach point, state/consults/2026-09-24-crs-unit-fact-and-bounds.md:
     frontends/shell/src/canvas/tileGrid.ts's MIN_ANCHOR_SPAN (a per-CrsUnit record: metre 1, degree
-    1e-6, other 1, unestablished 1) and frontends/shell/src/canvas/offsetFrame.ts's
-    RECENTER_MAX_DRIFT (metre/degree/other/unestablished all 131_072), pinned by
-    tileGrid.test.ts's "declares metre 1, degree 1e-6, other 1, unestablished 1" and
-    offsetFrame.test.ts's "declares 131072 for every unit; degree hands over at zoom 6" (this
-    piece's preregistration §4 items 7 and 9); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md,
-    Amendment 1 item 6, true of the build for degree and metre only per DECISIONS-PENDING.md entry 120,
-    the RULED 2026-09-23 (later) block, item (1)(a) -- scoped to the two constants this item names,
-    MIN_ANCHOR_SPAN and RECENTER_MAX_DRIFT; MAX_ZOOM and extent.ts's fit and degenerate zoom
-    constants are the same item-6 class and remain open, the consult's STOP LIST Q2,
-    state/consults/2026-09-24-crs-unit-fact-and-bounds.md. Entry 120 (1)(c)'s bound statement: PR #109
-    (open for the click) states the P0 bound for today's build on main; this scope line replaces it at
-    landing, the point after which PR #109's P0 bound no longer describes the build (see PR #109 and
-    the consult's P0 section, state/consults/2026-09-24-crs-unit-fact-and-bounds.md, by name). -->
+    1e-6, other 1, unestablished 1), pinned by tileGrid.test.ts's "declares metre 1, degree 1e-6,
+    other 1, unestablished 1" (this piece's preregistration §4 item 7); DECISIONS-PENDING.md entry
+    120, the RULED 2026-09-23 (later) block, item (1)(b), the node's authority for this declared
+    value. frontends/shell/src/canvas/offsetFrame.ts's RECENTER_MAX_DRIFT
+    (metre/degree/other/unestablished all 131_072 by derivation from ADR-010 rule 1's float32
+    precision requirement), pinned by offsetFrame.test.ts's "declares 131072 for every unit; degree
+    hands over at zoom 6" (this piece's preregistration §4 item 9); the derivation itself is
+    state/consults/2026-09-24-crs-unit-fact-and-bounds.md, section DECLARED VALUE, steps 3-4. The
+    render-precision sentence is entry 120's item (1)(c) bound, computed at
+    state/consults/2026-09-24-crs-unit-fact-and-bounds.md, section P0, steps 1-7; it still holds
+    after this piece lands because re-centering is unaffected by the tile-grid anchor-span change
+    (the same consult section; this piece's preregistration §5 prediction, "Re-centring behaviour is
+    identical for every unit"). PR #109 (docs/known-limitations-owed-rows) states this same
+    render-precision sentence for main's build before this piece lands; this item carries that
+    sentence forward unchanged, and the minimum-anchor-span sentence above is the one respect in
+    which this item's text differs from PR #109's. docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md,
+    Amendment 1 item 6, true of the build for degree and metre only per DECISIONS-PENDING.md entry
+    120, the RULED 2026-09-23 (later) block, item (1)(a) -- scoped to the two constants this item
+    names, MIN_ANCHOR_SPAN and RECENTER_MAX_DRIFT; MAX_ZOOM and extent.ts's fit and degenerate zoom
+    constants are the same item-6 class and remain undeclared per unit, the consult's STOP LIST Q2,
+    state/consults/2026-09-24-crs-unit-fact-and-bounds.md; the follow-on node is PLAN.yaml's
+    `crs-zoom-constants-per-unit`. -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe

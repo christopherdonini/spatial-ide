@@ -422,3 +422,104 @@ omitted: Amendment 1 is a class-1 post-result amendment.
   2 and 3.
 - `frontends/shell/MANUAL-WALKTHROUGH.md` Part P's P1 pre-this-round expected-outcome text:
   superseded by this round's item 8.
+
+### Amendment 3 — correction round after full gating attempt 2
+
+Written after PR #112's full gating attempt 2 was seen (architect: FAIL, one semantic finding and
+four record-only; reviewer: FAIL, Evidence and Documentation), under DECISIONS-PENDING.md, RULED
+2026-09-24, question round 17, item 1 (entry 128: "Continue"). Class 1 (post-result) and class 3
+(cite/line-number fixes, test-text exception) per `docs/PREREGISTRATION-TEMPLATE.md` §10. Record
+cap form: references and hashes, no prose restating them.
+
+1. **Discharge map (b), (d), (h) (architect §8 item 10, unresolved residue).** Defect: Amendment 2
+   item 1's (b) named tests 2 and 6 for §2(b)'s `SKP-V0.md` prose edits, neither of which asserts
+   prose; (d) named test 6 for `skp/types.ts`'s `SKP_VERSION = "skp/0.4"`, which test 6 does not
+   touch; (h) named a comment at "the four `recenterThresholdForBudget` call sites" that is not one
+   comment. Corrected reference: (b) is prose, discharged by inspection at `913059f`, not a test;
+   (d) is asserted by `frontends/shell/src/skp/__tests__/fixtures.test.ts:61` and `:81` (the
+   request-fixture round trips); (h) is one comment at `WorkingCanvas.tsx:1910` (the drag-deferral
+   note), and the four-call-sites text is the separate `crsUnit` prop doc at `WorkingCanvas.tsx:505`.
+   Proof: those files/lines as committed.
+
+2. **`cargo fmt` claim (reviewer E1, re-opened).** Defect: Amendment 2 item 6 said
+   `kernel/src/skp.rs` and `protocol/skp/tests/fixtures.rs` were left as pre-existing drift; false —
+   five diff blocks (`skp.rs:1077,1780,1794`; `fixtures.rs:283,290` at `25333d0`) sat on lines this
+   piece added. Corrected reference: this round's own commit formats exactly those five blocks; each
+   file's `rustfmt --edition 2021 --check` block count now equals `origin/main`'s (`skp.rs` 58,
+   `fixtures.rs` 11). Proof: that command, both files, this round.
+
+3. **Item 6's scope in §1 and the Header (architect R2).** Defect: §1's "Claimable at landing" line
+   (`:51`) and the Header's Aim (`:12`) state ADR-013 A1 item 6 true for degree and metre without
+   naming which constants, unlike `KNOWN-LIMITATIONS.md` item 17's comment. Corrected reference: §1
+   (`:51`) and the Header's Aim (`:12`) are superseded by this item to read as scoped to
+   `MIN_ANCHOR_SPAN` and `RECENTER_MAX_DRIFT` only, the scope `KNOWN-LIMITATIONS.md` item 17's
+   comment states as committed this round. Proof: that comment, this round's commit.
+
+4. **Superseded-index gaps (architect R1).** Defect: Amendment 2's index omitted four items: Amendment
+   1's `cargo fmt` sentence; its discharge-by-commit sentence; its claim that no Rust file changed
+   after `c027d39` (`:222`), false since `8a237dd` reformats `kernel/tests/describe_crs_unit.rs`; and
+   the row-9 pin `kernel/src/skp.rs:1735-1736 @ 90ab7bf` (`:296`), a branch-commit pin of the same
+   kind Amendment 2 item 5 already superseded for tests 1-11. Corrected reference: this Amendment's
+   superseded index, below, lists all four. Proof: that index.
+
+5. **Whitespace-mismatched quote (reviewer).** Defect: the Amendment-2 superseded index's line at
+   `:418` quotes the fixture-count phrase spanning source lines `:323-324` with a space joining the
+   two lines, where the source itself has a line break there — a byte mismatch under a quotation
+   mark. Corrected reference: this Amendment's superseded index (below) restates that entry without
+   quotation marks. Proof: `git show HEAD:frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md
+   | sed -n '323,324p'`, this round.
+
+6. **Clippy grep line, re-proven (architect R3).** Defect: Amendment 1's clippy claim (`:274-275`)
+   reused the `cargo fmt` grep's forward-slash path pattern; `cargo clippy` prints Windows
+   backslash paths, so that grep matched nothing regardless of the true count. Corrected reference:
+   this round's `cargo clippy -p spatial-skp -p spatial-kernel --all-targets` (rc 0, 36 warnings),
+   grepped for `kernel\src\skp.rs`, `protocol\skp\tests\fixtures.rs` and
+   `kernel\tests\describe_crs_unit.rs`: one match, `kernel\src\skp.rs:172`, predating this piece
+   (`git blame`: commit `d400a475`, 2026-08-09) — no new warning. Proof: that command's output and
+   that blame, this round.
+
+7. **Class-3 test-text corrections, by row (reviewer, for the architect's reduction).** Amendment 2
+   items 8, 9 and 10 are the class-3 test-text corrections: item 8 is
+   `frontends/shell/MANUAL-WALKTHROUGH.md` Part P's P1 literal; item 9 is
+   `frontends/shell/src/skp/__tests__/fixtures.test.ts`'s three per-fixture comments and
+   `App.lateResult.test.tsx`'s test-11 comment; item 10 is `offsetFrame.ts`'s parameter rename. Their
+   pre-correction spans exist only on branch commits (the round-15(e) tension the reviewer named),
+   left for the architect's reduction rather than a new clause here.
+
+**Suite run, this round's own commits (rustfmt fix, this Amendment), commands and rc:**
+
+- `cargo test -p spatial-skp` — rc 0, 40/40.
+- `cargo test -p spatial-kernel` (whole crate) — rc 0, 113 lib tests; every integration-test binary
+  green.
+- `cargo clippy -p spatial-skp -p spatial-kernel --all-targets` — rc 0, 36 warnings, one in a file
+  this piece touches (`kernel/src/skp.rs:172`, pre-existing per item 6 above) — no new warning.
+- `rustfmt --edition 2021 --check kernel/src/skp.rs` — 58 diff blocks (matches `origin/main`).
+- `rustfmt --edition 2021 --check protocol/skp/tests/fixtures.rs` — 11 diff blocks (matches
+  `origin/main`).
+- `frontends/shell`: `npm run verify` — rc 0, 71 test files, 1055/1055 tests.
+- `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` — rc 0, 256/256.
+- `node scripts/plan/verify-cites.mjs` — rc 0.
+- `node scripts/plan/verify-quotes.mjs --show-cites` — PASS, 0 checked/verified/baselined/advisory,
+  0 baseline errors (tree-wide).
+- `node scripts/plan/verify-test-claims.mjs` — rc 0, all 122 claimed tests exist or are planned (3
+  advisory, unrelated node).
+- `node scripts/plan/verify-mutation.mjs --base origin/main --head HEAD` — rc 0, 12/12.
+- `node scripts/plan/verify.mjs --offline` — rc 0.
+
+**Superseded index (as of this Amendment).**
+- Amendment 1's `cargo fmt --check` sentence (Amendment 2's own §4 pin: item 6, since further
+  corrected by this Amendment's item 2): superseded — the five blocks are now formatted.
+- Amendment 1's §2 discharge-by-commit sentence: superseded by Amendment 2 item 1, itself corrected
+  for (b), (d) and (h) by this Amendment's item 1.
+- Amendment 1's claim that no Rust file changed after `c027d39` (`:222`): superseded — `8a237dd`
+  reformats `kernel/tests/describe_crs_unit.rs`.
+- Amendment 1's §4 row-9 pin `kernel/src/skp.rs:1735-1736 @ 90ab7bf` (`:296`): superseded, cite by
+  test name only (`named_unit_projects_to_other_never_to_unestablished`), per Amendment 2 item 5.
+- Amendment 2's superseded-index entry for "all nine `protocol/skp/tests/data/*.json`" (`:418`):
+  superseded by this Amendment's item 5 — the count is ten, cited without quotation marks.
+- §1's "Claimable at landing" line (`:51`) and the Header's Aim (`:12`): superseded by this
+  Amendment's item 3 — scoped to `MIN_ANCHOR_SPAN` and `RECENTER_MAX_DRIFT` only.
+- `KNOWN-LIMITATIONS.md` item 17's pre-this-round text and comment (the Amendment-2-round wording):
+  superseded by this round's own `KNOWN-LIMITATIONS.md` commit (RULED 2026-09-24, question round 17,
+  item 1: the render-precision bound restated, the anchor span per-unit, `MAX_ZOOM`/`extent.ts`
+  named open).
