@@ -1,14 +1,14 @@
 # CUT-STATE — opened 2026-09-24 (the post-tag arc's ledger archived; the work continues)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-24T21:29:56Z
-tip: f082c3128a2ce0ab89fd842e65345ab585e648b2
-branches: Ready for the human's click, merge commit (never squash): #116 fix/kernel-ticket-drop-under-registry-lock @ 51bf4d5 (attempt 3 PASS/PASS; CI 9/9; no generated files); #117 governance/test-claims-superseded @ c25efd5 (architect PASS index 171, reviewer scoped PASS index 175; re-merged after #112, CI watched). STOPPED, draft: #114 docs/adr-035-dataset-session-ended @ 22a0272 (after #116 merges: one read under round 19 item 1). Merged today: #97, #104-#109, #111-#113, #115. Closed unmerged: #110.
-position: 2026-09-24 21:35Z -- rounds 17-20 ruled and applied; #112 merged 21:14Z; PLAN true on main at d818c5a (ready set empty). Waiting on the human's clicks (#116, #117). context: unmeasured (the status-line proposal state/drafts/statusline-context-proposal.md is the human's to apply).
-half-made judgments: Main PLAN commits are no longer held: keep PLAN true and re-merge open PRs promptly (generated files regenerated; check `file PLAN.yaml` for CRLF). On #116's merge: kernel-ticket-drop-under-registry-lock -> done (evidence pr 116); then ADR-035's redraft by the architect under a fresh count, stating round 19 item 1 as Decision text and the #116 architect's constraints (gate-log index 173): GenerationRegistry::invalidate is the single end point; the at-most-once gate keys on the live generation actually removed; emission is a non-blocking enqueue that never re-enters a lock; close-time ends emit before forget_dataset. On #117's merge: briefa-p3b-owner-side-invalidation and governance-test-claims-superseded-scanner -> done (evidence pr 117, gate = the form, which main then carries); governance-verify-mutation-multiline-attrs stays in progress (round 20); governance-test-claims-withdrawn-marker becomes ready (one round, fully gated, riders (a)/(b) as requirements; five-line form committed before code); test-claims-landedness-bound also unblocks.
-intended sequencing (next session): Resume from this block and the ledger's 21:35Z entry. (1) On #117's CI watcher: tell the human it is clickable. (2) After #116's click: node done; dispatch ADR-035's redraft (architect), then both gates. (3) After #117's click: nodes done; dispatch the withdrawn-marker piece (worker, form first). (4) Sweep merged worktrees (clean+pushed+merged: crs-unit-fact-and-bounds, verify-mutation-multiline-attrs, known-limitations-owed-rows, adr-021-023-b1-notes, fixture-regeneration-entry-point, shell-dependency-audit, engine-tests-configured-connections, verify-gate-file-exists, drill-*) and read main's CI. Weekly window 2026-09-25: raise the unreported findings.
-unreported findings: For the 2026-09-25 weekly window: the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) -- not the ticket-drop defect per #116's reviewer (its message prints after host.cancel returns); cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory also flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop; verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form at dispatch) as a proposal; the gate-log node id governance-test-claims-superseded differs from the PLAN id -scanner; whether B1's build may start before the watcher lands (PLAN now sequences it after, by the night ruling's literal order).
-in-flight gate states: No agent running. #117 CI watcher (background). gate-log: 178 records (latest: #116 attempt 3 PASS/PASS; #117 reviewer scoped PASS at index 175).
+flushed_at: 2026-09-24T22:56:05Z
+tip: 1ac335d4e6a77110c2d3e8a4748dc4f2c055de12
+branches: Ready for the human's click (merge commit): #114 docs/adr-035-dataset-session-ended @ f8e77ad (ADR-035, Proposed; fresh count PASS/PASS plus the architect's scoped PASS; CI 5/5; ACCEPTED AS MERGED by round 21 item 1 -- the acceptance edits come in a follow-up docs PR after the merge). In flight: #118 governance/test-claims-withdrawn @ dc769fd (the correction round, worker-high, worktree .claude/worktrees/test-claims-withdrawn). Merged today: #97, #104-#109, #111-#113, #115-#117. Closed unmerged: #110.
+position: 2026-09-24 23:00Z -- rounds 17-21 ruled and applied; main green. context: 532.3k/800k (67%) by the human's /context at about 23:00Z (371.4k at 21:55Z).
+half-made judgments: After #114 merges: apply the architect's drafted acceptance texts (filed at state/consults/2026-09-24-adr-035-acceptance-drafts.md, 1ac335d) (Status Accepted; Acceptance section with round 21 item 1's words byte-copied by script from DECISIONS-PENDING; the SKP-V0's section 8 dated note of rider (c), not widening the rule) on a fresh branch; regenerate the ADR index; both gates (red-line content: the words must be byte-exact). Riders (a) and (b) go into the watcher's preregistration requirements. #118: if this correction round's gates FAIL on substance, the piece stops under Rule 7 and #108's node reverts to not-done with advisory names (round 21 item 2); a record-only FAIL goes to the architect's reduction (the custodian's reading from round 19 item 2, stated in the RULED block's Applied text). PLAN summaries must avoid a digit followed by whitespace and 'sec' (site.mjs's duration pattern): write 'SKP-V0's section'. Owed PLAN node: the ADR-035 drafter's two kernel notes (post-close invalidated entry; live_or_mint close race).
+intended sequencing (next session): Resume from this block and the ledger's 22:52Z entry. (1) On the architect's acceptance drafts: hold until #114 merges, then branch, apply, gate. (2) On #118's correction report: verify mechanically (CI, file PLAN.yaml, the named probe test fails by name, 15 withdrawn/0 findings, append-only both forms), then both gates (attempt 2). (3) After #118 lands: governance-test-claims-superseded-followups, then test-claims-landedness-bound, in sequence. (4) The watcher's preregistration (engine-source-change-watcher) after ADR-035's acceptance lands, carrying rounds 17-21 including riders (a)/(b). (5) Weekly window 2026-09-25: raise the unreported findings.
+unreported findings: For the 2026-09-25 weekly window: the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurred on #114's CI and passed on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop; verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form); the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template's class 6 is short-form only and a full form's overrun has no class but 2 (the #118 gates).
+in-flight gate states: Running: #118's correction round (worker-high). The ADR-035 acceptance drafts are filed; waiting on #114's click. gate-log: 185 records.
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the post-tag arc, 2026-09-13 → 2026-09-24; archived byte-identical by `git mv`; its last flush named tip d4362bd). Before it: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut; v0.1.0 = b391e43).
 
@@ -74,3 +74,42 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - ADR-035's redraft. It states round 19 item 1 and the constraints in gate-log index 173, corrects the premises the kernel fix changed, and names the watcher's literal from `protocol/` on main.
     - The withdrawn marker's design: the row grammar, riders (a) and (b) as mechanical checks, #108's fifteen rows, and the budget.
   - **Worktrees swept.** 13 removed, each verified merged, pushed and clean, with no process running in it. C: went from 39 to 69 GB free. Kept: `C:/dev/wt/adr-035-dataset-session-ended` (active) and `.claude/worktrees/verify-mutation-header-token` (dropped, unmerged).
+- 2026-09-24T22:01Z - **ADR-035 redrafted and at its fresh-count gates; the withdrawn marker dispatched.**
+  - **ADR-035 (PR #114):**
+    - Main merged in at 1f96ba1, with no conflicts.
+    - The architect's round-19 redraft was applied byte-exact at 8d4b13d, with the ADR index row regenerated. It covers:
+      - round 19 item 1 as Decision text: a single end point, every end emitting, at most once, keyed on the live generation removed;
+      - a non-blocking enqueue, with close-time ends emitted before `forget_dataset`;
+      - the Open item removed;
+      - the tree described as main after #116;
+      - the watcher's literal, `skp/0.5`.
+    - The drafter's gate-log index note was wrong: it counted file lines. Array index 173 is file line 175, #116's architect attempt 2. The note is not carried anywhere.
+    - Attempt 1 of the fresh count dispatched: reviewer and architect in parallel. The PR body was updated.
+    - The drafter suggested one follow-up node, owed. It covers two items:
+      - a post-close `invalidate` leaves a never-removed `invalidated` entry;
+      - a `viewport_query` racing `close_dataset` can mint a generation for a closed name.
+  - **The withdrawn marker:**
+    - The architect's pre-work consult is filed at `state/consults/2026-09-24-withdrawn-marker.md` (90de3e9). Its design:
+      - token `withdrawn-test`;
+      - rider (a) resolved against the current ledger's RULED blocks, by round/item or by entry;
+      - rider (b)'s carrier required on every row;
+      - the full form, with a ≤280-line budget;
+      - #108's five rows citing ruling round 20 item 1 and carrier round 18 item 4, pinned at the merge-base.
+    - Worker dispatched in `.claude/worktrees/test-claims-withdrawn`. The form is committed before any code, and #108's node flips to done in the same PR.
+  - **Context: 371.4k of 800k (46%),** measured by the human's `/context` at about 21:55Z. The first measured reading this session.
+- 2026-09-24T22:52Z - **ADR-035 ready and accepted as merged (round 21, red line, typed). #118 failed its first gates; one correction round granted. Main briefly red.**
+  - **ADR-035 (PR #114):**
+    - Fresh count under round 19 item 1:
+      - Attempt 1: the architect FAILED on close-time ordering (a data-plane-thread end recorded before `forget_dataset`, whose enqueue follows it); the reviewer PASSED.
+      - The drafter's ten edits at ce5b8e2.
+      - Attempt 2: PASS/PASS.
+      - Three custodian wording fixes at f8e77ad, with the architect's scoped PASS.
+    - CI 5/5. Marked ready: merge commit, Status Proposed.
+  - **PR #118 (the withdrawn marker), attempt 1: both gates FAILED on the same substance item.** Rider (a)'s "fails by name" was built weaker: a row with an unresolvable citation is checked only when its claimed test is missing. The reviewer's probe passed a row citing `round 99, item 1` with carrier `nonsense`. There was record-only residue besides. Verified as sound: #108's five pins, 15 withdrawn, and SUPERSEDED unchanged.
+  - **Round 21** (f086085), both answers typed and verbatim in the RULED block:
+    - Item 1, a red line: ADR-035 is accepted as merged, and Decision 4's reading is confirmed with rider (a)-(c).
+      - After #114 merges, one fully gated docs piece: Status Accepted, an Acceptance section with the words byte-copied by script, and the SKP-V0 §8 dated note (rider (c)). The architect is pre-drafting the texts.
+      - Riders (a) and (b) bind the watcher's preregistration.
+    - Item 2: one correction round for #118. The reviewer's probe becomes a named regression test. If the round fails again, Rule 7 stops the piece.
+    - A worker-high round was dispatched.
+  - **Main red for one run.** The round-21 PLAN commit f086085 was pushed by a chain whose `;` bypassed a failed `site.mjs`. The PLAN summary's "SKP-V0 section 8" had tripped the duration pattern. It was fixed at 618dada (reworded, regenerated), and Governance is green again. The lesson is appended to the gate-on-exit-code memory.

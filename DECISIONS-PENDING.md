@@ -29,6 +29,22 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-09-24 — question round 21 (AskUserQuestion, one set, mirrored to Telegram first as `state/questions/round-21.md`; both answers typed, verbatim; item 1 a red line):**
+
+- *Item 1 — entry 135, accepting ADR-035 (red line):* **"Accepted as merged. Decision 4's reading is confirmed, with a rider. The session reference is an opaque, per-open, non-authorising value that reveals no more than the DatasetHandle already on the wire; it is not a generation value, provided it never does a generation value's job: (a) batch and ticket attribution stays with the ticket, and the reference is used only to route the ended-session event to its open; (b) it is never persisted or published, and the leakage tests that forbid a generation in recipes and bundles are extended to name the reference too; (c) SKP-V0 §8's rule gains an appended, dated note distinguishing per-open opaque references from generation values, so the rule is clarified in writing rather than reinterpreted by an ADR."** Applied:
+  - ADR-035 is accepted as merged. After PR #114 merges, one docs piece, fully gated, does three things:
+    - sets ADR-035's Status to Accepted, citing this item;
+    - appends an Acceptance section recording these words verbatim, with the rider;
+    - appends to `protocol/skp/SKP-V0.md` §8 the dated note of rider (c).
+  - Riders (a) and (b) bind the watcher's preregistration (`engine-source-change-watcher`) through this ruling:
+    - the reference carries no batch or ticket attribution, and routes only the ended-session event to its open;
+    - it is never persisted or published;
+    - the recipe and bundle leakage tests that forbid a generation value name the reference too.
+- *Item 2 — entry 136, PR #118's second round:* **"Option 1. The reviewer's probe (a row citing "round 99, item 1" with carrier "nonsense") becomes a named regression test that must fail by name. If this round fails again, the piece stops under Rule 7 and #108 keeps its advisory names."** Applied:
+  - One correction round, fully gated, by a fresh worker. Every `withdrawn-test` row is checked on its own and fails by name, with exit 1. The citation grammar is anchored. The record is corrected by references only.
+  - The reviewer's probe is a named regression test that must fail by name.
+  - If this round's gates fail again, the piece stops under Rule 7, and `governance-verify-mutation-multiline-attrs` keeps its advisory names, not-done.
+
 **RULED 2026-09-24 — question round 20 (AskUserQuestion, one item, mirrored to Telegram first as `state/questions/round-20.md`; the answer typed, verbatim):**
 
 - *Item 1 — entry 134, PR #108's node and the scanner:* **"Option 1, with two riders: (a) a withdrawn row is valid only if the ruling it names resolves: the round/item or entry id must exist as a RULED block that names the removal, and verify fails an unresolvable citation by name. No ruling, no withdrawal. (b) A withdrawn test may never be evidence that a gate, acceptance or preregistered claim still relies on. If one is, the row must name what now carries that evidence, or verify fails. For #108 that's the union design itself, which makes "no loss" true by construction. That's why its twelve property tests are obsolete rather than merely deleted. The piece is one round, fully gated, after #117 lands, and #108 closes as done when its rows are in."** Applied:
@@ -422,6 +438,43 @@ yes, 4326 + 3857 under the entry-51 protocol. #30: clicking. Sweep authorized in
 re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #31; item 1 (b) and the
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
+
+136. **[RULED 2026-09-24 — question round 21; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — PR #118, the withdrawn marker: a second round, beyond round 20 item 1's one round.]** Both gates failed attempt 1 on the same substance item (`state/gate-log.json`, node `governance-test-claims-withdrawn-marker`, attempt 1).
+- **What fails.** Rider (a) says verify fails an unresolvable citation by name, and rider (b) likewise says verify fails. As built, neither holds:
+  - A `withdrawn-test` row is checked only when a claim on its pinned line is missing, and then the failure names the claim, not the citation.
+  - The reviewer probed it: a row with ruling `round 99, item 1` and carrier `nonsense`, and a row with no carrier, both pass silently.
+  - The citation parser is also unanchored. A cited ruling resolves even when the text around it says "not round 20, item 1".
+- **What stands.** Four record-only items (a ledger line cite in a test comment, false recorded-mutation outcomes, and two in #108's Amendment 7) and several should-fixes. Everything else is verified:
+  - all five of #108's pins recompute;
+  - 15 withdrawn, 0 findings, and 3 superseded, unchanged;
+  - SUPERSEDED's behaviour unchanged.
+- **Options:**
+  - (1) **One correction round, fully gated** (Recommended). A fresh worker does four things:
+    - checks every `withdrawn-test` row on its own, naming the unresolved ruling or carrier, or a missing carrier, and exiting 1, whatever the claim's state;
+    - anchors the citation grammar;
+    - applies the should-fixes;
+    - corrects the record by references only (record cap).
+    If it fails again, the architect reduces the record, or the piece stops under Rule 7.
+  - (2) **Drop the piece.** #108's node stays not-done and its twelve names stay advisory. This is round 20's option (2) in effect.
+- **Touches:** PR #118; PLAN nodes `governance-test-claims-withdrawn-marker` and `governance-verify-mutation-multiline-attrs`.
+
+135. **[RULED 2026-09-24 — question round 21; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — RED LINE (an ADR status): accepting ADR-035, `dataset_session_ended`.]** PR #114 carries ADR-035 as Proposed. It passed its fresh count under round 19 item 1:
+- attempt 1: architect FAIL (close-time ordering), reviewer PASS;
+- attempt 2 at ce5b8e2: PASS/PASS;
+- three wording fixes at f8e77ad, which the architect confirmed in a scoped re-read (`state/gate-log.json`, node `engine-source-change-watcher`).
+
+Merging it keeps it Proposed. The Decision states round 19 item 1:
+- the event is emitted where the kernel records a generation's end, so every end emits, at most once, keyed on the live generation removed;
+- emission is a non-blocking enqueue that takes no lock;
+- the transition report carries the session reference, so every end recorded before `forget_dataset` emits;
+- a generation with no reference still emits.
+
+One reading is yours at acceptance: Decision 4 reads the session reference as not engaging `SKP-V0.md` §8's `skp/0.3` rule of no generation value on the wire.
+- **Options:**
+  - (1) **Accept ADR-035 as merged,** confirming Decision 4's reading. The custodian sets its Status to Accepted, citing your words, after #114 merges.
+  - (2) **Keep it Proposed for now.** The watcher's preregistration proceeds under rounds 17–19, which bind whatever the ADR's status.
+  - (3) **Refuse Decision 4's reading.** The ADR is redrafted for the reference's wire form.
+- **Touches:** `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` (the Status line only); the ADR index.
 
 134. **[RULED 2026-09-24 — question round 20; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD — PR #108's node cannot close as done when the scanner lands; entry 133's premise was wrong.]** Round 19 item 2 closes `governance-verify-mutation-multiline-attrs` as done when the superseded-name scanner (PR #117) lands. That rested on entry 133's statement that the scanner would neutralise #108's twelve historical test names. The statement was the custodian's error.
 - **Why it fails.** The scanner exempts only a renamed claim whose replacement exists (`scripts/plan/README.md`, section "The boundary"). #108's twelve names are tests the round-18 union design removed with no replacement.
