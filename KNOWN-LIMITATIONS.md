@@ -165,12 +165,22 @@ queried again. The app cannot know whether those areas are empty.
 *The lines below are true of `main`'s build after the v0.1.0 tag, not of the v0.1.0 artifact the
 header above describes. They move into the next release's list when that release is cut.*
 
-17. **A dataset in degrees uses tile and render-precision bounds declared for metres.** The tile
-    grid's minimum anchor span and the re-centering drift bound are declared in metres, and they apply
-    unchanged when a dataset's coordinates are in degrees. The effect at close zoom is bounded as
-    stated in the owed piece's record: that piece's first step computes the bound, and this line will
-    then state it.
-    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
+17. **A dataset whose unit is neither degrees nor metres uses tile and drift bounds declared for
+    metres.** `skp/0.4` (crs-unit-fact-and-bounds) gives the tile grid's minimum anchor span and the
+    re-centering drift cap their own declared value for degrees, matching metres; a dataset the
+    engine records as `other` (a named unit that is neither) or `unestablished` still keeps the
+    one-unit minimum anchor span and the same 131 072 drift cap every unit shares, with no declared
+    value of its own for either bound.
+    <!-- DRAFT wording, for the human's sight (crs-unit-fact-and-bounds, this piece's own preregistration,
+    frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md §2 (i), §7, §8 item 8, and the STOP LIST's
+    Q1 attach point, state/consults/2026-09-24-crs-unit-fact-and-bounds.md): frontends/shell/src/canvas/tileGrid.ts's
+    MIN_ANCHOR_SPAN (a per-CrsUnit record: metre 1, degree 1e-6, other 1, unestablished 1) and
+    frontends/shell/src/canvas/offsetFrame.ts's RECENTER_MAX_DRIFT (metre/degree/other/unestablished
+    all 131_072), pinned by tileGrid.test.ts's "declares metre 1, degree 1e-6, other 1, unestablished 1"
+    and offsetFrame.test.ts's "declares 131072 for every unit; degree hands over at zoom 6" (this
+    piece's preregistration §4 items 7 and 9); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md,
+    Amendment 1 item 6, true of the build for degree and metre only; DECISIONS-PENDING.md entry 120
+    and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
