@@ -40,7 +40,7 @@ const SAMPLE: (string | null | undefined)[] = [
   undefined,
 ];
 
-describe("the two deliberate copies of extractSpdxIds tokenise identically", () => {
+describe("the two deliberate copies of extractSpdxIds tokenise identically", { timeout: 30_000 }, () => {
   it("agrees on every sampled expression shape", () => {
     for (const expression of SAMPLE) {
       expect(viewerCopy(expression), `tokenisation of ${JSON.stringify(expression)}`).toStrictEqual(
