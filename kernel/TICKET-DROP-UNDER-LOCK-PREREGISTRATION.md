@@ -125,3 +125,24 @@ tests named (re-run at `9ab46fe`). `verify.mjs --offline` — rc 0 (at `6b94f1e`
 - Results section: the clippy bullet's `:197` line pin is superseded by (e)'s symbol cite.
 - Scope line: the "ADR-019's admission-ticket mechanism" clause, read as an independent full-gating
   justification, is superseded by (f); it stands only as a mechanism reference.
+
+## Amendment 2 (correction round 2, the last under the record cap: PR #116 attempt 2, `state/gate-log.json` index 173 (architect) and index 174 (reviewer), both FAIL record-only; commits not on main are disclosed as branch commits)
+
+(a) Class 1. Amendment 1 (h)'s reproduced span of round 16, item 1 and its clause crediting the architect's attempt 1 with applying that precedent are withdrawn. D5 is ruled at `state/gate-log.json` index 173 (architect, attempt 2).
+
+(b) Class 3 (tense). The five-line form's Tests+mutation line's last sentence records the three mutation runs in the past tense at `fa39539` (branch commit), which is the parent of `8ff2875` (branch commit), the commit that adds the fix and its tests. That sentence is read as the planned step; the runs are recorded by the Results section's mutation bullet, as superseded by Amendment 1 (c), and by Amendment 1 (b).
+
+(c) Class 3. The Results section's clippy pin is completed as `kernel/src/skp.rs:172 @ 96d8668 sha256:ba5a20cb973fd24c19bda5a9c374082be0525ad6a42615c593ca8ba44a2c6148`, a historical pin authoritative for what origin/main carried before this piece, while Amendment 1 (e)'s symbol cite is authoritative for the current tree. Amendment 1 (e)'s bare line number is superseded by that symbol cite alone, since no commit on main carries that line.
+
+(d) Class 3. The Results section's last two bullets (the `node --test` and `verify-*` runs), which name no commit, are superseded by Amendment 1's Checks paragraph, which names each run's commit.
+
+(e) Class 3 (test text, by named exception). The doc comment of `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name` as it stood at `9d2586c` (branch commit; no commit on main carries it, so no hash) is corrected in place in this commit: its heading no longer calls mutation (B) a drop-under-lock mutation, and (B)'s failure site is the test's `expect_err` call, not its `refused.code` assertion (`state/gate-log.json` index 174).
+
+### Superseded index (as of Amendment 2) - read this amendment first
+
+- Amendment 1 (h): the reproduced span of round 16, item 1 and the clause about the architect's attempt 1, by (a).
+- The five-line form's Tests+mutation line's last sentence, read as a record of runs, by (b).
+- Results section, clippy bullet: the unhashed `96d8668` pin, completed by (c); Amendment 1 (e)'s bare line number, by (c).
+- Results section: the last two bullets' tool results without a commit, by (d), and with them Amendment 1 (e)'s clause closing that half of D4.
+- The fourth regression test's doc comment as at `9d2586c` (branch commit), by (e).
+- Amendment 1's superseded index stands for what it names; this index adds to it.
