@@ -1,0 +1,61 @@
+# explicit viewer-before-shell build order — five-line preregistration (`AUTONOMY.md` §21d)
+
+*Committed before any code, per the header rule both full and short forms keep.*
+
+```
+Authority: state/directives/2026-09-22-part-n-n8-and-sequencing.md:159 (read, cite by path:line, not retyped); DECISIONS-PENDING.md entry 115, item (b); kernel/RESULTS.md, section "### Step 4 — the shell build/test (`frontends/shell`)"; PLAN.yaml node drill-fix-viewer-build-order; AUTONOMY.md §21d.
+Scope: frontends/shell/package.json (the "prebuild" and "pretest" scripts only) and a new frontends/shell/scripts/buildViewerFirst.mjs; declared line budget <= 150 non-generated lines across <= 8 files.
+Change: prebuild first runs buildViewerFirst.mjs (builds renderer/bundle-viewer, refusing with a named-fix message if its node_modules is missing) then generate:notice, so a bare `npm run build` here builds the viewer on its own; pretest is simplified since prebuild now covers what it built explicitly.
+Tests+mutation: the check is a real clean run -- delete renderer/bundle-viewer/dist and dist-metafile.json, run `npm run build` in frontends/shell, record rc; the mutation is the change reverted and the same run recorded failing with generateNotice.mjs's existing "does not exist -- run `npm run build` in renderer/bundle-viewer first" message; both runs recorded in the hand-back.
+Out-of-scope: no dependency added/removed/bumped; no ADR, wire, security or guarantee text; no change to what ships -- frontends/shell/src/generated/NOTICE.txt and the viewer's dist/NOTICE.txt sha256 verified equal to main's build of them.
+```
+
+Budget: 43 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
+
+Amendment 1 (sibling per AUTONOMY.md sec14): pretypecheck (frontends/shell/package.json:11) shared the same generate:notice precondition prebuild had; fixed the same way in commit 6554b96. Budget after: 45 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).
+
+Amendment 2 (reviewer PASS-with-notes, PR #106 attempt 1; per AUTONOMY.md sec14 sibling search):
+- Sibling (a), fixed: `build:frontend:measure` (frontends/shell/package.json:38) reaches `vite build --mode measure` with no `prebuild`-style hook, so it hit the same missing-NOTICE failure on a clean clone; fixed by adding `prebuild:frontend:measure` (npm's own pre-hook convention for any script name, not only `build`/`typecheck`), same shape as `prebuild`/`pretypecheck`, this commit.
+- Sibling (b), out of scope: `dev` (vite, reached by `tauri dev`'s `beforeDevCommand`) returns HTTP 500 on a clean clone because `NoticesPanel.tsx` imports a NOTICE the dev server never generates. Not fixed here: a `predev` hook would run the viewer build and the cargo-backed notice generation on every `vite` dev start, a dev-loop change outside state/directives/2026-09-22-part-n-n8-and-sequencing.md:159's "bounded repairs, not a tooling redesign." Named for the morning list.
+- Nit fixed: buildViewerFirst.mjs's header now names `prebuild`, `pretypecheck`, and `prebuild:frontend:measure` as its callers (this commit).
+- Nit fixed: buildViewerFirst.mjs's header no longer claims `tauri.conf.json`'s `beforeBuildCommand` installs the viewer's own dependencies; only CI does, and `beforeBuildCommand` reaches this script through `prebuild` the same as any other `npm run build` caller (this commit).
+- Nit fixed: a failed viewer build no longer surfaces an uncaught `execSync`/`execFileSync` stack trace; the failure is caught, printed as one line, and the process exits with the child's own status (or 1) (this commit).
+- No earlier form line is superseded by this amendment.
+
+Budget after Amendment 2: 54 of 150 non-generated lines across 2 files (git diff --numstat against the branch's merge-base with origin/main, working tree included, the form excluded).
+
+Amendment 3 — record correction after the scoped re-read:
+- Finding A: Amendment 2's sibling (b) row put a phrase in quotation marks as the words of state/directives/2026-09-22-part-n-n8-and-sequencing.md:159, but that line does not carry it. Corrected reference: state/directives/2026-09-22-part-n-n8-and-sequencing.md:159 @ eddc4851bd38384803f8c7b3c1d955465631d088 sha256:a815f8782a3b4cd7d909f7a588e27e75fcb611e60d114e2fca0ceaf6721769e4. `dev` stays out of scope because a `predev` hook would touch a script this form's Scope line never named, and every `vite` dev start would pay a cargo-backed notice build the piece never measured or budgeted. Proof: `git show eddc4851bd38384803f8c7b3c1d955465631d088:state/directives/2026-09-22-part-n-n8-and-sequencing.md | sed -n '159p' | sha256sum` reproduces the pinned hash; the phrase is absent from that output.
+- Finding B: Amendment 2's item rows (sibling (a) at frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:18 @ c93c05a sha256:643961ec9981bbb0c61d4ac498f1311e7c66c7912d68ab347f3a9f6bc1a8ad39; nit 1 at :20 @ c93c05a sha256:744aad0982bc31cbf77f75f45f606d08a995efeaaf055be684abe5064c2ef1ad; nit 2 at :21 @ c93c05a sha256:470c73624dc096b15800b3758a768bebe05ca0ffb7bee67de5bbaa0002324ea0; nit 3 at :22 @ c93c05a sha256:69b633b4a13e73192e4d4e4e7c86f83b03d67daf09973ccb83127eff5a35b5bc) mark their fixes "this commit", but Amendment 2's own commit (c93c05a) touches only this form; the fixes are in 7edaf71. Corrected reference: each of the four rows above is fixed at commit 7edaf71, not at Amendment 2's own commit. Proof: `git show 7edaf71 --stat` lists frontends/shell/package.json and frontends/shell/scripts/buildViewerFirst.mjs; `git show c93c05a --stat` lists only this form.
+- Finding C: Amendment 2's closing sentence (frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:23 @ c93c05a sha256:0354c0bd929b76f50e44a7e928556156a8114b4c02fd8a307b043cf72d53f31a) says no earlier form line is superseded; that is false, since the Scope and Change lines no longer state the current script set after Amendment 1 and Amendment 2's own sibling (a) fix. Corrected reference: see the superseded index below. Proof: the index's pins reproduce each superseded text's hash against the commit that wrote it.
+- Nit: Amendment 2's bare cite of `frontends/shell/package.json:38` is pinned at frontends/shell/package.json:38 @ 7edaf71 sha256:4274e0f28d34a04339851cd250ab0d15e3beb5a88f800e9de1c475d9f11e15ad.
+
+Superseded index (each entry: superseded text, its pin, what supersedes it):
+1. The Scope line, naming only the "prebuild" and "pretest" scripts, pinned at frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:7 @ d0d0a5d sha256:160d98598c47b3ddef92dd5217923c9ffd52964089243aa914c7a80583575df1, is superseded by Amendment 1's pretypecheck fix and Amendment 2's sibling (a) `prebuild:frontend:measure` fix, both touching scripts the Scope line never named.
+2. The Change line, naming only prebuild, pinned at frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:8 @ d0d0a5d sha256:d538e4c907293d9883943bc3a1615c92f136ea996309b36269cc46ddd256bdfe, is superseded by the same two fixes, which add equivalent pre-hooks Change never described.
+3. Amendment 2's sibling (b) quoted phrase, pinned at frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:19 @ c93c05a sha256:7408ceb679269db3cd33be36f82c6e57572aebbe4096d72388e9d6360877875a, is superseded by this amendment's Finding A, which replaces the quotation with a path:line pin.
+4. Amendment 2's four "this commit" references, pinned above in Finding B (frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md lines :18, :20, :21, :22 @ c93c05a with the same hashes there), are superseded by this amendment's Finding B, which corrects each to 7edaf71.
+5. Amendment 2's no-supersession sentence, pinned above in Finding C (frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:23 @ c93c05a sha256:0354c0bd929b76f50e44a7e928556156a8114b4c02fd8a307b043cf72d53f31a), is superseded by this superseded index.
+
+Amendment 4 — record reduction (the record cap, point (3))
+
+Superseded index. Every pin below is historical, and the branch head's tree is authoritative for what ships.
+1. Amendment 2 is superseded in whole by this amendment. Its rows are pinned at:
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:18 @ c93c05a sha256:643961ec9981bbb0c61d4ac498f1311e7c66c7912d68ab347f3a9f6bc1a8ad39
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:19 @ c93c05a sha256:7408ceb679269db3cd33be36f82c6e57572aebbe4096d72388e9d6360877875a
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:20 @ c93c05a sha256:744aad0982bc31cbf77f75f45f606d08a995efeaaf055be684abe5064c2ef1ad
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:21 @ c93c05a sha256:470c73624dc096b15800b3758a768bebe05ca0ffb7bee67de5bbaa0002324ea0
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:22 @ c93c05a sha256:69b633b4a13e73192e4d4e4e7c86f83b03d67daf09973ccb83127eff5a35b5bc
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:23 @ c93c05a sha256:0354c0bd929b76f50e44a7e928556156a8114b4c02fd8a307b043cf72d53f31a
+2. Amendment 3 (commit 18f1fbe) is superseded in whole by this amendment.
+3. The form's Scope and Change lines are superseded, as to the scripts and files changed, by `git diff origin/main...HEAD -- frontends/shell/package.json frontends/shell/scripts/buildViewerFirst.mjs`. They are pinned at:
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:7 @ d0d0a5d sha256:160d98598c47b3ddef92dd5217923c9ffd52964089243aa914c7a80583575df1
+   - frontends/shell/VIEWER-BUILD-ORDER-PREREGISTRATION.md:8 @ d0d0a5d sha256:d538e4c907293d9883943bc3a1615c92f136ea996309b36269cc46ddd256bdfe
+4. Amendment 1's cite of frontends/shell/package.json:11 is superseded by the same diff.
+5. The Budget line after the form, Amendment 1's Budget sentence and the Budget line after Amendment 2 are superseded by the Budget below.
+
+`dev` stays out of scope because a `predev` hook would add a cargo-backed notice build, never measured or budgeted by this piece, to every `vite` dev start (state/directives/2026-09-22-part-n-n8-and-sequencing.md:159 @ eddc4851bd38384803f8c7b3c1d955465631d088 sha256:a815f8782a3b4cd7d909f7a588e27e75fcb611e60d114e2fca0ceaf6721769e4).
+
+Commits d0d0a5d, 6554b96, c93c05a, 7edaf71 and 18f1fbe are on branch fix/drill-viewer-build-order and not on main. Every pin or cite at them resolves on main only after PR #106 lands by a merge commit.
+
+Budget: 54 of 150 non-generated lines across 2 files (git diff --numstat origin/main...HEAD, the form excluded).

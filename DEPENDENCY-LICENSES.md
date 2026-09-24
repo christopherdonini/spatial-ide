@@ -51,11 +51,11 @@ a changed expression, or the same package appearing in a different tree all retu
 
 | | |
 |---|---|
-| Packages audited | 966 |
-| Recognised without question | 956 |
-| Decided by a human, with a dated citation | 9 |
-| **Needs human review** | **1** |
-| Trees not auditable | 1 |
+| Packages audited | 989 |
+| Recognised without question | 977 |
+| Decided by a human, with a dated citation | 12 |
+| **Needs human review** | **0** |
+| Trees not auditable | 0 |
 
 ## Decided packages
 
@@ -63,35 +63,32 @@ Each of these was flagged by the mechanical check and then **accepted by a human
 and for the reason shown. They are printed rather than merely omitted: a decision that only
 shows up as the absence of a review line is one nobody can audit.
 
-| Tree | Package | Version | Declared | Flagged because | Decided | Reason |
-|---|---|---|---|---|---|---|
-| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 | 2026-08-07 | CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set |
-| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
-| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on |
-| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless |
+| Tree | Package | Version | Declared | Flagged because | Decided | Reason | Source |
+|---|---|---|---|---|---|---|---|
+| workspace (kernel, engine, renderer, protocol/data-plane) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| workspace (kernel, engine, renderer, protocol/data-plane) | `webpki-roots` | 1.0.9 | `CDLA-Permissive-2.0` | not on the recognised list: CDLA-Permissive-2.0 | 2026-08-07 | CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| protocol/transport-bakeoff (ADR-012 decision evidence) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser` | 0.36.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `cssparser-macros` | 0.6.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `dtoa-short` | 0.3.5 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `option-ext` | 0.2.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `ryu` | 1.0.23 | `Apache-2.0 OR BSL-1.0` | not on the recognised list: BSL-1.0 | 2026-08-07 | accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| spikes/adr-003-crs-rendering (spike app) | `selectors` | 0.36.1 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-08-07 | spike-only, transitive via Tauri, compatible regardless | PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1 |
+| frontends/shell (the packaged app's frontend) | `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | not on the recognised list: CC-BY-4.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 117 |
+| frontends/shell (the packaged app's frontend) | `lightningcss` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 116 |
+| frontends/shell (the packaged app's frontend) | `lightningcss-win32-x64-msvc` | 1.33.0 | `MPL-2.0` | not on the recognised list: MPL-2.0 | 2026-09-20 | build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set | DECISIONS-PENDING.md, RULED 2026-09-20, entry 116 |
 
-Source for every decision above: **PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1**. Counsel confirms per ADR-009's Caveat
-before anything commercial; nothing here is a legal conclusion.
-
-## Not auditable
-
-Named rather than skipped: an audit that hides its own gaps is worth less than no audit.
-
-- **protocol/transport-bakeoff/web** — node_modules is not installed, and installing it is a download. Declared direct dependencies, from package.json: apache-arrow, esbuild, typescript
+Each row cites the note where a human accepted that exact package. Counsel confirms per
+ADR-009's Caveat before anything commercial; nothing here is a legal conclusion.
 
 ## Needs human review
 
-| Tree | Package | Version | Declared | Why it is here |
-|---|---|---|---|---|
-| frontends/shell (the packaged app's frontend) | `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | not on the recognised list: CC-BY-4.0 |
+None. Every audited package either declares an SPDX expression whose every identifier is on
+the recognised list in the script, **or is one of the 12 package-scoped
+decisions listed above** — each accepted by a named human, on a date, with its citation.
 
 **This is not a statement that the dependency tree is legally clear**, and it must not be cited
-as one. Each row above is a question the mechanical check raised, over the coverage stated above.
+as one. It says the mechanical check found nothing to ask about, over the coverage stated above.
 
 ## Third-party data terms (not a package): the EPSG Geodetic Parameter Dataset (IOGP)
 
@@ -1179,7 +1176,7 @@ and the terms URL:
 
 | Package | Version | Declared license | |
 |---|---|---|---|
-| `@esbuild/win32-x64` | 0.24.2 | `MIT` |  |
+| `@esbuild/win32-x64` | 0.28.2 | `MIT` |  |
 | `@swc/helpers` | 0.5.23 | `Apache-2.0` |  |
 | `@types/command-line-args` | 5.2.3 | `MIT` |  |
 | `@types/command-line-usage` | 5.0.4 | `MIT` |  |
@@ -1195,7 +1192,7 @@ and the terms URL:
 | `command-line-usage` | 7.0.4 | `MIT` |  |
 | `command-line-usage/array-back` | 6.2.3 | `MIT` |  |
 | `command-line-usage/typical` | 7.3.0 | `MIT` |  |
-| `esbuild` | 0.24.2 | `MIT` |  |
+| `esbuild` | 0.28.2 | `MIT` |  |
 | `find-replace` | 3.0.0 | `MIT` |  |
 | `flatbuffers` | 24.12.23 | `Apache-2.0` |  |
 | `has-flag` | 4.0.0 | `MIT` |  |
@@ -1247,7 +1244,7 @@ and the terms URL:
 | `@jridgewell/gen-mapping` | 0.3.13 | `MIT` |  |
 | `@jridgewell/remapping` | 2.3.5 | `MIT` |  |
 | `@jridgewell/resolve-uri` | 3.1.2 | `MIT` |  |
-| `@jridgewell/sourcemap-codec` | 1.5.5 | `MIT` |  |
+| `@jridgewell/sourcemap-codec` | 1.6.0 | `MIT` |  |
 | `@jridgewell/trace-mapping` | 0.3.31 | `MIT` |  |
 | `@loaders.gl/core` | 4.4.4 | `MIT` |  |
 | `@loaders.gl/images` | 4.4.4 | `MIT` |  |
@@ -1265,9 +1262,11 @@ and the terms URL:
 | `@math.gl/sun` | 4.1.0 | `MIT` |  |
 | `@math.gl/types` | 4.1.0 | `MIT` |  |
 | `@math.gl/web-mercator` | 4.1.0 | `MIT` |  |
+| `@oxc-project/types` | 0.150.0 | `MIT` |  |
 | `@probe.gl/env` | 4.1.1 | `MIT` |  |
 | `@probe.gl/log` | 4.1.1 | `MIT` |  |
 | `@probe.gl/stats` | 4.1.1 | `MIT` |  |
+| `@rolldown/binding-win32-x64-msvc` | 1.2.9 | `MIT` |  |
 | `@rolldown/pluginutils` | 1.0.0-beta.27 | `MIT` |  |
 | `@rollup/rollup-win32-x64-gnu` | 4.62.4 | `MIT` |  |
 | `@rollup/rollup-win32-x64-msvc` | 4.62.4 | `MIT` |  |
@@ -1280,6 +1279,8 @@ and the terms URL:
 | `@types/babel__generator` | 7.27.0 | `MIT` |  |
 | `@types/babel__template` | 7.4.4 | `MIT` |  |
 | `@types/babel__traverse` | 7.28.0 | `MIT` |  |
+| `@types/chai` | 5.2.3 | `MIT` |  |
+| `@types/deep-eql` | 4.0.2 | `MIT` |  |
 | `@types/estree` | 1.0.9 | `MIT` |  |
 | `@types/geojson` | 7946.0.16 | `MIT` |  |
 | `@types/node` | 25.9.5 | `MIT` |  |
@@ -1288,23 +1289,18 @@ and the terms URL:
 | `@types/react` | 18.3.31 | `MIT` |  |
 | `@types/react-dom` | 18.3.7 | `MIT` |  |
 | `@vitejs/plugin-react` | 4.7.0 | `MIT` |  |
-| `@vitest/expect` | 2.1.9 | `MIT` |  |
-| `@vitest/pretty-format` | 2.1.9 | `MIT` |  |
-| `@vitest/runner` | 2.1.9 | `MIT` |  |
-| `@vitest/snapshot` | 2.1.9 | `MIT` |  |
-| `@vitest/spy` | 2.1.9 | `MIT` |  |
-| `@vitest/utils` | 2.1.9 | `MIT` |  |
+| `@vitest/mocker` | 5.0.1 | `MIT` |  |
+| `@vitest/spy` | 5.0.1 | `MIT` |  |
 | `agent-base` | 7.1.4 | `MIT` |  |
 | `apache-arrow` | 21.2.0 | `Apache-2.0` |  |
 | `assertion-error` | 2.0.1 | `MIT` |  |
 | `asynckit` | 0.4.0 | `MIT` |  |
 | `baseline-browser-mapping` | 2.11.13 | `Apache-2.0` |  |
 | `browserslist` | 4.28.8 | `MIT` |  |
-| `cac` | 6.7.14 | `MIT` |  |
+| `cac` | 7.0.0 | `MIT` |  |
 | `call-bind-apply-helpers` | 1.0.2 | `MIT` |  |
-| `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | **REVIEW** |
-| `chai` | 5.3.3 | `MIT` |  |
-| `check-error` | 2.1.3 | `MIT` |  |
+| `caniuse-lite` | 1.0.30001809 | `CC-BY-4.0` | decided 2026-09-20 |
+| `chai` | 6.2.2 | `MIT` |  |
 | `combined-stream` | 1.0.8 | `MIT` |  |
 | `convert-source-map` | 2.0.0 | `MIT` |  |
 | `cssstyle` | 4.6.0 | `MIT` |  |
@@ -1313,15 +1309,15 @@ and the terms URL:
 | `data-urls` | 5.0.0 | `MIT` |  |
 | `debug` | 4.4.3 | `MIT` |  |
 | `decimal.js` | 10.6.0 | `MIT` |  |
-| `deep-eql` | 5.0.2 | `MIT` |  |
 | `delayed-stream` | 1.0.0 | `MIT` |  |
+| `detect-libc` | 2.1.2 | `Apache-2.0` |  |
 | `dunder-proto` | 1.0.1 | `MIT` |  |
 | `earcut` | 2.2.4 | `ISC` |  |
 | `electron-to-chromium` | 1.5.403 | `ISC` |  |
 | `entities` | 6.0.1 | `BSD-2-Clause` |  |
 | `es-define-property` | 1.0.1 | `MIT` |  |
 | `es-errors` | 1.3.0 | `MIT` |  |
-| `es-module-lexer` | 1.7.0 | `MIT` |  |
+| `es-module-lexer` | 2.3.2 | `MIT` |  |
 | `es-object-atoms` | 1.1.2 | `MIT` |  |
 | `es-set-tostringtag` | 2.1.0 | `MIT` |  |
 | `esbuild` | 0.25.12 | `MIT` |  |
@@ -1350,10 +1346,11 @@ and the terms URL:
 | `jsesc` | 3.1.0 | `MIT` |  |
 | `json-with-bigint` | 3.5.10 | `MIT` |  |
 | `json5` | 2.2.3 | `MIT` |  |
+| `lightningcss` | 1.33.0 | `MPL-2.0` | decided 2026-09-20 |
+| `lightningcss-win32-x64-msvc` | 1.33.0 | `MPL-2.0` | decided 2026-09-20 |
 | `loose-envify` | 1.4.0 | `MIT` |  |
-| `loupe` | 3.2.1 | `MIT` |  |
 | `lru-cache` | 5.1.1 | `ISC` |  |
-| `magic-string` | 0.30.21 | `MIT` |  |
+| `magic-string` | 1.4.1 | `MIT` |  |
 | `math-intrinsics` | 1.1.0 | `MIT` |  |
 | `mime-db` | 1.52.0 | `MIT` |  |
 | `mime-types` | 2.1.35 | `MIT` |  |
@@ -1362,17 +1359,19 @@ and the terms URL:
 | `nanoid` | 3.3.18 | `MIT` |  |
 | `node-releases` | 2.0.53 | `MIT` |  |
 | `nwsapi` | 2.2.24 | `MIT` |  |
+| `obug` | 2.2.1 | `MIT` |  |
 | `parse5` | 7.3.0 | `MIT` |  |
-| `pathe` | 1.1.2 | `MIT` |  |
-| `pathval` | 2.0.1 | `MIT` |  |
+| `pathe` | 2.0.3 | `MIT` |  |
 | `picocolors` | 1.1.1 | `ISC` |  |
-| `picomatch` | 4.0.5 | `MIT` |  |
+| `picomatch` | 4.0.7 | `MIT` |  |
 | `playwright-core` | 1.62.1 | `Apache-2.0` |  |
-| `postcss` | 8.5.26 | `MIT` |  |
+| `postcss` | 8.5.28 | `MIT` |  |
 | `punycode` | 2.3.1 | `MIT` |  |
 | `react` | 18.3.1 | `MIT` |  |
 | `react-dom` | 18.3.1 | `MIT` |  |
 | `react-refresh` | 0.17.0 | `MIT` |  |
+| `rolldown` | 1.2.9 | `MIT` |  |
+| `rolldown/@rolldown/pluginutils` | 1.0.1 | `MIT` |  |
 | `rollup` | 4.62.4 | `MIT` |  |
 | `rrweb-cssom` | 0.7.1 | `MIT` |  |
 | `safer-buffer` | 2.1.2 | `MIT` |  |
@@ -1382,14 +1381,11 @@ and the terms URL:
 | `siginfo` | 2.0.0 | `ISC` |  |
 | `source-map-js` | 1.2.1 | `BSD-3-Clause` |  |
 | `stackback` | 0.0.2 | `MIT` |  |
-| `std-env` | 3.10.0 | `MIT` |  |
+| `std-env` | 4.2.0 | `MIT` |  |
 | `symbol-tree` | 3.2.4 | `MIT` |  |
-| `tinybench` | 2.9.0 | `MIT` |  |
-| `tinyexec` | 0.3.2 | `MIT` |  |
+| `tinybench` | 6.1.4 | `MIT` |  |
+| `tinyexec` | 1.3.0 | `MIT` |  |
 | `tinyglobby` | 0.2.17 | `MIT` |  |
-| `tinypool` | 1.1.1 | `MIT` |  |
-| `tinyrainbow` | 1.2.0 | `MIT` |  |
-| `tinyspy` | 3.0.2 | `MIT` |  |
 | `tldts` | 6.1.86 | `MIT` |  |
 | `tldts-core` | 6.1.86 | `MIT` |  |
 | `tough-cookie` | 5.1.2 | `BSD-3-Clause` |  |
@@ -1399,15 +1395,9 @@ and the terms URL:
 | `undici-types` | 7.24.6 | `MIT` |  |
 | `update-browserslist-db` | 1.3.0 | `MIT` |  |
 | `vite` | 6.4.3 | `MIT` |  |
-| `vite-node` | 2.1.9 | `MIT` |  |
-| `vite-node/@esbuild/win32-x64` | 0.21.5 | `MIT` |  |
-| `vite-node/esbuild` | 0.21.5 | `MIT` |  |
-| `vite-node/vite` | 5.4.21 | `MIT` |  |
-| `vitest` | 2.1.9 | `MIT` |  |
-| `vitest/@esbuild/win32-x64` | 0.21.5 | `MIT` |  |
-| `vitest/@vitest/mocker` | 2.1.9 | `MIT` |  |
-| `vitest/esbuild` | 0.21.5 | `MIT` |  |
-| `vitest/vite` | 5.4.21 | `MIT` |  |
+| `vite-node` | 6.0.0 | `MIT` |  |
+| `vite-node/vite` | 8.3.0 | `MIT` |  |
+| `vitest` | 5.0.1 | `MIT` |  |
 | `w3c-xmlserializer` | 5.0.0 | `MIT` |  |
 | `webidl-conversions` | 7.0.0 | `BSD-2-Clause` |  |
 | `whatwg-encoding` | 3.1.1 | `MIT` |  |
@@ -1457,7 +1447,38 @@ and the terms URL:
 
 ### protocol/transport-bakeoff/web
 
-*Not auditable: node_modules is not installed, and installing it is a download. Declared direct dependencies, from package.json: apache-arrow, esbuild, typescript*
+| Package | Version | Declared license | |
+|---|---|---|---|
+| `@esbuild/win32-x64` | 0.24.2 | `MIT` |  |
+| `@swc/helpers` | 0.5.23 | `Apache-2.0` |  |
+| `@types/command-line-args` | 5.2.3 | `MIT` |  |
+| `@types/command-line-usage` | 5.0.4 | `MIT` |  |
+| `@types/node` | 20.19.43 | `MIT` |  |
+| `ansi-styles` | 4.3.0 | `MIT` |  |
+| `apache-arrow` | 18.1.0 | `Apache-2.0` |  |
+| `array-back` | 3.1.0 | `MIT` |  |
+| `chalk` | 4.1.2 | `MIT` |  |
+| `chalk-template` | 0.4.0 | `MIT` |  |
+| `color-convert` | 2.0.1 | `MIT` |  |
+| `color-name` | 1.1.4 | `MIT` |  |
+| `command-line-args` | 5.2.1 | `MIT` |  |
+| `command-line-usage` | 7.0.4 | `MIT` |  |
+| `command-line-usage/array-back` | 6.2.3 | `MIT` |  |
+| `command-line-usage/typical` | 7.3.0 | `MIT` |  |
+| `esbuild` | 0.24.2 | `MIT` |  |
+| `find-replace` | 3.0.0 | `MIT` |  |
+| `flatbuffers` | 24.12.23 | `Apache-2.0` |  |
+| `has-flag` | 4.0.0 | `MIT` |  |
+| `json-bignum` | 0.0.3 | `MIT` |  |
+| `lodash.camelcase` | 4.3.0 | `MIT` |  |
+| `supports-color` | 7.2.0 | `MIT` |  |
+| `table-layout` | 4.1.1 | `MIT` |  |
+| `table-layout/array-back` | 6.2.3 | `MIT` |  |
+| `tslib` | 2.8.1 | `0BSD` |  |
+| `typescript` | 5.9.3 | `Apache-2.0` |  |
+| `typical` | 4.0.0 | `MIT` |  |
+| `undici-types` | 6.21.0 | `MIT` |  |
+| `wordwrapjs` | 5.1.1 | `MIT` |  |
 
 ### spikes/adr-003-crs-rendering/app
 

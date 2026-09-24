@@ -2267,7 +2267,7 @@ describe("F1 close-out (entry 44's second finding) + F2 close-out (entry 43): a 
    * genuine trimmed-batch report on "A" -- the SAME setup every test below starts from. Returns the
    * bbox (so each test can re-plan over the identical covering set) and "A"'s own real tile key
    * (read from round 1's own `applyTileViewportContext` call, never assumed). */
-  async function bootstrapAndArmOverBudget(canvas: WorkingCanvasHandle, onResidencyStatusChange: ReturnType<typeof vi.fn>) {
+  async function bootstrapAndArmOverBudget(canvas: WorkingCanvasHandle, onResidencyStatusChange: (event: ResidencyStatusEvent) => void) {
     const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);
@@ -3331,7 +3331,7 @@ describe("entry 84: a clean Completed terminal that delivered no batch marks the
   /** Bootstrap: the untiled first look establishes the grid frame (this file's own
    * `completeUntiledLook`), then ONE camera change plans the single covering tile and mints its
    * stream. Returns that stream's own sink for the caller to terminate by hand. */
-  async function armOneTile(canvas: WorkingCanvasHandle, onResidencyStatusChange: ReturnType<typeof vi.fn>) {
+  async function armOneTile(canvas: WorkingCanvasHandle, onResidencyStatusChange: (event: ResidencyStatusEvent) => void) {
     const session = startCandidateArmSession({ dataset: "ds_x", canvas, onResidencyStatusChange });
     await session.reissueUnrestricted(null, null);
     lastSink().onBatch(new Uint8Array([1]), true);

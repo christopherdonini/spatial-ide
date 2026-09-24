@@ -238,6 +238,11 @@ fn one_sample(source: &Dataset, directory: &Path, workers: usize, label: &str) -
             lod_tier_measurements -- --ignored --exact \
             wall_time_arm_s_and_arm_p_over_polygons_100k --nocapture"]
 fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
+    assert!(
+        !cfg!(debug_assertions),
+        "this test measures build wall time; a debug build's numbers are not measurements, and \
+         every other pass in this family refuses a debug build on principle. Run with --release."
+    );
     let path = polygons_100k();
     let source = Dataset::open(&path).expect("open polygons-100k");
     let directory = tier_directory(&source);
@@ -415,6 +420,12 @@ fn the_row_order_check_fires_on_a_permutation() {
 }
 
 fn five_gb_build(workers: usize, label: &str, verify: bool) {
+    assert!(
+        !cfg!(debug_assertions),
+        "this helper is called by both wall-time measurements and an O1-O4 outcomes pass at 5 GB \
+         scale; a debug build's wall time is not a measurement, and every other pass in this \
+         family refuses a debug build on principle. Run with --release."
+    );
     let path = PathBuf::from(PARCELS_5GB);
     assert!(
         path.is_file(),

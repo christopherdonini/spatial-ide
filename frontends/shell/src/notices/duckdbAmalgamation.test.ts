@@ -49,7 +49,7 @@ function amalgamationSection(text: string): string {
   return text.slice(start);
 }
 
-describe("the DuckDB amalgamation notice set (DECISIONS-PENDING entry 62 = (a))", () => {
+describe("the DuckDB amalgamation notice set (DECISIONS-PENDING entry 62 = (a))", { timeout: 30_000 }, () => {
   it("pins exactly one duckdb-<version> directory, with a manifest naming a version and a tag", () => {
     const { manifest } = readAmalgamationManifest();
     expect(manifest.duckdb_version).toBe("1.5.5");

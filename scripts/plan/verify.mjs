@@ -97,6 +97,32 @@ function trackedPathExists(repoRoot, filePath) {
   }
 }
 
+const PATHSPEC_MAGIC_RE = /[*?[\]]|^:\(/;
+
+// A node "gate" (AUTONOMY.md:44) must name exactly one tracked path equal to the literal input.
+// `git ls-files --error-unmatch` accepts a directory, ".", or a glob and still exits 0 (each
+// returns every contained/matched path), so a directory or glob gate would otherwise pass. This
+// rejects pathspec magic up front and then requires exactly one matched path equal to the literal
+// input; it does not distinguish a regular file from a symlink or gitlink among tracked entries.
+function trackedGateFileExists(repoRoot, filePath) {
+  if (typeof filePath !== 'string' || filePath === '' || path.isAbsolute(filePath) || PATHSPEC_MAGIC_RE.test(filePath)) {
+    return false;
+  }
+  try {
+    // stdio: git's "pathspec did not match" goes to stderr on every failing gate (the common
+    // case); silencing it here does not change the result, which still fails closed.
+    const out = execFileSync('git', ['ls-files', '--error-unmatch', '--', filePath], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const matches = out.split('\n').filter(Boolean);
+    return matches.length === 1 && matches[0] === filePath;
+  } catch {
+    return false;
+  }
+}
+
 const ADR_STATUS_LINE_RE = /^(?:\*\*Status:\*\*|Status:)(.*)$/m;
 
 export function adrStatusAccepted(repoRoot, adrId) {
@@ -193,6 +219,17 @@ export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
       failures.push(
         `node "${node.id}": recorded status "${node.status}" does not agree with the derivation ("${derived.get(node.id)}")`,
       );
+    }
+
+    // The gate field (AUTONOMY.md:44) names a preregistration path, or "none" for docs nodes.
+    // plan.mjs only checks the field is a non-empty string; a path that names a file only present
+    // on the node's own branch (not on the tree being verified), or a directory/glob pathspec
+    // rather than one file, must fail here, or a node can be set in-progress/ready against a
+    // preregistration nobody can actually read (found by the record-round-count gate, 2026-09-18).
+    if ((node.status === 'in-progress' || node.status === 'ready') && node.gate !== 'none') {
+      if (!trackedGateFileExists(repoRoot, node.gate)) {
+        failures.push(`node "${node.id}": gate "${node.gate}" is not a tracked file`);
+      }
     }
 
     if (node.status === 'done') {

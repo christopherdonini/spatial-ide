@@ -1,23 +1,20 @@
 {
-  "generated_at": "2026-09-24T00:45:26.571Z",
+  "generated_at": "2026-09-24T03:38:21.069Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": false,
-    "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
-    ]
+    "ok": true,
+    "failures": []
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 76395892736,
+        "bytes": 64240697344,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 390399623168,
+        "bytes": 393723527168,
         "total": 500090007552
       }
     ]
@@ -30,16 +27,52 @@
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [],
+  "waiting_on_human": [
+    {
+      "id": "engine-source-change-watcher",
+      "kind": "ruling",
+      "minutes": 15,
+      "opened": "2026-09-18",
+      "age_days": 6
+    },
+    {
+      "id": "crs-unit-fact-and-bounds",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-23",
+      "age_days": 1
+    },
+    {
+      "id": "governance-verify-mutation-multiline-attrs",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-17",
+      "age_days": 7
+    },
+    {
+      "id": "governance-verify-mutation-header-token",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": "2026-09-17",
+      "age_days": 7
+    },
+    {
+      "id": "test-claims-landedness-bound",
+      "kind": "ruling",
+      "minutes": 5,
+      "opened": null,
+      "age_days": null
+    }
+  ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 56
+    "n": 58
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 31,
-    "first_pass": 13,
-    "rate": 0.41935483870967744
+    "nodes": 41,
+    "first_pass": 15,
+    "rate": 0.36585365853658536
   },
   "record_rounds": {
     "present": true,
@@ -52,8 +85,14 @@
       "briefa-p5-gate-tests": 1,
       "briefa-p4-corpus-run": 2,
       "briefa-p6-describe-fields": 1,
-      "adr-013-display-statement": 2
+      "adr-013-display-statement": 2,
+      "drill-fix-release-only-guard": 1,
+      "governance-verify-gate-file-exists": 1,
+      "known-limitations-owed-rows": 1,
+      "engine-tests-configured-connections": 1,
+      "drill-fix-viewer-build-order": 1,
+      "shell-dependency-audit-piece": 1
     },
-    "total": 20
+    "total": 26
   }
 }
