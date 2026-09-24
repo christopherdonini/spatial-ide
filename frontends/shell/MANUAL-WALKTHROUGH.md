@@ -1446,3 +1446,42 @@ distinguishability verdict, N3's own red-line call (whether the human re-scoped 
 sight or a component now renders it), N5's guidance-wording verdict, N6's `{detail}` text as actually
 rendered, N8's small-pan observation (and the session log check if taken), and N9's honesty verdict
 on the five named KNOWN-LIMITATIONS rows.
+
+## Part P — crs-unit-fact-and-bounds: the degrees tile grid, at corpus #8 (P6)
+
+**Part O is reserved** (`PLAN.yaml` node `briefb-part-o-walkthrough`, "the nine-step recipe
+walkthrough, after B3 only") — this piece's own row lands as Part P instead, so Part O's own future
+content is never displaced.
+
+This Part is `frontends/shell/CRS-UNIT-FACT-AND-BOUNDS-PREREGISTRATION.md` §9's own Operator gate,
+discharged once it is run and its result log is filled, not before. **No duration in the row or its
+expected outcome** (`docs/08_Testing.md`; ADR-018) — the expected outcome is a session-log field and
+an absence of visible change, never a time, a rate, or a smoothness judgment.
+
+**Fixture this Part reuses — nothing new is written for it.**
+
+| Fixture | Path | Used by |
+|---|---|---|
+| Compat-corpus file #8 (`crs:format-default`, OGC:CRS84) | `C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet` — sha256 `79dabf9db66acad5c3adf6c001d1be2a68ecb4ea08afd73690dfaa1519a96bb7` (`target\fixtures\compat-corpus\MANIFEST.json`'s own `sha256` field; first 12 hex `79dabf9db66a` matches `engine/ADMISSION-PREREGISTRATION.md` §3 row 8; the same file Part N's N1/N5 already use) | P1 |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| P1 | Verify the fixture's hash against `MANIFEST.json` as Part N's own "Before N1" note describes. Click **Open GeoParquet…** and select the file above. The candidate arm is the default (`residencyArm.ts:50`'s own `DEFAULT_RESIDENCY_ARM`) — no arm switch needed. Let the first view settle (Part A's A4 shows what "settled" looks like), then open the newest `%LOCALAPPDATA%\dev.spatialide.shell\logs\session-*.log` (Part M's M12 own path) and find its `candidate-grid-frame-established` line (`frontends/shell/src/residency/candidateArmSession.ts:1218-1221`). | Nothing on screen changes from what Part N's own N1 row already shows for this file — same summary, same CRS/provenance/display-convention lines, same rendered features. The session log's `candidate-grid-frame-established` line reads `baseSpan=0.800515417276802…` (approximately 0.8005; it was `baseSpan=2` before this piece, `MANUAL-WALKTHROUGH.md`'s own Part N run record above and `KNOWN-LIMITATIONS.md` item 17) — the degree-keyed `MIN_ANCHOR_SPAN` (`1e-6`, `frontends/shell/src/canvas/tileGrid.ts`) applied to this file's own ~0.40°×0.40° extent, padded x2, instead of the metre-basis floor of 1. Record the line's exact `baseSpan=` value. |
+
+**If anything deviates:** stop, record the exact step, and report it, same as every earlier Part. A
+visible change on screen, or a `baseSpan` value that is not approximately 0.8005, is the deviation
+this row exists to catch.
+
+**Sitting estimate — scheduling only, not a claim about the app:** a few minutes: one corpus open, one
+settle, one session-log read.
+
+---
+
+## Result log
+
+Fill in after running the row above.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **P1:**
