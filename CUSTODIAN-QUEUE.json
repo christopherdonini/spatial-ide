@@ -1,15 +1,37 @@
 {
-  "generated_at": "2026-09-24T11:23:40.680Z",
-  "plan_hash": "35196d541b025557fb715f65ac51660e72d823b08a9bfde9b677e5e13ba35584",
+  "generated_at": "2026-09-24T12:15:16.521Z",
+  "plan_hash": "396d543a017684a51ac6c75d42ab9e0fde67e4ecdbe872fa2ad63fec1dcf7b44",
   "priorities_approved": true,
   "next": null,
   "ready": [],
   "waiting_on_human": {
-    "total_minutes": 0,
+    "total_minutes": 5,
     "by_kind": {
       "click": [],
       "sight": [],
-      "ruling": [],
+      "ruling": [
+        {
+          "id": "governance-verify-mutation-multiline-attrs",
+          "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+          "lane": "governance",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 4,
+          "budget_minutes": 60,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 5
+          },
+          "evidence": {
+            "pr": 108
+          },
+          "dates": {
+            "opened": "2026-09-17",
+            "done": null
+          },
+          "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding."
+        }
+      ],
       "sitting": []
     }
   },
@@ -319,14 +341,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "fix/fixture-regeneration-entry-point"
+        "pr": 115
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece.",
-      "evidence_label": "branch `fix/fixture-regeneration-entry-point`"
+      "evidence_label": "PR #115"
     },
     {
       "id": "known-limitations-owed-rows",
@@ -349,28 +371,6 @@
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
       "evidence_label": "PR #109"
-    },
-    {
-      "id": "governance-verify-mutation-multiline-attrs",
-      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 4,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 108
-      },
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding.",
-      "evidence_label": "PR #108"
     }
   ],
   "proposed": [
