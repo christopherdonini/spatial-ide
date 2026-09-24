@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T00:09:06.270Z",
-  "plan_hash": "a96622868f2bf72d09202f5d6f10de0cc44a95eb701ac00d4ed424c91cb7a8f8",
+  "generated_at": "2026-09-24T00:16:03.501Z",
+  "plan_hash": "f1837a5b69d013f133bd281e674ca505bf45c1db97489bc37829a2397cd5be7e",
   "priorities_approved": true,
   "lanes": [
     {
@@ -761,8 +761,8 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "ready",
+      "order": 8,
       "depends_on": [
         "self-check-false-readings"
       ],
@@ -776,7 +776,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form",
       "dates": {
         "opened": null,
         "done": null
@@ -924,7 +924,8 @@
         "drill-fix-release-only-guard",
         "drill-fix-fixture-watchdog",
         "drill-fix-viewer-build-order",
-        "crs-unit-fact-and-bounds"
+        "crs-unit-fact-and-bounds",
+        "b1-engine-prereg-draft"
       ],
       "needs_human": {
         "kind": "none",
@@ -936,7 +937,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
+      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "dates": {
         "opened": "2026-09-13",
         "done": null
@@ -1321,7 +1322,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "ready",
       "order": 4,
       "depends_on": [],
       "needs_human": {
@@ -1334,7 +1335,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
@@ -1346,7 +1347,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "ready",
       "order": 5,
       "depends_on": [],
       "needs_human": {
@@ -1359,7 +1360,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
       "dates": {
         "opened": "2026-09-17",
         "done": null
@@ -1405,7 +1406,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "ready",
       "order": 7,
       "depends_on": [],
       "needs_human": {
@@ -1418,7 +1419,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -1430,8 +1431,8 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "ready",
+      "order": 2,
       "depends_on": [
         "engine-extension-autoload-off"
       ],
@@ -1445,7 +1446,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate",
       "dates": {
         "opened": null,
         "done": null
@@ -2448,15 +2449,9 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 1,
-      "depends_on": [
-        "accept-adr-013-instance",
-        "accept-adr-015-a1",
-        "accept-adr-016-a1",
-        "accept-adr-028-qualification",
-        "accept-adr-032"
-      ],
+      "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -2469,9 +2464,86 @@
       "entries": [
         120
       ],
-      "summary": "PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one) and, on the custodian's reading of first, ahead of shell-dependency-audit-piece too. Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement",
       "dates": {
         "opened": "2026-09-23",
+        "done": null
+      }
+    },
+    {
+      "id": "known-limitations-owed-rows",
+      "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
+      "kind": "task",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [
+        120
+      ],
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      }
+    },
+    {
+      "id": "b1-engine-prereg-draft",
+      "title": "Brief B, stage B1's engine/kernel half -- the preregistration draft and the architect consult only; no code; the draft comes to the human's morning sight",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7: the preregistration and the architect consult only, on a branch; no code. B1 takes the SKP literal after crs-unit-fact-and-bounds. The draft goes to the human's morning sight, in the one question round",
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      }
+    },
+    {
+      "id": "multipolygon-assessment-consult",
+      "title": "MultiPolygon support -- the architect's assessment, consult only (if time remains)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round",
+      "dates": {
+        "opened": "2026-09-24",
         "done": null
       }
     },
@@ -2508,20 +2580,14 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 6,
       "depends_on": [
-        "briefa-p6-part-n-acceptances",
-        "accept-adr-013-instance",
-        "accept-adr-015-a1",
-        "accept-adr-016-a1",
-        "accept-adr-028-qualification",
-        "accept-adr-032",
-        "crs-unit-fact-and-bounds"
+        "briefa-p6-part-n-acceptances"
       ],
       "needs_human": {
-        "kind": "click",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
       "evidence": null,
@@ -2531,7 +2597,7 @@
       "entries": [
         110
       ],
-      "summary": "RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 2: the full gate on its branch, as ruled. Merge order, not work order: after PR #103 (the acceptances); the click when gated and green. The earlier custodian reading that put crs-unit-fact-and-bounds ahead of it is superseded by the program's order. RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -2543,11 +2609,9 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 7,
-      "depends_on": [
-        "shell-dependency-audit-piece"
-      ],
+      "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -2560,7 +2624,7 @@
       "entries": [
         110
       ],
-      "summary": "A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -2572,11 +2636,9 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 8,
-      "depends_on": [
-        "shell-dependency-audit-piece"
-      ],
+      "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -2589,7 +2651,7 @@
       "entries": [
         110
       ],
-      "summary": "A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -2601,11 +2663,9 @@
       "kind": "task",
       "lane": "shell",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 9,
-      "depends_on": [
-        "shell-dependency-audit-piece"
-      ],
+      "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -2618,7 +2678,7 @@
       "entries": [
         110
       ],
-      "summary": "A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Stacked on PR #97's branch if it touches the same scripts. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
       "dates": {
         "opened": "2026-09-22",
         "done": null
