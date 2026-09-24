@@ -125,6 +125,7 @@ const PACKAGE_DECISIONS = [
     tree: 'Cargo.toml', name: 'ryu', version: '1.0.23', license: 'Apache-2.0 OR BSL-1.0',
     decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1: CDLA-Permissive-2.0 is a permissive **data** license, accepted
   // for the root certificate set `webpki-roots` distributes.
@@ -132,6 +133,7 @@ const PACKAGE_DECISIONS = [
     tree: 'Cargo.toml', name: 'webpki-roots', version: '1.0.9', license: 'CDLA-Permissive-2.0',
     decided: '2026-08-07',
     why: 'CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1. The bake-off crate is ADR-012 decision evidence, pinned to the
   // trees its phases were measured on; the same OR-branch reasoning applies to the same version.
@@ -139,12 +141,14 @@ const PACKAGE_DECISIONS = [
     tree: 'protocol/transport-bakeoff/Cargo.toml', name: 'ryu', version: '1.0.23',
     license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1, and the same OR-branch reasoning again in the third tree.
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'ryu', version: '1.0.23',
     license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // ---- 2026-08-07 — same note, item 1: the five MPL-2.0 crates ----------------------------------
   //
@@ -155,31 +159,64 @@ const PACKAGE_DECISIONS = [
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser',
     version: '0.36.0', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser-macros',
     version: '0.6.1', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'dtoa-short',
     version: '0.3.5', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'option-ext',
     version: '0.2.0', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'selectors',
     version: '0.36.1', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: lightningcss. It arrives through
+  // `vite-node`'s nested `vite` (approved by this same entry as `vite-node@^6.0.0`), which resolves
+  // to `vite@8.3.0` under `node_modules/vite-node/node_modules/vite` and declares a direct (not
+  // optional) dependency on `lightningcss@^1.33.0` (`frontends/shell/package-lock.json`). Build-time-
+  // only (dev tooling, not in the Rollup module walk that defines frontends/shell's shipped set); not
+  // in any shipped set. A fresh decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'lightningcss', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 116',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: the platform binary for
+  // lightningcss on this machine. Same reasoning as the entry above.
+  {
+    tree: 'frontends/shell', name: 'lightningcss-win32-x64-msvc', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 116',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 117: caniuse-lite. Already at
+  // 1.0.30001809 on `origin/main` before this piece's fix (`git show eab8e82:frontends/shell/package-
+  // lock.json`) — not bumped by the forced audit fix; the entry approves the existing version rather
+  // than a new one. Build-time-only (browserslist/tooling data, not in any shipped set). A fresh
+  // decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'caniuse-lite', version: '1.0.30001809', license: 'CC-BY-4.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 117',
   },
 ];
-
-/** The note every entry above cites, named once so the report can print the citation. */
-const DECISION_SOURCE = 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1';
 
 /** Which decisions were actually matched this run, so a stale one becomes visible (see the report). */
 const usedDecisions = new Set();
@@ -271,7 +308,7 @@ function verdictFor(tree, name, version, license, licenseFile) {
   if (base.verdict !== 'REVIEW') return base;
   const d = decisionFor(tree, name, version, license ?? '');
   if (!d) return base;
-  return { verdict: 'decided', why: d.why, decided: d.decided, flaggedFor: base.why };
+  return { verdict: 'decided', why: d.why, decided: d.decided, source: d.source, flaggedFor: base.why };
 }
 
 function cargoTree(label, manifest) {
@@ -494,17 +531,17 @@ if (decided.length) {
   w('and for the reason shown. They are printed rather than merely omitted: a decision that only');
   w('shows up as the absence of a review line is one nobody can audit.');
   w();
-  w('| Tree | Package | Version | Declared | Flagged because | Decided | Reason |');
-  w('|---|---|---|---|---|---|---|');
+  w('| Tree | Package | Version | Declared | Flagged because | Decided | Reason | Source |');
+  w('|---|---|---|---|---|---|---|---|');
   for (const d of decided) {
     w(
       `| ${d.tree} | \`${d.name}\` | ${d.version} | \`${d.license}\` | ${d.flaggedFor} | ` +
-        `${d.decided} | ${d.why} |`,
+        `${d.decided} | ${d.why} | ${d.source} |`,
     );
   }
   w();
-  w(`Source for every decision above: **${DECISION_SOURCE}**. Counsel confirms per ADR-009's Caveat`);
-  w('before anything commercial; nothing here is a legal conclusion.');
+  w('Each row cites the note where a human accepted that exact package. Counsel confirms per');
+  w('ADR-009\'s Caveat before anything commercial; nothing here is a legal conclusion.');
   w();
 }
 
