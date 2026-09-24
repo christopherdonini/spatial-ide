@@ -371,3 +371,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
   - **Item 5:** PR #107 (gate-file-exists) had reviewer attempt 1 FAIL on Documentation; one correction round is running. PR #108 (the verify-mutation pair) was opened by its worker and returned to draft. `engine-tests-configured-connections` is running. `test-claims-landedness-bound` STOPPED (entry 125).
   - **Item 6:** PR #109 (KNOWN-LIMITATIONS items 19-23 and item 17's P0 bound): `docsOnly.mjs` eligible; reviewer gate running.
   - **Item 8:** the MultiPolygon assessment is filed at `state/consults/2026-09-24-multipolygon-assessment.md`; its eight decisions are entry 126.
+
+- 2026-09-24T02:20Z - **Section A closings and a Rule 7 stop.**
+  - **PR #107 (gate-file-exists): closed under section A.** Closing commits db9d20b and b7e9a32 were custodian-verified: both pins recompute at eac705a, the stdio and comment changes read true, CI is green. One known residual is disclosed in the PR body: the superseded index names form lines by number, above it in an append-only file. Marked ready.
+  - **PR #109 (KNOWN-LIMITATIONS): closed under section A.** Closing commit aff6692 was custodian-verified: all six pins recompute, and items 22 and 23 match `dataset.rs`'s `convicts` rule and `geoparquet.rs`'s R-C4 branch. It is docs-only and §9-eligible, but it is operator-facing release text that never took a clean PASS, so it is left for the human's click. Marked ready.
+  - **PR #104 (release guard): CI green, marked ready.**
+  - **PR #108: STOPPED under Rule 7** after two Correctness FAILs (entry 127). **PR #110:** its architect FAILED Correctness (the JS boundary), its second failed attempt, so it stops with #108.
+  - **PR #97:** the architect FAILED with must-fixes (the decision source line, two comments, the nested vite 8.3.0 disclosure, Amendment 3's cause claim). The reviewer is still running; one batched correction round follows.
+  - **PR #111:** section A closing running. **PR #106:** scoped re-read running.
