@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T10:36:39.431Z",
-  "plan_hash": "e652b852243c5bb31a47d5c2ece35710d54761d8bd85357f392ffa9bfa6e0895",
+  "generated_at": "2026-09-24T10:42:08.232Z",
+  "plan_hash": "34875f3325c7af2f9b6f935bfa419c7ebd0eb7652ae715728fd729c48a0a5589",
   "priorities_approved": true,
   "lanes": [
     {
@@ -981,7 +981,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 2,
       "depends_on": [],
       "needs_human": {
@@ -989,7 +989,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "docs/adr-021-023-b1-notes"
+      },
       "budget_minutes": 45,
       "generation": 1,
       "felt_verdict": false,
@@ -1381,7 +1383,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 4,
       "depends_on": [],
       "needs_human": {
@@ -2543,7 +2545,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -2834,7 +2836,7 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -2842,7 +2844,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "branch": "fix/fixture-regeneration-entry-point"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,

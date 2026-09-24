@@ -1,110 +1,9 @@
 {
-  "generated_at": "2026-09-24T10:36:39.324Z",
-  "plan_hash": "e652b852243c5bb31a47d5c2ece35710d54761d8bd85357f392ffa9bfa6e0895",
+  "generated_at": "2026-09-24T10:42:08.126Z",
+  "plan_hash": "34875f3325c7af2f9b6f935bfa419c7ebd0eb7652ae715728fd729c48a0a5589",
   "priorities_approved": true,
-  "next": {
-    "id": "crs-unit-fact-and-bounds",
-    "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
-    "lane": "kernel-protocol",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 1,
-    "budget_minutes": 300,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": {
-      "pr": 112
-    },
-    "dates": {
-      "opened": "2026-09-23",
-      "done": null
-    },
-    "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement RULED 2026-09-24, question round 17, item 1 (entry 128): continue -- one text-only round under a fresh count (item 17 keeps a degrees sentence: the Q2 constants still metre-declared, the P0 render bound still holds; the anchor-span clause becomes the per-unit value; PR #109's item 17 text carried through the merge after #109 lands; the five rustfmt blocks formatted; the record residue corrected), then both gates; a record-only failure after that goes to the architect's reduction."
-  },
-  "ready": [
-    {
-      "id": "crs-unit-fact-and-bounds",
-      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 112
-      },
-      "dates": {
-        "opened": "2026-09-23",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement RULED 2026-09-24, question round 17, item 1 (entry 128): continue -- one text-only round under a fresh count (item 17 keeps a degrees sentence: the Q2 constants still metre-declared, the P0 render bound still holds; the anchor-span clause becomes the per-unit value; PR #109's item 17 text carried through the merge after #109 lands; the five rustfmt blocks formatted; the record residue corrected), then both gates; a record-only failure after that goes to the architect's reduction."
-    },
-    {
-      "id": "adr-021-023-b1-notes",
-      "title": "ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 2,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "RULED 2026-09-24, question round 17, item 3 (entry 123, a red line ruled by the human's typed word, verbatim in the RULED block): the architect drafts ADR-021's dated note and ADR-023's clarifying sentence from the ruling; reviewer and architect gate; the human's click. No status line changes; ADR-017 is not edited."
-    },
-    {
-      "id": "fixture-regeneration-entry-point",
-      "title": "The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece."
-    },
-    {
-      "id": "governance-verify-mutation-multiline-attrs",
-      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 4,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "pr": 108
-      },
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -364,6 +263,72 @@
       "evidence_label": "PR #86"
     },
     {
+      "id": "adr-021-023-b1-notes",
+      "title": "ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 2,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "docs/adr-021-023-b1-notes"
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "RULED 2026-09-24, question round 17, item 3 (entry 123, a red line ruled by the human's typed word, verbatim in the RULED block): the architect drafts ADR-021's dated note and ADR-023's clarifying sentence from the ruling; reviewer and architect gate; the human's click. No status line changes; ADR-017 is not edited.",
+      "evidence_label": "branch `docs/adr-021-023-b1-notes`"
+    },
+    {
+      "id": "crs-unit-fact-and-bounds",
+      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 112
+      },
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement RULED 2026-09-24, question round 17, item 1 (entry 128): continue -- one text-only round under a fresh count (item 17 keeps a degrees sentence: the Q2 constants still metre-declared, the P0 render bound still holds; the anchor-span clause becomes the per-unit value; PR #109's item 17 text carried through the merge after #109 lands; the five rustfmt blocks formatted; the record residue corrected), then both gates; a record-only failure after that goes to the architect's reduction.",
+      "evidence_label": "PR #112"
+    },
+    {
+      "id": "fixture-regeneration-entry-point",
+      "title": "The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "fix/fixture-regeneration-entry-point"
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece.",
+      "evidence_label": "branch `fix/fixture-regeneration-entry-point`"
+    },
+    {
       "id": "known-limitations-owed-rows",
       "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
       "lane": "release",
@@ -384,6 +349,28 @@
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
       "evidence_label": "PR #109"
+    },
+    {
+      "id": "governance-verify-mutation-multiline-attrs",
+      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 4,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 108
+      },
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding.",
+      "evidence_label": "PR #108"
     }
   ],
   "proposed": [

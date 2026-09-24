@@ -397,3 +397,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
   - **Night program, final state.** Item 1 done (PR #103, the human's merge). Item 2: PR #97 ready (section A plus the record cap's reduction). Item 3: PRs #104, #105 and #106 ready. Item 4: PR #112 STOPPED (entries 124, 128). Item 4b: STOPPED before code (entry 122). Item 5: PRs #107 and #111 ready; #108 and #110 STOPPED (entry 127); test-claims-landedness-bound STOPPED (entry 125). Item 6: PR #109 ready. Item 7 done (entry 123). Item 8 done (entry 126).
   - **Merge order for the clicks, each by merge commit:** #97 first, then #104, #105 and #106. #107 and #111 are independent. #109 lands before any continuation of #112.
   - **The morning round** is `state/questions/round-17.md`: nine items (entries 121-128), with the weekly-window list filed rather than asked. It is mirrored to Telegram now, because every remaining item is blocked (the night rule). The AskUserQuestion round opens with the human's next message; no AskUserQuestion was sent overnight.
+
+- 2026-09-24T04:30Z - **Question round 17 ruled; the human merged six PRs; the ruled work dispatched.**
+  - **Merged by the human's clicks, in order:** #97 (4380ae8), #104, #105, #106, #107 and #111. Their nodes are done, confirmed by verify's online merge check. #109 is still open, and it lands before #112's continuation merges main.
+  - **Round 17:** all nine items were answered and are recorded verbatim in the RULED block (6a25757). Items 2 and 7 carry typed riders. Item 3 was a red line, answered in typed words; the answer field carried its paragraph twice, identically, and it is recorded once with that noted. PR #110 was closed unmerged, as ruled; its branch is kept.
+  - **Dispatched, in parallel:**
+    - #112's text-only round under a fresh count (a fresh worker; the gates' findings condensed into a scratchpad file labelled not verbatim).
+    - `fixture-regeneration-entry-point`: its five-line form first, then the byte-identity proof written to D: scratch, never touching the canonical fixture.
+    - #108's narrowed fix under a fresh count.
+    - The architect drafting ADR-021's dated note, ADR-023's clarifying sentence, and ADR-035 (Proposed; the watcher's `dataset_session_ended`, reconciled with riders (a) and (b)). ADR-031 and ADR-034 are reserved.

@@ -601,12 +601,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 2
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: docs/adr-021-023-b1-notes}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
@@ -838,7 +838,7 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 4
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -1488,7 +1488,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
@@ -1666,12 +1666,12 @@ nodes:
     kind: task
     lane: measurement
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {branch: fix/fixture-regeneration-entry-point}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
