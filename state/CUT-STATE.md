@@ -434,7 +434,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
     - Both byte-identity runs matched the table: 5,004,376,705 B, SHA-256 5ae955c5…1788. Both real copies are untouched.
   - **Round 18:** `state/questions/round-18.md` carries entries 129 (ADR-035's two Open items), 130 (ADR-035's Rule 7 stop) and 131 (#108's second Rule 7 stop): four items, one question set, no red line.
 
-- 2026-09-24T15:40Z - **Round 18 ruled and its work run; a kernel defect found; two more queued rulings.**
+- 2026-09-24T18:15Z - **Round 18 ruled and its work run; a kernel defect found; two more queued rulings.**
   - **Round 18** (e78dea5): items 1-2 were answered by option. For items 3-4 the human's typed message replaced the selections, and the typed word governs. An interrupted tool call had already written the superseded answers, uncommitted; the custodian restored them before recording (memory updated).
   - **ADR-035 (PR #114):**
     - Redrafted under round 18. Fresh-count attempt 1: the architect failed it on a third post-check residual case (the data plane's own terminal). Redrafted again; the architect's recommendation moved from (c) to (b).
