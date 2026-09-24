@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T10:42:08.126Z",
-  "plan_hash": "34875f3325c7af2f9b6f935bfa419c7ebd0eb7652ae715728fd729c48a0a5589",
+  "generated_at": "2026-09-24T11:32:29.042Z",
+  "plan_hash": "e65135613f582f728955e7695b4ced2f6ccbba64b93130d5f3f0bf3af328500a",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -47,8 +47,8 @@
       "order": 7,
       "budget_minutes": 240,
       "needs_human": {
-        "kind": "none",
-        "minutes": 0
+        "kind": "ruling",
+        "minutes": 5
       },
       "evidence": null,
       "dates": {
@@ -77,7 +77,7 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's.",
+      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list).",
       "blocked_by": [
         "crs-unit-fact-and-bounds",
         "adr-021-023-b1-notes"
@@ -275,14 +275,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "docs/adr-021-023-b1-notes"
+        "pr": 113
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "RULED 2026-09-24, question round 17, item 3 (entry 123, a red line ruled by the human's typed word, verbatim in the RULED block): the architect drafts ADR-021's dated note and ADR-023's clarifying sentence from the ruling; reviewer and architect gate; the human's click. No status line changes; ADR-017 is not edited.",
-      "evidence_label": "branch `docs/adr-021-023-b1-notes`"
+      "evidence_label": "PR #113"
     },
     {
       "id": "crs-unit-fact-and-bounds",
@@ -319,14 +319,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "fix/fixture-regeneration-entry-point"
+        "pr": 115
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "RULED 2026-09-24, question round 17, item 6 (entry 121): a separate regeneration entry point outside the measurement harness, byte-identical output (about 30 lines of test code), a bounded light-lane piece under its own five-line form. kernel/SCALE-PASS-PREREGISTRATION.md is not amended; the recorded scale-pass run stands. FIXTURES.md's Regenerate row moves to the new entry point in the same piece.",
-      "evidence_label": "branch `fix/fixture-regeneration-entry-point`"
+      "evidence_label": "PR #115"
     },
     {
       "id": "known-limitations-owed-rows",
