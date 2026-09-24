@@ -494,7 +494,7 @@ nodes:
     depends_on: []
     needs_human: {kind: click, minutes: 2}
     gate: scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md
-    evidence: {branch: governance/test-claims-superseded}
+    evidence: {branch: governance/test-claims-superseded, pr: 117}
     budget_minutes: 120
     generation: 2
     felt_verdict: false

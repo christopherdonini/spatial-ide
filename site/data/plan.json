@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T19:27:50.123Z",
-  "plan_hash": "9f462d422b6585dbd2f77fe75494fb86048116d969d502411f800bedb496f4c9",
+  "generated_at": "2026-09-24T19:32:26.638Z",
+  "plan_hash": "e1f4a235aed6ec8e40ae6ff819e123a9f4c4b6f50df10299f673169e1a552940",
   "priorities_approved": true,
   "lanes": [
     {
@@ -800,7 +800,8 @@
       },
       "gate": "scripts/plan/TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md",
       "evidence": {
-        "branch": "governance/test-claims-superseded"
+        "branch": "governance/test-claims-superseded",
+        "pr": 117
       },
       "budget_minutes": 120,
       "generation": 2,

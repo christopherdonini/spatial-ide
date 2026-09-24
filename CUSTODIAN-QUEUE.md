@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9f462d422b6585dbd2f77fe75494fb86048116d969d502411f800bedb496f4c9`) at `2026-09-24T19:27:50.268Z`.
+Generated from `PLAN.yaml` (sha256 `e1f4a235aed6ec8e40ae6ff819e123a9f4c4b6f50df10299f673169e1a552940`) at `2026-09-24T19:32:26.832Z`.
 
 ## 1. Next
 
@@ -35,7 +35,7 @@ Generated from `PLAN.yaml` (sha256 `9f462d422b6585dbd2f77fe75494fb86048116d969d5
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: PR #112
 - **fixture-regeneration-entry-point** — The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half) — evidence: PR #115
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
-- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded) — evidence: branch `governance/test-claims-superseded`
+- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded) — evidence: PR #117
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
 
 ## 6. Proposed / unscheduled

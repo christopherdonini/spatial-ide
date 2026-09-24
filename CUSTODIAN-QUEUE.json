@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T19:27:50.268Z",
-  "plan_hash": "9f462d422b6585dbd2f77fe75494fb86048116d969d502411f800bedb496f4c9",
+  "generated_at": "2026-09-24T19:32:26.832Z",
+  "plan_hash": "e1f4a235aed6ec8e40ae6ff819e123a9f4c4b6f50df10299f673169e1a552940",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -386,14 +386,15 @@
         "minutes": 2
       },
       "evidence": {
-        "branch": "governance/test-claims-superseded"
+        "branch": "governance/test-claims-superseded",
+        "pr": 117
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap. This round (attempt-2 corrections; state/gate-log.json this node's attempt-2 records): reviewer attempt-2's four blockers and architect attempt-2's two residual items closed, per this node's gate file's own append-only Amendments. test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8); when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done. The merge is the human's click.",
-      "evidence_label": "branch `governance/test-claims-superseded`"
+      "evidence_label": "PR #117"
     },
     {
       "id": "governance-verify-mutation-multiline-attrs",
