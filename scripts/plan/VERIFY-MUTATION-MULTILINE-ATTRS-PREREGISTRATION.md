@@ -74,3 +74,15 @@ Record corrections (class 3), each replacing a stale claim named by architect at
 Checks at `c7e3273`, each rc 0: `node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` (270/270 pass); `node scripts/plan/verify-quotes.mjs`; `node scripts/plan/verify-cites.mjs`; `node scripts/plan/verify-test-claims.mjs`; `node scripts/plan/verify-mutation.mjs --base origin/main --head HEAD` (14/14 new tests named by a recorded mutation); `node scripts/plan/verify.mjs --offline`.
 
 Superseded index (this amendment): Amendment 2's Results line's "156 non-generated lines total" figure; Amendment 2's class-6 line's missing reason (now stated above); Amendment 2's Tests line's five branch-relative line cites (`:129`, `:147`, `:167`, `:195`, `:229`); Amendment 3's Fact line's "332 lines" / "past §21c's 150-line bound" figure (both counting methods now stated above; the route to full gating is unchanged either way).
+
+## Amendment 5 — union design replacing the bounded fallback (class 5, §10)
+
+Ruling: RULED 2026-09-24, question round 18, item 4 (entry 131), replacing round 17 item 9's bounded fallback that Amendments 2-4 built.
+
+Design: `findTestsInFile`'s Rust branch now runs two independent scans over the same lines — `mainStyleRustScan` (byte-for-byte `origin/main`'s own per-line rules, no bracket tracking) and `trackedRustScan` (the multi-line-attribute bracket/string tracking, with the look-ahead bound and its rewind removed as no longer needed) — and unions their results, deduplicated by (name, line). Since every test `origin/main`'s scan finds is also found by `mainStyleRustScan` alone, no test main lists can be lost by the union, by construction.
+
+Gain and risk: the tracked scan can find a test only `mainStyleRustScan` misses — one behind a genuinely multi-line `#[ignore = "..."]`-style attribute (13 such tests over the tree, per the no-regression count below). Because attribute-depth tracking can misjudge where an attribute closes, it can also add a false entry — a `fn` the union lists though no `#[test]` directly precedes it under a single-line reading — surfaced by a `verify:mutation note` naming any test found only by the tracked scan, pinned by a dedicated test below.
+
+Removed: the self-comparing no-loss property test (`the branch lists a superset of origin/main's tests...`) and its scratch-directory build of `origin/main`'s own tool; the fixtures' expected lists are asserted directly as fixed name/line lists, not by comparison to another build of the tool.
+
+Budget (declared for this design, base commit `2385a8f`): <= 300 insertions + deletions across `scripts/plan/verify-mutation.mjs` and `scripts/plan/verify-mutation.test.mjs`.
