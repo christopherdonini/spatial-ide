@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T19:08:03.956Z",
-  "plan_hash": "14eb83a67e98fdfbeabc19d281dfd0db31f16187288d6aef9bed4ac83492a677",
+  "generated_at": "2026-09-24T19:09:01.210Z",
+  "plan_hash": "afbc0f6eab87ce412ff7eb21c2e8b0984c1d182268b324b16e2190ee59a42e3a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1390,7 +1390,7 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md",
       "evidence": {
         "pr": 108
       },
