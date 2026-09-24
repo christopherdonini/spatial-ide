@@ -83,10 +83,41 @@ const RUST_TEST_ATTR = /#\[[^\]]*\btest\b[^\]]*\]/;
 const RUST_FN = /^\s*(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+([a-z_][A-Za-z0-9_]*)/;
 const JS_TEST = /^\s*(?:await\s+)?(?:test|it)\s*\(\s*(['"`])(.+?)\1/;
 
-/** Net count of `[` minus `]` on a line — used to track an attribute across line continuations. */
-function netBracketDelta(l) {
+/**
+ * Drop the contents of string literals before bracket-counting — a `"…"` (with `\` escapes) or a
+ * raw `r"…"`/`r#"…"#` — so a bracket inside an attribute's string value (e.g. `#[ignore = "a [b"]`)
+ * is never mistaken for the attribute's own delimiter. `state` (`{inString, rawHashes}`) is CARRIED
+ * across calls so a string that opens on one line and closes on a later one is still tracked.
+ */
+function stripStringLiterals(l, state) {
+  let out = '';
+  let i = 0;
+  while (i < l.length) {
+    if (state.rawHashes !== null) {
+      const close = l.indexOf(`"${'#'.repeat(state.rawHashes)}`, i);
+      if (close === -1) return out;
+      i = close + state.rawHashes + 1;
+      state.rawHashes = null;
+      continue;
+    }
+    if (state.inString) {
+      if (l[i] === '\\') { i += 2; continue; }
+      if (l[i] === '"') state.inString = false;
+      i++;
+      continue;
+    }
+    const raw = /^r(#*)"/.exec(l.slice(i));
+    if (raw) { i += raw[0].length; state.rawHashes = raw[1].length; continue; }
+    if (l[i] === '"') { state.inString = true; i++; continue; }
+    out += l[i];
+    i++;
+  }
+  return out;
+}
+
+function netBracketDelta(l, state) {
   let d = 0;
-  for (const ch of l) {
+  for (const ch of stripStringLiterals(l, state)) {
     if (ch === '[') d++;
     else if (ch === ']') d--;
   }
@@ -119,12 +150,13 @@ export function findTestsInFile(rel, content) {
     let attrDepth = 0; // > 0 while inside a `#[...]` attribute left unclosed on its opening line
     let attrStartLine = 0;
     let lastItemEndLine = headerLineCount(lines); // 1-based line of the previous item's end
+    let strState = { inString: false, rawHashes: null };
     for (let i = 0; i < lines.length; i++) {
       const l = lines[i];
       if (attrDepth > 0) {
         // a continuation line of an unterminated attribute (e.g. a multi-line `#[ignore = "..."]`
         // string) is part of that attribute, not "any other code line" — it never clears `pending`.
-        attrDepth += netBracketDelta(l);
+        attrDepth += netBracketDelta(l, strState);
         if (attrDepth <= 0) {
           attrDepth = 0;
           console.error(
@@ -142,7 +174,8 @@ export function findTestsInFile(rel, content) {
       }
       if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
       if (/^\s*#!?\[/.test(l)) {
-        const delta = netBracketDelta(l);
+        strState = { inString: false, rawHashes: null };
+        const delta = netBracketDelta(l, strState);
         if (delta > 0) { attrDepth = delta; attrStartLine = i + 1; }
         // stay "pending" across this attribute line whether it closed on this line or not.
         continue;
@@ -151,6 +184,9 @@ export function findTestsInFile(rel, content) {
       // `fn`; any other code line clears it.
       if (/^\s*\/\//.test(l) || l.trim() === '') continue;
       pending = false;
+    }
+    if (attrDepth > 0) {
+      console.error(`verify:mutation note — ${rel}:${attrStartLine} multi-line attribute never closed by end of file`);
     }
   } else if (/\.(mjs|cjs|js|ts|tsx|jsx)$/.test(rel)) {
     let lastItemEndLine = headerLineCount(lines);
