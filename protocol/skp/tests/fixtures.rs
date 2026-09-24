@@ -283,14 +283,21 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
         (CrsUnit::Unestablished, "unestablished"),
     ] {
         let serialized = serde_json::to_value(value).unwrap();
-        assert_eq!(serialized, serde_json::json!(wire), "{wire}: serialized form");
+        assert_eq!(
+            serialized,
+            serde_json::json!(wire),
+            "{wire}: serialized form"
+        );
         let parsed: CrsUnit = serde_json::from_value(serde_json::json!(wire))
             .unwrap_or_else(|e| panic!("{wire}: does not deserialize: {e}"));
         assert_eq!(parsed, value, "{wire}: round trip");
     }
     for bad in ["Degree", "degrees", "meter", ""] {
         let result: Result<CrsUnit, _> = serde_json::from_value(serde_json::json!(bad));
-        assert!(result.is_err(), "{bad:?} deserialized as a CrsUnit, but it is not one of the four declared strings");
+        assert!(
+            result.is_err(),
+            "{bad:?} deserialized as a CrsUnit, but it is not one of the four declared strings"
+        );
     }
 }
 

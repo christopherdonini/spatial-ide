@@ -1077,7 +1077,9 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             // two provenance fields above, never re-derived and never read from the CRS
             // identifier. `admission() == None` is the same unreachable arm the two fields above
             // already treat as "not established" — here that is `CrsUnit::Unestablished`.
-            unit: ds.admission().map_or(CrsUnit::Unestablished, |a| crs_unit_of(&a.coordinate_unit)),
+            unit: ds
+                .admission()
+                .map_or(CrsUnit::Unestablished, |a| crs_unit_of(&a.coordinate_unit)),
         },
         geometry: GeometryInfo {
             column: ds.geometry_column().to_string(),
@@ -1780,7 +1782,10 @@ mod tests {
             })
             .expect("open");
         let describe = host
-            .describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
+            .describe(DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: open.dataset,
+            })
             .expect("describe");
 
         let real_crs = serde_json::to_value(&describe.crs).unwrap();
@@ -1794,7 +1799,9 @@ mod tests {
         let fixture_raw = std::fs::read_to_string(&fixture_path).expect("read shared fixture");
         let fixture_json: serde_json::Value =
             serde_json::from_str(&fixture_raw).expect("shared fixture is valid JSON");
-        let fixture_crs = fixture_json.get("crs").expect("shared fixture has a crs object");
+        let fixture_crs = fixture_json
+            .get("crs")
+            .expect("shared fixture has a crs object");
         let fixture_keys: std::collections::BTreeSet<String> =
             fixture_crs.as_object().unwrap().keys().cloned().collect();
 
