@@ -992,12 +992,12 @@ nodes:
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-n8-reopen-reset, briefa-p6-part-n-acceptances]
     needs_human: {kind: click, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {pr: 103}
     budget_minutes: 5
     generation: 1
     felt_verdict: false
     entries: [110, 119]
-    summary: "RULED 2026-09-23 (late), entry 119 item (1): accepted as it stands; appended in the one PR with the other four. A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
+    summary: "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (1): accepted as it stands; appended in the one PR with the other four. A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
     dates: {opened: 2026-09-18, done: null}
 
   - id: accept-adr-016-a1
@@ -1010,12 +1010,12 @@ nodes:
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-n8-reopen-reset, briefa-p6-part-n-acceptances]
     needs_human: {kind: click, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {pr: 103}
     budget_minutes: 5
     generation: 1
     felt_verdict: false
     entries: [110, 119]
-    summary: "RULED 2026-09-23 (late), entry 119 item (3): accepted with a dated acceptance note naming item 2's degradation display as owed, delivered by the watcher piece's detection-state field on describe; in the one PR with the other four. A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
+    summary: "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (3): accepted with a dated acceptance note naming item 2's degradation display as owed, delivered by the watcher piece's detection-state field on describe; in the one PR with the other four. A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
   - id: accept-adr-013-instance
@@ -1028,12 +1028,12 @@ nodes:
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-n8-reopen-reset, briefa-p6-part-n-acceptances]
     needs_human: {kind: click, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {pr: 103}
     budget_minutes: 5
     generation: 1
     felt_verdict: false
     entries: [110, 119]
-    summary: "RULED 2026-09-23 (later), entry 120 (1): with a dated acceptance note naming item 6 (unit-aware bounds) as owed, scheduled as crs-unit-fact-and-bounds. RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
+    summary: "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (later), entry 120 (1): with a dated acceptance note naming item 6 (unit-aware bounds) as owed, scheduled as crs-unit-fact-and-bounds. RULED 2026-09-23 (late), entry 119 item (5): accepted once item 5 is true of the build -- after adr-013-display-statement and N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
   - id: accept-adr-028-qualification
@@ -1046,12 +1046,12 @@ nodes:
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-n8-reopen-reset, briefa-p6-part-n-acceptances]
     needs_human: {kind: click, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {pr: 103}
     budget_minutes: 5
     generation: 1
     felt_verdict: false
     entries: [110, 119]
-    summary: "RULED 2026-09-23 (late), entry 119 item (4): after the short N8 rerun on the merged build, in the same sitting as N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
+    summary: "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (4): after the short N8 rerun on the merged build, in the same sitting as N1's re-sight; in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
     dates: {opened: 2026-09-18, done: null}
 
   - id: accept-adr-032
@@ -1064,12 +1064,12 @@ nodes:
     depends_on: [briefa-p4-corpus-run, briefa-p5-gate-tests, briefa-p6-n8-reopen-reset, briefa-p6-part-n-acceptances]
     needs_human: {kind: click, minutes: 3}
     gate: none
-    evidence: null
+    evidence: {pr: 103}
     budget_minutes: 5
     generation: 1
     felt_verdict: false
     entries: [110, 119]
-    summary: "RULED 2026-09-23 (late), entry 119 item (2): accepted as it stands; its Status line changes in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
+    summary: "PR #103 FOR YOUR CLICK (head 42a5f34; every CI run green on push and pull_request; mergeable, clean) -- one PR for all five acceptances; done on merge. RULED 2026-09-23 (late), entry 119 item (2): accepted as it stands; its Status line changes in the one PR with the other four. A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
     dates: {opened: 2026-09-18, done: null}
 
   - id: entry-73-polygon-gate-scope
