@@ -33,11 +33,31 @@ use parquet::basic::Compression;
 use parquet::file::properties::{EnabledStatistics, WriterProperties};
 use parquet::file::metadata::KeyValue;
 
+use duckdb::Connection;
+
 use crate::cancel::CancelToken;
 use crate::error::{EngineError, Result};
 use crate::wkb::encode_polygon;
 
 pub const LV95_PROJJSON: &str = include_str!("../tests/data/epsg2056.projjson");
+
+/// Open an in-memory DuckDB connection configured exactly as a product engine connection is.
+///
+/// **Test-support only** (feature `fixture`, never shipped) — the fixture-generating unit tests
+/// already use this module for that reason (see the module's own header). `engine/tests/*.rs`
+/// integration tests read back the files this module writes with their own raw
+/// `duckdb::Connection::open_in_memory()`, which carries the compiled autoload/autoinstall-ON
+/// defaults `pool::configure_connection` exists to turn off
+/// (`engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md`): a future test naming a non-built-in extension
+/// on such a connection would fetch it from the network in CI. This is the one place a test opens
+/// such a connection; every `engine/tests/*.rs` site routes through it instead of repeating
+/// `Connection::open_in_memory()` and the configuration call separately.
+pub fn configured_connection() -> Result<Connection> {
+    let conn = Connection::open_in_memory()
+        .map_err(|e| EngineError::ConnectionSetup { detail: format!("open: {e}") })?;
+    crate::pool::configure_connection(&conn)?;
+    Ok(conn)
+}
 
 /// The EPSG:2056 (LV95) working domain the fixture is drawn in.
 pub const E_LO: f64 = 2_600_000.0;

@@ -57,6 +57,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use spatial_engine::fixture::configured_connection;
 use spatial_engine::layout::{write_clustered_variant, ClusterOrder, DeclaredExtent, VariantSpec};
 use spatial_engine::CancelToken;
 
@@ -180,7 +181,7 @@ fn file_facts(p: &Path) -> (u64, String) {
 }
 
 fn row_groups_of(path: &Path) -> u64 {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let path_sql = path.to_str().unwrap().replace('\'', "''");
     spatial_engine::layout::row_group_row_counts(&conn, &path_sql).expect("row groups").len() as u64
 }
