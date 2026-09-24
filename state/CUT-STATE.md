@@ -360,7 +360,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
   - **Item 7 (B1 draft):** done. The draft is at `state/consults/2026-09-24-b1-engine-prereg-draft.md` with eight stop items (entry 123; item 1 crosses ADR-017 §4, a red line). It states B1's literal as the one after the watcher's.
   - **Mechanics:** a worker used `git stash` in its worktree (shared stack, which is dangerous); the stack was empty afterwards, and later briefs forbid it. Excluded-crate trouble in `.claude/worktrees` again: heavy worktrees now go to `C:\dev\wt\`.
 
-- 2026-09-24T02:10Z - **PR #104 closed under AI_DEVELOPMENT.md Amendment 1 §A; items 5, 6 and 8 under way or done.**
+- 2026-09-24T01:45Z - **PR #104 closed under AI_DEVELOPMENT.md Amendment 1 §A; items 5, 6 and 8 under way or done.**
   - **Root-cause note for PR #104 (§A 1).**
     - Attempt 1 failed on the record: the sibling list, the first-statement wording and the guard message's reason. That class is mechanical.
     - Attempt 2 failed on the correction's own record: no superseded index, a proof pointing outside the tree, a stale line cite, and one message clause overclaiming. Mechanical again, plus test text.

@@ -802,12 +802,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 4
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 108}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
@@ -820,12 +820,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 5
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 110}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
@@ -857,12 +857,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 7
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 107}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
@@ -875,12 +875,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 2
     depends_on: [engine-extension-autoload-off]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 111}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
@@ -1470,12 +1470,12 @@ nodes:
     kind: task
     lane: release
     phase: prototype
-    status: ready
+    status: in-progress
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 109}
     budget_minutes: 45
     generation: 1
     felt_verdict: false

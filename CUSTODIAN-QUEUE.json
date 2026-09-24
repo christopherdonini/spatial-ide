@@ -1,123 +1,9 @@
 {
-  "generated_at": "2026-09-24T01:46:11.441Z",
-  "plan_hash": "4d011abb3e7c888cd846cf3dfc6db051d301efdc0d72bac960088d699c6d43e1",
+  "generated_at": "2026-09-24T01:51:45.443Z",
+  "plan_hash": "4d1b8221994a3d7e7458975de1a6637be97faa284a6fae1faad78768cd09878a",
   "priorities_approved": true,
-  "next": {
-    "id": "engine-tests-configured-connections",
-    "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 2,
-    "budget_minutes": 60,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": null,
-      "done": null
-    },
-    "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
-  },
-  "ready": [
-    {
-      "id": "engine-tests-configured-connections",
-      "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 2,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
-    },
-    {
-      "id": "known-limitations-owed-rows",
-      "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
-      "lane": "release",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form"
-    },
-    {
-      "id": "governance-verify-mutation-multiline-attrs",
-      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 4,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate"
-    },
-    {
-      "id": "governance-verify-mutation-header-token",
-      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 5,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate"
-    },
-    {
-      "id": "governance-verify-gate-file-exists",
-      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 7,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate"
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -350,6 +236,28 @@
   ],
   "in_progress": [
     {
+      "id": "engine-tests-configured-connections",
+      "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 2,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 111
+      },
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate",
+      "evidence_label": "PR #111"
+    },
+    {
       "id": "briefa-p3b-owner-side-invalidation",
       "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
       "lane": "engine",
@@ -480,6 +388,94 @@
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign",
       "evidence_label": "PR #105"
+    },
+    {
+      "id": "known-limitations-owed-rows",
+      "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 109
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form",
+      "evidence_label": "PR #109"
+    },
+    {
+      "id": "governance-verify-mutation-multiline-attrs",
+      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 4,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 108
+      },
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate",
+      "evidence_label": "PR #108"
+    },
+    {
+      "id": "governance-verify-mutation-header-token",
+      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 5,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 110
+      },
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate",
+      "evidence_label": "PR #110"
+    },
+    {
+      "id": "governance-verify-gate-file-exists",
+      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 7,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 107
+      },
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate",
+      "evidence_label": "PR #107"
     }
   ],
   "proposed": [
