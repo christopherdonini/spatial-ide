@@ -10,7 +10,7 @@
 
 use arrow::array::Array;
 use spatial_engine::fixture::{
-    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, ZONE_VALUES,
+    configured_connection, write_geoparquet, AttributeMode, CrsMode, FixtureSpec, ZONE_VALUES,
 };
 use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
@@ -262,7 +262,7 @@ fn the_publish_stream_orders_by_identity_and_the_query_path_still_does_not() {
 /// no test, because it is read as coverage.
 #[test]
 fn duckdb_resolves_order_by_and_where_in_opposite_directions() {
-    let c = duckdb::Connection::open_in_memory().unwrap();
+    let c = configured_connection().expect("configured connection");
     c.execute_batch(
         "CREATE TABLE t(id BIGINT, parcel_key BIGINT);
          INSERT INTO t VALUES (300,0),(200,1),(100,2);",

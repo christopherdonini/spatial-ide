@@ -28,7 +28,7 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use spatial_engine::fixture::{write_geoparquet, FixtureFacts, FixtureSpec};
+use spatial_engine::fixture::{configured_connection, write_geoparquet, FixtureFacts, FixtureSpec};
 use spatial_engine::layout::{
     hilbert_d2xy, hilbert_xy2d, write_clustered_variant, ClusterOrder, DeclaredExtent, VariantSpec,
     AXIS_CELLS,
@@ -471,8 +471,7 @@ fn a_file_whose_identity_is_not_row_group_ordered_is_refused_and_says_which_way(
     let (path, _) = write("lever-b2-refused", &spec);
     // The engine refuses a duplicate identity at open time (ADR-016), so the refusal is asserted
     // on the index directly rather than through a `Dataset`.
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
-    conn.execute_batch("SET enable_geoparquet_conversion=false;").expect("pragma");
+    let conn = configured_connection().expect("configured connection");
     let covering = spatial_engine::geoparquet::GeoMeta::parse(&geo_key(&conn, &path))
         .expect("geo")
         .covering
@@ -504,7 +503,7 @@ fn metadata_paths_match_what_duckdb_reports_for_a_struct_child() {
     // group would be retained, and the lever would report a perfect null.
     let spec = multi_row_group();
     let (path, _) = write("lever-b2-paths", &spec);
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let mut stmt = conn
         .prepare("SELECT DISTINCT path_in_schema FROM parquet_metadata(?)")
         .expect("prepare");
@@ -702,7 +701,7 @@ fn the_shuffled_order_is_exactly_hash_id_then_id_in_file_order() {
 /// `preserve_insertion_order` (on by default) is what makes this equal file order rather than
 /// whatever a parallel scan's scheduling happened to produce.
 fn ids_in_file_order(path: &std::path::Path) -> Vec<u64> {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let mut stmt = conn.prepare("SELECT id FROM read_parquet(?)").expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
     let mut out = Vec::new();
@@ -715,7 +714,7 @@ fn ids_in_file_order(path: &std::path::Path) -> Vec<u64> {
 /// `id`, sorted by `hash(id), id` — the preregistration's exact wording, issued independently of
 /// [`spatial_engine::layout::write_clustered_variant`]'s own SQL.
 fn ids_in_hash_id_order(path: &std::path::Path) -> Vec<u64> {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let mut stmt =
         conn.prepare("SELECT id FROM read_parquet(?) ORDER BY hash(id), id").expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
@@ -783,8 +782,7 @@ fn clustering_reorders_the_file_and_that_costs_it_lever_b2() {
     );
 
     // And the refusal is the named one, reached through the index rather than asserted about it.
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
-    conn.execute_batch("SET enable_geoparquet_conversion=false;").expect("pragma");
+    let conn = configured_connection().expect("configured connection");
     let covering = spatial_engine::geoparquet::GeoMeta::parse(&geo_key(&conn, &dst))
         .expect("geo")
         .covering
@@ -810,7 +808,7 @@ fn clustering_reorders_the_file_and_that_costs_it_lever_b2() {
 /// Whether a file's per-row-group identity intervals are ordered and disjoint — B2's admissibility
 /// condition, computed here independently of the module under test so the test is not the code.
 fn id_ranges_are_disjoint_and_ordered(path: &std::path::Path) -> bool {
-    let conn = duckdb::Connection::open_in_memory().expect("conn");
+    let conn = configured_connection().expect("configured connection");
     let sql = "SELECT row_group_id, \
                  max(CASE WHEN path_in_schema='id' THEN CAST(stats_min_value AS UBIGINT) END), \
                  max(CASE WHEN path_in_schema='id' THEN CAST(stats_max_value AS UBIGINT) END) \

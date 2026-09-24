@@ -885,6 +885,30 @@ mod tests {
         );
     }
 
+    /// `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`'s test. `engine/tests/*.rs`
+    /// integration tests read fixtures back through `fixture::configured_connection` rather than a
+    /// raw `Connection::open_in_memory()`; this asserts that helper carries the same fail-closed
+    /// configuration T1 asserts on the pool's own leases.
+    ///
+    /// RECORDED MUTATION: `fixture::configured_connection` skips the
+    /// `pool::configure_connection` call and returns the bare connection ->
+    /// `a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off`
+    /// fails by name (both settings read `true`).
+    #[test]
+    fn a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off() {
+        let conn = crate::fixture::configured_connection().expect("configured connection");
+        assert_eq!(
+            setting(&conn, "autoinstall_known_extensions"),
+            "false",
+            "the fixture test-support helper must not permit runtime extension install"
+        );
+        assert_eq!(
+            setting(&conn, "autoload_known_extensions"),
+            "false",
+            "the fixture test-support helper must not permit runtime extension autoload"
+        );
+    }
+
     #[test]
     fn two_concurrent_leases_are_two_different_physical_connections() {
         // One query per physical connection. DuckDB's interrupt addresses a *connection*, so two
