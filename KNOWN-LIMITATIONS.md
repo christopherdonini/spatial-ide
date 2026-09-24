@@ -167,13 +167,58 @@ header above describes. They move into the next release's list when that release
 
 17. **A dataset in degrees uses tile and render-precision bounds declared for metres.** The tile
     grid's minimum anchor span and the re-centering drift bound are declared in metres, and they apply
-    unchanged when a dataset's coordinates are in degrees. The effect at close zoom is bounded as
-    stated in the owed piece's record: that piece's first step computes the bound, and this line will
-    then state it.
-    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
+    unchanged when a dataset's coordinates are in degrees. For the CRS84 corpus file the float32
+    rounding of drawn coordinates is at most 1/32 pixel per axis at zoom 21, the deepest a fit reaches,
+    while the render origin lies inside the file's extent, and at most half a pixel at any zoom and
+    origin — the bound a dataset in metres has, because the re-centering threshold is computed per
+    screen pixel — so the metre-declared bound that acts on this file is the tile grid's minimum anchor
+    span, which puts its 0.40-degree extent in a grid frame 2 degrees across where its own extent would
+    give 0.80.
+    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording; the revision sentence is byte-copied from state/consults/2026-09-24-crs-unit-fact-and-bounds.md:77, its "KNOWN-LIMITATIONS item 17 revision" section -->
 
 18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
     statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
     summary, but the dataset already on the canvas stays drawn. Its equirectangular statement is then
     shown nowhere until the next successful open.
     <!-- frontends/shell/src/admission/AdmissionPanel.tsx:206-209 (an attempt replaces the admitted state), :230 (a cancel ends idle), :240-249 (a refusal); :411 (the summary renders only for the admitted state); the earlier dataset stays drawn: the human's N8 retest session log session-1790201742.log, where the earlier dataset's tiles are still delivered after the 22:18:04Z refusal; DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2) -->
+
+19. **The change detector is heuristic, not a snapshot check.** The open dataset is watched by a
+    structural descriptor only — byte size, modification time, footer length, footer hash — re-read
+    before every query and after every stream terminal; a difference in any component ends the
+    session. It does not establish snapshot consistency, cannot detect every in-place modification,
+    and may detect a change during a query only after that query has finished reading. A change none
+    of the four components shows is not thereby a check that passed.
+    <!-- engine/src/descriptor.rs:1-24 (the type's own doc comment, "not a snapshot claim" and the three not-established/cannot-detect/may-detect-late clauses); engine/src/error.rs:342-347 (SourceChanged Display, the same three clauses verbatim in the refusal message); engine/ADMISSION-PREREGISTRATION.md:72-73 (R-D1, R-D2); MANUAL-WALKTHROUGH.md Part N row N6, N9 -->
+
+20. **A partitioned source is refused; only a single file is admitted.** A directory of Parquet parts
+    is a real dataset this engine will not admit, refused by name before anything is read (code
+    `engine.identity_ordinal_partitioned_unsupported`): *"refused: this source is partitioned across
+    more than one file (`<detail>`), and session identity is a row's position within one file. Open a
+    single file, or declare an identity column that is carried in the data"*.
+    <!-- engine/src/dataset.rs:280-290 (the gate, run before the file is opened); engine/src/error.rs:348-352 (the Display); kernel/src/skp.rs:1187-1189 (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+21. **A dataset in degrees cannot be published.** The bundled viewer has no degrees path — it renders
+    in the dataset's own CRS, and this shell's degrees display is a view-time convention a static
+    bundle does not carry — so publish is refused at preflight, before the native destination picker's
+    result is used further: *"refused: `<crs>` is a geographic CRS whose coordinates are in degrees
+    (`<unit source>`), and the bundled viewer has no degrees path — it renders in the dataset's own
+    CRS, while this shell's degrees display is a view-time convention a bundle does not carry.
+    Publishing it would hand a recipient a bundle nothing can render correctly. Reproject the source to
+    a projected CRS and open that, or wait for the reader change that adds the degrees path"*.
+    <!-- kernel/src/publish/mod.rs:435-443 (the preflight check, run before the pin/execute phases); kernel/src/publish/error.rs:129, :201, :223, :323-331 (GeographicCrsNotPublishable, its code and Display); MANUAL-WALKTHROUGH.md Part N row N5 (the message and the panel rendering it verbatim) -->
+
+22. **A sanity check convicts, never confirms.** At open, a cheap check reads only a bbox or covering
+    statistics already resident in the footer (or, absent those, the first row group's covering
+    columns), and flags a coordinate outside plus-or-minus 180/90 as contradicting an assumed CRS. A
+    file whose coordinates lie inside that domain is not thereby shown correct — a projected file may
+    sit inside it too — and no code path or status ever says a file "passed", "is valid" or "was
+    verified" on this basis.
+    <!-- engine/ADMISSION-PREREGISTRATION.md:26 (the rule and its no-string/no-comment/no-status prohibition), :59-60 (R-S1 level selection; R-S2, the same not-thereby-correct finding for a file inside the domain); MANUAL-WALKTHROUGH.md Part N row N9 -->
+
+23. **A pan that stays inside what is already resident issues no fresh query, so a source change made
+    during it goes unnoticed until a later pan or zoom leaves that area.** The change detector (item
+    19) runs only against a query that is actually issued; a small pan well inside the resident tiles
+    triggers none, so the canvas keeps showing what it showed before the pan and a hover there still
+    answers normally. The refusal still arrives once a query is issued — panning further out shows it —
+    so this is a delay in noticing, not a missed detection.
+    <!-- frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:950 (Amendment 11 (b), the small-pan/no-query finding); MANUAL-WALKTHROUGH.md Part N row N8 (the recipe and its observed outcome, both halves) -->
