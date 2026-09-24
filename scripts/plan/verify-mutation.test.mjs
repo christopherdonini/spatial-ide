@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 import {
   parseAddedRanges,
   findTestsInFile,
+  blockText,
   hasMutationMention,
   runVerifyMutation,
 } from './verify-mutation.mjs';
@@ -154,6 +155,41 @@ test('runVerifyMutation flags a new test with no named mutation and passes one t
 // `blockText(content, t)` for the changed-test-file check in runVerifyMutation restores the old
 // fixed-window distance match, which makes `a_test_credited_by_a_header_token_is_now_a_miss` FAIL
 // — the bare test below would again be wrongly credited by the header's "mutation" mention.
+// RECORDED MUTATION (own-block boundary fix): reverting `lastItemEndLine` back to the previous
+// item's declaration line (i.e. `lastItemEndLine = i + 1;` right after pushing the test, instead of
+// `bodyEndLine(...)`) makes `a_neighbouring_rust_tests_body_comment_does_not_credit_a_bare_test`
+// FAIL — the bare test's block would again reach back into the prior test's body comment.
+test('a_neighbouring_rust_tests_body_comment_does_not_credit_a_bare_test', () => {
+  const rust = [
+    '#[test]',
+    'fn a_prior_test_with_a_mutation_comment_in_its_body() {',
+    '    // a mutation of y makes an_unguarded_bare_test fail',
+    '    assert_eq!(1, 1);',
+    '}',
+    '',
+    '#[test]',
+    'fn an_unguarded_bare_test() {}',
+  ].join('\n');
+  const t = findTestsInFile('x.rs', rust)[1];
+  assert.equal(t.name, 'an_unguarded_bare_test');
+  assert.equal(/mutation/i.test(blockText(rust, t)), false, blockText(rust, t));
+});
+
+// RECORDED MUTATION (same fix, JS branch): the same reversion makes
+// `a_neighbouring_js_tests_body_string_does_not_credit_a_bare_test` FAIL.
+test('a_neighbouring_js_tests_body_string_does_not_credit_a_bare_test', () => {
+  const js = [
+    "test('a prior test with a mutation string in its body', () => {",
+    "  const s = 'the mutation reverts admit; an_unguarded_bare_test fails by name';",
+    '});',
+    '',
+    "test('an unguarded bare test', () => {});",
+  ].join('\n');
+  const t = findTestsInFile('x.test.mjs', js)[1];
+  assert.equal(t.name, 'an unguarded bare test');
+  assert.equal(/mutation/i.test(blockText(js, t)), false, blockText(js, t));
+});
+
 test('a_test_credited_by_a_header_token_is_now_a_miss', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-mutation-header-'));
   gitInit(dir);

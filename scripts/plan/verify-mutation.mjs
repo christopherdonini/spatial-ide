@@ -84,15 +84,23 @@ const RUST_FN = /^\s*(?:pub\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+([a-z_][A-Za-z0-
 const JS_TEST = /^\s*(?:await\s+)?(?:test|it)\s*\(\s*(['"`])(.+?)\1/;
 
 /**
- * Drop the contents of string literals before bracket-counting — a `"…"` (with `\` escapes) or a
- * raw `r"…"`/`r#"…"#` — so a bracket inside an attribute's string value (e.g. `#[ignore = "a [b"]`)
- * is never mistaken for the attribute's own delimiter. `state` (`{inString, rawHashes}`) is CARRIED
- * across calls so a string that opens on one line and closes on a later one is still tracked.
+ * Drop the contents of string literals and comments before bracket-counting — a `"…"` (with `\`
+ * escapes), a raw `r"…"`/`r#"…"#`, a `//` line comment, or a `/*…*​/` block comment — so a bracket
+ * inside one of these is never mistaken for a real code delimiter (an attribute's own `[`/`]`, or a
+ * test body's own `{`/`}`/`(`/`)`). `state` (`{inString, rawHashes, inBlockComment}`) is CARRIED
+ * across calls so a construct that opens on one line and closes on a later one is still tracked.
  */
-function stripStringLiterals(l, state) {
+function stripNonCode(l, state) {
   let out = '';
   let i = 0;
   while (i < l.length) {
+    if (state.inBlockComment) {
+      const end = l.indexOf('*/', i);
+      if (end === -1) return out;
+      i = end + 2;
+      state.inBlockComment = false;
+      continue;
+    }
     if (state.rawHashes !== null) {
       const close = l.indexOf(`"${'#'.repeat(state.rawHashes)}`, i);
       if (close === -1) return out;
@@ -106,6 +114,8 @@ function stripStringLiterals(l, state) {
       i++;
       continue;
     }
+    if (l[i] === '/' && l[i + 1] === '/') return out;
+    if (l[i] === '/' && l[i + 1] === '*') { state.inBlockComment = true; i += 2; continue; }
     const raw = /^r(#*)"/.exec(l.slice(i));
     if (raw) { i += raw[0].length; state.rawHashes = raw[1].length; continue; }
     if (l[i] === '"') { state.inString = true; i++; continue; }
@@ -115,13 +125,36 @@ function stripStringLiterals(l, state) {
   return out;
 }
 
-function netBracketDelta(l, state) {
+function netDelta(l, state, openCh, closeCh) {
   let d = 0;
-  for (const ch of stripStringLiterals(l, state)) {
-    if (ch === '[') d++;
-    else if (ch === ']') d--;
+  for (const ch of stripNonCode(l, state)) {
+    if (ch === openCh) d++;
+    else if (ch === closeCh) d--;
   }
   return d;
+}
+
+function netBracketDelta(l, state) {
+  return netDelta(l, state, '[', ']');
+}
+
+/**
+ * From `lines[startIdx]` (0-based, an item's own declaration line) scan forward counting net
+ * `openCh`/`closeCh` (brackets inside strings/comments ignored) until the count returns to zero
+ * having gone positive at least once; returns the 1-based line where the item's own body closes
+ * (its own state, never a later item's — this is what makes a test's OWN block stop at its own
+ * body, not swallow whatever follows). Unterminated: runs to end of file.
+ */
+function bodyEndLine(lines, startIdx, openCh, closeCh) {
+  const state = { inString: false, rawHashes: null, inBlockComment: false };
+  let depth = 0;
+  let opened = false;
+  for (let i = startIdx; i < lines.length; i++) {
+    depth += netDelta(lines[i], state, openCh, closeCh);
+    if (depth > 0) opened = true;
+    if (opened && depth <= 0) return i + 1;
+  }
+  return lines.length;
 }
 
 /**
@@ -137,9 +170,10 @@ function headerLineCount(lines) {
 /**
  * Every declared test in a file's text: Rust `#[test] fn name`, or JS `test('...')`/`it('...')`.
  * Each entry also carries `blockStart`/`blockEnd` (1-based, inclusive) — the span from the
- * previous item's end (or the file header's end, for the first item) through this test's own
- * declaration line. A RECORDED MUTATION token only counts for a test when it falls in that span
- * (§`hasOwnMutationMention` below) — not anywhere in the file within a fixed character window.
+ * previous item's end (its own body's matching close, via `bodyEndLine`; or the file header's end,
+ * for the first item) through this test's own declaration line. A RECORDED MUTATION token only
+ * counts for a test when it falls in that span (the changed-test-file convention in
+ * `runVerifyMutation` below) — not anywhere in the file within a fixed character window.
  */
 export function findTestsInFile(rel, content) {
   // survive a CRLF checkout (AI_DEVELOPMENT.md eol class): normalise before line-splitting.
@@ -169,7 +203,9 @@ export function findTestsInFile(rel, content) {
       if (fn) {
         if (pending) tests.push({ name: fn[1], line: i + 1, kind: 'rust', blockStart: lastItemEndLine + 1, blockEnd: i + 1 });
         pending = false;
-        lastItemEndLine = i + 1;
+        // this item's OWN end is its own body's matching close, not its declaration line — so the
+        // NEXT item's block never reaches back into this one's body.
+        lastItemEndLine = bodyEndLine(lines, i, '{', '}');
         continue;
       }
       if (RUST_TEST_ATTR.test(l)) { pending = true; continue; }
@@ -194,7 +230,9 @@ export function findTestsInFile(rel, content) {
       const m = JS_TEST.exec(lines[i]);
       if (m) {
         tests.push({ name: m[2], line: i + 1, kind: 'js', blockStart: lastItemEndLine + 1, blockEnd: i + 1 });
-        lastItemEndLine = i + 1;
+        // this item's OWN end is its own `test(...)`/`it(...)` call's matching close paren, not
+        // its declaration line — so the NEXT item's block never reaches back into this one's body.
+        lastItemEndLine = bodyEndLine(lines, i, '(', ')');
       }
     }
   }
