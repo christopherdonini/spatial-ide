@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T21:27:41.765Z",
-  "plan_hash": "e3e0843edaa5378ba3911cf5e3990dd1ed55cd820634dfd5d03b29d0df11d701",
+  "generated_at": "2026-09-24T21:28:41.947Z",
+  "plan_hash": "973ebb49297f26cba66c2018f80a4782617447e08d78ea755f28bdc825194b3a",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -329,6 +329,44 @@
     }
   ],
   "proposed": [
+    {
+      "id": "governance-hash-grammar-shared",
+      "title": "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix)."
+    },
+    {
+      "id": "governance-test-claims-superseded-followups",
+      "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id."
+    },
     {
       "id": "lod-tier-selection",
       "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",

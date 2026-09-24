@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e3e0843edaa5378ba3911cf5e3990dd1ed55cd820634dfd5d03b29d0df11d701`) at `2026-09-24T21:27:41.765Z`.
+Generated from `PLAN.yaml` (sha256 `973ebb49297f26cba66c2018f80a4782617447e08d78ea755f28bdc825194b3a`) at `2026-09-24T21:28:41.947Z`.
 
 ## 1. Next
 
@@ -38,6 +38,8 @@ Generated from `PLAN.yaml` (sha256 `e3e0843edaa5378ba3911cf5e3990dd1ed55cd820634
 
 ### Proposed
 
+- **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs (phase `prototype`) — never queued until placed
+- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (phase `prototype`) — never queued until placed
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (phase `prototype`) — never queued until placed

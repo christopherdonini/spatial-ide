@@ -160,7 +160,7 @@ self-checks so gates fail only on semantics."* Four mechanical checks are **adde
    (`docs/PREREGISTRATION-TEMPLATE.md`'s header rule) it necessarily names tests that do not exist
    yet, so a claim in a file that is the `gate` of a `PLAN.yaml` node whose `status` is not `done`
    is printed as advisory (`planned — node <id> is <status>`) instead of failing, and becomes
-   binding again the moment a node naming it is `done` (binding is sticky: a gate file any `done` node names is never planned, whatever other nodes name it).
+   binding again the moment a node naming it is `done` (binding is sticky: a gate file any `done` node names is never planned, whatever other nodes name it). **Superseded claims (2026-09-18):** a claim at line L of file F is printed as advisory (`superseded — pinned by <reference>`) instead of failing when F's own text carries a `superseded`-marked hash reference to `F:L` at an explicit `@ <rev>`, whose bytes recompute and whose span contains the claimed name, and whose `<rev>` is shown to be an ancestor of `origin/main` — an append-only record's own proof that the name is historical. It proves a rename happened, never that the replacement exists; that half is the gate's to read.
 4. **The mutation-per-new-test rule, automated** (`scripts/plan/verify-test-claims.mjs`, the same
    runner) — §14's "one mutation per new test that fails it by name" is verified mechanically rather
    than only self-reported.

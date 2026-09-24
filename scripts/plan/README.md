@@ -120,6 +120,40 @@ layout).
 a `measurement: {results: "...", row: "..."}` field — the mechanical form of "no performance
 numbers except those carrying a docs/08 measurement" (§5).
 
+## `verify-test-claims.mjs` — the claimed-test-exists check (§6a), planned and SUPERSEDED claims
+
+`node scripts/plan/verify-test-claims.mjs [--quiet]` scans every tracked preregistration and ADR for
+a claimed test name and confirms a test of that name exists (see the module's own header comment for
+the recognizer and the PLANNED/BINDING split). **SUPERSEDED** (`TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md`;
+the human, round 14 item 2): a claim at line L of file F that does not exist in the current tree is
+reported advisory, never a binding finding, when F's own text carries a matching row that (a) pins a
+hash reference to `F:L` (or a range containing L) — `` `path:a[-b]` @ <rev> sha256:<hex> ``, DERIVED
+FROM the reference grammar `verify-quotes.mjs`'s `HASH_REF_RE` uses (round 12's "quote by reference")
+as it stands on `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a
+tool claim names the tool's commit); only an explicit path equal to F's own repo-relative path is
+recognized, not a bare `:line` — (b) carries the word `superseded` on that same line, outside any
+backtick span (single **or double**); (c) the hash recomputes against `git show <rev>:F`'s own lines
+a..b, the blob's bytes as committed (not normalized to LF — a CRLF-committed blob hashes with its own
+CRs), so a marker cannot be forged without the historical bytes; (d) those same historical bytes
+CONTAIN the claimed name — a pin that merely hashes a line it already has, without ever naming the
+claim, exempts nothing it was written to explain; and (e) `<rev>` is shown to be an ancestor of
+`origin/main` (refused, not merely unproven, when it is not — a commit that lives only on an unmerged
+branch can become unreachable from every fetched ref after a squash- or rebase-merge, which would
+silently evaporate the exemption and turn `main` red on an already-landed piece; SKIPPED, with a
+printed note, when `origin/main` does not resolve in the scanned tree at all). All five conditions
+must hold or the claim stays binding (or planned); a superseded claim is printed under its own
+heading, the same way the planned set is, and never counts toward the exit code. See
+`supersededSpans` and `findSupersededSpan` in the module.
+
+**The boundary** (byte-copied from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 1):
+
+> SUPERSEDED means **renamed**: the pinned historical span must itself contain the claimed name, and
+> the replacement name must be claimed and exist elsewhere in the same record. The check proves only
+> the first half mechanically — that this line, at that commit, carried this name. That the obligation
+> moved rather than vanished is proven by the record's own rows and read by the gate, not by this
+> tool; a claim marked superseded with no replacement anywhere in the file is a defect this check does
+> not catch, disclosed here.
+
 ## `health.mjs` — the health strip's **machine** facts (§5, §15)
 
 `node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>]` writes `site/data/health.json`
