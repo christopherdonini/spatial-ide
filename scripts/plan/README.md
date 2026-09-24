@@ -154,6 +154,14 @@ heading, the same way the planned set is, and never counts toward the exit code.
 > tool; a claim marked superseded with no replacement anywhere in the file is a defect this check does
 > not catch, disclosed here.
 
+**WITHDRAWN** (round 20 item 1): a claim reads the same reference grammar again, this time marked
+`withdrawn-test` (never a bare `withdrawn`, which already means something else on a round-15(g)
+withdrawal row) and restricted to one pinned line. The gate reads two distinct semantic halves here,
+same as SUPERSEDED's own boundary above: this tool proves only that the named ruling and carrier
+citations *resolve* to a RULED block or an entry line in the current `DECISIONS-PENDING.md` — never
+that the cited ruling actually *names the removal*, and never that the named carrier actually *carries
+the evidence* the withdrawn test once did. Both of those readings are the gate's, not this check's.
+
 ## `health.mjs` — the health strip's **machine** facts (§5, §15)
 
 `node scripts/plan/health.mjs [--plan <path>] [--out-dir <site-dir>]` writes `site/data/health.json`
