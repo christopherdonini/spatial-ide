@@ -257,7 +257,7 @@ describe("renderAdrIndex (the table)", () => {
     expect(TABLE_HEADER).toContain("the ADR's own Status field");
     expect(TABLE_HEADER).toContain("conditions in adjacent fields are not shown; read the ADR");
     expect(HEADER_LINE).toContain("Status field alone");
-    expect(HEADER_LINE).toContain("A reserved number with no ADR file (ADR-014 and ADR-031 today)");
+    expect(HEADER_LINE).toContain("A reserved number with no ADR file (ADR-014, ADR-031 and ADR-034 today)");
   });
 });
 

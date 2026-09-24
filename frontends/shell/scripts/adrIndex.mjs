@@ -47,7 +47,7 @@ export const HEADER_LINE =
   "edit by hand; run `npm run adr-index` in `frontends/shell`. `npm run verify:adr-index` fails on " +
   "drift. Each status cell is that ADR's **Status field alone**: an acceptance condition, a " +
   "corrigendum or a qualification recorded in an adjacent header field is not shown here, so read " +
-  "the ADR before relying on a row. A reserved number with no ADR file (ADR-014 and ADR-031 today) " +
+  "the ADR before relying on a row. A reserved number with no ADR file (ADR-014, ADR-031 and ADR-034 today) " +
   "has no row.*";
 
 export const TABLE_HEADER =
