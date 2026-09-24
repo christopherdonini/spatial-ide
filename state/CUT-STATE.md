@@ -62,3 +62,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **#117:** re-merged at c25efd5. One PLAN conflict, the scanner node's gate line, was resolved to the branch's side. The generated files were regenerated from the LF file; plan_hash equals the staged PLAN.yaml. 270/0 tests, and cites, quotes and test-claims PASS. CI is watched.
   - **#116:** touches no generated file; it waits on the click as is.
   - **Correction:** the 21:20Z flush (a21c92a) still listed #112 as waiting. It had merged six minutes earlier.
+- 2026-09-24T21:52Z - **#116 (f165218, 21:32Z) and #117 (aa79322) merged by the human. Every PR the day opened has landed except #114.**
+  - **PLAN (708e361):**
+    - Done: kernel-ticket-drop-under-registry-lock, the scanner, and P3b (round 19 item 2).
+    - In progress: engine-source-change-watcher (ADR-035's read, round 19 item 1).
+    - Ready: governance-test-claims-withdrawn-marker (round 20, order 1), then test-claims-landedness-bound (round 17 item 8, order 2).
+    - `governance-verify-mutation-multiline-attrs` stays in progress (round 20).
+    - kernel-ticket-drop-followups stays proposed.
+  - **Main's CI is green:** Governance and Pages at 708e361; Rust workspace and shell at f165218.
+  - **Dispatched, two architect consults in parallel:**
+    - ADR-035's redraft. It states round 19 item 1 and the constraints in gate-log index 173, corrects the premises the kernel fix changed, and names the watcher's literal from `protocol/` on main.
+    - The withdrawn marker's design: the row grammar, riders (a) and (b) as mechanical checks, #108's fifteen rows, and the budget.
+  - **Worktrees swept.** 13 removed, each verified merged, pushed and clean, with no process running in it. C: went from 39 to 69 GB free. Kept: `C:/dev/wt/adr-035-dataset-session-ended` (active) and `.claude/worktrees/verify-mutation-header-token` (dropped, unmerged).
