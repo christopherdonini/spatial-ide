@@ -9,3 +9,5 @@ Change: the Regenerate command names the generating test with --exact, so the pu
 Tests+mutation: no test covers a documentation command (stated plainly); the check is `cargo test --release -p spatial-kernel --test scale_pass -- --list --ignored` read against the new --exact filter (it selects measure_the_five_gigabyte_scale_pass and not measure_publish_at_five_gigabytes), without running either test; no mutation, since no test is added.
 Out-of-scope: kernel/SCALE-PASS-PREREGISTRATION.md is not amended (its header's amendment rule would invalidate the recorded run); no watchdog ceiling, silence scope, harness code or fixture byte changes; the post-write silence-ceiling firing (entry 115 (a)'s second half) is queued for the human as entry 121, not fixed; no ADR, wire, security or guarantee text.
 ```
+
+Budget: 9 of 12 changed lines across 1 file (kernel/FIXTURES.md; git diff --numstat origin/main...HEAD, this form excluded); the --exact filter checked by `--list` (1 test selected against 2 without it), neither test run; commit 5f52a67.
