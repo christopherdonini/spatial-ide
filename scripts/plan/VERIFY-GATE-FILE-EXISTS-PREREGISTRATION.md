@@ -10,4 +10,4 @@ Tests+mutation: two new tests in verify.test.mjs -- a fixture plan with a ready 
 Out-of-scope: no ADR, wire, security or guarantee text; no change to evidence.path/evidence.log checking (already present, confirmed unchanged); no change to plan.mjs's structural gate-is-a-string validation; no PLAN.yaml status is edited by this piece.
 ```
 
-Budget: (filled at landing).
+Budget: 53 of 60 non-generated lines across 2 of <= 3 files (git diff --numstat origin/main -- scripts/plan/verify.mjs scripts/plan/verify.test.mjs; the form itself excluded per §21c); commit a84b614.
