@@ -1,12 +1,12 @@
 # ADR-035 — SKP control-plane event: `dataset_session_ended`
 
 **Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. Filed 2026-09-24 on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 2); its acceptance is the human's. Riders (a) and (b) of that ruling bind the watcher's preregistration through the ruling itself, whatever this ADR's status, and a review may block on the ruling, never on this text.
-**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-source-change-watcher.md`, section "ADR skeleton (for S1)") and that consult's preregistration body with the ruling's two riders. It was redrafted after its first full gate (`state/gate-log.json`, node `engine-source-change-watcher`, attempt 1), and again after its second (attempt 2) under RULED 2026-09-24 — question round 18, items 1, 2 and 3.
-**Related:** `docs/10` (the specification must cover subscriptions and events) · `docs/02` (control plane vs data plane) · `docs/08` · ADR-004 and its Amendment 4 (instrument surface is never an SKP field) · ADR-006 · ADR-019 · `protocol/skp/SKP-V0.md` §3, §4 items 2, 7, 10 and 13, §5, §8's `skp/0.3` entry · RULED 2026-09-24, the watcher sight (its additions 2 and 4) · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, item 2 · RULED 2026-09-24 — question round 18, items 1, 2 and 3.
+**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-source-change-watcher.md`, section "ADR skeleton (for S1)") and that consult's preregistration body with the ruling's two riders. It was redrafted after its first full gate (`state/gate-log.json`, node `engine-source-change-watcher`, attempt 1), again after its second (attempt 2) under RULED 2026-09-24 — question round 18, items 1, 2 and 3, and once more after attempt 1 of the fresh count that round 18 item 1 ruled.
+**Related:** `docs/10` (the specification must cover subscriptions and events) · `docs/02` (control plane vs data plane) · `docs/08_Testing.md` · ADR-004 and its Amendment 4 (instrument surface is never an SKP field) · ADR-006 · ADR-019 · `protocol/skp/SKP-V0.md` §3, §4 items 2, 7, 10 and 13, §5, §8's `skp/0.3` entry · RULED 2026-09-24, the watcher sight (its additions 2 and 4) · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, item 2 · RULED 2026-09-24 — question round 18, items 1, 2 and 3.
 
 ## Context
 
-SKP v0 declares no server-to-client push on the control plane in any form (`SKP-V0.md` §4 item 7), while `docs/10`'s checklist requires the specification to cover subscriptions and events. The advisory source-change watcher (PLAN node `engine-source-change-watcher`) can end a dataset-session generation while no command or stream is in flight. The watcher sight's addition 4 requires a kernel-to-shell event that delivers that idle signal, with case (f) as its acceptance test. The only kernel-host → webview events today are Tauri emits outside SKP (publish progress, the origin self-check), and neither carries a dataset-session fact. The human ruled one SKP control-plane event on the watcher's literal, with two riders (round 17 item 2), and then ruled its session reference and the reading of rider (a) (round 18 items 2 and 3).
+SKP v0 declares no server-to-client push on the control plane in any form (`SKP-V0.md` §4 item 7), while `docs/10`'s checklist requires the specification to cover subscriptions and events. The advisory source-change watcher (PLAN node `engine-source-change-watcher`) can end a dataset-session generation while no command or stream is in flight. The watcher sight's addition 4 requires a kernel-to-shell event that delivers that idle signal, with case (f) as its acceptance test. The only kernel-host → webview events today are Tauri emits outside SKP (publish progress, the origin self-check), and neither carries a dataset-session fact. The human ruled one SKP control-plane event on the watcher's literal, with two riders (round 17 item 2). The human then ruled its session reference and the reading of rider (a) (round 18 items 2 and 3), and left one question Open: whether post-check ends should also emit (round 18 item 1).
 
 Four things this ADR names do not exist in the tree at its filing, and the watcher piece introduces all of them:
 - the refusal code `engine.source_coverage_lost`, an `engine.` code under `SKP-V0.md` §5's variant-name rule (the sight's addition 2; preregistration body §2a);
@@ -21,7 +21,7 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
    - The kernel decides a generation's end server-side and records it before the event is emitted.
    - Rider (a)'s every-later-call is every later generation-scoped call. Each of those refuses by name, whether or not the event was delivered. The code is the one for the end's reason, `engine.source_changed` or `engine.source_coverage_lost`; code-by-reason also lands with the watcher piece (preregistration body §2b). Today the generation-scoped calls are two:
      - `viewport_query`: the live-generation check and the mint-race arm in `SkpHost::viewport_query`.
-     - Redemption of a ticket (ADR-019) from the ended generation. `EngineSourceFactory::create_from_ticket`'s dead-ticket arm (`kernel/src/lib.rs`, on `GenerationRegistry::ticket_liveness`) refuses it by name while the dead-ticket record holds. That record ends at `TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, or earlier when the dataset is reopened or closed (`mint_for_open` and `forget_dataset` drop that dataset's records). After that, the answer degrades to `StreamRegistry::redeem`'s own refusal, which is never an admission.
+     - Redemption of a ticket (ADR-019) from the ended generation. `EngineSourceFactory::create_from_ticket`'s dead-ticket arm (`kernel/src/lib.rs`, on `GenerationRegistry::ticket_liveness`) refuses it by name while the dead-ticket record holds. That record ends at `TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, or earlier when `close_dataset` drops the ended handle's records through `forget_dataset`. A product reopen does not drop them: `open_dataset` mints a new `DatasetHandle` per open, and `mint_for_open`'s own drop is keyed to that new handle. After the record ends, the answer degrades to `StreamRegistry::redeem`'s own refusal, which is never an admission.
    - `describe`, `cancel` and `close_dataset` are not generation-scoped, and they still answer after the end (round 18 item 3). An ended dataset stays in the catalog, so `describe` answers and `close_dataset` stays the ordinary end of the open. Refusing either one would leave the handle with no ordinary way to close it.
    - **After the end, the `describe` answer carries the ended state and its typed reason** (round 18 item 3's rider). This way no client can take an ended generation's facts for current ones.
      - The reason is the end's own, one of the two values the event's `reason` carries.
@@ -31,10 +31,11 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
 3. **Emission scope, and at most once.**
    - *Scope.* Only the watcher's sink emits the event, and only on the transition that ends the generation. This comes from the preregistration body (§2b's idle-notification bullet), not the skeleton. An end made by the pre-check or the post-check emits nothing. Such an end reaches the shell only through what the tree already delivers:
      - **A pre-check end:** the `viewport_query` refusal that made it, on that call.
-     - **A post-check end on a stream whose own outcome was clean:** that stream's `engine.source_changed` terminal, which replaces its `ok` (`engine/src/stream.rs`, the post-check's rule (i)).
-     - **The residual:** some post-check ends deliver nothing on their own call, and each reaches the shell only at its next generation-scoped call's refusal (Decision 2). There are two cases:
+     - **A post-check end on a stream whose own outcome was clean:** that stream's `engine.source_changed` terminal, which replaces its `ok` (`engine/src/stream.rs`, the post-check's rule (i)), when the data plane forwards it. The residual's third case below is when it does not.
+     - **The residual** (round 18 item 1 names it): some post-check ends deliver nothing on their own call, and each reaches the shell only at its next generation-scoped call's refusal (Decision 2). There are three cases:
        - a post-check end on a cancelled or failed stream: that stream keeps its own terminal (rule (ii));
-       - an end found when the stream is dropped: `EngineSource`'s `Drop` in `kernel/src/lib.rs` delivers no terminal.
+       - an end found when the stream is dropped: `EngineSource`'s `Drop` in `kernel/src/lib.rs` delivers no terminal;
+       - a post-check end on a stream whose engine outcome was clean, when the data plane ends the stream with its own terminal first. The shell's data-plane CANCEL (`frontends/shell/src/streaming/adapterWs.ts`) makes the adapter's reader publish a `Cancelled` halt. `drive`'s loop head and its `biased` selects (`protocol/data-plane/src/adapter_ws.rs`) take that halt before the pump's next item. A peer close or a failed send likewise ends `drive` with `Cancelled` or `TransportFailed`. The pump (`protocol/data-plane/src/pump.rs`) may already have called `next_into`, and `EngineSource::next_into`'s error arm (`kernel/src/lib.rs`) then ended the generation on rule (i)'s `engine.source_changed`. The shell never receives that terminal.
 
        Until that refusal, the shell shows no session-ended block. Whether these ends should also emit is Open item 1.
    - *At most once per ended generation.*
@@ -54,7 +55,7 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
      - **`SKP-V0.md` §3 gains a third minting rule beside its two:** the kernel mints a value wherever the value only names a kernel-side session to its holder and authorises nothing, and no command accepts it as input.
      - §3's table gains the reference, which falls under §3's existing session-scoped, non-persistable rule. §4 item 10 gains it as a fourth value kind, one that is not a handle.
      - Like the `DatasetHandle`, it is minted per open. *This ADR's reading:* `skp/0.3`'s §8 rule of no generation value on the wire is not engaged. The reference is an opaque random value, not the kernel's generation counter, and it reveals no more than the `DatasetHandle` already on the wire with the same per-open cardinality. The human's acceptance of this ADR confirms or refuses that reading.
-   - `reason`: the typed reason. It is a closed set of two, `"observed-change"` | `"coverage-lost"`, one-to-one with the kernel's session-end reasons.
+   - `reason`: the typed reason. It is a closed set of exactly two values that encode rider (b)'s two reasons, observed change and coverage lost, one-to-one with the kernel's session-end reasons. Their wire spellings are the watcher's preregistration's to fix, with the reference's codec and the new members' names.
 
    Nothing else is carried: no feature data, no generation value, no timestamp or other instrument field (ADR-004 Amendment 4), no message text, no version field and no handle. Receiving the event grants nothing.
 
@@ -88,7 +89,7 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
 ## Consequences
 
 - This is SKP's first push. §4 item 7's "none" ends for this one kind, and §4 item 2's single Tauri-invoke binding gains the Tauri event as this event's delivery. Any later event kind is its own decision and its own literal, never an extension of this one.
-- The event's ordering relative to data-plane frames or control-plane responses is not guaranteed and may not be claimed. No delivery latency is claimed either: `docs/08` has no row for it and no measurement exists, and `docs/08` admits no figure without its measurement.
+- The event's ordering relative to data-plane frames or control-plane responses is not guaranteed and may not be claimed. No delivery latency is claimed either. `docs/08_Testing.md` has no budget row for it and no measurement exists. That file states its rule as `no numbers, no claim` in its Correctness section, for the figures it names there, and the rule is applied here.
 - It carries no bulk data and no feature data, so the control plane/data plane split (`docs/02`, `docs/10`) is unchanged, and `protocol/data-plane/` has an empty diff.
 - `open_dataset`'s response and `describe`'s response each gain a member on the watcher's literal, and the kernel holds one session reference per open.
 - A future conformance suite and MCP adapter would inherit the event. Whether it is exposed to an agent host is not decided here.
@@ -98,28 +99,43 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
 
 ## What this ADR does not decide
 
-Subscription or unsubscription commands; any other event kind; a websocket or remote binding; re-arm, reload or a restored generation; a generation value on the wire (Decision 4 records this ADR's reading of the reference); the reference's codec, the new members' names and the `describe` ended state's wire form (the watcher's preregistration); the reason-keyed entry's exact form and the operator-visible wording (P6); MCP exposure.
+Subscription or unsubscription commands; any other event kind; a websocket or remote binding; re-arm, reload or a restored generation; a generation value on the wire (Decision 4 records this ADR's reading of the reference); the reference's codec, the new members' names, the `reason` values' wire spellings and the `describe` ended state's wire form (the watcher's preregistration); the reason-keyed entry's exact form and the operator-visible wording (P6); MCP exposure.
 
 ## Open — for the human, before acceptance
 
-*History:* the second draft's Open items 1 (the session reference's wire form) and 2 (the reading of rider (a)) were ruled by round 18 items 2 and 3, and are now Decision 4–5 and Decision 2 text.
+*History:* the second draft's Open items 1 (the session reference's wire form) and 2 (the reading of rider (a)) were ruled by round 18 items 2 and 3, and are now Decision 4–5 and Decision 2 text. Round 18 item 1 left the item below as the one remaining Open item. The previous draft recommended (c). That recommendation rested on a premise the residual's third case falsifies, and it is restated below.
 
-1. **Whether a post-check end should also emit.**
-   - **The residual.** Decision 3 emits only from the watcher's sink. A post-check end on a cancelled or failed stream, or an end found when the stream is dropped, therefore reaches the shell only at its next generation-scoped call's refusal. Rider (a) keeps that correct, because no generation-scoped call is answered. But until the operator's next pan or query, the shell shows the ended generation's resident data with no session-ended block.
-   - **What no form reaches.** One sub-case stays outside every form: a change the drop does not find, because `BatchStream::drop` returns before the producer's post-check has run. That end is made by the next pre-check, on its own call.
+*Also for acceptance, not an Open item:* Decision 4 records this ADR's reading that the session reference does not engage `SKP-V0.md` §8's `skp/0.3` rule of no generation value on the wire. The human's acceptance confirms or refuses that reading.
+
+1. **Whether a post-check end should also emit** (round 18 item 1).
+   - **The residual.** Decision 3 emits only from the watcher's sink, so its three residual cases reach the shell only at the next generation-scoped call's refusal. Rider (a) keeps that correct, because no generation-scoped call is answered. But until the operator's next pan or query, the shell shows the ended generation's resident data with no session-ended block.
+   - **Where it falls once the watcher lands.** On a watching open, a change the watch sees ends the generation at the sink, which emits. The residual is left with:
+     - every checks-only open: every open off Windows, and a Windows open whose arming failed (preregistration body §2a);
+     - a change the watch cannot see: ancestors above the grandparent watch (round 17 item 2's KNOWN-LIMITATIONS line), and what the preregistration body's §1 declines to claim;
+     - on a watching open, a residual-case post-check end made before the watch's signal arrives. The sink's later end then reports no transition, so Decision 3's gate keeps it from emitting. No OS delivery deadline is claimed (§1).
+   - **Outside every form.** Sometimes `BatchStream::drop` returns before the producer's post-check has run. The drop then finds no change and the generation stays live: nothing has ended, so nothing can be delivered. The first caller to reach the change ends it: the next pre-check, on its own call; a concurrent stream's later post-check; or, on a watching open, the sink. That end then takes its own caller's route in Decision 3.
    - **(a) No.** The residual stays as Decision 3 names it.
      - *For:* the event keeps the preregistration body's scope, a watcher end, and nothing changes.
-     - *Against:* the operator-visible lag above has no bound except the operator's next call.
+     - *Against:* the operator-visible lag above has no bound except the operator's next call, over every open the practical residual above covers.
    - **(b) Every post-check end emits.** The post-check's `end_generation` call emits, gated on the same transition report as the sink.
-     - *For:* it closes the residual whenever delivery succeeds. Every post-check already reaches the one `SessionInvalidator`, and the owner latch already tolerates a repeat.
+     - *For:*
+       - It closes all three residual cases whenever delivery succeeds, the third included. It keys on the kernel's own transition, not on which terminal the data plane delivered.
+       - On a watching open it also closes the race above: whichever caller makes the transition emits.
+       - Every post-check already reaches the one `SessionInvalidator`, and the owner latch already tolerates a repeat.
      - *Against:*
-       - A clean-outcome end would then reach the shell twice, as terminal and as event, in no guaranteed order. The block's text would depend on which arrives first: the engine's display text or the owner's P6 wording.
+       - A clean-outcome end whose terminal the data plane forwards would reach the shell twice, as terminal and as event, in no guaranteed order. The block's text would depend on which arrives first: the engine's display text or the owner's P6 wording.
        - The event's scope widens beyond the preregistration body's §2b.
-       - The emitter must reach the producer's drop path, which holds no `&SkpHost`.
-   - **(c) Only a post-check end its own stream does not carry emits:** a cancelled or failed stream, or an end found at drop.
-     - *For:* it closes the same residual and adds no repeat for a clean outcome.
+       - Emission moves from the sink alone to the one end operation that the pre-check, the post-check and the sink all reach. The producer's drop path already holds that `SessionInvalidator` (`EngineSource`'s `invalidator`), so the cost is placing the emission beside it, not reaching it.
+   - **(c) Only a post-check end whose stream's engine terminal does not carry it emits:** a cancelled or failed stream, or an end found at drop.
+     - *For:* it closes the residual's first two cases, and adds no repeat for a clean outcome the data plane forwards.
      - *Against:*
+       - It does not close the third case. There the engine outcome was clean, so (c) stays silent while the shell receives `Cancelled` or `TransportFailed`. Only `protocol/data-plane` knows which terminal was delivered (`drive`'s return, recorded in `server.rs`). Keying emission on it would need a data-plane report to the kernel, against the empty `protocol/data-plane/` diff in this ADR's Consequences.
        - Emission then branches on the stream's outcome class, a second condition beside the transition report, and that condition needs its own test.
-       - It has the same drop-path reach as (b), and the same widening beyond §2b.
+       - It has the same placement as (b), and the same widening beyond §2b.
 
-   *Architect's recommendation, not a ruling:* (c). The event then covers exactly the ends that no call carries, which is the principle the watcher-only scope already follows, and it adds no operator-visible order dependence. Under (b) or (c), the watcher's preregistration carries the emission point and its test. Under (a), the residual becomes a KNOWN-LIMITATIONS line in that piece.
+   *Architect's recommendation, not a ruling:* (b), revised from (c).
+   - (c) assumed that a clean-outcome post-check end always reaches the shell as its own stream's terminal. The third case shows the data plane can replace that terminal, and the kernel cannot see which terminal was delivered without a data-plane change.
+   - The transition report is then the one kernel-side condition that covers every post-check end, and it also closes the sink race above.
+   - (b)'s cost is a repeat that the owner latch already absorbs. Both routes carry the same reason, and only the block's display text depends on order. (a)'s lag has no bound but the next call, over every checks-only open.
+
+   Under (b) or (c), the watcher's preregistration carries the emission point and its test. Under (a), the residual becomes a KNOWN-LIMITATIONS line in that piece.
