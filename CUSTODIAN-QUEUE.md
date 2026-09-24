@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1ba0e263b0cabb3907ff2ad8a0e8ededbf47aab401af26d8dabc961f4626b457`) at `2026-09-24T18:12:04.369Z`.
+Generated from `PLAN.yaml` (sha256 `afbc0f6eab87ce412ff7eb21c2e8b0984c1d182268b324b16e2190ee59a42e3a`) at `2026-09-24T19:09:00.577Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (lane `governance`, order 1, budget 120 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -17,7 +17,7 @@ Generated from `PLAN.yaml` (sha256 `1ba0e263b0cabb3907ff2ad8a0e8ededbf47aab401af
 ## 4. Blocked on dependencies
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: crs-unit-fact-and-bounds, engine-source-change-watcher, b1-engine-kernel-half
-- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds
+- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds, kernel-ticket-drop-under-registry-lock
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: crs-unit-fact-and-bounds, adr-021-023-b1-notes
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
@@ -31,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `1ba0e263b0cabb3907ff2ad8a0e8ededbf47aab401af
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **adr-021-023-b1-notes** — ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR — evidence: PR #113
+- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released — evidence: PR #116
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: PR #112
 - **fixture-regeneration-entry-point** — The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half) — evidence: PR #115
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
@@ -40,7 +41,6 @@ Generated from `PLAN.yaml` (sha256 `1ba0e263b0cabb3907ff2ad8a0e8ededbf47aab401af
 
 ### Proposed
 
-- **governance-test-claims-superseded-scanner** — verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4) (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed

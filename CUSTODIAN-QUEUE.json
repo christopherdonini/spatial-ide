@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-09-24T18:12:04.369Z",
-  "plan_hash": "1ba0e263b0cabb3907ff2ad8a0e8ededbf47aab401af26d8dabc961f4626b457",
+  "generated_at": "2026-09-24T19:09:00.577Z",
+  "plan_hash": "afbc0f6eab87ce412ff7eb21c2e8b0984c1d182268b324b16e2190ee59a42e3a",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "governance-test-claims-superseded-scanner",
+    "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 1,
+    "budget_minutes": 120,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-24",
+      "done": null
+    },
+    "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR. RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap; when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done."
+  },
+  "ready": [
+    {
+      "id": "governance-test-claims-superseded-scanner",
+      "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR. RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap; when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 0,
     "by_kind": {
@@ -55,9 +93,10 @@
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal).",
+      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged.",
       "blocked_by": [
-        "crs-unit-fact-and-bounds"
+        "crs-unit-fact-and-bounds",
+        "kernel-ticket-drop-under-registry-lock"
       ]
     },
     {
@@ -285,6 +324,28 @@
       "evidence_label": "PR #113"
     },
     {
+      "id": "kernel-ticket-drop-under-registry-lock",
+      "title": "kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "pr": 116
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Found by PR #114's architect gate, fresh-count attempt 2 (state/gate-log.json, node engine-source-change-watcher), and confirmed by the custodian's reading of kernel/src/skp.rs: StreamRegistry::cancel, cancel_all_for_dataset and sweep_locked replace or remove a Pending TicketState (whose PendingBuilt owns the EngineSource) under the registry lock; EngineSource's Drop calls end_session_if_source_changed, which calls SessionInvalidator::end_generation, which calls StreamRegistry::cancel on the same lock. Reachable when an unredeemed ticket's post-check found a source change and the ticket is then cancelled (the shell abandons unredeemed tickets), swept on expiry, or cancelled by close_dataset. A defect fix inside the existing design (never block the canvas; ADR-018, ADR-019): regression test first (the hang detected by a bounded join, never a suite that hangs), then the fix, full gating (a stated guarantee).",
+      "evidence_label": "PR #116"
+    },
+    {
       "id": "crs-unit-fact-and-bounds",
       "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
       "lane": "kernel-protocol",
@@ -369,30 +430,11 @@
         "opened": "2026-09-17",
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding. RULED 2026-09-24, question round 18, item 4 (entry 131): the union design replaces round 17 item 9's fallback -- the tool returns the union of main's per-line scan and the tracked scan, no self-comparing no-loss test; one round under a fresh count; if it stops again the PR is closed unmerged, the node dropped, and the 13 tests behind multi-line ignore attributes listed as a known limit of the tool.",
+      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding. RULED 2026-09-24, question round 18, item 4 (entry 131): the union design replaces round 17 item 9's fallback -- the tool returns the union of main's per-line scan and the tracked scan, no self-comparing no-loss test; one round under a fresh count; if it stops again the PR is closed unmerged, the node dropped, and the 13 tests behind multi-line ignore attributes listed as a known limit of the tool. RULED 2026-09-24, question round 19, item 2 (entry 133): merge; the node stays in progress (its gate naming the form) until the superseded-name scanner lands, then closes as done.",
       "evidence_label": "PR #108"
     }
   ],
   "proposed": [
-    {
-      "id": "governance-test-claims-superseded-scanner",
-      "title": "verify:test-claims -- the superseded-name scanner (governance/test-claims-superseded @ 3100766, held under round 16 item 4)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": 2,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Held by the human (round 16, item 4); its scheduling is on the weekly-window list (2026-09-25 at the earliest). test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8). The branch is governance/test-claims-superseded @ 3100766, no PR."
-    },
     {
       "id": "lod-tier-selection",
       "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
