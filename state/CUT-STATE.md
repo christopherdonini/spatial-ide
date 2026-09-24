@@ -433,3 +433,16 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
       - CI is 9/9 green on d1eec2b. Marked ready.
     - Both byte-identity runs matched the table: 5,004,376,705 B, SHA-256 5ae955c5…1788. Both real copies are untouched.
   - **Round 18:** `state/questions/round-18.md` carries entries 129 (ADR-035's two Open items), 130 (ADR-035's Rule 7 stop) and 131 (#108's second Rule 7 stop): four items, one question set, no red line.
+
+- 2026-09-24T15:40Z - **Round 18 ruled and its work run; a kernel defect found; two more queued rulings.**
+  - **Round 18** (e78dea5): items 1-2 were answered by option. For items 3-4 the human's typed message replaced the selections, and the typed word governs. An interrupted tool call had already written the superseded answers, uncommitted; the custodian restored them before recording (memory updated).
+  - **ADR-035 (PR #114):**
+    - Redrafted under round 18. Fresh-count attempt 1: the architect failed it on a third post-check residual case (the data plane's own terminal). Redrafted again; the architect's recommendation moved from (c) to (b).
+    - Attempt 2: the reviewer PASSED. The architect FAILED on S1′, a Pending ticket's source dropped under StreamRegistry's lock.
+    - The custodian confirmed that chain as a latent kernel hang on main. It is filed as node `kernel-ticket-drop-under-registry-lock` and dispatched to worker-high, regression test first.
+    - ADR-035 is **STOPPED under Rule 7** a second time (entry 132). Recommendation: land the fix, then one confirmation read.
+  - **PR #108:**
+    - The union design (round 18 item 4) passed on the code in both gates; both failed on the record only.
+    - The architect's record-cap reduction was applied at d1630b3 and custodian-verified: the pre-edit form is a byte prefix, and the test diff is comment-only.
+    - The branch's gate now names the form. Landing waits on entry 133, which states the custodian's reading that a record-only FAIL is not a stop under round 18 item 4.
+  - **Ready for the click:** #109 (before #112); #112 (the custodian merges main after #109); #113; #115 (closed under section A, CI 9/9).
