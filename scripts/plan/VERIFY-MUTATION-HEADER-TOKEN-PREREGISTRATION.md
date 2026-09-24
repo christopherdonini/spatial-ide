@@ -11,3 +11,17 @@ Out-of-scope: no ADR, wire, security or guarantee text; no change to the changed
 ```
 
 Budget: references only, filled in at landing.
+
+## Correction round 1
+
+Reviewer attempt 1 (state/gate-log.json, node governance-verify-mutation-header-token, @ c5f913e): a test's own block started at the previous item's DECLARATION line, so a neighbouring test's body comment (Rust) or body string (JS) mentioning "mutation" still credited a bare test. Corrected at commit 0d087a6: `lastItemEndLine` is now the previous item's own body's matching close (`bodyEndLine`, brackets in strings/comments ignored), not its declaration line. Proof: `a_neighbouring_rust_tests_body_comment_does_not_credit_a_bare_test` and `a_neighbouring_js_tests_body_string_does_not_credit_a_bare_test` (scripts/plan/verify-mutation.test.mjs, commit 0d087a6), each verified to fail when `lastItemEndLine = bodyEndLine(...)` is reverted to `= i + 1`.
+
+Doc cite (reviewer attempt 1, Documentation FAIL): the module doc's `§hasOwnMutationMention` citation named a function that never existed. Fixed at commit 0d087a6 to point at `runVerifyMutation`'s changed-test-file convention, the check's real location.
+
+Known residual (reviewer attempt 1, item (c), reproduced and NOT fixed): a file's first test with no leading comment/attribute of its own still has its own leading token absorbed into `headerLineCount`'s header span (a false MISS) — `headerLineCount` is unchanged by this fix; this is the pre-existing limitation already disclosed in the module doc (scripts/plan/verify-mutation.mjs's own "disclosed, not solved" note).
+
+Flip count on main (reviewer attempt 1 confirmed 20; re-run at commit 0d087a6 against origin/main: 22 — the higher count reflects piece 1's own netBracketDelta change landing between the two counts): `runVerifyMutation`'s `parseAddedRanges` gates only tests inside a diff's added ranges (scripts/plan/verify-mutation.mjs's `runVerifyMutation`), so none of these pre-existing tests turn main red.
+
+Superseded index: none. No form or doc text from this piece's own history is made false by commit 0d087a6 — the Change line above and the module doc's "previous item's end" description were already the intended design; the fix makes the code match text that was already true, not false.
+
+Amendment (class-6, AUTONOMY.md §21b size-overrun): declared budget 105; final figure 192 (`git diff --numstat origin/governance/verify-mutation-multiline-attrs...HEAD -- scripts/plan/verify-mutation.mjs scripts/plan/verify-mutation.test.mjs`, form excluded: 105+20 mjs, 67+0 test), landed at commit 0d087a6 — reason: reviewer attempt 1's Correctness finding (the own-block boundary) required a structural rewrite beyond the declared scope. Per AUTONOMY.md §21b, this overrun closes the single-gate route exactly as a §21a category does; this piece routes to FULL gating (reviewer + architect) while keeping its five-line form.
