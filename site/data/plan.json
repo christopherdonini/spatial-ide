@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T22:05:06.696Z",
-  "plan_hash": "09d0ef9af3281863bb8bede86877e69a5b5dcf4a639ffce7dc51a61100c82cf2",
+  "generated_at": "2026-09-24T22:30:12.259Z",
+  "plan_hash": "c22e51b23dccd9abcae247d9bc9056e83dc398896b567f5063154b17c5836ec4",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1446,7 +1446,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 4,
       "depends_on": [],
       "needs_human": {
@@ -1469,7 +1469,7 @@
       "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding. RULED 2026-09-24, question round 18, item 4 (entry 131): the union design replaces round 17 item 9's fallback -- the tool returns the union of main's per-line scan and the tracked scan, no self-comparing no-loss test; one round under a fresh count; if it stops again the PR is closed unmerged, the node dropped, and the 13 tests behind multi-line ignore attributes listed as a known limit of the tool. RULED 2026-09-24, question round 19, item 2 (entry 133): merge; the node stays in progress (its gate naming the form) until the superseded-name scanner lands, then closes as done. RULED 2026-09-24, question round 20, item 1 (entry 134): closes as done when its withdrawn rows are in (governance-test-claims-withdrawn-marker); round 19 item 2's closing on the scanner's landing is superseded.",
       "dates": {
         "opened": "2026-09-17",
-        "done": null
+        "done": "2026-09-25"
       }
     },
     {

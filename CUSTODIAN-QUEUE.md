@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `09d0ef9af3281863bb8bede86877e69a5b5dcf4a639ffce7dc51a61100c82cf2`) at `2026-09-24T22:05:06.586Z`.
+Generated from `PLAN.yaml` (sha256 `c22e51b23dccd9abcae247d9bc9056e83dc398896b567f5063154b17c5836ec4`) at `2026-09-24T22:30:12.132Z`.
 
 ## 1. Next
 
@@ -28,7 +28,6 @@ Generated from `PLAN.yaml` (sha256 `09d0ef9af3281863bb8bede86877e69a5b5dcf4a639f
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
-- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
 - **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement — evidence: branch `governance/test-claims-withdrawn`
 
 ## 6. Proposed / unscheduled
