@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2891068c55f97dd1e0ef8d526287de7c77eee90a9e1ad84ccf5693cfbf4e3700`) at `2026-09-24T17:35:08.820Z`.
+Generated from `PLAN.yaml` (sha256 `dcd2350e1bf004da6d9930e17ed420969ec2da6ffd37db147faafb53562c6bfb`) at `2026-09-24T18:04:32.118Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released (lane `kernel-protocol`, order 1, budget 120 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -17,7 +17,7 @@ Generated from `PLAN.yaml` (sha256 `2891068c55f97dd1e0ef8d526287de7c77eee90a9e1a
 ## 4. Blocked on dependencies
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: crs-unit-fact-and-bounds, engine-source-change-watcher, b1-engine-kernel-half
-- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds
+- **engine-source-change-watcher** — The advisory source-change watcher — blocked by: crs-unit-fact-and-bounds, kernel-ticket-drop-under-registry-lock
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: crs-unit-fact-and-bounds, adr-021-023-b1-notes
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons

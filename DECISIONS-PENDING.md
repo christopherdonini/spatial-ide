@@ -397,6 +397,23 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+133. **[FOR YOUR WORD, with the click — PR #108's landing condition.]** The union design (round 18 item 4) passed on the code in both gates. Both gates failed on the record only; no finding is semantic. The architect is reducing the record under the record cap's point (3), which restores five amendment lines that were edited in place and appends a superseded index naming the twelve removed tests.
+- **The landing problem.** After the restore, the record's committed amendments still name those twelve tests. `verify-test-claims` binds a gate file's claims once its node is done, so merging with the node `done` would turn main's CI red. No append-only text neutralises them; the held superseded-name scanner would.
+- **Options:**
+  - (1) **Merge; keep the node in progress until the scanner lands** (Recommended). The node's `gate` names the form, so the names stay advisory. This extends your round-16 item-4 P3b precedent to this node.
+  - (2) **Scanner first:** schedule the superseded-name scanner, and #108 waits for it.
+  - (3) **Drop #108** despite the pass: the 13 tests are listed as a known limit of the tool.
+
+Touches: PLAN node `governance-verify-mutation-multiline-attrs`; PR #108.
+
+132. **[FOR YOUR WORD — ADR-035 (PR #114) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed on one semantic item, which is a kernel defect, not ADR text.]** The reviewer PASSED attempt 2: every earlier finding is resolved, and every tree claim is true. The architect FAILED it on S1′, a fourth route. A Pending ticket's `EngineSource` is dropped while `StreamRegistry`'s `std::sync::Mutex` is held. If its post-check has found a change, `Drop` ends the generation and re-locks that Mutex on the same thread, which hangs. The custodian confirmed the chain by reading `kernel/src/skp.rs` and `kernel/src/lib.rs`: `cancel`, `cancel_all_for_dataset` and `sweep_locked` replace a Pending state under the lock; `EngineSource::drop` leads to `end_session_if_source_changed`, then `end_generation`, then `StreamRegistry::cancel`. It is a latent defect on main, independent of ADR-035, and is filed as PLAN node `kernel-ticket-drop-under-registry-lock`, dispatched with a regression test first under full gating.
+- **Recommendation:**
+  - Land the kernel fix first. That turns the sub-case into an ordinary drop-path end, which ADR-035's residual case 2 already names.
+  - Then one confirmation read under a fresh count. That read also carries the reviewer's non-blocking S1 (whether option (b)'s emission point includes pre-check ends) and the record nits.
+- **Alternative:** hold ADR-035.
+
+The watcher waits on it and on crs-unit either way. Touches: PR #114; PLAN nodes `engine-source-change-watcher` and `kernel-ticket-drop-under-registry-lock`.
+
 131. **[RULED 2026-09-24 — question round 18; see the RULED block at the top; recorded as filed:]** **[FOR YOUR WORD, the next round — `governance-verify-mutation-multiline-attrs` (PR #108) STOPPED under Rule 7 a second time: the fresh count's attempt 2 failed in both gates on one semantic item.]**
 - **Root cause.** Fresh-count attempt 1 failed on the fallback, which consumed the look-ahead window instead of re-reading it. The correction's rewind fixed that, and both gates confirmed it on 25+ inputs against main's tool (0 lost everywhere except the disclosed false-close case).
 - Attempt 2 failed on the correction's own property test. It builds main's tool from `origin/main` and asserts one exact loss. After merge, `origin/main` is this tool, so the assertion fails and main's governance CI turns red on merge and on every later run. That test also carries no recorded mutation of its own.
