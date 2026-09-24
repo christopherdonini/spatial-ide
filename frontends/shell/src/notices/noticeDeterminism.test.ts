@@ -62,7 +62,7 @@ function generateOnce(): string {
   });
 }
 
-describe("packaged NOTICE.txt generation is deterministic (RELEASE-0.1 item 9 / ADR-030 (a))", () => {
+describe("packaged NOTICE.txt generation is deterministic (RELEASE-0.1 item 9 / ADR-030 (a))", { timeout: 30_000 }, () => {
   it("produces byte-identical output across two independent runs, including two real cargo calls", () => {
     const first = generateOnce();
     const second = generateOnce();

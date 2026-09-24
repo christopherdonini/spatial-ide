@@ -114,7 +114,7 @@ and records no timing.
   test asserts either verbatim.
 - **No ADR is amended by this file.** Cited: **ADR-010** rule 5 (`:68`, *"Staleness is signalled,
   never silently served"*) and rule 6 (`:70`, *"Capacity ceilings are declared, not discovered"*);
-  **ADR-016** and its Proposed Amendment 1 (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:31-43`,
+  **ADR-016** and its Proposed Amendment 1 (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 31-43 at 433413a,
   the `by-construction-within-generation` basis, implemented at `engine/src/identity.rs:118-126`);
   **ADR-018**; **ADR-019** (tickets; `kernel/src/skp.rs:97-99`); **ADR-021** (no wire change beyond
   `skp/0.3`); **ADR-028** (residency contract, `frontends/shell/src/residency/*`). The **ADR-016
@@ -294,7 +294,7 @@ scores, and says so rather than claiming the gate).
   consistency, cannot detect every in-place modification, and may detect a change during a query only
   at the post-check** (boundary 4, `state/NEXT-CUT.md:60-63`).
 - The amendment's rule-3 text this discharges, verbatim from the Proposed draft
-  (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`): *"A detected change
+  (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a): *"A detected change
   invalidates G: new tickets refused under G, in-flight producer streams cancelled through the
   existing cancel, residency cleared, picks refused until reopen, and a typed status 'source changed
   during use'."*
@@ -1027,7 +1027,7 @@ That commit is the one that wrote Amendment 11, whose own `:942` says *"Amendmen
 
 ---
 
-**(4) §2e's ADR-016 rule-3 reproduction (`:296-300`) is not byte for byte against its named source.** Introduced *"verbatim from the Proposed draft (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`)"*, §2e's quote is shortened and single-quoted. The source span, `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`, reproduced here byte for byte:
+**(4) §2e's ADR-016 rule-3 reproduction (`:296-300`) is not byte for byte against its named source.** Introduced *"verbatim from the Proposed draft (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a)"*, §2e's quote is shortened and single-quoted. The source span, `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a, reproduced here byte for byte:
 
 > **3. Change handling — the read-around policy, declared.** Checks run **before every query issue
 > and after every stream terminal**. A detected change invalidates G: new tickets refused under G,
@@ -1171,4 +1171,56 @@ Against this, §2e's `:296-300` drops the emphasis on **existing** (source `:54`
 | Amendment 15, gap 3 | settled | round 14, item 2 |
 | Amendment 13 (3), and Amendment 8's two driver-output quotes it checks | recorded: evidence, not Authority; the rule dated non-retroactive | round 15, item 4 |
 
+**Read this amendment first, for Amendments 1-16.**
+
+---
+
+### Amendment 18 -- P5's G-A2 shell-side row: owner residency-clearing proven end-to-end, real app (2026-09-18, appended)
+
+**Written after this piece's results were seen (class 1, `docs/PREREGISTRATION-TEMPLATE.md:103-105 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:bf67639cc8f151ef4bd47156a7421ec9b89bf85e602bbb8e20575c02edbf54ed`).** Filed as 18, not the mechanically-next 17: Amendment 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18; this amendment does not touch Amendments 1-16. Full run detail lives at that document's own record, cross-cited below, not duplicated here. Report paths under `frontends/shell/e2e/out/` are gitignored real-app run output, cited by path and this run's date (2026-09-18) only.
+
+| id | status | reference |
+| --- | --- | --- |
+| G-A2 -- owner residency clearing on the post-check route, real app | discharged | Full evidence (pre-route reconfirmation, post-route isolated/mutated/reverted runs, driver): `engine/ADMISSION-PREREGISTRATION.md` **§12e Amendment 16**, its G-A2 rows. |
+| Owner's `clearAllTiles()` call site exercised by the mutation | pinned | `frontends/shell/src/residency/candidateArmSession.ts:1076 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:cf363518c47ce44d0f43d6fd9057ef38c9c19cd864e100fe1e1cb96d73058bc1`, inside `endCandidateSession`, the unified owner-clearing call its own doc comment names for every route in -- `frontends/shell/src/residency/candidateArmSession.ts:1052-1067 @ 9af7308d7d11f79cb43fd2f2021a47071f49eeb1 sha256:76abd5ea0ac915a54bcf03aff78b2506dd4448fa84b33824c4191bff2786d7a1`, both the tiled and untiled arms and both routes. Removing it, re-running the post-check route, leaves the owner's status/refusal text correct while residency itself does not clear -- the mutation isolates the owner's clearing act from its messaging, the same act/consequence split this document's own vocabulary keeps. |
+
 **Read this amendment first.**
+
+---
+
+### Amendment 17 -- class 3 (test text), the six titles aligned to §4 (2026-09-18, appended)
+
+**Written after `cut/briefa-p3b-test-names`'s renames landed on that branch.** **Read this amendment first** for the rows below; Amendment 15 remains the resolution point for everything else it lists. Classes: **3** throughout (round 14, item 2's test-text exception; `docs/PREREGISTRATION-TEMPLATE.md:112-114 @ 5632f94 sha256:8933bc8e294970c5cf38be8b25c680322f3adb5480b3fa28b842c633efcb1ce5`). The six T-rows below are **bare references** -- path and test name, no line, no hash: the name is the claim itself, a hash pin at a branch commit is forbidden (round 15, item 1, clause (e)), and a pin at `main` is impossible before this branch merges. The ten superseded-quotation rows are pinned `@ 46cde2c`, which is on `main`. This amendment claims nothing about any item it does not list.
+
+| id | status | reference |
+| --- | --- | --- |
+| T3 | title aligned to §4 | `kernel/tests/session_generation.rs`, fn `the_dead_ticket_record_is_bounded` |
+| T4 | title aligned to §4 | `frontends/shell/src/streaming/viewportStreamManager.test.ts`, `a_source_changed_terminal_clears_the_working_canvas_residency` |
+| T5 | title aligned to §4, the untiled case | `frontends/shell/src/residency/candidateArmSession.test.ts`, `a_source_changed_terminal_on_either_stream_clears_every_resident_tile` |
+| T6 | title aligned to §4 | `frontends/shell/src/App.test.ts`, `the_pre_check_refusal_latches_the_session_in_the_untiled_catch` |
+| T7 | title aligned to §4 | `frontends/shell/src/streaming/tileViewportStreamManager.test.ts`, `the_pre_check_refusal_latches_the_session_on_a_tile_mint` |
+| T9 | title aligned to §4 | `frontends/shell/src/streaming/formatTerminalRefusal.test.ts`, `a_terminal_refusal_reaches_the_operator_without_its_machine_prefix` |
+| T5, scope | the claimed name sits on the untiled first-look case; the tile-stream case keeps its own title; both assert the clearing; Amendment 4 (c) item 2's class-2 split disclosure stands | `frontends/shell/src/residency/candidateArmSession.test.ts`, untiled: `a_source_changed_terminal_on_either_stream_clears_every_resident_tile`; tile-stream: `a TILE stream's terminal ends the session and clears every tile` |
+| Amendment 4 (a) table, row 2a(ii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:600 @ 46cde2c sha256:f6bd5501f35b779f518c774f0e9f40cd2da1a38938b732ff668055efbb65dff1` |
+| Amendment 4 (a) table, row 2a(iii) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:601 @ 46cde2c sha256:2ecf5459bf515aa9eb6e7a351f8916089f5a097d551a29d22030de1985f97311` |
+| Amendment 4 (a) table, row 2b | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:604 @ 46cde2c sha256:4ce36104f4c83983a028b2a420dada75d35b994f551f775ee62203d09aad5d9d` |
+| Amendment 4 (c), item 1 | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:621 @ 46cde2c sha256:88d89d06ede95c83d1f24f9cb88f1e467516d658b7cd9343955add460c587a44` |
+| Amendment 4 (c) item 2's table, T3 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:627 @ 46cde2c sha256:9de743ddfeb3d03902d2f1f4c20483021aea090ab05b03c08cfa845af152be43` |
+| Amendment 4 (c) item 2's table, T4 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:628 @ 46cde2c sha256:c38c8a40443831d954ca62f5120379c527a0c55fdc0c6937cd5b99e2ad6e8092` |
+| Amendment 4 (c) item 2's table, T5 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:629 @ 46cde2c sha256:95e03985d5f95058c31f6947e87187c7cfc73b4beebc6d28147c8f7265e24a4f` |
+| Amendment 4 (c) item 2's table, T6 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:630 @ 46cde2c sha256:d906473971bfdfa80a82fe717c78cc1e657ffc75187a6aeaf288b47437a368c9` |
+| Amendment 4 (c) item 2's table, T7 row | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:631 @ 46cde2c sha256:d04e3d6c2914b39d7483aae409fe02dc1a37db85d9d7f61abea52f2551198465` |
+| Amendment 4 (f) table, the instrument-exemption row (`GenerationRegistry::dead_ticket_count`) | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:677 @ 46cde2c sha256:2a2ebfac9b64a428c084c4faab28defafb25e96e6d1c5588973528474fd4f8ff` |
+| Amendment 10 (b), the §4-T6 paragraph | quotes the title as of `46cde2c`; superseded | `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:912 @ 46cde2c sha256:af2ecbc2dab258ffb996d260ac1517873c52eb4068247d2dd3da57ea42abb5c9` |
+
+**Read this amendment first.**
+
+### Amendment 19 -- pointer: Amendment 18's row is narrowed by the engine record (2026-09-18, appended)
+
+**Written after the architect gate's attempt-2 findings were seen.** Class **3** (pointer row). Filed as 19: 17 is carried by cut/briefa-p3b-test-names (PR #90), per the coordinator's numbering of 2026-09-18.
+
+| id | status | reference |
+| --- | --- | --- |
+| Amendment 18's "discharged" | narrowed | `engine/ADMISSION-PREREGISTRATION.md` §12e Amendment 17, its first row. |
+
+**Read this amendment first, for Amendments 1-19.**

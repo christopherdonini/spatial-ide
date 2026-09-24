@@ -4,7 +4,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { CrsInfo, IdentityInfo } from "../skp/types";
-import { crsSummaryLine, identitySummaryLine } from "./describeSummaryText";
+import {
+  crsProvenanceLine,
+  crsSummaryLine,
+  displayConventionLine,
+  identitySummaryLine,
+  sessionStatementLine,
+} from "./describeSummaryText";
 
 function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
   return {
@@ -85,5 +91,75 @@ describe("identitySummaryLine (I6: the payload's own uniqueness fact, verbatim, 
     const line = identitySummaryLine(identity);
     expect(line).toBe("mapped:parcel_key — verified-at-open-full-file");
     expect(line).not.toBe("mapped:parcel_key — unique");
+  });
+});
+
+describe("crsProvenanceLine (round 16, item 1: crs.provenance and crs.axis_provenance rendered verbatim)", () => {
+  // RECORDED MUTATION for "crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated":
+  // swap the two fields (`return `${crs.axis_provenance}, ${crs.provenance}`;`). Expected failure:
+  // the exact-string assertion below no longer matches ("axis:declared, crs:declared" instead of
+  // "crs:declared, axis:declared").
+  it("crsProvenanceLine renders crs.provenance and crs.axis_provenance verbatim, comma-separated", () => {
+    const line = crsProvenanceLine(fileCrs({ provenance: "crs:declared", axis_provenance: "axis:declared" }));
+    expect(line).toBe("crs:declared, axis:declared");
+  });
+});
+
+describe("sessionStatementLine (round 16, item 1: identity.session_statement rendered verbatim, only when non-null)", () => {
+  // sessionStatementLine is a pass-through (describeSummaryText.ts:56-58); this unit test drives it
+  // from a plainly-marked placeholder, not the wire's sentence. The real fixture's own bytes --
+  // the shared fixture `protocol/skp/tests/fixtures.rs:120` also reads -- reach this function
+  // unchanged, proven by the seam test named at fixtures.test.ts:174 ("describe response for a
+  // session-ordinal dataset..."), which loads v0-describe-response-session-ordinal.json. The
+  // fixture's transcription of `SESSION_IDENTITY_STATEMENT` (engine/src/identity.rs:145) is not
+  // asserted byte-for-byte by any test (only a substring, fixtures.test.ts:186, and is_some(),
+  // protocol/skp/tests/fixtures.rs:129) -- a pre-existing fixture-regime gap this piece did not create.
+  //
+  // RECORDED MUTATION for "sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal":
+  // replace the returned value with a paraphrase (`return identity.session_statement === null ? null : "a session-ordinal identity";`).
+  // Expected failure: the first assertion below no longer matches the placeholder string.
+  it("sessionStatementLine renders identity.session_statement verbatim, and null when the identity is not session-ordinal", () => {
+    const sessionOrdinal: IdentityInfo = {
+      source: "session-ordinal:file_row_number",
+      uniqueness: "by-construction-within-generation",
+      verified_rows: null,
+      max_value: null,
+      js_exact: null,
+      class: "session-ordinal",
+      session_statement: "<session statement placeholder>",
+    };
+    expect(sessionStatementLine(sessionOrdinal)).toBe("<session statement placeholder>");
+
+    const native: IdentityInfo = {
+      source: "file:id",
+      uniqueness: "verified-at-open-full-file",
+      verified_rows: "100000",
+      max_value: "99999",
+      js_exact: true,
+      class: "native",
+      session_statement: null,
+    };
+    expect(sessionStatementLine(native)).toBeNull();
+  });
+});
+
+describe("displayConventionLine (DECISIONS-PENDING.md RULED 2026-09-23 (late), entry 119 item (5): crs.display_convention rendered verbatim, only when non-null)", () => {
+  // displayConventionLine is a pass-through (describeSummaryText.ts:67-69); this unit test drives it
+  // from a plainly-marked placeholder, not the wire's sentence (the same discipline
+  // sessionStatementLine's test above uses, and for the same reason -- the real sentence is never
+  // retyped as a TypeScript literal, types.ts:93-99). The real fixture's own bytes reach this
+  // function unchanged, proven by the seam assertion in fixtures.test.ts.
+  //
+  // RECORDED MUTATION for "displayConventionLine renders crs.display_convention verbatim, and null when the dataset has none":
+  // replace the returned value with a fixed paraphrase (`return crs.display_convention === null ? null : "a display convention applies";`).
+  // Observed failure (applied and reverted, worker run): "AssertionError: expected 'a display
+  // convention applies' to be '<display convention placeholder>' // Object.is equality" at this
+  // file's `expect(displayConventionLine(degrees)).toBe("<display convention placeholder>")` line.
+  it("displayConventionLine renders crs.display_convention verbatim, and null when the dataset has none", () => {
+    const degrees = fileCrs({ display_convention: "<display convention placeholder>" });
+    expect(displayConventionLine(degrees)).toBe("<display convention placeholder>");
+
+    const projected = fileCrs({ display_convention: null });
+    expect(displayConventionLine(projected)).toBeNull();
   });
 });

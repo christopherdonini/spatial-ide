@@ -125,6 +125,7 @@ const PACKAGE_DECISIONS = [
     tree: 'Cargo.toml', name: 'ryu', version: '1.0.23', license: 'Apache-2.0 OR BSL-1.0',
     decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1: CDLA-Permissive-2.0 is a permissive **data** license, accepted
   // for the root certificate set `webpki-roots` distributes.
@@ -132,6 +133,7 @@ const PACKAGE_DECISIONS = [
     tree: 'Cargo.toml', name: 'webpki-roots', version: '1.0.9', license: 'CDLA-Permissive-2.0',
     decided: '2026-08-07',
     why: 'CDLA-Permissive-2.0, a permissive data license, over a distributed root certificate set',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1. The bake-off crate is ADR-012 decision evidence, pinned to the
   // trees its phases were measured on; the same OR-branch reasoning applies to the same version.
@@ -139,12 +141,14 @@ const PACKAGE_DECISIONS = [
     tree: 'protocol/transport-bakeoff/Cargo.toml', name: 'ryu', version: '1.0.23',
     license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // 2026-08-07 — same note, item 1, and the same OR-branch reasoning again in the third tree.
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'ryu', version: '1.0.23',
     license: 'Apache-2.0 OR BSL-1.0', decided: '2026-08-07',
     why: 'accepted under the Apache-2.0 branch of its OR expression; BSL-1.0 is not relied on',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   // ---- 2026-08-07 — same note, item 1: the five MPL-2.0 crates ----------------------------------
   //
@@ -155,31 +159,64 @@ const PACKAGE_DECISIONS = [
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser',
     version: '0.36.0', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'cssparser-macros',
     version: '0.6.1', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'dtoa-short',
     version: '0.3.5', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'option-ext',
     version: '0.2.0', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
   },
   {
     tree: 'spikes/adr-003-crs-rendering/app/src-tauri/Cargo.toml', name: 'selectors',
     version: '0.36.1', license: 'MPL-2.0', decided: '2026-08-07',
     why: 'spike-only, transitive via Tauri, compatible regardless',
+    source: 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: lightningcss. It arrives through
+  // `vite-node`'s nested `vite` (approved by this same entry as `vite-node@^6.0.0`), which resolves
+  // to `vite@8.3.0` under `node_modules/vite-node/node_modules/vite` and declares a direct (not
+  // optional) dependency on `lightningcss@^1.33.0` (`frontends/shell/package-lock.json`). Build-time-
+  // only (dev tooling, not in the Rollup module walk that defines frontends/shell's shipped set); not
+  // in any shipped set. A fresh decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'lightningcss', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 116',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 116: the platform binary for
+  // lightningcss on this machine. Same reasoning as the entry above.
+  {
+    tree: 'frontends/shell', name: 'lightningcss-win32-x64-msvc', version: '1.33.0', license: 'MPL-2.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 116',
+  },
+  // 2026-09-20 — DECISIONS-PENDING.md RULED 2026-09-20, entry 117: caniuse-lite. Already at
+  // 1.0.30001809 on `origin/main` before this piece's fix (`git show eab8e82:frontends/shell/package-
+  // lock.json`) — not bumped by the forced audit fix; the entry approves the existing version rather
+  // than a new one. Build-time-only (browserslist/tooling data, not in any shipped set). A fresh
+  // decision is required if it ever enters a shipped set.
+  {
+    tree: 'frontends/shell', name: 'caniuse-lite', version: '1.0.30001809', license: 'CC-BY-4.0',
+    decided: '2026-09-20',
+    why: 'build-time-only, not in any shipped set; a fresh decision is required if it ever enters a shipped set',
+    source: 'DECISIONS-PENDING.md, RULED 2026-09-20, entry 117',
   },
 ];
-
-/** The note every entry above cites, named once so the report can print the citation. */
-const DECISION_SOURCE = 'PRE-PUBLIC-CHECKLIST.md — "Human decisions — 2026-08-07", item 1';
 
 /** Which decisions were actually matched this run, so a stale one becomes visible (see the report). */
 const usedDecisions = new Set();
@@ -209,6 +246,7 @@ const CARGO_TREES = [
 /** The npm workspaces to audit. */
 const NPM_TREES = [
   ['renderer/bundle-viewer (ships inside every published bundle)', 'renderer/bundle-viewer'],
+  ['frontends/shell (the packaged app\'s frontend)', 'frontends/shell'],
   ['frontends/canvas-probe', 'frontends/canvas-probe'],
   ['protocol/transport-bakeoff/web', 'protocol/transport-bakeoff/web'],
   ['spikes/adr-003-crs-rendering/app', 'spikes/adr-003-crs-rendering/app'],
@@ -270,7 +308,7 @@ function verdictFor(tree, name, version, license, licenseFile) {
   if (base.verdict !== 'REVIEW') return base;
   const d = decisionFor(tree, name, version, license ?? '');
   if (!d) return base;
-  return { verdict: 'decided', why: d.why, decided: d.decided, flaggedFor: base.why };
+  return { verdict: 'decided', why: d.why, decided: d.decided, source: d.source, flaggedFor: base.why };
 }
 
 function cargoTree(label, manifest) {
@@ -428,7 +466,7 @@ const w = (s = '') => lines.push(s);
 
 w('# Dependency-license audit');
 w();
-w('**Generated by `scripts/audit-dependency-licenses.mjs`. Do not edit by hand — re-run it.**');
+w('**Generated by `scripts/audit-dependency-licenses.mjs`. Do not edit by hand — re-run it.** The "Third-party data terms" section is hand-maintained and preserved verbatim by the script.');
 w();
 w('ADR-009 pre-public checklist item 4. Read from metadata already on this machine: `cargo metadata');
 w('--offline` and the `license` field of each installed `node_modules/*/package.json`. **Nothing here');
@@ -468,6 +506,9 @@ w('- **The cargo side counts dev- and build-dependencies.** `cargo metadata` res
 w('  package total overstates what actually ships. That is the conservative direction — a license');
 w('  question is raised about a build-time tool that may never be distributed — but it is not the');
 w('  shipped surface, and this report does not separate the two.');
+w('- **The npm side counts dev- and build-dependencies too.** The `node_modules` walk reads every');
+w('  installed package, so a build-time tool or a browser-support data table is a row here whether');
+w('  or not it ships; the shipped surface is defined by the notice generators, not by this report.');
 w('- **Nothing about the code itself** — vendored sources, copied snippets, or a dependency that');
 w('  bundles third-party code under a different license than its own. `engine/` builds DuckDB from');
 w('  vendored C++, which this sees as one crate.');
@@ -490,17 +531,17 @@ if (decided.length) {
   w('and for the reason shown. They are printed rather than merely omitted: a decision that only');
   w('shows up as the absence of a review line is one nobody can audit.');
   w();
-  w('| Tree | Package | Version | Declared | Flagged because | Decided | Reason |');
-  w('|---|---|---|---|---|---|---|');
+  w('| Tree | Package | Version | Declared | Flagged because | Decided | Reason | Source |');
+  w('|---|---|---|---|---|---|---|---|');
   for (const d of decided) {
     w(
       `| ${d.tree} | \`${d.name}\` | ${d.version} | \`${d.license}\` | ${d.flaggedFor} | ` +
-        `${d.decided} | ${d.why} |`,
+        `${d.decided} | ${d.why} | ${d.source} |`,
     );
   }
   w();
-  w(`Source for every decision above: **${DECISION_SOURCE}**. Counsel confirms per ADR-009's Caveat`);
-  w('before anything commercial; nothing here is a legal conclusion.');
+  w('Each row cites the note where a human accepted that exact package. Counsel confirms per');
+  w('ADR-009\'s Caveat before anything commercial; nothing here is a legal conclusion.');
   w();
 }
 
@@ -552,8 +593,54 @@ if (flagged.length === 0) {
   for (const f of flagged) {
     w(`| ${f.tree} | \`${f.name}\` | ${f.version} | ${f.license ? `\`${f.license}\`` : '*(none)*'} | ${f.why} |`);
   }
+  w();
+  w('**This is not a statement that the dependency tree is legally clear**, and it must not be cited');
+  w('as one. Each row above is a question the mechanical check raised, over the coverage stated above.');
 }
 w();
+
+// ---- the hand-maintained "Third-party data terms" section --------------------------------------
+//
+// Everything above this point is generated fresh from metadata on disk. `DEPENDENCY-LICENSES.md`
+// also carries one section this script has never generated: the EPSG/IOGP data-terms compliance
+// record, added directly across thirteen-plus commits (`78f480b`..`4455fc3`) with no script behind
+// any of them. Overwriting it would silently delete that record, so it is read back from the report
+// this run is about to replace and re-emitted here, byte for byte, in the same position the tracked
+// file already carries it -- between "Needs human review" and "Full inventory". A run that cannot
+// find it fails closed: one line naming the missing heading, exit 1, nothing written. The block ends
+// at the next `## ` heading, so a `## ` heading added inside it would end it early; use `### ` inside.
+const EXISTING_REPORT_PATH = join(ROOT, 'DEPENDENCY-LICENSES.md');
+const THIRD_PARTY_HEADING = '## Third-party data terms';
+
+function readHandMaintainedThirdPartySection() {
+  if (!existsSync(EXISTING_REPORT_PATH)) {
+    console.error(
+      `DEPENDENCY-LICENSES.md does not exist yet, so the hand-maintained "${THIRD_PARTY_HEADING}" ` +
+        'section cannot be read back and preserved. Aborting without writing a report; restore the ' +
+        'tracked file first (git checkout -- DEPENDENCY-LICENSES.md).',
+    );
+    process.exit(1);
+  }
+  const existingLines = readFileSync(EXISTING_REPORT_PATH, 'utf8').split('\n');
+  const start = existingLines.findIndex((l) => l.startsWith(THIRD_PARTY_HEADING));
+  if (start === -1) {
+    console.error(
+      `The hand-maintained "${THIRD_PARTY_HEADING}" section is missing from the existing ` +
+        'DEPENDENCY-LICENSES.md. Aborting without writing a report, rather than silently dropping it.',
+    );
+    process.exit(1);
+  }
+  let end = existingLines.length;
+  for (let i = start + 1; i < existingLines.length; i += 1) {
+    if (existingLines[i].startsWith('## ')) {
+      end = i;
+      break;
+    }
+  }
+  return existingLines.slice(start, end);
+}
+
+for (const line of readHandMaintainedThirdPartySection()) w(line);
 
 w('## Full inventory');
 w();

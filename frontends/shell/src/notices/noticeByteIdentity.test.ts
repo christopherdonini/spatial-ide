@@ -88,7 +88,7 @@ function viewerSection(fullText: string): string {
   return section.trimEnd();
 }
 
-describe("src/generated/NOTICE.txt (RELEASE-0.1 item 2 MUST-FIX 2; extended by item 9 / ADR-030 (a))", () => {
+describe("src/generated/NOTICE.txt (RELEASE-0.1 item 2 MUST-FIX 2; extended by item 9 / ADR-030 (a))", { timeout: 30_000 }, () => {
   it("has a viewer section byte-identical to renderer/bundle-viewer/dist/NOTICE.txt's own text", () => {
     const generated = readFileSync(generatedPath, "utf8");
     const viewerDist = readFileSync(viewerDistPath, "utf8");

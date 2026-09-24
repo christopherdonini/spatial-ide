@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T05:42:40.648Z",
+  "generated_at": "2026-09-24T18:15:23.211Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,34 +9,34 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 61344825344,
+        "bytes": 56556212224,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 415102676992,
+        "bytes": 383180820480,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 4,
+    "total": 3,
     "by_name": {
       "cargo": 0,
-      "node": 4,
+      "node": 3,
       "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 31
+    "n": 63
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 21,
-    "first_pass": 12,
-    "rate": 0.5714285714285714
+    "nodes": 44,
+    "first_pass": 16,
+    "rate": 0.36363636363636365
   },
   "record_rounds": {
     "present": true,
@@ -44,8 +44,22 @@
       "briefa-p3b-owner-side-invalidation": 5,
       "lod-tier-builder-route-b": 4,
       "governance-verify-quotes": 3,
-      "governance-record-round-count": 1
+      "governance-record-round-count": 1,
+      "briefa-p3b-test-names": 1,
+      "briefa-p5-gate-tests": 1,
+      "briefa-p4-corpus-run": 2,
+      "briefa-p6-describe-fields": 1,
+      "adr-013-display-statement": 2,
+      "drill-fix-release-only-guard": 1,
+      "governance-verify-gate-file-exists": 1,
+      "known-limitations-owed-rows": 1,
+      "engine-tests-configured-connections": 1,
+      "drill-fix-viewer-build-order": 1,
+      "shell-dependency-audit-piece": 1,
+      "crs-unit-fact-and-bounds": 1,
+      "fixture-regeneration-entry-point": 1,
+      "governance-verify-mutation-multiline-attrs": 1
     },
-    "total": 13
+    "total": 29
   }
 }

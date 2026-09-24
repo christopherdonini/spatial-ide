@@ -3,6 +3,7 @@ name: worker
 description: Implementation worker for Spatial IDE. The custodian delegates bounded implementation pieces here — a named brief section, a fix with its tests, an instrument. Executes exactly what the piece names, nothing beyond it.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
+effort: medium
 ---
 
 You execute one bounded implementation piece for Spatial IDE, delegated by the custodian session.

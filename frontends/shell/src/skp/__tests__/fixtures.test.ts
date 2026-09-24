@@ -22,6 +22,7 @@ import type {
 } from "../types";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
+import { crsProvenanceLine, displayConventionLine, sessionStatementLine } from "../../admission/describeSummaryText";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -183,12 +184,30 @@ describe("SKP v0 shared fixtures", () => {
     // A1: the statement says the identity does not outlive the open. It never says the open read
     // one snapshot, and no string on this response does.
     expect(res.identity.session_statement).toContain("does not survive this open");
+    // Cross-module seam, real shape (round 16, item 1; reviewer gate attempt 1, B1): the two
+    // describeSummaryText.ts render functions are pass-throughs of this fixture's own bytes, not a
+    // retyped sentence. `res.identity.session_statement` is asserted non-null above (`toBeTruthy`);
+    // this fixture's own JSON carries it at
+    // `protocol/skp/tests/data/v0-describe-response-session-ordinal.json:29`.
+    expect(sessionStatementLine(res.identity)).toBe(res.identity.session_statement);
+    expect(crsProvenanceLine(res.crs)).toBe("crs:format-default, axis:declared");
     // The equirectangular sentence travels over the wire from the Rust constant. This test asserts
     // its bytes are carried; it is deliberately the only place in this frontend that quotes it, and
     // it quotes it from the fixture rather than retyping it into rendering code.
     expect(res.crs.display_convention).toBe(
       "no coordinate value is transformed; the display convention is equirectangular"
     );
+    // Cross-module seam, real shape (ADR-013 display statement piece): displayConventionLine is a
+    // pass-through of this fixture's own bytes, not a retyped sentence -- res.crs.display_convention
+    // is asserted verbatim above.
+    //
+    // RECORDED MUTATION for this seam assertion: displayConventionLine mutated to
+    // `return null;` unconditionally. Observed failure (applied and reverted, worker run):
+    // "AssertionError: expected null to be 'no coordinate value is transformed; t…' // Object.is equality"
+    // at this file's
+    // `expect(displayConventionLine(res.crs)).toBe(res.crs.display_convention)`
+    // line.
+    expect(displayConventionLine(res.crs)).toBe(res.crs.display_convention);
     expect(res.crs.provenance).toBe("crs:format-default");
 
     // **A2 on the wire**: no generation value anywhere on this response. The word itself is not

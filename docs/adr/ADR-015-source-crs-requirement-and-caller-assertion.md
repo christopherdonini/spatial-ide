@@ -151,3 +151,54 @@ retired, not promoted.
 > non-x-first source is *permitted* is settled in §5: the `docs/05` conflict resolves lower-number-
 > wins in favour of `docs/01` principle 8. What is undecided is whether normalizing should replace
 > refusing once it can be done correctly, and where that would happen and how it would be recorded.
+
+## Amendment 1 — format-governed inputs, and provenance as a recorded fact (2026-09-23, appended — Accepted)
+
+
+**1. §5 sentence 1 carries two facts, not one.** The **declared** axis order is established from
+the CRS definition, never assumed. The **data's** axis order is established from the source
+format's own specification where that specification states one, and from the definition otherwise.
+Where the two differ, **both are recorded**, with the rule and the specification version that
+established the data order, and neither is inferred from the other. **The definition's own axis
+order is retained as a recorded fact and never discarded** — it is what a later reprojection or
+export needs, and a slice that discards it has destroyed a file fact to save a field.
+
+**2. Sentence 3 narrows.** `AxisOrderUnsupported` refuses sources for which **no format rule
+establishes the data order**. Sentence 2 (`AxisOrderUnestablished` — a definition with no
+coordinate system) and sentence 4 (`axis_normalization = none-performed`) are **unchanged**:
+nothing is normalized, and the record still says what was done rather than what was assumed. The
+`docs/05` conflict block quoted in §5 is unchanged — refusing remains the resolved behaviour
+wherever it still applies, not a gap.
+
+**3. §2's second sentence narrows, and this is a reversal stated plainly rather than smuggled.**
+§2 reads *"GeoParquet's OGC:CRS84 default is not applied."* Under this amendment an **absent**
+`crs` key is admitted under the format's own published rule and recorded as `crs:format-default`.
+An explicit `"crs": null` is **unchanged**: unknown, refused, assertion required. The distinction
+is the whole of the narrowing — absent means the format has already spoken; explicit null means
+the file has said "I do not know", and no rule may answer for it.
+
+**4. §6 stands, and this amendment is not an exception to it.** *"No guessing, no default, no
+fallback"* forbids an **engine-invented** default. A format's own published rule, applied only to
+inputs that format governs, quoted verbatim and pinned by URL, retrieval date and page hash, is a
+read fact and is recorded as one. **A format rule that is not pinned in the tree may not be
+applied** — the pinning is the difference between reading a rule and remembering one.
+
+**5. The provenance classes are recorded facts, never judgements.** Five values, each naming what
+was read and from where: `crs:declared` (the file's own `crs`), `crs:asserted` (§3, unchanged),
+`crs:format-default` (the format's rule, absent key), `axis:declared` (from the definition),
+`axis:format-override` (from the format's specification, with its version). They are recorded on
+`describe` and travel with the dataset. **None of them is an equivalence finding** — §4 and §7's
+closing sentence are untouched, and this amendment licenses no later code to assume otherwise.
+
+**6. The range check is a sanity check, not a truth test, and its assurance is recorded.** Its
+level is recorded per open as exactly one of `metadata` (geo `bbox` or column statistics), `sample`
+(first row group) or `none`. **It never reads all coordinates at open.** It can convict a
+malformed file; it can never establish conformance. Its stated limit, which travels with it into
+KNOWN-LIMITATIONS: *"A projected file inside ±180/±90 is NOT detected by it"* **[Brief A boundary
+2, verbatim]**. No text may describe it as verifying, confirming or validating anything.
+
+**7. Unchanged:** §1, §3, §4, §6 (as read in item 4), §7 in full, the Consequences, and the two
+OPEN blocks. **The §5 OPEN block — the normalize-later question — is not answered here**, and this
+amendment must not be cited as answering it.
+
+**Acceptance (2026-09-23).** Amendment 1 is accepted on the human's word, as it stands: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (1). Its text above is appended verbatim from the Proposed text block of `docs/adr/PROPOSED-amendment-to-ADR-015-format-governed-inputs-and-provenance-classes.md` as it stood at 433413a, which this commit deletes: the blockquote markers are removed and the heading's date is filled; nothing else changes. Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N1, N2 and N4, operator-verified in its Part N run section; `engine/ADMISSION-RESULTS.md`.
