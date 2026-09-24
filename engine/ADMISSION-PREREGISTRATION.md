@@ -1750,3 +1750,7 @@ text is not on main, the commit named is the branch commit that carries it.
 | `ADMISSION-RESULTS.md` row #8's verdict label | recorded defect, not regenerated here: the label names retention among the components compared and §3 row 8 registers no retained declared order; the row's own note is the authoritative record of what was compared, and the label is built from a fixed string rather than that note's list (`engine/tests/admission_p4_corpus.rs`, `verdict_label`) | row `engine/ADMISSION-RESULTS.md:19 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:da0009efa2cb73e025aa963669e2682678d721ec381b3685ea506af36311eb87`; note `engine/ADMISSION-RESULTS.md:39 @ ff1b48168f2d15ef8e56613113c0bb11a5d01556 sha256:61c6c6bbddf3de0a7458f7df0f886da2212163683828170095495c2abe87f054` |
 
 **Read this amendment first.**
+
+### Amendment 21 -- P6 record: G-A7 (2026-09-23, appended)
+
+References only (the record cap). G-A7, Part N operator-verified: `frontends/shell/MANUAL-WALKTHROUGH.md`, section "Part N run" -- Run 1 (2026-09-20, build b7c6788: N1-N7, N9), the N8 retest (2026-09-23, 7301dc6), and the N1 re-sight with the N8 rerun (2026-09-23, 8704535). The human's words: `state/directives/2026-09-22-part-n-n8-and-sequencing.md`, `state/directives/2026-09-23-n8-retest-and-handoff.md`, `state/directives/2026-09-23-sitting-n1-n8.md`. The five ADR acceptances: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) and (later) blocks.

@@ -98,7 +98,7 @@ unchanged; refusals typed. Reviewer + architect (data plane).
 **Surface.** `spatial-recipe/1`: source ResourceRef (identity = sha256; locator = relative
 path where practical; identity policy), CRS assertion + provenance class, predicate + dialect,
 style document (ADR-017 §5a format), viewport, declared publish scope, recipe version,
-host-attributed created/updated stamps (ADR-024 F-5 form). Save = Tier-2 prepare (item 10's
+host-attributed created/updated stamps (ADR-024 F-5 form). Save = reference Save, no whole-file scan; Prepare, a separate explicit verb (Save vs Prepare, below), is the Tier-2 acquisition (item 10's
 cancellable, progress-reported hash) → atomic write. Reopen = the state machine in boundary 3
 with re-admission; the "verifying source…" status; rebind action producing a new recipe version
 on explicit prepare; the original preserved.
@@ -135,7 +135,7 @@ byte. Reviewer + architect; the exposure review is the human's.
 Two corpus files — one projected with integer ids, one CRS84 with string ids and no id column:
 (1) open — map, provenance class, identity statement; (2) inspect — projected attributes on
 hover; (3) filter — a `duckdb-expr/0` predicate, count shown; (4) colour — the existing `match`;
-(5) save — cancel mid-hash writes nothing, typed; complete writes the recipe; (6) reopen —
+(5) save — the reference recipe, no whole-file scan; prepare (explicit) — cancel mid-hash writes nothing, typed; complete records the prepared revision; (6) reopen —
 preview immediately, filter/style/viewport restored, promotion to `verified`; (7) mutate the
 source, reopen — "source changed since save", attribute parts applied, identity parts declared
 invalid, original recipe intact, rebind offered; (8) publish, scope = filtered dataset —

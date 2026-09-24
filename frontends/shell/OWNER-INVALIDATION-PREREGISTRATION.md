@@ -114,7 +114,7 @@ and records no timing.
   test asserts either verbatim.
 - **No ADR is amended by this file.** Cited: **ADR-010** rule 5 (`:68`, *"Staleness is signalled,
   never silently served"*) and rule 6 (`:70`, *"Capacity ceilings are declared, not discovered"*);
-  **ADR-016** and its Proposed Amendment 1 (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:31-43`,
+  **ADR-016** and its Proposed Amendment 1 (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 31-43 at 433413a,
   the `by-construction-within-generation` basis, implemented at `engine/src/identity.rs:118-126`);
   **ADR-018**; **ADR-019** (tickets; `kernel/src/skp.rs:97-99`); **ADR-021** (no wire change beyond
   `skp/0.3`); **ADR-028** (residency contract, `frontends/shell/src/residency/*`). The **ADR-016
@@ -294,7 +294,7 @@ scores, and says so rather than claiming the gate).
   consistency, cannot detect every in-place modification, and may detect a change during a query only
   at the post-check** (boundary 4, `state/NEXT-CUT.md:60-63`).
 - The amendment's rule-3 text this discharges, verbatim from the Proposed draft
-  (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`): *"A detected change
+  (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a): *"A detected change
   invalidates G: new tickets refused under G, in-flight producer streams cancelled through the
   existing cancel, residency cleared, picks refused until reopen, and a typed status 'source changed
   during use'."*
@@ -1027,7 +1027,7 @@ That commit is the one that wrote Amendment 11, whose own `:942` says *"Amendmen
 
 ---
 
-**(4) §2e's ADR-016 rule-3 reproduction (`:296-300`) is not byte for byte against its named source.** Introduced *"verbatim from the Proposed draft (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`)"*, §2e's quote is shortened and single-quoted. The source span, `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md:52-58`, reproduced here byte for byte:
+**(4) §2e's ADR-016 rule-3 reproduction (`:296-300`) is not byte for byte against its named source.** Introduced *"verbatim from the Proposed draft (`docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a)"*, §2e's quote is shortened and single-quoted. The source span, `docs/adr/PROPOSED-amendment-to-ADR-016-identity-tier-model.md` lines 52-58 at 433413a, reproduced here byte for byte:
 
 > **3. Change handling — the read-around policy, declared.** Checks run **before every query issue
 > and after every stream terminal**. A detected change invalidates G: new tickets refused under G,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T04:39:13.596Z",
+  "generated_at": "2026-09-24T00:45:26.571Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,98 +12,34 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 29993463808,
+        "bytes": 76395892736,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 390613749760,
+        "bytes": 390399623168,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 1,
+    "total": 3,
     "by_name": {
       "cargo": 0,
-      "node": 1,
+      "node": 3,
       "spatial-ide-shell": 0
     }
   },
-  "waiting_on_human": [
-    {
-      "id": "accept-adr-013-instance",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "accept-adr-015-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "accept-adr-016-a1",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "accept-adr-028-qualification",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "accept-adr-032",
-      "kind": "click",
-      "minutes": 3,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "briefa-p6-part-n-acceptances",
-      "kind": "sitting",
-      "minutes": 60,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "decision-prepare-managed-selection-default",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "decision-watcher-scheduling",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-18",
-      "age_days": 1
-    },
-    {
-      "id": "decision-generated-outputs-merge-strategy",
-      "kind": "ruling",
-      "minutes": 5,
-      "opened": "2026-09-19",
-      "age_days": 0
-    }
-  ],
+  "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 39
+    "n": 56
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 28,
-    "first_pass": 12,
-    "rate": 0.42857142857142855
+    "nodes": 31,
+    "first_pass": 13,
+    "rate": 0.41935483870967744
   },
   "record_rounds": {
     "present": true,
@@ -115,8 +51,9 @@
       "briefa-p3b-test-names": 1,
       "briefa-p5-gate-tests": 1,
       "briefa-p4-corpus-run": 2,
-      "briefa-p6-describe-fields": 1
+      "briefa-p6-describe-fields": 1,
+      "adr-013-display-statement": 2
     },
-    "total": 18
+    "total": 20
   }
 }

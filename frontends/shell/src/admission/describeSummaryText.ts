@@ -56,3 +56,14 @@ export function crsProvenanceLine(crs: CrsInfo): string {
 export function sessionStatementLine(identity: IdentityInfo): string | null {
   return identity.session_statement;
 }
+
+/**
+ * `DescribeSummary`'s display-convention row (DECISIONS-PENDING.md, RULED 2026-09-23 (late), entry
+ * 119 item (5); the gap first recorded at entry 113 (3)). Renders `crs.display_convention` VERBATIM
+ * (the Rust-constant sentence carried over the wire, `frontends/shell/src/skp/types.ts:100`) when
+ * non-null; `null` means this dataset is not a geographic-degrees instance, and the caller renders
+ * no row.
+ */
+export function displayConventionLine(crs: CrsInfo): string | null {
+  return crs.display_convention;
+}

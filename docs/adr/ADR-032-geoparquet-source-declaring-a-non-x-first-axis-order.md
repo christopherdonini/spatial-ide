@@ -2,7 +2,7 @@
 
 *Redrafted 2026-09-10 at Brief A's P0 by the architect agent on the custodian's brief, as this cut's accepting record — for the human's sight on `cut/admission-format-semantics`. Sentences marked **[H]** are the human's verbatim; everything else is drafting. Cites marked **[2nd]** are taken from `state/drafts/post-tag/architect-consult-adr-032.md` and were not re-read in the P0 pass. The 2026-09-08 filing this replaces is in git history (`docs/README.md` still describes it as "decision deliberately open" until acceptance).*
 
-**Status:** **Proposed** — filed 2026-09-08 on the human's ruling (DECISIONS-PENDING entry 59 = (a), verbatim: **[H]** *"ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open)"*). **This text is the accepting draft prepared at Brief A's P0; acceptance comes at P6 and only in the human's own words. Until then it binds nothing.** The human's sequencing note, not a decision: **[H]** *"ADR-032 (4326 admission) likely outranks LOD."*
+**Status:** **Accepted** — 2026-09-23, on the human's word, as it stands (`DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (2)). Filed Proposed 2026-09-08 on the human's ruling (DECISIONS-PENDING entry 59 = (a), verbatim: **[H]** *"ADR-032 filed Proposed (4326 via the GeoParquet x,y override, decision open)"*). Its accepting draft was prepared at Brief A's P0. The human's sequencing note, not a decision: **[H]** *"ADR-032 (4326 admission) likely outranks LOD."*
 
 **Related:** ADR-015 §5 (`:56-60`; conflict block `:62-75`; OPEN block `:150-153`, unanswered here) · ADR-013 · ADR-010 rule 1 · ADR-017 §14 and its spent v1 schema lever · ADR-025 (the refuse-typed-at-preflight pattern, `:3-4`) · ADR-026 · ADR-003 (the accepted rendering claim is EPSG:2056 on Windows/WebView2) · docs/01 principle 8 and docs/01:21 · docs/05.
 
@@ -50,3 +50,7 @@ Reprojection, or the ADR-013 §2 transform service, which does not exist · norm
 ## Reopen conditions
 
 A GeoParquet specification revision that changes or withdraws the axis-order override, or that changes the absent-key default · a pinned reading of a specification version whose rules differ from those pinned here · evidence of a producer population that violates the override at a rate the falsification check cannot convict · the arrival of a second bundle reader, which is ADR-025's own reopen trigger and is what lifts the boundary-8 preflight refusal · acceptance of the transform service, at which point ADR-015 §5's OPEN block, not this ADR, is the venue.
+
+## Acceptance (2026-09-23)
+
+Accepted on the human's word, as it stands: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (2). Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N1, N2 and N4, operator-verified in its Part N run section.

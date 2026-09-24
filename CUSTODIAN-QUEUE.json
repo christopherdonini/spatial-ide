@@ -1,33 +1,310 @@
 {
-  "generated_at": "2026-09-19T04:39:13.513Z",
-  "plan_hash": "d8ded6172d3976b813033de7ca52c0029f9acbdac36544ac3b10f6eb15974460",
+  "generated_at": "2026-09-24T00:51:11.715Z",
+  "plan_hash": "60f9cfde3752fcd186161259c189003535f1cf9276f102006b52e8a4960873e7",
   "priorities_approved": true,
   "next": {
-    "id": "geometry-types-beyond-polygons",
-    "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+    "id": "engine-tests-configured-connections",
+    "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
     "lane": "engine",
-    "phase": "alpha",
+    "phase": "prototype",
     "status": "ready",
-    "order": 6,
-    "budget_minutes": 480,
+    "order": 2,
+    "budget_minutes": 60,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-14",
+      "opened": null,
       "done": null
     },
-    "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider"
+    "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
   },
   "ready": [
     {
+      "id": "engine-tests-configured-connections",
+      "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
+    },
+    {
+      "id": "engine-source-change-watcher",
+      "title": "The advisory source-change watcher",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 7,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
+    },
+    {
+      "id": "multipolygon-assessment-consult",
+      "title": "MultiPolygon support -- the architect's assessment, consult only (if time remains)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round"
+    },
+    {
+      "id": "crs-unit-fact-and-bounds",
+      "title": "ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-23",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement"
+    },
+    {
+      "id": "b1-engine-prereg-draft",
+      "title": "Brief B, stage B1's engine/kernel half -- the preregistration draft and the architect consult only; no code; the draft comes to the human's morning sight",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 3,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7: the preregistration and the architect consult only, on a branch; no code. B1 follows crs-unit-fact-and-bounds on the wire (entry 120); the watcher's describe fields also take the literal after crs-unit (RULED 2026-09-24, the watcher sight), and RULED 2026-09-24 (night) item (2) fixes the order: the watcher takes the literal after crs-unit-fact-and-bounds and B1 the one after the watcher's, which the draft states rather than leaving open. The draft goes to the human's morning sight, in the one question round"
+    },
+    {
+      "id": "shell-dependency-audit-piece",
+      "title": "PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 6,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 2: the full gate on its branch, as ruled. Merge order, not work order: after PR #103 (the acceptances); the click when gated and green. The earlier custodian reading that put crs-unit-fact-and-bounds ahead of it is superseded by the program's order. RULED 2026-09-23 (later), entry 120 (1)(b): the unit-fact piece is first after the acceptance PR (the custodian's reading; the human may re-place it). After the sitting and the five acceptances (the human, 2026-09-20 and 2026-09-22); no settled dependency decision is asked again; draft PR #97 carries the branch"
+    },
+    {
+      "id": "drill-fix-viewer-build-order",
+      "title": "Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Stacked on PR #97's branch if it touches the same scripts. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
+    },
+    {
+      "id": "drill-fix-release-only-guard",
+      "title": "Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 7,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
+    },
+    {
+      "id": "drill-fix-fixture-watchdog",
+      "title": "Clean-clone repair 2 -- fixture generation and the post-write watchdog coordinated (entry 115)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 8,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 3: its own light-lane PR. Merge order: after PR #97. A bounded piece after PR #97 (the human, 2026-09-22); no tooling redesign"
+    },
+    {
+      "id": "known-limitations-owed-rows",
+      "title": "KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR",
+      "lane": "release",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 1,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 6: one docs PR (docs-only auto-merge under AUTONOMY.md section 9 applies). N9's five rows are named in frontends/shell/MANUAL-WALKTHROUGH.md Part N, row N9: the change detector's limitation, single-file only, the degrees-publish refusal, the sanity check's limits, and the small-pan/no-query gap. Entry 120's two lines are already on main as items 17 and 18 (8704535), in the section for main's build after v0.1.0; this PR adds N9's five beside them and brings 17 and 18 to the same form"
+    },
+    {
+      "id": "governance-verify-mutation-multiline-attrs",
+      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 4,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate"
+    },
+    {
+      "id": "governance-verify-mutation-header-token",
+      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 5,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate"
+    },
+    {
+      "id": "governance-verify-gate-file-exists",
+      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 7,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-18",
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate"
+    },
+    {
+      "id": "test-claims-landedness-bound",
+      "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 8,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": null,
+        "done": null
+      },
+      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
+    }
+  ],
+  "waiting_on_human": {
+    "total_minutes": 0,
+    "by_kind": {
+      "click": [],
+      "sight": [],
+      "ruling": [],
+      "sitting": []
+    }
+  },
+  "blocked_on_dependencies": [
+    {
       "id": "geometry-types-beyond-polygons",
-      "title": "Geometry types beyond polygons (points, lines) — widening the admission gate, its own preregistration",
+      "title": "Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration",
       "lane": "engine",
       "phase": "alpha",
-      "status": "ready",
+      "status": "blocked",
       "order": 6,
       "budget_minutes": 480,
       "needs_human": {
@@ -39,212 +316,11 @@
         "opened": "2026-09-14",
         "done": null
       },
-      "summary": "RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider"
-    },
-    {
-      "id": "site-design-v1",
-      "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 6,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-14",
-        "done": null
-      },
-      "summary": "Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged"
-    }
-  ],
-  "waiting_on_human": {
-    "total_minutes": 90,
-    "by_kind": {
-      "click": [
-        {
-          "id": "accept-adr-013-instance",
-          "title": "Acceptance for the click at P6 -- the ADR-013 degrees-space instance (Proposed; Brief A digest Part 4, with the entry-81 clarification)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-015-a1",
-          "title": "Acceptance for the click at P6 -- ADR-015 Amendment 1 (Proposed; Brief A digest Part 5)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line: accepted ADR text changes only by the human's click; queued for P6 on the human's word of 2026-09-18 (entry 110); the proposed text is in docs/adr/ marked Proposed"
-        },
-        {
-          "id": "accept-adr-016-a1",
-          "title": "Acceptance for the click at P6 -- ADR-016 Amendment 1, the identity tier model (Proposed; rule 3 true of the build since PR #86)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; PR #86's merge made rule 3 true in all four limbs (T10) and its body named the merge as the acceptance -- the formal step (the Proposed file's status) is this click, queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-028-qualification",
-          "title": "Acceptance for the click at P6 -- the ADR-028 qualification (Proposed; Brief A digest Part 7)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110)"
-        },
-        {
-          "id": "accept-adr-032",
-          "title": "Acceptance for the click at P6 -- ADR-032 (Proposed; Brief A digest Part 8: Status and Decision)",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 5,
-          "needs_human": {
-            "kind": "click",
-            "minutes": 3
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "A red line; queued for P6 on the human's word of 2026-09-18 (entry 110); its accepting draft was prepared at Brief A's P0"
-        }
-      ],
-      "sight": [],
-      "ruling": [
-        {
-          "id": "decision-prepare-managed-selection-default",
-          "title": "Whether \"Prepare\" for a source *already* managed as an immutable revision (a future tier or a published artifact) may be selected silently or must be confirmed by the operator — a user-visible default, decided at B2's preregistration sight.",
-          "lane": "shell",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 1,
-          "budget_minutes": 0,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "Owner: briefb-b2-save-reopen -- decided at B2's preregistration sight (state/drafts/post-tag/DRAFT-3-BRIEF-B-recipe-replay-publish.md's Save vs Prepare amendment)."
-        },
-        {
-          "id": "decision-watcher-scheduling",
-          "title": "Whether the watcher node is scheduled before or after Brief A's close (it depends on P3b only, already merged).",
-          "lane": "governance",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 1,
-          "budget_minutes": 0,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "Owner: engine-source-change-watcher -- the proposed PLAN node this scheduling ruling would place."
-        },
-        {
-          "id": "decision-generated-outputs-merge-strategy",
-          "title": "Where generated outputs live so sibling PRs stop colliding on files nobody edits -- the human's directive of 2026-09-19 asked the custodian to consider a .gitattributes merge strategy or moving them out of PRs (CI regenerates on main after merge)",
-          "lane": "governance",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 2,
-          "budget_minutes": 0,
-          "needs_human": {
-            "kind": "ruling",
-            "minutes": 5
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-19",
-            "done": null
-          },
-          "summary": "The custodian's reading is DECISIONS-PENDING.md entry 114: (A) the standing mechanic alone (regenerate on merge, now AUTONOMY section 2); (B) a .gitattributes merge driver -- insufficient, GitHub's merge ignores custom drivers; (C) site/index.html and site/data/plan.json built by the Pages workflow from PLAN.yaml and no longer tracked, the queue files kept tracked with a PR CI drift check against the merge ref -- recommended, one governance piece after the current wave; (D) a bot commit on main after merge -- advised against, it fights the branch protection. Until the ruling, (A) is the rule"
-        }
-      ],
-      "sitting": [
-        {
-          "id": "briefa-p6-part-n-acceptances",
-          "title": "Brief A P6 -- Brief A's close: Part N operator-verified at a sitting (G-A7), the KNOWN-LIMITATIONS rows, and the five ADR acceptances for the click",
-          "lane": "engine",
-          "phase": "prototype",
-          "status": "blocked",
-          "order": 6,
-          "budget_minutes": 60,
-          "needs_human": {
-            "kind": "sitting",
-            "minutes": 60
-          },
-          "evidence": null,
-          "dates": {
-            "opened": "2026-09-18",
-            "done": null
-          },
-          "summary": "Part N's rows are being drafted on docs/part-n-walkthrough with a blank result log (the sitting the human asked for on 2026-09-18, entry 110); the five acceptances are their own click nodes; B1 of Brief B is blocked on this node, Brief A's close"
-        }
+      "summary": "RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider",
+      "blocked_by": [
+        "b1-engine-kernel-half"
       ]
-    }
-  },
-  "blocked_on_dependencies": [
+    },
     {
       "id": "b1-engine-kernel-half",
       "title": "Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)",
@@ -262,9 +338,13 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
+      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then",
       "blocked_by": [
-        "briefa-p6-part-n-acceptances"
+        "drill-fix-release-only-guard",
+        "drill-fix-fixture-watchdog",
+        "drill-fix-viewer-build-order",
+        "crs-unit-fact-and-bounds",
+        "b1-engine-prereg-draft"
       ]
     },
     {
@@ -306,9 +386,10 @@
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
+      "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
-        "briefb-b2-save-reopen"
+        "b1-engine-kernel-half",
+        "geometry-types-beyond-polygons"
       ]
     },
     {
@@ -378,52 +459,29 @@
       ]
     },
     {
-      "id": "lod-tier-selection",
-      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
-      "lane": "renderer",
+      "id": "site-design-v1",
+      "title": "Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board)",
+      "lane": "governance",
       "phase": "prototype",
       "status": "blocked",
-      "order": 9,
-      "budget_minutes": 480,
+      "order": 6,
+      "budget_minutes": 300,
       "needs_human": {
-        "kind": "sight",
-        "minutes": 20
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-17",
+        "opened": "2026-09-14",
         "done": null
       },
-      "summary": "Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here",
+      "summary": "Behind the product work and the generated-output decision (the human, 2026-09-22): waits on governance-ci-built-site. Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged",
       "blocked_by": [
-        "lod-tier-builder-route-b",
-        "lod-tier-cache-lifecycle"
+        "governance-ci-built-site"
       ]
     }
   ],
   "in_progress": [
-    {
-      "id": "lod-tier-builder-route-b",
-      "title": "LOD tier builder, route B (Rust geo) -- under engine/LOD-PREREGISTRATION.md; crate set + parquet promotion approved subject to its §8 gate steps",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 7,
-      "budget_minutes": 480,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 10
-      },
-      "evidence": {
-        "pr": 84
-      },
-      "dates": {
-        "opened": "2026-09-16",
-        "done": null
-      },
-      "summary": "RULED 2026-09-16 (question round 3, items 1-2): the preregistration accepted with two class-5 amendments (sidecar tiers in the app-local cache, never beside the source without the user's word; geographic-CRS tiers a dated named follow-on); geo/wkb/geo-traits + parquet non-optional APPROVED subject to §8's gate steps (transitive licences recorded before any cargo add; stop on a second Arrow major; notice set regenerated + lockfile diff read in the PR); wkb's writer gets its own test on the first tier written. Full gating; the tester fills the numbers; no perf claim",
-      "evidence_label": "PR #84"
-    },
     {
       "id": "briefa-p3b-owner-side-invalidation",
       "title": "Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b",
@@ -445,144 +503,46 @@
       },
       "summary": "HELD in-progress by the human (round 16, item 4, 2026-09-18): after briefa-p3b-test-names (PR #90) lands, three historical mentions of an old test name in this record stay reported by verify-test-claims as planned (advisory under the not-done rule) until the superseded-name scanner (governance/test-claims-superseded @ 3100766, STOPPED under Rule 7) is scheduled at the weekly window, 2026-09-25 at the earliest. Earlier: LANDED 2026-09-18 at PR #86 (entry 110); done is held by verify:test-claims: marking the node done binds the preregistration section-5 names T3-T7 and T9, and the six tests exist under other titles (found 2026-09-18) -- a test-text alignment piece (briefa-p3b-test-names) is dispatched under the round-14 test-text exception; done when it lands. Landed under the record cap's point (5) after attempt 6 (architect PASS, reviewer FAIL on the record only); its sight items (the two operator strings, the code chip, the small-pan limitation) and ADR-016 Amendment 1's formal acceptance are queued at P6. Earlier: RULED 2026-09-16 (round 4, entry 96): P3 split on conditions -- P3a (the narrowed cut/briefa-p3, under briefa-p3-p6) lands only code with a real product caller and an end-to-end test from the real shape; P3b carries what P3's own row promised and P3a does not claim: residency cleared + picks refused in both owners (App.tsx, candidateArmSession.ts) on the terminal AND on the pre-check refusal; the dead-ticket refusal at redemption with a real caller and known-dead/known-live/unknown behaviour (never a fabricated source change); the ADR-016 amendment's acceptance waits here. Preregistration DRAFTED 2026-09-16 (architect; owning-module path) for the human's sight -- question round 5; reviewer + architect. No release includes P3a without P3b -- the next release build node depends on this one",
       "evidence_label": "PR #86"
-    },
-    {
-      "id": "governance-record-round-count",
-      "title": "health strip -- a record-round count per piece: a gate record that gates a record-correction round carries record: true; scripts/plan/health.mjs counts them per node and the strip shows the count beside the first-pass rate, target zero (the human's 2026-09-18 directive, point 4)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 6,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "click",
-        "minutes": 2
-      },
-      "evidence": {
-        "pr": 87
-      },
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "The human's standing directive of 2026-09-18 (state/directives/2026-09-18-record-cap.md), point 4, paraphrased: the health strip carries a record-round count per piece, target zero. Mechanism: an optional boolean record on gate-log records, set by the custodian on the gate attempts that gate a record-correction round; health.mjs derives per-node counts; site.mjs renders them; today's record rounds tagged retroactively in the same piece. Five-line short form; the single-gate route closed under AUTONOMY section 21b's mid-piece clause when the section-21c figure crossed the bound (the preregistration's Amendment 2); reviewer and architect gates from attempt 2",
-      "evidence_label": "PR #87"
     }
   ],
   "proposed": [
     {
-      "id": "test-claims-landedness-bound",
-      "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
-      "lane": "governance",
+      "id": "lod-tier-selection",
+      "title": "LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough",
+      "lane": "renderer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": 9,
+      "budget_minutes": 480,
+      "needs_human": {
+        "kind": "sight",
+        "minutes": 20
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-17",
+        "done": null
+      },
+      "summary": "RETURNED TO PROPOSED 2026-09-22 (the custodian, reconciling the human's separate-tracks direction): its dependencies are done, but its preregistration is not drafted and the LOD track is not scheduled among the product priorities -- the human places it. The human, 2026-09-22: the lifecycle design completes before any product caller serves tiers, reconciled with Prepare's artifact ownership, cancellation and retention; a saved-work input is never deleted under a render-cache eviction rule; the integrated benefit measured, no carried-over speed claim; basic Save never waits for LOD; no renderer rewrite. Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here"
+    },
+    {
+      "id": "shell-redesign-map-studio",
+      "title": "Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled)",
+      "lane": "shell",
       "phase": "prototype",
       "status": "proposed",
       "order": null,
-      "budget_minutes": 90,
+      "budget_minutes": 0,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": null,
+        "opened": "2026-09-23",
         "done": null
       },
-      "summary": "Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form"
-    },
-    {
-      "id": "lod-tier-cache-lifecycle",
-      "title": "LOD tier-cache lifecycle -- an owed ADR-031 decision (RULED 2026-09-17, round 8): a total cache ceiling declared relative to free disk at its site, delete-on-supersede as the default candidate with LRU over directories as the alternative, a runner with a scheduler + a priority policy + a cancellation owner, an operator view",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": 8,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "ruling",
-        "minutes": 15
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "The human, round 8: 'Recorded as a named, owed decision for ADR-031 and a hard precondition of the selection piece ... never a background job without all three ... No product path calls build_tiers before the lifecycle is declared. Not widened into this piece.' The architect's drafted skeleton (entry 99) is the starting text; ADR-031 carries the decision; a ruling node until the human accepts it"
-    },
-    {
-      "id": "governance-verify-mutation-multiline-attrs",
-      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": 4,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate"
-    },
-    {
-      "id": "governance-verify-mutation-header-token",
-      "title": "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": 5,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-17",
-        "done": null
-      },
-      "summary": "Noted by the custodian on 2026-09-17 beside the multi-line-attribute weakness while reading the check's window logic for the verify-quotes branch's e8a8661 fix: the token is matched by distance, not by ownership. Fix: require the token inside the test's own comment or attribute block (between the previous item's end and its fn), print a diagnostic for a token that owns no test; a fixture with a header token and a bare test, plus the recorded mutation. Five-line short form, single gate"
-    },
-    {
-      "id": "governance-verify-gate-file-exists",
-      "title": "verify.mjs -- a node whose gate names a preregistration path that does not exist on main passes verify:plan; an in-progress or ready node with a dangling gate path should fail by name (found by the record-round-count gate, 2026-09-18)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": 7,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-18",
-        "done": null
-      },
-      "summary": "Reported by the reviewer of governance-record-round-count at attempt 1 (gate-log record 70): the node was set in progress naming a gate file that existed only on its branch, and node scripts/plan/verify.mjs stayed green. Fix: for every node whose status is in-progress or ready and whose gate is a path, require the path to be a tracked file; a test with a dangling gate fixture and its recorded mutation. Five-line short form committed before code, single gate"
-    },
-    {
-      "id": "engine-tests-configured-connections",
-      "title": "engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": null,
-        "done": null
-      },
-      "summary": "Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
+      "summary": "Migration requirement, RULED 2026-09-23 (later), entry 120 item (2), the human's words: every fact display binds to the dataset on the canvas, never to an in-flight open attempt. RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))"
     },
     {
       "id": "release-v0-1-1",
@@ -601,7 +561,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it"
+      "summary": "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it"
     },
     {
       "id": "adr-032-decision",
@@ -639,7 +599,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes"
     },
     {
       "id": "briefb-b3-publish-v2",
@@ -658,7 +618,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "the filtered-subset bundle format and the CLI's own exposure review, replaying through the shell's own publish code path"
+      "summary": "After B2 (the human, 2026-09-22): publishing the intended filtered/scoped result and CLI agreement. the filtered-subset bundle format and the CLI's own exposure review, replaying through the shell's own publish code path"
     },
     {
       "id": "briefb-part-o-walkthrough",
@@ -677,26 +637,64 @@
         "opened": null,
         "done": null
       },
-      "summary": "the recipe milestone may only be described as complete after this operator-verified walkthrough's log carries the human's verdict"
+      "summary": "After B3 (the human, 2026-09-22); accepted only after the human's walkthrough. the recipe milestone may only be described as complete after this operator-verified walkthrough's log carries the human's verdict"
     },
     {
-      "id": "engine-source-change-watcher",
-      "title": "The advisory source-change watcher",
+      "id": "governance-ci-built-site",
+      "title": "Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Deferred by the human 2026-09-22 to a bounded governance piece; the current regeneration procedure stays for this cut"
+    },
+    {
+      "id": "geometry-points-cut",
+      "title": "Geometry -- points, its own bounded vertical cut",
       "lane": "engine",
       "phase": "prototype",
       "status": "proposed",
       "order": null,
-      "budget_minutes": 240,
+      "budget_minutes": 0,
       "needs_human": {
-        "kind": "sight",
-        "minutes": 15
+        "kind": "none",
+        "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-18",
+        "opened": "2026-09-22",
         "done": null
       },
-      "summary": "Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing."
+      "summary": "Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    },
+    {
+      "id": "geometry-lines-cut",
+      "title": "Geometry -- lines, its own bounded vertical cut",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-22",
+        "done": null
+      },
+      "summary": "Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
     }
   ],
   "unscheduled": [

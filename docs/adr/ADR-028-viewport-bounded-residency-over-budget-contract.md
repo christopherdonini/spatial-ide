@@ -530,3 +530,52 @@ deleted in the same commit.
 **Named consequence of the keep-set half, as ruled.** A queued in-view tile outside the window survives the supersede prune and is re-checked at drain against the latest membership: still in view, it is issued as a `viewport_query` for a cell that round never enumerated, within `MAX_IN_FLIGHT_TILE_STREAMS` and `MAX_QUEUED_TILES`; out of view by then, it is dropped at drain and never issued. ADR-006 class 1 throughout; no wire change; tile keys still never cross a module or protocol boundary (`:478-479`). No performance claim is made or implied.
 
 **KNOWN-LIMITATIONS 13b** retires with this landing. **Reopen.** The 2026-09-09 note's reopen sentence (`:518`) is discharged for both paths; a tile drawn and then vanishing while still on screen, or a `fits` reading that disagrees with the true cover, reopens this as a defect on the human's word.
+
+## Amendment 4 — the within-generation qualification (2026-09-23, appended — Accepted)
+
+
+**1. Scope, not substance.** Every residency statement this ADR makes is **scoped to one dataset-
+session generation G**. This changes **no accepted rule**; it bounds the referent every rule
+already had. Specifically:
+
+- **Protection** — Amendment 3's geometric rule (*"A tile intersecting the viewport is protected
+  whether it is complete or partial, tracked this round or a prior one, or never requested at
+  all"*) protects tiles **of the current G**.
+- **Completeness** — no completeness claim ("Showing all N…") survives an invalidation. A claim
+  made under an invalidated G is stale by construction and is cleared, per Amendment 2(c)'s own
+  rule that silence and staleness never represent state.
+- **The declared partial view** and its persistent status describe the current G's resident set.
+- **The over-budget latch**, `fits`, and the fill-completeness predicate are read within G.
+
+**2. On invalidation.** Residency is **cleared**; in-flight streams are **cancelled through the
+existing cancel** (the existing `cancel` SKP command, ADR-018 — no new wire, the same lever
+Amendment 2(a) already repoints); **picks are refused** until reopen; and **late batches are
+dropped by ticket**. A batch is attributed to a generation **via its ticket**; the client drops any
+batch whose ticket belongs to an invalidated generation, so a late result never repopulates the
+canvas.
+
+**3. The drop is a second predicate at an existing site — no wire field.** The ticket already
+reaches the batch: `frontends/shell/src/streaming/tileViewportStreamManager.ts:685` captures
+`streamHandleAtStart = ticket.stream` at mint and `:699` passes it out through `onBatch`;
+`viewportStreamManager.ts:189-212` has the same shape, with an existing supersede drop at
+`:193-201` as the precedent this one sits beside. **Data plane: EMPTY DIFF.** Generation
+attribution rides the existing ticket and no new wire field is introduced.
+
+**4. Duties, split.** The **kernel** is the refusal authority: no ticket is minted or honoured
+under an invalidated G. The **client** is the drop authority: a batch already in flight is dropped
+at its sink. Both hold a ticket→generation mapping; neither puts it on the wire.
+
+**5. Interaction with the appended note of 2026-09-09 — both stand.** That note declares an
+exception past a bounded tile cover: past `MAX_COVERING_TILES` the windowed array is both the
+eviction-protected set and the supersede keep-set, so Amendment 3's geometric rule holds **inside
+the window only** at those zooms. That is a **spatial** narrowing of the protection rule. This
+amendment is a **temporal** one. They compose and neither weakens the other: inside G, protection
+is geometric within the window; outside G, there is nothing to protect. The note's completeness
+guarantee is likewise per-generation — `coveringTruncated` refuses a completeness claim over a
+windowed cover (`ADR-028:514`), and an invalidated G refuses one regardless of the cover.
+
+**6. What this amendment does not do.** It states no new residency behaviour, retires no reopen
+condition, discharges no binding debt, and touches neither the gate-8 evidence nor its ruling. It
+attaches no number and no duration to anything.
+
+**Acceptance (2026-09-23).** Amendment 4 is accepted on the human's word, after the N8 rerun on the merged build: `DECISIONS-PENDING.md`, the RULED 2026-09-23 (late) block, entry 119 item (4). Its text above is appended verbatim from the Proposed text block of `docs/adr/PROPOSED-amendment-to-ADR-028-within-generation-qualification.md` as it stood at 433413a, which this commit deletes: the blockquote markers are removed and the heading's date is filled; nothing else changes. Evidence: `frontends/shell/MANUAL-WALKTHROUGH.md` Part N rows N6, N7 and N8, operator-verified in its Part N run section. The drop of an ended generation's late results across a reopen is proven by tests and recorded mutations (PRs #100 and #101), not by a human run.

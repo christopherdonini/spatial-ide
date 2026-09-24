@@ -159,3 +159,21 @@ queried again. The app cannot know whether those areas are empty.
     scaled a drag's pan distance and shifted hover picking. Fixed for every bundle published by a
     build that includes the viewer zoom-anchor fix (PR #53) or later.
     <!-- kernel/src/publish/viewer_assets.rs:4-19, :85 and frontends/shell/src-tauri/src/publish.rs:1109-1120 (publish copies the viewer's dist/ into the bundle — a frozen copy, not a version reference); docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md:527-530 (§14: a bundle's viewer cannot verify itself); renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md §5 (already-published bundles are not updated) and its Amendments 1-3; the fix: PR #53 (viewer/zoom-anchor, merged 2026-09-13); DECISIONS-PENDING.md entry 86 (the human's sighting of this line, 2026-09-13). Scope line, not a retirement: it stands for every bundle published before the fix. -->
+
+## On main since v0.1.0 — not in any release yet
+
+*The lines below are true of `main`'s build after the v0.1.0 tag, not of the v0.1.0 artifact the
+header above describes. They move into the next release's list when that release is cut.*
+
+17. **A dataset in degrees uses tile and render-precision bounds declared for metres.** The tile
+    grid's minimum anchor span and the re-centering drift bound are declared in metres, and they apply
+    unchanged when a dataset's coordinates are in degrees. The effect at close zoom is bounded as
+    stated in the owed piece's record: that piece's first step computes the bound, and this line will
+    then state it.
+    <!-- frontends/shell/src/canvas/tileGrid.ts:78 (MIN_ANCHOR_SPAN = 1, no unit input); frontends/shell/src/canvas/offsetFrame.ts:37 (RECENTER_MAX_DRIFT_M); docs/adr/ADR-013-typed-coordinate-spaces-and-provenance.md, Amendment 1 item 6 and its acceptance note; engine/ADMISSION-PREREGISTRATION.md:577-579 (the preregistered 1e-6 degree, not yet in code); the owed piece: PLAN.yaml node crs-unit-fact-and-bounds; DECISIONS-PENDING.md entry 120 and the RULED 2026-09-23 (later) block, item (1)(a), the human's wording -->
+
+18. **After a failed or cancelled open, a dataset in degrees can stay drawn without its display
+    statement.** A later open attempt, whether in flight, cancelled or refused, clears the describe
+    summary, but the dataset already on the canvas stays drawn. Its equirectangular statement is then
+    shown nowhere until the next successful open.
+    <!-- frontends/shell/src/admission/AdmissionPanel.tsx:206-209 (an attempt replaces the admitted state), :230 (a cancel ends idle), :240-249 (a refusal); :411 (the summary renders only for the admitted state); the earlier dataset stays drawn: the human's N8 retest session log session-1790201742.log, where the earlier dataset's tiles are still delivered after the 22:18:04Z refusal; DECISIONS-PENDING.md entry 120 (2) and the RULED 2026-09-23 (later) block, item (2) -->

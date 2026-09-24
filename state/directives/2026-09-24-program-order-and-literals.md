@@ -1,0 +1,5 @@
+# The human's message of 2026-09-24 (about 00:49Z, opening the night session after the handover) — verbatim (the two rulings: the program's order governs; protocol literals follow merge order)
+
+Recorded by the custodian as received. The message came into the chat as one pasted block with no other text. Nothing here is paraphrased.
+
+Fresh session after a human-directed handover. Verify the relinquished lease and that origin matches the last flush, take the lease, then read the resume order and run the night program recorded in the ledger, item by item, under its night rules. Two rulings added now (record them verbatim): (1) while a recorded program exists, the program's order governs; the queue's lane-priority display and the Stop hook's "next" are advisory; no generator change. (2) Protocol literals follow merge order (the C2 precedent): the watcher takes the literal after crs-unit-fact-and-bounds, B1 the one after, and B1's draft states this rather than leaving it open; the watcher branch stacks on the unit piece's branch because both touch describe. The morning deliverable is a report of 20 lines or fewer, then one question round.

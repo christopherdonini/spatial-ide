@@ -1,0 +1,13 @@
+# The human's message of 2026-09-20 (the sitting day) — verbatim
+
+Recorded by the custodian on 2026-09-20 as received; the rulings are also recorded as a RULED block in `DECISIONS-PENDING.md` (entries 116, 117, 118 and the LOD lifecycle under entry 99). Nothing here is paraphrased.
+
+Today is the Part N sitting; the weekly limit is the constraint. Order of the day, token-cheapest first, and nothing token-heavy before the sitting closes:
+
+Rulings, applied first (small): entry 116 — PR #97 lands as one dependency piece under the full gate: the three major bumps approved; lightningcss + its win32 stub admitted as build-time-only with a dated package-scoped decision in the audit script (MPL-2.0 compatible for a non-shipped build tool; fresh decision required if it ever enters a shipped set); the vi.fn() typing fix with the callback's own type; suite, build, notice diff against main; reachability-not-severity recorded as the P-033 boundary's precedent. Entry 117 — leave the hybrid, documented; caniuse-lite approved. Entry 118 — all three yes: the 200k launch flag as a one-week pilot, the startup/clear matchers, and I paste /context at checkpoints. LOD lifecycle (entry 99's precondition): total cache ceiling relative to free disk at its own site; delete-on-supersede, LRU only as fallback; runner = the prepare machinery with the operation lifecycle as scheduler, background priority, the prepare token as cancellation owner; operator view = tier count/size/state in describe and the status stack — pre-committed for the tier-selection preregistration's sight.
+Sitting prep: confirm the render-before-Part-N piece (round 16 item 1) is on main and the build is warm; verify the three corpus hashes against the manifest; make the scratch copy; give me the N1–N9 rows with their verbatim expected strings and nothing else. Estimated duration. Then hold: no worker dispatch while I sit.
+During the sitting: record my rows verbatim into the Result log as I give them; deviations stop the row and are recorded exactly.
+After the sitting: the five acceptances come to me as one question set — ADR-015 A1, ADR-016 A1, ADR-013 instance, ADR-028 qualification, ADR-032 — each with the rows that evidence it; then #97's gate and the PLAN flip.
+Deferred until the sitting and acceptances are done: anything with a worker or gate — the PR #97 gate, the three drill fixes, the scanner's weekly-window question. If the weekly limit approaches before Part N closes, stop everything except recording my rows; a partial sitting is recorded as partial, never padded.
+
+Report the prep in ≤10 lines, then wait for me
