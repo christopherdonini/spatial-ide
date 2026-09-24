@@ -422,8 +422,9 @@ fn the_row_order_check_fires_on_a_permutation() {
 fn five_gb_build(workers: usize, label: &str, verify: bool) {
     assert!(
         !cfg!(debug_assertions),
-        "this file's tests are wall-time measurements; a debug build's numbers are not \
-         measurements. Run with --release."
+        "this helper is called by both wall-time measurements and an O1-O4 outcomes pass at 5 GB \
+         scale; neither a timing nor a correctness result from a debug build is trustworthy at this \
+         scale. Run with --release."
     );
     let path = PathBuf::from(PARCELS_5GB);
     assert!(
