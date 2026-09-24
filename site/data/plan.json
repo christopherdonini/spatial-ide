@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T01:36:08.677Z",
-  "plan_hash": "b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc6271f920f7bb6262c43d457",
+  "generated_at": "2026-09-24T01:46:11.636Z",
+  "plan_hash": "4d011abb3e7c888cd846cf3dfc6db051d301efdc0d72bac960088d699c6d43e1",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2557,7 +2557,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": 9,
       "depends_on": [],
       "needs_human": {
@@ -2565,15 +2565,19 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "path": "state/consults/2026-09-24-multipolygon-assessment.md"
+      },
       "budget_minutes": 45,
       "generation": 1,
       "felt_verdict": false,
-      "entries": [],
+      "entries": [
+        126
+      ],
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round",
       "dates": {
         "opened": "2026-09-24",
-        "done": null
+        "done": "2026-09-24"
       }
     },
     {

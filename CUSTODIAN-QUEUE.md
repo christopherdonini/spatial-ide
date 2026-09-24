@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc6271f920f7bb6262c43d457`) at `2026-09-24T01:36:08.465Z`.
+Generated from `PLAN.yaml` (sha256 `4d011abb3e7c888cd846cf3dfc6db051d301efdc0d72bac960088d699c6d43e1`) at `2026-09-24T01:46:11.441Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc627
 ## 2. Ready
 
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) (lane `engine`, order 2, budget 60 min)
-- **multipolygon-assessment-consult** — MultiPolygon support -- the architect's assessment, consult only (if time remains) (lane `engine`, order 9, budget 45 min)
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR (lane `release`, order 1, budget 45 min)
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (lane `governance`, order 4, budget 60 min)
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (lane `governance`, order 5, budget 60 min)

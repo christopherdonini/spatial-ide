@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T01:36:08.465Z",
-  "plan_hash": "b58fb5afd6d83ce8373b55b6d61a9968afcf6cbcc6271f920f7bb6262c43d457",
+  "generated_at": "2026-09-24T01:46:11.441Z",
+  "plan_hash": "4d011abb3e7c888cd846cf3dfc6db051d301efdc0d72bac960088d699c6d43e1",
   "priorities_approved": true,
   "next": {
     "id": "engine-tests-configured-connections",
@@ -40,25 +40,6 @@
         "done": null
       },
       "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Proposed from the autoload reviewer's finding 3 (2026-09-16): first_batch_and_pruning.rs (6 sites), import_layout_5gb_fixtures.rs, import_layout_fixtures.rs (2), publish_stream.rs open raw DuckDB connections with the compiled autoload/autoinstall defaults ON; a future integration test naming a non-built-in extension would fetch from the network in CI. Outside the autoload piece's §8 item 1 scope (engine/src non-test) by design. Fix: one pub(crate)/test-support helper calling pool::configure_connection; five-line short form; single reviewer gate"
-    },
-    {
-      "id": "multipolygon-assessment-consult",
-      "title": "MultiPolygon support -- the architect's assessment, consult only (if time remains)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round"
     },
     {
       "id": "known-limitations-owed-rows",

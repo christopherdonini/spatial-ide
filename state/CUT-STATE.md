@@ -359,3 +359,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the 
   - **Item 4b (watcher):** STOPPED at S1 (no idle push path exists) and S2 (a watched-directory rename needs a grandparent watch). The preregistration is filed at `state/consults/2026-09-24-source-change-watcher.md`, not committed as a gate. Entry 122; the node is blocked on the ruling.
   - **Item 7 (B1 draft):** done. The draft is at `state/consults/2026-09-24-b1-engine-prereg-draft.md` with eight stop items (entry 123; item 1 crosses ADR-017 §4, a red line). It states B1's literal as the one after the watcher's.
   - **Mechanics:** a worker used `git stash` in its worktree (shared stack, which is dangerous); the stack was empty afterwards, and later briefs forbid it. Excluded-crate trouble in `.claude/worktrees` again: heavy worktrees now go to `C:\dev\wt\`.
+
+- 2026-09-24T02:10Z - **PR #104 closed under AI_DEVELOPMENT.md Amendment 1 §A; items 5, 6 and 8 under way or done.**
+  - **Root-cause note for PR #104 (§A 1).**
+    - Attempt 1 failed on the record: the sibling list, the first-statement wording and the guard message's reason. That class is mechanical.
+    - Attempt 2 failed on the correction's own record: no superseded index, a proof pointing outside the tree, a stale line cite, and one message clause overclaiming. Mechanical again, plus test text.
+    - The design and Correctness were affirmed at both attempts.
+    - Closing commit 5300fcb, self-verified by the custodian: the seven superseded-index pins recompute at 1187205, every function it names exists, and the family phrase exists in `import_layout_digest.rs`.
+    - The four debug runs are the worker's report; the machine's cargo was busy, so the custodian did not re-run them. CI is pending at this entry.
+    - The pins name branch commit 1187205, which reaches main only if PR #104 merges by merge commit, the repository's practice, and never by squash.
+  - **Item 5:** PR #107 (gate-file-exists) had reviewer attempt 1 FAIL on Documentation; one correction round is running. PR #108 (the verify-mutation pair) was opened by its worker and returned to draft. `engine-tests-configured-connections` is running. `test-claims-landedness-bound` STOPPED (entry 125).
+  - **Item 6:** PR #109 (KNOWN-LIMITATIONS items 19-23 and item 17's P0 bound): `docsOnly.mjs` eligible; reviewer gate running.
+  - **Item 8:** the MultiPolygon assessment is filed at `state/consults/2026-09-24-multipolygon-assessment.md`; its eight decisions are entry 126.

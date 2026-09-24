@@ -1506,18 +1506,18 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: done
     order: 9
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {path: "state/consults/2026-09-24-multipolygon-assessment.md"}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
-    entries: []
+    entries: [126]
     summary: "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 8, if time remains: an architect assessment for MultiPolygon support (reading, rendering, picking, attributes, styling, publishing), consult only; it feeds geometry-types-beyond-polygons and goes to the morning question round"
-    dates: {opened: 2026-09-24, done: null}
+    dates: {opened: 2026-09-24, done: 2026-09-24}
   - id: shell-redesign-map-studio
     title: "Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled)"
     kind: task

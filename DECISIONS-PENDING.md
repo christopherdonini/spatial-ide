@@ -355,6 +355,18 @@ re-aim, item 8, item 9, item 10 = entry 7's pre-fix); the sweep dispatched on #3
 K6 re-aim dispatched; ADR-030 filed Proposed; the LOD home renumbered ADR-031; the mechanic added;
 entry 58 (A9′ flakiness) filed below. #30 merged @ fdb7c87.
 
+126. **[FOR YOUR WORD, the morning round — MultiPolygon: the architect's assessment and eight decisions (night program item 8, consult only).]** `state/consults/2026-09-24-multipolygon-assessment.md`. The corpus problem is 5 of 12 files refused on geometry type, not B4's conditional 8 (checked against `engine/ADMISSION-RESULTS.md`). Only #11 and #12 involve MultiPolygon, and both mix Polygon and MultiPolygon rows. The cut crosses three wires: the data-plane envelope, SKP describe, and the bundle partition schema of ADR-017 §4, which is a red line. The architect proposes MP-1 as one vertical cut after crs-unit, the watcher and B1, with bundle partitions riding B3 (MP-2). Your eight decisions, each recommended in the consult's §5:
+1. Mixed columns admit, with Polygon rows promoted to one-part MultiPolygons (yes).
+2. The encoding is chosen per dataset (yes).
+3. An empty `geometry_types` gets the MultiPolygon encoding.
+4. New refusal wording (for your sight).
+5. Publishing in B3, not MP-1: MP-1's preflight refuses by name.
+6. MP-1 takes the literal after B1's and adds `describe.declared_types` (yes).
+7. LOD stays out, since it has no product caller (yes).
+8. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration (yes).
+
+A latent defect is noted: the shell's `decodeBatch.ts` never checks `geometry_encoding`. Touches: PLAN node `geometry-types-beyond-polygons` (its summary should cite the P4 table), a proposed ADR-034, and B3's preregistration.
+
 125. **[FOR YOUR WORD, the morning round — `test-claims-landedness-bound` STOPPED before code: every candidate design collides with your P3b hold.]** The node lets planned test claims bind when their piece lands, not only when PLAN says done. Its three candidates (the custodian's choice) are: (a) key the exemption on the piece being unlanded; (b) a staleness window; (c) verify fails a node whose evidence PR is merged but which is not done. On main today the only planned claims are P3b's three historical mentions of `the_dead_ticket_record_is_bounded_by_the_same_sum_and_by_reopen_and_close` (`frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md`). PR #86 has merged, and the node is held in progress by your round-16 item-4 ruling exactly so that those mentions stay advisory until the superseded-name scanner is scheduled at the weekly window. Each of (a)–(c) would make them binding and turn main's CI red, which overrides that hold.
 - **Recommendation:** sequence this node after the superseded-name scanner (`governance/test-claims-superseded`, weekly-window list), then implement (c), with the scanner retiring the three mentions first.
 - **Alternative:** (c) now, with an explicit `held` exemption for nodes you hold (a new PLAN field — your call).
