@@ -1493,7 +1493,7 @@ nodes:
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: {branch: fix/kernel-ticket-drop-under-registry-lock}
+    evidence: {pr: 116}
     budget_minutes: 120
     generation: 1
     felt_verdict: false

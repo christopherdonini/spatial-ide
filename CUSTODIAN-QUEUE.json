@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-24T18:05:22.051Z",
-  "plan_hash": "10d107c8327524b9f784837086bcb3a1f8822ea77e088e40c41443cb452c6c0b",
+  "generated_at": "2026-09-24T19:03:21.275Z",
+  "plan_hash": "6faecffa4840154f3943cfc6eb7c3225c65b54d06c6d32cd592cbaff99c55567",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -298,14 +298,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "fix/kernel-ticket-drop-under-registry-lock"
+        "pr": 116
       },
       "dates": {
         "opened": "2026-09-24",
         "done": null
       },
       "summary": "Found by PR #114's architect gate, fresh-count attempt 2 (state/gate-log.json, node engine-source-change-watcher), and confirmed by the custodian's reading of kernel/src/skp.rs: StreamRegistry::cancel, cancel_all_for_dataset and sweep_locked replace or remove a Pending TicketState (whose PendingBuilt owns the EngineSource) under the registry lock; EngineSource's Drop calls end_session_if_source_changed, which calls SessionInvalidator::end_generation, which calls StreamRegistry::cancel on the same lock. Reachable when an unredeemed ticket's post-check found a source change and the ticket is then cancelled (the shell abandons unredeemed tickets), swept on expiry, or cancelled by close_dataset. A defect fix inside the existing design (never block the canvas; ADR-018, ADR-019): regression test first (the hang detected by a bounded join, never a suite that hangs), then the fix, full gating (a stated guarantee).",
-      "evidence_label": "branch `fix/kernel-ticket-drop-under-registry-lock`"
+      "evidence_label": "PR #116"
     },
     {
       "id": "crs-unit-fact-and-bounds",

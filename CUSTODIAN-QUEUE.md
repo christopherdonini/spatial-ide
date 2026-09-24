@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `10d107c8327524b9f784837086bcb3a1f8822ea77e088e40c41443cb452c6c0b`) at `2026-09-24T18:05:22.051Z`.
+Generated from `PLAN.yaml` (sha256 `6faecffa4840154f3943cfc6eb7c3225c65b54d06c6d32cd592cbaff99c55567`) at `2026-09-24T19:03:21.275Z`.
 
 ## 1. Next
 
@@ -31,7 +31,7 @@ Generated from `PLAN.yaml` (sha256 `10d107c8327524b9f784837086bcb3a1f8822ea77e08
 
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
 - **adr-021-023-b1-notes** — ADR-021's dated note (Float32 filterable by reference to ADR-023; dictionaries excluded by name) and ADR-023's one clarifying sentence (admission one function; the bundle check format-owned) -- one docs PR — evidence: PR #113
-- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released — evidence: branch `fix/kernel-ticket-drop-under-registry-lock`
+- **kernel-ticket-drop-under-registry-lock** — kernel -- a Pending ticket's EngineSource is dropped while StreamRegistry's std Mutex is held; if its post-check found a change, Drop ends the generation and re-locks the same Mutex on the same thread (a hang). Move the removed TicketState out and drop it after the guard is released — evidence: PR #116
 - **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: PR #112
 - **fixture-regeneration-entry-point** — The 5 GB fixture regenerated through its own entry point outside the measurement harness, byte-identical output (entry 121's second half) — evidence: PR #115
 - **known-limitations-owed-rows** — KNOWN-LIMITATIONS -- the rows owed: N9's five (Part N) and entry 120's two lines, in one docs PR — evidence: PR #109
