@@ -1,56 +1,83 @@
 # ADR-035 — SKP control-plane event: `dataset_session_ended`
 
-**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. Filed 2026-09-24 on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 2); its acceptance is the human's. Riders (a) and (b) of that ruling bind the watcher's preregistration through the ruling itself, whatever this ADR's status, and a review may block on the ruling, never on this text.
-**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-source-change-watcher.md`, section "ADR skeleton (for S1)") and that consult's preregistration body with the ruling's two riders. It was redrafted after its first full gate (`state/gate-log.json`, node `engine-source-change-watcher`, attempt 1), again after its second (attempt 2) under RULED 2026-09-24 — question round 18, items 1, 2 and 3, and once more after attempt 1 of the fresh count that round 18 item 1 ruled.
-**Related:** `docs/10` (the specification must cover subscriptions and events) · `docs/02` (control plane vs data plane) · `docs/08_Testing.md` · ADR-004 and its Amendment 4 (instrument surface is never an SKP field) · ADR-006 · ADR-019 · `protocol/skp/SKP-V0.md` §3, §4 items 2, 7, 10 and 13, §5, §8's `skp/0.3` entry · RULED 2026-09-24, the watcher sight (its additions 2 and 4) · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, item 2 · RULED 2026-09-24 — question round 18, items 1, 2 and 3.
+**Status:** Proposed — **binds nothing until accepted.** Not architect-blockable. Filed 2026-09-24 on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 2); its acceptance is the human's. Riders (a) and (b) of that ruling bind the watcher's preregistration through the ruling itself, whatever this ADR's status, as does the emission point RULED 2026-09-24 — question round 19, item 1 fixes; a review may block on those rulings, never on this text.
+**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-source-change-watcher.md`, section "ADR skeleton (for S1)") and that consult's preregistration body with the ruling's two riders. It was redrafted after its first full gate (`state/gate-log.json`, node `engine-source-change-watcher`, attempt 1), again after its second (attempt 2) under RULED 2026-09-24 — question round 18, items 1, 2 and 3, once more after attempt 1 of the fresh count that round 18 item 1 ruled, and again after that count's read at 22a0272, under RULED 2026-09-24 — question round 19, item 1. That read stopped on a kernel defect that PR #116 has since fixed on main (merge f165218).
+**Related:** `docs/10` (the specification must cover subscriptions and events) · `docs/02` (control plane vs data plane) · `docs/08_Testing.md` · ADR-004 and its Amendment 4 (instrument surface is never an SKP field) · ADR-006 · ADR-019 · `protocol/skp/SKP-V0.md` §3, §4 items 2, 7, 10 and 13, §5, §8's `skp/0.3` and `skp/0.4` entries · RULED 2026-09-24, the watcher sight (its additions 2 and 4) · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, item 2 · RULED 2026-09-24 — question round 18, items 1, 2 and 3 · RULED 2026-09-24 — question round 19, item 1.
 
 ## Context
 
-SKP v0 declares no server-to-client push on the control plane in any form (`SKP-V0.md` §4 item 7), while `docs/10`'s checklist requires the specification to cover subscriptions and events. The advisory source-change watcher (PLAN node `engine-source-change-watcher`) can end a dataset-session generation while no command or stream is in flight. The watcher sight's addition 4 requires a kernel-to-shell event that delivers that idle signal, with case (f) as its acceptance test. The only kernel-host → webview events today are Tauri emits outside SKP (publish progress, the origin self-check), and neither carries a dataset-session fact. The human ruled one SKP control-plane event on the watcher's literal, with two riders (round 17 item 2). The human then ruled its session reference and the reading of rider (a) (round 18 items 2 and 3), and left one question Open: whether post-check ends should also emit (round 18 item 1).
+SKP v0 declares no server-to-client push on the control plane in any form (`SKP-V0.md` §4 item 7), while `docs/10`'s checklist requires the specification to cover subscriptions and events. The advisory source-change watcher (PLAN node `engine-source-change-watcher`) can end a dataset-session generation while no command or stream is in flight. The watcher sight's addition 4 requires a kernel-to-shell event that delivers that idle signal, with case (f) as its acceptance test. The only kernel-host → webview events today are Tauri emits outside SKP (publish progress, the origin self-check), and neither carries a dataset-session fact. The human ruled one SKP control-plane event on the watcher's literal, with two riders (round 17 item 2). The human then ruled its session reference and the reading of rider (a) (round 18 items 2 and 3). Round 18 item 1 left one question open, whether post-check ends should also emit. Round 19 item 1 answered it: every end emits, whichever check caused it (Decision 3).
 
-Four things this ADR names do not exist in the tree at its filing, and the watcher piece introduces all of them:
+**The tree this draft describes** is main since PR #116's merge (f165218):
+- The kernel records a generation's end in one place, `GenerationRegistry::invalidate` (`kernel/src/skp.rs`). Its only product caller is `SessionInvalidator::end_generation`, and every end route reaches it through that caller (Decision 3).
+- No `TicketState` is dropped while `StreamRegistry`'s guard is held. Each retired value is moved out and dropped after the guard is released; the invariant is stated on `StreamRegistry`'s `tickets` field.
+- An end reached from a dropped `Pending` ticket's `EngineSource` therefore completes. The `ticket_drop_under_lock_regression` module in `kernel/src/skp.rs` asserts this in its three `…_does_not_hang` tests, covering the `cancel`, sweep and `cancel_all_for_dataset` paths.
+
+Five things this ADR names do not exist in the tree at this draft, and the watcher piece introduces all of them:
 - the refusal code `engine.source_coverage_lost`, an `engine.` code under `SKP-V0.md` §5's variant-name rule (the sight's addition 2; preregistration body §2a);
 - the kernel's session-end reasons, `SessionEndReason { ObservedChange, CoverageLost }` (addition 2; preregistration body §2b);
 - the session reference (round 18 item 2; Decision 4);
-- `describe`'s ended state (round 18 item 3; Decision 2).
+- `describe`'s ended state (round 18 item 3; Decision 2);
+- the transition report on `invalidate` that gates emission (preregistration body §2b's reason bullet; Decision 3).
 
 ## Decision
 
 1. **One event kind, `dataset_session_ended`, on the SKP control plane.** It is delivered over the Tauri binding as a Tauri event whose name is a constant in `protocol/skp`. There is no subscription command: the shell's one webview receives it. No other event kind is defined.
-2. **Advisory delivery, never the authority** (rider (a), read as round 18 item 3 rules).
+2. **Advisory delivery, never the authority** (rider (a), unchanged by round 19 item 1, read as round 18 item 3 rules).
    - The kernel decides a generation's end server-side and records it before the event is emitted.
-   - Rider (a)'s every-later-call is every later generation-scoped call. Each of those refuses by name, whether or not the event was delivered. The code is the one for the end's reason, `engine.source_changed` or `engine.source_coverage_lost`; code-by-reason also lands with the watcher piece (preregistration body §2b). Today the generation-scoped calls are two:
+   - Rider (a)'s every later call reads as every later generation-scoped call. Each of those refuses by name, whether or not the event was delivered. The code is the one for the end's reason, `engine.source_changed` or `engine.source_coverage_lost`; code-by-reason also lands with the watcher piece (preregistration body §2b). Today the generation-scoped calls are two:
      - `viewport_query`: the live-generation check and the mint-race arm in `SkpHost::viewport_query`.
      - Redemption of a ticket (ADR-019) from the ended generation. `EngineSourceFactory::create_from_ticket`'s dead-ticket arm (`kernel/src/lib.rs`, on `GenerationRegistry::ticket_liveness`) refuses it by name while the dead-ticket record holds. That record ends at `TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, or earlier when `close_dataset` drops the ended handle's records through `forget_dataset`. A product reopen does not drop them: `open_dataset` mints a new `DatasetHandle` per open, and `mint_for_open`'s own drop is keyed to that new handle. After the record ends, the answer degrades to `StreamRegistry::redeem`'s own refusal, which is never an admission.
-   - `describe`, `cancel` and `close_dataset` are not generation-scoped, and they still answer after the end (round 18 item 3). An ended dataset stays in the catalog, so `describe` answers and `close_dataset` stays the ordinary end of the open. Refusing either one would leave the handle with no ordinary way to close it.
-   - **After the end, the `describe` answer carries the ended state and its typed reason** (round 18 item 3's rider). This way no client can take an ended generation's facts for current ones.
+   - `describe`, `cancel` and `close_dataset` are not generation-scoped, and they still answer after the end (round 18 item 3). An ended dataset stays in the catalog, so `describe` answers and `close_dataset` stays the ordinary end of the open. Refusing `close_dataset` would leave the handle with no ordinary way to close it.
+   - **After the end, the `describe` answer carries the ended state and its typed reason** (round 18 item 3's rider). No client can then take an ended generation's facts for current ones.
      - The reason is the end's own, one of the two values the event's `reason` carries.
      - The ended state is a fact beside `coverage` and `checks`, never a rewrite of them: `coverage` stays the admission-time fact (preregistration body §2b).
      - This is a `describe` change on the watcher's literal, and the watcher's preregistration carries it and its wire form. `describe` stays ADR-006 class 1.
    - A lost or late event therefore cannot leave a client acting on an ended generation. The refusal is the authority.
-3. **Emission scope, and at most once.**
-   - *Scope.* Only the watcher's sink emits the event, and only on the transition that ends the generation. This comes from the preregistration body (§2b's idle-notification bullet), not the skeleton. An end made by the pre-check or the post-check emits nothing. Such an end reaches the shell only through what the tree already delivers:
-     - **A pre-check end:** the `viewport_query` refusal that made it, on that call.
-     - **A post-check end on a stream whose own outcome was clean:** that stream's `engine.source_changed` terminal, which replaces its `ok` (`engine/src/stream.rs`, the post-check's rule (i)), when the data plane forwards it. The residual's third case below is when it does not.
-     - **The residual** (round 18 item 1 names it): some post-check ends deliver nothing on their own call, and each reaches the shell only at its next generation-scoped call's refusal (Decision 2). There are three cases:
-       - a post-check end on a cancelled or failed stream: that stream keeps its own terminal (rule (ii));
-       - an end found when the stream is dropped: `EngineSource`'s `Drop` in `kernel/src/lib.rs` delivers no terminal;
-       - a post-check end on a stream whose engine outcome was clean, when the data plane ends the stream with its own terminal first. The shell's data-plane CANCEL (`frontends/shell/src/streaming/adapterWs.ts`) makes the adapter's reader publish a `Cancelled` halt. `drive`'s loop head and its `biased` selects (`protocol/data-plane/src/adapter_ws.rs`) take that halt before the pump's next item. A peer close or a failed send likewise ends `drive` with `Cancelled` or `TransportFailed`. The pump (`protocol/data-plane/src/pump.rs`) may already have called `next_into`, and `EngineSource::next_into`'s error arm (`kernel/src/lib.rs`) then ended the generation on rule (i)'s `engine.source_changed`. The shell never receives that terminal.
+3. **Emission point: every end emits, at most once** (round 19 item 1).
+   - *The point.* The event is emitted where the kernel records a generation's end: on `GenerationRegistry::invalidate`'s transition, reached in the product only through `SessionInvalidator::end_generation`. Every end therefore emits, whichever check caused it, and **pre-check ends are included**. The routes that reach it:
+     - the pre-check: `SkpHost::viewport_query` ends the generation through `SkpHost::end_generation` when `open_engine_stream` fails with `EngineError::SourceChanged`, and refuses that call;
+     - the post-check at a stream's terminal: `EngineSource::next_into`'s clean arm and its error arm, through `EngineSource::end_session_if_source_changed` (`kernel/src/lib.rs`);
+     - the drop path: `EngineSource`'s `Drop`, through the same method. This includes a `Pending` ticket's source retired by `StreamRegistry`'s `sweep_expired`, `mint`, `redeem`, `cancel` or `cancel_all_for_dataset`, which is dropped after the registry's guard is released;
+     - the watcher's sink, once the watcher piece lands (preregistration body §2b's signal-after-admission bullet).
+   - *A non-blocking enqueue that never re-enters a lock.* Emission is an enqueue onto the control plane's event delivery (`docs/10`), made after `invalidate`'s guard is released.
+     - It never waits on delivery or on the consumer.
+     - It takes no lock of `GenerationRegistry` or `StreamRegistry` and calls into neither.
+     - The Tauri emit (Decision 1) runs on the host's side of the queue, never inside the ending call.
+     - The queue's type and bound are the watcher preregistration's. An event the queue cannot take is lost, which Decision 2 makes safe.
+   - *At most once per ended generation.* Emission is gated on a transition report from `invalidate`, the single point's own precondition. The report is **keyed on the live generation actually removed**: only the call that removes the dataset's live generation emits.
+     - Today `invalidate` cannot report it. It returns the ended tickets, and the list is empty both when no live generation was left and when a live one had no tickets, which is the idle case. `end_generation` returns a cancel count, with the same ambiguity. The preregistration body (§2b's reason bullet) declares `invalidate(dataset, reason)` reporting whether this call ended the generation.
+     - The report does not key on the ended set. `invalidate` marks the dataset in `GenerationState`'s `invalidated` before it looks for a live generation, so a first mark can happen where no generation ends (below).
+     - More than one caller can reach one end:
+       - the pre-check;
+       - the post-check or drop of each of the dataset's concurrent streams;
+       - a nested end: `end_generation`'s own cancel retires a `Pending` ticket, and that ticket's dropped source ends again;
+       - with the watcher, the parent and grandparent watches (S2).
+       The first to remove the live generation emits; the rest emit nothing.
+   - *No live generation, no end.* An `invalidate` that finds no live generation for the dataset ends nothing and emits nothing. In the shipped build that happens in two cases:
+     - another caller already ended the generation, the nested end included;
+     - `close_dataset`'s `forget_dataset` already removed it, and a stream the close cancelled reaches its post-check later on its own thread.
+   - *Close.* `forget_dataset` ends the open, not a generation.
+     - It runs on the client's own `close_dataset` and is answered by that command's response. Neither of the event's two reasons describes it, and it emits nothing.
+     - An end made during `close_dataset` is recorded and enqueued inside `cancel_all_for_dataset`, before `close_dataset` calls `forget_dataset`, so **close-time ends emit before `forget_dataset`**. Such an end comes from a `Pending` ticket's source that `cancel_all_for_dataset` drops after its post-check had found a change.
+     - The kernel therefore releases an open's session reference no earlier than `forget_dataset`.
+   - *What else reaches the shell.* The event is not an end's only route, so one end can reach the shell twice, in no guaranteed order:
+     - a pre-check end: that call's own refusal;
+     - a post-check end on a stream whose own outcome was clean: its `engine.source_changed` terminal, which replaces its `ok` (`engine/src/stream.rs`, the post-check's rule (i)), when the data plane forwards it.
 
-       Until that refusal, the shell shows no session-ended block. Whether these ends should also emit is Open item 1.
-   - *At most once per ended generation.*
-     - The source is the consult's ADR skeleton, which the S1 recommendation pointed to. Round 17 item 2 chose that recommendation. The skeleton is not an accepted ADR, and this text binds nothing until the human accepts it.
-     - It rests on a **precondition the watcher piece must build**: an end that reports whether this call made the transition. Today neither call can report it:
-       - `GenerationRegistry::invalidate` returns the ended tickets. The list is empty both for an already-ended generation and for a live one with no tickets, which is the idle case this event exists for.
-       - `SessionInvalidator::end_generation` returns a cancel count, with the same ambiguity.
-     - The preregistration body (§2b's reason bullet) already declares `invalidate(dataset, reason)` reporting whether this call ended the generation.
-     - Emission is gated on that report, because more than one caller can reach one end: the parent watch and the grandparent watch (S2), the pre-check, and the post-check of each of the dataset's concurrent streams. All of them reach it through the one `SessionInvalidator`. The gate means the sink never emits for an end another caller already made.
-   - *A repeat at the consumer.* One end can also reach the shell through a refusal or terminal on an in-flight call, so the consumer tolerates a repeat. Today's owner latch is `handleSessionEnded`'s `isAlreadyEnded` guard (`frontends/shell/src/App.tsx`), asserted by `App.test.ts`'s `is idempotent -- the first route to notice wins`.
+     Some ends deliver nothing on their own call, and they reach the shell by the event. There are three cases:
+     - a post-check end on a cancelled or failed stream, which keeps its own terminal (rule (ii));
+     - an end on the drop path;
+     - a clean-outcome post-check end where the data plane ended the stream first with its own `Cancelled` or `TransportFailed` (`drive` in `protocol/data-plane/src/adapter_ws.rs`).
+
+     If the event is lost, each of these reaches the shell at its next generation-scoped call's refusal (Decision 2).
+   - *A change nobody has ended emits nothing.* `BatchStream::drop` (`engine/src/stream.rs`) cancels without joining the producer, so `EngineSource`'s `Drop` can run before the post-check and find no change. The generation stays live until the first later caller ends it, and that end emits. On a checks-only open, a change no check has read is not yet an end.
+   - *A repeat at the consumer.* The consumer tolerates a repeat. Today's owner latch is `handleSessionEnded`'s `isAlreadyEnded` guard (`frontends/shell/src/App.tsx`), asserted by `App.test.ts`'s `is idempotent -- the first route to notice wins`.
    - Delivery is best-effort.
 4. **The payload is exactly two members, and it authorises nothing** (rider (b)):
    - `session`: the **session reference** (round 18 item 2).
      - It is a kernel-minted, non-authorising reference, returned by `open_dataset` beside the `DatasetHandle` and accepted by no command.
-     - The kernel mints one per successful `open_dataset` from the OS CSPRNG and never reuses it. The shell's stale-generation guard therefore keeps its kernel-side collision-freedom.
+     - The kernel mints one per successful `open_dataset` from the OS CSPRNG and never reuses it, so a reference never matches another open's.
      - The watcher's preregistration fixes the event's payload to this reference, and fixes its codec and its `open_dataset` member name.
      - **`SKP-V0.md` §3 gains a third minting rule beside its two:** the kernel mints a value wherever the value only names a kernel-side session to its holder and authorises nothing, and no command accepts it as input.
      - §3's table gains the reference, which falls under §3's existing session-scoped, non-persistable rule. §4 item 10 gains it as a fourth value kind, one that is not a handle.
@@ -75,9 +102,9 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
    - When an event arrives, the listener compares its `session` with the reference recorded for the current admitted handle. It drops the event on a mismatch (the N8 guard's rule).
    - On a match, it enters a **reason-keyed entry** with the admitted handle as `forDataset`. That entry passes through the same `endSessionForDataset` guard and the same `handleSessionEnded` latch.
 
-   The idle-end block carries no engine display text. Its wording is the owner's, a P6 placeholder, and the event states no consequence. The watcher piece builds and proves the map and the entry.
+   The block the event enters carries no engine display text. Its wording is the owner's, a P6 placeholder, and the event states no consequence. The watcher piece builds and proves the map and the entry.
 6. **Version.**
-   - The event rides the watcher's SKP literal, which is the one after `crs-unit-fact-and-bounds`' own, by merge order (RULED 2026-09-24 (night) item (2)). The watcher's preregistration fixes the number against its branch base; this ADR does not.
+   - The event rides the watcher's SKP literal, `skp/0.5`. Main's `SKP_VERSION` (`protocol/skp/src/v0/mod.rs`) is `skp/0.4`, the literal `crs-unit-fact-and-bounds` took. The watcher takes the one after it by merge order (RULED 2026-09-24 (night) item (2)), and `SKP-V0.md` §8's `skp/0.4` entry states the same.
    - `SKP-V0.md` §3 gains the minting rule and the reference's row (Decision 4). §4 items 2, 7 and 10 gain notes.
    - The version's §8 entry lists:
      - the event and its two members;
@@ -89,53 +116,21 @@ Four things this ADR names do not exist in the tree at its filing, and the watch
 ## Consequences
 
 - This is SKP's first push. §4 item 7's "none" ends for this one kind, and §4 item 2's single Tauri-invoke binding gains the Tauri event as this event's delivery. Any later event kind is its own decision and its own literal, never an extension of this one.
-- The event's ordering relative to data-plane frames or control-plane responses is not guaranteed and may not be claimed. No delivery latency is claimed either. `docs/08_Testing.md` has no budget row for it and no measurement exists. That file states its rule as `no numbers, no claim` in its Correctness section, for the figures it names there, and the rule is applied here.
-- It carries no bulk data and no feature data, so the control plane/data plane split (`docs/02`, `docs/10`) is unchanged, and `protocol/data-plane/` has an empty diff.
+- The event's ordering relative to data-plane frames or control-plane responses is not guaranteed and may not be claimed. No delivery latency is claimed either. `docs/08_Testing.md` has no budget row for it and no measurement exists. That file states its rule as `no numbers, no claim` in its Correctness section, for the figures it names there, and the rule is applied here. The enqueue that every end route now performs, the data plane's post-check and drop paths among them, is likewise unmeasured and no cost is claimed for it.
+- One end can reach the shell twice (Decision 3). The block's text then depends on which route arrives first: the engine's display text from a refusal or terminal, or the owner's P6 wording from the event. Both carry the same reason, and the owner latch keeps one block.
+- It carries no bulk data and no feature data, so the control plane/data plane split (`docs/02`, `docs/10`) is unchanged. Emission is kernel-side and keys on no data-plane outcome, so `protocol/data-plane/` has an empty diff.
 - `open_dataset`'s response and `describe`'s response each gain a member on the watcher's literal, and the kernel holds one session reference per open.
 - A future conformance suite and MCP adapter would inherit the event. Whether it is exposed to an agent host is not decided here.
-- Everything else lands in the watcher's piece, and is proven by one end-to-end test from the real shape (case (f)):
-  - the producer: the reference's mint, the `describe` ended state, and the kernel host's emission, gated on the transition-reporting end;
-  - the consumer: the shell's listener, its decoder, the session-to-handle map and the reason-keyed route entry.
+- Everything else lands in the watcher's piece, whose preregistration carries the emission point (round 19 item 1). One end-to-end test from the real shape, case (f), proves it.
+  - The producer: the reference's mint, the `describe` ended state, the transition report, and emission at the single end point. It comes with a kernel test per route in Decision 3 (pre-check, post-check, the drop path including a `Pending` drop, the sink, a close-time end) that the route emits exactly once, and that a repeat, nested or post-close end emits nothing.
+  - The consumer: the shell's listener, its decoder, the session-to-handle map and the reason-keyed route entry.
 
 ## What this ADR does not decide
 
-Subscription or unsubscription commands; any other event kind; a websocket or remote binding; re-arm, reload or a restored generation; a generation value on the wire (Decision 4 records this ADR's reading of the reference); the reference's codec, the new members' names, the `reason` values' wire spellings and the `describe` ended state's wire form (the watcher's preregistration); the reason-keyed entry's exact form and the operator-visible wording (P6); MCP exposure.
+Subscription or unsubscription commands; any other event kind; a websocket or remote binding; re-arm, reload or a restored generation; a generation value on the wire (Decision 4 records this ADR's reading of the reference); the reference's codec, the new members' names, the `reason` values' wire spellings and the `describe` ended state's wire form (the watcher's preregistration); the event queue's type, bound and full-queue behaviour, within Decision 3's rule (the watcher's preregistration); what an end emits for a generation `live_or_mint` minted for a dataset that no `open_dataset` minted a reference for (the watcher's preregistration); the reason-keyed entry's exact form and the operator-visible wording (P6); MCP exposure.
 
-## Open — for the human, before acceptance
+## For the human, at acceptance
 
-*History:* the second draft's Open items 1 (the session reference's wire form) and 2 (the reading of rider (a)) were ruled by round 18 items 2 and 3, and are now Decision 4–5 and Decision 2 text. Round 18 item 1 left the item below as the one remaining Open item. The previous draft recommended (c). That recommendation rested on a premise the residual's third case falsifies, and it is restated below.
+*History:* round 18 items 2 and 3 ruled the earlier Open items on the session reference's wire form and the reading of rider (a), which are now Decisions 4–5 and Decision 2. Round 19 item 1 ruled the last one, whether post-check ends should also emit, which is now Decision 3. No Open item remains.
 
-*Also for acceptance, not an Open item:* Decision 4 records this ADR's reading that the session reference does not engage `SKP-V0.md` §8's `skp/0.3` rule of no generation value on the wire. The human's acceptance confirms or refuses that reading.
-
-1. **Whether a post-check end should also emit** (round 18 item 1).
-   - **The residual.** Decision 3 emits only from the watcher's sink, so its three residual cases reach the shell only at the next generation-scoped call's refusal. Rider (a) keeps that correct, because no generation-scoped call is answered. But until the operator's next pan or query, the shell shows the ended generation's resident data with no session-ended block.
-   - **Where it falls once the watcher lands.** On a watching open, a change the watch sees ends the generation at the sink, which emits. The residual is left with:
-     - every checks-only open: every open off Windows, and a Windows open whose arming failed (preregistration body §2a);
-     - a change the watch cannot see: ancestors above the grandparent watch (round 17 item 2's KNOWN-LIMITATIONS line), and what the preregistration body's §1 declines to claim;
-     - on a watching open, a residual-case post-check end made before the watch's signal arrives. The sink's later end then reports no transition, so Decision 3's gate keeps it from emitting. No OS delivery deadline is claimed (§1).
-   - **Outside every form.** Sometimes `BatchStream::drop` returns before the producer's post-check has run. The drop then finds no change and the generation stays live: nothing has ended, so nothing can be delivered. The first caller to reach the change ends it: the next pre-check, on its own call; a concurrent stream's later post-check; or, on a watching open, the sink. That end then takes its own caller's route in Decision 3.
-   - **(a) No.** The residual stays as Decision 3 names it.
-     - *For:* the event keeps the preregistration body's scope, a watcher end, and nothing changes.
-     - *Against:* the operator-visible lag above has no bound except the operator's next call, over every open the practical residual above covers.
-   - **(b) Every post-check end emits.** The post-check's `end_generation` call emits, gated on the same transition report as the sink.
-     - *For:*
-       - It closes all three residual cases whenever delivery succeeds, the third included. It keys on the kernel's own transition, not on which terminal the data plane delivered.
-       - On a watching open it also closes the race above: whichever caller makes the transition emits.
-       - Every post-check already reaches the one `SessionInvalidator`, and the owner latch already tolerates a repeat.
-     - *Against:*
-       - A clean-outcome end whose terminal the data plane forwards would reach the shell twice, as terminal and as event, in no guaranteed order. The block's text would depend on which arrives first: the engine's display text or the owner's P6 wording.
-       - The event's scope widens beyond the preregistration body's §2b.
-       - Emission moves from the sink alone to the one end operation that the pre-check, the post-check and the sink all reach. The producer's drop path already holds that `SessionInvalidator` (`EngineSource`'s `invalidator`), so the cost is placing the emission beside it, not reaching it.
-   - **(c) Only a post-check end whose stream's engine terminal does not carry it emits:** a cancelled or failed stream, or an end found at drop.
-     - *For:* it closes the residual's first two cases, and adds no repeat for a clean outcome the data plane forwards.
-     - *Against:*
-       - It does not close the third case. There the engine outcome was clean, so (c) stays silent while the shell receives `Cancelled` or `TransportFailed`. Only `protocol/data-plane` knows which terminal was delivered (`drive`'s return, recorded in `server.rs`). Keying emission on it would need a data-plane report to the kernel, against the empty `protocol/data-plane/` diff in this ADR's Consequences.
-       - Emission then branches on the stream's outcome class, a second condition beside the transition report, and that condition needs its own test.
-       - It has the same placement as (b), and the same widening beyond §2b.
-
-   *Architect's recommendation, not a ruling:* (b), revised from (c).
-   - (c) assumed that a clean-outcome post-check end always reaches the shell as its own stream's terminal. The third case shows the data plane can replace that terminal, and the kernel cannot see which terminal was delivered without a data-plane change.
-   - The transition report is then the one kernel-side condition that covers every post-check end, and it also closes the sink race above.
-   - (b)'s cost is a repeat that the owner latch already absorbs. Both routes carry the same reason, and only the block's display text depends on order. (a)'s lag has no bound but the next call, over every checks-only open.
-
-   Under (b) or (c), the watcher's preregistration carries the emission point and its test. Under (a), the residual becomes a KNOWN-LIMITATIONS line in that piece.
+- Decision 4 records this ADR's reading that the session reference does not engage `SKP-V0.md` §8's `skp/0.3` rule of no generation value on the wire. The human's acceptance confirms or refuses that reading.
