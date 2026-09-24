@@ -84,12 +84,17 @@ test('finds_a_test_behind_a_multiline_ignore_attribute_holding_an_unmatched_brac
 });
 
 // The six reviewer-named fixtures (state/gate-log.json, node governance-verify-mutation-multiline-attrs,
-// reviewer attempt 1 @ 28fef8e: "trailing comment, char literal, raw-string body, test inside the
-// window, false close, pending carried across"). Under the union design each fixture's expected list
+// reviewer attempt 1 @ 28fef8e; the six inputs its C1 lists, one fixture each, named by the
+// variables below). Under the union design each fixture's expected list
 // is asserted directly (fixed names/lines), never by comparison to another build of the tool: on
 // every one of these six, `mainStyleRustScan` alone already finds every test a human would expect,
 // because each fixture keeps a real single-line `#[test]` immediately before its `fn` — the union
 // guarantees these six are found (RULED 2026-09-24 round 18 item 4), whatever `trackedRustScan` does.
+//
+// RECORDED MUTATION (deleting the per-line half of the union): replacing findTestsInFile's Rust
+// branch with `trackedRustScan(rel, lines)` alone (dropping `mainStyleRustScan` from the union) makes
+// `the_six_reviewer_fixtures_are_found_by_the_union_no_loss_by_construction` FAIL — on the first
+// fixture `trackedRustScan` never sees the comment bracket's attribute close, so it lists nothing.
 test('the_six_reviewer_fixtures_are_found_by_the_union_no_loss_by_construction', () => {
   const trailingComment = [
     '#[allow(clippy::something)] // note: an unmatched [ bracket in a trailing comment',
@@ -169,8 +174,8 @@ test('the_six_reviewer_fixtures_are_found_by_the_union_no_loss_by_construction',
 // RECORDED MUTATION (deleting the per-line half of the union): replacing findTestsInFile's Rust
 // branch with `trackedRustScan(rel, lines)` alone (dropping `mainStyleRustScan` from the union) makes
 // `deleting_the_per_line_half_of_the_union_loses_a_test_main_finds` FAIL — on this exact fixture
-// `trackedRustScan` alone never sees the attribute close (it is swallowed to end of file), so it finds
-// neither test, while `mainStyleRustScan` (and hence today's `origin/main`) finds both.
+// `trackedRustScan` alone takes line 1's comment `[` as an attribute open and line 4's comment `]` as
+// its close, so it lists only the later function, while `mainStyleRustScan` lists both.
 test('deleting_the_per_line_half_of_the_union_loses_a_test_main_finds', () => {
   const rust = [
     '#[allow(clippy::something)] // note: an unmatched [ bracket opens here',
@@ -181,7 +186,7 @@ test('deleting_the_per_line_half_of_the_union_loses_a_test_main_finds', () => {
     'fn a_test_after_the_false_close() {}',
   ].join('\n');
   const rustTests = findTestsInFile('engine/src/lib.rs', rust);
-  // Both tests are present only because mainStyleRustScan (the per-line half) finds them; pinned here
+  // The first test is present only because mainStyleRustScan (the per-line half) finds it; pinned here
   // as the union's own no-loss guarantee, not the tracked scan's.
   assert.deepEqual(rustTests.map((t) => t.name), [
     'a_test_lost_between_open_and_a_false_close',
@@ -226,11 +231,17 @@ test('a_false_entry_from_a_misjudged_attribute_close_is_flagged_and_still_listed
   );
 });
 
-// The string-parity case from the attempt-2 record ("the false-close class ... reached also by a
-// string-parity flip"): an odd, unescaped `"` on a continuation line flips `stripStringLiterals`'s
-// `inString` state, which can swallow a real closing `]` (or, as here, run to end of file). This is a
-// LOST GAIN (the multi-line test is not found), never a lost main-coverage test: the fixture's other
-// test, preceded by its own real `#[test]`, is still found by `mainStyleRustScan`.
+// The string-parity case (state/gate-log.json, node governance-verify-mutation-multiline-attrs,
+// reviewer attempt 2 @ b595344): an odd, unescaped `"` on a continuation line flips
+// `stripStringLiterals`'s `inString` state, which can swallow a real closing `]` (or, as here, run to
+// end of file). This is a LOST GAIN (the multi-line test is not found), never a lost main-coverage
+// test: the fixture's other test, preceded by its own real `#[test]`, is still found by
+// `mainStyleRustScan`.
+//
+// RECORDED MUTATION (deleting the per-line half of the union): replacing findTestsInFile's Rust
+// branch with `trackedRustScan(rel, lines)` alone (dropping `mainStyleRustScan` from the union) makes
+// `a_string_parity_flip_can_lose_the_gain_but_never_loses_what_main_finds` FAIL — the flipped `"`
+// swallows the rest of the file, so `trackedRustScan` alone lists nothing.
 test('a_string_parity_flip_can_lose_the_gain_but_never_loses_what_main_finds', () => {
   const rust = [
     '#[test]',
