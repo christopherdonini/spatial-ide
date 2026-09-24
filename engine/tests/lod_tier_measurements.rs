@@ -240,8 +240,8 @@ fn one_sample(source: &Dataset, directory: &Path, workers: usize, label: &str) -
 fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
     assert!(
         !cfg!(debug_assertions),
-        "this file's tests are wall-time measurements; a debug build's numbers are not \
-         measurements. Run with --release."
+        "this test measures build wall time; a debug build's numbers are not measurements, and \
+         every other pass in this family refuses a debug build on principle. Run with --release."
     );
     let path = polygons_100k();
     let source = Dataset::open(&path).expect("open polygons-100k");
@@ -423,8 +423,8 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
     assert!(
         !cfg!(debug_assertions),
         "this helper is called by both wall-time measurements and an O1-O4 outcomes pass at 5 GB \
-         scale; neither a timing nor a correctness result from a debug build is trustworthy at this \
-         scale. Run with --release."
+         scale; a debug build's wall time is not a measurement, and every other pass in this \
+         family refuses a debug build on principle. Run with --release."
     );
     let path = PathBuf::from(PARCELS_5GB);
     assert!(
