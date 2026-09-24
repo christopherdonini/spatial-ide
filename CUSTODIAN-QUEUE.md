@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `69b93b3e48421c7d9ee0b62d80999d8392de47dedc7409d00a5e0f8b78965c12`) at `2026-09-24T02:17:57.430Z`.
+Generated from `PLAN.yaml` (sha256 `437ddff9fe469231f4a1bfdb659adceef36279efac597018ec9dc7a02469af28`) at `2026-09-24T03:36:21.079Z`.
 
 ## 1. Next
 
@@ -10,11 +10,12 @@ Generated from `PLAN.yaml` (sha256 `69b93b3e48421c7d9ee0b62d80999d8392de47dedc74
 
 - (none)
 
-## 3. Waiting on the human (total: 30 min)
+## 3. Waiting on the human (total: 35 min)
 
 ### ruling
 
 - **engine-source-change-watcher** — The advisory source-change watcher (15 min)
+- **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests (5 min)
 - **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen (5 min)
 - **governance-verify-mutation-header-token** — verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own (5 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (5 min)
@@ -34,7 +35,6 @@ Generated from `PLAN.yaml` (sha256 `69b93b3e48421c7d9ee0b62d80999d8392de47dedc74
 
 - **engine-tests-configured-connections** — engine/tests -- route the 10 raw duckdb::Connection::open_in_memory() sites through a test helper that applies pool::configure_connection (autoload/autoinstall off in test connections too) — evidence: PR #111
 - **briefa-p3b-owner-side-invalidation** — Brief A P3b -- owner-side invalidation (residency cleared, picks refused), the kernel-authoritative dead-ticket refusal wired with a real caller and three-valued unknown-handle behaviour, the §12e split amendment; its own preregistration and gates. No release includes P3a without P3b — evidence: PR #86
-- **crs-unit-fact-and-bounds** — ADR-013 A1 item 6 made true of the build -- a typed CRS unit fact on describe (the next SKP literal), MIN_ANCHOR_SPAN's declared per-unit values and RECENTER_MAX_DRIFT_M's architect-declared degrees value, both pinned by tests — evidence: branch `cut/crs-unit-fact-and-bounds`
 - **shell-dependency-audit-piece** — PR #97 as one dependency piece under the full gate (RULED 2026-09-20): the three majors, the typed test helpers, suite, build, the notice diff, the dated package decisions — evidence: PR #97
 - **drill-fix-viewer-build-order** — Clean-clone repair 3 -- the bundle viewer built before the shell, explicitly (entry 115) — evidence: PR #106
 - **drill-fix-release-only-guard** — Clean-clone repair 1 -- the missing release-only guard on the wall-time measurement test (entry 115) — evidence: PR #104

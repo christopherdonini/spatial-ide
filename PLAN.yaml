@@ -1452,16 +1452,16 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: in-progress
+    status: blocked
     order: 1
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 5}
     gate: none
-    evidence: {branch: cut/crs-unit-fact-and-bounds}
+    evidence: {pr: 112}
     budget_minutes: 300
     generation: 1
     felt_verdict: false
-    entries: [120, 124]
+    entries: [120, 124, 128]
     summary: "Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 4: P0's arithmetic bound first, then the preregistration, the implementation and both gates on a branch, taking the next SKP literal. If P0 shows a visible defect, record it and continue. If any choice goes beyond the ruled scope, stop this piece and move on. Merge order: after PR #103; before B1. PLACED 2026-09-23 by the human (RULED 2026-09-23 (later), entry 120 item (1)(b)-(c); state/directives/2026-09-23-entry-120.md): first after the acceptance PR, ahead of b1-engine-kernel-half (which takes the SKP literal after this one). Full gating (a wire change); its full preregistration is written at P0 and becomes this node's gate. P0 opens with one arithmetic bound, no measurement campaign: the worst-case float32 residual under today's bounds for the CRS84 corpus file at the deepest zoom; the KNOWN-LIMITATIONS line is then revised to state it. The anchor span's degrees value, 1e-6 degree, is preregistered at engine/ADMISSION-PREREGISTRATION.md:577-579; the drift bound's degrees value is declared by the architect from ADR-010 rule 1's float32 precision requirement"
     dates: {opened: 2026-09-23, done: null}
 
