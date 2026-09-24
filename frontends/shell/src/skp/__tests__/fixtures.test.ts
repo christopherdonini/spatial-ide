@@ -118,6 +118,8 @@ describe("SKP v0 shared fixtures", () => {
         "provenance",
         "axis_provenance",
         "display_convention",
+        // skp/0.4, crs-unit-fact-and-bounds
+        "unit",
       ],
       "describe response .crs"
     );
@@ -159,6 +161,7 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.crs.provenance).toBe("crs:declared");
     expect(res.crs.axis_provenance).toBe("axis:declared");
     expect(res.crs.display_convention).toBeNull(); // not a degrees dataset
+    expect(res.crs.unit).toBe("metre"); // skp/0.4: EPSG:2056 (Lv95) is metre
     expect(res.identity.class).toBe("native");
     expect(res.identity.session_statement).toBeNull();
     // A sanity check convicts, never confirms: "none" is *not checked*, and no string here says a
@@ -166,6 +169,17 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.sanity.level).toBe("none");
     expect(res.sanity.reason).toMatch(/not checked/i);
     expect(res.sanity.reason).not.toMatch(/passed|valid|verified/i);
+  });
+
+  // Mutation: the session-ordinal fixture's `unit` set to `"metre"`. Expected failure: this test,
+  // "describe fixtures carry the typed unit fact (skp/0.4)", fails by name.
+  it("describe fixtures carry the typed unit fact (skp/0.4)", () => {
+    const lv95File = loadFixture<DescribeResponse>("v0-describe-response");
+    const lv95Asserted = loadFixture<DescribeResponse>("v0-describe-response-caller-asserted");
+    const crs84FormatRule = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(lv95File.crs.unit).toBe("metre");
+    expect(lv95Asserted.crs.unit).toBe("metre");
+    expect(crs84FormatRule.crs.unit).toBe("degree");
   });
 
   // Mutation: add a generation member to the describe response shape and populate the fixture.
@@ -209,6 +223,7 @@ describe("SKP v0 shared fixtures", () => {
     // line.
     expect(displayConventionLine(res.crs)).toBe(res.crs.display_convention);
     expect(res.crs.provenance).toBe("crs:format-default");
+    expect(res.crs.unit).toBe("degree"); // skp/0.4: OGC:CRS84 is degree
 
     // **A2 on the wire**: no generation value anywhere on this response. The word itself is not
     // banned and cannot be -- ADR-016 §6's record value is literally
@@ -266,6 +281,8 @@ describe("SKP v0 shared fixtures", () => {
         "provenance",
         "axis_provenance",
         "display_convention",
+        // skp/0.4, crs-unit-fact-and-bounds
+        "unit",
       ],
       "describe response (caller-asserted) .crs"
     );
@@ -273,6 +290,7 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.crs.asserted_by).toBe("os-user chris");
     expect(res.crs.asserted_at).toBe("2026-08-18T00:00:00Z");
     expect(res.crs.definition_provenance).toBe("catalog:epsg-2056@sha256:254016888ff4");
+    expect(res.crs.unit).toBe("metre"); // skp/0.4: EPSG:2056 (Lv95) is metre
   });
 
   it("viewport_query request/response, with bbox edges as hex, never JSON numbers", () => {

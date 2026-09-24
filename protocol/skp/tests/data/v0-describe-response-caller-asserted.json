@@ -11,7 +11,8 @@
     "axis_normalization": "none-performed",
     "provenance": "crs:asserted",
     "axis_provenance": "axis:declared",
-    "display_convention": null
+    "display_convention": null,
+    "unit": "metre"
   },
   "geometry": {
     "column": "geometry",

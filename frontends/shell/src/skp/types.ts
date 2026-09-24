@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.3";
+export const SKP_VERSION = "skp/0.4";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -98,7 +98,16 @@ export interface CrsInfo {
    * A display statement only: no coordinate value is transformed, and `axis_normalization` stays
    * `"none-performed"`. Render it verbatim; never paraphrase or shorten it. */
   display_convention: string | null;
+  /** `skp/0.4`, crs-unit-fact-and-bounds: the engine's recorded
+   * `AdmissionRecord::coordinate_unit` class. `"other"` means both axes named one unit that is
+   * neither degree nor metre; its name is not carried, and neither is the unit's source. */
+  unit: CrsUnit;
 }
+
+/** `skp/0.4`, crs-unit-fact-and-bounds: a closed projection of `spatial_engine::CoordinateUnit`
+ * (`engine/src/geoparquet.rs`) mirroring `protocol/skp/src/v0/commands.rs`'s `CrsUnit` exactly.
+ * There is no fifth value and no default. */
+export type CrsUnit = "degree" | "metre" | "other" | "unestablished";
 
 export interface GeometryInfo {
   column: string;
