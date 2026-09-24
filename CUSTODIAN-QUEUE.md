@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e1f4a235aed6ec8e40ae6ff819e123a9f4c4b6f50df10299f673169e1a552940`) at `2026-09-24T19:32:26.832Z`.
+Generated from `PLAN.yaml` (sha256 `f31d01d5c9de449b6a12befee9029a8927468a3402ec24e1b0cabf4988a61396`) at `2026-09-24T19:55:18.274Z`.
 
 ## 1. Next
 
@@ -42,6 +42,7 @@ Generated from `PLAN.yaml` (sha256 `e1f4a235aed6ec8e40ae6ff819e123a9f4c4b6f50df1
 
 ### Proposed
 
+- **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
 - **interactive-zoom-ceiling** — A declared ceiling for interactive zoom (ADR-010 rule 6) -- crs-unit's STOP LIST Q3 (phase `prototype`) — never queued until placed

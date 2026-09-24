@@ -502,6 +502,24 @@ nodes:
     summary: "RULED 2026-09-24, question round 19, item 2: the round-16 hold is lifted; placed next in the governance lane, one round under a fresh count and the record cap. This round (attempt-2 corrections; state/gate-log.json this node's attempt-2 records): reviewer attempt-2's four blockers and architect attempt-2's two residual items closed, per this node's gate file's own append-only Amendments. test-claims-landedness-bound follows it (RULED 2026-09-24, question round 17, item 8); when it lands, briefa-p3b-owner-side-invalidation and governance-verify-mutation-multiline-attrs close as done. The merge is the human's click."
     dates: {opened: 2026-09-24, done: null}
 
+  - id: governance-hash-grammar-shared
+    title: "Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [governance-test-claims-superseded-scanner]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: [111]
+    summary: "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix)."
+    dates: {opened: 2026-09-18, done: null}
+
   - id: site-bugs-first
     title: "Landing page — DRAFT-4's bugs-first section (health facts from GitHub's API at Pages build time; the shipped panel's fallback; chips, ids, dates)"
     kind: task
@@ -842,7 +860,7 @@ nodes:
     order: 4
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md
     evidence: {pr: 108}
     budget_minutes: 60
     generation: 1
