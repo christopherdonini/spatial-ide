@@ -138,10 +138,13 @@ export function extractClaimedTests(text) {
 
 // `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s own `HASH_REF_RE` as it stands on
 // `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (its `GAP`/`HASH_REF_RE`
-// constants, lines 553 and 554 at that commit -- not written as a `path:line` token here, since that
-// file is not tracked on this branch and `verify-cites.mjs` resolves every such token against the
-// CURRENT tree, gate S4/N4's own disclosed limit; round 15(c) -- a tool claim names the tool's
-// commit). `GAP` is that source's own
+// constants, lines 554 and 555 at that commit -- round 19 item 2's correction (attempt-2 reviewer
+// gate, entry 133): the earlier text read 553/554, one line short of each constant's own opening
+// line -- not written as a `path:line` token here, since that
+// file is not tracked on this branch and `verify-cites.mjs` (as it stands on `main` @
+// 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f, round 15(c): a tool claim names the tool's commit)
+// resolves every such token against the CURRENT tree, gate S4/N4's own disclosed limit). `GAP` is
+// that source's own
 // name and definition, standing in for a plain `\s*` so a reference rustfmt (or, here, a table cell)
 // has wrapped across exactly one `//`-comment continuation still binds, exactly as the source binds
 // it. ONE necessary grammar-level divergence, and the only one kept: group 2 (path) is REQUIRED --

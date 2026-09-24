@@ -187,9 +187,11 @@ test('a_gate_file_named_by_any_done_node_is_never_planned', () => {
 // The SUPERSEDED rule (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2). A
 // two-commit history: v1's claim line is fixed and hashed at its own commit, v2 appends a pin
 // referencing it. The appended row is a real markdown TABLE ROW, byte-ALIKE in shape (not content) to
-// `OWNER-INVALIDATION-PREREGISTRATION.md:1195` on `cut/briefa-p3b-test-names` @ `46cde2c` -- the
-// reference inside ONE backtick span, in its own table cell, with `superseded` in a different cell
-// (attempt-1 architect gate B6).
+// the row on MAIN at `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:1191 @ b14993192c8769113ddd630ab0d49d6c8ec2c897 sha256:72456eb51e3018d88b8583268fdd52b0cf4f4f263470839cf353362377836c6c` --
+// round 19 item 2's correction (attempt-2 reviewer gate, entry 133): the earlier cite named
+// `cut/briefa-p3b-test-names`'s unmerged `46cde2c` at `:1195`, a line only the moving branch tip ever
+// carried (that file is 1174 lines at `46cde2c` itself); the reference inside ONE backtick span, in
+// its own table cell, with `superseded` in a different cell (attempt-1 architect gate B6).
 const SUPERSEDED_DOC = 'X-PREREGISTRATION.md';
 const SUPERSEDED_CLAIM_NAME = 'an_old_test_name_here';
 const SUPERSEDED_V1 = `# Doc\n\nVerified by test \`${SUPERSEDED_CLAIM_NAME}\`.\n`;
@@ -373,4 +375,68 @@ test('a_pin_with_the_word_superseded_only_in_a_double_backtick_span_does_not_exe
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
   assert.equal(superseded.length, 0, `superseded only inside a double-backtick span must not exempt: ${JSON.stringify(superseded)}`);
   assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// Condition (e), round 19 item 2 (entry 133; attempt-2 reviewer gate finding, gate-log.json this
+// node's attempt-2 reviewer record): every fixture above lacks a remote entirely, so `origin/main`
+// never resolves in `originMainSha` and only `isAncestorOfMain`'s SKIPPED branch (`checked: false`)
+// ever ran in this suite -- the fail-closed REFUSED branch (`checked: true, ok: false`) was untested.
+// This fixture is the first to give the scanned tree a real bare `origin` remote, so both branches run
+// for real: a rev that origin/main's own history actually contains exempts; a rev reachable locally
+// (`git show` still finds it) but NOT an ancestor of origin/main does not.
+function supersededFixtureWithRemote({ ancestorOfMain }) {
+  const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-origin-'));
+  execFileSync('git', ['init', '-q', '--bare', bareDir]);
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-remote-'));
+  const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1); // the claim's own historical commit
+  execFileSync('git', ['branch', '-M', 'main'], { cwd: dir });
+  execFileSync('git', ['remote', 'add', 'origin', bareDir], { cwd: dir });
+
+  if (ancestorOfMain) {
+    // v1Rev becomes origin/main's own commit -- trivially its own ancestor.
+    execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: dir });
+  } else {
+    // origin/main is seeded from an UNRELATED history that never contains v1Rev, pushed from a
+    // second, disconnected working copy -- v1Rev stays resolvable locally (this repo's own object
+    // store has it) but is not reachable from origin/main at all.
+    const seedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-origin-seed-'));
+    gitRepoAt(seedDir, 'README.md', 'unrelated origin/main history; never contains v1Rev\n');
+    execFileSync('git', ['branch', '-M', 'main'], { cwd: seedDir });
+    execFileSync('git', ['remote', 'add', 'origin', bareDir], { cwd: seedDir });
+    execFileSync('git', ['push', '-q', 'origin', 'main'], { cwd: seedDir });
+  }
+  execFileSync('git', ['fetch', '-q', 'origin'], { cwd: dir });
+
+  const row = pinRow({
+    relPath: SUPERSEDED_DOC,
+    pinnedLine: SUPERSEDED_CLAIM_LINE,
+    rev: v1Rev,
+    hash: sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE)),
+    word: 'superseded',
+  });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'v2');
+  return { dir };
+}
+
+// RECORDED MUTATION: in isAncestorOfMain, replace the whole body with `return { checked: true, ok:
+// true };` unconditionally (condition (e) always satisfied once origin/main merely resolves, the
+// ancestor check itself dropped, `mainSha`/the try/catch removed) → applied for real, run via
+// `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; fails: "AssertionError
+// [ERR_ASSERTION]: a rev off origin/main must not exempt:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3
+// @ <sha> sha256:<hash>`"}]" then "1 !== 0" (this run's own only failure -- the other 19 tests pass;
+// `<sha>`/`<hash>` elided, the temp repo's own commit and content hash differing every run).
+test('a_pin_whose_rev_is_not_an_ancestor_of_origin_main_does_not_exempt', () => {
+  const { dir: dirOnMain } = supersededFixtureWithRemote({ ancestorOfMain: true });
+  const onMain = runVerifyTestClaims({ repoRoot: dirOnMain });
+  assert.equal(onMain.findings.length, 0, `an ancestor-of-main rev must exempt: ${JSON.stringify(onMain.findings)}`);
+  assert.equal(onMain.superseded.length, 1, JSON.stringify(onMain.superseded));
+  assert.equal(onMain.supersededMainUnchecked, false);
+
+  const { dir: dirOffMain } = supersededFixtureWithRemote({ ancestorOfMain: false });
+  const offMain = runVerifyTestClaims({ repoRoot: dirOffMain });
+  assert.equal(offMain.superseded.length, 0, `a rev off origin/main must not exempt: ${JSON.stringify(offMain.superseded)}`);
+  assert.equal(offMain.findings.length, 1, JSON.stringify(offMain.findings));
 });
