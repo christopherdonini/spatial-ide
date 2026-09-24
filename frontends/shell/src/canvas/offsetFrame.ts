@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import type { CrsUnit } from "../skp/types";
+
 /**
  * Offset-relative rendering frame — ADR-010 rule 3: `f32(coord − origin)`, never
  * `f32(coord) − f32(origin)` and never `f32(coord)` at all for absolute projected magnitudes.
@@ -34,25 +36,58 @@ export type AuthoritativeM = number;
 export type LocalFrameM = number;
 
 export const RECENTER_BUDGET_PX = 0.5;
-export const RECENTER_MAX_DRIFT_M = 131_072;
+
+/**
+ * `skp/0.4`, crs-unit-fact-and-bounds: the drift-cap sanity ceiling, KEYED BY THE DATASET'S OWN
+ * COORDINATE UNIT -- every value is `131_072`, and every value's rationale sits here, at its own
+ * site:
+ *
+ * - `metre: 131_072` -- **unchanged**, the original sanity ceiling (below): not derived from
+ *   precision, a power of two below the budget-derived threshold at the ADR-003 spike's reference
+ *   scale (a 0.1 px budget at 1:500 gives about 222 km, capped at 131_072 m).
+ * - `degree: 131_072` -- derived, not copied, in the consult's own DECLARED VALUE section
+ *   (`state/consults/2026-09-24-crs-unit-fact-and-bounds.md`): the precision requirement is
+ *   `R(z) = min(C * 2^(z-24), B)`, which names no unit, and fixes `C` only through the zoom
+ *   handover it guarantees. The metre curve's handover is `z* = 6`; the unique degree `C` with the
+ *   SAME handover is `B * 2^24 / 2^6 = 2^17 degree` -- the same 131_072, by derivation rather than
+ *   coincidence, and it never binds on the CRS84 domain (largest separation about 402.49 degrees).
+ * - `other: 131_072` and `unestablished: 131_072` -- **unchanged**, the same sanity ceiling as
+ *   `metre` (this piece's preregistration §7 and §8 item 8: no per-unit value beyond metre and
+ *   degree is declared in this cut). **The attach point if Q1 is ever ruled** (the consult's STOP
+ *   LIST, Q1: declared values for a unit recorded as `other` or `unestablished`).
+ *
+ * Swapping which unit's cap a caller selects is undetectable by any test: every value is the same
+ * number (the consult's own DECLARED VALUE step 4). The guard against a wrong or dropped selection
+ * is `recenterThresholdForBudget`'s own required, no-default cap parameter below, which the
+ * typecheck suite enforces.
+ */
+export const RECENTER_MAX_DRIFT: Record<CrsUnit, number> = {
+  metre: 131_072,
+  degree: 131_072,
+  other: 131_072,
+  unestablished: 131_072,
+};
 
 /**
  * Largest drift permitted before re-centering, derived from the precision budget rather than
  * picked. f32 carries a 24-bit significand, so a value of magnitude D lands within `D * 2^-24` of
- * the truth; on screen that is `D * 2^-24 * pixelsPerMetre`. Solving for a declared pixel budget
- * gives the largest D still inside it.
+ * the truth; on screen that is `D * 2^-24 * pixelsPerAuthoritativeUnit`. Solving for a declared
+ * pixel budget gives the largest D still inside it.
  *
- * A *fixed metric* threshold has exactly the wrong shape: zoomed in, metres-per-pixel is small and
- * even a modest drift costs real pixels; zoomed out, the view centre moves kilometres per gesture
- * at a scale where f32 error is invisible. `maxM` is a sanity ceiling, not a precision limit.
+ * A *fixed metric* threshold has exactly the wrong shape: zoomed in, authoritative-units-per-pixel
+ * is small and even a modest drift costs real pixels; zoomed out, the view centre moves many units
+ * per gesture at a scale where f32 error is invisible. `maxUnit` is a sanity ceiling, not a
+ * precision limit -- REQUIRED, with no default (this piece's preregistration §8 item 2: a defaulted
+ * cap is block-on-sight), because there is no unit a silent default could pick that is honest for
+ * every dataset; callers select it from `RECENTER_MAX_DRIFT[unit]`.
  */
 export function recenterThresholdForBudget(
   pixelsPerMetre: number,
   budgetPx: number = RECENTER_BUDGET_PX,
-  maxM: number = RECENTER_MAX_DRIFT_M
+  maxUnit: number
 ): number {
   const f32RelativePrecision = Math.pow(2, -24);
-  return Math.min(maxM, budgetPx / (f32RelativePrecision * pixelsPerMetre));
+  return Math.min(maxUnit, budgetPx / (f32RelativePrecision * pixelsPerMetre));
 }
 
 /**

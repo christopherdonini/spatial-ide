@@ -6,6 +6,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import type { PixelColorCount, PixelRegion, PixelRegionSummary, PixelSamplePoint, PixelSummary } from "../e2e-test-surface";
+import type { CrsUnit } from "../skp/types";
 import { logSessionEvent } from "../diagnostics/log";
 import {
   recordResidencyBatch,
@@ -41,7 +42,7 @@ import {
   PickCeilingExceeded,
   ResidentVertexCeilingExceeded,
 } from "./limits";
-import { OffsetFrame, RECENTER_BUDGET_PX, recenterThresholdForBudget } from "./offsetFrame";
+import { OffsetFrame, RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT, recenterThresholdForBudget } from "./offsetFrame";
 import type { HoverReadout, PickResult } from "./pick";
 import { isPickBelowResolution, isPickConfirming, isPickSessionEnded, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
@@ -499,6 +500,11 @@ export interface WorkingCanvasProps {
    * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
   dataset: string;
   geometryColumn: string;
+  /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact -- REQUIRED,
+   * with no default (this piece's preregistration §8 item 2 names a defaulted unit block-on-sight).
+   * Selects `RECENTER_MAX_DRIFT[crsUnit]` at this component's four `recenterThresholdForBudget`
+   * call sites; the tile grid frame reads it separately, at `establishGridFrame`. */
+  crsUnit: CrsUnit;
   /** Viewport-residency cut P6a, decision 24(c): `HoverReadout`, not merely `PickResult | null` --
    * a below-threshold pick reports the typed refusal (`PickBelowResolution`), never null-silence. */
   onHover: (pick: HoverReadout) => void;
@@ -802,7 +808,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
+  { dataset, geometryColumn, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -886,7 +892,11 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * change ever arrives (harmless: eviction never runs before any batch has pushed residency past
    * budget, which cannot happen before a real viewport has driven any tile planning at all). */
   const viewCentreRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const frameRef = useRef(new OffsetFrame(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(INITIAL_ZOOM))));
+  const frameRef = useRef(
+    new OffsetFrame(
+      recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(INITIAL_ZOOM), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit])
+    )
+  );
   /** The style prop, already resolved to what `buildLayers` needs (deck.gl's 0-255 RGBA accessor
    * convention -- `buildLayers.ts`'s own `ResolvedDrawParams`). Initialized synchronously from the
    * INITIAL `style` prop (never left undefined for a window before the first effect commits, the
@@ -1285,7 +1295,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     scheduleHoverRepick(zoomChanged, readoutWasStanding); // entry 47, D1: arming site 2 of 3 ("zoom to layer" / the auto-fit)
     const frame = frameRef.current;
     frame.forceRecenter(fit.centerX, fit.centerY);
-    frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX));
+    frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(fit.zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
     traceViewState(fit.target[0], fit.target[1], fit.zoom, frame.originX, frame.originY);
     // See this file's own doc comment: `initialViewState`, never `viewState`. Entry 85: the value
     // comes from THIS instance's own fit-camera write sequence, never an inline literal -- a fit
@@ -1897,7 +1907,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         // recenter lands. This is deck's *observed* behaviour on `@deck.gl/core@9.3.7` (pinned), NOT
         // a documented invariant. A future deck upgrade that stops emitting that trailing settled
         // tick — or ends a gesture on `pointercancel` with no `panend` — would silently defer the
-        // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT_M` headroom
+        // origin advance by one gesture; harmless within `RECENTER_MAX_DRIFT`'s own headroom
         // (`offsetFrame.ts`), but there is no in-code fallback and the only guard is the operator-run
         // `e2e/pan-anchor.mjs` (not in CI). Re-run that E2E after any `@deck.gl/*` bump.
         const isDragging = Boolean((interactionState as { isDragging?: boolean } | undefined)?.isDragging);
@@ -1908,7 +1918,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         reevaluateHoverForZoom(vs.zoom); // residency-debt cut 1b, Item C (K6): the interactive wheel-zoom repro site
         scheduleHoverRepick(zoomChanged, readoutWasStanding); // entry 47, D1: arming site 1 of 3 (every real pan/zoom gesture)
         const frame = frameRef.current;
-        frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(vs.zoom), RECENTER_BUDGET_PX));
+        frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(vs.zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
         traceViewState(vs.target[0], vs.target[1], vs.zoom, frame.originX, frame.originY);
 
         // Captured *before* any recenter below: `vs.target` is a local-frame value produced
@@ -2145,7 +2155,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       scheduleHoverRepick(zoomChanged, readoutWasStanding); // entry 47, D1: arming site 3 of 3 (the DEV-only camera seam)
       const frame = frameRef.current;
       frame.forceRecenter(targetX, targetY);
-      frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX));
+      frame.setThreshold(recenterThresholdForBudget(pixelsPerWorldUnitAtZoom(zoom), RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT[crsUnit]));
       traceViewState(0, 0, zoom, frame.originX, frame.originY);
       // See this file's own doc comment: `initialViewState`, never `viewState`.
       deck.setProps({ initialViewState: { target: [0, 0, 0], zoom } });

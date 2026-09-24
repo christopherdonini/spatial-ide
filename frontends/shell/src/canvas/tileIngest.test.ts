@@ -23,7 +23,7 @@ function batch(streamHandle: string, batchSeq: number, ids: number[], verticesPe
   };
 }
 
-const GRID = { frame: deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 }), level: "medium" as const };
+const GRID = { frame: deriveTileGridFrame({ xmin: 0, ymin: 0, xmax: 100, ymax: 100 }, "metre"), level: "medium" as const };
 
 function baseParams(overrides: Partial<Parameters<typeof ingestTileBatch>[0]> = {}) {
   return {

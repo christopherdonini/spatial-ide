@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import type { CrsUnit } from "../skp/types";
 import type { AuthoritativeBbox } from "./viewportBbox";
 import {
   COVER_WINDOW_CELLS_PER_AXIS,
@@ -72,10 +73,29 @@ export interface TileKey {
 
 /** Degenerate-anchor fallback (a zero-span anchor: a single point, or every batch's geometry
  * coincident) -- an arbitrary but DECLARED minimum span (ADR-010 rule 6: "declared, not
- * discovered"), so `deriveTileGridFrame` never produces a zero (or negative) cell size. One
- * authoritative-CRS unit (e.g. one metre for a projected CRS) is small enough to never matter for
- * any real dataset and large enough to keep every level's cell size comfortably above zero. */
-const MIN_ANCHOR_SPAN = 1;
+ * discovered"), so `deriveTileGridFrame` never produces a zero (or negative) cell size, KEYED BY
+ * THE DATASET'S OWN COORDINATE UNIT (`skp/0.4`, crs-unit-fact-and-bounds) -- one authoritative-CRS
+ * unit is not one span in every unit a dataset can declare. Each value's rationale sits here, at
+ * its own site:
+ *
+ * - `metre: 1` -- the original basis above, unchanged: small enough to never matter for any real
+ *   projected-metre dataset, large enough to keep every level's cell size comfortably above zero.
+ * - `degree: 1e-6` -- the declared value of RULED 2026-09-23 (later), entry 120 item (1)(b), and
+ *   `engine/ADMISSION-PREREGISTRATION.md` §14 item II: one metre in projected-CRS terms is not a
+ *   sane floor for a geographic-degrees dataset, whose whole domain is a few hundred degrees wide;
+ *   `1e-6` degree (about 0.11 m at the equator) keeps the same "small enough to never matter, large
+ *   enough to stay above zero" property in the unit datasets in this class actually use.
+ * - `other: 1` and `unestablished: 1` -- **unchanged**, the unit-agnostic one-unit rule above,
+ *   because no fixture in this cut's declared scope establishes any other value for either (this
+ *   piece's preregistration §7 and §8 item 8). **The attach point if Q1 is ever ruled** (the
+ *   consult's STOP LIST, Q1: declared values for a unit recorded as `other` or `unestablished`).
+ */
+export const MIN_ANCHOR_SPAN: Record<CrsUnit, number> = {
+  metre: 1,
+  degree: 1e-6,
+  other: 1,
+  unestablished: 1,
+};
 
 /** "Padded x2 each side" (NEXT-CUT.md P3 item A): the frame's own padded square is DOUBLE the
  * anchor's own (square) span, centred on the anchor's centre -- i.e. the anchor sits centred inside
@@ -87,11 +107,16 @@ const PAD_FACTOR = 2;
  * own top doc comment) -- pure, deterministic, no I/O. Callers declare the RESULT frozen for a
  * dataset's whole session (`TileViewportStreamManager.establishGridFrame`); this function itself
  * has no notion of "session" and may be called again for a genuinely fresh session (a new dataset).
+ *
+ * `unit` is the dataset's own `describe.crs.unit` fact (`skp/0.4`, crs-unit-fact-and-bounds) --
+ * REQUIRED, with no default (this piece's preregistration §8 item 2: a defaulted unit is
+ * block-on-sight), because the degenerate-anchor floor below is unit-keyed and there is no unit a
+ * silent default could pick that is honest for every dataset.
  */
-export function deriveTileGridFrame(anchor: AuthoritativeBbox): TileGridFrame {
+export function deriveTileGridFrame(anchor: AuthoritativeBbox, unit: CrsUnit): TileGridFrame {
   const spanX = anchor.xmax - anchor.xmin;
   const spanY = anchor.ymax - anchor.ymin;
-  const anchorSpan = Math.max(spanX, spanY, MIN_ANCHOR_SPAN);
+  const anchorSpan = Math.max(spanX, spanY, MIN_ANCHOR_SPAN[unit]);
   const baseSpan = anchorSpan * PAD_FACTOR;
   const centerX = (anchor.xmin + anchor.xmax) / 2;
   const centerY = (anchor.ymin + anchor.ymax) / 2;

@@ -91,9 +91,9 @@ describe("TileViewportStreamManager", () => {
 
     it("establishGridFrame is idempotent -- a second call does not move the frame", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame1 = manager.gridFrame;
-      manager.establishGridFrame({ xmin: 500, ymin: 500, xmax: 600, ymax: 600 });
+      manager.establishGridFrame({ xmin: 500, ymin: 500, xmax: 600, ymax: 600 }, "metre");
       expect(manager.gridFrame).toEqual(frame1);
     });
 
@@ -111,7 +111,7 @@ describe("TileViewportStreamManager", () => {
   describe("planning: camera change issues exactly the non-resident covering tiles, capped", () => {
     it("issues one viewport_query per covering tile up to MAX_IN_FLIGHT_TILE_STREAMS, queues the rest", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR); // baseSpan 200, cellSize at medium = 12.5
+      manager.establishGridFrame(ANCHOR, "metre"); // baseSpan 200, cellSize at medium = 12.5
       viewportQueryMock.mockReturnValue(new Promise(() => {})); // never resolves -- inspect planning only
 
       // A bbox spanning a 3x2 block of medium cells -> 6 covering tiles, more than the cap of 3.
@@ -135,7 +135,7 @@ describe("TileViewportStreamManager", () => {
     it("does not re-request an already-resident tile", () => {
       const residentKey = "0:0";
       const { manager } = makeManager({ residency: fakeResidency([residentKey]) });
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
 
       const frame = manager.gridFrame!;
@@ -150,7 +150,7 @@ describe("TileViewportStreamManager", () => {
 
     it("does not re-request a tile already in flight from a prior camera change", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
 
       const frame = manager.gridFrame!;
@@ -170,7 +170,7 @@ describe("TileViewportStreamManager", () => {
 
     it("queued tiles drain as in-flight streams end", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
 
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -206,7 +206,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a superseding camera change drops queued-not-issued tiles silently (no cancel call for them)", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
 
       const frame = manager.gridFrame!;
@@ -233,7 +233,7 @@ describe("TileViewportStreamManager", () => {
   describe("tile bbox rides as an ordinary bbox param (C3)", () => {
     it("issues viewport_query with the tile's own bbox, no extra parameter", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -254,7 +254,7 @@ describe("TileViewportStreamManager", () => {
   describe("batch delivery and per-tile supersede discipline (D3.7, per-tile)", () => {
     it("a batch for the active tile stream is admitted with an ascending per-stream sequence", async () => {
       const { manager, onBatch } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -274,7 +274,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a tile no longer covered by a new camera change is cancelled and reported superseded; resident tiles are untouched", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -293,7 +293,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a batch arriving late from a tile stream this manager already superseded is dropped, never rendered", async () => {
       const { manager, onBatch } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -311,7 +311,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a terminal for a self-superseded tile stream is suppressed -- never reaches onTerminal", async () => {
       const { manager, onTerminal } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -329,7 +329,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a genuine failure terminal (not self-cancelled) still reaches onTerminal", async () => {
       const { manager, onTerminal } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -347,7 +347,7 @@ describe("TileViewportStreamManager", () => {
   describe("filter/dataset change: wholesale clear (item B's own carve-out)", () => {
     it("clearAll cancels every in-flight tile and reports every resident tile hint as superseded with a null handle", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -371,7 +371,7 @@ describe("TileViewportStreamManager", () => {
     // tile must be genuinely re-queryable afterward (not still wrongly tracked).
     it("clearAll sweeps a tile mid-ticket-mint (\"issuing\") -- the old ticket's eventual resolve is abandoned, the tile is re-queryable", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       let resolveTicket: ((v: { stream: string; expires_in_ms: number }) => void) | null = null;
       viewportQueryMock.mockImplementationOnce(
         () => new Promise((resolve) => { resolveTicket = resolve; })
@@ -410,7 +410,7 @@ describe("TileViewportStreamManager", () => {
 
     it("clearAll also drops the queue and resets overBudget", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -435,7 +435,7 @@ describe("TileViewportStreamManager", () => {
   describe("overBudget (item D's own callback/state field seam)", () => {
     it("stops issuing NEW tile requests while overBudget is set, but does not disturb resident/in-flight tiles", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       manager.setOverBudget(true, ["0:0"]);
 
       const frame = manager.gridFrame!;
@@ -453,7 +453,7 @@ describe("TileViewportStreamManager", () => {
 
     it("clearing overBudget resumes issuance on the next camera change", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       manager.setOverBudget(true);
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
 
@@ -472,7 +472,7 @@ describe("TileViewportStreamManager", () => {
     // while the historical flag was set."
     it("hasHeadroom() true lets a new candidate through despite overBudget being set", () => {
       const { manager } = makeManager({ residency: fakeResidency([], () => true) });
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       manager.setOverBudget(true);
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
 
@@ -487,7 +487,7 @@ describe("TileViewportStreamManager", () => {
 
     it("hasHeadroom() false (or absent) keeps blocking every new candidate while overBudget is set -- the pre-existing behaviour", () => {
       const { manager } = makeManager({ residency: fakeResidency([], () => false) });
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       manager.setOverBudget(true);
 
       const frame = manager.gridFrame!;
@@ -503,7 +503,7 @@ describe("TileViewportStreamManager", () => {
   describe("covering-set truncation (P5f complex-gate should-fix 2, the \"undeclared fan-out\" half)", () => {
     it("a covering set exceeding capacity truncates farthest-first, deterministically, and records it (never silent)", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {})); // never resolves -- inspect planning only
 
       const frame = manager.gridFrame!;
@@ -527,7 +527,7 @@ describe("TileViewportStreamManager", () => {
       // Deterministic: an identically-constructed manager planning the SAME bbox keeps the identical
       // set, in the identical order -- never a comparator-artifact/engine-dependent result.
       const { manager: manager2 } = makeManager();
-      manager2.establishGridFrame(ANCHOR);
+      manager2.establishGridFrame(ANCHOR, "metre");
       const outcome2 = manager2.onCameraChange(bbox);
       if (outcome2.kind !== "planned") throw new Error("unreachable");
       expect([...outcome2.issued, ...outcome2.queued]).toEqual([...outcome.issued, ...outcome.queued]);
@@ -539,7 +539,7 @@ describe("TileViewportStreamManager", () => {
       // hung the page. Before the fix this call materialised the whole cover first; the assertion
       // that matters most here is that it RETURNS.
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {})); // never resolves -- inspect planning only
 
       const half = 1280 / 2 ** -64 / 2;
@@ -554,7 +554,7 @@ describe("TileViewportStreamManager", () => {
 
     it("an ordinary, small covering set is never marked truncated", () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockReturnValue(new Promise(() => {}));
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -570,7 +570,7 @@ describe("TileViewportStreamManager", () => {
   describe("drainQueueIfRoom respects overBudget (P5f complex-gate should-fix 2, the \"drain ignores over-budget\" half)", () => {
     it("never mints a queued tile while overBudget is set, however many slots free up -- resumes the moment it clears", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
 
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -613,7 +613,7 @@ describe("TileViewportStreamManager", () => {
   describe("stop()", () => {
     it("cancels every in-flight tile stream and refuses future onCameraChange calls", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -635,7 +635,7 @@ describe("TileViewportStreamManager", () => {
   describe("relinquishOutstanding (item A, decisions 32a/33b: the scoped relief lever)", () => {
     it("cancels every in-flight tile and drops every queued tile, WITHOUT ever setting stopped -- a subsequent onCameraChange still plans (BS1)", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = {
@@ -691,7 +691,7 @@ describe("TileViewportStreamManager", () => {
 
     it("reports every affected tile through two distinguishable classes, distinct from onTileSuperseded (BS2)", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = {
@@ -727,7 +727,7 @@ describe("TileViewportStreamManager", () => {
 
     it("also drops a tile mid-ticket-mint (\"issuing\") -- reported as dropped, never left tracked", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockImplementationOnce(() => new Promise(() => {})); // never resolves -- stays "issuing"
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -748,7 +748,7 @@ describe("TileViewportStreamManager", () => {
 
     it("never touches overBudget -- relinquishing outstanding work is not itself a budget verdict", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       manager.setOverBudget(true, ["9:9"]);
 
       manager.relinquishOutstanding();
@@ -764,7 +764,7 @@ describe("TileViewportStreamManager", () => {
     // assertion (no "within X ms" claim) -- only that the property holds.
     it("in-flight cancel as a property: cancel issued, the eventual terminal is suppressed, and no batch is ever admitted again for that stream's tile", async () => {
       const { manager, onBatch, onTerminal } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -805,7 +805,7 @@ describe("TileViewportStreamManager", () => {
   describe("a rejected cancel is logged, never thrown, never silent (P6b item 4)", () => {
     it("stop()'s own cancel loop logs a rejected cancel and still resolves", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -826,7 +826,7 @@ describe("TileViewportStreamManager", () => {
 
     it("cancelTileStream's own out-of-view supersede logs a rejected cancel, and the supersede itself still reports", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -865,7 +865,7 @@ describe("TileViewportStreamManager", () => {
 
     it("a retryable code (engine.connections_exhausted): one refusal log line, the tile is back in the queue, issued by the next drain, and its recovery is named too", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
@@ -893,7 +893,7 @@ describe("TileViewportStreamManager", () => {
 
     it("the same tile refused twice: no more than one requeue per drain, and no spin", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
@@ -914,7 +914,7 @@ describe("TileViewportStreamManager", () => {
 
     it("any other code (e.g. skp.filter_too_long): dropped with one log line, never retried", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
@@ -940,7 +940,7 @@ describe("TileViewportStreamManager", () => {
     // `"unknown"` -- `logMintRefused`'s own doc comment.
     it("a non-SkpCallError throw (a transport failure): dropped with one log line under the declared \"unknown\" code, never retried", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
@@ -961,7 +961,7 @@ describe("TileViewportStreamManager", () => {
     // never a bypass of that ceiling.
     it("MAX_QUEUED_TILES already at capacity: the retryable refusal is dropped, not requeued", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       // Exactly `MAX_IN_FLIGHT_TILE_STREAMS + MAX_QUEUED_TILES` covering cells in one row: every
@@ -1012,7 +1012,7 @@ describe("TileViewportStreamManager", () => {
     // become valid.
     it("skp.filter_rejected_by_binder is never retried", async () => {
       const { manager: binderManager } = makeManager();
-      binderManager.establishGridFrame(ANCHOR);
+      binderManager.establishGridFrame(ANCHOR, "metre");
       const frame2 = binderManager.gridFrame!;
       const cellSize2 = frame2.baseSpan / 16;
       const binderBbox = { xmin: frame2.originX, ymin: frame2.originY, xmax: frame2.originX + cellSize2, ymax: frame2.originY + cellSize2 };
@@ -1031,7 +1031,7 @@ describe("TileViewportStreamManager", () => {
 
     it("both epoch-abandon branches log the abandonment", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
@@ -1056,7 +1056,7 @@ describe("TileViewportStreamManager", () => {
       // only AFTER "0:0" is superseded again.
       logSessionEventMock.mockClear();
       const { manager: manager2 } = makeManager();
-      manager2.establishGridFrame(ANCHOR);
+      manager2.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_post", expires_in_ms: 30_000 });
       let resolveAttach: ((v: { url: string; subprotocols: [string, string] }) => void) | null = null;
       dataPlaneAttachMock.mockImplementationOnce(() => new Promise((resolve) => { resolveAttach = resolve; }));
@@ -1079,7 +1079,7 @@ describe("TileViewportStreamManager", () => {
     // the ticket is cancelled, the tile is dropped, and the queue is re-drained.
     it("dataPlaneAttach rejects: named, the minted ticket is cancelled, the tile is dropped and the queue re-drains", async () => {
       const { manager } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
       // Two covering tiles: the first's `dataPlaneAttach` will reject; the second sits queued
@@ -1131,7 +1131,7 @@ describe("TileViewportStreamManager", () => {
 
     it("test 5: an IN-FLIGHT in-view tile outside the window is neither cancelled nor superseded", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
@@ -1155,7 +1155,7 @@ describe("TileViewportStreamManager", () => {
 
     it("test 8a: a retained QUEUED in-view tile is not re-issued by the same plan, IS issued by a later drain while still in view, and an out-of-view tracked tile is still dropped", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
 
@@ -1226,7 +1226,7 @@ describe("TileViewportStreamManager", () => {
 
     it("test 8b: a retained queued tile whose cell left the view before the drain is DROPPED at drain -- never issued, the drop reported", async () => {
       const { manager, onTileSuperseded } = makeManager();
-      manager.establishGridFrame(ANCHOR);
+      manager.establishGridFrame(ANCHOR, "metre");
       const frame = manager.gridFrame!;
       const cellSize = frame.baseSpan / 16;
 
@@ -1329,7 +1329,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * late-batch one — which is precisely the gap the gate found. */
   it("ends the whole session from one tile's terminal: work dropped, further planning refused, owner told", async () => {
     const { manager } = makeManager();
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
     viewportQueryMock
       .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
       .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 })
@@ -1363,7 +1363,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * lets the late batch through and fails this. */
   it("drops a batch that arrives for another tile after the session ended", async () => {
     const { manager, onBatch } = makeManager();
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
     viewportQueryMock
       .mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 })
       .mockResolvedValueOnce({ stream: "sh_2", expires_in_ms: 30_000 });
@@ -1387,7 +1387,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
    * ordinary terminal that happens to mention a change end the session, and breaks this. */
   it("an ordinary terminal does not end the session", async () => {
     const { manager } = makeManager();
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
     viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
     manager.onCameraChange(ANCHOR);
     await flushMicrotasks();
@@ -1431,7 +1431,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
   it("the_pre_check_refusal_latches_the_session_on_a_tile_mint", async () => {
     const onSessionEnded = vi.fn();
     const { manager } = makeManager({ onSessionEnded });
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
     viewportQueryMock.mockReset().mockRejectedValue(realSourceChangedRefusal());
 
     manager.onCameraChange(ANCHOR);
@@ -1466,7 +1466,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
   it("a source-changed refusal is not retryable, unlike an exhausted-connection one", async () => {
     const onSessionEnded = vi.fn();
     const { manager } = makeManager({ onSessionEnded });
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
     viewportQueryMock
       .mockReset()
       .mockRejectedValue(
@@ -1492,7 +1492,7 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
   it("notifySourceChanged ends the session exactly as a tile terminal does", async () => {
     const onSessionEnded = vi.fn();
     const { manager } = makeManager({ onSessionEnded });
-    manager.establishGridFrame(ANCHOR);
+    manager.establishGridFrame(ANCHOR, "metre");
 
     manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
     // Idempotent, like `endSession` itself.
