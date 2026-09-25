@@ -535,7 +535,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [111]
-    summary: "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges."
+    summary: "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended."
     dates: {opened: 2026-09-24, done: null}
 
   - id: site-bugs-first
@@ -623,7 +623,7 @@ nodes:
     order: 2
     depends_on: [briefa-p6-part-n-acceptances, adr-023-decision-text, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order, crs-unit-fact-and-bounds, b1-engine-prereg-draft, adr-021-023-b1-notes, engine-source-change-watcher]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: engine/B1-PROJECTION-PREREGISTRATION.md
     evidence: null
     budget_minutes: 240
     generation: 1
@@ -2325,7 +2325,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration."
+    summary: "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it."
     dates: {opened: 2026-09-25, done: null}
 
   - id: adr-035-decision-4-note
@@ -2333,18 +2333,18 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: proposed
-    order: null
+    status: done
+    order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 122}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece."
-    dates: {opened: 2026-09-25, done: null}
+    summary: "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece. PR #119 merged 2026-09-25 (9f764c8): placed ready."
+    dates: {opened: 2026-09-25, done: 2026-09-25}
 
   - id: b1-shell-half
     title: "Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable)"
@@ -2363,3 +2363,21 @@ nodes:
     entries: []
     summary: "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio."
     dates: {opened: 2026-09-25, done: null}
+
+  - id: governance-hooks-cloud-inert
+    title: "The custodian's hooks inert in cloud sessions -- each hook .claude/settings.json runs exits 0 at entry, with no output, when CLAUDE_CODE_REMOTE is exactly true"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: done
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/hooks/HOOKS-CLOUD-INERT-PREREGISTRATION.md
+    evidence: {pr: 120}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-25, the cloud hooks, item (1): a tooling fix under the existing delegation, single combined gate (reviewer attempts 1-3, state/gate-log.json indices 191-193, PASS at the third); merged by the human 2026-09-25 (85bbe8d); its dry run passed on main at 9f764c8 before wave 1 A3 launched."
+    dates: {opened: 2026-09-25, done: 2026-09-25}

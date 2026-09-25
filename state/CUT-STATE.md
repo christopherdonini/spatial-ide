@@ -1,14 +1,14 @@
 # CUT-STATE — opened 2026-09-24 (the post-tag arc's ledger archived; the work continues)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-25T00:32:42Z
-tip: c2289dc2ac498bfd602d14dcdbfc44e8a221b36e
-branches: Ready for the human's click (merge commit, never squash): #118 governance/test-claims-withdrawn @ 5f03481 (the withdrawn marker; round 21 item 2's round; record reduced; CI 3/3; closes governance-verify-mutation-multiline-attrs in the same PR); #119 docs/adr-035-acceptance @ d2936d7 (ADR-035 accepted as merged, round 21 item 1; reviewer + architect PASS plus the scoped PASS; CI was finishing at handoff -- check it). Merged 2026-09-24/25: #97, #104-#109, #111-#117. Closed unmerged: #110. Worktrees left: C:/dev/wt/adr-035-acceptance (#119), .claude/worktrees/test-claims-withdrawn (#118), C:/dev/wt/adr-035-dataset-session-ended (merged -- sweep), .claude/worktrees/verify-mutation-header-token (dropped, unmerged -- keep).
-position: 2026-09-25 handoff -- rounds 17-21 ruled and applied; the lease RELINQUISHED on the human's word (see the ledger's last line). RECORDED PROGRAM: wave 1 (the ledger's handoff entry; state/cloud/wave1-prompts.md, baseline bb98f71 with product CI green; ledger state/cloud/wave1.md). context: 532.3k/800k (67%) at about 23:00Z 2026-09-24 by the human's /context; unmeasured since.
-half-made judgments: Wave 1 is the recorded program and its order governs: A3 calibration alone first, then section 5's batches by what the platform shows, recording per section 6 (balances before and after each batch; never estimate spend from tokens). After #118 merges: governance-test-claims-withdrawn-marker done (evidence pr 118); then governance-test-claims-superseded-followups (carries the refused-line residual) and test-claims-landedness-bound, in sequence. After #119 merges: ADR-035 is Accepted and immutable; the watcher's preregistration (engine-source-change-watcher) carries rounds 17-21 including round 21's riders (a) and (b) (the reference routes only; never persisted or published; the leakage tests in kernel/tests/no_generation_in_persisted_artifacts.rs extended to name it). Owed PLAN node, not yet added: the ADR-035 drafter's two kernel notes (a post-close invalidate's stray invalidated entry; a viewport_query racing close_dataset minting for a closed name). For the human's word: the withdrawn-marker's refused-line residual (a refused withdrawn-test line exempts nothing but is never named; the architect reads rider (a) as governing withdrawals only). PLAN summaries must avoid a digit followed by whitespace and 'sec' (site.mjs's duration pattern).
-intended sequencing (next session): Verify the relinquish (CUSTODIAN-LEASE reads relinquished:; origin's tip matches this flush) before taking the lease. Then: (1) check #119's CI and tell the human #118 and #119 are clickable; (2) run the recorded program -- wave 1 -- starting with the A3 calibration (assemble its prompt from state/cloud/wave1-prompts.md section 7 exactly; record the assembled text beside its session ID and the balance before and after); (3) after the clicks, the PLAN moves in half-made judgments and a worktree sweep; (4) raise the unreported findings in the weekly window.
-unreported findings: Weekly window (due 2026-09-25): the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurs on CI and passes on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop; verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form); the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template has no class for a full form's section-7 overrun (class 6 is short-form only; class 2 names section 3/5 predictions); the refused-line residual (above).
-in-flight gate states: No agent running. gate-log: 191 records (latest: #119 reviewer PASS, architect PASS, architect scoped PASS; #118 index 187 scoped confirmation). #119's CI was finishing at handoff.
+flushed_at: 2026-09-25T22:53:11Z
+tip: d5e758f048a8aa8240850d373d20c58d33004e11
+branches: In progress: cut/source-change-watcher @ 09104f4 at dispatch (the watcher; phase 1 built; Amendments 1-3 on the preregistration; phase 2 running in a worker-high, step F -- the A2-1 fold-in -- waits for Amendment 4), worktree C:/dev/wt/source-change-watcher. governance/test-claims-followups (the follow-ups form committed; its worker-high running). Wave 1 branches on origin, never PR'd: cloud/wave1-A3 @ db9527f, cloud/wave1-A1 @ aa7ead1, cloud/wave1-A2 @ 271f04b. Worktrees: C:/dev/wt/source-change-watcher, C:/dev/wt/triage-a3-obs3 (untracked scratch: A3 obs 3's reproduction, A1-1's and A2-1's reproducers -- kept for the after-wave S1 batch), .claude/worktrees/verify-mutation-header-token (dropped, unmerged -- keep).
+position: 2026-09-25 about 23:00Z -- wave 1 batch 1 pair 2 (A4 session_01NZDimj5kbXchTDKA9MQrPT, A5 session_018DZybsCUV4Zb8z81uUUEAQ) running since about 22:49Z; pair 1 recorded and triaged (5af4e84; batch delta $6); A3 calibrated ($7). Running locally: the watcher's phase 2 (worker-high), an architect consult drafting the watcher's Amendment 4 (A2-1), the follow-ups worker. Lease: 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg). context: unmeasured.
+half-made judgments: Wave 1 (round 23 item 1; the prompts' deviation 1): when A4 and A5 report -- copy each report verbatim (the message's Copy action, Get-Clipboard, LF) into state/cloud/wave1/<item>.md with custodian fields, read the balance after (claude.ai Settings, Usage, Cloud session credits; before pair 2: 237 of 250 dollars), triage against main before other work, then launch C+D the same way (assemble.mjs in the scratchpad; composer paragraphs hash-checked before Send), then B alone. S1 candidates so far: A3 3(b), A1-1, A2-1 -- all reproduced on Windows -- go to the human in one batch after the wave. An A5 S1 in the watcher's code folds into the watcher before it merges, like A2-1. The watcher: when the architect returns Amendment 4, send its text to the phase-2 worker by message (it appends it byte-exact as its own commit before the fold-in code); if the worker has already handed back, resume it with the text. Then both gates, the closing amendment, the PR for the human's click. The follow-ups: on hand-back, verify, full gating, then the PR.
+intended sequencing (next session): (1) Pair 2's reports: record, balance after, triage, then launch C+D, then B. (2) The watcher: Amendment 4 to the worker; phase 2's hand-back; the gates. (3) The follow-ups worker's hand-back and gating. (4) After the wave: the S1 batch to the human; the S2 records (A3's, A1's, A2's) as KNOWN-LIMITATIONS rows or PLAN notes together. (5) Disk: C: at 23 GB free. (6) The weekly-window findings below are still unraised.
+unreported findings: Weekly window (due 2026-09-25): the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurs on CI and passes on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop (A2 obs 5 duplicates it); verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form); the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template has no class for a full form's section-7 overrun (class 6 is short-form only; class 2 names section 3/5 predictions), nor for a scope widening on a standing rule (class 5 names narrowing; met at the watcher's Amendment 4).
+in-flight gate states: gate-log: 197 records (latest: adr-035-decision-4-note architect attempt 2 scoped PASS, index 196). Running: wave 1 A4 and A5 (cloud); the watcher's phase 2 (worker-high); the architect consult for the watcher's Amendment 4; the follow-ups worker (worker-high).
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the post-tag arc, 2026-09-13 → 2026-09-24; archived byte-identical by `git mv`; its last flush named tip d4362bd). Before it: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut; v0.1.0 = b391e43).
 
@@ -154,3 +154,87 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
        - The exact assembled text of each prompt is recorded beside its session ID.
     5. **Triage (§4):** the custodian decides severity. S1 candidates go to the human in one batch after the wave, with evidence. Nothing becomes a cut in this wave.
   - **Lease:** relinquished by this session (856bc41b), on the human's word. `CUSTODIAN-LEASE` is rewritten to a single `relinquished:` line. The incoming session verifies the relinquish and that origin's tip matches this flush before taking the lease.
+- 2026-09-25T01:40Z - **Handover taken; the cloud launch path checked against the docs; the cloud-hook ruling applied; wave 1 held for PR #120.**
+  - **Lease:** the relinquish was verified (`CUSTODIAN-LEASE` read `relinquished:`; origin's tip 4c757e1 = the final flush, parent c2289dc), then taken by 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg).
+  - **The human's messages** are verbatim in `state/directives/2026-09-25-cloud-hooks.md` (§1 the wave-1 instruction, §2 the cloud-hook ruling, §3 the #118 merge, §4 the wave-1 block relayed from Fable, §5 the confirmation and the baseline correction).
+  - **The cloud launch path (the Claude Code docs, fetched 2026-09-25):**
+    - `claude --cloud "<task>"` creates a cloud session from the current directory's GitHub remote at the current branch.
+    - The environment is the `/remote-env` pick or a fallback. The Default environment has Trusted network (package registries).
+    - A one-repo session runs the repository's `.claude/settings.json` hooks and loads `CLAUDE.md`.
+    - `git push` works only against the session's current working branch, so A3's push to `cloud/wave1-A3` may be refused. That is a calibration watch-point.
+  - **The finding and the ruling:** at the baseline the repo's hooks would have fired in a cloud worker: the continuity block at startup, up to six Stop-hook continuations toward the ready governance node, and a PreCompact demand to write and push `state/CUT-STATE.md`. The human ruled without a question round (RULED 2026-09-25, the cloud hooks):
+    - (1) the hooks are made inert in a cloud session;
+    - (2) every prompt uses a worktree at `/tmp/wave1-baseline`;
+    - (3) the baseline stays bb98f71, per the correction beside the ruling. The ruling's 59406134 was superseded by the human.
+  - **Applied:**
+    - PR #120 (`governance/hooks-cloud-inert`, single combined gate). The marker is `CLAUDE_CODE_REMOTE` = `true`, quoted from the cloud-environments docs; it was checked unset in this local Remote Control session. Reviewer attempt 1 FAILED (index 191): two existing CLI tests inherited the marker. Fixed at 3bd2b2d. Attempt 2 FAILED record-only (index 192): the superseded index was missing. Appended at cde1d31. Attempt 3, the scoped confirmation, PASSED (index 193). Record rounds: two, the cap. Marked ready; the human's click.
+    - Wave-1 prompts deviation 1 (c69ad28): four baseline instructions and §3's "Baseline SHA" field move to the worktree, with the originals byte-copied.
+    - `governance-test-claims-withdrawn-marker` done (evidence pr 118; a646d59).
+    - The two design references were copied to `state/drafts/design/` (c16f41d).
+  - **The wave-1 block (§4), confirmed (§5).** Its triage rules govern wave 1's reports. Round 21's rulings were already applied, so skipped. The architect redrafted B1's preregistration (round 17 items 3–4) and the watcher's (rounds 17–21, ADR-035); see the next entry.
+  - **Balance before A3:** Cloud session credits "$250 of $250 left" (expires November 5), read in claude.ai Settings → Usage at about 00:45Z. The A3 prompt is assembled by script from the amended §7 (63 lines, sha256 a408c1d81ed3bd6552e8024312c7a76c93f093774dc83bdac7812da616eefe46). It launches after #120 merges and its dry run passes on main.
+  - **Worktrees:** `C:/dev/wt/adr-035-dataset-session-ended` swept (merged at #114, clean, pushed, no process). Added: `.claude/worktrees/hooks-cloud-inert` (#120).
+- 2026-09-25T06:30Z - **Both preregistrations committed; round 22 ruled; the watcher's phase 1 dispatched.**
+  - **The architect's two consults** are filed verbatim at 9e6faf9, extracted by script from the hand-backs (the tasks output files were 0 bytes; the subagent transcripts under the session's `subagents/` directory carried the text):
+    - `state/consults/2026-09-25-b1-prereg-revision.md`: B1 revised to round 17 items 3–4; stop list O1–O8.
+    - `state/consults/2026-09-25-source-watcher-prereg.md`: the watcher redrafted to rounds 17–21 and ADR-035; stop item X1 for the human; X2–X4 sequencing and mechanics.
+  - **B1's preregistration:** PR #121 (`docs/b1-preregistration`), docs-only under `AUTONOMY.md` §9 (`docsOnly.mjs` eligible). `b1-engine-kernel-half`'s gate names it. Its Amendment 1 (4fa387d) resolves O1–O8 by round 22 item 2. Merged by the custodian once CI and drift are green.
+  - **The watcher's preregistration:** the first commit on `cut/source-change-watcher` (596511b; worktree `C:/dev/wt/source-change-watcher`). The node's gate names it, and its evidence is the branch. Amendment 1 (d5d262e) resolves X1 by round 22 item 1. X2–X4 are applied under existing rules, as listed in `state/questions/round-22.md`'s last paragraph.
+  - **Round 22** (b78ba94; `state/questions/round-22.md`, mirrored to Telegram first). Recorded verbatim in the RULED block:
+    - item 1, X1 as an invariant (typed; a red line);
+    - item 2, O1–O8 as recommended;
+    - item 3, the refused-line residual fails by name, with the condition that the follow-ups PR corrects or reduces every such line already on main.
+  - **PLAN (b78ba94):**
+    - `kernel-generation-close-races` is placed immediately after the watcher (kernel-protocol, order 1). It carries the ADR-035 drafter's two notes and whatever wave-1 A2 reports about the close race.
+    - Proposed: `adr-035-decision-4-note` (after #119 merges) and `b1-shell-half` (O7).
+    - `governance-test-claims-superseded-followups` is ready at order 1, ahead of `test-claims-landedness-bound` at order 2.
+  - **Watcher phase 1 dispatched:** worker-high at the agent default (sonnet). Scope: engine, protocol with both fixture sides, kernel and the src-tauri wiring, with their §4 tests. Phase 2 (the shell consumer, SH1–SH11, the E2E and the KNOWN-LIMITATIONS lines) goes to a fresh worker after the hand-back.
+  - **Worktrees added:** `.claude/worktrees/b1-prereg` (#121) and `C:/dev/wt/source-change-watcher`.
+- 2026-09-25T22:40Z - **A3 calibrated and reported; #119–#122 merged; rounds 23 ruled; wave 1 pair 1 (A1+A2) running; the watcher's phase 1 built.**
+  - **Merged:**
+    - by the human: #120 (85bbe8d, the hooks inert in cloud sessions), #119 (9f764c8, ADR-035 accepted) and #122 (4628610, ADR-035's Note 2026-09-25);
+    - by the custodian, docs-only under §9: #121 (31d7d34, B1's preregistration).
+  - **PLAN:** done — `governance-hooks-cloud-inert` (pr 120) and `adr-035-decision-4-note` (pr 122).
+  - **The dry run before A3:** it passed on main at 9f764c8 — the six cloud tests; the scripts suite 291/291 with the marker set; every hook silent.
+  - **A3 (calibration):**
+    - `claude --cloud` refused from the custodian's shell ("requires an interactive terminal") and created nothing. A3 was launched from claude.ai/code instead: the Default environment, spatial-ide on main, Opus 5.5 at Medium.
+    - The prompt was pasted from the clipboard and hash-checked in the composer before sending (a408c1d8).
+    - session_01STxb5ot2J5RaYpnzffmSq6 ran 06:41:30Z to about 06:54Z. The balance went $250 → $243: a batch delta of $7, in whole dollars only, with no per-session figure anywhere.
+    - Result: 0 findings, 5 unproven observations, triaged in `state/cloud/wave1/A3.md` — 1 RECORD S2; 2 DISCARD S3; 3(a) RECORD S2; 3(b) an S1 candidate; 4 and 5 DISCARD S3.
+    - Observation 3 was reproduced on Windows by a tester (worktree `C:/dev/wt/triage-a3-obs3`, kept for the after-wave S1 batch). (a) reproduced. (b)'s mechanism reproduced: linear, about 46 ns per ring-offset iteration, 4.6 s at 1e8, no exception; a run past 60 s was extrapolated, not observed.
+    - Watch-points: the push to `cloud/wave1-A3` was accepted (db9527f); the DCO proof worked; the build path worked; the worktree deviation held; the hooks stayed quiet.
+  - **The ADR-035 note (#122):** the architect's draft was appended with the human's words byte-copied by script. Reviewer PASS (index 194). Architect PASS with F1 (195); F1 was applied byte-exact at f227036 and got a scoped PASS (196).
+  - **Round 23** (`state/questions/round-23.md`, mirrored first; RULED block at 7f8095f):
+    - item 1: pairs as planned;
+    - item 2 (a red line, typed): S1 yes, with the containment rider;
+    - item 3: S2–S4 as recommended;
+    - item 4 (typed): the follow-ups form's O1 by use versus mention, not in place; O3 widened by the human; the rest as recommended.
+  - **Wave 1, batch 1, pair 1 launched** from claude.ai/code with the balance at $243 of $250 (about 22:24Z):
+    - A1: session_01Dvwb34AguXpmzqPFN5SLGQ at 22:24:22Z;
+    - A2: session_012sfSh2fvSkNDCVbQ2o27Rm at 22:24:56Z.
+    - Both prompts are recorded beside their session IDs and hash-checked in the composer.
+  - **The watcher's phase 1** (worker-high, sonnet default; `cut/source-change-watcher` @ 4137f4d, 8 commits):
+    - Built: engine, protocol `skp/0.5`, kernel and the src-tauri wiring. 54/54 new tests carry recorded mutations, and every suite is green.
+    - H1–H5 were confirmed on the real Windows adapter.
+    - Budget: engine 1,848 against 1,100 and kernel 2,334 against 2,000 are over their rows; the total, 4,677 of 4,830 across 54 files, is within.
+    - Deviations disclosed in code: E5, E7 and E8 have no record/enqueue split, so they test the synchronous design; A7 cannot isolate case-folding, and `names_match_folds_case` does; K5's and K6's mutations were corrected.
+    - An architect consult is drafting Amendments 2 (round 23 items 2–3) and 3 (the phase-1 record) and the phase-2 deltas.
+  - **The follow-ups form:** an architect consult is revising it to round 23 item 4.
+  - **Disk:** C: 24 GB free after the phase-1 builds. Worktrees swept: #120's, #119's, #121's and #122's.
+- 2026-09-25T23:00Z - **Wave 1 pair 1 reported and triaged; pair 2 (A4+A5) running; two new S1 candidates; the watcher's phase 2 dispatched with A2-1 folded in.**
+  - **Pair 1** (5af4e84): A1 and A2 reported by about 22:30Z. Both reports are recorded verbatim with custodian fields in `state/cloud/wave1/A1.md` and `A2.md`. The balance went $243 → $237: a batch delta of $6 for the pair, not attributable per session.
+  - **Triage against main at ab4eb65:** every cited file is unchanged since bb98f71, so every item is still-present.
+    - **A1-1, S1 candidate:** a stated non-ASCII Origin is admitted as absent. Reproduced on Windows in `C:/dev/wt/triage-a3-obs3`: rc 101, 2 of 3 failing as in the cloud run. It goes to the after-wave batch.
+    - **A2-1, S1 candidate:** the untiled manager re-admits a late-minted ticket after session end, against ADR-028 Amendment 4 item 2's client half; the kernel masks it end to end. Reproduced on Windows: the vitest, 1 passed. It is in the watcher's code, so it folds in under wave-1 rule 2 and also goes to the after-wave batch.
+    - **RECORD S2:** A1-2, A1 observations 1–2 and A2 observation 2. Observation 2 and A2's close race go to `kernel-generation-close-races`' intake.
+    - **DISCARD S3:** the rest.
+    - **Watch-point for D:** `npm ci` refused under npm 10.9.7 at the baseline.
+  - **Pair 2** (37eee20), launched from claude.ai/code with the balance at $237 of $250:
+    - A4: session_01NZDimj5kbXchTDKA9MQrPT at 22:48:55Z;
+    - A5: session_018DZybsCUV4Zb8z81uUUEAQ at 22:49:26Z.
+    - Both prompts were hash-checked in the composer and are recorded beside their session IDs.
+  - **The watcher:**
+    - Phase 2 is dispatched to a worker-high on `cut/source-change-watcher` @ 09104f4: merge main, deltas 1–12, §2d, SH1–SH11, the E2E, the KNOWN-LIMITATIONS lines and the checks.
+    - Step F, the A2-1 fold-in, waits for Amendment 4. An architect consult is drafting it: the class, since no template class names a widening; the fix's shape; the SH rows.
+  - **The follow-ups worker** (`governance/test-claims-followups`) is still running.
+  - **Disk:** C: 23 GB free.

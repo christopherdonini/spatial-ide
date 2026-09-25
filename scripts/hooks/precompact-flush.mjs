@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { isCloudSession } from './cloud.mjs';
 
 export const FLUSH_FRESHNESS_MS = 10 * 60 * 1000; // §7, tightened 2026-09-15: "within the last 10 minutes"
 export const SECOND_CHANCE_WINDOW_MS = 15 * 60 * 1000; // §7: "a second PreCompact within 15 minutes is allowed"
@@ -250,5 +251,6 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (isCloudSession()) process.exit(0); // the custodian's hook, inert in a cloud session (cloud.mjs)
   main();
 }

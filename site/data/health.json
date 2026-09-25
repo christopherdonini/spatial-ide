@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T06:28:50.394Z",
+  "generated_at": "2026-09-25T22:57:19.481Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,12 +12,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 71827357696,
+        "bytes": 24304467968,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 383180808192,
+        "bytes": 383071404032,
         "total": 500090007552
       }
     ]
@@ -33,13 +33,13 @@
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 72
+    "n": 74
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 48,
-    "first_pass": 18,
-    "rate": 0.375
+    "nodes": 49,
+    "first_pass": 19,
+    "rate": 0.3877551020408163
   },
   "record_rounds": {
     "present": true,

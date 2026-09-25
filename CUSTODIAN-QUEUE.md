@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ca089e8e26eb7296741c16793bd0c931c4ccf500c0024d76c9a95400d8fb6e16`) at `2026-09-25T06:28:50.308Z`.
+Generated from `PLAN.yaml` (sha256 `7ff419f43fa41fc8b404b309d65dd1fb385b9761088b43c0aebefda1be83a9a5`) at `2026-09-25T22:57:15.111Z`.
 
 ## 1. Next
 
@@ -49,7 +49,6 @@ Generated from `PLAN.yaml` (sha256 `ca089e8e26eb7296741c16793bd0c931c4ccf500c002
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (phase `prototype`) — never queued until placed
-- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (phase `prototype`) — never queued until placed
 - **b1-shell-half** — Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
