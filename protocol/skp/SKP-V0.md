@@ -725,14 +725,14 @@ stated order. **`skp/1` stays RESERVED** and must not be used for any interim ve
 
 ### Note to the `skp/0.3` entry: per-open references and generation values (2026-09-24)
 
-**Appended 2026-09-24 on the human's ruling** (`DECISIONS-PENDING.md`, RULED 2026-09-24 —
+**Appended on the human's ruling of 2026-09-24** (`DECISIONS-PENDING.md`, RULED 2026-09-24 —
 question round 21, item 1, its rider (c)). The `skp/0.3` entry above is unchanged, and its rule
 that no generation value crosses the wire (that entry's paragraph on what the version deliberately
 does not add) stands as written; this note clarifies the rule in writing and does not reinterpret
 it.
 
-A per-open opaque reference is distinguished from a generation value only on every condition the
-ruling states (paraphrased here; the ruling's words govern):
+A per-open opaque reference is distinguished from a generation value only when every condition the
+ruling states holds (paraphrased here; the ruling's words govern):
 
 - it is opaque, minted per open and non-authorising, and it reveals no more than the
   `DatasetHandle` already on the wire;
@@ -740,7 +740,7 @@ ruling states (paraphrased here; the ruling's words govern):
   the reference is used only to route the ended-session event to its open (the ruling's
   rider (a));
 - it is never persisted or published, and the recipe and bundle leakage tests that forbid a
-  generation value name it too (the ruling's rider (b)).
+  generation value are extended to name it too (the ruling's rider (b)).
 
 The reference the ruling names is the session reference of
 `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` Decision 4, which the watcher
