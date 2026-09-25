@@ -190,3 +190,34 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - `governance-test-claims-superseded-followups` is ready at order 1, ahead of `test-claims-landedness-bound` at order 2.
   - **Watcher phase 1 dispatched:** worker-high at the agent default (sonnet). Scope: engine, protocol with both fixture sides, kernel and the src-tauri wiring, with their §4 tests. Phase 2 (the shell consumer, SH1–SH11, the E2E and the KNOWN-LIMITATIONS lines) goes to a fresh worker after the hand-back.
   - **Worktrees added:** `.claude/worktrees/b1-prereg` (#121) and `C:/dev/wt/source-change-watcher`.
+- 2026-09-25T22:40Z - **A3 calibrated and reported; #119–#122 merged; rounds 23 ruled; wave 1 pair 1 (A1+A2) running; the watcher's phase 1 built.**
+  - **Merged:**
+    - by the human: #120 (85bbe8d, the hooks inert in cloud sessions), #119 (9f764c8, ADR-035 accepted) and #122 (4628610, ADR-035's Note 2026-09-25);
+    - by the custodian, docs-only under §9: #121 (31d7d34, B1's preregistration).
+  - **PLAN:** done — `governance-hooks-cloud-inert` (pr 120) and `adr-035-decision-4-note` (pr 122).
+  - **The dry run before A3:** it passed on main at 9f764c8 — the six cloud tests; the scripts suite 291/291 with the marker set; every hook silent.
+  - **A3 (calibration):**
+    - `claude --cloud` refused from the custodian's shell ("requires an interactive terminal") and created nothing. A3 was launched from claude.ai/code instead: the Default environment, spatial-ide on main, Opus 5.5 at Medium.
+    - The prompt was pasted from the clipboard and hash-checked in the composer before sending (a408c1d8).
+    - session_01STxb5ot2J5RaYpnzffmSq6 ran 06:41:30Z to about 06:54Z. The balance went $250 → $243: a batch delta of $7, in whole dollars only, with no per-session figure anywhere.
+    - Result: 0 findings, 5 unproven observations, triaged in `state/cloud/wave1/A3.md` — 1 RECORD S2; 2 DISCARD S3; 3(a) RECORD S2; 3(b) an S1 candidate; 4 and 5 DISCARD S3.
+    - Observation 3 was reproduced on Windows by a tester (worktree `C:/dev/wt/triage-a3-obs3`, kept for the after-wave S1 batch). (a) reproduced. (b)'s mechanism reproduced: linear, about 46 ns per ring-offset iteration, 4.6 s at 1e8, no exception; a run past 60 s was extrapolated, not observed.
+    - Watch-points: the push to `cloud/wave1-A3` was accepted (db9527f); the DCO proof worked; the build path worked; the worktree deviation held; the hooks stayed quiet.
+  - **The ADR-035 note (#122):** the architect's draft was appended with the human's words byte-copied by script. Reviewer PASS (index 194). Architect PASS with F1 (195); F1 was applied byte-exact at f227036 and got a scoped PASS (196).
+  - **Round 23** (`state/questions/round-23.md`, mirrored first; RULED block at 7f8095f):
+    - item 1: pairs as planned;
+    - item 2 (a red line, typed): S1 yes, with the containment rider;
+    - item 3: S2–S4 as recommended;
+    - item 4 (typed): the follow-ups form's O1 by use versus mention, not in place; O3 widened by the human; the rest as recommended.
+  - **Wave 1, batch 1, pair 1 launched** from claude.ai/code with the balance at $243 of $250 (about 22:24Z):
+    - A1: session_01Dvwb34AguXpmzqPFN5SLGQ at 22:24:22Z;
+    - A2: session_012sfSh2fvSkNDCVbQ2o27Rm at 22:24:56Z.
+    - Both prompts are recorded beside their session IDs and hash-checked in the composer.
+  - **The watcher's phase 1** (worker-high, sonnet default; `cut/source-change-watcher` @ 4137f4d, 8 commits):
+    - Built: engine, protocol `skp/0.5`, kernel and the src-tauri wiring. 54/54 new tests carry recorded mutations, and every suite is green.
+    - H1–H5 were confirmed on the real Windows adapter.
+    - Budget: engine 1,848 against 1,100 and kernel 2,334 against 2,000 are over their rows; the total, 4,677 of 4,830 across 54 files, is within.
+    - Deviations disclosed in code: E5, E7 and E8 have no record/enqueue split, so they test the synchronous design; A7 cannot isolate case-folding, and `names_match_folds_case` does; K5's and K6's mutations were corrected.
+    - An architect consult is drafting Amendments 2 (round 23 items 2–3) and 3 (the phase-1 record) and the phase-2 deltas.
+  - **The follow-ups form:** an architect consult is revising it to round 23 item 4.
+  - **Disk:** C: 24 GB free after the phase-1 builds. Worktrees swept: #120's, #119's, #121's and #122's.
