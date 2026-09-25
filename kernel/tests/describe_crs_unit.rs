@@ -7,11 +7,13 @@
 //! `SkpHost::describe` round trip, the same seam `kernel/tests/skp_admission_remediation.rs`
 //! already exercises for the other `describe.crs.*` fields.
 
+mod watch_support;
+
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
-use spatial_kernel::skp::{SkpHost, StreamRegistry};
+use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{CrsUnit, DescribeRequest, OpenDatasetRequest, SKP_VERSION};
 
@@ -38,7 +40,12 @@ fn small_spec() -> FixtureSpec {
 
 fn open_and_describe(name: &str, spec: &FixtureSpec) -> spatial_skp::v0::DescribeResponse {
     let path = fixture(name, spec);
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new());
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
     let open = host
         .open_dataset(OpenDatasetRequest {
             skp: SKP_VERSION.to_string(),

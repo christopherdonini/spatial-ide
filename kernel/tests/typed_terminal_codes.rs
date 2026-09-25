@@ -28,9 +28,11 @@ use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_engine::EngineError;
 use spatial_kernel::publish::error::PublishError;
-use spatial_kernel::skp::{error_of, terminal_detail_of, SkpHost, StreamRegistry};
+use spatial_kernel::skp::{error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
 use spatial_skp::v0::{DatasetHandle, ViewportQueryRequest, SKP_VERSION};
+
+mod watch_support;
 
 /// The code the shell's `liveTicketSet.ts` matches as a prefix. Spelled as a literal on both sides
 /// deliberately — a shared constant would let the two agree while both being wrong, and the whole
@@ -85,7 +87,7 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
     let catalog = Arc::new(Catalog::new());
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone());
+    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {

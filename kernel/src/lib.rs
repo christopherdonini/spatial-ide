@@ -428,6 +428,17 @@ impl EngineSourceFactory {
                         .to_string(),
                 }))
             }
+            // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: a coverage loss takes its own code, never
+            // `engine.source_changed` (block-on-sight 3). Same discipline as the arm above: this
+            // registry holds no descriptor and never read the file, so `detail` names the fact
+            // this registry itself knows, not a fabricated component list.
+            skp::TicketLiveness::EndedByCoverageLoss => {
+                Err(skp::terminal_detail_of(&spatial_engine::EngineError::SourceCoverageLost {
+                    detail: "{this dataset's session ended when the advisory watch on its source \
+                             lost coverage}"
+                        .to_string(),
+                }))
+            }
             skp::TicketLiveness::Live | skp::TicketLiveness::Unknown => {
                 tickets.redeem(handle.as_str())
             }
@@ -478,7 +489,10 @@ impl EngineSource {
         let Some(detail) = self.stats.source_changed_detail() else { return };
         self.session_ended = true;
         let Some(invalidator) = self.invalidator.as_ref() else { return };
-        let cancelled = invalidator.end_generation(&self.dataset);
+        // The engine's own post-check descriptor comparison — never the watcher — so this always
+        // passes `ObservedChange` (`SOURCE-WATCHER-PREREGISTRATION.md` §2b: "the first three pass
+        // ObservedChange").
+        let cancelled = invalidator.end_generation(&self.dataset, skp::SessionEndReason::ObservedChange);
         // **What this line is: a record of which stream noticed, how many siblings went with it,
         // and what the post-check cost.** The generation is already over by the time it runs —
         // `end_generation` above did that — so the line reports; it does not decide anything.
