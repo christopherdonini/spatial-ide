@@ -113,3 +113,44 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Item 2: one correction round for #118. The reviewer's probe becomes a named regression test. If the round fails again, Rule 7 stops the piece.
     - A worker-high round was dispatched.
   - **Main red for one run.** The round-21 PLAN commit f086085 was pushed by a chain whose `;` bypassed a failed `site.mjs`. The PLAN summary's "SKP-V0 section 8" had tripped the duration pattern. It was fixed at 618dada (reworded, regenerated), and Governance is green again. The lesson is appended to the gate-on-exit-code memory.
+- 2026-09-25T00:32Z - **Handoff: round 21 applied; three PRs ready; wave 1 prepared as the recorded program; the lease relinquished.** The human's instruction of 2026-09-25 had four items: finish the current task and apply round 21's two rulings; copy the wave-1 prompts; set the baseline; write the program, then flush, push and relinquish.
+  - **Round 21 item 1 (ADR-035 accepted as merged):**
+    - #114 was merged by the human.
+    - PR #119 carries the acceptance texts (the architect's drafts, `state/consults/2026-09-24-adr-035-acceptance-drafts.md`): the Status line Accepted; the Acceptance section with the human's words byte-copied by script; the SKP-V0 §8 note of rider (c).
+    - Reviewer PASS and architect PASS at 3c7a638. The note's three wording should-fixes are at d2936d7, with the architect's scoped PASS (gate-log node `adr-035-acceptance`).
+    - Ready: merge commit, immutable after merge.
+  - **Round 21 item 2 (#118's one correction round):**
+    - Attempt 2 was a FAIL from both gates, record-only; the substance is fixed and proven (indices 185 and 186).
+    - The architect's reduction was applied byte-exact at 9bf9fc1.
+    - The scoped confirmation (index 187) found five comment pointers, repointed mechanically at 5f03481. CI 3/3. Ready: merge commit.
+    - With it, `governance-verify-mutation-multiline-attrs` closes as done (its rows are in the PR).
+  - **For the human's word** (the refused-line residual, on the followups node): a line carrying the `withdrawn-test` marker whose reference the grammar refuses exempts nothing but is never named. The architect reads rider (a) as governing withdrawals only; the human may read it otherwise.
+  - **Wave 1: the prompts.** `state/cloud/wave1-prompts.md` is the tracked record of the prompts, byte-identical to the draft except for the baseline SHA and one marked custodian note. Nothing tracked cites the untracked original.
+  - **Wave 1: the baseline.**
+    - Re-pinned from 59406134a447d6187fae4a6a79fb9f390c8efefb to bb98f71f43a2891d317b10a124387df9d5ee0ebf, uniformly (6 places).
+    - Why: #114's merge changed code under `frontends/`, one header string in `frontends/shell/scripts/adrIndex.mjs` and its test naming ADR-034 as reserved. Nothing changed under `engine/`, `kernel/`, `protocol/` or `renderer/`.
+    - Product CI was dispatched on bb98f71 and is green: Rust workspace https://github.com/christopherdonini/spatial-ide/actions/runs/36076675466, shell https://github.com/christopherdonini/spatial-ide/actions/runs/36076678443, bundle viewer https://github.com/christopherdonini/spatial-ide/actions/runs/36076681073.
+    - Every main commit after bb98f71 touches `state/` only. #119 and #118, if merged, add only a docs change under `protocol/` (the SKP-V0 note) and `scripts/plan/` tooling, neither of them product code.
+  - **RECORDED PROGRAM — wave 1** (from `state/cloud/wave1-prompts.md` §5 and §6; while it exists, its order governs, per the session-start ruling (1)):
+    1. **Calibration first: A3** (panics reachable from untrusted input), alone.
+       - It is bounded and read-mostly like the other audits, so it predicts their cost.
+       - It is the audit most likely to need a compiled reproducer, so it tests the build path and the DCO proof before anything depends on them.
+    2. **After calibration, decide by what the platform shows:**
+       - If per-session spend is visible:
+         - batch 1: A1, A2, A4 and A5 in parallel;
+         - batch 2: C and D in parallel (both build heavily, independently);
+         - batch 3: B alone (the network exception, and the licences need attention).
+       - If only the shared balance moves:
+         - the same batches, but batch 1 runs as two pairs, A1+A2 and then A4+A5, recording each pair's balance delta;
+         - never parallelise past the point where a delta can still be tied to a named batch.
+    3. **Recording (§6, custodian only):**
+       - `state/cloud/wave1.md` holds the ledger. It is created with the baseline line and the table header of §6.
+       - Each report goes verbatim into `state/cloud/wave1/<item>.md`, as immutable evidence.
+       - Balance is recorded before and after *each* launch batch, even when per-session figures exist, so the two can be reconciled.
+       - Spend is never estimated from tokens. A figure that is not shown reads "not attributable".
+       - The custodian fields of §3 are filled locally, never by the worker.
+    4. **Prompt assembly (§7):**
+       - A2–A5 are built by copying A1 in full and swapping exactly the item id, the branch name and the TASK block. "[paste §3's schema]" becomes §3's worker fields verbatim.
+       - The exact assembled text of each prompt is recorded beside its session ID.
+    5. **Triage (§4):** the custodian decides severity. S1 candidates go to the human in one batch after the wave, with evidence. Nothing becomes a cut in this wave.
+  - **Lease:** relinquished by this session (856bc41b), on the human's word. `CUSTODIAN-LEASE` is rewritten to a single `relinquished:` line. The incoming session verifies the relinquish and that origin's tip matches this flush before taking the lease.
