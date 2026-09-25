@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-25T01:17:52.371Z",
-  "plan_hash": "833fc2e8e950cb75cedabe29b5ac2580e7194e1328df8c47edab3c6fdef56470",
+  "generated_at": "2026-09-25T01:23:02.334Z",
+  "plan_hash": "117eca883ad21506242c172f9cec607d1f392b2761c7820e8582706a3a800c80",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3654,9 +3654,9 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "state/briefs/source-change-watcher-brief.md",
+      "gate": "engine/SOURCE-WATCHER-PREREGISTRATION.md",
       "evidence": {
-        "pr": 114
+        "branch": "cut/source-change-watcher"
       },
       "budget_minutes": 240,
       "generation": 1,

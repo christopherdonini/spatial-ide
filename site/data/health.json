@@ -1,15 +1,19 @@
 {
-  "generated_at": "2026-09-25T01:17:50.675Z",
+  "generated_at": "2026-09-25T01:23:00.768Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "node \"engine-source-change-watcher\": gate \"engine/SOURCE-WATCHER-PREREGISTRATION.md\" is not a tracked file",
+      "site drift: C:\\dev\\wt\\source-change-watcher\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\wt\\source-change-watcher\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 71810949120,
+        "bytes": 71838912512,
         "total": 510319915008
       },
       {
