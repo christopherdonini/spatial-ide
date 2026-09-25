@@ -1,0 +1,11 @@
+# The custodian's hooks inert in cloud sessions — five-line preregistration (`AUTONOMY.md` §21d)
+
+*Committed before any code, per the header rule both full and short forms keep.*
+
+```
+Authority: DECISIONS-PENDING.md, "RULED 2026-09-25, the cloud hooks", item (1) (verbatim in state/directives/2026-09-25-cloud-hooks.md §2); AUTONOMY.md §21b; PRECEDENTS.md P-005.
+Scope: scripts/hooks/cloud.mjs (new), scripts/hooks/stop-queue.mjs, scripts/hooks/precompact-flush.mjs, scripts/hooks/session-resume.mjs, scripts/hooks/notify-telegram.mjs, scripts/hooks/cloud.test.mjs (new), scripts/hooks/README.md; declared line budget <= 150 non-generated lines across 7 files.
+Change: each of the four scripts .claude/settings.json runs as a hook exits 0 at its entry point, before reading stdin and with nothing on stdout or stderr, when the environment variable CLAUDE_CODE_REMOTE is exactly "true" -- the marker https://code.claude.com/docs/en/cloud-environments names for this (quoted in cloud.mjs and the README); with the variable unset or any other value, every hook behaves as before.
+Tests+mutation: six new tests in scripts/hooks/cloud.test.mjs -- `each_settings_hook_command_exits_silently_under_the_cloud_marker` (every command in .claude/settings.json, run as configured, marker set: exit 0, empty stdout and stderr); `the_stop_hook_is_silent_in_the_cloud_and_unchanged_locally`, `the_precompact_hook_is_silent_in_the_cloud_and_unchanged_locally`, `the_session_resume_hook_is_silent_in_the_cloud_and_unchanged_locally`, `the_notification_hook_is_silent_in_the_cloud_and_unchanged_locally` (one dry run per hook, marker set: exit 0 and no output; marker unset: the existing observable behaviour -- the block decision, exit 2 with the flush reason, the reading order, the dry-run Telegram line); `the_cloud_marker_is_only_the_value_true`. Mutations, each run and recorded by name in the test file: a hook command running an unguarded script, added temporarily to .claude/settings.json, fails the first; each hook's guard removed fails that hook's test; the exact-"true" comparison loosened to truthiness fails the last.
+Out-of-scope: no ADR, wire, security or guarantee text; .claude/settings.json and every hook's local decision logic unchanged; no PLAN.yaml change in this piece (its node is added on main after the merge, with the PR as evidence).
+```
