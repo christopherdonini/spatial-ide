@@ -34,6 +34,40 @@ WAVE1_BASELINE=bb98f71f43a2891d317b10a124387df9d5ee0ebf
 
 This is `origin/main` at 2026-09-25 00:22 +0200. It includes #108, #112, #116 and #117; the commits after the last code merge are state and docs only. **Condition before launch:** the custodian confirms product CI is green on this SHA (or on `aa79322`, the #117 merge, which has identical code). If it isn't green, it chooses the most recent green SHA and records why.
 
+### Deviation 1, 2026-09-25 — the baseline is a worktree, not a checkout
+
+Recorded under RULED 2026-09-25, the cloud hooks, item (2), with the human's baseline correction beside it (`DECISIONS-PENDING.md`; verbatim in `state/directives/2026-09-25-cloud-hooks.md` §2 and §5). The baseline SHA is unchanged: bb98f71f43a2891d317b10a124387df9d5ee0ebf. The baseline instruction in A1 (and so, by §7's assembly rule, in A2–A5), in B, in C and in D, and §3's "Baseline SHA" field, now create a worktree at `/tmp/wave1-baseline` instead of checking the SHA out. The ruling's reason, byte-copied: "All reading, building, reproducers and branches happen inside that worktree, and the session's own checkout stays on main so the fixed hooks stay in force." Each prompt's sentence names the work that prompt does: reproducers and branches for A1–A5, commits and branches for B and C, and test runs for D, which makes no commits. §3's field changes because, with the session's checkout left on main, a bare `git rev-parse HEAD` would report main rather than the baseline.
+
+The original text of each amended passage, byte-copied by script before the change:
+
+§3:
+
+```
+Baseline SHA: <full SHA, confirmed by `git rev-parse HEAD` at start>
+```
+
+A1 (and so A2–A5):
+
+```
+BASELINE: audit exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf. Run `git checkout
+bb98f71f43a2891d317b10a124387df9d5ee0ebf` and confirm with `git rev-parse HEAD` before anything else. Do not
+move to a newer head, and do not reason from later commits.
+```
+
+B and C:
+
+```
+BASELINE: start from exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git checkout`, confirm
+with `git rev-parse HEAD`). Do not move to a newer head.
+```
+
+D:
+
+```
+BASELINE: run exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git checkout`, confirm with
+`git rev-parse HEAD`). Do not move to a newer head.
+```
+
 ## 3. Result schema
 
 Each session's final message is a single report in this shape. The custodian stores it verbatim.
@@ -42,7 +76,7 @@ Each session's final message is a single report in this shape. The custodian sto
 # WAVE1 REPORT
 ## Worker fields
 Item: <A1..A5 | B | C | D>          Lens/purpose: <one line>
-Baseline SHA: <full SHA, confirmed by `git rev-parse HEAD` at start>
+Baseline SHA: <full SHA, confirmed by `git -C /tmp/wave1-baseline rev-parse HEAD` at start>
 Branch: <cloud/wave1-<item> or "none">   Commits: <SHAs or "none">
 Environment: <OS, rustc, cargo, node, npm versions; network scope actually used>
 Commands run: <exact, with exit codes>
@@ -104,9 +138,11 @@ Every prompt below repeats the common rules in full, by design; no session relie
 
 ```
 You are a disposable, evidence-only cloud worker on the Spatial IDE repository.
-BASELINE: audit exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf. Run `git checkout
-bb98f71f43a2891d317b10a124387df9d5ee0ebf` and confirm with `git rev-parse HEAD` before anything else. Do not
-move to a newer head, and do not reason from later commits.
+BASELINE: audit exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf. Run `git worktree add
+/tmp/wave1-baseline bb98f71f43a2891d317b10a124387df9d5ee0ebf` and confirm with `git -C /tmp/wave1-baseline
+rev-parse HEAD` before anything else. All reading, building, reproducers and branches happen inside
+/tmp/wave1-baseline; the session's own checkout stays on main. Do not move to a newer head, and do not
+reason from later commits.
 ROLE: you investigate and report. You do not design, decide, merge, or change product code.
 
 TASK — security-boundary audit. Examine only whether the code's security boundaries hold as their
@@ -209,8 +245,10 @@ one that grows with ordinary use is in scope for S1.
 
 ```
 You are a disposable, evidence-only cloud worker on the Spatial IDE repository.
-BASELINE: start from exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git checkout`, confirm
-with `git rev-parse HEAD`). Do not move to a newer head.
+BASELINE: start from exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git worktree add
+/tmp/wave1-baseline bb98f71f43a2891d317b10a124387df9d5ee0ebf`, confirm with `git -C /tmp/wave1-baseline
+rev-parse HEAD`). All reading, building, commits and branches happen inside /tmp/wave1-baseline; the
+session's own checkout stays on main. Do not move to a newer head.
 ROLE: you build a proposal. You do not design, decide or merge.
 
 TASK — make the compatibility corpus reproducible without committing any third-party data. Read
@@ -256,8 +294,10 @@ it, "Findings" are the files that did not reproduce, with reasons.
 
 ```
 You are a disposable, evidence-only cloud worker on the Spatial IDE repository.
-BASELINE: start from exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git checkout`, confirm
-with `git rev-parse HEAD`). Do not move to a newer head.
+BASELINE: start from exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git worktree add
+/tmp/wave1-baseline bb98f71f43a2891d317b10a124387df9d5ee0ebf`, confirm with `git -C /tmp/wave1-baseline
+rev-parse HEAD`). All reading, building, commits and branches happen inside /tmp/wave1-baseline; the
+session's own checkout stays on main. Do not move to a newer head.
 ROLE: you check conformance. You do not design, decide, merge or change the protocol.
 
 TASK — write conformance fixtures from the specification alone, then compare the implementation.
@@ -296,8 +336,10 @@ it, "Findings" are the divergences, and "Unproven observations" include the ambi
 
 ```
 You are a disposable, evidence-only cloud worker on the Spatial IDE repository.
-BASELINE: run exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git checkout`, confirm with
-`git rev-parse HEAD`). Do not move to a newer head.
+BASELINE: run exactly commit bb98f71f43a2891d317b10a124387df9d5ee0ebf (`git worktree add
+/tmp/wave1-baseline bb98f71f43a2891d317b10a124387df9d5ee0ebf`, confirm with `git -C /tmp/wave1-baseline
+rev-parse HEAD`). All reading, building and test runs happen inside /tmp/wave1-baseline; the session's
+own checkout stays on main. Do not move to a newer head.
 ROLE: you run and catalogue. You do not fix, design or decide.
 
 TASK — run the project's suites on Linux and catalogue every result.
