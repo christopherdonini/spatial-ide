@@ -481,3 +481,48 @@ Applied here:
 2. §2d: the listener drops an event whose `session` is not the recorded reference with one logged line stating that an event for an unknown session was dropped, and its reason. The line never carries the reference (round 21 item 1, rider (b); §8 item 19).
 3. §4 gains two tests. Kernel: `a_generation_minted_by_live_or_mint_carries_an_unheld_reference_and_its_end_emits` (mutation: `live_or_mint` stores no reference and the end skips the enqueue). Shell, SH11: an unknown-session drop writes one log line, without the reference (mutation: drop it silently). SH9 stands.
 4. The close race itself is `kernel-generation-close-races`, placed immediately after this piece (PLAN.yaml); it is not in this piece's scope.
+
+### Amendment 2 — 2026-09-26, written after phase 1's results were seen: RULED 2026-09-25 — question round 23, items 2 and 3
+
+Class 5, a scope settled on a ruling. The rulings are cited by round and item and are not reproduced. S1–S4 are the stop items of `state/consults/2026-09-25-adr-035-decision-4-note.md` §4.
+
+1. **Item 2 (S1, a red line).** §2c's `SKP-V0.md` work gains a second dated note, appended at the end of §8, after the `skp/0.5` entry and after main's 2026-09-24 note to the `skp/0.3` entry. The note states three things:
+   - a `SessionRef` no client holds does not engage `skp/0.3`'s no-generation-value rule, under round 21 item 1's riders: it carries no ticket attribution, and it is never persisted or published;
+   - that reference is containment for the close race, not a protocol feature;
+   - PLAN node `kernel-generation-close-races` makes the unheld path unreachable and adds a test proving it. That obligation is the node's, not this piece's.
+
+   The note reproduces none of the human's words. §2c's sub-bullet on rider (c)'s note stands; this note is round 23's.
+2. **Item 3, S2** (§2b, the session reference). Every `SessionRef`, held or unheld, is minted by `SessionRef::mint` (`protocol/skp/src/v0/handles.rs`, the OS CSPRNG) and is never reused. `SkpHost::open_dataset` and the minting branch of `GenerationRegistry::live_or_mint` both call it; K14 and Amendment 1's kernel test assert distinctness. No test is added.
+3. **Item 3, S3** (§2d, the listener; §8 item 19). The line logged for a dropped unknown-session event carries no reference. SH11 also asserts that the line contains neither the event's `session` value nor any `sr_` followed by 32 lowercase hex digits; its added mutation writes the reference into the line. Amendment 1 item 2 stands.
+4. **Item 3, S4** (§2c, `SKP-V0.md` §3). The third minting rule is worded to cover a reference no client holds, and §3's count of its session-scoped kinds becomes four.
+5. **§9, architect.** The gate adds two checks: the second note against round 23 item 2, and §3's wording against round 23 item 3's S4.
+
+### Amendment 3 — 2026-09-26, written after phase 1's results were seen: the phase-1 record
+
+Post-result record; each row names its template class. Phase 1's head is `4137f4d` on `cut/source-change-watcher`; names below are as they stand there.
+
+1. **Budget, class 1 (§7).** The engine and kernel rows are overrun at `4137f4d`. The final per-module, total and file figures, under §21c's counting rule, are recorded by the closing amendment.
+2. **E5, E7, E8, class 2.** §4's `pub(crate)` split of `end_generation` was not built; E5 and E7 assert their named properties against the single call, and E7's recorded mutation (swap `cancel_all_for_dataset` and `forget_dataset` in `close_dataset`) replaced the registered one. E8 does not exercise its named order: both of its ends are enqueued before `forget_dataset` runs, so it does not prove ADR-035 Decision 3's close bullet for an end recorded on another thread. The comment above E5 that denies such a window is withdrawn; the closing amendment pins the superseded span at a commit on main.
+3. **A7, class 2.** A7's registered mutation (byte-exact comparison) does not fail A7: its case-only rename delivers `RENAMED_OLD_NAME` on the stored spelling first, and a handle signals at most once. The fold is proved by `names_match_folds_case` in `engine/src/watch.rs`, on the shipped `names_match`; its mutation replaces the body with `a == b`. A7 stays a case (b) test with no mutation of its own. Only A3's and A7's scenarios were observed; nothing wider is recorded.
+4. **K5, K6, class 2.**
+   - K5's registered mutation cannot fail at the `SkpHost` level, because every open mints a fresh `DatasetHandle` as the registry key. Its recorded mutation (drop the `OpenRecord` insert on the `Watching` arm) proves that a reopen watches again. No restored generation rests on K10 and on §7's zero re-arms per open.
+   - K6's registered mutation (mint before the latch check) is not discriminated: a refused open returns no handle, and the retry opens under a fresh one. The comment saying the retry would fail on a leftover is withdrawn. The recorded mutation (skip steps 1 and 2) proves the refusal. The absence of a catalog entry is asserted in phase 2. The absence of a generation is reduced: no test asserts it, since an accessor would be the test-only `pub` item §5 forbids.
+5. **Other deviations, class 2**, each stated in its test's doc comment at `4137f4d`:
+   - A3's mutation ignores `REMOVED` and `RENAMED_NEW_NAME`;
+   - A6 forces the overflow by suspending the watch threads, not with a blocked sink;
+   - A10 nests the junction one level deeper, and its mutation skips `canonicalize`;
+   - A11 forces the failure with a share-mode conflict, not an `icacls` deny, under a changed name;
+   - Amendment 1's kernel test reuses one shared reference as its mutation, since the registered one no longer type-checks with `EndReport.session` not optional.
+
+   The gate's `verify-mutation` run, commit named, is the observation of record for every mutation in rows 2–5.
+6. **H1–H5, class 1.** This amendment records none as observed. Each resolves at the gate's run, commit named:
+   - H1 by A8 under its mutation;
+   - H2 by A1 passing (A1 does not separate the write's notification from the mtime restore's);
+   - H3 by A6 under its mutation;
+   - H5 by A13 passing.
+
+   H4 is not discriminated by A9 as built, because A9 accepts a `Change` from either handle; it stays open.
+7. **Found at `4137f4d`, owed in phase 2, class 1:**
+   - §2b's sink log line is not built;
+   - the coverage-lost details of `create_from_ticket`'s `EndedByCoverageLoss` arm and of `viewport_query`'s mint-race arm lack the `[P6 placeholder]` mark (§7; §8 item 9);
+   - test names carry prefixes and do not resolve against §4.
