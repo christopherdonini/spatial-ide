@@ -6,12 +6,14 @@
 pub mod codec;
 pub mod commands;
 pub mod error;
+pub mod events;
 pub mod handles;
 
 pub use codec::{DecU64, HexF64, HexF64ParseError};
 pub use commands::*;
 pub use error::SkpError;
-pub use handles::{CancelKey, DatasetHandle, StreamHandle};
+pub use events::{DatasetSessionEnded, DATASET_SESSION_ENDED_EVENT};
+pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 
 /// The one version string this crate speaks. A host compares an incoming request's `skp` field with
 /// `==`; anything else is `SkpError::version_unsupported` (SKP-V0.md §4 item 3 — there is
@@ -44,4 +46,12 @@ pub use handles::{CancelKey, DatasetHandle, StreamHandle};
 /// diff; no MCP surface. Same discipline again: `deny_unknown_fields` both directions, `==`
 /// unchanged, every fixture on both sides of the wire updated in this commit (`SKP-V0.md` §8's
 /// `skp/0.4` entry lists the full field set).
-pub const SKP_VERSION: &str = "skp/0.4";
+///
+/// `skp/0.5` (the advisory source-change watcher, `engine/SOURCE-WATCHER-PREREGISTRATION.md`):
+/// `OpenDatasetResponse` gains `session: SessionRef`; `DescribeResponse` gains `coverage`, `checks`
+/// and `session_end`; and one new control-plane event, [`DatasetSessionEnded`] on
+/// [`DATASET_SESSION_ENDED_EVENT`] — the one named exception to §4 item 7's "no server-to-client
+/// push". No generation value crosses the wire (rider (a)). Same discipline again:
+/// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
+/// updated in this commit (`SKP-V0.md` §8's `skp/0.5` entry lists the full field set).
+pub const SKP_VERSION: &str = "skp/0.5";

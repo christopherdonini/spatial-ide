@@ -9,7 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::v0::{DatasetHandle, DecU64, HexF64, StreamHandle};
+use crate::v0::{DatasetHandle, DecU64, HexF64, SessionRef, StreamHandle};
 
 // ---------------------------------------------------------------------------------------------
 // open_dataset
@@ -62,6 +62,10 @@ pub struct IdentityDeclaration {
 #[serde(deny_unknown_fields)]
 pub struct OpenDatasetResponse {
     pub dataset: DatasetHandle,
+    /// `skp/0.5`, the advisory source-change watcher (ADR-035 D4): minted once per successful open,
+    /// after admission. Returned once, here; carried again only on the
+    /// [`crate::v0::DatasetSessionEnded`] event that ends this open's generation.
+    pub session: SessionRef,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -256,6 +260,69 @@ pub struct DescribeResponse {
     pub license: LicenseInfo,
     /// **`skp/0.3`, Brief A boundary 9's sanity-check level.**
     pub sanity: SanityInfo,
+    /// `skp/0.5`, the advisory source-change watcher. Fixed at admission and never rewritten by a
+    /// later loss (rule 3) — a dataset with no armed watch reports `checks-only` with the reason
+    /// naming why. Independent of [`Self::checks`] and [`Self::session_end`] (addition 1): neither
+    /// field ever rewrites another.
+    pub coverage: SourceCoverage,
+    /// `skp/0.5`. What [`crate::v0::CheckComponent`]s this open's structural descriptor could not
+    /// establish — `ADMISSION-PREREGISTRATION.md`'s degradation, carried on the wire for the first
+    /// time (ADR-016 A1 item 2's owed display).
+    pub checks: SourceChecks,
+    /// `skp/0.5`. `Some` exactly once this dataset's generation has ended; the key is always present.
+    pub session_end: Option<EndReason>,
+}
+
+/// `skp/0.5`. Whether this open's source is under active OS notification, or falls back to the
+/// pre-check/post-check descriptor comparison alone. Closed, kebab-case, no fallback (the `skp/0.4`
+/// `CrsUnit` precedent).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CoverageState {
+    Watching,
+    ChecksOnly,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SourceCoverage {
+    pub state: CoverageState,
+    /// `Some` exactly for `checks-only` — the key is always present (addition 1).
+    pub reason: Option<String>,
+}
+
+/// `skp/0.5`. Whether every structural-descriptor component was established at open.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ChecksState {
+    Full,
+    Degraded,
+}
+
+/// `skp/0.5`. A structural-descriptor component this open could not establish
+/// (`engine::descriptor::SourceDescriptor::unestablished_components`'s vocabulary).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CheckComponent {
+    Mtime,
+    FooterHash,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SourceChecks {
+    pub state: ChecksState,
+    /// Non-empty exactly for `degraded` (addition 1).
+    pub components: Vec<CheckComponent>,
+}
+
+/// `skp/0.5`. Why a dataset-session generation ended — carried on `describe.session_end` and on the
+/// [`crate::v0::DatasetSessionEnded`] event. Closed, kebab-case, no fallback.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EndReason {
+    ObservedChange,
+    CoverageLost,
 }
 
 /// What the range check was decided from at this open — **`skp/0.3`**.

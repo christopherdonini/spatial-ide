@@ -45,5 +45,8 @@
   "sanity": {
     "level": "none",
     "reason": "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked"
-  }
+  },
+  "coverage": { "state": "watching", "reason": null },
+  "checks": { "state": "full", "components": [] },
+  "session_end": null
 }

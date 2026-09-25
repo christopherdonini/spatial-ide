@@ -154,7 +154,14 @@ wherever its only power is to stop the caller's *own already-authorized* work.
 DatasetHandle  "ds_" + 32 lowercase hex   kernel-minted, OS CSPRNG
 StreamHandle   "sh_" + 32 lowercase hex   kernel-minted, OS CSPRNG, single-use ticket (ADR-019)
 CancelKey      client-minted, 1..=64 chars of [A-Za-z0-9_-]
+SessionRef     "sr_" + 32 lowercase hex   kernel-minted, OS CSPRNG (skp/0.5, ADR-035 D4)
 ```
+
+**`skp/0.5`'s third minting rule, stated beside the first two:** the kernel mints a `SessionRef`
+once per successful open and hands it back exactly once, on `OpenDatasetResponse.session` — it
+authorizes nothing (no request type ever accepts it back) and is not looked up; its only other
+appearance is on the `dataset_session_ended` event that names the generation it ends
+(`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b, round 21 item 1 rider (a)).
 
 All three are session-scoped and non-persistable. None may be written to disk, logged, or reused
 across a process restart — docs/11's ResourceRef model and ADR-016's "stability across reopen" OPEN
@@ -184,7 +191,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    no `style`, no `publish` (ADR-017's acceptance condition keeps publish unreachable regardless).
    **v0.1 (§7 below) does not add a sixth command** — `viewport_query` gains an optional row-filter
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
-2. **Transport bindings** — one: Tauri invoke. No control-plane websocket, no stdio, no MCP adapter.
+2. **Transport bindings** — one: Tauri invoke, for the five commands. **`skp/0.5` adds exactly one
+   more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
+   server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
+   stdio, no MCP adapter.
 3. **Version negotiation** — *"beyond a version field" means, minimally:* every request carries
    `skp: "skp/0"`, compared with `==`. No ranges, no min/max, no capability sets, no per-command
    versions, no downgrade path, no handshake. A client and host that disagree fail on the first call.
@@ -223,7 +233,11 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    filtered scan.
 6. **Backpressure** — data-plane credit only (`MAX_INFLIGHT_BATCHES = 4`, unchanged). None on the
    control plane; commands are unqueued, bounded only by the declared ticket/stream ceilings.
-7. **Subscriptions and events** — none. No server-to-client push on the control plane in any form.
+7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
+   Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
+   generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
+   turn it off, and no request or response on any of the five commands mentions it. No other
+   server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §6. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
    taxonomy — still no new error *invented outside a declared, exhaustive taxonomy*: every one of the
@@ -237,8 +251,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
    and must not be cited as one.
-10. **Stable vs temporary handles** — all three handle kinds are temporary and session-scoped (§3).
-    No stable resource URI; the publish path's `spatial://dataset/<name>` is not reachable here.
+10. **Stable vs temporary handles** — all handle kinds are temporary and session-scoped (§3),
+    `SessionRef` (`skp/0.5`) included: it is minted per open, never persisted, never published,
+    never logged, and does not survive a reopen. No stable resource URI; the publish path's
+    `spatial://dataset/<name>` is not reachable here.
 11. **Authentication and authorization** — none on the control plane beyond "only this shell's own
     webview can invoke it." No capability grants, no principals. The data plane keeps its existing
     session token, origin check and loopback bind, unchanged.
@@ -249,6 +265,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     exercised**, not an exception to it: `viewport_query`'s new `filter` field shipped together with
     the `skp/0.1` version bump, every fixture on both sides of the wire updated in the same commit
     (`CUT-STATE.md` P1) — a tolerant reader was never introduced.
+
+    **`skp/0.5` is a further instance of this rule** — its whole field set (§8's `skp/0.5` entry)
+    landed in this piece's own commits, before merge, and freezes at merge exactly as `skp/0.2`
+    through `skp/0.4` did.
 
     **`skp/0.2` (§8) is the second instance of this rule, and the first assembled across several
     commits.** Its field set grew after the literal was bumped (P2's `CrsInfo.definition_provenance`,
@@ -722,3 +742,48 @@ and stacks its branch on this one, and B1 takes the literal after the watcher's.
 unmerged, further additions to it are appended addenda, the `skp/0.2`/`skp/0.3` precedent. Once
 this piece merges to `main`, `skp/0.4`'s field set is closed and the next version bumps in the
 stated order. **`skp/1` stays RESERVED** and must not be used for any interim version.
+
+### skp/0.5 — the advisory source-change watcher (`engine/SOURCE-WATCHER-PREREGISTRATION.md`)
+
+**The version's FULL field set, as §8's own discipline requires — every member `skp/0.5` adds, in
+one list.**
+
+`open_dataset` **response** gains one member:
+
+- **`session: SessionRef`** (`"sr_" + 32 lowercase hex`, kernel-minted) — minted once per
+  successful open, after admission. Authorizes nothing; no request type ever accepts it back.
+
+`describe` **response** gains three top-level, always-present members, kept independent by
+construction (addition 1 — none ever rewrites another):
+
+- **`coverage: { state: "watching" | "checks-only", reason: string | null }`** — fixed at
+  admission and never rewritten by a later loss (rule 3). `reason` is `Some` exactly for
+  `checks-only`.
+- **`checks: { state: "full" | "degraded", components: ("mtime" | "footer-hash")[] }`** —
+  `engine::descriptor::SourceDescriptor::unestablished_components()`'s vocabulary, carried on the
+  wire for the first time (ADR-016 A1 item 2's owed display). `components` is non-empty exactly
+  for `degraded`.
+- **`session_end: "observed-change" | "coverage-lost" | null`** — `Some` exactly once this
+  dataset's generation has ended.
+
+One new typed refusal:
+
+- **`engine.source_coverage_lost`**, `fields.detail` — the session-ended family, not retryable, on
+  `error_of`'s existing `EngineError` + variant-name rule. Never `engine.source_changed` for a
+  coverage loss (block-on-sight 3).
+
+One new control-plane event, the sole server-to-client push this spec defines (§4 item 7):
+
+- **`skp://dataset_session_ended`**, payload `{ session: SessionRef, reason: "observed-change" |
+  "coverage-lost" }`, `deny_unknown_fields`, exactly two members. Emitted at most once per ended
+  dataset-session generation.
+
+**What `skp/0.5` deliberately does not add.** No generation value anywhere on the wire (rider (a)).
+No OS delivery deadline, event ordering against a data-plane frame, or latency claim (ADR-035
+Consequences). No new command. `protocol/data-plane/` has an empty diff.
+
+Mechanics, the `skp/0.2`–`skp/0.4` precedent followed exactly: one literal bumped once,
+`"skp/0.4"` → `"skp/0.5"`; plain `==` comparison retained; `deny_unknown_fields` kept both
+directions; every fixture on both the Rust (`protocol/skp/tests/data/*.json`,
+`protocol/skp/tests/fixtures.rs`) and TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`)
+sides of the wire updated in the same commit as each addition. `skp/1` stays RESERVED.

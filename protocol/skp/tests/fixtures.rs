@@ -305,5 +305,69 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
 /// failure: this test fails by name.
 #[test]
 fn skp_version_is_skp_0_4() {
-    assert_eq!(SKP_VERSION, "skp/0.4");
+    assert_eq!(SKP_VERSION, "skp/0.5");
+}
+
+/// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.
+/// Mutation: omit `session` from `error_of`/`open_dataset`'s response construction. Expected
+/// failure: this test fails to deserialize the fixture (`session` is a required member, not
+/// `Option`).
+#[test]
+fn open_dataset_response_carries_a_session_reference() {
+    let v = fixture("v0-open_dataset-response");
+    let parsed: OpenDatasetResponse = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as OpenDatasetResponse: {e}"));
+    assert!(parsed.session.as_str().starts_with("sr_"));
+    assert_eq!(parsed.session.as_str().len(), 3 + 32);
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
+/// `skp/0.5`. `coverage`, `checks` and `session_end` are three independent facts: none rewrites
+/// another (addition 1). The session-ordinal fixture is populated with `coverage.state =
+/// "watching"`, `checks.state = "degraded"` and a set `session_end` all at once, which is only
+/// possible if the three are independent.
+/// Mutation: merge `coverage` and `checks` into one field. Expected failure: this test fails to
+/// deserialize the fixture, or its three independent assertions below fail.
+#[test]
+fn describe_carries_coverage_checks_and_session_end_as_independent_members() {
+    let v = fixture("v0-describe-response-session-ordinal");
+    let parsed: DescribeResponse = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
+    assert_eq!(parsed.coverage.state, CoverageState::Watching);
+    assert_eq!(parsed.coverage.reason, None);
+    assert_eq!(parsed.checks.state, ChecksState::Degraded);
+    assert_eq!(parsed.checks.components, vec![CheckComponent::Mtime]);
+    assert_eq!(parsed.session_end, Some(EndReason::ObservedChange));
+
+    // The unpopulated shape, on the plain fixture: watching, full, no end.
+    let plain = fixture("v0-describe-response");
+    let parsed_plain: DescribeResponse = serde_json::from_value(plain.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
+    assert_eq!(parsed_plain.coverage.state, CoverageState::Watching);
+    assert!(parsed_plain.checks.components.is_empty());
+    assert_eq!(parsed_plain.session_end, None);
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
+/// `skp/0.5`. `DatasetSessionEnded` is `deny_unknown_fields` with exactly two members.
+/// Mutation: add a third member (e.g. `dataset`) to the type. Expected failure: this test fails to
+/// deserialize the fixture — an added member is refused, never tolerated.
+#[test]
+fn the_session_ended_event_fixture_decodes_with_exactly_two_members() {
+    let v = fixture("v0-dataset_session_ended-event");
+    assert_eq!(v.get("event").and_then(|e| e.as_str()), Some(DATASET_SESSION_ENDED_EVENT));
+    let payload = v.get("payload").cloned().expect("fixture carries a payload member");
+    let parsed: DatasetSessionEnded = serde_json::from_value(payload.clone())
+        .unwrap_or_else(|e| panic!("payload does not deserialize as DatasetSessionEnded: {e}"));
+    assert!(parsed.session.as_str().starts_with("sr_"));
+    assert_eq!(parsed.reason, EndReason::ObservedChange);
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), payload, "round trip changed the JSON shape");
+
+    // A third member is refused, never tolerated (deny_unknown_fields).
+    let mut mutated = payload;
+    mutated.as_object_mut().unwrap().insert("dataset".into(), serde_json::json!("ds_x"));
+    assert!(
+        serde_json::from_value::<DatasetSessionEnded>(mutated).is_err(),
+        "a third member on the event payload must be refused, not tolerated"
+    );
 }

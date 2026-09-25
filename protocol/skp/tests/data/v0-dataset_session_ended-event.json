@@ -1,0 +1,7 @@
+{
+  "event": "skp://dataset_session_ended",
+  "payload": {
+    "session": "sr_00112233445566778899aabbccddeeff",
+    "reason": "observed-change"
+  }
+}
