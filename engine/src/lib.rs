@@ -100,6 +100,8 @@ pub mod predicate;
 pub mod rowgroup;
 pub mod stream;
 pub mod trace;
+/// The advisory source-change watcher's adapter — `SOURCE-WATCHER-PREREGISTRATION.md` §2a.
+pub mod watch;
 pub mod wkb;
 
 pub use attributes::{PublishedProjection, MAX_PUBLISHED_ATTRIBUTES};
@@ -130,6 +132,7 @@ pub use pool::{
     MAX_PHYSICAL_CONNECTIONS, MAX_STREAM_CONNECTIONS,
 };
 pub use rowgroup::{RowGroupIndex, RowGroupRefusal, RowGroupSelection};
+pub use watch::{ArmOutcome, ArmedWatch, PlatformWatch, SourceWatchArm, WatchSignal, WatchSink, WATCH_BUFFER_BYTES};
 pub use stream::{
     BatchCut, BatchCutPolicy, BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox,
     ConnectionFacts, FilterPlan, RowOrdering, StreamStats, ViewportQuery,
