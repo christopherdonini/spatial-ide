@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-25T06:43:57.790Z",
-  "plan_hash": "e34a553f93992a55c0d535c7b342c601164ce8d1d088b80c36b416377452ba1d",
+  "generated_at": "2026-09-25T06:45:25.316Z",
+  "plan_hash": "794abab87f823493b7c4bf950c02b5c89cbf332ecd64b15b5cf24b5896e15e52",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1026,7 +1026,7 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "engine/B1-PROJECTION-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 240,
       "generation": 1,

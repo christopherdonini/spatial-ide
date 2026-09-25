@@ -1,18 +1,18 @@
 {
-  "generated_at": "2026-09-25T06:43:56.207Z",
+  "generated_at": "2026-09-25T06:45:23.575Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\b1-prereg\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\b1-prereg\\site\\data\\plan.json differs from a fresh generation"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 71723819008,
+        "bytes": 71766888448,
         "total": 510319915008
       },
       {
