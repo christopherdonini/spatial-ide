@@ -531,8 +531,8 @@ function withdrawnFixture({
 // Deleting the `if (withdrawnSpans.length) { ... }` branch entirely (the withdrawn-test check, and the
 // `invalidRowLines` suppression inside it, both dropped) is NOT isolated to this one test: over the full file it fails 10
 // of 35 and 25 pass -- the "also marked superseded" test passes, its fixture being a range row the
-// withdrawn-test check never reads; which 10: the attempt-2 reviewer record, `state/gate-log.json`
-// index 186.
+// withdrawn-test check never reads; which 10: the scoped-confirmation reviewer record, `state/gate-log.json`
+// index 187.
 // RECORDED MUTATION: delete that branch in runVerifyTestClaims -- applied for real against the full
 // file, then reverted; this test fails: "no binding finding expected: [{...,\"kind\":\"claim\"}] / 1 !== 0"
 // (25 of 35 pass; see above).
@@ -602,7 +602,7 @@ test('a_withdrawn_test_row_whose_carrier_does_not_resolve_fails_by_name', () => 
 // is `supersededSpans`'s own precedence exclusion of any line ALSO carrying the `withdrawn-test` token.
 // RECORDED MUTATION: in supersededSpans, drop the `&& !containsWithdrawnTestOutsideBackticks(lineText)`
 // exclusion -- applied for real, run, then reverted; fails at its first assertion (the claim lands in
-// `superseded`); the printed finding: the attempt-2 reviewer record, `state/gate-log.json` index 186.
+// `superseded`); the printed finding: the scoped-confirmation reviewer record, `state/gate-log.json` index 187.
 test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded', () => {
   const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-both-'));
@@ -621,8 +621,8 @@ test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded'
 // One row, one pinned line (round 15(d)): a range reference is refused outright, never exempting.
 // RECORDED MUTATION: in markedSpans, drop `if (singleLineOnly && startLine !== endLine) continue;` --
 // applied for real, run against the full file, then reverted; fails at its first assertion (the claim
-// lands in `withdrawn`); the printed finding: the attempt-2 reviewer record, `state/gate-log.json`
-// index 186.
+// lands in `withdrawn`); the printed finding: the scoped-confirmation reviewer record, `state/gate-log.json`
+// index 187.
 test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
   const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-range-'));
@@ -643,7 +643,7 @@ test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
 // other condition here would otherwise pass).
 // RECORDED MUTATION: in markedSpans, delete `if (m[2] !== relPath) continue;` -- applied for real, run
 // against the full file, then reverted; fails at its first assertion (the claim lands in `withdrawn`);
-// the printed finding: the attempt-2 reviewer record, `state/gate-log.json` index 186.
+// the printed finding: the scoped-confirmation reviewer record, `state/gate-log.json` index 187.
 test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-otherpath-'));
   const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
@@ -669,7 +669,7 @@ test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
 // RECORDED MUTATION: replace `WITHDRAWN_TEST_TOKEN_RE` with
 // `/(?<![A-Za-z0-9_-])withdrawn(?![A-Za-z0-9_-])/` -- applied for real against the full file, then
 // reverted; fails 13 of 35, including this test at its first assertion (the claim lands in
-// `withdrawn`); the printed finding: the attempt-2 reviewer record, `state/gate-log.json` index 186.
+// `withdrawn`); the printed finding: the scoped-confirmation reviewer record, `state/gate-log.json` index 187.
 test('the_bare_word_withdrawn_on_a_pinned_line_is_not_a_withdrawn_test_row', () => {
   const { dir } = withdrawnFixture({ marker: 'withdrawn' });
   const { findings, withdrawn, superseded } = runVerifyTestClaims({ repoRoot: dir });
