@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-25T06:27:08.140Z",
-  "plan_hash": "f432d8fb102fab084c5b66204ff4ef2a8f397610f79e6759acdd228b9f5948d0",
+  "generated_at": "2026-09-25T06:43:57.790Z",
+  "plan_hash": "e34a553f93992a55c0d535c7b342c601164ce8d1d088b80c36b416377452ba1d",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3854,8 +3854,8 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "ready",
+      "order": 1,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
@@ -3867,7 +3867,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece.",
+      "summary": "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece. PR #119 merged 2026-09-25 (9f764c8): placed ready.",
       "dates": {
         "opened": "2026-09-25",
         "done": null
@@ -3899,6 +3899,33 @@
       "dates": {
         "opened": "2026-09-25",
         "done": null
+      }
+    },
+    {
+      "id": "governance-hooks-cloud-inert",
+      "title": "The custodian's hooks inert in cloud sessions -- each hook .claude/settings.json runs exits 0 at entry, with no output, when CLAUDE_CODE_REMOTE is exactly true",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "done",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "scripts/hooks/HOOKS-CLOUD-INERT-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 120
+      },
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "RULED 2026-09-25, the cloud hooks, item (1): a tooling fix under the existing delegation, single combined gate (reviewer attempts 1-3, state/gate-log.json indices 191-193, PASS at the third); merged by the human 2026-09-25 (85bbe8d); its dry run passed on main at 9f764c8 before wave 1 A3 launched.",
+      "dates": {
+        "opened": "2026-09-25",
+        "done": "2026-09-25"
       }
     }
   ]

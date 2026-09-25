@@ -2333,8 +2333,8 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: proposed
-    order: null
+    status: ready
+    order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
@@ -2343,7 +2343,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece."
+    summary: "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece. PR #119 merged 2026-09-25 (9f764c8): placed ready."
     dates: {opened: 2026-09-25, done: null}
 
   - id: b1-shell-half
@@ -2363,3 +2363,21 @@ nodes:
     entries: []
     summary: "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio."
     dates: {opened: 2026-09-25, done: null}
+
+  - id: governance-hooks-cloud-inert
+    title: "The custodian's hooks inert in cloud sessions -- each hook .claude/settings.json runs exits 0 at entry, with no output, when CLAUDE_CODE_REMOTE is exactly true"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: done
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/hooks/HOOKS-CLOUD-INERT-PREREGISTRATION.md
+    evidence: {pr: 120}
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-25, the cloud hooks, item (1): a tooling fix under the existing delegation, single combined gate (reviewer attempts 1-3, state/gate-log.json indices 191-193, PASS at the third); merged by the human 2026-09-25 (85bbe8d); its dry run passed on main at 9f764c8 before wave 1 A3 launched."
+    dates: {opened: 2026-09-25, done: 2026-09-25}

@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f432d8fb102fab084c5b66204ff4ef2a8f397610f79e6759acdd228b9f5948d0`) at `2026-09-25T06:27:06.503Z`.
+Generated from `PLAN.yaml` (sha256 `e34a553f93992a55c0d535c7b342c601164ce8d1d088b80c36b416377452ba1d`) at `2026-09-25T06:43:56.111Z`.
 
 ## 1. Next
 
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`)
+- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (lane `kernel-protocol`)
 
 ## 2. Ready
 
+- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (lane `kernel-protocol`, order 1, budget 45 min)
 - **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`, order 1, budget 60 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
@@ -49,7 +50,6 @@ Generated from `PLAN.yaml` (sha256 `f432d8fb102fab084c5b66204ff4ef2a8f397610f79e
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (phase `prototype`) — never queued until placed
-- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (phase `prototype`) — never queued until placed
 - **b1-shell-half** — Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
