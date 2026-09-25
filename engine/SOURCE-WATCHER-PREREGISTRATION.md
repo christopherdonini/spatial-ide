@@ -471,3 +471,13 @@ An overrun is recorded in a class-1 amendment with the final figure. This sectio
 ## §10. Amendments
 
 *(opens empty; append-only)*
+
+### Amendment 1 — 2026-09-25, before any code (no outcome seen): stop item X1 resolved by RULED 2026-09-25, question round 22, item 1
+
+Class 5, a scope settled on a ruling. The ruling, byte-copied by script from `DECISIONS-PENDING.md`'s RULED block: "The architect's recommendation, as an invariant: every generation carries a kernel-minted SessionRef, and a generation not created by open_dataset gets one no client holds. Its end still emits, and the shell drops an event for an unknown session with a logged line, never silently. Recorded as an appended, dated note to ADR-035's Decision 4 after #119 merges. The close race is not deferred indefinitely: kernel-generation-close-races is placed immediately after the watcher, and it takes in whatever wave-1 A2 reports about it. A generation minted for a closing dataset is the defect; the unheld reference only makes it harmless meanwhile."
+
+Applied here:
+1. §2b: every generation carries a kernel-minted `SessionRef`. `GenerationState.live` holds `(u64, SessionRef)`: `mint_for_open(dataset, session)` stores the open's reference, and `live_or_mint` mints one that no client holds. `EndReport.session` is a `SessionRef`, never absent, so every end's event carries one. X1's attach point is this rule; §5's X1 invalidator and §8 item 21 no longer apply.
+2. §2d: the listener drops an event whose `session` is not the recorded reference with one logged line stating that an event for an unknown session was dropped, and its reason. The line never carries the reference (round 21 item 1, rider (b); §8 item 19).
+3. §4 gains two tests. Kernel: `a_generation_minted_by_live_or_mint_carries_an_unheld_reference_and_its_end_emits` (mutation: `live_or_mint` stores no reference and the end skips the enqueue). Shell, SH11: an unknown-session drop writes one log line, without the reference (mutation: drop it silently). SH9 stands.
+4. The close race itself is `kernel-generation-close-races`, placed immediately after this piece (PLAN.yaml); it is not in this piece's scope.
