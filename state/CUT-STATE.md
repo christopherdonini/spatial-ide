@@ -221,3 +221,20 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - An architect consult is drafting Amendments 2 (round 23 items 2–3) and 3 (the phase-1 record) and the phase-2 deltas.
   - **The follow-ups form:** an architect consult is revising it to round 23 item 4.
   - **Disk:** C: 24 GB free after the phase-1 builds. Worktrees swept: #120's, #119's, #121's and #122's.
+- 2026-09-25T23:00Z - **Wave 1 pair 1 reported and triaged; pair 2 (A4+A5) running; two new S1 candidates; the watcher's phase 2 dispatched with A2-1 folded in.**
+  - **Pair 1** (5af4e84): A1 and A2 reported by about 22:30Z. Both reports are recorded verbatim with custodian fields in `state/cloud/wave1/A1.md` and `A2.md`. The balance went $243 → $237: a batch delta of $6 for the pair, not attributable per session.
+  - **Triage against main at ab4eb65:** every cited file is unchanged since bb98f71, so every item is still-present.
+    - **A1-1, S1 candidate:** a stated non-ASCII Origin is admitted as absent. Reproduced on Windows in `C:/dev/wt/triage-a3-obs3`: rc 101, 2 of 3 failing as in the cloud run. It goes to the after-wave batch.
+    - **A2-1, S1 candidate:** the untiled manager re-admits a late-minted ticket after session end, against ADR-028 Amendment 4 item 2's client half; the kernel masks it end to end. Reproduced on Windows: the vitest, 1 passed. It is in the watcher's code, so it folds in under wave-1 rule 2 and also goes to the after-wave batch.
+    - **RECORD S2:** A1-2, A1 observations 1–2 and A2 observation 2. Observation 2 and A2's close race go to `kernel-generation-close-races`' intake.
+    - **DISCARD S3:** the rest.
+    - **Watch-point for D:** `npm ci` refused under npm 10.9.7 at the baseline.
+  - **Pair 2** (37eee20), launched from claude.ai/code with the balance at $237 of $250:
+    - A4: session_01NZDimj5kbXchTDKA9MQrPT at 22:48:55Z;
+    - A5: session_018DZybsCUV4Zb8z81uUUEAQ at 22:49:26Z.
+    - Both prompts were hash-checked in the composer and are recorded beside their session IDs.
+  - **The watcher:**
+    - Phase 2 is dispatched to a worker-high on `cut/source-change-watcher` @ 09104f4: merge main, deltas 1–12, §2d, SH1–SH11, the E2E, the KNOWN-LIMITATIONS lines and the checks.
+    - Step F, the A2-1 fold-in, waits for Amendment 4. An architect consult is drafting it: the class, since no template class names a widening; the fix's shape; the SH rows.
+  - **The follow-ups worker** (`governance/test-claims-followups`) is still running.
+  - **Disk:** C: 23 GB free.
