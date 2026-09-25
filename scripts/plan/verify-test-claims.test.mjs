@@ -212,9 +212,10 @@ test('a_gate_file_named_by_any_done_node_is_never_planned', () => {
 // two-commit history: v1's claim line is fixed and hashed at its own commit, v2 appends a pin
 // referencing it. The appended row is a real markdown TABLE ROW, byte-ALIKE in shape (not content) to
 // the row on MAIN at `frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:1191 @ b14993192c8769113ddd630ab0d49d6c8ec2c897 sha256:72456eb51e3018d88b8583268fdd52b0cf4f4f263470839cf353362377836c6c` --
-// round 19 item 2's correction (attempt-2 reviewer gate, entry 133): the earlier cite named
-// `cut/briefa-p3b-test-names`'s unmerged `46cde2c` at `:1195`, a line only the moving branch tip ever
-// carried (that file is 1174 lines at `46cde2c` itself); the reference inside ONE backtick span, in
+// round 19 item 2's correction (attempt-2 reviewer gate, `state/gate-log.json` index 87): the earlier
+// cite named `cut/briefa-p3b-test-names`'s `46cde2c` (since become an ancestor of main) at `:1195`, a
+// line only the moving branch tip ever carried (that file is 1174 lines at `46cde2c` itself); the
+// reference inside ONE backtick span, in
 // its own table cell, with `superseded` in a different cell (attempt-1 architect gate B6).
 const SUPERSEDED_DOC = 'X-PREREGISTRATION.md';
 const SUPERSEDED_CLAIM_NAME = 'an_old_test_name_here';
@@ -397,8 +398,8 @@ test('a_pin_with_the_word_superseded_only_in_a_double_backtick_span_does_not_exe
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// Condition (e), round 19 item 2 (entry 133; attempt-2 reviewer gate finding, gate-log.json this
-// node's attempt-2 reviewer record): every fixture above lacks a remote entirely, so `origin/main`
+// Condition (e), round 19 item 2 (`state/gate-log.json` index 87, this node's attempt-2 reviewer
+// finding): every fixture above lacks a remote entirely, so `origin/main`
 // never resolves in `originMainSha` and only `isAncestorOfMain`'s SKIPPED branch (`checked: false`)
 // ever ran in this suite -- the fail-closed REFUSED branch (`checked: true, ok: false`) was untested.
 // This fixture is the first to give the scanned tree a real bare `origin` remote, so both branches run

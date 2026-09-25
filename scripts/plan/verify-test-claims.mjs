@@ -43,11 +43,11 @@
 // actually assert what the prose says (this checks the name exists, not its body); a fabricated claim
 // that reuses an existing test's name; and, by the conservative recognizer, a test claim phrased
 // without a narrative prefix AND far from the word "test" (a recall gap, not a false alarm). Node's
-// standard library only. SUPERSEDED (below) adds one more, disclosed rather than mechanized (byte-
-// copied from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 2, itself item 1's own
-// closing sentence): "That the obligation moved rather than vanished is proven by the record's own
-// rows and read by the gate, not by this tool; a claim marked superseded with no replacement anywhere
-// in the file is a defect this check does not catch, disclosed here."
+// standard library only. SUPERSEDED (below) adds one more, disclosed rather than mechanized (adopted
+// from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 2, itself item 1's own closing
+// sentence): that the obligation moved rather than vanished is proven by the record's own rows and
+// read by the gate, not by this tool; a claim marked superseded with no replacement anywhere in the
+// file is a defect this check does not catch, disclosed here.
 //
 // SUPERSEDED (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2 -- a pinned
 // `path:line @ <rev> sha256:<hex>` reference is a historical pin, never silently read as current; the
@@ -67,12 +67,13 @@
 // architect gate, attempt 1, B1); (e) `<rev>` is shown to be an ancestor of `origin/main` -- REFUSED,
 // not merely unproven, when it is not (a rev not yet on main is not something main's own record can
 // rely on surviving a squash/rebase merge -- reviewer gate, attempt 1, S3), SKIPPED rather than failed
-// when `origin/main` does not resolve in the scanned tree at all (true of every unit-test fixture
-// here). A `<rev>` that merely LOOKS like a commit id (`COMMIT_ID_RE`) but does not RESOLVE to one --
-// a hex-named branch or tag -- is refused the same way as a non-commit `<rev>` (§2.4,
-// TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; see `revResolvesToCommit`). Recognized by `HASH_REF_RE`,
-// DERIVED FROM `verify-quotes.mjs`'s
-// own reference grammar (round 12's "quote by reference" mechanism) as it stands on
+// when `origin/main` does not resolve in the scanned tree at all (true of most unit-test fixtures
+// here; `supersededFixtureWithRemote`/`withdrawnFixtureWithRemote` are the two that now carry a real
+// bare `origin` remote, testing the REFUSED branch instead). A `<rev>` that merely LOOKS like a commit
+// id (`COMMIT_ID_RE`) but does not RESOLVE to one -- a hex-named branch or tag -- is refused the same
+// way as a non-commit `<rev>` (§2.4, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; see
+// `revResolvesToCommit`). Recognized by `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s
+// own reference grammar (round 12, item 1's quote-by-reference mechanism) as it stands on
 // `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a record
 // statement about a tool's behaviour names the tool's commit) -- see that constant's own comment for
 // the one grammar-level divergence this tool keeps (the path group is REQUIRED) and the policy layer
@@ -146,12 +147,11 @@ export function extractClaimedTests(text) {
 // `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s own `HASH_REF_RE` as it stands on
 // `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (its `GAP`/`HASH_REF_RE`
 // constants, lines 554 and 555 at that commit -- round 19 item 2's correction (attempt-2 reviewer
-// gate, entry 133): the earlier text read 553/554, one line short of each constant's own opening
-// line -- not written as a `path:line` token here, since that
-// file is not tracked on this branch and `verify-cites.mjs` (as it stands on `main` @
-// 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f, round 15(c): a tool claim names the tool's commit)
-// resolves every such token against the CURRENT tree, gate S4/N4's own disclosed limit). `GAP` is
-// that source's own
+// gate, `state/gate-log.json` index 87): the earlier text read 553/554, one line short of each
+// constant's own opening line -- not written as a `path:line` token here: that file is tracked as of
+// 6191a7c, but `verify-cites.mjs` (as it stands on `main` @ 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f,
+// round 15(c): a tool claim names the tool's commit) resolves every such token against the CURRENT
+// tree, not the pinned historical commit, gate S4/N4's own disclosed limit). `GAP` is that source's own
 // name and definition, standing in for a plain `\s*` so a reference rustfmt (or, here, a table cell)
 // has wrapped across exactly one `//`-comment continuation still binds, exactly as the source binds
 // it. ONE necessary grammar-level divergence, and the only one kept: group 2 (path) is REQUIRED --
@@ -327,7 +327,8 @@ function sha256Hex(s) {
 }
 
 // Condition (e): memoized per `root`, `origin/main`'s own commit id, or `null` when that ref does not
-// resolve in the scanned tree at all (true of every unit-test fixture below -- none carries a remote).
+// resolve in the scanned tree at all (true of most unit-test fixtures below;
+// `supersededFixtureWithRemote`/`withdrawnFixtureWithRemote` are the two that carry one).
 const originMainCache = new Map();
 function originMainSha(root) {
   if (originMainCache.has(root)) return originMainCache.get(root);
