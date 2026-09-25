@@ -99,3 +99,9 @@ fourteen tests in `scripts/plan/verify-test-claims.test.mjs`'s withdrawn-test se
 Superseded index (this amendment): §2's exemption-only design paragraph; Amendment 1's "(class 6)"
 label; Amendment 1's 418 final-figure total, now stale — the current total across all commits is
 restated above.
+
+## Amendment 3 — record correction (class 3; the architect's reduction, `state/directives/2026-09-18-record-cap.md` point (3))
+
+Defect: Amendment 2's Discharged clause names tests that do not assert its claim (`state/gate-log.json` indices 185 and 186). Corrected reference: its proof is the attempt-2 reviewer's rerun of `node scripts/plan/verify-test-claims.mjs` (index 186). The corrections this commit makes to comments in `scripts/plan/verify-test-claims.test.mjs` and `scripts/plan/verify-test-claims.mjs`, and to `scripts/plan/README.md` and `AUTONOMY.md` §6a item 3, are the items indices 185 and 186 name; the corrected text never reached main, so no span is pinned (round 15 (e)).
+
+Superseded index (this amendment): Amendment 2's Discharged clause's named proof.

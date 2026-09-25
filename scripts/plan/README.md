@@ -156,10 +156,11 @@ heading, the same way the planned set is, and never counts toward the exit code.
 
 **WITHDRAWN** (round 20 item 1): a claim reads the same reference grammar again, this time marked
 `withdrawn-test` (never a bare `withdrawn`, which already means something else on a round-15(g)
-withdrawal row) and restricted to one pinned line. Every `withdrawn-test` row is checked on its own
+withdrawal row) and restricted to one pinned line. Every `withdrawn-test` row that the row grammar accepts is checked on its own
 (round 21 item 2), whatever the state of the claim on its pinned line and whatever its node's status: an
 unresolvable `ruling:`, a missing `carrier:`, or an unresolvable carrier each fails the run by name,
-naming the row and the unresolved citation (or "no carrier"). The gate reads two distinct semantic
+naming the row and the unresolved citation (or "no carrier"). A line whose reference the row grammar refuses (a range, another
+file's path, no commit-id rev) is not checked and exempts nothing. The gate reads two distinct semantic
 halves here, same as SUPERSEDED's own boundary above: this tool proves only that the named ruling and
 carrier citations *resolve* to a RULED block or an entry line in the current `DECISIONS-PENDING.md` —
 never that the cited ruling actually *names the removal*, and never that the named carrier actually

@@ -429,9 +429,7 @@ const WITHDRAWN_CARRIER_RE = new RegExp(`${KEY_NOT_MIDWORD}carrier:\\s*(.*)$`, '
  * same for `carrier:`. Returns `{ ok: true, ruling, carrier }` when both hold, or `{ ok: false,
  * failure }` naming exactly what's wrong -- `no ruling` / `unresolvable ruling: <text>` / `no carrier`
  * / `unresolvable carrier: <text>` -- so a caller can name the row's own file:line and the unresolved
- * citation text (or "no carrier") in a finding, round 20 item 1's own words: "No ruling, no
- * withdrawal." (rider (a)) and "the row must name what now carries that evidence, or verify fails"
- * (rider (b)).
+ * citation text (or "no carrier") in a finding, per round 20, item 1, riders (a) and (b).
  */
 function withdrawnRiders(root, lineText) {
   const outside = lineText.replace(BACKTICK_SPAN_RE, '');
