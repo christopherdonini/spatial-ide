@@ -32,6 +32,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { isCloudSession } from './cloud.mjs';
 import { loadPlan, deriveStates, PlanFileMissingError } from '../plan/plan.mjs';
 import { sendTelegramDeduped } from './telegram.mjs';
 
@@ -327,5 +328,6 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (isCloudSession()) process.exit(0); // the custodian's hook, inert in a cloud session (cloud.mjs)
   main();
 }
