@@ -12,6 +12,7 @@ import type {
   CancelResponse,
   CloseDatasetRequest,
   CloseDatasetResponse,
+  DatasetSessionEnded,
   DescribeRequest,
   DescribeResponse,
   OpenDatasetRequest,
@@ -20,7 +21,7 @@ import type {
   ViewportQueryRequest,
   ViewportQueryResponse,
 } from "../types";
-import { FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
+import { DATASET_SESSION_ENDED_EVENT, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
 import { crsProvenanceLine, displayConventionLine, sessionStatementLine } from "../../admission/describeSummaryText";
 
@@ -65,8 +66,10 @@ describe("SKP v0 shared fixtures", () => {
     expect(req.identity).toBeNull(); // skp/0.2: absent declaration is `null`, never omitted
 
     const res = loadFixture<OpenDatasetResponse>("v0-open_dataset-response");
-    assertExactKeys(res, ["dataset"], "open_dataset response");
+    assertExactKeys(res, ["dataset", "session"], "open_dataset response");
     expect(res.dataset).toMatch(/^ds_[0-9a-f]{32}$/);
+    // skp/0.5: the advisory source-change watcher's session reference.
+    expect(res.session).toMatch(/^sr_[0-9a-f]{32}$/);
   });
 
   it("open_dataset request with crs_assertion and identity present (skp/0.2)", () => {
@@ -99,7 +102,12 @@ describe("SKP v0 shared fixtures", () => {
     const res = loadFixture<DescribeResponse>("v0-describe-response");
     assertExactKeys(
       res,
-      ["source", "crs", "geometry", "identity", "schema", "covering_bbox", "row_count", "extent", "license", "sanity"],
+      [
+        "source", "crs", "geometry", "identity", "schema", "covering_bbox", "row_count", "extent",
+        "license", "sanity",
+        // skp/0.5, the advisory source-change watcher
+        "coverage", "checks", "session_end",
+      ],
       "describe response"
     );
     assertExactKeys(res.source, ["path_display", "geoparquet_version"], "describe response .source");
@@ -169,6 +177,33 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.sanity.level).toBe("none");
     expect(res.sanity.reason).toMatch(/not checked/i);
     expect(res.sanity.reason).not.toMatch(/passed|valid|verified/i);
+    // skp/0.5, the advisory source-change watcher: the unpopulated (baseline) shape.
+    expect(res.coverage).toEqual({ state: "watching", reason: null });
+    expect(res.checks).toEqual({ state: "full", components: [] });
+    expect(res.session_end).toBeNull();
+  });
+
+  // Mutation: merge `coverage` and `checks` into one field. Expected failure: this test fails to
+  // find one of the three keys, or the three independent assertions below fail.
+  it("describe carries coverage, checks and session_end as three independent facts (skp/0.5)", () => {
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    assertExactKeys(res.coverage, ["state", "reason"], "describe response .coverage");
+    assertExactKeys(res.checks, ["state", "components"], "describe response .checks");
+    expect(res.coverage).toEqual({ state: "watching", reason: null });
+    expect(res.checks).toEqual({ state: "degraded", components: ["mtime"] });
+    expect(res.session_end).toBe("observed-change");
+  });
+
+  // Mutation: add a third member to `DatasetSessionEnded`. Expected failure: this test fails by
+  // name -- the fixture's payload no longer round-trips through the declared two-member shape.
+  it("the dataset_session_ended event fixture carries exactly two payload members (skp/0.5)", () => {
+    const fixture = loadFixture<{ event: string; payload: DatasetSessionEnded }>(
+      "v0-dataset_session_ended-event"
+    );
+    expect(fixture.event).toBe(DATASET_SESSION_ENDED_EVENT);
+    assertExactKeys(fixture.payload, ["session", "reason"], "dataset_session_ended payload");
+    expect(fixture.payload.session).toMatch(/^sr_[0-9a-f]{32}$/);
+    expect(fixture.payload.reason).toBe("observed-change");
   });
 
   // Mutation: the session-ordinal fixture's `unit` set to `"metre"`. Expected failure: this test,

@@ -139,6 +139,11 @@ function describeFixture(): DescribeResponse {
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
     // skp/0.3 (Brief A boundary 9). "none" means NOT CHECKED -- never "nothing wrong".
     sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
+    // skp/0.5, the advisory source-change watcher: additive, so this builder keeps the wire's
+    // baseline (unpopulated) shape.
+    coverage: { state: "watching", reason: null },
+    checks: { state: "full", components: [] },
+    session_end: null,
   };
 }
 

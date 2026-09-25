@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.4";
+export const SKP_VERSION = "skp/0.5";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -52,6 +52,10 @@ export interface OpenDatasetRequest {
 }
 export interface OpenDatasetResponse {
   dataset: string;
+  /** `skp/0.5`, the advisory source-change watcher (ADR-035 D4): minted once per successful open,
+   * after admission. Returned once, here; carried again only on the `dataset_session_ended` event
+   * that ends this open's generation. Authorizes nothing -- no request ever accepts it back. */
+  session: string;
 }
 
 export interface DescribeRequest {
@@ -178,7 +182,44 @@ export interface DescribeResponse {
   license: LicenseInfo;
   /** `skp/0.3` (Brief A boundary 9). */
   sanity: SanityInfo;
+  /** `skp/0.5`, the advisory source-change watcher. Fixed at admission and never rewritten by a
+   * later loss (rule 3) -- a dataset with no armed watch reports `checks-only` with the reason
+   * naming why. Independent of `checks` and `session_end`: neither field ever rewrites another. */
+  coverage: SourceCoverage;
+  /** `skp/0.5`. What structural-descriptor components this open could not establish, carried on
+   * the wire for the first time (ADR-016 A1 item 2's owed display). */
+  checks: SourceChecks;
+  /** `skp/0.5`. `Some` (non-null) exactly once this dataset's generation has ended; the key is
+   * always present. */
+  session_end: EndReason | null;
 }
+
+/** `skp/0.5`. Whether this open's source is under active OS notification, or falls back to the
+ * pre-check/post-check descriptor comparison alone. Closed, kebab-case, no fallback (the
+ * `skp/0.4` `CrsUnit` precedent). */
+export type CoverageState = "watching" | "checks-only";
+
+export interface SourceCoverage {
+  state: CoverageState;
+  /** `Some` (non-null) exactly for `checks-only` -- the key is always present. */
+  reason: string | null;
+}
+
+/** `skp/0.5`. Whether every structural-descriptor component was established at open. */
+export type ChecksState = "full" | "degraded";
+
+/** `skp/0.5`. A structural-descriptor component this open could not establish. */
+export type CheckComponent = "mtime" | "footer-hash";
+
+export interface SourceChecks {
+  state: ChecksState;
+  /** Non-empty exactly for `degraded`. */
+  components: CheckComponent[];
+}
+
+/** `skp/0.5`. Why a dataset-session generation ended -- carried on `describe.session_end` and on
+ * the `skp://dataset_session_ended` event. Closed, kebab-case, no fallback. */
+export type EndReason = "observed-change" | "coverage-lost";
 
 export interface Bbox {
   xmin: HexF64;
@@ -223,4 +264,15 @@ export interface CloseDatasetRequest {
 }
 export interface CloseDatasetResponse {
   cancelled_streams: number;
+}
+
+/** `skp/0.5`, the advisory source-change watcher (ADR-035 D4). The one named exception to "no
+ * server-to-client push" -- a Tauri event, never a websocket frame. The decoder/listener that
+ * consumes this (`skp/events.ts`) is a later piece; this file mirrors only the wire shape. */
+export const DATASET_SESSION_ENDED_EVENT = "skp://dataset_session_ended";
+
+/** The event payload -- exactly two members (rider (b); ADR-035 D4). No generation value. */
+export interface DatasetSessionEnded {
+  session: string;
+  reason: EndReason;
 }

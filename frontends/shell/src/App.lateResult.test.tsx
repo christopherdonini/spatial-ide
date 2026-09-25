@@ -168,6 +168,11 @@ function describeFixture(): import("./skp/types").DescribeResponse {
     extent: { basis: "not-established-at-open", value: null },
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
     sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
+    // skp/0.5, the advisory source-change watcher: additive, so this builder keeps the wire's
+    // baseline (unpopulated) shape.
+    coverage: { state: "watching", reason: null },
+    checks: { state: "full", components: [] },
+    session_end: null,
   };
 }
 
@@ -190,7 +195,10 @@ vi.mock("./skp/client", () => {
     SkpCallError,
     openDataset: async (): Promise<import("./skp/types").OpenDatasetResponse> => {
       mintCounter += 1;
-      return { dataset: `ds_${mintCounter.toString(16).padStart(32, "0")}` };
+      return {
+        dataset: `ds_${mintCounter.toString(16).padStart(32, "0")}`,
+        session: `sr_${mintCounter.toString(16).padStart(32, "0")}`,
+      };
     },
     describe: async (): Promise<import("./skp/types").DescribeResponse> => describeFixture(),
     closeDataset: async (): Promise<import("./skp/types").CloseDatasetResponse> => ({ cancelled_streams: 0 }),
