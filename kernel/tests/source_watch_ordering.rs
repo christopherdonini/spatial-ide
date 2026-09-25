@@ -75,7 +75,7 @@ fn host_with(arm: Arc<injected_watch::InjectedArm>) -> SkpHost {
 /// failure: `viewport_query` below no longer refuses — it mints a ticket over a source this test
 /// already told the kernel had changed.
 #[test]
-fn k1_a_signal_before_a_query_ends_the_generation_before_its_ticket_is_minted() {
+fn a_signal_before_a_query_ends_the_generation_before_its_ticket_is_minted() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k1");
@@ -97,7 +97,7 @@ fn k1_a_signal_before_a_query_ends_the_generation_before_its_ticket_is_minted() 
 /// its generation never ended, so a redemption arriving after this point would answer
 /// `Unknown`/expired rather than the typed `EndedBySourceChange`.
 #[test]
-fn k2_a_signal_during_a_stream_ends_the_generation_before_its_terminal() {
+fn a_signal_during_a_stream_ends_the_generation_before_its_terminal() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k2");
@@ -122,7 +122,7 @@ fn k2_a_signal_during_a_stream_ends_the_generation_before_its_terminal() {
 /// failure: this test's event-count assertion fails — an idle dataset has no tickets to cancel, so
 /// the event this test waits for is never sent.
 #[test]
-fn k3_a_signal_while_idle_ends_the_generation_and_emits_once() {
+fn a_signal_while_idle_ends_the_generation_and_emits_once() {
     let arm = injected_watch::InjectedArm::new();
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
@@ -155,7 +155,7 @@ fn k3_a_signal_while_idle_ends_the_generation_and_emits_once() {
 /// failure: both assertions below fail — `engine.source_changed` where `engine.source_coverage_lost`
 /// is expected.
 #[test]
-fn k4_coverage_loss_refuses_with_its_own_code_never_source_changed() {
+fn coverage_loss_refuses_with_its_own_code_never_source_changed() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k4");
@@ -206,13 +206,17 @@ fn k4_coverage_loss_refuses_with_its_own_code_never_source_changed() {
 /// `self.watches.lock()...insert(..)` call. Expected failure: this test's final `describe`
 /// assertion fails — `coverage.state` reports `checks-only` (`describe`'s own `None` arm, "no watch
 /// was armed") for a dataset that really is being watched.
+///
+/// **Phase-2 delta 11 (optional, taken):** injects `CoverageLost` rather than `Change`, matching
+/// case (c)'s own trigger (`Cases → tests`: "(c) A6, K4, K5") — a small change, since nothing below
+/// reads the refusal's specific code.
 #[test]
-fn k5_a_signal_free_rearm_does_not_restore_an_ended_generation() {
+fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k5");
     let open = host.open_dataset(open_req(&path, "k5-first")).expect("open");
-    arm.signal(&path, WatchSignal::Change { action: "modified" });
+    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
     assert!(host.viewport_query(viewport_req(open.dataset.clone())).is_err(), "ended, refuses");
 
     host.close_dataset(spatial_skp::v0::CloseDatasetRequest {
@@ -248,8 +252,20 @@ fn k5_a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// (the recorded signal) and step 2 (`resolves_unchanged()`) as no-ops. Expected/observed failure:
 /// `open_dataset` below no longer refuses — it admits a source this test already told the kernel
 /// had changed before admission ever ran.
+///
+/// **Corrected comment (phase 2 delta 7).** The earlier revision of this comment claimed a
+/// signal-free retry "would not be true if the first attempt had left anything behind" — false: a
+/// refused open returns no handle, and the retry runs under a fresh, OS-CSPRNG `DatasetHandle` key
+/// (`k6-clean`'s own mint), so the retry succeeding proves nothing about what the first attempt did
+/// or did not leave in the catalog or the generation registry (`state/consults/2026-09-25-source-
+/// watcher-between-phases.md`, Amendment 3 item 4). "No catalog entry" is now asserted directly,
+/// against the same handle the refused call minted internally but never returned —
+/// `Catalog::names()` (already `pub`, an existing accessor with its own product callers) is read
+/// before the retry runs at all. "No generation" stays unproven here: an accessor for it would be
+/// the test-only `pub` item §5 forbids, so that clause is not asserted (Amendment 3 item 4's own
+/// reduction).
 #[test]
-fn k6_a_signal_between_arming_and_admission_refuses_the_open() {
+fn a_signal_between_arming_and_admission_refuses_the_open() {
     let arm = injected_watch::InjectedArm::new();
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
@@ -265,8 +281,13 @@ fn k6_a_signal_between_arming_and_admission_refuses_the_open() {
         "an open refused before admission must never emit"
     );
 
-    // No catalog entry, no generation: a second, signal-free open of the SAME path succeeds
-    // cleanly, which would not be true if the first attempt had left anything behind.
+    // No catalog entry: asserted directly, before the retry runs (phase 2 delta 7).
+    assert!(
+        host.catalog().names().is_empty(),
+        "a refused-before-admission open must leave no catalog entry behind"
+    );
+
+    // A second, signal-free open of the SAME path succeeds cleanly under its own fresh handle.
     let open = host.open_dataset(open_req(&path, "k6-clean")).expect("a clean retry succeeds");
     assert!(host.viewport_query(viewport_req(open.dataset)).is_ok());
 }
@@ -281,7 +302,7 @@ fn k6_a_signal_between_arming_and_admission_refuses_the_open() {
 /// `describe.session_end` below reports `CoverageLost` (the second signal), not the first
 /// `ObservedChange`.
 #[test]
-fn k7_the_first_reason_wins_and_is_the_emitted_reason() {
+fn the_first_reason_wins_and_is_the_emitted_reason() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k7");
@@ -304,7 +325,7 @@ fn k7_the_first_reason_wins_and_is_the_emitted_reason() {
 /// RECORDED MUTATION: in `SkpHost::describe`, hardcode `CoverageState::Watching` instead of
 /// reading `self.watches`. Expected failure: this test's `assert_eq!` on `coverage.state` fails.
 #[test]
-fn k8_an_unwatchable_source_opens_checks_only_and_describe_says_so() {
+fn an_unwatchable_source_opens_checks_only_and_describe_says_so() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k8");
@@ -330,7 +351,7 @@ fn k8_an_unwatchable_source_opens_checks_only_and_describe_says_so() {
 /// `session_end.is_some()`. Expected failure: this test's post-signal `coverage.state` assertion
 /// fails — rule 3 says coverage is fixed at admission and never downgraded by a later loss.
 #[test]
-fn k9_a_loss_after_admission_ends_the_generation_and_describe_still_says_watching() {
+fn a_loss_after_admission_ends_the_generation_and_describe_still_says_watching() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k9");
@@ -354,7 +375,7 @@ fn k9_a_loss_after_admission_ends_the_generation_and_describe_still_says_watchin
 /// invalidated one instead of returning `Err(reason)` (drop the `invalidated` check). Expected
 /// failure: the retry `viewport_query` below succeeds — a "reload" that must never happen.
 #[test]
-fn k10_no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
+fn no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k10");
@@ -379,7 +400,7 @@ fn k10_no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
 /// RECORDED MUTATION: in `SkpHost::describe`, report `ChecksState::Degraded` with an empty
 /// `components` list unconditionally. Expected failure: this test's `assert_eq!` fails.
 #[test]
-fn k11_describe_reports_checks_full_for_an_undegraded_fixture() {
+fn describe_reports_checks_full_for_an_undegraded_fixture() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm);
     let path = fixture("k11");
@@ -397,7 +418,7 @@ fn k11_describe_reports_checks_full_for_an_undegraded_fixture() {
 /// `SourceChanged` arm's code (`"source_changed"`) instead of its own. Expected failure: this
 /// test's `assert_eq!` on `code` fails.
 #[test]
-fn k12_source_coverage_lost_maps_to_its_own_code_and_detail() {
+fn source_coverage_lost_maps_to_its_own_code_and_detail() {
     let e = spatial_engine::EngineError::SourceCoverageLost { detail: "overflow".to_string() };
     let mapped = error_of(&e);
     assert_eq!(mapped.code, "engine.source_coverage_lost");
@@ -412,7 +433,7 @@ fn k12_source_coverage_lost_maps_to_its_own_code_and_detail() {
 /// `generations.ended_reason(..)` is `Some`. Expected failure: this test's `describe` call panics
 /// on `.expect(..)`.
 #[test]
-fn k13_describe_after_an_end_carries_session_end_and_describe_cancel_close_still_answer() {
+fn describe_after_an_end_carries_session_end_and_describe_cancel_close_still_answer() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k13");
@@ -442,7 +463,7 @@ fn k13_describe_after_an_end_carries_session_end_and_describe_cancel_close_still
 /// reuse it for every open instead of calling `SessionRef::mint()` per open. Expected failure:
 /// this test's `assert_ne!` fails.
 #[test]
-fn k14_two_opens_of_one_file_return_distinct_session_references() {
+fn two_opens_of_one_file_return_distinct_session_references() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm);
     let path = fixture("k14");

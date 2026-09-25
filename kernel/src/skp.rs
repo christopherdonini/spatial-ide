@@ -1020,7 +1020,18 @@ impl SkpHost {
                         // (Amendment 1: it always carries a `SessionRef`, even one no client
                         // holds). Dropped before reaching into `generations` — lock order.
                         drop(guard);
-                        invalidator.end_generation(&dataset_name, reason_of_signal(&signal));
+                        let reason = reason_of_signal(&signal);
+                        // Phase-2 delta 8, following `kernel/src/lib.rs`'s own post-check
+                        // `eprintln!` convention: the reason's wire spelling only — no reference, no
+                        // dataset handle, no duration (the operator-visible-text rule; ADR-018).
+                        eprintln!(
+                            "session ended for a dataset: the advisory source watcher observed {}",
+                            match reason {
+                                SessionEndReason::ObservedChange => "observed-change",
+                                SessionEndReason::CoverageLost => "coverage-lost",
+                            }
+                        );
+                        invalidator.end_generation(&dataset_name, reason);
                     }
                 }
             })
@@ -1252,14 +1263,19 @@ impl SkpHost {
                 .generations
                 .ended_reason(&dataset_name)
                 .unwrap_or(SessionEndReason::ObservedChange);
-            let detail = "{this dataset's session ended while this query was being prepared}";
+            // Phase-2 delta 9: one detail string per reason, so the coverage-lost one carries its
+            // own `[P6 placeholder]` mark (§7; §8 item 9) — the observed-change one is the existing,
+            // already-unmarked sentence this arm has always used for that reason.
             return Err(error_of(&match reason {
-                SessionEndReason::ObservedChange => {
-                    EngineError::SourceChanged { detail: detail.to_string() }
-                }
-                SessionEndReason::CoverageLost => {
-                    EngineError::SourceCoverageLost { detail: detail.to_string() }
-                }
+                SessionEndReason::ObservedChange => EngineError::SourceChanged {
+                    detail: "{this dataset's session ended while this query was being prepared}"
+                        .to_string(),
+                },
+                SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
+                    detail: "{[P6 placeholder] this dataset's session ended while this query was \
+                             being prepared}"
+                        .to_string(),
+                },
             }));
         }
         Ok(ViewportQueryResponse { stream: handle, expires_in_ms: TICKET_TTL.as_millis() as u32 })

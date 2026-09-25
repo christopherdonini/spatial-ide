@@ -113,7 +113,7 @@ fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
 /// Expected failure: this test times out in `recv_signal` — a same-size in-place write generates
 /// no `FILE_NAME` event, so with both flags gone nothing is left to catch it.
 #[test]
-fn a1_same_size_in_place_write_with_restored_mtime_signals_change_while_the_descriptor_still_matches(
+fn a_same_size_in_place_write_with_restored_mtime_signals_change_while_the_descriptor_still_matches(
 ) {
     let _guard = serial_guard();
     let dir = scratch_dir("a1");
@@ -150,7 +150,7 @@ fn a1_same_size_in_place_write_with_restored_mtime_signals_change_while_the_desc
 /// failure: this test times out — the rename-away completion is the only event this test
 /// produces, and dropping its action leaves nothing to signal.
 #[test]
-fn a2_renaming_the_source_away_signals_change() {
+fn renaming_the_source_away_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a2");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -182,7 +182,7 @@ fn a2_renaming_the_source_away_signals_change() {
 /// mapping. Expected/observed failure: this test times out — every record this rename-over
 /// produces is then excluded.
 #[test]
-fn a3_a_temp_write_renamed_over_the_source_signals_change() {
+fn a_temp_write_renamed_over_the_source_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a3");
     let path = plain_file(&dir, "source.dat", b"original");
@@ -205,7 +205,7 @@ fn a3_a_temp_write_renamed_over_the_source_signals_change() {
 /// RECORDED MUTATION: ignore `REMOVED` in `engine::watch`'s action mapping. Expected failure: this
 /// test times out.
 #[test]
-fn a4_deleting_the_source_signals_change() {
+fn deleting_the_source_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a4");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -226,7 +226,7 @@ fn a4_deleting_the_source_signals_change() {
 /// Expected failure: `assert_no_signal_soon` after the sibling-only write fails — a signal arrives
 /// for the sibling, which must never happen.
 #[test]
-fn a5_a_sibling_change_signals_nothing_and_a_later_source_write_does() {
+fn a_sibling_change_signals_nothing_and_a_later_source_write_does() {
     let _guard = serial_guard();
     let dir = scratch_dir("a5");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -358,7 +358,7 @@ mod raw_win32 {
 /// `engine::watch`'s completion handling. Expected failure: this test times out — the shape H3
 /// predicts on this hardware (a 0-byte success) is silently swallowed instead of reported.
 #[test]
-fn a6_a_forced_overflow_signals_coverage_lost() {
+fn a_forced_overflow_signals_coverage_lost() {
     let _guard = serial_guard();
     let dir = scratch_dir("a6");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -415,7 +415,7 @@ fn a6_a_forced_overflow_signals_coverage_lost() {
 /// test passing unchanged (confirmed above). The isolating mutation is recorded on
 /// `names_match_folds_case` below instead, which is where it belongs.
 #[test]
-fn a7_a_differently_cased_name_renamed_over_the_source_signals_change() {
+fn a_differently_cased_name_renamed_over_the_source_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a7");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -439,7 +439,7 @@ fn a7_a_differently_cased_name_renamed_over_the_source_signals_change() {
 /// Expected failure: this test times out — H1 predicts P's own handle sees nothing when P itself
 /// is renamed, so only G's watch can ever catch this, and dropping it leaves nothing to.
 #[test]
-fn a8_renaming_the_watched_directory_succeeds_and_signals_change() {
+fn renaming_the_watched_directory_succeeds_and_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a8"); // G
     let parent = dir.join("watched-parent"); // P
@@ -463,7 +463,7 @@ fn a8_renaming_the_watched_directory_succeeds_and_signals_change() {
 /// Expected failure: `remove_dir_all` fails with a sharing violation instead of succeeding — this
 /// test's own `.expect("remove the watched directory")` panics.
 #[test]
-fn a9_deleting_the_watched_directory_succeeds_and_signals() {
+fn deleting_the_watched_directory_succeeds_and_signals() {
     let _guard = serial_guard();
     let dir = scratch_dir("a9");
     let parent = dir.join("watched-parent");
@@ -510,7 +510,7 @@ fn a9_deleting_the_watched_directory_succeeds_and_signals() {
 /// parent (`dir/layer`) instead of the real target's real parent (`dir`), so renaming `dir` is
 /// never seen.
 #[test]
-fn a10_a_source_reached_through_a_junction_is_watched_at_its_final_path() {
+fn a_source_reached_through_a_junction_is_watched_at_its_final_path() {
     let _guard = serial_guard();
     let dir = scratch_dir("a10");
     let real_dir = dir.join("real-target");
@@ -574,7 +574,7 @@ fn a10_a_source_reached_through_a_junction_is_watched_at_its_final_path() {
 /// (ignore `open_directory`'s error). Expected failure: `arm_checks_only`'s own panic on an
 /// unexpected `Watching` outcome.
 #[test]
-fn a11_an_unwatchable_parent_directory_arms_checks_only_with_its_reason() {
+fn an_unlistable_directory_arms_checks_only_with_its_reason() {
     let _guard = serial_guard();
     const FILE_LIST_DIRECTORY: u32 = 1;
     const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
@@ -603,7 +603,7 @@ fn a11_an_unwatchable_parent_directory_arms_checks_only_with_its_reason() {
 /// fails — `Drop`'s own `CancelIoEx` produces exactly the completion this test must see nothing
 /// from.
 #[test]
-fn a12_a_disarmed_watch_delivers_nothing_and_releases_the_directory() {
+fn a_disarmed_watch_delivers_nothing_and_releases_the_directory() {
     let _guard = serial_guard();
     let dir = scratch_dir("a12");
     let path = plain_file(&dir, "source.dat", b"body");
@@ -629,7 +629,7 @@ fn a12_a_disarmed_watch_delivers_nothing_and_releases_the_directory() {
 /// failure: this test times out — a bare mtime touch (no byte written) generates no other flag's
 /// event.
 #[test]
-fn a13_a_modification_time_touch_signals_change() {
+fn a_modification_time_touch_signals_change() {
     let _guard = serial_guard();
     let dir = scratch_dir("a13");
     let path = plain_file(&dir, "source.dat", b"body");

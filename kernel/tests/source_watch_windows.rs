@@ -80,7 +80,7 @@ fn touch_modification_time(path: &std::path::Path) {
 /// (ignore signals once admitted). Expected failure: this test's `viewport_query` no longer
 /// refuses, and no event arrives.
 #[test]
-fn w1_a_real_write_to_the_open_source_ends_its_generation_through_the_host() {
+fn a_real_write_to_the_open_source_ends_its_generation_through_the_host() {
     let d = dir("w1");
     let path = fixture(&d);
     let (tx, rx) = session_end_channel();
@@ -118,7 +118,7 @@ fn w1_a_real_write_to_the_open_source_ends_its_generation_through_the_host() {
 /// failure: this test's `viewport_query` never refuses within the wait — H1 means only G could
 /// ever have caught this.
 #[test]
-fn w2_renaming_the_watched_directory_ends_the_generation() {
+fn renaming_the_watched_directory_ends_the_generation() {
     let d = dir("w2");
     let parent = d.join("watched-parent");
     std::fs::create_dir(&parent).expect("create P");
@@ -151,7 +151,7 @@ fn w2_renaming_the_watched_directory_ends_the_generation() {
 /// RECORDED MUTATION: open P without `FILE_SHARE_DELETE` in `engine::watch::open_directory`.
 /// Expected failure: `remove_dir_all` below fails with a sharing violation instead of succeeding.
 #[test]
-fn w3_deleting_the_watched_directory_ends_the_generation() {
+fn deleting_the_watched_directory_ends_the_generation() {
     let d = dir("w3");
     let parent = d.join("watched-parent");
     std::fs::create_dir(&parent).expect("create P");

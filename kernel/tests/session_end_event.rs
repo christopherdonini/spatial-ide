@@ -68,7 +68,7 @@ fn viewport_req(dataset: DatasetHandle) -> ViewportQueryRequest {
 /// `SessionInvalidator`, would no longer emit). Expected failure: E2/E3/E4/E6 below stop emitting;
 /// this test alone stays green, which is the point — it isolates the pre-check's own route.
 #[test]
-fn e1_a_pre_check_end_emits_once_and_refuses_its_call() {
+fn a_pre_check_end_emits_once_and_refuses_its_call() {
     let path = fixture("e1");
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
@@ -97,7 +97,7 @@ fn e1_a_pre_check_end_emits_once_and_refuses_its_call() {
 ///
 /// RECORDED MUTATION: same as E1.
 #[test]
-fn e2_a_post_check_end_on_a_clean_terminal_emits_once() {
+fn a_post_check_end_on_a_clean_terminal_emits_once() {
     let path = fixture("e2");
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
@@ -139,7 +139,7 @@ fn e2_a_post_check_end_on_a_clean_terminal_emits_once() {
 ///
 /// RECORDED MUTATION: same as E1.
 #[test]
-fn e3_a_post_check_end_on_an_error_terminal_emits_once() {
+fn a_post_check_end_on_an_error_terminal_emits_once() {
     let path = fixture("e3");
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
@@ -193,7 +193,7 @@ fn e3_a_post_check_end_on_an_error_terminal_emits_once() {
 ///
 /// RECORDED MUTATION: same as E1.
 #[test]
-fn e4_an_end_on_the_drop_path_emits_once() {
+fn an_end_on_the_drop_path_emits_once() {
     let path = fixture("e4");
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
@@ -228,7 +228,7 @@ fn e4_an_end_on_the_drop_path_emits_once() {
 /// `SessionInvalidator`'s enqueue). Expected failure: this test's event wait times out — nothing
 /// is ever sent on the channel.
 #[test]
-fn e6_a_watcher_signal_after_admission_emits_once() {
+fn a_watcher_signal_after_admission_emits_once() {
     let arm = injected_watch::InjectedArm::new();
     let path = fixture("e6");
     let (tx, rx) = session_end_channel();
@@ -252,7 +252,7 @@ fn e6_a_watcher_signal_after_admission_emits_once() {
 /// live entry — i.e. `Self::prune_locked`'s own idempotency guard is bypassed and every repeated
 /// call re-enqueues. Expected failure: this test's "exactly one event total" assertion fails.
 #[test]
-fn e9_a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
+fn a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
     let arm = injected_watch::InjectedArm::new();
     let path = fixture("e9");
     let (tx, rx) = session_end_channel();
@@ -288,7 +288,7 @@ fn e9_a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
 /// either hangs (a `send` on a full bounded `sync_channel` blocks) or the "returns quickly"
 /// assertion fails, depending on the channel's exact capacity semantics under the change.
 #[test]
-fn e10_a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_refuses() {
+fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_refuses() {
     let generations = GenerationRegistry::new();
     let tickets = StreamRegistry::new();
     let (tx, rx) = session_end_channel();

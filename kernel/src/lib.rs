@@ -434,8 +434,8 @@ impl EngineSourceFactory {
             // this registry itself knows, not a fabricated component list.
             skp::TicketLiveness::EndedByCoverageLoss => {
                 Err(skp::terminal_detail_of(&spatial_engine::EngineError::SourceCoverageLost {
-                    detail: "{this dataset's session ended when the advisory watch on its source \
-                             lost coverage}"
+                    detail: "{[P6 placeholder] this dataset's session ended when the advisory \
+                             watch on its source lost coverage}"
                         .to_string(),
                 }))
             }
