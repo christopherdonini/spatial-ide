@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T01:08:20.400Z",
+  "generated_at": "2026-09-25T01:13:15.650Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,7 +9,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 71825686528,
+        "bytes": 71805972480,
         "total": 510319915008
       },
       {
@@ -61,8 +61,9 @@
       "governance-verify-mutation-multiline-attrs": 1,
       "kernel-ticket-drop-under-registry-lock": 3,
       "governance-test-claims-superseded": 2,
-      "governance-test-claims-withdrawn-marker": 2
+      "governance-test-claims-withdrawn-marker": 2,
+      "governance-hooks-cloud-inert": 1
     },
-    "total": 36
+    "total": 37
   }
 }
