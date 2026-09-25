@@ -526,3 +526,40 @@ Post-result record; each row names its template class. Phase 1's head is `4137f4
    - §2b's sink log line is not built;
    - the coverage-lost details of `create_from_ticket`'s `EndedByCoverageLoss` arm and of `viewport_query`'s mint-race arm lack the `[P6 placeholder]` mark (§7; §8 item 9);
    - test names carry prefixes and do not resolve against §4.
+
+### Amendment 4 — 2026-09-26, written after phase 1's results were seen, before any fold-in code: the wave-1 fold-in of Finding A2-1
+
+Class 5 as Amendments 1 and 2 read it, a scope settled on a ruling. Disclosed: this adds scope and narrows none; no pre-declared class names an addition, class 5 is the nearest, and the gap is carried to the weekly proposal list. The ruling is the Header's wave-1 block (`state/directives/2026-09-25-cloud-hooks.md` §4 rule (2), confirmed by §5), cited and not reproduced. The defect and its triage are `state/cloud/wave1/A2.md`, the WAVE1 REPORT's Finding A2-1 and the custodian fields' Finding A2-1 paragraph. The defect is present at this branch's base and is not introduced by phase 1; §2d's `notifySessionEnded` would add a second route into it. The fix is owed under ADR-028 Amendment 4 items 2 and 4 whatever final severity the human assigns.
+
+1. **Shape (§2d, `ViewportStreamManager`).**
+   - The source-changed terminal branch and §2d's `notifySessionEnded` call one private end method, the shape of `TileViewportStreamManager`'s `endSession` and `notifySourceChanged`. It sets the single `sessionEnded` latch before it invalidates.
+   - In `requestViewport`, the guard after `viewportQuery` and the guard after `dataPlaneAttach` read the latch before comparing generations. When the latch is set, the minted ticket is cancelled through the existing `skpCancel` and is never admitted to the live set; no stream starts; any handle field naming the ticket is cleared; and the call returns `{ kind: "session-ended" }`.
+   - An end never bumps `this.generation`, so a changed file is never reported as `superseded`.
+   - The comment above the live-set `admit` is corrected to the guarded premise.
+   - The guard after `supersedeCurrent` is unchanged: no ticket exists there, and the kernel's pre-check refuses a later query.
+   - The precedent is `tileViewportStreamManager.ts`'s `mintAndStart`, whose two abandon checks cancel a late mint.
+   - No new operator string.
+2. **Tests (§4, shell, `frontends/shell/src/streaming/viewportStreamManager.test.ts`).** The reproducer named in Finding A2-1 is not merged; SH12 is its inverse.
+
+| Test | Asserts | Mutation |
+|---|---|---|
+| SH12 | Terminal route: a `viewportQuery` pending when another stream's source-changed terminal ends the session resolves afterwards. The call returns `session-ended`, `skpCancel` receives the late handle, `dataPlaneAttach` and `startStream` are not called for it, and `activeStreamHandle` never names it | the guard after `viewportQuery` compares generations only |
+| SH13 | Event route: the same window, with the end delivered by `notifySessionEnded`; the same assertions | `notifySessionEnded` invalidates, clears and notifies without setting the latch |
+| SH14 | Event route: the end lands while `dataPlaneAttach` is pending. The call returns `session-ended`, the ticket is cancelled, `startStream` is not called for it, and `activeStreamHandle` is null | the guard after `dataPlaneAttach` compares generations only |
+
+3. **Cases → tests.** Case (g) gains SH12–SH14.
+4. **§5.**
+   - Prediction: each of SH12–SH14 fails by name under its registered mutation. The SH12 and SH14 mutations restore the code at this branch's base.
+   - Declared unchanged by the fold-in: `kernel/`, `protocol/`, `App.tsx`, `tileViewportStreamManager.ts`, and `RequestOutcome`'s variants.
+   - Invalidator: the fold-in needs a new `RequestOutcome` variant, a kernel, protocol or wire change, or a `pub` item.
+5. **§7.** No file is added. The fold-in's lines count in the shell row, and the closing amendment's class-1 budget row names the fold-in commits. §7 is not edited.
+6. **§8, item 23.** A ticket whose `viewport_query` resolves after the session ended, on either route, that is admitted to a live set, has its stream started, or is left uncancelled. Also: an end implemented by bumping the supersede counter.
+7. **§9, architect.** The gate adds §8 item 23 and ADR-028 Amendment 4 items 2 and 4, checked on both the terminal route and the event route. SH12–SH14 join `verify-mutation`.
+8. **The candidate arm's untiled sink** (found at consult by reading main at 37eee20; not reproduced; triage: `state/consults/2026-09-25-source-watcher-amendment-4.md`, its section Custodian triage of decision 2(b)).
+   - `candidateArmSession.ts`'s `issueUntiledQuery`: its check after `dataPlaneAttach` reads `sessionEnded` beside `stopped`. When the latch is set, the ticket is cancelled and the call returns `{ kind: "session-ended" }`.
+   - `endCandidateSession` cancels a running untiled stream through the existing `cancelUntiledStream`, so the untiled `onBatch`'s existing handle check drops late batches.
+   - Tests, in `frontends/shell/src/residency/candidateArmSession.test.ts`, case (g):
+     - SH15: an event-route end while the first look's `viewportQuery` is pending. The call returns `session-ended`, the ticket is cancelled, and no stream starts. Mutation: the check after `dataPlaneAttach` reads `stopped` only.
+     - SH16: an untiled batch delivered after an event-route end reaches no `pushTileBatch`, and the untiled handle is cancelled. Mutation: `endCandidateSession` omits `cancelUntiledStream`.
+   - §8 item 24: an untiled first-look batch or mint admitted after the session ended.
+   - §9: the gate checks item 24, and SH15–SH16 join `verify-mutation`.
