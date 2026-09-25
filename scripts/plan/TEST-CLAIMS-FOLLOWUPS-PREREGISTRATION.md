@@ -163,3 +163,19 @@ All assertions; no measurement. The temp-directory check counts `verify-test-cla
 - **Operator**: none.
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — 2026-09-25 (UTC), written after the results were seen: the closing record (class 2)
+
+1. **Budget overrun, class 2 (§7's own rule; round 23, item 4, O7).** Declared: ≤ 720. Final, by `git diff --numstat origin/main...HEAD -- scripts/plan/verify-test-claims.mjs scripts/plan/verify-test-claims.test.mjs scripts/plan/README.md` at c1e315b: **912**.
+   - Per file: mjs 235+65, test 513+39, README 37+23.
+   - Reason: nineteen new tests, each with its own git-tree fixture; §2.9's qualifiers on existing comments; §2.8(f)'s restated WITHDRAWN paragraph.
+   - Non-generated files: 5 of ≤ 6. The §7 line is not edited to match.
+2. **Results at c1e315b** (the custodian's re-run, every command exiting 0):
+   - P1: `verify-test-claims` reports 0 findings, 15 withdrawn, 3 superseded.
+   - P3: the scripts suite, 310 pass and 0 fail; `verify-mutation --base origin/main --head HEAD` finds 19 of 19 new tests with a recorded mutation.
+   - verify-cites, verify-quotes, `verify.mjs --offline`, `queue.mjs --check` and `site.mjs --check` all pass.
+   - P2 and the temp-directory delta are the reviewer's mechanical runs under §9, recorded in the gate log.
+3. **Deviations disclosed by the worker, for the gates:**
+   - §2.9's temp-directory sweep is one whole-file `after()` hook over a single `fs.mkdtempSync` wrapper, not per-test cleanup.
+   - The nineteen new tests' recorded-mutation comments carry no commit citation. Only the §2.9 qualifiers on existing comments carry one.
+4. **Commits:** e6ac5c8 (this form), c617ddc and a30ff02 (§2.1–§2.9), 10ec8f4 (§2.8 (a)–(d), (f)), c1e315b (§2.8 (e), `AUTONOMY.md` §6a item 3, one line in place).
