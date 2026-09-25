@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { isCloudSession } from './cloud.mjs';
 
 export const READING_ORDER = `Reading order after a compaction or a new session (AUTONOMY.md §0):
 1. state/CUT-STATE.md — its SESSION-CONTINUITY block first (position, tip hash, half-made judgments, intended sequencing), then the ledger's last entries.
@@ -94,5 +95,6 @@ async function main() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (isCloudSession()) process.exit(0); // the custodian's hook, inert in a cloud session (cloud.mjs)
   main();
 }
