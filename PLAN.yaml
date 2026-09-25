@@ -2333,18 +2333,18 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: done
     order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {pr: 122}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
     entries: []
     summary: "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece. PR #119 merged 2026-09-25 (9f764c8): placed ready."
-    dates: {opened: 2026-09-25, done: null}
+    dates: {opened: 2026-09-25, done: 2026-09-25}
 
   - id: b1-shell-half
     title: "Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable)"

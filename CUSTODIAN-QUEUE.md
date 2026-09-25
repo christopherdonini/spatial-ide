@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c32de691016f271b14bf5b800b146498bba5cd6489fcf1c89e21ea07da1deb2e`) at `2026-09-25T22:21:41.786Z`.
+Generated from `PLAN.yaml` (sha256 `72662ed8b305788c914be9438158457571e127cd7f66bfa12489f5c44874db8b`) at `2026-09-25T22:22:14.309Z`.
 
 ## 1. Next
 
-- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (lane `kernel-protocol`)
+- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`)
 
 ## 2. Ready
 
-- **adr-035-decision-4-note** — ADR-035 -- the appended, dated note to Decision 4: every generation carries a kernel-minted SessionRef, an unheld one when not created by open_dataset (lane `kernel-protocol`, order 1, budget 45 min)
 - **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`, order 1, budget 60 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 

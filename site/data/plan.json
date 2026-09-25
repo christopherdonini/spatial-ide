@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-25T22:21:43.970Z",
-  "plan_hash": "c32de691016f271b14bf5b800b146498bba5cd6489fcf1c89e21ea07da1deb2e",
+  "generated_at": "2026-09-25T22:22:15.862Z",
+  "plan_hash": "72662ed8b305788c914be9438158457571e127cd7f66bfa12489f5c44874db8b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3854,7 +3854,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": 1,
       "depends_on": [],
       "needs_human": {
@@ -3862,7 +3862,9 @@
         "minutes": 0
       },
       "gate": "none",
-      "evidence": null,
+      "evidence": {
+        "pr": 122
+      },
       "budget_minutes": 45,
       "generation": 1,
       "felt_verdict": false,
@@ -3870,7 +3872,7 @@
       "summary": "RULED 2026-09-25, question round 22, item 1: recorded as an appended, dated note to ADR-035 Decision 4 after PR #119 merges; one fully gated docs piece. PR #119 merged 2026-09-25 (9f764c8): placed ready.",
       "dates": {
         "opened": "2026-09-25",
-        "done": null
+        "done": "2026-09-25"
       }
     },
     {
