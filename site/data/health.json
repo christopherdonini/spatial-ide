@@ -1,42 +1,45 @@
 {
-  "generated_at": "2026-09-24T18:15:23.211Z",
+  "generated_at": "2026-09-25T00:51:50.128Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 56556212224,
+        "bytes": 71921250304,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 383180820480,
+        "bytes": 383180808192,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 5,
     "by_name": {
       "cargo": 0,
-      "node": 3,
+      "node": 5,
       "spatial-ide-shell": 0
     }
   },
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 63
+    "n": 72
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 44,
-    "first_pass": 16,
-    "rate": 0.36363636363636365
+    "nodes": 47,
+    "first_pass": 18,
+    "rate": 0.3829787234042553
   },
   "record_rounds": {
     "present": true,
@@ -58,8 +61,11 @@
       "shell-dependency-audit-piece": 1,
       "crs-unit-fact-and-bounds": 1,
       "fixture-regeneration-entry-point": 1,
-      "governance-verify-mutation-multiline-attrs": 1
+      "governance-verify-mutation-multiline-attrs": 1,
+      "kernel-ticket-drop-under-registry-lock": 3,
+      "governance-test-claims-superseded": 2,
+      "governance-test-claims-withdrawn-marker": 2
     },
-    "total": 29
+    "total": 36
   }
 }

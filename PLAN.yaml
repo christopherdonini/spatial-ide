@@ -892,18 +892,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 1
     depends_on: [governance-test-claims-superseded-scanner]
     needs_human: {kind: none, minutes: 0}
     gate: scripts/plan/TEST-CLAIMS-WITHDRAWN-PREREGISTRATION.md
-    evidence: {branch: governance/test-claims-withdrawn}
+    evidence: {pr: 118}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: [134]
     summary: "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done. RULED 2026-09-24, question round 21, item 2: one correction round, fully gated, by a fresh worker; the reviewer probe (round 99, item 1 with carrier nonsense) becomes a named regression test that must fail by name; if this round fails again the piece stops under Rule 7 and governance-verify-mutation-multiline-attrs keeps its advisory names."
-    dates: {opened: 2026-09-24, done: null}
+    dates: {opened: 2026-09-24, done: 2026-09-25}
 
   - id: governance-verify-mutation-header-token
     title: "verify-mutation.mjs -- the RECORDED MUTATION token is accepted anywhere inside the check's fixed window around a test, so a token in a file header or in a neighbouring test's comment greens a test that carries no mutation of its own"

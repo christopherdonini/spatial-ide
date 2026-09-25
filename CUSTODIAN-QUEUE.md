@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3ba0a25d9c7afbb219ed2401fecb83f71f9dffb66ddccbe174ad45a68efd83f6`) at `2026-09-25T00:11:55.600Z`.
+Generated from `PLAN.yaml` (sha256 `833fc2e8e950cb75cedabe29b5ac2580e7194e1328df8c47edab3c6fdef56470`) at `2026-09-25T00:51:50.037Z`.
 
 ## 1. Next
 
@@ -28,7 +28,6 @@ Generated from `PLAN.yaml` (sha256 `3ba0a25d9c7afbb219ed2401fecb83f71f9dffb66ddc
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement — evidence: branch `governance/test-claims-withdrawn`
 
 ## 6. Proposed / unscheduled
 
