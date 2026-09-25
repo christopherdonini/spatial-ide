@@ -623,7 +623,7 @@ nodes:
     order: 2
     depends_on: [briefa-p6-part-n-acceptances, adr-023-decision-text, drill-fix-release-only-guard, drill-fix-fixture-watchdog, drill-fix-viewer-build-order, crs-unit-fact-and-bounds, b1-engine-prereg-draft, adr-021-023-b1-notes, engine-source-change-watcher]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: engine/B1-PROJECTION-PREREGISTRATION.md
     evidence: null
     budget_minutes: 240
     generation: 1
