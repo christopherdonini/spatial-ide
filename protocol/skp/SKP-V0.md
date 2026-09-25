@@ -722,3 +722,27 @@ and stacks its branch on this one, and B1 takes the literal after the watcher's.
 unmerged, further additions to it are appended addenda, the `skp/0.2`/`skp/0.3` precedent. Once
 this piece merges to `main`, `skp/0.4`'s field set is closed and the next version bumps in the
 stated order. **`skp/1` stays RESERVED** and must not be used for any interim version.
+
+### Note to the `skp/0.3` entry: per-open references and generation values (2026-09-24)
+
+**Appended on the human's ruling of 2026-09-24** (`DECISIONS-PENDING.md`, RULED 2026-09-24 —
+question round 21, item 1, its rider (c)). The `skp/0.3` entry above is unchanged, and its rule
+that no generation value crosses the wire (that entry's paragraph on what the version deliberately
+does not add) stands as written; this note clarifies the rule in writing and does not reinterpret
+it.
+
+A per-open opaque reference is distinguished from a generation value only when every condition the
+ruling states holds (paraphrased here; the ruling's words govern):
+
+- it is opaque, minted per open and non-authorising, and it reveals no more than the
+  `DatasetHandle` already on the wire;
+- it never does a generation value's job: batch and ticket attribution stays with the ticket, and
+  the reference is used only to route the ended-session event to its open (the ruling's
+  rider (a));
+- it is never persisted or published, and the recipe and bundle leakage tests that forbid a
+  generation value are extended to name it too (the ruling's rider (b)).
+
+The reference the ruling names is the session reference of
+`docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` Decision 4, which the watcher
+piece introduces on `skp/0.5` (that ADR's Decision 6). A reference that fails any condition gets no
+clarification from this note.
