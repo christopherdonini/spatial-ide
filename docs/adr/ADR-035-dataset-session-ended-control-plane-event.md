@@ -154,5 +154,5 @@ Round 21 item 1's riders (a) and (b), which are not round 17 item 2's riders of 
 
 1. **The invariant joins Decision 4's mint rule.** The ruling's `SessionRef` is Decision 4's session reference. Decision 4's mint per successful `open_dataset` stands, and the ruling adds the reference that no client holds. Every end's event therefore carries a `session`; the member is never absent.
 2. **Read with this note:** Decision 3's bullet on a generation with no session reference, whose open payload form the ruling settles; the matching item of "What this ADR does not decide"; and Decision 5's drop on a mismatch, which the ruling makes a logged drop.
-3. **Not settled here:** the close race that mints such a generation (Decision 3's bullet names it). The same item places it at PLAN node `kernel-generation-close-races`.
+3. **Not settled here:** the close race that mints such a generation (Decision 3's bullet names it). The same item places it at PLAN node `kernel-generation-close-races`. Nor is it settled here whether Decision 4's reading of `skp/0.3`'s rule, confirmed for a per-open reference, covers a reference no client holds (`protocol/skp/SKP-V0.md` §8, the note to the `skp/0.3` entry); that is the human's.
 4. The watcher piece (PLAN node `engine-source-change-watcher`) implements this note with Decision 4.
