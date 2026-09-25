@@ -16,7 +16,10 @@ vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 import { debounce } from "./debounce";
 import type { StreamSink } from "./transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./viewportStreamManager";
-import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
+import {
+  REAL_SOURCE_CHANGED_TERMINAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL,
+} from "../testUtils/terminalShapes";
 
 function mockStream(handle: string) {
   viewportQueryMock.mockResolvedValueOnce({ stream: handle, expires_in_ms: 30_000 });
@@ -749,6 +752,107 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
     expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH3: the same terminal-route ending, on the
+   * advisory watch's own code -- `isSessionEndedTerminal` (renamed §2d) matches it too.
+   *
+   * RECORDED MUTATION: narrow the terminal handler's guard back to matching only
+   * `engine.source_changed` (the pre-rename `isSourceChangedTerminal`). Expected failure: the
+   * `onSessionEnded` assertion below fails -- it is never called.
+   */
+  it("a coverage-lost terminal ends the session once, exactly as source-changed does", async () => {
+    mockStream("sh_a");
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded: vi.fn(),
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+
+    sinkFor(0).onTerminal({ kind: "ProducerFailed", detail: REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL });
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL);
+
+    // Refused until reopen, same as the source-changed route.
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH7 (Amendment 4 item 1's own precedent on the
+   * tiled sibling, `tileViewportStreamManager.test.ts`'s "notifySessionEnded ends the session
+   * exactly as a tile terminal does"): the event route into THIS (baseline) manager, added by §2d
+   * -- it did not exist before this piece. Clears residency through `onSuperseded`, exactly as the
+   * terminal route does, and is idempotent with it (the single `sessionEnded` latch).
+   *
+   * RECORDED MUTATION: make `notifySessionEnded` a no-op (`notifySessionEnded(): void {}`).
+   * Expected failure: every assertion below fails -- `onSuperseded`/`onSessionEnded` are never
+   * called and a later `requestViewport` is not refused.
+   */
+  it("notifySessionEnded ends the session exactly as a terminal does", async () => {
+    mockStream("sh_a");
+    const onSuperseded = vi.fn();
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded,
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+    sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
+    onSuperseded.mockClear();
+
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(
+      "engine.source_coverage_lost: [P6 placeholder] coverage lost"
+    );
+
+    // Idempotent with the terminal route, and refused until reopen.
+    sinkFor(0).onTerminal(sourceChangedTerminal());
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH10: after an event-ended session, a batch on a
+   * retired ticket is dropped -- `notifySessionEnded` invalidates `liveTickets` exactly as the
+   * terminal route does.
+   *
+   * RECORDED MUTATION: skip `this.liveTickets.invalidate()` in `endSession` (called by both
+   * `notifySessionEnded` and the terminal route). Expected failure: the assertion below fails --
+   * the late batch reaches `onBatch` a second time.
+   */
+  it("after an event-ended session, a batch on a retired ticket is dropped (SH10)", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    const sink = sinkFor(0);
+    sink.onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(onBatch).toHaveBeenCalledTimes(1);
+
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+    onBatch.mockClear();
+    // The old socket delivering late, on the still-registered sink.
+    sink.onBatch(new Uint8Array([4, 5, 6]), true);
+    expect(onBatch).not.toHaveBeenCalled();
   });
 
   /**

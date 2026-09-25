@@ -1481,6 +1481,38 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
   });
 
   /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH5: the advisory watch's own code is not
+   * retryable either -- caught by `isSessionEndedRefusal` before the retryable check is ever
+   * reached (the same ordering `isSourceChangedRefusal` already had; `mintAndStart`'s own comment
+   * above: "Checked BEFORE the epoch guard"), never falling through to `isRetryableRefusal`
+   * (`RETRYABLE_ENGINE_CODE` stays the one `engine.connections_exhausted` code, unwidened by §2d's
+   * predicate rename).
+   *
+   * RECORDED MUTATION: in `streaming/liveTicketSet.ts`, drop the `SOURCE_COVERAGE_LOST_CODE`
+   * disjunct from `isSessionEndedRefusal` (the same mutation SH3/SH4 use). Expected/observed
+   * failure: the first assertion below fails -- `onSessionEnded` is never called, because the
+   * refusal falls through `isSessionEndedRefusal`'s now-narrower check to the retry block, where
+   * `isRetryableRefusal` also returns `false` for this code (it is not `engine.connections_exhausted`
+   * either), so the tile is silently dropped instead of ending the session.
+   */
+  it("a coverage-lost refusal is not retryable either, and still ends the session", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR, "metre");
+    viewportQueryMock
+      .mockReset()
+      .mockRejectedValue(
+        new SkpCallError({ code: "engine.source_coverage_lost", message: "coverage lost", fields: {} })
+      );
+
+    manager.onCameraChange(ANCHOR);
+    await flushMicrotasks();
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
+  });
+
+  /**
    * The untiled first-look sink's way in (P3b §2a(iii)) -- `notifySessionEnded` is `public` for
    * exactly one product caller, `candidateArmSession.ts`'s untiled `onTerminal`. Asserted here as
    * the manager-side contract; the caller itself is asserted in `candidateArmSession.test.ts`.

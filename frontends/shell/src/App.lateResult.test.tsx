@@ -548,6 +548,31 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
   });
 
+  // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH4: the same control, on the advisory watch's
+  // own code -- `isSessionEndedRefusal` (renamed §2d) matches it too, never only
+  // `engine.source_changed` (block-on-sight 3 is a kernel-side rule; this is its client mirror).
+  //
+  // RECORDED MUTATION for "a coverage-lost pre-check refusal also ends the session": narrow
+  // `reportViewportOutcome`'s guard back to `e.skpError.code === "engine.source_changed"` (undoing
+  // the §2d rename's widening). Expected failure: the first assertion below fails -- no
+  // `.canvas-session-ended` block appears.
+  it("an engine.source_coverage_lost pre-check refusal also ends the session", async () => {
+    const handleA = await openPathAndCaptureHandle();
+    const handleB = await openPathAndCaptureHandle();
+    expect(handleB).not.toBe(handleA);
+
+    await rejectFirstRequest(
+      handleB,
+      new SkpCallError({ code: "engine.source_coverage_lost", message: "coverage was lost", fields: {} })
+    );
+
+    expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
+    expect(container.querySelector(".canvas-session-ended .admission-refusal-code")?.textContent).toBe(
+      "engine.source_coverage_lost"
+    );
+    expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
+  });
+
   // RECORDED MUTATION for "a genuine A ISSUED arriving in the real pre-cleanup window -- before A's own effect cleanup runs -- does not write B's scan/residency state":
   // remove the new `if (forThisEffect !== admittedDatasetRef.current) return;` guard from `issueViewportQuery`'s `.then` (App.tsx).
   // Expected failure: A's late `{kind:"issued"}`, delivered before A's own cleanup runs, reaches `applyScanEvent`/`setResidencyStatus`

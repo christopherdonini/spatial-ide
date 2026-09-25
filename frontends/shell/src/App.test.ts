@@ -16,6 +16,8 @@ import {
   admitAndResetStaleUiState,
   ApplyFilterDeps,
   applyFilter,
+  buildSessionEndedOwnerDetail,
+  dispatchSessionEndedToOwner,
   endSessionForDataset,
   handleCanvasCeilingRefusal,
   handleSessionEnded,
@@ -27,12 +29,14 @@ import {
   nextScanState,
   requestViewportWithSingleRetry,
   ResidencyStatus,
+  routeDatasetSessionEndedEvent,
   ScanEvent,
   ScanState,
   scanLivenessText,
   scanLivenessTextShouldShow,
   SCAN_LIVENESS_DELAY_MS,
 } from "./App";
+import type { DatasetSessionEnded } from "./skp/types";
 import { SkpCallError } from "./skp/client";
 import { encodeHexF64 } from "./skp/codec";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
@@ -1270,5 +1274,141 @@ describe("endSessionForDataset (N8: a late callback from an ended generation mus
     expect(calls.setSessionEnded[0].code).toBe("engine.source_changed");
     expect(calls.setHover).toEqual([{ kind: "session-ended" }]);
     expect(ended.current).toBe(true);
+  });
+});
+
+describe("buildSessionEndedOwnerDetail (§2d: the event route's owner detail)", () => {
+  // Mutation: return the same code for both reasons. Expected failure: the second assertion below
+  // fails -- coverage-lost would carry the source-changed code.
+  it("maps each reason to its own code, [P6 placeholder]-marked", () => {
+    expect(buildSessionEndedOwnerDetail("observed-change")).toMatch(/^engine\.source_changed: /);
+    expect(buildSessionEndedOwnerDetail("coverage-lost")).toMatch(/^engine\.source_coverage_lost: /);
+    expect(buildSessionEndedOwnerDetail("observed-change")).toContain("[P6 placeholder]");
+  });
+});
+
+describe("dispatchSessionEndedToOwner (§2d: baseline, then candidate, then endSession directly)", () => {
+  // RECORDED MUTATION for "tries the baseline manager first": swap the two `if` calls' order.
+  // Expected failure: the assertion below fails -- the candidate notifier would be called too (or
+  // instead), when the baseline one reported it handled it.
+  it("tries the baseline manager first, and calls at most one of the three", () => {
+    const notifyBaselineManager = vi.fn(() => true);
+    const notifyCandidateManager = vi.fn(() => true);
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("detail", "ds_a", {
+      notifyBaselineManager,
+      notifyCandidateManager,
+      endSessionDirectly,
+    });
+    expect(notifyBaselineManager).toHaveBeenCalledTimes(1);
+    expect(notifyCandidateManager).not.toHaveBeenCalled();
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "falls to the candidate manager when no baseline manager exists": always
+  // call `endSessionDirectly` regardless of what the notifiers report. Expected failure: the
+  // assertion below fails -- `endSessionDirectly` would also have been called.
+  it("falls to the candidate manager when no baseline manager exists", () => {
+    const notifyCandidateManager = vi.fn(() => true);
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("detail", "ds_a", {
+      notifyBaselineManager: () => false,
+      notifyCandidateManager,
+      endSessionDirectly,
+    });
+    expect(notifyCandidateManager).toHaveBeenCalledTimes(1);
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "ends the session directly when neither manager exists yet": drop the
+  // `endSessionDirectly` fallback call entirely. Expected failure: the assertion below fails --
+  // `endSessionDirectly` would never be called, and an end delivered before either manager is
+  // constructed would be silently lost.
+  it("ends the session directly when neither manager exists yet", () => {
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("detail", "ds_a", {
+      notifyBaselineManager: () => false,
+      notifyCandidateManager: () => false,
+      endSessionDirectly,
+    });
+    expect(endSessionDirectly).toHaveBeenCalledWith("detail", "ds_a");
+  });
+});
+
+describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/drop logic; SH9, SH11)", () => {
+  const EVENT: DatasetSessionEnded = { session: "sr_" + "a".repeat(32), reason: "observed-change" };
+
+  // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH9: an event whose `session` does not match is
+  // dropped.
+  //
+  // RECORDED MUTATION for SH9: skip the comparison (dispatch unconditionally). Expected failure:
+  // the first assertion below fails -- `dispatch` would be called despite the mismatch.
+  it("drops an event whose session does not match, and logs the reason only (SH9, SH11)", () => {
+    const dispatch = vi.fn();
+    const logUnknownSessionDrop = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: "sr_" + "b".repeat(32),
+      admittedDataset: "ds_a",
+      dispatch,
+      logUnknownSessionDrop,
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+    // SH11: the dropped-event log line names the reason only -- never the event's `session` value
+    // nor any `sr_`-shaped value (round 21 item 1, rider (b); Amendment 2 S3).
+    expect(logUnknownSessionDrop).toHaveBeenCalledTimes(1);
+    expect(logUnknownSessionDrop).toHaveBeenCalledWith("observed-change");
+  });
+
+  // RECORDED MUTATION for SH11: write the event's `session` into the dropped-event log line (e.g.
+  // `deps.logUnknownSessionDrop` called with a string containing it). Expected failure: this
+  // function's own contract is that `logUnknownSessionDrop` receives only the reason -- a caller
+  // that logs `` `${reason} (${event.session})` `` would still pass this unit test (the mock only
+  // inspects what THIS function passes it), so the real assertion of record is `App.tsx`'s own
+  // call site, which passes exactly the reason and nothing else (read the source, not inferred):
+  // `logSessionEvent("warn", \`dataset_session_ended: dropped for an unknown session (reason=${reason})\`)`
+  // carries no `sr_`-shaped value anywhere in its template.
+  it("a matching event dispatches for the currently admitted dataset", () => {
+    const dispatch = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: EVENT.session,
+      admittedDataset: "ds_a",
+      dispatch,
+      logUnknownSessionDrop: vi.fn(),
+    });
+    expect(dispatch).toHaveBeenCalledWith("observed-change", "ds_a");
+  });
+
+  it("a matching event with no dataset currently admitted is dropped silently", () => {
+    const dispatch = vi.fn();
+    const logUnknownSessionDrop = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: EVENT.session,
+      admittedDataset: null,
+      dispatch,
+      logUnknownSessionDrop,
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(logUnknownSessionDrop).not.toHaveBeenCalled();
+  });
+});
+
+describe("App.tsx's own dropped-event log line carries no session reference (SH11)", () => {
+  // The real call site, read from source rather than re-implemented: this is the record-fidelity
+  // discipline this codebase uses elsewhere (`the_pre_check_refusal_latches_the_session_in_the_
+  // untiled_catch`, above) for a closure App.tsx cannot export.
+  //
+  // RECORDED MUTATION for SH11: change the template to
+  // `` `dataset_session_ended: dropped for an unknown session ${event.session} (reason=${event.reason})` ``
+  // (writing the reference into the line). Expected failure: the regex below, which requires the
+  // line to contain no `sr_` followed by 32 lowercase hex digits, would then match the mutated
+  // source's own template text and fail this test.
+  it("the listener logs no session reference, only the reason", () => {
+    const appSource = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "App.tsx"), "utf8");
+    const callSite = appSource.match(/logUnknownSessionDrop: \(reason\) =>\s*\n?\s*logSessionEvent\(\s*\n?\s*"warn",\s*\n?\s*`([^`]*)`/);
+    expect(callSite).not.toBeNull();
+    const template = callSite![1];
+    expect(template).not.toMatch(/sr_[0-9a-f]{32}/);
+    expect(template).not.toContain("event.session");
+    expect(template).toContain("reason=");
   });
 });
