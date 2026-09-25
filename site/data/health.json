@@ -1,10 +1,9 @@
 {
-  "generated_at": "2026-09-25T01:23:00.768Z",
+  "generated_at": "2026-09-25T06:28:50.394Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "node \"engine-source-change-watcher\": gate \"engine/SOURCE-WATCHER-PREREGISTRATION.md\" is not a tracked file",
       "site drift: C:\\dev\\wt\\source-change-watcher\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
       "site drift: C:\\dev\\wt\\source-change-watcher\\site\\data\\plan.json differs from a fresh generation"
     ]
@@ -13,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 71838912512,
+        "bytes": 71827357696,
         "total": 510319915008
       },
       {
@@ -24,10 +23,10 @@
     ]
   },
   "stray_processes": {
-    "total": 5,
+    "total": 3,
     "by_name": {
       "cargo": 0,
-      "node": 5,
+      "node": 3,
       "spatial-ide-shell": 0
     }
   },
