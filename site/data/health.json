@@ -1,18 +1,19 @@
 {
-  "generated_at": "2026-09-25T22:22:14.395Z",
+  "generated_at": "2026-09-25T22:34:20.490Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+      "node \"governance-test-claims-superseded-followups\": gate \"scripts/plan/TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md\" is not a tracked file",
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\test-claims-followups\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\.claude\\worktrees\\test-claims-followups\\site\\data\\plan.json differs from a fresh generation"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 24744198144,
+        "bytes": 24778833920,
         "total": 510319915008
       },
       {

@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `72662ed8b305788c914be9438158457571e127cd7f66bfa12489f5c44874db8b`) at `2026-09-25T22:22:14.309Z`.
+Generated from `PLAN.yaml` (sha256 `ef2c3368faf609266ad1fc8c7e2cf71620627df285d8c46abda4850db2cf9b10`) at `2026-09-25T22:34:20.402Z`.
 
 ## 1. Next
 
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`)
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`)
 
 ## 2. Ready
 
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`, order 1, budget 60 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `72662ed8b305788c914be9438158457571e127cd7f66
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
+- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing — evidence: branch `governance/test-claims-followups`
 
 ## 6. Proposed / unscheduled
 

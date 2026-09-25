@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-25T22:22:15.862Z",
-  "plan_hash": "72662ed8b305788c914be9438158457571e127cd7f66bfa12489f5c44874db8b",
+  "generated_at": "2026-09-25T22:34:22.082Z",
+  "plan_hash": "ef2c3368faf609266ad1fc8c7e2cf71620627df285d8c46abda4850db2cf9b10",
   "priorities_approved": true,
   "lanes": [
     {
@@ -852,7 +852,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [
         "governance-test-claims-superseded-scanner"
@@ -861,15 +861,18 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
-      "budget_minutes": 60,
+      "gate": "scripts/plan/TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "governance/test-claims-followups"
+      },
+      "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,
       "entries": [
-        111
+        134,
+        136
       ],
-      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended.",
+      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned,. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended.",
       "dates": {
         "opened": "2026-09-24",
         "done": null

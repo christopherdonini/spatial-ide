@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-09-25T22:22:14.309Z",
-  "plan_hash": "72662ed8b305788c914be9438158457571e127cd7f66bfa12489f5c44874db8b",
+  "generated_at": "2026-09-25T22:34:20.402Z",
+  "plan_hash": "ef2c3368faf609266ad1fc8c7e2cf71620627df285d8c46abda4850db2cf9b10",
   "priorities_approved": true,
   "next": {
-    "id": "governance-test-claims-superseded-followups",
-    "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
+    "id": "test-claims-landedness-bound",
+    "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 1,
-    "budget_minutes": 60,
+    "order": 2,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-24",
+      "opened": null,
       "done": null
     },
-    "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended."
+    "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions."
   },
   "ready": [
-    {
-      "id": "governance-test-claims-superseded-followups",
-      "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended."
-    },
     {
       "id": "test-claims-landedness-bound",
       "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
@@ -294,6 +275,28 @@
       },
       "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged. 2026-09-24, after PR #116 merged: ADR-035's read under a fresh count (round 19 item 1) dispatched on PR #114. RULED 2026-09-24, question round 21, item 1 (red line, typed): ADR-035 accepted as merged, Decision 4 confirmed with a rider; riders (a) and (b) bind this preregistration -- the session reference carries no batch or ticket attribution and routes only the ended-session event to its open; never persisted or published; the recipe and bundle leakage tests name it too. After PR #114 merges, one fully gated docs piece sets Accepted, appends the Acceptance section and appends to SKP-V0's section 8 the dated note of rider (c).",
       "evidence_label": "PR #114"
+    },
+    {
+      "id": "governance-test-claims-superseded-followups",
+      "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 1,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "governance/test-claims-followups"
+      },
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned,. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended.",
+      "evidence_label": "branch `governance/test-claims-followups`"
     }
   ],
   "proposed": [
