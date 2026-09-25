@@ -157,13 +157,9 @@ CancelKey      client-minted, 1..=64 chars of [A-Za-z0-9_-]
 SessionRef     "sr_" + 32 lowercase hex   kernel-minted, OS CSPRNG (skp/0.5, ADR-035 D4)
 ```
 
-**`skp/0.5`'s third minting rule, stated beside the first two:** the kernel mints a `SessionRef`
-once per successful open and hands it back exactly once, on `OpenDatasetResponse.session` — it
-authorizes nothing (no request type ever accepts it back) and is not looked up; its only other
-appearance is on the `dataset_session_ended` event that names the generation it ends
-(`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b, round 21 item 1 rider (a)).
+**`skp/0.5`'s third minting rule, stated beside the first two:** the kernel mints a value wherever the value only names a kernel-side session and authorizes nothing, and no command accepts it as input. `SessionRef` is that value. The kernel mints one for every dataset-session generation, from the OS CSPRNG, and never reuses one. For a generation a successful `open_dataset` creates, the reference is handed back exactly once, on `OpenDatasetResponse.session`. For a generation created any other way, no response returns it and no client holds it. Either way it is not looked up, and its only other appearance is on the `dataset_session_ended` event that names the generation it ends (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b and Amendment 2; `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` Decision 4 and its Note 2026-09-25; round 21 item 1, rider (a); round 23, items 2 and 3).
 
-All three are session-scoped and non-persistable. None may be written to disk, logged, or reused
+All four are session-scoped and non-persistable. None may be written to disk, logged, or reused
 across a process restart — docs/11's ResourceRef model and ADR-016's "stability across reopen" OPEN
 block are both unsatisfied, so no handle may address a feature or dataset across sessions.
 `protocol/data-plane`'s own `OperationId`/`StreamId` are transport-internal instrument identities,
@@ -811,3 +807,14 @@ Mechanics, the `skp/0.2`–`skp/0.4` precedent followed exactly: one literal bum
 directions; every fixture on both the Rust (`protocol/skp/tests/data/*.json`,
 `protocol/skp/tests/fixtures.rs`) and TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`)
 sides of the wire updated in the same commit as each addition. `skp/1` stays RESERVED.
+
+### Second note to the `skp/0.3` entry: a session reference no client holds (2026-09-25)
+
+**Appended on the human's ruling of 2026-09-25** (`DECISIONS-PENDING.md`, RULED 2026-09-25 — question round 23, item 2; a red line, answered in typed text). The `skp/0.3` entry and the note of 2026-09-24 above are unchanged; this note clarifies the rule in writing and does not reinterpret it. It is paraphrased here; the ruling's words govern.
+
+`skp/0.5`'s kernel mints a `SessionRef` for every dataset-session generation, including one that `open_dataset` did not create (`docs/adr/ADR-035-dataset-session-ended-control-plane-event.md`, Note 2026-09-25). No response returns that reference, so no client holds it. It appears only on the `dataset_session_ended` event that ends its generation, which the shell drops as naming an unknown session.
+
+- That reference does not engage the `skp/0.3` rule that no generation value crosses the wire, under round 21 item 1's riders: it carries no ticket attribution, and it is never persisted or published.
+- It is containment for the close race, not a protocol feature. PLAN node `kernel-generation-close-races` makes the path that mints it unreachable and adds a test proving that.
+
+A reference that fails any condition in this note or in the 2026-09-24 note gets no clarification from either.
