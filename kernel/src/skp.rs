@@ -884,7 +884,8 @@ fn reason_of_signal(signal: &WatchSignal) -> SessionEndReason {
 fn engine_error_of_pre_admission_signal(signal: WatchSignal) -> EngineError {
     match signal {
         WatchSignal::Change { .. } => EngineError::SourceChanged {
-            detail: "{a notification arrived for this source before admission}".to_string(),
+            detail: "{[P6 placeholder] a notification arrived for this source before admission}"
+                .to_string(),
         },
         WatchSignal::CoverageLost { cause } => EngineError::SourceCoverageLost { detail: cause },
     }
@@ -1046,7 +1047,8 @@ impl SkpHost {
                     self.catalog.remove(handle.as_str());
                     drop(watch);
                     return Err(error_of(&EngineError::SourceChanged {
-                        detail: "{a notification arrived for this source before admission}"
+                        detail: "{[P6 placeholder] a notification arrived for this source before \
+                                 admission}"
                             .to_string(),
                     }));
                 }
@@ -1178,8 +1180,8 @@ impl SkpHost {
                         .to_string(),
                 },
                 SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
-                    detail: "{this dataset's session ended when the advisory watch on its source \
-                             lost coverage}"
+                    detail: "{[P6 placeholder] this dataset's session ended when the advisory \
+                             watch on its source lost coverage}"
                         .to_string(),
                 },
             }));
