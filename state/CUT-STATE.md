@@ -154,3 +154,39 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
        - The exact assembled text of each prompt is recorded beside its session ID.
     5. **Triage (§4):** the custodian decides severity. S1 candidates go to the human in one batch after the wave, with evidence. Nothing becomes a cut in this wave.
   - **Lease:** relinquished by this session (856bc41b), on the human's word. `CUSTODIAN-LEASE` is rewritten to a single `relinquished:` line. The incoming session verifies the relinquish and that origin's tip matches this flush before taking the lease.
+- 2026-09-25T01:40Z - **Handover taken; the cloud launch path checked against the docs; the cloud-hook ruling applied; wave 1 held for PR #120.**
+  - **Lease:** the relinquish was verified (`CUSTODIAN-LEASE` read `relinquished:`; origin's tip 4c757e1 = the final flush, parent c2289dc), then taken by 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg).
+  - **The human's messages** are verbatim in `state/directives/2026-09-25-cloud-hooks.md` (§1 the wave-1 instruction, §2 the cloud-hook ruling, §3 the #118 merge, §4 the wave-1 block relayed from Fable, §5 the confirmation and the baseline correction).
+  - **The cloud launch path (the Claude Code docs, fetched 2026-09-25):**
+    - `claude --cloud "<task>"` creates a cloud session from the current directory's GitHub remote at the current branch.
+    - The environment is the `/remote-env` pick or a fallback. The Default environment has Trusted network (package registries).
+    - A one-repo session runs the repository's `.claude/settings.json` hooks and loads `CLAUDE.md`.
+    - `git push` works only against the session's current working branch, so A3's push to `cloud/wave1-A3` may be refused. That is a calibration watch-point.
+  - **The finding and the ruling:** at the baseline the repo's hooks would have fired in a cloud worker: the continuity block at startup, up to six Stop-hook continuations toward the ready governance node, and a PreCompact demand to write and push `state/CUT-STATE.md`. The human ruled without a question round (RULED 2026-09-25, the cloud hooks):
+    - (1) the hooks are made inert in a cloud session;
+    - (2) every prompt uses a worktree at `/tmp/wave1-baseline`;
+    - (3) the baseline stays bb98f71, per the correction beside the ruling. The ruling's 59406134 was superseded by the human.
+  - **Applied:**
+    - PR #120 (`governance/hooks-cloud-inert`, single combined gate). The marker is `CLAUDE_CODE_REMOTE` = `true`, quoted from the cloud-environments docs; it was checked unset in this local Remote Control session. Reviewer attempt 1 FAILED (index 191): two existing CLI tests inherited the marker. Fixed at 3bd2b2d. Attempt 2 FAILED record-only (index 192): the superseded index was missing. Appended at cde1d31. Attempt 3, the scoped confirmation, PASSED (index 193). Record rounds: two, the cap. Marked ready; the human's click.
+    - Wave-1 prompts deviation 1 (c69ad28): four baseline instructions and §3's "Baseline SHA" field move to the worktree, with the originals byte-copied.
+    - `governance-test-claims-withdrawn-marker` done (evidence pr 118; a646d59).
+    - The two design references were copied to `state/drafts/design/` (c16f41d).
+  - **The wave-1 block (§4), confirmed (§5).** Its triage rules govern wave 1's reports. Round 21's rulings were already applied, so skipped. The architect redrafted B1's preregistration (round 17 items 3–4) and the watcher's (rounds 17–21, ADR-035); see the next entry.
+  - **Balance before A3:** Cloud session credits "$250 of $250 left" (expires November 5), read in claude.ai Settings → Usage at about 00:45Z. The A3 prompt is assembled by script from the amended §7 (63 lines, sha256 a408c1d81ed3bd6552e8024312c7a76c93f093774dc83bdac7812da616eefe46). It launches after #120 merges and its dry run passes on main.
+  - **Worktrees:** `C:/dev/wt/adr-035-dataset-session-ended` swept (merged at #114, clean, pushed, no process). Added: `.claude/worktrees/hooks-cloud-inert` (#120).
+- 2026-09-25T02:10Z - **Both preregistrations committed; round 22 ruled; the watcher's phase 1 dispatched.**
+  - **The architect's two consults** are filed verbatim at 9e6faf9, extracted by script from the hand-backs (the tasks output files were 0 bytes; the subagent transcripts under the session's `subagents/` directory carried the text):
+    - `state/consults/2026-09-25-b1-prereg-revision.md`: B1 revised to round 17 items 3–4; stop list O1–O8.
+    - `state/consults/2026-09-25-source-watcher-prereg.md`: the watcher redrafted to rounds 17–21 and ADR-035; stop item X1 for the human; X2–X4 sequencing and mechanics.
+  - **B1's preregistration:** PR #121 (`docs/b1-preregistration`), docs-only under `AUTONOMY.md` §9 (`docsOnly.mjs` eligible). `b1-engine-kernel-half`'s gate names it. Its Amendment 1 (4fa387d) resolves O1–O8 by round 22 item 2. Merged by the custodian once CI and drift are green.
+  - **The watcher's preregistration:** the first commit on `cut/source-change-watcher` (596511b; worktree `C:/dev/wt/source-change-watcher`). The node's gate names it, and its evidence is the branch. Amendment 1 (d5d262e) resolves X1 by round 22 item 1. X2–X4 are applied under existing rules, as listed in `state/questions/round-22.md`'s last paragraph.
+  - **Round 22** (b78ba94; `state/questions/round-22.md`, mirrored to Telegram first). Recorded verbatim in the RULED block:
+    - item 1, X1 as an invariant (typed; a red line);
+    - item 2, O1–O8 as recommended;
+    - item 3, the refused-line residual fails by name, with the condition that the follow-ups PR corrects or reduces every such line already on main.
+  - **PLAN (b78ba94):**
+    - `kernel-generation-close-races` is placed immediately after the watcher (kernel-protocol, order 1). It carries the ADR-035 drafter's two notes and whatever wave-1 A2 reports about the close race.
+    - Proposed: `adr-035-decision-4-note` (after #119 merges) and `b1-shell-half` (O7).
+    - `governance-test-claims-superseded-followups` is ready at order 1, ahead of `test-claims-landedness-bound` at order 2.
+  - **Watcher phase 1 dispatched:** worker-high at the agent default (sonnet). Scope: engine, protocol with both fixture sides, kernel and the src-tauri wiring, with their §4 tests. Phase 2 (the shell consumer, SH1–SH11, the E2E and the KNOWN-LIMITATIONS lines) goes to a fresh worker after the hand-back.
+  - **Worktrees added:** `.claude/worktrees/b1-prereg` (#121) and `C:/dev/wt/source-change-watcher`.
