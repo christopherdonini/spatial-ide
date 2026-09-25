@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c5205fe4b201231c5ea6be10`) at `2026-09-24T22:50:59.128Z`.
+Generated from `PLAN.yaml` (sha256 `3ba0a25d9c7afbb219ed2401fecb83f71f9dffb66ddccbe174ad45a68efd83f6`) at `2026-09-25T00:11:55.600Z`.
 
 ## 1. Next
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`)
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`)
 
 ## 2. Ready
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`, order 1, budget 90 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -29,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c520
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
-- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
+- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement — evidence: branch `governance/test-claims-withdrawn`
 
 ## 6. Proposed / unscheduled
 

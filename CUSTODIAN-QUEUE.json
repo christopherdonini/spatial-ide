@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-24T22:50:59.128Z",
-  "plan_hash": "052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c5205fe4b201231c5ea6be10",
+  "generated_at": "2026-09-25T00:11:55.600Z",
+  "plan_hash": "3ba0a25d9c7afbb219ed2401fecb83f71f9dffb66ddccbe174ad45a68efd83f6",
   "priorities_approved": true,
   "next": {
-    "id": "governance-test-claims-withdrawn-marker",
-    "title": "verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement",
+    "id": "test-claims-landedness-bound",
+    "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 1,
+    "order": 2,
     "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
@@ -16,31 +16,12 @@
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-24",
+      "opened": null,
       "done": null
     },
-    "summary": "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done. RULED 2026-09-24, question round 21, item 2: one correction round, fully gated, by a fresh worker; the reviewer probe (round 99, item 1 with carrier nonsense) becomes a named regression test that must fail by name; if this round fails again the piece stops under Rule 7 and governance-verify-mutation-multiline-attrs keeps its advisory names."
+    "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions."
   },
   "ready": [
-    {
-      "id": "governance-test-claims-withdrawn-marker",
-      "title": "verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done. RULED 2026-09-24, question round 21, item 2: one correction round, fully gated, by a fresh worker; the reviewer probe (round 99, item 1 with carrier nonsense) becomes a named regression test that must fail by name; if this round fails again the piece stops under Rule 7 and governance-verify-mutation-multiline-attrs keeps its advisory names."
-    },
     {
       "id": "test-claims-landedness-bound",
       "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
@@ -274,26 +255,26 @@
       "evidence_label": "PR #114"
     },
     {
-      "id": "governance-verify-mutation-multiline-attrs",
-      "title": "verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen",
+      "id": "governance-test-claims-withdrawn-marker",
+      "title": "verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement",
       "lane": "governance",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 4,
-      "budget_minutes": 60,
+      "order": 1,
+      "budget_minutes": 90,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "pr": 108
+        "branch": "governance/test-claims-withdrawn"
       },
       "dates": {
-        "opened": "2026-09-17",
+        "opened": "2026-09-24",
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 under Rule 7 after two Correctness FAILs (DECISIONS-PENDING.md entry 127; PR #108): continue narrowed / drop is the human's. Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Reported by the reviewer's scoped re-read of engine/lod-tier-builder @ 43a3039 (gate-log record 52): scripts/plan/verify-mutation.mjs lines ~96-97 set pending = false on a continuation line of an unterminated attribute. Fix: keep pending inside an unterminated attribute and print a diagnostic for skipped attribute blocks; a test with a multi-line #[ignore] fixture and its recorded mutation. Five-line short form, single gate RULED 2026-09-24, question round 17, item 9 (entry 127): continue under a fresh count, narrowed -- an attribute that does not close on its own line falls back to single-line handling after a bounded look-ahead, the unclosed case printed as a finding. RULED 2026-09-24, question round 18, item 4 (entry 131): the union design replaces round 17 item 9's fallback -- the tool returns the union of main's per-line scan and the tracked scan, no self-comparing no-loss test; one round under a fresh count; if it stops again the PR is closed unmerged, the node dropped, and the 13 tests behind multi-line ignore attributes listed as a known limit of the tool. RULED 2026-09-24, question round 19, item 2 (entry 133): merge; the node stays in progress (its gate naming the form) until the superseded-name scanner lands, then closes as done. RULED 2026-09-24, question round 20, item 1 (entry 134): closes as done when its withdrawn rows are in (governance-test-claims-withdrawn-marker); round 19 item 2's closing on the scanner's landing is superseded.",
-      "evidence_label": "PR #108"
+      "summary": "RULED 2026-09-24, question round 20, item 1 (entry 134): one round, fully gated, after PR #117 lands. The same hash-pinned row at a main commit as superseded, with no replacement required, under the human's two riders as its own requirements (the RULED block states them verbatim): (a) the ruling a withdrawn row names must resolve to a RULED block that names the removal, else verify fails the citation by name; (b) a withdrawn test that a gate, acceptance or preregistered claim still relies on must name what now carries that evidence, else verify fails. Then PR #108's record gains its withdrawn rows (the carrier: the union design itself, round 18 item 4), and governance-verify-mutation-multiline-attrs closes as done. RULED 2026-09-24, question round 21, item 2: one correction round, fully gated, by a fresh worker; the reviewer probe (round 99, item 1 with carrier nonsense) becomes a named regression test that must fail by name; if this round fails again the piece stops under Rule 7 and governance-verify-mutation-multiline-attrs keeps its advisory names.",
+      "evidence_label": "branch `governance/test-claims-withdrawn`"
     }
   ],
   "proposed": [
@@ -333,7 +314,7 @@
         "opened": "2026-09-24",
         "done": null
       },
-      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id."
+      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own."
     },
     {
       "id": "lod-tier-selection",
