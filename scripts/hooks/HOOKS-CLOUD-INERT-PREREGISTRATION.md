@@ -13,3 +13,12 @@ Out-of-scope: no ADR, wire, security or guarantee text; .claude/settings.json an
 Amendment 1 (class 6, budget deviation, Scope not edited; reviewer attempt 1, `state/gate-log.json` index 191): declared 7 files and <= 150 lines; final 8 files and 149 lines under §21c's rule (`git diff --numstat origin/main...HEAD`, this form excluded). Reason, the gate's Correctness finding: `scripts/hooks/hooks.test.mjs` gains one line removing `CLAUDE_CODE_REMOTE` from its suite's environment, so its two CLI tests that spawn a hook with the inherited environment keep testing local behaviour when the suite itself runs under the marker. Proof: `CLAUDE_CODE_REMOTE=true node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"` passes 291 of 291.
 
 Amendment 2 (class 3; the same gate): the Change line's "(quoted in cloud.mjs and the README)" points at two places. The quotation is in `scripts/hooks/cloud.mjs` only; the README names `cloud.mjs` as where it is quoted.
+
+Amendment 1's proof ran on the tree at 3bd2b2d, the correction commit.
+
+**Superseded index (round 12, item 1, clause (e)).** Form lines are referenced by section name only, never by line: this form's commits are branch commits, not on `origin/main` (round 15 (e)).
+
+| form line | superseded by |
+| --- | --- |
+| Change line, its parenthetical "(quoted in cloud.mjs and the README)" | Amendment 2: the quotation is in `scripts/hooks/cloud.mjs` only |
+| Scope line | not superseded; the line stands, its final figure (8 files, 149 lines) in Amendment 1 |
