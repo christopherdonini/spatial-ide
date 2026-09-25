@@ -22,6 +22,7 @@ const twoNodesHumanOnlyPlan = path.join(fixturesDir, 'two-nodes-human-only.yaml'
 process.env.CUSTODIAN_TELEGRAM_DRY_RUN = '1';
 delete process.env.CUSTODIAN_TELEGRAM_BOT_TOKEN;
 delete process.env.CUSTODIAN_TELEGRAM_CHAT_ID;
+delete process.env.CLAUDE_CODE_REMOTE; // the cloud marker (cloud.mjs): these tests exercise the hooks' local behaviour
 
 function makeTempDir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));

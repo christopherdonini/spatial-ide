@@ -39,7 +39,7 @@ function runHook(script, input, env) {
   return spawnSync(process.execPath, [path.join(here, script)], { input: JSON.stringify(input), encoding: 'utf8', env });
 }
 const assertSilent = (r) => assert.deepEqual({ status: r.status, stdout: r.stdout, stderr: r.stderr }, { status: 0, stdout: '', stderr: '' });
-// The shell Claude Code runs command hooks in: Git Bash on Windows (scripts/hooks/README.md), sh elsewhere.
+// The hook shell: Git Bash on Windows, where Claude Code runs command hooks in it (scripts/hooks/README.md); /bin/sh otherwise.
 function hookShell() {
   if (process.platform !== 'win32') return '/bin/sh';
   return path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '..', '..', '..', 'bin', 'bash.exe');
