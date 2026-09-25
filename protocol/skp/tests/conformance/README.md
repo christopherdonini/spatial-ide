@@ -24,4 +24,9 @@ expected_refusal_code? }`.
   A type-level rejection satisfies it; a type-level acceptance is reported as "deferred to host",
   not as a divergence.
 
-Run: `cargo test -p <skp crate> --test conformance -- --nocapture`.
+Run: `cargo test -p spatial-skp --test conformance -- --nocapture`.
+
+Observed divergences are in `DIVERGENCES.md`. The harness asserts the observed divergence set
+equals `REPORTED_DIVERGENCES` in `main.rs` in both directions, so a new divergence fails the run and
+so does a reported one that stops diverging; neither is absorbed silently. No existing fixture or
+implementation file was changed.
