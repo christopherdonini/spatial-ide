@@ -9,7 +9,7 @@
 // (a backtick only on one side) would then be wrongly recognized as a claimed test — while the other
 // tests still pass. That one test pins the "its own complete code span" rule.
 
-import { test } from 'node:test';
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -24,6 +24,29 @@ import {
   plannedGateFiles,
   REPO_ROOT,
 } from './verify-test-claims.mjs';
+
+// Every temp directory this file creates is removed after its own run (§2.9,
+// TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; §6's delta check: 0 `verify-test-claims-*` directories net
+// under the OS temp directory across one run of this file). One wrapper, not a per-call-site edit: every
+// fixture helper and test body below calls the plain `fs.mkdtempSync` -- this intercepts each call once,
+// centrally, and `after()` sweeps every directory it returned, whichever test created it and whatever
+// that test's own outcome.
+const realMkdtempSync = fs.mkdtempSync.bind(fs);
+const createdTempDirs = [];
+fs.mkdtempSync = (...args) => {
+  const dir = realMkdtempSync(...args);
+  createdTempDirs.push(dir);
+  return dir;
+};
+after(() => {
+  for (const dir of createdTempDirs) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // already gone, or never fully created -- nothing more to remove.
+    }
+  }
+});
 
 test('isTestShaped accepts narrative-prefixed >= 3-word snake_case, rejects field/symbol names', () => {
   assert.equal(isTestShaped('a_residual_admission_lease_exhaustion'), true);
