@@ -767,24 +767,42 @@ impl SessionInvalidator {
         Arc::new(Self { generations, tickets, events })
     }
 
+    /// **Record half of the single emission point** (§2b step 1; phase-2 delta 5). Takes the
+    /// [`EndReport`] under `GenerationRegistry`'s own guard, which the guard's release (inside
+    /// `invalidate`) already completes before this returns. Private: its product caller is
+    /// [`Self::end_generation`] below; the in-crate `ticket_drop_under_lock_regression` test module
+    /// reaches it as a descendant of this module.
+    fn record(&self, dataset: &str, reason: SessionEndReason) -> Option<EndReport> {
+        self.generations.invalidate(dataset, reason)
+    }
+
+    /// **Enqueue half of the single emission point** (§2b step 2; phase-2 delta 5). `try_send`s one
+    /// [`DatasetSessionEnded`] event for an already-taken [`EndReport`] — called only after
+    /// [`Self::record`]'s guard has been released, never under it. Never waits and never blocks the
+    /// end: a full queue loses the event (Decision 2).
+    fn enqueue(&self, report: &EndReport) {
+        let _ = self.events.try_send(DatasetSessionEnded {
+            session: report.session.clone(),
+            reason: end_reason_of(report.reason),
+        });
+    }
+
     /// **The single emission point** (§2b). End `dataset`'s generation for `reason`, emit at most
     /// one [`DatasetSessionEnded`] event, then cancel every ticket that belonged to it. Returns how
     /// many tickets this call actually cancelled.
     ///
-    /// **Order, exactly** (§2b): 1. take the report; 2. after the guard is released (`invalidate`
-    /// has already returned by this point — the enqueue never runs under `GenerationRegistry`'s own
-    /// lock), `try_send` one event; 3. cancel the report's tickets through the existing
-    /// `StreamRegistry::cancel`. The emission never waits and never blocks the end — a full queue
-    /// loses the event (Decision 2 keeps that safe).
+    /// **Order, exactly** (§2b): 1. [`Self::record`] takes the report; 2. after the guard is
+    /// released (`invalidate` has already returned by this point — the enqueue never runs under
+    /// `GenerationRegistry`'s own lock), [`Self::enqueue`] sends one event; 3. cancel the report's
+    /// tickets through the existing `StreamRegistry::cancel`. The emission never waits and never
+    /// blocks the end — a full queue loses the event (Decision 2 keeps that safe).
     ///
     /// **Idempotent**, so the pre-check and a post-check (or the watcher's sink) observing the same
     /// change do not double-cancel or double-emit, and so a source whose post-check fires on
     /// several concurrent tile streams ends one session rather than N.
     pub fn end_generation(&self, dataset: &str, reason: SessionEndReason) -> u32 {
-        let Some(report) = self.generations.invalidate(dataset, reason) else { return 0 };
-        let _ = self
-            .events
-            .try_send(DatasetSessionEnded { session: report.session, reason: end_reason_of(report.reason) });
+        let Some(report) = self.record(dataset, reason) else { return 0 };
+        self.enqueue(&report);
         let mut cancelled = 0u32;
         for h in report.tickets {
             if matches!(self.tickets.cancel(&h), CancelOutcome::Requested) {
@@ -2627,21 +2645,18 @@ mod ticket_drop_under_lock_regression {
     // E5, E7, E8 (`SOURCE-WATCHER-PREREGISTRATION.md` §4) — in-crate, reusing this module's own
     // helpers, per the doc's own placement note.
     //
-    // **Deviation from the doc's own setup note, disclosed here rather than silently reconciled**:
-    // §4's header for this table says these three tests reuse "the `pub(crate)` split of
-    // `end_generation` (record, then enqueue)". No such split exists in this implementation, and none
-    // was introduced for these tests. `SessionInvalidator::end_generation` (`:783`) records
-    // (`GenerationRegistry::invalidate`, which removes the live entry and captures its `SessionRef`
-    // under one lock hold) and enqueues (`events.try_send`) in the same synchronous call, and
-    // `SkpHost::close_dataset` (`:1280`) runs `cancel_all_for_dataset` — which is what drops a
-    // `Pending` ticket and reaches this call, on the ticket's `Drop` — to completion, entirely,
-    // before `forget_dataset` ever starts (`:1298-1301`). There is no window in this design where a
-    // record could happen before `forget_dataset` while its enqueue happened after: by construction,
-    // both finish, together, strictly before `forget_dataset` starts. E5, E7 and E8 below test the
-    // real observable properties their names describe — one event within the bound (E5), the open's
-    // own reference surviving a pending drop inside close (E7), and that reference surviving even
-    // when two pending tickets for the same dataset are dropped by the same close (E8) — against the
-    // actual, synchronous call order, rather than against a split that was never built.
+    // **Phase-2 delta 5/6.** `SessionInvalidator::end_generation` is now split into two private
+    // methods, `record` (the `GenerationRegistry::invalidate` call, returning `Option<EndReport>`)
+    // and `enqueue` (`events.try_send` for an already-taken `EndReport`) — see their doc comments
+    // just above `end_generation` in this same `impl SessionInvalidator` block. `end_generation`
+    // itself calls them in that order, then cancels the report's tickets, exactly as before.
+    //
+    // The withdrawn no-window claim from this comment's earlier revision (phase 1, superseded at
+    // `4137f4d`, Amendment 3 item 2) is not repeated here. E8 below no longer argues from a claimed
+    // absence of a window; it drives the window directly, by calling `record` and `enqueue` itself
+    // on the test's own thread around a real `host.close_dataset` call — the same shape ADR-035
+    // Decision 3's close bullet describes for a data-plane thread that records an end, releases the
+    // guard, lets `close_dataset`'s `forget_dataset` run, and only then enqueues.
 
     /// E5 `a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang`. The non-hang half of this
     /// claim is already `sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang`
@@ -2713,14 +2728,23 @@ mod ticket_drop_under_lock_regression {
     /// E7 `a_pending_drop_inside_close_emits_once_with_its_session_reference`. A real `SkpHost`, a
     /// real `open_dataset` (so this test knows the exact reference the event must carry), and one
     /// `Pending` ticket for that same dataset wired through the **host's own** invalidator — so
-    /// closing the dataset drops it via `cancel_all_for_dataset` (`close_dataset`'s first line,
-    /// `:1298`), strictly before `forget_dataset` (`:1301`).
+    /// closing the dataset drops it via `cancel_all_for_dataset` (`SkpHost::close_dataset`, the
+    /// removal-then-cancel-then-forget order documented on that method), strictly before
+    /// `forget_dataset` runs.
     ///
-    /// RECORDED MUTATION: swap `close_dataset`'s two lines — `self.generations.forget_dataset(name)`
-    /// before `self.tickets.cancel_all_for_dataset(name)`. Expected failure: by the time the ticket's
+    /// RECORDED MUTATION (registered, phase 2 delta 6 — same as E1): move the `enqueue` call out of
+    /// `SessionInvalidator::end_generation` into `SkpHost::end_generation`'s own wrapper only, so the
+    /// post-check/drop/close routes — which reach `SessionInvalidator::end_generation` directly,
+    /// never through that wrapper — stop emitting. Observed failure (performed on this branch, then
+    /// reverted): this test's `recv_timeout` timed out with "one event, carrying the open's own
+    /// reference" never satisfied.
+    ///
+    /// RECORDED MUTATION (second, phase 1's own finding): swap `close_dataset`'s two lines —
+    /// `self.generations.forget_dataset(name)` before `self.tickets.cancel_all_for_dataset(name)`.
+    /// Observed failure (performed once on this branch, then reverted): by the time the ticket's
     /// drop reaches `GenerationRegistry::invalidate`, `forget_dataset` has already removed the live
     /// entry, so `invalidate` returns `None`, `end_generation` returns `0`, and no event is ever
-    /// enqueued — this test's `recv_timeout` times out.
+    /// enqueued — this test's `recv_timeout` timed out.
     #[test]
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
         let path = fixture("close-drop-path");
@@ -2767,21 +2791,33 @@ mod ticket_drop_under_lock_regression {
         assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
     }
 
-    /// E8 `an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference`. Two
-    /// `Pending` tickets for the **same** dataset, both wired through the host's own invalidator, both
-    /// dropped by the same `close_dataset` call: the first ticket's drop records the end and captures
-    /// the reference (`GenerationRegistry::invalidate` removes the live entry and enqueues, all before
-    /// `forget_dataset` ever runs); the second ticket's drop, immediately after, finds the generation
-    /// already gone (`invalidate` returns `None` — the idempotency guard E9 also exercises) and
-    /// contributes nothing. Exactly one event, and it is the open's own reference — proving the
-    /// reference recorded survives both the second drop and the close's own `forget_dataset`.
+    /// E8 `an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference`
+    /// (rebuilt, phase 2 delta 6). ADR-035 Decision 3's close bullet names a route E7 alone cannot
+    /// reach: a data-plane thread records the end (`record`, under `GenerationRegistry`'s guard),
+    /// releases that guard, `close_dataset`'s `forget_dataset` then runs on the close's own thread,
+    /// and only *afterwards* does the first thread's `enqueue` run. This test drives that window
+    /// directly instead of arguing from ticket-drop timing: it calls `SessionInvalidator::record`
+    /// itself (reachable — this module is a descendant of `skp`, `record` and `enqueue` are private
+    /// to that module), then runs a real `host.close_dataset` to completion, then calls `enqueue` on
+    /// the already-taken `EndReport` — proving the reference recorded before `forget_dataset` still
+    /// carries correctly on an enqueue that runs after it.
     ///
-    /// RECORDED MUTATION: same as E7 (swap `close_dataset`'s two lines). Expected failure: neither
-    /// ticket's drop ever finds a live entry to remove (already forgotten first), so no event is ever
-    /// enqueued and this test's `recv_timeout` times out — identically to E7 under the same mutation.
+    /// RECORDED MUTATION (registered, phase 2 delta 6): `enqueue` reads the reference from
+    /// `GenerationRegistry` instead of from the already-taken `EndReport`. Observed failure
+    /// (performed on this branch, then reverted): by the time this test's `enqueue` call runs,
+    /// `close_dataset`'s `forget_dataset` has already removed the dataset's `live` entry, so the
+    /// re-read finds nothing and no event carries the reference — this test's `recv_timeout` timed
+    /// out with "one event, carrying the recorded reference" never satisfied.
+    ///
+    /// RECORDED MUTATION (registered, phase 2 delta 6, second): `enqueue` is skipped when
+    /// `ended_reason(dataset)` is `None`. Observed failure (performed on this branch, then
+    /// reverted): `forget_dataset` clears `invalidated` along with `live`
+    /// (`GenerationRegistry::forget_dataset`), so by the time this test's `enqueue` call runs,
+    /// `ended_reason` already answers `None` for the (now-closed) dataset, and the mutated `enqueue`
+    /// sends nothing — this test's `recv_timeout` timed out the same way.
     #[test]
     fn an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference() {
-        let path = fixture("close-drop-twice-path");
+        let path = fixture("close-drop-race-path");
         let (tx, rx) = super::session_end_channel();
         let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
         let open = host
@@ -2794,33 +2830,26 @@ mod ticket_drop_under_lock_regression {
             })
             .expect("open");
         let name = open.dataset.as_str().to_string();
-        let reuses = spatial_engine::Dataset::open(&path)
-            .expect("reopen for connection config")
-            .connections()
-            .config()
-            .reuses_connections();
 
-        for _ in 0..2 {
-            let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
-            let (source, source_cancel) = crate::wrap_for_data_plane(
-                stream,
-                cancel,
-                name.clone(),
-                reuses,
-                None,
-                Some(host.invalidator.clone()),
-            );
-            let handle =
-                host.tickets().mint(&name, source, source_cancel).expect("mint a pending ticket");
-            assert!(host.generations().attribute_ticket(handle.as_str(), &name));
-        }
+        // The data-plane thread's own step 1 (§2b), performed here on the test's own thread, before
+        // `close_dataset` ever runs: take the report under `GenerationRegistry`'s guard, which the
+        // guard's own release (inside `invalidate`) already completes before `record` returns.
+        let report = host
+            .invalidator
+            .record(&name, SessionEndReason::ObservedChange)
+            .expect("a live generation to end");
 
+        // The close's own thread runs to completion — including `forget_dataset` — while the
+        // report above is only held locally, its `enqueue` not yet called.
         host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
             .expect("close");
 
+        // The data-plane thread's own step 2 (§2b), run only now — strictly after `forget_dataset`.
+        host.invalidator.enqueue(&report);
+
         let event = rx
             .recv_timeout(Duration::from_secs(5))
-            .expect("one event, carrying the open's own reference, despite two pending drops");
+            .expect("one event, carrying the reference recorded before forget_dataset ran");
         assert_eq!(event.session, open.session);
         assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
     }
