@@ -387,3 +387,9 @@ Every instrument is an assertion (a typed outcome, a schema, a byte comparison, 
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-09-25, before any code (no outcome seen): OPEN markers O1–O8 resolved by RULED 2026-09-25, question round 22, item 2
+
+Class 5, a scope settled on a ruling. The ruling, byte-copied by script from `DECISIONS-PENDING.md`'s RULED block: "All eight as rec. (Recommended)"
+
+Each OPEN marker O1–O8 resolves to its recommendation as written in `state/consults/2026-09-25-b1-prereg-revision.md`, §3 (the architect's stop list), which binds this piece from this amendment. O7's node is `b1-shell-half` (PLAN.yaml), the consumer §2.9's caller rule names. The Header's OPEN-marker line no longer holds any point back.
