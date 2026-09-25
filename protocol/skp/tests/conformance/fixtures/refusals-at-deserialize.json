@@ -1,0 +1,333 @@
+[
+ {
+  "id": "rej-open-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields; \u00a74 item 13",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": null,
+   "identity": null,
+   "extra": 1
+  }
+ },
+ {
+  "id": "rej-open-attribution-by",
+  "spec": "\u00a71 open_dataset / \u00a78 skp/0.2 (wire carries no attribution) + deny_unknown_fields",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": {
+    "identifier": "EPSG:2056",
+    "definition_json": "{}",
+    "by": "me"
+   },
+   "identity": null
+  }
+ },
+ {
+  "id": "rej-open-identity-at",
+  "spec": "\u00a78 skp/0.2 (no by, no at) + deny_unknown_fields",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": null,
+   "identity": {
+    "column": "id",
+    "at": "2026-01-01"
+   }
+  }
+ },
+ {
+  "id": "rej-open-missing-skp",
+  "spec": "\u00a71 every request carries skp",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "rej-open-missing-cancel-key",
+  "spec": "\u00a71 open_dataset (cancel_key is not Option)",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "rej-describe-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields",
+  "wire_type": "describe.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "verbose": true
+  }
+ },
+ {
+  "id": "rej-viewport-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null,
+   "sql": "select 1"
+  }
+ },
+ {
+  "id": "rej-viewport-bbox-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields (nested struct)",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142f58400000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000",
+    "crs": "EPSG:2056"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  }
+ },
+ {
+  "id": "rej-viewport-filter-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields (nested struct); \u00a77.2",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": {
+    "predicate": "a = 1",
+    "dialect": "duckdb-expr/0",
+    "params": []
+   }
+  }
+ },
+ {
+  "id": "rej-viewport-dialect-other",
+  "spec": "\u00a77.2 any other dialect refused at deserialization",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": {
+    "predicate": "a = 1",
+    "dialect": "duckdb-expr/1"
+   }
+  }
+ },
+ {
+  "id": "rej-viewport-dialect-case",
+  "spec": "\u00a77.2 one admitted value; any other value refused at deserialization",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": {
+    "predicate": "a = 1",
+    "dialect": "DuckDB-Expr/0"
+   }
+  }
+ },
+ {
+  "id": "rej-viewport-dialect-empty",
+  "spec": "\u00a77.2 any other dialect refused at deserialization",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": {
+    "predicate": "a = 1",
+    "dialect": ""
+   }
+  }
+ },
+ {
+  "id": "rej-viewport-filter-missing-dialect",
+  "spec": "\u00a77.2 filter { predicate, dialect }",
+  "wire_type": "viewport_query.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": {
+    "predicate": "a = 1"
+   }
+  }
+ },
+ {
+  "id": "rej-cancel-unknown-field",
+  "spec": "\u00a71 cancel; deny_unknown_fields",
+  "wire_type": "cancel.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "handle": "sh_fedcba9876543210fedcba9876543210",
+   "reason": "user"
+  }
+ },
+ {
+  "id": "rej-close-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields",
+  "wire_type": "close_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "force": true
+  }
+ },
+ {
+  "id": "rej-trace-field",
+  "spec": "\u00a74 item 12 (tracing forbidden as a field) + deny_unknown_fields",
+  "wire_type": "describe.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "traceparent": "00-0-0-00"
+  }
+ },
+ {
+  "id": "rej-resp-open-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields in both directions",
+  "wire_type": "open_dataset.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "generation": "1"
+  }
+ },
+ {
+  "id": "rej-resp-viewport-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields in both directions",
+  "wire_type": "viewport_query.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "stream": "sh_fedcba9876543210fedcba9876543210",
+   "expires_in_ms": 30000,
+   "ticket": "x"
+  }
+ },
+ {
+  "id": "rej-resp-viewport-expires-overflow",
+  "spec": "\u00a71 viewport_query response expires_in_ms: u32",
+  "wire_type": "viewport_query.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "stream": "sh_fedcba9876543210fedcba9876543210",
+   "expires_in_ms": 4294967296
+  }
+ },
+ {
+  "id": "rej-resp-cancel-timestamp",
+  "spec": "\u00a71 cancel (no timestamp in response) + deny_unknown_fields",
+  "wire_type": "cancel.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "state": "requested",
+   "at_ms": "5"
+  }
+ },
+ {
+  "id": "rej-resp-cancel-bad-state",
+  "spec": "\u00a71 cancel response state enumeration",
+  "wire_type": "cancel.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "state": "cancelled"
+  }
+ },
+ {
+  "id": "rej-resp-close-unknown-field",
+  "spec": "\u00a71 deny_unknown_fields in both directions",
+  "wire_type": "close_dataset.response",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "cancelled_streams": 0,
+   "cancelled_tickets": 0
+  }
+ },
+ {
+  "id": "rej-error-nonstring-field",
+  "spec": "\u00a75 fields: BTreeMap<String, String>",
+  "wire_type": "error",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "code": "skp.filter_too_long",
+   "message": "x",
+   "fields": {
+    "limit": 4096
+   }
+  }
+ }
+]

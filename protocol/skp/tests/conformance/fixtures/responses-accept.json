@@ -1,0 +1,104 @@
+[
+ {
+  "id": "resp-open",
+  "spec": "\u00a71 open_dataset response; \u00a73 DatasetHandle",
+  "wire_type": "open_dataset.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  }
+ },
+ {
+  "id": "resp-viewport",
+  "spec": "\u00a71 viewport_query response; \u00a73 StreamHandle; ordinary bounded integer",
+  "wire_type": "viewport_query.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "stream": "sh_fedcba9876543210fedcba9876543210",
+   "expires_in_ms": 30000
+  }
+ },
+ {
+  "id": "resp-cancel-requested",
+  "spec": "\u00a71 cancel response",
+  "wire_type": "cancel.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "state": "requested"
+  }
+ },
+ {
+  "id": "resp-cancel-unknown",
+  "spec": "\u00a71 cancel response",
+  "wire_type": "cancel.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "state": "unknown"
+  }
+ },
+ {
+  "id": "resp-cancel-already-terminal",
+  "spec": "\u00a71 cancel response",
+  "wire_type": "cancel.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "state": "already_terminal"
+  }
+ },
+ {
+  "id": "resp-close",
+  "spec": "\u00a71 close_dataset response",
+  "wire_type": "close_dataset.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "cancelled_streams": 0
+  }
+ },
+ {
+  "id": "resp-error-version",
+  "spec": "\u00a75 SkpError envelope; skp.version_unsupported",
+  "wire_type": "error",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "code": "skp.version_unsupported",
+   "message": "x",
+   "fields": {}
+  }
+ },
+ {
+  "id": "resp-error-filter-too-long",
+  "spec": "\u00a75; \u00a77.5 skp.filter_too_long fields limit,saw (strings)",
+  "wire_type": "error",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "code": "skp.filter_too_long",
+   "message": "x",
+   "fields": {
+    "limit": "4096",
+    "saw": "5000"
+   }
+  }
+ },
+ {
+  "id": "resp-error-identity-candidates",
+  "spec": "\u00a75; \u00a78 skp/0.2 candidate_columns comma-joined string",
+  "wire_type": "error",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "code": "engine.identity_unusable",
+   "message": "x",
+   "fields": {
+    "candidate_columns": "a,b"
+   }
+  }
+ }
+]

@@ -1,0 +1,508 @@
+[
+ {
+  "id": "any-version-skp_0",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_0_1",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.1",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_0_2",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.2",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_0_3",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.3",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_0_5",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.5",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_1",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/1",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-SKP_0_4",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "SKP/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-skp_0_4SP",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4 ",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-version-empty",
+  "spec": "\u00a71 (== comparison); \u00a74 item 3; \u00a78 skp/0.4 literal",
+  "wire_type": "describe.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  },
+  "expected_refusal_code": "skp.version_unsupported"
+ },
+ {
+  "id": "any-hex-upper",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142F58400000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-short",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142f5840000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-long",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142f584000000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-prefix",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "0x4142f58400000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-nonhex",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142f5840000000g",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-empty",
+  "spec": "\u00a73 HexF64 (exactly 16 lowercase hex, no 0x)",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.malformed_hex_f64"
+ },
+ {
+  "id": "any-hex-json-number",
+  "spec": "\u00a73 no JSON number ever carries a coordinate",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": 2485000.0,
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  }
+ },
+ {
+  "id": "any-hex-inf",
+  "spec": "\u00a73 HexF64 non-finite bit pattern",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "7ff0000000000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.bbox_not_finite"
+ },
+ {
+  "id": "any-hex-neginf",
+  "spec": "\u00a73 HexF64 non-finite bit pattern",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "fff0000000000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.bbox_not_finite"
+ },
+ {
+  "id": "any-hex-nan",
+  "spec": "\u00a73 HexF64 non-finite bit pattern",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "7ff8000000000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  },
+  "expected_refusal_code": "skp.bbox_not_finite"
+ },
+ {
+  "id": "any-decu64-json-number",
+  "spec": "\u00a73 no JSON number ever carries a u64",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": 1000,
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-negative",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "-1",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-fraction",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "1.5",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-exponent",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "1e3",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-hex",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "0x10",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-overflow",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "18446744073709551616",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-decu64-empty",
+  "spec": "\u00a73 DecU64 decimal string; strict codec, never a best-effort parse",
+  "wire_type": "viewport_query.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "",
+   "filter": null
+  }
+ },
+ {
+  "id": "any-cancel-key-empty",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "any-cancel-key-len65",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "any-cancel-key-space",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "a b",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "any-cancel-key-dot",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "a.b",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "any-cancel-key-slash",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "a/b",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "any-cancel-key-nonascii",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "refused_any_layer",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "caf\u00e9",
+   "crs_assertion": null,
+   "identity": null
+  }
+ }
+]
