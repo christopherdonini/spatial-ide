@@ -1481,22 +1481,22 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
   });
 
   /**
-   * The untiled first-look sink's way in (P3b §2a(iii)) -- `notifySourceChanged` is `public` for
+   * The untiled first-look sink's way in (P3b §2a(iii)) -- `notifySessionEnded` is `public` for
    * exactly one product caller, `candidateArmSession.ts`'s untiled `onTerminal`. Asserted here as
    * the manager-side contract; the caller itself is asserted in `candidateArmSession.test.ts`.
    *
-   * RECORDED MUTATION: make `notifySourceChanged` a no-op. Expected failure: "notifySourceChanged
+   * RECORDED MUTATION: make `notifySessionEnded` a no-op. Expected failure: "notifySessionEnded
    * ends the session exactly as a tile terminal does" fails on the outcome assertion.
    * OBSERVED: FAILED -- `AssertionError: expected "spy" to be called 1 times, but got 0 times`.
    */
-  it("notifySourceChanged ends the session exactly as a tile terminal does", async () => {
+  it("notifySessionEnded ends the session exactly as a tile terminal does", async () => {
     const onSessionEnded = vi.fn();
     const { manager } = makeManager({ onSessionEnded });
     manager.establishGridFrame(ANCHOR, "metre");
 
-    manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
     // Idempotent, like `endSession` itself.
-    manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
 
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
     expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });

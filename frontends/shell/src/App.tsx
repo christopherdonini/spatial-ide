@@ -62,13 +62,14 @@ import type { StyleState } from "./style/document";
 import StylePanel from "./style/StylePanel";
 import { Debounced, debounce } from "./streaming/debounce";
 import { formatTerminalRefusal } from "./streaming/formatTerminalRefusal";
-import { isSourceChangedRefusal, refusalDetailOf } from "./streaming/liveTicketSet";
+import { isSessionEndedRefusal, refusalDetailOf } from "./streaming/liveTicketSet";
 import type { Terminal } from "./streaming/transport";
 import type { TileViewportStreamManager } from "./streaming/tileViewportStreamManager";
 import ErrorBanner from "./ErrorBanner";
 import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { closeDataset, SkpCallError } from "./skp/client";
-import type { Bbox, Filter } from "./skp/types";
+import { listenDatasetSessionEnded } from "./skp/events";
+import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
 import {
   RequestOutcome,
   VIEWPORT_QUERY_MIN_INTERVAL_MS,
@@ -672,6 +673,65 @@ export function endSessionForDataset(
 }
 
 /**
+ * **§2d: the owner detail a `dataset_session_ended` event builds**, in the same
+ * `"<code>: <owner placeholder>"` shape every other route into `endSession` already carries
+ * (`reportViewportOutcome`'s pre-check catch, above). `[P6 placeholder]`-marked (§7): its wording is
+ * not settled.
+ */
+export function buildSessionEndedOwnerDetail(reason: EndReason): string {
+  const code = reason === "observed-change" ? "engine.source_changed" : "engine.source_coverage_lost";
+  return `${code}: [P6 placeholder] the advisory source watcher ended this dataset's session (${reason})`;
+}
+
+/**
+ * **§2d's reason-keyed entry, extracted pure** (the `endSessionForDataset`/`handleSessionEnded`
+ * shape above, applied to the event route): tries the baseline manager, then the candidate manager,
+ * and falls back to ending the session directly only when neither manager exists yet. Each
+ * `notify*` callback reports whether a manager existed and was called, so this function calls at
+ * most one of the three.
+ */
+export function dispatchSessionEndedToOwner(
+  detail: string,
+  forDataset: string,
+  deps: {
+    notifyBaselineManager: () => boolean;
+    notifyCandidateManager: () => boolean;
+    endSessionDirectly: (detail: string, forDataset: string) => void;
+  }
+): void {
+  if (deps.notifyBaselineManager()) return;
+  if (deps.notifyCandidateManager()) return;
+  deps.endSessionDirectly(detail, forDataset);
+}
+
+/**
+ * **§2d: the listener's own comparison/drop logic, extracted pure** so it is directly
+ * unit-testable without a DOM or a live Tauri event (this package's own convention). Drops an event
+ * whose `session` does not match the currently admitted open's, with one logged line naming neither
+ * the event's `session` nor any `sr_`-shaped value (Amendment 1 item 2; Amendment 2 S3; round 21
+ * item 1, rider (b)) -- on a match, dispatches for the currently admitted dataset. An event that
+ * matches but arrives with no dataset currently admitted (unreachable in product: a session
+ * reference is only ever recorded alongside a dataset, by the same `handleAdmitted` call) is
+ * dropped silently rather than dispatched for `null`.
+ */
+export function routeDatasetSessionEndedEvent(
+  event: DatasetSessionEnded,
+  deps: {
+    admittedSession: string | null;
+    admittedDataset: string | null;
+    dispatch: (reason: EndReason, forDataset: string) => void;
+    logUnknownSessionDrop: (reason: EndReason) => void;
+  }
+): void {
+  if (event.session !== deps.admittedSession) {
+    deps.logUnknownSessionDrop(event.reason);
+    return;
+  }
+  if (deps.admittedDataset === null) return;
+  deps.dispatch(event.reason, deps.admittedDataset);
+}
+
+/**
  * Cut 1's whole shell: an admission flow, a working canvas, viewport-driven streaming with
  * supersede-on-pan, a filter panel, a style panel (ADR-017 §5a; ADR-022; NEXT-CUT.md's
  * style-panel cut), and a publish panel (NEXT-CUT.md's publish cut, ADR-017's class-3 exposure
@@ -706,6 +766,11 @@ export default function App() {
   /** N8 fix: the CURRENT admitted generation, written by `handleAdmitted` -- `endSessionForDataset`
    * compares a late callback's own captured `forDataset` against this ref to spot a stale one. */
   const admittedDatasetRef = useRef<string | null>(null);
+  /** `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d (D5; round 18 item 2): the current open's
+   * kernel-minted session reference, written by `handleAdmitted` beside `admittedDatasetRef`. The
+   * `dataset_session_ended` listener compares an event's `session` against this ref and drops a
+   * mismatch -- never logging the reference either way (round 21 item 1, rider (b)). */
+  const admittedSessionRef = useRef<string | null>(null);
   // NEXT-CUT.md (style-panel cut) P3: App-owned, ephemeral (ADR-022's consequences -- no
   // persistence, no undo; binding note 4), starting at exactly today's fixed rendering
   // (`DEFAULT_STYLE_STATE`'s own doc comment has the hex/opacity math against `buildLayers.ts`'s
@@ -899,6 +964,8 @@ export default function App() {
     (next: Admitted): void => {
       // N8 fix: written FIRST, synchronously -- see `admittedDatasetRef`'s own doc comment above.
       admittedDatasetRef.current = next.dataset;
+      // §2d (D5): the session reference for this same open, written beside it.
+      admittedSessionRef.current = next.session;
       admitAndResetStaleUiState(next, {
         setCanvasRefusal,
         setViewportRefusal,
@@ -1075,6 +1142,75 @@ export default function App() {
     });
   }, []);
 
+  /**
+   * **§2d's reason-keyed entry** (D5; round 18 item 2): the `dataset_session_ended` event route,
+   * once `routeDatasetSessionEndedEvent` (below) has confirmed the event names THIS open. Calls
+   * whichever manager is live for `forDataset` -- the baseline manager's `notifySessionEnded` (new;
+   * §2d), the candidate manager's `notifySessionEnded` (renamed from `notifySourceChanged`; its
+   * route to `endCandidateSession`, clearing all tiles, is unchanged), or `endSession` directly when
+   * no manager exists yet (e.g. an end delivered between `open_dataset` and the `[admitted]` effect's
+   * own construction). Every one of these ends in the same `endSessionForDataset` guard and the same
+   * `handleSessionEnded` latch, because all three routes funnel into `endSession` above.
+   *
+   * `useCallback([endSession])`: closes only over the two manager refs (identity-stable) and
+   * `endSession` itself (already `useCallback([])`-stable).
+   */
+  const endSessionForReason = useCallback(
+    (reason: EndReason, forDataset: string) => {
+      const detail = buildSessionEndedOwnerDetail(reason);
+      dispatchSessionEndedToOwner(detail, forDataset, {
+        notifyBaselineManager: () => {
+          if (!managerRef.current) return false;
+          managerRef.current.notifySessionEnded(detail);
+          return true;
+        },
+        notifyCandidateManager: () => {
+          if (!candidateManagerRef.current) return false;
+          candidateManagerRef.current.notifySessionEnded(detail);
+          return true;
+        },
+        endSessionDirectly: endSession,
+      });
+    },
+    [endSession]
+  );
+
+  /**
+   * **§2d: the listener.** Registered once, at mount -- `diagnostics/originSelfCheck.ts`'s own
+   * `wireOriginSelfCheck` precedent for the pattern -- deliberately NOT inside the `[admitted]`
+   * effect below: an end can in principle be emitted for an open this effect has not finished
+   * constructing yet, and re-registering per dataset would also mean a listener leak on every
+   * reopen if the teardown ever raced. Every payload is routed through the exported, pure
+   * `routeDatasetSessionEndedEvent` (below) so the comparison/drop logic is directly unit-testable
+   * without a DOM -- this package's own convention (`admitAndResetStaleUiState`'s doc comment).
+   */
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    let cancelled = false;
+    listenDatasetSessionEnded((event) => {
+      routeDatasetSessionEndedEvent(event, {
+        admittedSession: admittedSessionRef.current,
+        admittedDataset: admittedDatasetRef.current,
+        dispatch: endSessionForReason,
+        logUnknownSessionDrop: (reason) =>
+          logSessionEvent(
+            "warn",
+            `dataset_session_ended: dropped for an unknown session (reason=${reason})`
+          ),
+      });
+    }).then((u) => {
+      if (cancelled) {
+        u();
+        return;
+      }
+      unlisten = u;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [endSessionForReason]);
+
   function reportViewportOutcome(promise: Promise<RequestOutcome>, forDataset: string) {
     promise.then(
       () => {
@@ -1105,8 +1241,9 @@ export default function App() {
           // **P3b §2b: and, for this one code, additionally ends the session.** This is the catch
           // both arms' untiled issues land in -- baseline's `issueViewportQuery`, and the candidate
           // session's `reissueUnrestricted`, which rejects with the real `SkpCallError`
-          // (`candidateArmSession.ts:282-284`). Matched on `.skpError.code`, never on prose.
-          if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e), forDataset);
+          // (`candidateArmSession.ts:282-284`). Matched on `.skpError.code`, never on prose --
+          // `isSessionEndedRefusal` (renamed §2d) now also matches a coverage-lost pre-check refusal.
+          if (isSessionEndedRefusal(e)) endSession(refusalDetailOf(e), forDataset);
           return;
         }
         throw e; // an unexpected failure still reaches the ADR-010 rule 7 handlers

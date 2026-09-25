@@ -631,7 +631,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   }
 
   /** Mutation recorded in-source: dropping the `terminal_detail_of` prefix kernel-side (so the
-   * detail is `Display` text alone) makes `isSourceChangedTerminal` false and fails every
+   * detail is `Display` text alone) makes `isSessionEndedTerminal` false and fails every
    * assertion below -- which is exactly the defect attempt 1 shipped. */
   it("drops its tickets, refuses further requests, and returns session-ended", async () => {
     mockStream("sh_a");
@@ -684,7 +684,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   /** An ordinary cancel is NOT a source change -- §13 C rule (ii), on the client side. A pan that
    * supersedes must not look like a file that changed.
    *
-   * Mutation recorded in-source: relaxing `isSourceChangedTerminal` to a substring search over the
+   * Mutation recorded in-source: relaxing `isSessionEndedTerminal` to a substring search over the
    * whole detail, or matching on the prose instead of the code, breaks this. */
   it("an ordinary cancelled terminal does not end the session", async () => {
     mockStream("sh_a");

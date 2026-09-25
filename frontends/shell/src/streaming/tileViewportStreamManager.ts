@@ -15,8 +15,8 @@ import { cancel as skpCancel, SkpCallError, viewportQuery } from "../skp/client"
 import type { Bbox, CrsUnit, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
 import {
-  isSourceChangedRefusal,
-  isSourceChangedTerminal,
+  isSessionEndedRefusal,
+  isSessionEndedTerminal,
   LiveTicketSet,
   refusalDetailOf,
 } from "./liveTicketSet";
@@ -760,7 +760,7 @@ export class TileViewportStreamManager {
    * this manager, and a session that ended while its manager kept planning tiles would be the
    * half-ended state boundary 4 exists to prevent. Idempotent, like `endSession` itself.
    */
-  notifySourceChanged(detail: string): void {
+  notifySessionEnded(detail: string): void {
     this.endSession(detail);
   }
 
@@ -952,7 +952,7 @@ export class TileViewportStreamManager {
       // Checked BEFORE the epoch guard below, deliberately: a tile that left the view before its
       // own mint resolved still learned a fact about the whole session, and discarding it because
       // the tile is stale would lose the only notice this arm may get.
-      if (isSourceChangedRefusal(err)) {
+      if (isSessionEndedRefusal(err)) {
         this.endSession(refusalDetailOf(err as SkpCallError));
         return;
       }
@@ -1081,7 +1081,7 @@ export class TileViewportStreamManager {
         // owners"). Nothing here, and no test narration, may say the operator's view is cleared:
         // what is true today is that this manager stops filling it and that stale batches are
         // dropped.
-        if (isSourceChangedTerminal(terminal)) {
+        if (isSessionEndedTerminal(terminal)) {
           this.endSession(terminal.detail);
         }
         if (this.selfCancelledHandles.delete(streamHandleAtStart)) {

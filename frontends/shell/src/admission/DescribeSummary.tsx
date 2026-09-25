@@ -2,7 +2,15 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { DescribeResponse } from "../skp/types";
-import { crsProvenanceLine, crsSummaryLine, displayConventionLine, identitySummaryLine, sessionStatementLine } from "./describeSummaryText";
+import {
+  checksOnlyStatusLine,
+  crsProvenanceLine,
+  crsSummaryLine,
+  degradedChecksLine,
+  displayConventionLine,
+  identitySummaryLine,
+  sessionStatementLine,
+} from "./describeSummaryText";
 
 /** Success shows schema, identity, row count and license as `describe` actually established them
  * -- never a dataset extent or an unqualified feature count (NEXT-CUT.md's brief said "bounds,
@@ -57,6 +65,24 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
           <>
             <dt>Display convention</dt>
             <dd>{displayConventionLine(describe.crs)}</dd>
+          </>
+        )}
+
+        {/* `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: two conditional rows, placeholders and
+            migration-inventory items. Neither is added to `.canvas-status-stack` or placed over the
+            map -- both render only within this existing component, the `sessionStatementLine`
+            precedent immediately above. */}
+        {checksOnlyStatusLine(describe.coverage) !== null && (
+          <>
+            <dt>Source watch</dt>
+            <dd>{checksOnlyStatusLine(describe.coverage)}</dd>
+          </>
+        )}
+
+        {degradedChecksLine(describe.checks) !== null && (
+          <>
+            <dt>Structural checks</dt>
+            <dd>{degradedChecksLine(describe.checks)}</dd>
           </>
         )}
       </dl>

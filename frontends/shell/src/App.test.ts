@@ -109,7 +109,7 @@ function describeFixture(): DescribeResponse {
 }
 
 function admittedFixture(dataset: string): Admitted {
-  return { dataset, describe: describeFixture() };
+  return { dataset, describe: describeFixture(), session: "sr_" + "a".repeat(32) };
 }
 
 function pickResultFixture(): PickResult {
@@ -1179,12 +1179,12 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    *
    * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch":
    * change the catch to `e.skpError.message.includes("source file
-   * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
+   * changed")`. Expected failure: that test fails on the `isSessionEndedRefusal` (renamed §2d) pattern -- the
    * pinned message is the human's prose and is not required to contain the code (§4 T6's own
    * mutation).
    *
    * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
-   * /if \(isSourceChangedRefusal\(e\)\) en…/`.
+   * /if \(isSessionEndedRefusal\(e\)\) en…/`.
    *
    * N8 correction round 1: the original record above was overwritten (not appended) by the N8
    * piece's first commit; restored here verbatim from `git show origin/main:frontends/shell/src/
@@ -1196,7 +1196,7 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * `endSession(refusalDetailOf(e))` (drop `forDataset`). Expected failure: the
    * `endSession(refusalDetailOf(e), forDataset)` pattern fails to match.
    * OBSERVED 2026-09-22: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…'
-   * to match /if \(isSourceChangedRefusal\(e\)\) en…/`. Reverted after observing.
+   * to match /if \(isSessionEndedRefusal\(e\)\) en…/`. Reverted after observing.
    *
    * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch"
    * (correction round 1, both `viewportRefusal` writes guarded, not only `endSession`): remove the
@@ -1212,7 +1212,9 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
       "utf8"
     );
     expect(appSource).toMatch(/setViewportRefusal\(formatRefusal\(e\.skpError\)\);/);
-    expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
+    // §2d: `isSourceChangedRefusal` renamed `isSessionEndedRefusal` -- it now also matches a
+    // coverage-lost pre-check refusal, never only a source-changed one.
+    expect(appSource).toMatch(/if \(isSessionEndedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
     // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
     expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
     // N8 correction round 1 (reviewer B1): a late arrival from a superseded generation must not

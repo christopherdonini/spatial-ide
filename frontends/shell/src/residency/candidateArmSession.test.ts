@@ -3620,7 +3620,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   // through that one method. The session-side latch was therefore a branch no input could take, and
   // it was REMOVED rather than kept with a mutation that cannot bite (finding recorded in
   // `OWNER-INVALIDATION-PREREGISTRATION.md` §10). This test still asserts the property, now against
-  // the guard that actually provides it -- see M6's mutation above ("notifySourceChanged no-op"),
+  // the guard that actually provides it -- see M6's mutation above ("notifySessionEnded no-op"),
   // which fails this block by name.
   it("the owner is told once, whichever sink or however many terminals", async () => {
     const canvas = fakeCanvas();
@@ -3632,7 +3632,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
     const sink = lastSink();
     sink.onTerminal(sourceChangedTerminal());
     sink.onTerminal(sourceChangedTerminal());
-    session.manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    session.manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
 
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
     expect(canvas.clearAllTiles).toHaveBeenCalledTimes(1);

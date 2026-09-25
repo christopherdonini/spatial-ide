@@ -148,7 +148,11 @@ function describeFixture(): DescribeResponse {
 }
 
 function admittedFixture(): Admitted {
-  return { dataset: "ds_00000000000000000000000000000000", describe: describeFixture() };
+  return {
+    dataset: "ds_00000000000000000000000000000000",
+    describe: describeFixture(),
+    session: "sr_" + "a".repeat(32),
+  };
 }
 
 /** A tiny, non-React stand-in for `useState`: `state` always holds the value the most recent

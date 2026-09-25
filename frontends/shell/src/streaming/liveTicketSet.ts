@@ -27,9 +27,10 @@ import { SkpCallError } from "../skp/client";
 import type { Terminal } from "./transport";
 
 /**
- * The typed refusal code that ends a dataset-session generation
- * (minted by `kernel/src/skp.rs`'s `error_of` table for `EngineError::SourceChanged`, and put on
- * the terminal by `terminal_detail_of` in that same file).
+ * The typed refusal codes that end a dataset-session generation
+ * (minted by `kernel/src/skp.rs`'s `error_of` table for `EngineError::SourceChanged` and
+ * `EngineError::SourceCoverageLost`, and put on the terminal by `terminal_detail_of` in that same
+ * file).
  *
  * **Matched on the code, not on prose.** `Terminal.detail` is `"<code>: <display>"` --
  * `kernel/src/skp.rs::terminal_detail_of`, applied at `kernel/src/lib.rs`'s
@@ -41,16 +42,24 @@ import type { Terminal } from "./transport";
  * predicate could never fire (P3 gate attempt 1, blocking finding 1).
  */
 const SOURCE_CHANGED_CODE = "engine.source_changed";
+/** `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b: the advisory watch's own refusal code, on the
+ * session-ended family too, but never `engine.source_changed` (block-on-sight 3). */
+const SOURCE_COVERAGE_LOST_CODE = "engine.source_coverage_lost";
 
 /**
- * Whether this terminal is the kernel telling the client its session ended.
+ * Whether this terminal is the kernel telling the client its session ended -- either because the
+ * source was observed to have changed, or because the advisory watch lost coverage of it
+ * (`isSourceChangedTerminal`/`isSourceChangedRefusal`, renamed for the second reason; §2d).
  *
  * Anchored to the **start** of the detail, not searched anywhere in it: the code is a prefix by
  * construction, and a substring match would also fire on a different refusal that happened to
  * quote this code in its prose.
  */
-export function isSourceChangedTerminal(terminal: Terminal): boolean {
-  return terminal.detail.startsWith(`${SOURCE_CHANGED_CODE}: `);
+export function isSessionEndedTerminal(terminal: Terminal): boolean {
+  return (
+    terminal.detail.startsWith(`${SOURCE_CHANGED_CODE}: `) ||
+    terminal.detail.startsWith(`${SOURCE_COVERAGE_LOST_CODE}: `)
+  );
 }
 
 /**
@@ -58,7 +67,7 @@ export function isSourceChangedTerminal(terminal: Terminal): boolean {
  *
  * G-A2's own wording requires both routes -- *"Asserted at the pre-check and at the post-check paths
  * separately"* (`engine/ADMISSION-PREREGISTRATION.md:221`). The post-check arrives as a data-plane
- * terminal (`isSourceChangedTerminal` above); the pre-check arrives synchronously, as a thrown
+ * terminal (`isSessionEndedTerminal` above); the pre-check arrives synchronously, as a thrown
  * `SkpCallError`, from `viewport_query`'s own live-generation check (`kernel/src/skp.rs:797-803`)
  * and its mint-race arm (`:840-846`), reaching this client through `skp/client.ts:58-65`.
  *
@@ -66,8 +75,11 @@ export function isSourceChangedTerminal(terminal: Terminal): boolean {
  * `isRetryableRefusal` already sets (`tileViewportStreamManager.ts:316`/`:324`). The message's wording
  * is the human's at P6 and is not required to contain the code.
  */
-export function isSourceChangedRefusal(err: unknown): boolean {
-  return err instanceof SkpCallError && err.skpError.code === SOURCE_CHANGED_CODE;
+export function isSessionEndedRefusal(err: unknown): boolean {
+  return (
+    err instanceof SkpCallError &&
+    (err.skpError.code === SOURCE_CHANGED_CODE || err.skpError.code === SOURCE_COVERAGE_LOST_CODE)
+  );
 }
 
 /**

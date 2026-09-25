@@ -25,7 +25,7 @@ import type { Bbox, CrsUnit, Filter } from "../skp/types";
 import { startStream } from "../streaming/adapterWs";
 import { dataPlaneAttach } from "../streaming/dataPlaneClient";
 import { debounce } from "../streaming/debounce";
-import { isSourceChangedTerminal } from "../streaming/liveTicketSet";
+import { isSessionEndedTerminal } from "../streaming/liveTicketSet";
 import type { StreamSink, TerminalKind } from "../streaming/transport";
 import { TileViewportStreamManager } from "../streaming/tileViewportStreamManager";
 import type { TilePlanOutcome } from "../streaming/tileViewportStreamManager";
@@ -1047,7 +1047,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     },
     // **P3b §2a(iii): the owner's half of boundary 4, on the tiled arm.** Reached from every one of
     // the three places this arm can learn the fact -- a tile stream's terminal, the untiled
-    // first-look stream's terminal (through `manager.notifySourceChanged`, below), and a tile
+    // first-look stream's terminal (through `manager.notifySessionEnded`, below), and a tile
     // mint's own pre-check refusal -- because all three go through `TileViewportStreamManager
     // .endSession`, which is the one place that calls this.
     onSessionEnded: (detail) => endCandidateSession(detail),
@@ -1314,10 +1314,11 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         const wasCurrent = untiledStreamHandle === stream;
         if (untiledStreamHandle === stream) untiledStreamHandle = null;
         // **P3b §2a(iii): the third sink, and the reason it needed its own test.** Before this
-        // line, `isSourceChangedTerminal` was called at exactly two product sites -- both streaming
-        // managers -- and this sink, which the candidate session owns itself, tested no terminal
-        // code at all. A change detected on the FIRST query of a tiled session (the likeliest
-        // place, §5 prediction 3) therefore ended nothing on the client.
+        // line, `isSessionEndedTerminal` (`isSourceChangedTerminal`, renamed §2d) was called at
+        // exactly two product sites -- both streaming managers -- and this sink, which the
+        // candidate session owns itself, tested no terminal code at all. A change detected on the
+        // FIRST query of a tiled session (the likeliest place, §5 prediction 3) therefore ended
+        // nothing on the client.
         //
         // Routed through the manager rather than calling `endCandidateSession` directly, so the
         // manager latches too: a session whose owner cleared its tiles while its manager kept
@@ -1328,8 +1329,8 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // about which generation's stream noticed it. An orphaned previous-generation stream that
         // learns the source changed has learned something true of the file every later generation
         // is also reading.
-        if (isSourceChangedTerminal(terminal)) {
-          manager.notifySourceChanged(terminal.detail);
+        if (isSessionEndedTerminal(terminal)) {
+          manager.notifySessionEnded(terminal.detail);
           return;
         }
         if (isInstrumentedBuild()) {
