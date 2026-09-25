@@ -409,6 +409,11 @@ fn a6_a_forced_overflow_signals_coverage_lost() {
 /// comment). Kept here because it still proves the real end-to-end path end to end (case (b));
 /// dropping the fold from `names_match` does **not** make this test fail — the unit test below
 /// does.
+///
+/// RECORDED MUTATION: none isolates `a7_a_differently_cased_name_renamed_over_the_source_signals_change`
+/// on its own — by the structural reason above, dropping the fold from `names_match` leaves this
+/// test passing unchanged (confirmed above). The isolating mutation is recorded on
+/// `names_match_folds_case` below instead, which is where it belongs.
 #[test]
 fn a7_a_differently_cased_name_renamed_over_the_source_signals_change() {
     let _guard = serial_guard();
