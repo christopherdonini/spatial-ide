@@ -1258,7 +1258,7 @@ impl SkpHost {
         // `viewport_query` mint another ticket against a file that is no longer the one that
         // opened. Every ticket that belonged to it is cancelled through the existing cancel. This
         // is the engine's own descriptor pre-check, never the watcher, so it always passes
-        // `ObservedChange` (§2b: "the first three pass ObservedChange").
+        // `ObservedChange`, as §2b's single emission point assigns to the pre-check.
         let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| {
             if matches!(e, EngineError::SourceChanged { .. }) {
                 self.end_generation(&dataset_name);
@@ -1330,7 +1330,7 @@ impl SkpHost {
     /// also holds — one implementation, two callers.
     pub fn end_generation(&self, dataset: &str) -> u32 {
         // The engine's own pre-check descriptor comparison — never the watcher — so this always
-        // passes `ObservedChange` (§2b: "the first three pass ObservedChange").
+        // passes `ObservedChange`, as §2b's single emission point assigns to the pre-check.
         self.invalidator.end_generation(dataset, SessionEndReason::ObservedChange)
     }
 

@@ -490,8 +490,8 @@ impl EngineSource {
         self.session_ended = true;
         let Some(invalidator) = self.invalidator.as_ref() else { return };
         // The engine's own post-check descriptor comparison — never the watcher — so this always
-        // passes `ObservedChange` (`SOURCE-WATCHER-PREREGISTRATION.md` §2b: "the first three pass
-        // ObservedChange").
+        // passes `ObservedChange`, as `SOURCE-WATCHER-PREREGISTRATION.md` §2b's single emission
+        // point assigns to the post-check.
         let cancelled = invalidator.end_generation(&self.dataset, skp::SessionEndReason::ObservedChange);
         // **What this line is: a record of which stream noticed, how many siblings went with it,
         // and what the post-check cost.** The generation is already over by the time it runs —

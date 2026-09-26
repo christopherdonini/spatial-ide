@@ -450,7 +450,7 @@ mod windows_watch {
 
     impl Drop for SourceWatch {
         fn drop(&mut self) {
-            // §2a: "at most one signal per handle... There is no re-arm within an open." Cancel
+            // Per §2a, at most one signal per handle and no re-arm within an open. Cancel
             // every outstanding read first (so every thread's `GetOverlappedResult` wakes with
             // `ERROR_OPERATION_ABORTED`, reported as nothing per the mapping table's last row),
             // then join, then close — releasing the directory happens only once every thread has

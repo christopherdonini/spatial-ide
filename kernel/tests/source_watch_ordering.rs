@@ -259,10 +259,10 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// refused open returns no handle, and the retry runs under a fresh, OS-CSPRNG `DatasetHandle` key
 /// (`k6-clean`'s own mint), so the retry succeeding proves nothing about what the first attempt did
 /// or did not leave in the catalog or the generation registry (`state/consults/2026-09-25-source-
-/// watcher-between-phases.md`, Amendment 3 item 4). "No catalog entry" is now asserted directly,
+/// watcher-between-phases.md`, Amendment 3 item 4). §4's no-catalog-entry clause is now asserted directly,
 /// against the same handle the refused call minted internally but never returned —
 /// `Catalog::names()` (already `pub`, an existing accessor with its own product callers) is read
-/// before the retry runs at all. "No generation" stays unproven here: an accessor for it would be
+/// before the retry runs at all. §4's no-generation clause stays unproven here: an accessor for it would be
 /// the test-only `pub` item §5 forbids, so that clause is not asserted (Amendment 3 item 4's own
 /// reduction).
 // Mutation: see the RECORDED MUTATION above (mint before the latch check, skipping the refusal path).

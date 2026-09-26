@@ -70,8 +70,8 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
 export function refusalGuidance(code: string): string | null {
   switch (code) {
     case "engine.source_coverage_lost":
-      // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §1: "user-visible wording is the human's at P6
-      // (addition 2). Every new string is a marked placeholder (§7)." This is one of those --
+      // Per `engine/SOURCE-WATCHER-PREREGISTRATION.md` §1, user-visible wording is the human's at
+      // P6 (addition 2), and every new string is a marked placeholder (§7). This is one of those --
       // written so the state exists and can be read end to end; its wording is not settled and no
       // test asserts it verbatim (the `engine.source_changed` precedent immediately below is the
       // one exception, for the round-5 reason its own comment states).

@@ -549,7 +549,7 @@ fn a_source_reached_through_a_junction_is_watched_at_its_final_path() {
 // -------------------------------------------------------------------------------------------
 
 /// **Deviation from the preregistration's named mechanism, recorded here rather than silently.**
-/// §4's own table names "icacls deny under a timeout" for this case. Verified empirically before
+/// §4's table names an `icacls` deny under a timeout for this case. Verified empirically before
 /// writing this test (two standalone probes, run and discarded): in this worker's execution
 /// sandbox, an explicit `icacls /deny <user>:(RX)` — and even `/inheritance:d` followed by a hard
 /// `(N)` no-access ACE — has **no effect** on this process's own ability to list the directory;
