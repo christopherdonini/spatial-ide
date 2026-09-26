@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-26T10:47:27.082Z",
-  "plan_hash": "42d210ea151f8b14ce7559dd6fed37f41e77c7af77fe226867a03caa930f217b",
+  "generated_at": "2026-09-26T12:00:00.138Z",
+  "plan_hash": "26994f33a92ecef955cf1047102cffd959e71b7c2cd4e156945d29a515c288a5",
   "priorities_approved": true,
   "next": {
-    "id": "corpus-reproducibility-record",
-    "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
+    "id": "catalog-open-drop-reproduction",
+    "title": "Reproduction: can a Drop reached from Catalog::open's replaced dataset block or reacquire the catalog lock (weekly window (d); wave-1 A2 observation 5)",
     "lane": "engine",
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 180,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,9 +19,28 @@
       "opened": "2026-09-26",
       "done": null
     },
-    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+    "summary": "RULED 2026-09-26, question round 25, item 1, (d) promoted: reproduction first, before the other five. Catalog::open drops a replaced dataset while holding the catalog write lock. The reproduction determines whether any Drop reached from it can block or reacquire the catalog lock (the #116 pattern). If it can: S1, a cut with #116's fix shape (drop after the guard is released). If it cannot: S2, a latency note, filed like the rest. Evidence so far: state/questions/round-25.md item 1 (d); state/cloud/wave1/A2.md, observation 5."
   },
   "ready": [
+    {
+      "id": "catalog-open-drop-reproduction",
+      "title": "Reproduction: can a Drop reached from Catalog::open's replaced dataset block or reacquire the catalog lock (weekly window (d); wave-1 A2 observation 5)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (d) promoted: reproduction first, before the other five. Catalog::open drops a replaced dataset while holding the catalog write lock. The reproduction determines whether any Drop reached from it can block or reacquire the catalog lock (the #116 pattern). If it can: S1, a cut with #116's fix shape (drop after the guard is released). If it cannot: S2, a latency note, filed like the rest. Evidence so far: state/questions/round-25.md item 1 (d); state/cloud/wave1/A2.md, observation 5."
+    },
     {
       "id": "corpus-reproducibility-record",
       "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
@@ -42,6 +61,25 @@
       "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
     },
     {
+      "id": "data-plane-stream-registry-bound",
+      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows."
+    },
+    {
       "id": "bundle-viewer-partition-offset-bounds",
       "title": "The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b))",
       "lane": "publish-viewer",
@@ -59,6 +97,25 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; independent of the other two; carries a KNOWN-LIMITATIONS line for bundles already published. A3 3(a)'s S2, the wrong failure state, rides along. Evidence: state/cloud/wave1/A3.md, its triage update, reproduced on Windows."
+    },
+    {
+      "id": "governance-weekly-proposals-2026-09-26",
+      "title": "The week's five process proposals adopted as one governance docs piece (round 25, item 2)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02."
     },
     {
       "id": "test-claims-landedness-bound",
@@ -114,28 +171,6 @@
       ]
     },
     {
-      "id": "data-plane-stream-registry-bound",
-      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows.",
-      "blocked_by": [
-        "data-plane-origin-non-ascii"
-      ]
-    },
-    {
       "id": "kernel-generation-close-races",
       "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
       "lane": "kernel-protocol",
@@ -174,7 +209,7 @@
         "opened": "2026-09-13",
         "done": null
       },
-      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher.",
+      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher. RULED 2026-09-26, question round 25, item 3: B1's build starts after the watcher merges, so it builds on skp/0.5 directly.",
       "blocked_by": [
         "engine-source-change-watcher"
       ]
@@ -335,28 +370,6 @@
       },
       "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged. 2026-09-24, after PR #116 merged: ADR-035's read under a fresh count (round 19 item 1) dispatched on PR #114. RULED 2026-09-24, question round 21, item 1 (red line, typed): ADR-035 accepted as merged, Decision 4 confirmed with a rider; riders (a) and (b) bind this preregistration -- the session reference carries no batch or ticket attribution and routes only the ended-session event to its open; never persisted or published; the recipe and bundle leakage tests name it too. After PR #114 merges, one fully gated docs piece sets Accepted, appends the Acceptance section and appends to SKP-V0's section 8 the dated note of rider (c). RULED 2026-09-26, question round 24, item 4: PR #123 (wave-1 C, SKP conformance fixtures at skp/0.4) is held until this piece merges; then the custodian merges main into cloud/wave1-C, updates its fixtures to skp/0.5, re-runs its harness, records the counts, and brings it back for the human.",
       "evidence_label": "PR #114"
-    },
-    {
-      "id": "data-plane-origin-non-ascii",
-      "title": "The data plane refuses a stated Origin that is not visible ASCII, as any foreign origin (wave-1 A1-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/data-plane-origin-non-ascii"
-      },
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; runs now, in parallel with the watcher (disjoint files), under full gating; it restores the accepted posture of ADR-020. Evidence: state/cloud/wave1/A1.md, Finding A1-1, reproduced on Windows. Its own preregistration before any code.",
-      "evidence_label": "branch `cut/data-plane-origin-non-ascii`"
     }
   ],
   "proposed": [
@@ -644,6 +657,101 @@
         "done": null
       },
       "summary": "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio."
+    },
+    {
+      "id": "timing-tests-assert-property-not-budget",
+      "title": "The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
+    },
+    {
+      "id": "verify-mutation-test-temp-dirs",
+      "title": "verify-mutation's own tests remove their mkdtemp directories (weekly window (b))",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (b): scripts/plan/verify-mutation.test.mjs leaves its mkdtemp directories behind (about 263 per run; the temp folder holds thousands). Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
+    },
+    {
+      "id": "extent-degenerate-zoom-doc",
+      "title": "extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c))",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (c): frontends/shell/src/canvas/extent.ts's doc drifted from its degenerate-zoom behaviour. Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
+    },
+    {
+      "id": "verify-quotes-show-cites-narrowed",
+      "title": "verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e))",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (e): scripts/plan/verify-quotes.mjs --show-cites, when narrowed, prints false FAILs. Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
+    },
+    {
+      "id": "adr-023-s2-widenings-adr-021-consult",
+      "title": "Consult: whether ADR-023's section 2 widenings owe ADR-021 a note (weekly window (f))",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (f): ADR-023's section 2 widenings sit uneasily beside ADR-021's notes; an architect consult says whether a note is owed, and any ADR text stays the human's (a red line). Raised by PR #113's architect gate (b1-engine-kernel-half's summary). Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
     },
     {
       "id": "publish-refusal-codes-and-attempt-lifecycle",
