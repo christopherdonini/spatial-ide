@@ -29,3 +29,6 @@ Pre-gate self-check and report additions (the human, 2026-09-17, directive + rou
 Report format, hard limit ~20 lines: what was built · tests added/passing (suite summary line, not
 the log) · files touched · anything off-scope you noticed but did NOT do · exact state left
 (`git status --porcelain` if you committed).
+
+Round 25, item 2 (the human, 2026-09-26; the rules are `docs/PREREGISTRATION-TEMPLATE.md`'s Round 25 additions, cited there by round and item). In every record you write: a full-form §7 budget overrun is class 8, and its §7 line is never edited; a scope addition on a standing rule is class 9, declared before any code of it; never call a `verify-mutation` run an observation of a mutation, because the tool at the commit that section names checks that a mutation is recorded and runs none: you observe a mutation by applying it, running the test, recording its failure by name with the commit, and reverting it; a span a class-3 test-text row pins that exists only on your unmerged branch is named in words, lines <a>-<b> of its path at its commit id, with no hash, and its pin follows on main after the merge.
+
