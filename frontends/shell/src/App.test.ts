@@ -1348,6 +1348,7 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
   // dropped for an…' not to contain 'sr_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'` -- 1 failed. Against this
   // function's own real return value, not a regex over App.tsx's source text, per My B2 / reviewer
   // S2 (architect gate-1).
+  // Mutation: see the two RECORDED MUTATIONs above (SH9's comparison skip; SH11's session write).
   it("drops an event whose session does not match, and logs a line naming the reason only (SH9, SH11)", () => {
     const dispatch = vi.fn();
     const logUnknownSessionDrop = vi.fn();

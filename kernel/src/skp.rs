@@ -1888,6 +1888,8 @@ impl SourceWatchArm for RacingCoverageLossArm {
     }
 }
 #[cfg(test)]
+// K15's own two registered mutations are recorded on the test itself, below in
+// `ticket_drop_under_lock_regression` — this constructor carries no mutation of its own.
 fn racing_coverage_loss_arm() -> Arc<dyn SourceWatchArm> {
     Arc::new(RacingCoverageLossArm)
 }
