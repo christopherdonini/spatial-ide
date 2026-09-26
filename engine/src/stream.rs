@@ -833,7 +833,7 @@ impl Dataset {
     pub fn stream_for_publish(
         &self,
         q: &ViewportQuery,
-        attributes: &crate::attributes::PublishedProjection,
+        attributes: &crate::attributes::AdmittedProjection,
         cancel: CancelToken,
     ) -> Result<BatchStream> {
         let envelope = BatchEnvelope::with_attributes(
@@ -860,35 +860,67 @@ impl Dataset {
     /// Types come from the dataset's own schema, which is DuckDB's arrow schema for this file, so
     /// the declared fields cannot disagree with the arrays the producer hands over. Nullability is
     /// **not** taken from the source — see `attributes::admit_projection`.
+    ///
+    /// **Publish's own entry point.** Every refusal [`crate::attributes::admit_projection`] can
+    /// produce is a [`crate::attributes::ProjectionError`]; this wraps it into the crate's ordinary
+    /// [`EngineError`] via `impl From<ProjectionError> for EngineError`, which is publish's own
+    /// texts, kept byte for byte (O1, O2). The live `viewport_query` path does not call this — it
+    /// calls [`Self::admit_projection`] directly, so the kernel keeps the typed
+    /// [`crate::attributes::ProjectionError`] apart for its own six-code wire mapping.
     pub fn resolve_projection(
         &self,
         names: &[String],
-    ) -> Result<crate::attributes::PublishedProjection> {
-        let mut resolved = Vec::with_capacity(names.len());
-        for name in names {
-            let f = self
-                .file_schema()
-                .fields()
-                .iter()
-                .find(|f| f.name() == name)
-                .ok_or_else(|| EngineError::AttributeUnpublishable {
-                    column: name.clone(),
-                    detail: format!(
-                        "the file has no such column (it has: {})",
-                        self.file_schema()
-                            .fields()
-                            .iter()
-                            .map(|f| f.name().as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ),
-                })?;
-            resolved.push(f.as_ref().clone());
-        }
+    ) -> Result<crate::attributes::AdmittedProjection> {
+        self.admit_projection(names).map_err(EngineError::from)
+    }
+
+    /// As [`Self::resolve_projection`], returning the typed [`crate::attributes::ProjectionError`]
+    /// rather than folding it into [`EngineError`] — the live `viewport_query` path's own entry
+    /// point (`kernel::skp::build_viewport_query`), which needs the variant apart to pick one of six
+    /// typed SKP codes (`kernel::skp::projection_error_of`).
+    pub fn admit_projection(
+        &self,
+        names: &[String],
+    ) -> std::result::Result<crate::attributes::AdmittedProjection, crate::attributes::ProjectionError>
+    {
         crate::attributes::admit_projection(
-            &resolved,
+            names,
+            self.file_schema().fields(),
             self.geometry_column(),
             self.identity().source().source_column(),
+        )
+    }
+
+    /// The **live projected** stream (Brief B stage B1): a declared attribute projection over the
+    /// ordinary viewport plan — `IndexUse::Off`, unordered, the default batch-size policy, and no
+    /// per-batch bounds report. Everything else is [`Self::stream_with_cancel`]'s.
+    ///
+    /// Deliberately its own entry point, on [`Self::stream_for_publish`]'s own precedent: a reader
+    /// of a call site sees which discipline is in force without a flag to interpret, and the
+    /// unprojected path (`columns: null`) cannot acquire a widened schema by accident. Its product
+    /// caller is `kernel::open_engine_stream`, with a non-empty admitted projection.
+    pub fn stream_projected_with_cancel(
+        &self,
+        q: &ViewportQuery,
+        projection: &crate::attributes::AdmittedProjection,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        let envelope = BatchEnvelope::with_attributes(
+            self.crs().clone(),
+            self.geometry_column().to_string(),
+            self.identity().clone(),
+            projection.fields().to_vec(),
+        );
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Off,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::default(),
+                envelope,
+                report_bounds: false,
+            },
         )
     }
 

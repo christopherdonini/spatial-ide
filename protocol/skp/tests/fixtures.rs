@@ -366,11 +366,11 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.5`, the advisory source-change watcher. Mutation: the literal back to `"skp/0.4"`.
-/// Expected failure: this test fails by name.
+/// `skp/0.6`, attribute projection on `viewport_query` (Brief B stage B1). Mutation: the literal
+/// back to `"skp/0.5"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_5() {
-    assert_eq!(SKP_VERSION, "skp/0.5");
+fn skp_version_is_skp_0_6() {
+    assert_eq!(SKP_VERSION, "skp/0.6");
 }
 
 /// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.

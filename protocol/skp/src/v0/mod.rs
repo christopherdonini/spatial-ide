@@ -54,4 +54,4 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// server-to-client push. No generation value crosses the wire (rider (a)). Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
 /// updated in this commit (`SKP-V0.md` §8's `skp/0.5` entry lists the full field set).
-pub const SKP_VERSION: &str = "skp/0.5";
+pub const SKP_VERSION: &str = "skp/0.6";

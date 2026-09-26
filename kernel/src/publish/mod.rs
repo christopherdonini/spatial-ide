@@ -360,7 +360,7 @@ pub struct PublishPreflight {
     pub logical_uri: String,
     pub pin: spatial_engine::ContentPin,
     pub style: CompiledStyle,
-    projection: spatial_engine::attributes::PublishedProjection,
+    projection: spatial_engine::attributes::AdmittedProjection,
     license: License,
     viewer_license: ViewerLicense,
 }
@@ -384,7 +384,7 @@ impl PublishPreflight {
 struct PreflightPinless {
     logical_uri: String,
     style: CompiledStyle,
-    projection: spatial_engine::attributes::PublishedProjection,
+    projection: spatial_engine::attributes::AdmittedProjection,
     license: License,
     viewer_license: ViewerLicense,
 }
@@ -409,6 +409,38 @@ struct PreflightPinless {
 /// this is the one case where it structurally cannot.
 pub fn preflight_pinless(req: &PublishRequest<'_>) -> Result<(), PublishError> {
     preflight_pinless_parts(req).map(|_| ())
+}
+
+/// **The bundle format's own restriction — never the gate** (round 17 item 3; ADR-017 §4, byte
+/// identical, unedited by this piece).
+///
+/// The live projection gate (`spatial_engine::attributes::admit_attribute_type`) now admits
+/// `Float32` and a dictionary over an admitted value type; a `bundle_version` 1 partition still
+/// cannot carry either. Refuses by the column's own **source** type — `ty` here is never an emitted
+/// type — rendering `admit_attribute_type`'s **former** `Float32`/`Dictionary` refusal text at
+/// c16f41d, byte for byte, until B3's `bundle_version`-2 ADR decides otherwise (O1, O2). Admits
+/// (returns `Ok`) for every other type: this function refuses and admits nothing else — admission
+/// stays the one function, `resolve_projection` above.
+fn admit_bundle_format(column: &str, ty: &arrow::datatypes::DataType) -> Result<(), PublishError> {
+    use arrow::datatypes::DataType as D;
+    match ty {
+        D::Dictionary(_, _) => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column: column.to_string(),
+            detail: format!(
+                "type is {ty}. A dictionary index is an ordinal, and decoding one to publish it \
+                 would be a conversion the caller did not ask for. The bundle format carries no \
+                 dictionary batches"
+            ),
+        })),
+        D::Float32 => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column: column.to_string(),
+            detail: "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
+                     it is still a conversion this engine was not asked to perform, and a consumer \
+                     reading `float64` would be told the source held one"
+                .to_string(),
+        })),
+        _ => Ok(()),
+    }
 }
 
 fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless, PublishError> {
@@ -451,6 +483,23 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
 
     let projection = ds.resolve_projection(&req.attributes)?;
+    // **The bundle-format restriction (round 17 item 3; ADR-017 §4).** The live gate
+    // (`spatial_engine::attributes::admit_attribute_type`) now admits `Float32` and a
+    // dictionary-over-an-admitted-value-type; ADR-017 §4 still refuses both in a *published*
+    // bundle, unedited. Run after shared admission (O1), refusing by the column's own **source**
+    // type — `resolve_projection` above already proved every declared name resolves, so this looks
+    // the source type up again rather than carrying it through `AdmittedProjection`, which is
+    // deliberately emitted-type-only (§2.3).
+    for name in &req.attributes {
+        let source_type = ds
+            .file_schema()
+            .fields()
+            .iter()
+            .find(|f| f.name() == name)
+            .map(|f| f.data_type().clone())
+            .expect("resolve_projection above already proved this column resolves");
+        admit_bundle_format(name, &source_type)?;
+    }
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
         .file_schema()
         .fields()

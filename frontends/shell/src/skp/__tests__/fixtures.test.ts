@@ -143,7 +143,11 @@ describe("SKP v0 shared fixtures", () => {
       "describe response .identity"
     );
     for (const [i, field] of res.schema.entries()) {
-      assertExactKeys(field, ["name", "arrow_type", "nullable"], `describe response .schema[${i}]`);
+      assertExactKeys(
+        field,
+        ["name", "arrow_type", "nullable", "projectable"],
+        `describe response .schema[${i}]`
+      );
     }
     assertExactKeys(res.row_count, ["basis", "value"], "describe response .row_count");
     assertExactKeys(res.extent, ["basis", "value"], "describe response .extent");
@@ -332,7 +336,7 @@ describe("SKP v0 shared fixtures", () => {
     const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request");
     assertExactKeys(
       req,
-      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter"],
+      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
       "viewport_query request"
     );
     expect(req.bbox).not.toBeNull();
@@ -344,6 +348,7 @@ describe("SKP v0 shared fixtures", () => {
     expect(req.bbox_crs).toBeNull(); // declares "the dataset's own CRS" (SKP-V0.md §1)
     expect(req.limit).toBe("5000");
     expect(req.filter).toBeNull(); // skp/0.1: absent filter is `null`, never omitted
+    expect(req.columns).toBeNull(); // skp/0.6: absent columns is `null`, never omitted
 
     const res = loadFixture<ViewportQueryResponse>("v0-viewport_query-response");
     assertExactKeys(res, ["stream", "expires_in_ms"], "viewport_query response");
@@ -355,7 +360,7 @@ describe("SKP v0 shared fixtures", () => {
     const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request-with-filter");
     assertExactKeys(
       req,
-      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter"],
+      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
       "viewport_query request (with filter)"
     );
     expect(req.skp).toBe(SKP_VERSION);
@@ -364,6 +369,18 @@ describe("SKP v0 shared fixtures", () => {
     assertExactKeys(req.filter, ["predicate", "dialect"], "viewport_query request .filter");
     expect(req.filter!.predicate).toBe("zone = 3 AND area > 100");
     expect(req.filter!.dialect).toBe(FILTER_DIALECT_DUCKDB_EXPR_0);
+  });
+
+  /** S-1 / P-2 on the shell side: `columns` covers the new key, and its declared order (which
+   * differs from any file's own column order) survives untouched. */
+  it("viewport_query request with a declared columns projection (skp/0.6)", () => {
+    const req = loadFixture<ViewportQueryRequest>("v0-viewport_query-request-with-columns");
+    assertExactKeys(
+      req,
+      ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
+      "viewport_query request (with columns)"
+    );
+    expect(req.columns).toEqual(["zone", "area"]);
   });
 
   it("cancel request/response", () => {

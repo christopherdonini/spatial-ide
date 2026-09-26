@@ -29,7 +29,7 @@
 //! ## What a caller gets from [`AdmittedPredicate::admit`]
 //!
 //! A type only constructible through one checked path, exactly [`crate::attributes::
-//! PublishedProjection`]'s discipline applied to a predicate: without it, `build_sql` would take a
+//! AdmittedProjection`]'s discipline applied to a predicate: without it, `build_sql` would take a
 //! bare `&str`, and every caller between the SKP boundary and composition would be *trusted* not
 //! to have skipped admission — exactly the shape a `docs/09` boundary must not have.
 
@@ -81,7 +81,7 @@ const ADMITTED_PATTERN_FUNCTIONS: &[&str] = &["~~", "~~*"];
 
 /// SQL text admitted to ride, verbatim, into a `WHERE` clause.
 ///
-/// **The single-constructor discipline [`crate::attributes::PublishedProjection`] uses, applied to
+/// **The single-constructor discipline [`crate::attributes::AdmittedProjection`] uses, applied to
 /// a predicate.** The only public, non-deprecated way to build one is [`AdmittedPredicate::admit`],
 /// which runs all three admission stages this module implements. Nothing rewrites, normalizes, or
 /// case-folds the text on the way in or out — [`Self::sql_text`] returns exactly what was admitted.
@@ -981,9 +981,11 @@ fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
 }
 
 /// Namespace admission (stage 2). Every name `structural_admit` collected is checked against
-/// `dataset`'s resident `file_schema()`, minus the geometry column, minus any column whose type
-/// fails [`crate::attributes::admit_attribute_type`], plus the identity-alias rule above. Returns
-/// the admitted namespace (name → type) for stage 3 to build its surrogate relation from.
+/// `dataset`'s resident `file_schema()`, minus the geometry column, minus any dictionary-encoded
+/// column (excluded by name — round 17 item 3; ADR-021 Note 2026-09-24 — whatever its value type),
+/// minus any column whose type fails [`crate::attributes::admit_attribute_type`], plus the
+/// identity-alias rule above. Returns the admitted namespace (name → **emitted** type) for stage 3
+/// to build its surrogate relation from.
 fn namespace_admit(
     columns: &[String],
     dataset: &Dataset,
@@ -997,8 +999,14 @@ fn namespace_admit(
         if name == geometry_column {
             continue;
         }
-        if crate::attributes::admit_attribute_type(name, field.data_type()).is_ok() {
-            namespace.insert(name.to_string(), field.data_type().clone());
+        // Dictionary-encoded columns are excluded from the filter namespace by name, whatever their
+        // value type — never admitted here even though the live projection gate now admits them
+        // (round 17 item 3).
+        if matches!(field.data_type(), DataType::Dictionary(_, _)) {
+            continue;
+        }
+        if let Ok(emitted) = crate::attributes::admit_attribute_type(name, field.data_type()) {
+            namespace.insert(name.to_string(), emitted);
         }
     }
 
@@ -1022,6 +1030,19 @@ fn namespace_admit(
         match dataset.file_schema().fields().iter().find(|f| f.name() == name) {
             None => return Err(FilterError::UnknownColumn { column: name.clone() }),
             Some(field) => {
+                // **ADR-021 Note 2026-09-24; round 17 item 3.** Refused by name, before the type
+                // gate ever runs — the gate now *admits* a dictionary (emitted as its value type),
+                // and the filter namespace deliberately does not follow it there.
+                if matches!(field.data_type(), DataType::Dictionary(_, _)) {
+                    return Err(FilterError::ColumnNotFilterable {
+                        column: name.clone(),
+                        reason: format!(
+                            "type is {}. This column is dictionary-encoded, and dictionary-encoded \
+                             columns are excluded from the filter namespace",
+                            field.data_type()
+                        ),
+                    });
+                }
                 if let Err(e) = crate::attributes::admit_attribute_type(name, field.data_type()) {
                     return Err(FilterError::ColumnNotFilterable {
                         column: name.clone(),
@@ -1040,8 +1061,8 @@ fn namespace_admit(
 // ---------------------------------------------------------------------------------------------
 
 /// The DuckDB type name to `CAST(NULL AS ...)` a column of Arrow type `ty` as, for the surrogate
-/// relation. `None` only for a type [`crate::attributes::admit_attribute_type`] would already have
-/// refused — `namespace_admit` guarantees every entry it hands to [`bind_admit`] admits here.
+/// relation. `None` for a type the filter namespace never admits (F1: it must cover every type
+/// [`namespace_admit`] can put in the namespace, with no gap left to an `.expect()`).
 fn duckdb_type_name(ty: &DataType) -> Option<&'static str> {
     use DataType as D;
     match ty {
@@ -1056,6 +1077,11 @@ fn duckdb_type_name(ty: &DataType) -> Option<&'static str> {
         D::UInt32 => Some("UINTEGER"),
         D::UInt64 => Some("UBIGINT"),
         D::Float64 => Some("DOUBLE"),
+        // **F1 (round 17 item 3; ADR-021 Note 2026-09-24).** The gate now admits `Float32` for
+        // filtering; DuckDB's `REAL` is its own 32-bit float type, and H5 (P0) confirmed a stored
+        // `REAL` compares against a decimal literal by casting the literal to `REAL`, never by
+        // widening the column to `DOUBLE`.
+        D::Float32 => Some("REAL"),
         _ => None,
     }
 }
@@ -1086,15 +1112,23 @@ fn bind_admit(
         // like `1 + 1` still needs *some* FROM target to bind against.
         format!("1 AS {}", quote("__surrogate_anchor"))
     } else {
-        namespace
-            .iter()
-            .map(|(name, ty)| {
-                let type_name = duckdb_type_name(ty)
-                    .expect("namespace_admit only carries types admit_attribute_type accepted");
-                format!("CAST(NULL AS {type_name}) AS {}", quote(name))
-            })
-            .collect::<Vec<_>>()
-            .join(", ")
+        let mut parts = Vec::with_capacity(namespace.len());
+        for (name, ty) in namespace {
+            // **F1: a typed refusal, never an `.expect()`.** Unreachable today — `namespace_admit`
+            // excludes dictionaries by name and refuses every other type `duckdb_type_name` does not
+            // cover before it ever reaches the namespace — but named rather than assumed, so a
+            // future admitted type with no surrogate fails this one predicate typed, not the
+            // process.
+            let type_name = duckdb_type_name(ty).ok_or_else(|| FilterError::ColumnNotFilterable {
+                column: name.clone(),
+                reason: format!(
+                    "type is {ty}, which this namespace admits but has no DuckDB surrogate type to \
+                     bind against — [B1 close placeholder]"
+                ),
+            })?;
+            parts.push(format!("CAST(NULL AS {type_name}) AS {}", quote(name)));
+        }
+        parts.join(", ")
     };
 
     let sql = format!(

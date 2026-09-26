@@ -190,7 +190,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 2. **Transport bindings** — one: Tauri invoke, for the five commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
-   stdio, no MCP adapter.
+   stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
+   `viewport_query` invoke and the existing data-plane WebSocket frame.
 3. **Version negotiation** — *"beyond a version field" means, minimally:* every request carries
    `skp: "skp/0"`, compared with `==`. No ranges, no min/max, no capability sets, no per-command
    versions, no downgrade path, no handshake. A client and host that disagree fail on the first call.
@@ -198,8 +199,9 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    min/max, no handshake; a v0-only client and a v0.1 host fail on the first call exactly as any two
    disagreeing literals always have here. **`skp/0.2` (§8) bumps the compared literal again, `==`
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
-   `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
-   literal again**, and `==` is unchanged.
+   `skp/0.2` host fail on the first call. **`skp/0.3` through `skp/0.5` each bumped the compared
+   literal again**, and `==` is unchanged. **`skp/0.6` (§9) bumps the literal once more, `==`
+   unchanged.**
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -242,7 +244,9 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    `engine.crs_assertion_identifier_blank` and `engine.crs_assertion_definition_too_large`
    (`limit`/`saw`) — and one structured field, `candidate_columns` on `engine.identity_unusable`.
    Both codes map 1:1 from their `EngineError` variants through `error_of`'s existing no-wildcard
-   `match`; no message text changed.
+   `match`; no message text changed. **`skp/0.6` (§9) adds six `skp.projection_*` codes and one more
+   protocol-level one** (`skp.projection_empty_list`, minted at the SKP boundary rather than through
+   `engine::attributes::ProjectionError` — F4), the same no-wildcard discipline applied a third time.
 9. **Idempotency** — none. Retrying `open_dataset` opens a second `Dataset` and a second connection
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
@@ -280,6 +284,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     in a later commit (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §10, Amendment 5 item 2). It is
     therefore not an instance of this rule. Its whole field set is §8's `skp/0.5` entry, and it
     freezes at merge as `skp/0.2` through `skp/0.4` did.
+
+    **`skp/0.6` (§9) mints the literal once, on its own branch, and both sides' fixtures change in
+    the same commit as the literal bump** (§2.7 of `engine/B1-PROJECTION-PREREGISTRATION.md`) —
+    condition (iii) holds for the literal itself; the field additions it carries (`columns`,
+    `projectable`) were developed on the same branch ahead of that commit, under this same
+    not-yet-merged standing.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -392,6 +402,14 @@ present, the predicate is the entire `WHERE` clause.
 **Namespace**: `describe.schema` minus the geometry column minus any column whose type is not
 admitted for filtering (`engine::attributes::admit_attribute_type`) — an unqualified name; this
 predicate never names a table.
+
+> **Dated note, `skp/0.6` (2026-09-26; ADR-021's Note 2026-09-24; round 17 item 3).** The gate this
+> namespace rule cites was widened by Brief B stage B1 (§9): `Float32` is now filterable
+> (`duckdb_type_name` maps it to `REAL`), and a dictionary-encoded column is **excluded from this
+> namespace by name**, whatever its value type, even though the same gate now admits it for a live
+> **projection**. A predicate naming a dictionary-encoded column is refused
+> `skp.filter_column_not_filterable`, `reason` stating the encoding — no new filter code. This note
+> amends this section's rule in place; it does not restate §7's own text elsewhere.
 
 ### 7.4 Admitted constructs and the refused-by-name list
 
@@ -821,3 +839,129 @@ sides of the wire updated in the same commit as each addition. `skp/1` stays RES
 - It is containment for the close race, not a protocol feature. PLAN node `kernel-generation-close-races` makes the path that mints it unreachable and adds a test proving that.
 
 A reference that fails any condition in this note or in the 2026-09-24 note gets no clarification from either.
+
+### skp/0.6 — attribute projection on `viewport_query` (Brief B stage B1)
+
+**The version's FULL field set, as §8's own discipline requires — every member `skp/0.6` adds, in
+one list.**
+
+`viewport_query` **request** gains one member:
+
+- **`columns: Option<Vec<String>>`** — an ordered, caller-declared attribute projection. Follows the
+  `bbox_crs`/`filter` discipline exactly (§7.2): no `#[serde(default)]`, no `skip_serializing_if`,
+  `None` serializes to JSON `null`, always present, never omitted. `null` is unchanged from every
+  version before this one — no attribute columns. `Some(&[])` is refused
+  (`skp.projection_empty_list`) and is never read as `null` (entry 79 item (1)).
+
+`describe` response's `schema` rows gain one member:
+
+- **`projectable: bool`** — whether this column could be named in a `columns` projection today,
+  live (`engine::attributes::admit_projection_column`). Never a claim about publishing: a
+  projectable `Float32` or dictionary column is still refused at publish preflight by the
+  bundle-format restriction (§9.5), which this fact does not consult.
+
+Seven new typed refusals, six mapped 1:1 from `engine::attributes::ProjectionError`
+(`kernel::skp::projection_error_of`) and one minted at the SKP boundary (§9.5's own table):
+
+- `skp.projection_empty_list`, `skp.projection_too_many_columns`, `skp.projection_column_unknown`,
+  `skp.projection_column_is_geometry`, `skp.projection_column_is_identity`,
+  `skp.projection_column_duplicated`, `skp.projection_type_not_admitted`.
+
+**What `skp/0.6` deliberately does not add.** No new command. No wire list-size ceiling beyond the
+count check that already runs first. `protocol/data-plane/` has an empty diff — the widening lives
+inside the Arrow IPC payload; `attribute_columns` rides the schema metadata, and no attribute value
+crosses the control plane.
+
+Mechanics, the `skp/0.2`–`skp/0.5` precedent followed exactly: one literal bumped once, `"skp/0.5"`
+→ `"skp/0.6"`; plain `==` comparison retained; `deny_unknown_fields` kept both directions; every
+fixture on both the Rust (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`) and
+TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire updated in the
+same commit as the literal bump (§2.7 of `engine/B1-PROJECTION-PREREGISTRATION.md`). `skp/1` stays
+RESERVED.
+
+## 9. Attribute projection on `viewport_query`
+
+**Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
+and §§8–11 as amended, and ADR-021's Note 2026-09-24. This section is laid out as §7 is: version,
+wire shape, contract, refusal table, pre-lease admission, data plane.
+
+### 9.1 Version
+
+`skp` is now compared against `"skp/0.6"`, still `==` (§4 item 3). `deny_unknown_fields` stays on
+every derived struct in both directions; every fixture on both sides of the wire changed in the same
+commit as the literal bump (§2.7 of the preregistration; the mechanics list under §8's `skp/0.6`
+entry).
+
+### 9.2 The wire shape
+
+```
+{ skp, dataset, bbox, bbox_crs, limit, filter, columns: Option<Vec<String>> }
+  →  { stream: StreamHandle, expires_in_ms: u32 }
+```
+
+`columns` is the only change to `viewport_query`'s request; the response is untouched. `describe`
+gains `projectable: bool` on every `schema` row (§8's `skp/0.6` entry).
+
+### 9.3 The contract
+
+`columns` is an ordered, caller-supplied list of attribute column names. Admitted, the projection
+widens the batch schema to `[id, geometry, ...columns]`, in declared order — `id` at column 0
+(non-null), geometry at column 1, unchanged. Every projected column is nullable, whatever the
+source's own nullability, on `admit_attribute_type`'s existing discipline (`engine/src/attributes.rs`).
+`Float32` is admitted and emitted as `Float32`, never widened. A dictionary-encoded column is
+admitted exactly when its value type is, and is emitted as the value type — never as the dictionary
+index.
+
+`columns: null` is unchanged from every version before this one: no `attribute_columns`, the frame
+tag, `crs`, `crs_source`, `axis_order`, `axis_normalization` and identity metadata all byte-identical
+to before this cut.
+
+### 9.4 Projection admission order, pre-lease and pre-mint
+
+Runs inside `kernel::skp::build_viewport_query`, before filter admission (O3 — it is pure and takes
+no admission-class lease) and before `open_engine_stream` leases a connection or `tickets.mint` ever
+runs (ADR-023 §3; ADR-019):
+
+1. `Some([])` refuses `skp.projection_empty_list`, minted at the SKP boundary and never read as
+   `null` (F4; entry 79 item (1)).
+2. The count ceiling (`MAX_PROJECTED_ATTRIBUTES = 32`) is checked before any name is resolved.
+3. Names are resolved in declared order. The reserved wire identity name `id` is recognised before
+   the unknown-column check (O8) — a mapped identity's file, carrying no column literally named
+   `id`, still refuses a request for `id` as an identity collision rather than as unknown.
+4. Per-column rules run in declared order: geometry, identity (the mapped identity's own source
+   column), duplicate, type.
+5. The first failure is reported.
+
+### 9.5 Refusal taxonomy — seven codes
+
+| Code | Fields |
+|---|---|
+| `skp.projection_empty_list` | *(none)* |
+| `skp.projection_column_unknown` | `column`, `known_columns` |
+| `skp.projection_type_not_admitted` | `column`, `arrow_type`, `detail` |
+| `skp.projection_column_is_geometry` | `column` |
+| `skp.projection_column_is_identity` | `column`, `id_column` |
+| `skp.projection_column_duplicated` | `column` |
+| `skp.projection_too_many_columns` | `limit`, `saw` |
+
+`known_columns` is comma-joined in the `candidate_columns` form (§8's `skp/0.2` entry); a name
+containing a comma is omitted, and the refusal's own `message` states that when it happens (round 17
+item 4, stop item 8).
+
+**Publish's own, separate restriction.** `kernel/src/publish`'s preflight refuses a `Float32` or
+dictionary-encoded column at preflight as a **bundle-format restriction** — ADR-017 §4, unedited,
+never this section's gate — with `publish.engine` carrying `EngineError::AttributeUnpublishable`'s
+Display, rendered from the column's own **source** type, byte for byte identical to
+`admit_attribute_type`'s former refusal text for those two types, until B3's `bundle_version`-2 ADR
+decides otherwise.
+
+### 9.6 Data plane
+
+**Unchanged, empty diff.** The projection rides the ticket mint (§9.4 above); the widened schema
+travels inside the Arrow IPC payload's own schema metadata (`attribute_columns`), which this spec has
+never put on the control plane. No attribute value crosses it. `protocol/data-plane/` is untouched.
+
+Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport-query.md`
+(cited by this section; not itself accepted by this piece — see the preregistration's Header) and
+`docs/adr/ADR-021-row-filter-on-viewport-query.md`'s Note 2026-09-24 (the filter namespace widening,
+§7.3's own dated note above).

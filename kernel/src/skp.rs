@@ -21,8 +21,9 @@ use std::path::Path;
 
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
 use spatial_engine::{
-    AdmittedPredicate, ArmOutcome, ArmedWatch, CancelToken, Dataset, EngineError, FilterError,
-    PredicateAdmitError, SourceWatchArm, ViewportQuery, WatchSignal, WatchSink,
+    AdmittedPredicate, AdmittedProjection, ArmOutcome, ArmedWatch, CancelToken, Dataset,
+    EngineError, FilterError, PredicateAdmitError, ProjectionError, SourceWatchArm, ViewportQuery,
+    WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
@@ -1248,7 +1249,8 @@ impl SkpHost {
                 },
             }));
         }
-        let query = build_viewport_query(&ds, &req).map_err(predicate_admit_error_of)?;
+        let (query, projection) =
+            build_viewport_query(&ds, &req).map_err(viewport_query_build_error_of)?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
@@ -1259,7 +1261,7 @@ impl SkpHost {
         // opened. Every ticket that belonged to it is cancelled through the existing cancel. This
         // is the engine's own descriptor pre-check, never the watcher, so it always passes
         // `ObservedChange`, as §2b's single emission point assigns to the pre-check.
-        let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| {
+        let (stream, cancel) = open_engine_stream(&ds, &query, projection.as_ref()).map_err(|e| {
             if matches!(e, EngineError::SourceChanged { .. }) {
                 self.end_generation(&dataset_name);
             }
@@ -1429,6 +1431,32 @@ fn host_minted_identity_declaration(
     )
 }
 
+/// Every way [`build_viewport_query`] can refuse — the projection refusals beside
+/// [`PredicateAdmitError`]'s two kinds, in one type so the function has one `Result` to return.
+///
+/// **`ProjectionEmptyList` is not a [`ProjectionError`] variant** (F4): `resolve_projection(&[])` is
+/// publish's own valid empty projection, so the `columns: []` refusal is minted here, at the SKP
+/// boundary, and never inside the shared gate.
+enum ViewportQueryBuildError {
+    /// `columns: []`, never read as `columns: null` (entry 79 item (1)).
+    ProjectionEmptyList,
+    Projection(ProjectionError),
+    Predicate(PredicateAdmitError),
+}
+
+/// Maps [`ViewportQueryBuildError`]'s three kinds to a wire code — exhaustive, no wildcard arm.
+fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
+    match e {
+        ViewportQueryBuildError::ProjectionEmptyList => SkpError::protocol(
+            "projection_empty_list",
+            "refused: an empty projection (`columns: []`) is not admitted; omit `columns` (or \
+             send `null`) for no projection",
+        ),
+        ViewportQueryBuildError::Projection(pe) => projection_error_of(&pe),
+        ViewportQueryBuildError::Predicate(pae) => predicate_admit_error_of(pae),
+    }
+}
+
 /// Maps [`AdmittedPredicate::admit`]'s two failure kinds to the wire code each one already has —
 /// the match `viewport_query` takes on [`build_viewport_query`]'s error.
 ///
@@ -1450,10 +1478,69 @@ fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
     }
 }
 
+/// `projection_error_of(&ProjectionError) -> SkpError` — one exhaustive `match`, no wildcard arm,
+/// the [`filter_error_of`] precedent applied to the six declared `skp.projection_*` codes.
+fn projection_error_of(e: &ProjectionError) -> SkpError {
+    let message = e.to_string();
+    match e {
+        ProjectionError::TooManyColumns { limit, saw } => SkpError::protocol_with_fields(
+            "projection_too_many_columns",
+            message,
+            [("limit", limit.to_string()), ("saw", saw.to_string())],
+        ),
+        ProjectionError::ColumnUnknown { column, known_columns } => SkpError::protocol_with_fields(
+            "projection_column_unknown",
+            message,
+            [
+                ("column", column.clone()),
+                ("known_columns", spatial_engine::attributes::known_columns_wire_field(known_columns)),
+            ],
+        ),
+        ProjectionError::ColumnIsGeometry { column } => {
+            SkpError::protocol_with_fields("projection_column_is_geometry", message, [("column", column.clone())])
+        }
+        ProjectionError::ColumnIsIdentity { column, id_column } => SkpError::protocol_with_fields(
+            "projection_column_is_identity",
+            message,
+            [("column", column.clone()), ("id_column", id_column.clone())],
+        ),
+        ProjectionError::ColumnDuplicated { column } => SkpError::protocol_with_fields(
+            "projection_column_duplicated",
+            message,
+            [("column", column.clone())],
+        ),
+        ProjectionError::TypeNotAdmitted { column, arrow_type, detail } => SkpError::protocol_with_fields(
+            "projection_type_not_admitted",
+            message,
+            [
+                ("column", column.clone()),
+                ("arrow_type", arrow_type.clone()),
+                ("detail", detail.clone()),
+            ],
+        ),
+    }
+}
+
+/// Build the engine's [`ViewportQuery`] and, if the request declares one, its admitted attribute
+/// projection — both refused synchronously and typed, before any lease or mint (ADR-023 §3).
+///
+/// **Projection admission runs first (O3).** It is pure and takes no admission-class lease, so a
+/// request carrying both a bad projection and a bad predicate is refused on the projection before
+/// either ever reaches DuckDB's parser.
 fn build_viewport_query(
     ds: &Dataset,
     req: &ViewportQueryRequest,
-) -> Result<ViewportQuery, PredicateAdmitError> {
+) -> Result<(ViewportQuery, Option<AdmittedProjection>), ViewportQueryBuildError> {
+    let projection = match &req.columns {
+        None => None,
+        Some(names) if names.is_empty() => {
+            return Err(ViewportQueryBuildError::ProjectionEmptyList)
+        }
+        Some(names) => Some(
+            ds.admit_projection(names).map_err(ViewportQueryBuildError::Projection)?,
+        ),
+    };
+
     let query = match &req.bbox {
         Some(b) => {
             let bbox =
@@ -1469,7 +1556,7 @@ fn build_viewport_query(
         Some(n) => query.with_limit(n.0),
         None => query,
     };
-    match &req.filter {
+    let query = match &req.filter {
         // **Real admission, not a pass-through.** `Filter::new` (`protocol/skp`) only ever checked
         // the wire dialect is `duckdb-expr/0`; `AdmittedPredicate::admit` (`engine/src/predicate.rs`,
         // P3) is what actually parses the predicate's grammar (structural admission), resolves every
@@ -1479,9 +1566,13 @@ fn build_viewport_query(
         // refuse synchronously and typed the moment any stage refuses — carrying
         // `PredicateAdmitError`'s two kinds apart, never folded into one another (the caller's
         // match, [`predicate_admit_error_of`], is what puts each on its own wire code).
-        Some(f) => Ok(query.with_filter(AdmittedPredicate::admit(f.predicate.clone(), ds)?)),
-        None => Ok(query),
-    }
+        Some(f) => query.with_filter(
+            AdmittedPredicate::admit(f.predicate.clone(), ds)
+                .map_err(ViewportQueryBuildError::Predicate)?,
+        ),
+        None => query,
+    };
+    Ok((query, projection))
 }
 
 /// **`skp/0.4`, crs-unit-fact-and-bounds.** Projects the engine's recorded
@@ -1589,6 +1680,15 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
                 name: f.name().clone(),
                 arrow_type: f.data_type().to_string(),
                 nullable: f.is_nullable(),
+                // **`skp/0.6`.** Live admission only (round 17 item 4, stop item 4) — a projectable
+                // `Float32` or dictionary column is still refused at publish preflight by the
+                // bundle-format restriction, which this fact knows nothing about.
+                projectable: spatial_engine::attributes::admit_projection_column(
+                    f,
+                    ds.geometry_column(),
+                    ds.identity().source().source_column(),
+                )
+                .is_ok(),
             })
             .collect(),
         covering_bbox: ds.covering().is_some(),
@@ -2469,7 +2569,8 @@ mod ticket_drop_under_lock_regression {
     ) -> (spatial_engine::BatchStream, spatial_engine::CancelToken) {
         let ds = spatial_engine::Dataset::open(path).expect("open dataset");
         let query = spatial_engine::ViewportQuery::all();
-        let (mut stream, cancel) = crate::open_engine_stream(&ds, &query).expect("build stream");
+        let (mut stream, cancel) =
+            crate::open_engine_stream(&ds, &query, None).expect("build stream");
         // The pre-check already ran, synchronously, inside `open_engine_stream` above, and passed —
         // mutating only now is what makes this the post-check's finding, not the pre-check's.
         touch_modification_time(path);
@@ -2723,6 +2824,7 @@ mod ticket_drop_under_lock_regression {
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         };
         let refused = host.viewport_query(request).expect_err("the ended generation refuses");
         assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);

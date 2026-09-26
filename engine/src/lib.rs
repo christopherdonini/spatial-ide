@@ -104,7 +104,7 @@ pub mod trace;
 pub mod watch;
 pub mod wkb;
 
-pub use attributes::{PublishedProjection, MAX_PUBLISHED_ATTRIBUTES};
+pub use attributes::{AdmittedProjection, ProjectionError, MAX_PROJECTED_ATTRIBUTES};
 pub use cancel::CancelToken;
 pub use pin::ContentPin;
 pub use crs::{

@@ -404,7 +404,7 @@ and its silence are DuckDB's own — outside `MAX_QUEUED_BATCHES` and outside ev
 declares, exactly as the streaming buffer already is. The caller reports progress across it.
 
 **Declared publish ceilings (ADR-010 rule 6):** `PUBLISH_PARTITION_TARGET_BYTES` 1 MiB ·
-`PUBLISH_PARTITION_ROWS` 8 192 · `MAX_PUBLISH_PARTITIONS` 100 000 · `MAX_PUBLISHED_ATTRIBUTES` 32,
+`PUBLISH_PARTITION_ROWS` 8 192 · `MAX_PUBLISH_PARTITIONS` 100 000 · `MAX_PROJECTED_ATTRIBUTES` 32,
 with compile-time assertions tying them to `MAX_BATCH_BYTES` and to the five-digit partition naming
 width. A **partition is exactly one `TaggedBatch`** — re-batching in a publisher would produce bytes
 that never passed through the single constructor, and the rule 1 envelope would then be on each

@@ -54,7 +54,7 @@ fn open_req(path: &std::path::Path, cancel_key: &str) -> OpenDatasetRequest {
 }
 
 fn viewport_req(dataset: DatasetHandle) -> ViewportQueryRequest {
-    ViewportQueryRequest { skp: SKP_VERSION.to_string(), dataset, bbox: None, bbox_crs: None, limit: None, filter: None }
+    ViewportQueryRequest { skp: SKP_VERSION.to_string(), dataset, bbox: None, bbox_crs: None, limit: None, filter: None, columns: None }
 }
 
 /// **The whole rider, in one test**: a ticket's liveness answers from the ticket, before and after

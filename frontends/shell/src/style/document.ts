@@ -16,9 +16,10 @@
  * closed here at construction, not validated afterward:
  *
  * - **Literal-only.** `StyleDocumentV0`'s type has no `match` variant at all -- there is no field to
- *   set that would produce one. Categorical/match styling is unavailable live regardless
- *   (`viewport_query` carries no attributes -- ADR-023), so this is not a restriction this module
- *   imposes on top of a wider model; there is no wider model here.
+ *   set that would produce one. `viewport_query` can carry a declared attribute projection since
+ *   `skp/0.6` (Brief B stage B1, condition (1)) -- this shell simply requests none (`client.ts`
+ *   sends `columns: null`) -- so categorical/match styling is still unavailable live, but that is
+ *   this document producer's own choice, not a wire restriction; there is no wider model here.
  * - **`#rrggbb`, lowercase.** `normalizeColor` lowercases and validates against the exact grammar
  *   `renderer/src/style.rs::Rgb::parse` accepts; anything else (a caller bug, not a control a real
  *   panel would ever produce) falls back to `#000000` rather than reaching the document malformed.
