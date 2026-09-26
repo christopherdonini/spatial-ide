@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T10:29:56.857Z",
-  "plan_hash": "3a05d0fe2fd50fa3e53332f95fc8f2f3ae65b7113a4167ebabb5d28f50931a38",
+  "generated_at": "2026-09-26T10:45:18.289Z",
+  "plan_hash": "d3b83408de645b87ea359dc17658ec032b93c903eb4cead691a98fff81a773fc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3991,15 +3991,17 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "renderer/bundle-viewer/PARTITION-OFFSET-BOUNDS-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "viewer/partition-offset-bounds"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
