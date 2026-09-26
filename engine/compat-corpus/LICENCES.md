@@ -5,7 +5,7 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 **Rules:**
 - Only primary sources are used: the rights holder's own statement for that material, at a pinned revision where the host allows one.
 - A licence is **identified** only when that source names it for the material.
-- An identified licence is **open** only when the OSI approved-licence list or the Open Definition conformant-licence list also names it.
+- An identified licence is **open** only when the OSI approved-licence list or the Open Definition conformant-licence list also names it. For #11, OSI approval is read from the SPDX licence list at a pinned release (O4; RULED 2026-09-26, the corpus positions, item (3)).
 - A third-party row (#11, #12, R-2–R-4) is `reproducible` only when its licence is both identified and open, and `local-only` otherwise. A project-generated row is `reproducible — by regeneration`, its licence undeclared and no data file distributed (round 26, item 2).
 
 **How sources were handled:**
@@ -25,8 +25,8 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 | #8 | `gdal/ogr2ogr-epsg4326-default.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
 | #9 | `gdal/ogr2ogr-epsg2056-no-covering.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
 | #10 | `qgis/qgis-savefeatures-epsg2056.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
-| #11 | `geoparquet-spec/example.parquet` | Apache License, Version 2.0 (Apache-2.0), named by the repository's `LICENSE` at the pinned commit. There is no `NOTICE` at that commit (HTTP 404, S2). Open: the OSI list names it (O1) | https://raw.githubusercontent.com/opengeospatial/geoparquet/4c9f87e5226e36f2022d6bd7d3c1980debdf7431/LICENSE (byte-stable) | 2026-09-26T14:19:00Z | cc771485216b90342591f565e62ad0d406ef036d40891cf27917b919956c4fb1 | reproducible — by fetch |
-| #12 | `overture/overture-2026-08-19.0-building-bern.parquet` | Several licences are named, so the row stays local-only until the human decides. The buildings theme's section names ODbL as the licence for the theme. Its per-source lines name the Open Database License (2 sources) and CC BY 4.0 (4 sources), and 1 source names none. The release's own notes name no licence (S7). The Open Definition list names ODbL-1.0 and CC-BY-4.0 (O3) | https://raw.githubusercontent.com/OvertureMaps/docs/3d742db2401e785d608d7c0497068f5c9326f8d2/docs/_generated_attribution.mdx (the Foundation's docs repository at its commit for the August 2026 release; byte-stable) | 2026-09-26T14:21:26Z | ed39c1ff27eaf6cb021d80bdc9e142c06255f293bb9b95502e645ca8cfb41c89 | local-only |
+| #11 | `geoparquet-spec/example.parquet` | Apache License, Version 2.0 (Apache-2.0), named by the repository's `LICENSE` at the pinned commit. There is no `NOTICE` at that commit (HTTP 404, S2). Open: the SPDX licence list at v3.29.0 marks it OSI-approved (O4; RULED 2026-09-26, the corpus positions, item (3)) | https://raw.githubusercontent.com/opengeospatial/geoparquet/4c9f87e5226e36f2022d6bd7d3c1980debdf7431/LICENSE (byte-stable) | 2026-09-26T14:19:00Z | cc771485216b90342591f565e62ad0d406ef036d40891cf27917b919956c4fb1 | reproducible — by fetch |
+| #12 | `overture/overture-2026-08-19.0-building-bern.parquet` | Every licence the source names, with attribution (RULED 2026-09-26, the corpus positions, item (3)). The buildings theme: ODbL. Per source, in the source's order: © OpenStreetMap contributors — Open Database License; Esri Community Maps contributors — CC BY 4.0; Global ML Building Footprints — Open Database License; Google Open Buildings — CC BY 4.0; USGS 3D Elevation Program Digital Elevation Program — no licence named by the source; Qian Shi, et al. A First High-quality Vector Data of Buildings in East Asian Countries Based on a Comprehensive Large-scale Mapping Framework. Zenodo, 22 July 2023, doi:10.5281/zenodo.8174931 — CC BY 4.0; Work derived from BTN 2024 ign.es — CC BY 4.0. The release's own notes name no licence (S7). The Open Definition list names ODbL-1.0 and CC-BY-4.0 (O3) | https://raw.githubusercontent.com/OvertureMaps/docs/3d742db2401e785d608d7c0497068f5c9326f8d2/docs/_generated_attribution.mdx (the Foundation's docs repository at its commit for the August 2026 release; byte-stable) | 2026-09-26T14:21:26Z | ed39c1ff27eaf6cb021d80bdc9e142c06255f293bb9b95502e645ca8cfb41c89 | local-only — fetch-only, never redistributed (RULED 2026-09-26, the corpus positions, item (3)) |
 | M-2 | `mutations/gp-epsg2056-intkey-truncated.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
 | M-3 | `mutations/gp-epsg2056-intkey-geojson-invalid.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
 | M-4 | `mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
@@ -46,10 +46,11 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 - **O2. OSI licence API (disclosed conflict).**
   - Source: https://opensource.org/api/licenses, retrieved 2026-09-26T14:22:20Z, sha256 91305b070052c410dc95b50e2e9a0abd2fcc009078889a99b717639798a68449 (byte-stable).
   - It lists Apache-2.0, but its `approved` field reads false for 119 of its 126 entries, Apache-2.0 and MIT among them.
-  - #11's open status rests on O1's list, not on this field. The human sights the conflict.
+  - Superseded as #11's pin by O4.
 - **O3. Open Definition conformant-licence list.**
   - Source: https://opendefinition.org/licenses/, retrieved 2026-09-26T14:21:57Z, sha256 2e437e107c33501fc3d906697b02182d6974cdbbca50c387d084df4406bfed3e (byte-stable).
   - Its table names ODbL-1.0 and CC-BY-4.0.
+- **O4. SPDX licence list, release v3.29.0 (#11's OSI pin; RULED 2026-09-26, the corpus positions, item (3)).** Source: https://raw.githubusercontent.com/spdx/license-list-data/31ba1a50e5397e00a304dbadc76531740e89ee48/json/licenses.json, retrieved 2026-09-26T19:47:35Z, sha256 47d1cc681abe31166b342b6cc4aab13a6ba8ea5c48794697fe3bf8b1dbaf509a (byte-stable). Its `licenses[]` entry with `licenseId` `Apache-2.0` has `isOsiApproved` `true`; `licenseListVersion` 3.29.0.
 
 ## Other sources consulted
 
@@ -85,11 +86,11 @@ Each was fetched from the rights holder at the same pin as its row.
 - `mutations/gp-epsg2056-intkey-appended.parquet` — by regeneration
 - `retired/gp-epsg3857-strkey.parquet` — by regeneration
 
-By regeneration means the procedure `RECORD.md` records; for #1–#6 and R-1 it lacks versions (procedure recorded: no), and the others take #1, #3 or #7 as input.
+By regeneration means the procedure `RECORD.md` records. Its section "Regeneration run" gives one run's outcome for #1–#6 and R-1. An entry that carries the human's phrase (RULED 2026-09-26, the corpus positions, item (2)) is one whose regeneration is not established, or is built from one.
 
 ## Local-only set (4)
 
-- `overture/overture-2026-08-19.0-building-bern.parquet`
+- `overture/overture-2026-08-19.0-building-bern.parquet` — fetch-only, never redistributed
 - `retired/poly.parquet`
 - `retired/test_geoparquet_1_1.parquet`
 - `retired/test_with_fid_and_geometry_bbox.parquet`
