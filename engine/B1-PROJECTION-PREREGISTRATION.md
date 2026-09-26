@@ -393,3 +393,40 @@ Every instrument is an assertion (a typed outcome, a schema, a byte comparison, 
 Class 5, a scope settled on a ruling. The ruling, byte-copied by script from `DECISIONS-PENDING.md`'s RULED block: "All eight as rec. (Recommended)"
 
 Each OPEN marker O1–O8 resolves to its recommendation as written in `state/consults/2026-09-25-b1-prereg-revision.md`, §3 (the architect's stop list), which binds this piece from this amendment. O7's node is `b1-shell-half` (PLAN.yaml), the consumer §2.9's caller rule names. The Header's OPEN-marker line no longer holds any point back.
+
+### Amendment 2 — 2026-09-26, post-result: §5 P0, all five hypotheses
+
+Class 1 (post-result). Made after the P0 outcomes below were seen.
+
+P0 ran as read-only probes on branch `cut/b1-engine-projection` at commit 86d6b4b (`main`'s tip at
+cut), never committed (scratch, removed after the run; no engine or kernel source touched).
+`Cargo.lock`-pinned crate versions: `duckdb` 1.10505.0, `arrow`/`arrow-ipc`/`arrow-array` 58.4.0.
+
+- **H1 — confirmed (predicted yes).** `ArrowWriter` (parquet 58) wrote one `Float32` column;
+  `duckdb::Connection::prepare("SELECT * FROM read_parquet(?) LIMIT 0").query_arrow(..)` reported
+  its Arrow field type as `Float32`.
+- **H2 — confirmed (predicted unreachable).** A 2000-row, 4-value `Utf8` column written with
+  `WriterProperties::builder().set_dictionary_enabled(true)` (the shape most likely to be
+  physically dictionary-encoded) was reported by the same `read_parquet` probe as `Utf8`, never
+  `Dictionary(_, _)`.
+- **H3 — confirmed (predicted yes), both clauses.**
+  - First clause (a slice's own memory beside `get_buffer_memory_size`): read directly from the
+    pinned crate's own vendored source (not a path in this tree), not run —
+    `arrow-data` 58.4.0's `src/data.rs`, `ArrayData::get_buffer_memory_size` beside
+    `ArrayData::get_slice_memory_size` (around lines 481 and 507 of that crate's file), the
+    latter's doc comment giving the worked example this hypothesis names.
+  - Second clause (the IPC writer emits identical bytes for a slice and its compacted copy): run —
+    an `Int64Array` of 1000 values, sliced to a 20-element run at offset 10, and a second array
+    freshly built from exactly those 20 values, each written through
+    `arrow::ipc::writer::StreamWriter` into its own buffer. Byte-for-byte identical (584 bytes
+    each).
+  - H3 is not false; no invalidator fires.
+- **H4 — confirmed (predicted yes).** `CREATE TYPE zone_enum AS ENUM ('charlie', 'alpha', 'bravo')`
+  (declared order charlie=0, alpha=1, bravo=2); `'charlie'::zone_enum < 'alpha'::zone_enum` was
+  `true` — declared-position order, not lexical order (under which `'alpha' < 'charlie'` would
+  hold instead).
+- **H5 — confirmed (predicted yes).** A `REAL` column holding `CAST(0.1 AS REAL)`: `f32 = 0.1` was
+  `true` and `f32 > 0.1` was `false` — DuckDB casts the literal to `REAL` for the comparison rather
+  than widening the column to `DOUBLE`.
+
+No class-2 result. No §5 invalidator fires from P0.
