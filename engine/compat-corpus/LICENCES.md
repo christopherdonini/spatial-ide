@@ -6,7 +6,7 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 - Only primary sources are used: the rights holder's own statement for that material, at a pinned revision where the host allows one.
 - A licence is **identified** only when that source names it for the material.
 - An identified licence is **open** only when the OSI approved-licence list or the Open Definition conformant-licence list also names it.
-- A row is `reproducible` only when its licence is both identified and open. Every other row is `local-only`.
+- A third-party row (#11, #12, R-2–R-4) is `reproducible` only when its licence is both identified and open, and `local-only` otherwise. A project-generated row is `reproducible — by regeneration`, its licence undeclared and no data file distributed (round 26, item 2).
 
 **How sources were handled:**
 - No licence text is reproduced here.
@@ -15,24 +15,24 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 
 | id | path | licence as the source names it | primary source (URL, pinned) | retrieved (UTC) | sha256 of the fetched bytes | set |
 |---|---|---|---|---|---|---|
-| #1 | `geopandas/gp-epsg2056-intkey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #2 | `geopandas/gp-nocrs-nokey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #3 | `geopandas/gp-epsg4326-covering.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #4 | `duckdb-spatial/duckdb-lv95range-intkey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #5 | `duckdb-spatial/duckdb-degreesrange-nokey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #6 | `duckdb-spatial/duckdb-mercatorrange-strkey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #7 | `gdal/ogr2ogr-epsg2056-default.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #8 | `gdal/ogr2ogr-epsg4326-default.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #9 | `gdal/ogr2ogr-epsg2056-no-covering.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #10 | `qgis/qgis-savefeatures-epsg2056.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| #11 | `geoparquet-spec/example.parquet` | Apache License, Version 2.0 (Apache-2.0), named by the repository's `LICENSE` at the pinned commit. There is no `NOTICE` at that commit (HTTP 404, S2). Open: the OSI list names it (O1) | https://raw.githubusercontent.com/opengeospatial/geoparquet/4c9f87e5226e36f2022d6bd7d3c1980debdf7431/LICENSE (byte-stable) | 2026-09-26T14:19:00Z | cc771485216b90342591f565e62ad0d406ef036d40891cf27917b919956c4fb1 | reproducible |
+| #1 | `geopandas/gp-epsg2056-intkey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #2 | `geopandas/gp-nocrs-nokey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #3 | `geopandas/gp-epsg4326-covering.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #4 | `duckdb-spatial/duckdb-lv95range-intkey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #5 | `duckdb-spatial/duckdb-degreesrange-nokey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #6 | `duckdb-spatial/duckdb-mercatorrange-strkey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #7 | `gdal/ogr2ogr-epsg2056-default.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #8 | `gdal/ogr2ogr-epsg4326-default.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #9 | `gdal/ogr2ogr-epsg2056-no-covering.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #10 | `qgis/qgis-savefeatures-epsg2056.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| #11 | `geoparquet-spec/example.parquet` | Apache License, Version 2.0 (Apache-2.0), named by the repository's `LICENSE` at the pinned commit. There is no `NOTICE` at that commit (HTTP 404, S2). Open: the OSI list names it (O1) | https://raw.githubusercontent.com/opengeospatial/geoparquet/4c9f87e5226e36f2022d6bd7d3c1980debdf7431/LICENSE (byte-stable) | 2026-09-26T14:19:00Z | cc771485216b90342591f565e62ad0d406ef036d40891cf27917b919956c4fb1 | reproducible — by fetch |
 | #12 | `overture/overture-2026-08-19.0-building-bern.parquet` | Several licences are named, so the row stays local-only until the human decides. The buildings theme's section names ODbL as the licence for the theme. Its per-source lines name the Open Database License (2 sources) and CC BY 4.0 (4 sources), and 1 source names none. The release's own notes name no licence (S7). The Open Definition list names ODbL-1.0 and CC-BY-4.0 (O3) | https://raw.githubusercontent.com/OvertureMaps/docs/3d742db2401e785d608d7c0497068f5c9326f8d2/docs/_generated_attribution.mdx (the Foundation's docs repository at its commit for the August 2026 release; byte-stable) | 2026-09-26T14:21:26Z | ed39c1ff27eaf6cb021d80bdc9e142c06255f293bb9b95502e645ca8cfb41c89 | local-only |
-| M-2 | `mutations/gp-epsg2056-intkey-truncated.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| M-3 | `mutations/gp-epsg2056-intkey-geojson-invalid.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| M-4 | `mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| M-1c | `mutations/gp-epsg2056-intkey-changed-same-size.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| M-1a-equivalent | `mutations/gp-epsg2056-intkey-appended.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
-| R-1 | `retired/gp-epsg3857-strkey.parquet` | unidentified — project-generated, no licence declared | none exists (§2b) | n/a | n/a | local-only |
+| M-2 | `mutations/gp-epsg2056-intkey-truncated.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| M-3 | `mutations/gp-epsg2056-intkey-geojson-invalid.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| M-4 | `mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| M-1c | `mutations/gp-epsg2056-intkey-changed-same-size.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| M-1a-equivalent | `mutations/gp-epsg2056-intkey-appended.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
+| R-1 | `retired/gp-epsg3857-strkey.parquet` | undeclared — project-generated (round 26, item 2) | none exists (§2b) | n/a | n/a | reproducible — by regeneration |
 | R-2 | `retired/poly.parquet` | unidentified. The test-data section of `autotest/README.md` names no licence. The General section of `LICENSE.TXT` names an MIT-style licence for GDAL/OGR in general, and makes no statement specific to autotest data (S4) | https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/README.md (byte-stable) | 2026-09-26T14:19:46Z | 247f8f8a2bb171400da575744d57939467b03569200034412357daff9a12dcef | local-only |
 | R-3 | `retired/test_geoparquet_1_1.parquet` | unidentified, as R-2 | https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/README.md (byte-stable) | 2026-09-26T14:19:46Z | 247f8f8a2bb171400da575744d57939467b03569200034412357daff9a12dcef | local-only |
 | R-4 | `retired/test_with_fid_and_geometry_bbox.parquet` | unidentified, as R-2 | https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/README.md (byte-stable) | 2026-09-26T14:19:46Z | 247f8f8a2bb171400da575744d57939467b03569200034412357daff9a12dcef | local-only |
@@ -65,29 +65,31 @@ Each was fetched from the rights holder at the same pin as its row.
 | S6 | https://raw.githubusercontent.com/OvertureMaps/docs/418db30cbdd1b26ca924b9562415ffa579f006ae/docs/_generated_attribution.mdx | 2026-09-26T14:20:32Z | ad1ab5b9d6db92ad298c603db96375a0d4c5708dc35004dad1bf67a1aebb0759 | yes | the docs repository's head on the retrieval date; its buildings section is identical to #12's source |
 | S7 | https://raw.githubusercontent.com/OvertureMaps/docs/3d742db2401e785d608d7c0497068f5c9326f8d2/blog/2026-08-19-release-notes.mdx | 2026-09-26T14:21:40Z | a4930aac93d9f1a79355dd0eb6aa8c48fe7767ae084d078edded400946c89c19 | yes | release 2026-08-19.0's own notes: no licence; they point to the attribution page |
 
-## Reproducible set (1)
+## Reproducible set (17)
 
-- `geoparquet-spec/example.parquet`
+- `geoparquet-spec/example.parquet` — by fetch
+- `geopandas/gp-epsg2056-intkey.parquet` — by regeneration
+- `geopandas/gp-nocrs-nokey.parquet` — by regeneration
+- `geopandas/gp-epsg4326-covering.parquet` — by regeneration
+- `duckdb-spatial/duckdb-lv95range-intkey.parquet` — by regeneration
+- `duckdb-spatial/duckdb-degreesrange-nokey.parquet` — by regeneration
+- `duckdb-spatial/duckdb-mercatorrange-strkey.parquet` — by regeneration
+- `gdal/ogr2ogr-epsg2056-default.parquet` — by regeneration
+- `gdal/ogr2ogr-epsg4326-default.parquet` — by regeneration
+- `gdal/ogr2ogr-epsg2056-no-covering.parquet` — by regeneration
+- `qgis/qgis-savefeatures-epsg2056.parquet` — by regeneration
+- `mutations/gp-epsg2056-intkey-truncated.parquet` — by regeneration
+- `mutations/gp-epsg2056-intkey-geojson-invalid.parquet` — by regeneration
+- `mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet` — by regeneration
+- `mutations/gp-epsg2056-intkey-changed-same-size.parquet` — by regeneration
+- `mutations/gp-epsg2056-intkey-appended.parquet` — by regeneration
+- `retired/gp-epsg3857-strkey.parquet` — by regeneration
 
-## Local-only set (20)
+By regeneration means the procedure `RECORD.md` records; for #1–#6 and R-1 it lacks versions (procedure recorded: no), and the others take #1, #3 or #7 as input.
 
-- `geopandas/gp-epsg2056-intkey.parquet`
-- `geopandas/gp-nocrs-nokey.parquet`
-- `geopandas/gp-epsg4326-covering.parquet`
-- `duckdb-spatial/duckdb-lv95range-intkey.parquet`
-- `duckdb-spatial/duckdb-degreesrange-nokey.parquet`
-- `duckdb-spatial/duckdb-mercatorrange-strkey.parquet`
-- `gdal/ogr2ogr-epsg2056-default.parquet`
-- `gdal/ogr2ogr-epsg4326-default.parquet`
-- `gdal/ogr2ogr-epsg2056-no-covering.parquet`
-- `qgis/qgis-savefeatures-epsg2056.parquet`
+## Local-only set (4)
+
 - `overture/overture-2026-08-19.0-building-bern.parquet`
-- `mutations/gp-epsg2056-intkey-truncated.parquet`
-- `mutations/gp-epsg2056-intkey-geojson-invalid.parquet`
-- `mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet`
-- `mutations/gp-epsg2056-intkey-changed-same-size.parquet`
-- `mutations/gp-epsg2056-intkey-appended.parquet`
-- `retired/gp-epsg3857-strkey.parquet`
 - `retired/poly.parquet`
 - `retired/test_geoparquet_1_1.parquet`
 - `retired/test_with_fid_and_geometry_bbox.parquet`
