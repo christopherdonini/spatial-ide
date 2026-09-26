@@ -1,14 +1,14 @@
 # CUT-STATE — opened 2026-09-24 (the post-tag arc's ledger archived; the work continues)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-25T22:53:11Z
-tip: d5e758f048a8aa8240850d373d20c58d33004e11
-branches: In progress: cut/source-change-watcher @ 09104f4 at dispatch (the watcher; phase 1 built; Amendments 1-3 on the preregistration; phase 2 running in a worker-high, step F -- the A2-1 fold-in -- waits for Amendment 4), worktree C:/dev/wt/source-change-watcher. governance/test-claims-followups (the follow-ups form committed; its worker-high running). Wave 1 branches on origin, never PR'd: cloud/wave1-A3 @ db9527f, cloud/wave1-A1 @ aa7ead1, cloud/wave1-A2 @ 271f04b. Worktrees: C:/dev/wt/source-change-watcher, C:/dev/wt/triage-a3-obs3 (untracked scratch: A3 obs 3's reproduction, A1-1's and A2-1's reproducers -- kept for the after-wave S1 batch), .claude/worktrees/verify-mutation-header-token (dropped, unmerged -- keep).
-position: 2026-09-25 about 23:00Z -- wave 1 batch 1 pair 2 (A4 session_01NZDimj5kbXchTDKA9MQrPT, A5 session_018DZybsCUV4Zb8z81uUUEAQ) running since about 22:49Z; pair 1 recorded and triaged (5af4e84; batch delta $6); A3 calibrated ($7). Running locally: the watcher's phase 2 (worker-high), an architect consult drafting the watcher's Amendment 4 (A2-1), the follow-ups worker. Lease: 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg). context: unmeasured.
-half-made judgments: Wave 1 (round 23 item 1; the prompts' deviation 1): when A4 and A5 report -- copy each report verbatim (the message's Copy action, Get-Clipboard, LF) into state/cloud/wave1/<item>.md with custodian fields, read the balance after (claude.ai Settings, Usage, Cloud session credits; before pair 2: 237 of 250 dollars), triage against main before other work, then launch C+D the same way (assemble.mjs in the scratchpad; composer paragraphs hash-checked before Send), then B alone. S1 candidates so far: A3 3(b), A1-1, A2-1 -- all reproduced on Windows -- go to the human in one batch after the wave. An A5 S1 in the watcher's code folds into the watcher before it merges, like A2-1. The watcher: when the architect returns Amendment 4, send its text to the phase-2 worker by message (it appends it byte-exact as its own commit before the fold-in code); if the worker has already handed back, resume it with the text. Then both gates, the closing amendment, the PR for the human's click. The follow-ups: on hand-back, verify, full gating, then the PR.
-intended sequencing (next session): (1) Pair 2's reports: record, balance after, triage, then launch C+D, then B. (2) The watcher: Amendment 4 to the worker; phase 2's hand-back; the gates. (3) The follow-ups worker's hand-back and gating. (4) After the wave: the S1 batch to the human; the S2 records (A3's, A1's, A2's) as KNOWN-LIMITATIONS rows or PLAN notes together. (5) Disk: C: at 23 GB free. (6) The weekly-window findings below are still unraised.
-unreported findings: Weekly window (due 2026-09-25): the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurs on CI and passes on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop (A2 obs 5 duplicates it); verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form); the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template has no class for a full form's section-7 overrun (class 6 is short-form only; class 2 names section 3/5 predictions), nor for a scope widening on a standing rule (class 5 names narrowing; met at the watcher's Amendment 4).
-in-flight gate states: gate-log: 197 records (latest: adr-035-decision-4-note architect attempt 2 scoped PASS, index 196). Running: wave 1 A4 and A5 (cloud); the watcher's phase 2 (worker-high); the architect consult for the watcher's Amendment 4; the follow-ups worker (worker-high).
+flushed_at: 2026-09-26T09:43:06Z
+tip: 5f65c44c13e8e8a7abec29270224cf64abbbf43e
+branches: In progress: cut/source-change-watcher @ 2daf371 at dispatch (Amendment 5 appended; the gate-1 fix round running in a fresh worker-high), worktree C:/dev/wt/source-change-watcher. governance/test-claims-followups @ 761915c (Amendment 3; both gates at attempt 2), worktree .claude/worktrees/test-claims-followups. Wave 1 branches on origin, never merged: cloud/wave1-A1..A5, -B (PR #124, held), -C (PR #123, held until the watcher). Worktrees: C:/dev/wt/triage-a3-obs3 (untracked scratch: the reproductions of A3 3(b), A1-1, A2-1, A5-1 -- the cuts' evidence), .claude/worktrees/verify-mutation-header-token (dropped, unmerged -- keep).
+position: 2026-09-26 about 02:00Z -- wave 1 closed and ruled (round 24). Running: the watcher's gate-1 fix round (worker-high), the follow-ups' reviewer and architect attempt 2, an architect consult drafting data-plane-origin-non-ascii's full-form preregistration. Lease: 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg). context: unmeasured.
+half-made judgments: The follow-ups: on attempt 2's verdicts -- both PASS: gate-log records, the PR (non-docs: the human's click; merge commit); if the architect reduces the record under the record cap's point (3), append its byte-exact text, then a scoped confirmation. The watcher: on the fix worker's hand-back, verify, then gate 2 (both), then the closing amendment per state/consults/2026-09-26-source-watcher-fix-ruling.md section 5 (references and hashes only; the E5 pin lines 2626-2644 of kernel/src/skp.rs at 4137f4d, sha256 c0483b8e..., the reviewer gate-1 report is appended on main only after a merge that keeps 4137f4d reachable -- no squash), then the PR for the human's click; after it merges, PR #123's integration (merge main into cloud/wave1-C, fixtures to skp/0.5, re-run, counts, back to the human). data-plane-origin-non-ascii: commit the architect's preregistration on a new branch before any code (set the node's gate to it, in progress), then a worker, then full gating; data-plane-stream-registry-bound follows it; bundle-viewer-partition-offset-bounds is independent and ready.
+intended sequencing (next session): (1) The follow-ups' attempt-2 verdicts and PR. (2) The watcher's fix round, gate 2, closing amendment, PR. (3) data-plane-origin-non-ascii: preregistration, worker, gates. (4) bundle-viewer-partition-offset-bounds when capacity allows. (5) The weekly-window findings below, overdue since 2026-09-25: raise as the next question round once the running gates settle. (6) Disk: C: 20 GB free.
+unreported findings: Weekly window (due 2026-09-25): the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurs on CI and passes on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs (7604 verify-test-claims-* dirs in TEMP); ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension (a pre-merge test-text span can only be named by commit id); Catalog's write guard drop (A2 obs 5 duplicates it); verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note; the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template has no class for a full form's section-7 overrun, nor for a scope widening on a standing rule; verify-mutation runs no mutation, so no record may call its run an observation of a mutation (the watcher's Amendment 3 item 5); verify-cites gates filed consults' cites to branch-only files (state/drafts/ is the only exempt path; the watcher's gate-1 reviewer report needed a disclosed rewrite).
+in-flight gate states: gate-log: 201 records (latest: engine-source-change-watcher attempt 1, architect FAIL B1-B4 and reviewer FAIL B1-B7 at ee6fa38). Running: governance-test-claims-superseded-followups attempt 2 (reviewer and architect, at 761915c); the watcher's gate-1 fix round (worker-high); the A1-1 preregistration consult (architect).
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the post-tag arc, 2026-09-13 → 2026-09-24; archived byte-identical by `git mv`; its last flush named tip d4362bd). Before it: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut; v0.1.0 = b391e43).
 
@@ -238,3 +238,50 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Step F, the A2-1 fold-in, waits for Amendment 4. An architect consult is drafting it: the class, since no template class names a widening; the fix's shape; the SH rows.
   - **The follow-ups worker** (`governance/test-claims-followups`) is still running.
   - **Disk:** C: 23 GB free.
+- 2026-09-26T00:35Z - **Wave 1: all launches done (B running); pair 2 and batch 2 triaged; A5-1 a fourth S1 candidate. The watcher's Amendment 4 is with its phase-2 worker. The follow-ups failed both gates at attempt 1; a batched fix round is running.**
+  - **Pair 2** (3a0f22d): A4 and A5 reported. The balance went $237 → $225, a batch delta of $12. A5's session still showed a running task at the reading.
+    - A5-1, S1 candidate: the data plane's `StreamRegistry` retains every stream served, with no ceiling. Reproduced on Windows (rc 101, 200 retained). It goes to the after-wave batch.
+    - RECORD S2: A4-1 to A4-4 (one class: a refusal's code lost on the publish or raw path), A5-2, and A5's observations 4 and 5.
+    - The rest DISCARD S3.
+  - **Batch 2** (0527390): C and D reported. The balance went $225 → $221, a batch delta of $4.
+    - C: one divergence, C-1, RECORD S2, plus the ambiguity list. Draft PR #123 is open with its checks green; merging it is the human's decision.
+    - D, the Linux catalogue: D-1, D-2 and D-4 are one class (the default Rust suites assume Windows), and D-3 is `npm ci` refusing under npm 10. All RECORD S2.
+    - D's prompt names no item, so its worker left Item blank and labelled its findings B-1 to B-4. They are recorded as D-1 to D-4.
+  - **Deviations appended to `state/cloud/wave1-prompts.md`:** 2 (45441d5) and 3 (cc74a23). C, D and B carry §3's worker fields, pasted after their OUTPUT paragraphs.
+  - **Batch 3** (e619486): B, session_01VQQsDu87TyJwwusSdt4GL8, launched at 00:20:10Z with the balance at $221 of $250.
+  - **S1 candidates for the after-wave batch:** A3 3(b), A1-1, A2-1 (its fix is folding into the watcher) and A5-1. All four were reproduced on Windows.
+  - **The watcher:**
+    - Amendment 4's consult is filed at 001115f and sent to the phase-2 worker, which appends it byte-exact as its own commit before the fold-in code.
+    - Its item 8, the candidate arm's untiled sink, was triaged by the custodian and folded in beside A2-1.
+    - Phase 2 is running.
+  - **The follow-ups:**
+    - The worker stopped at §7's budget line; §7 itself records an overrun as class 2, so it continued. §2.8 was done at c1e315b.
+    - The custodian's closing Amendment 1 went in at 556ee94. §8 item 9 was then applied to the new comments at fbf90f0, and ea3b21d re-observed the two changed tests. Amendment 2 went in at f6ccfd2.
+    - Both gates FAILed attempt 1 at f6ccfd2 (4b568d9):
+      - the architect on B1–B6;
+      - the reviewer on B1–B7.
+    - P1 and P2 hold, the enumeration agrees on the merge with main, the temp-directory delta is 0, and the hashes match.
+    - One batched fix round is with the same worker: code, tests, re-observation, then docs. Amendment 3, the custodian's, is references only and is the piece's last record-correction round.
+- 2026-09-26T02:00Z - **Wave 1 closed: B reported, round 24 ruled (three S1 cuts), the S2 records written. The watcher failed gate 1 and its fix round is running. The follow-ups are at attempt 2. A1-1's preregistration is being drafted.**
+  - **B** (d926a3f): batch delta $2; the wave cost $31 in total ($250 → $219).
+    - The corpus is not reproducible from the tracked tree: its scripts and full-hash manifest sit untracked on this machine.
+    - Licences for eleven of the twelve files are unrecorded.
+    - PR #124 is open, with its DCO check green.
+  - **Round 24** (`state/questions/round-24.md`, mirrored first; RULED block at 4d0e727):
+    - item 1 (typed): all three S1s are cuts.
+      - `data-plane-origin-non-ascii` runs now, in parallel with the watcher, under full gating.
+      - `data-plane-stream-registry-bound` follows it: a time bound plus a count ceiling, and no drop at the terminal.
+      - `bundle-viewer-partition-offset-bounds` is independent, with a KNOWN-LIMITATIONS line for bundles already published.
+    - item 2: A2-1 is S1, and the fold-in stands.
+    - item 3 (typed): #124 is held; `corpus-reproducibility-record` tracks the scripts, commands and hashes, with no data; licences go to the human before any merge.
+    - item 4: #123 is held until the watcher merges.
+  - **S2 records** (137cd3c): seven proposed PLAN nodes, plus the close-race intake in `kernel-generation-close-races`.
+  - **The watcher:**
+    - Phase 2 finished at d99b7a6. Part Q, the operator rows with a blank log, was added at ee6fa38.
+    - Gate 1 FAILed at ee6fa38 (dfdc8fb): the architect on B1–B4, the reviewer on B1–B7. Both reports are filed (04b3680).
+    - The reviewer's report had six cites to branch-only files, which reddened verify-cites on main. They were rewritten to the worktree path, disclosed in its filing note (4d0e727); main's CI was green after.
+    - The architect's fix ruling (f2316db): §8 item 3 governs §2b step 2. Amendment 5 was appended at 2daf371, with hashes computed by script. A fresh worker-high is on the fix list.
+  - **The follow-ups:**
+    - The fix round is done at 8fb4999; Amendment 3 is at 761915c. Its item 1 mislabels the code fixes as class 5, flagged to the architect.
+    - Both gates are at attempt 2. This is the last record round: if the record fails again, the architect reduces it.
+  - **A1-1:** an architect consult is drafting its full-form preregistration.

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T22:57:19.481Z",
+  "generated_at": "2026-09-26T10:55:59.378Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,12 +12,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 24304467968,
+        "bytes": 22980034560,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 383071404032,
+        "bytes": 378542063616,
         "total": 500090007552
       }
     ]
@@ -33,13 +33,13 @@
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 74
+    "n": 75
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 49,
+    "nodes": 51,
     "first_pass": 19,
-    "rate": 0.3877551020408163
+    "rate": 0.37254901960784315
   },
   "record_rounds": {
     "present": true,
@@ -65,8 +65,10 @@
       "kernel-ticket-drop-under-registry-lock": 3,
       "governance-test-claims-superseded": 2,
       "governance-test-claims-withdrawn-marker": 2,
-      "governance-hooks-cloud-inert": 1
+      "governance-hooks-cloud-inert": 1,
+      "governance-test-claims-superseded-followups": 1,
+      "data-plane-origin-non-ascii": 1
     },
-    "total": 37
+    "total": 39
   }
 }
