@@ -247,10 +247,11 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
    and must not be cited as one.
-10. **Stable vs temporary handles** — all handle kinds are temporary and session-scoped (§3),
-    `SessionRef` (`skp/0.5`) included: it is minted per open, never persisted, never published,
-    never logged, and does not survive a reopen. No stable resource URI; the publish path's
-    `spatial://dataset/<name>` is not reachable here.
+10. **Stable vs temporary handles** — every handle kind is temporary and session-scoped (§3).
+    `SessionRef` (`skp/0.5`) is minted per dataset-session generation (§3's third rule), a value
+    kind that is not a handle; never persisted, never published, never logged, and does not survive
+    a reopen. No stable resource URI; the publish path's `spatial://dataset/<name>` is not reachable
+    here.
 11. **Authentication and authorization** — none on the control plane beyond "only this shell's own
     webview can invoke it." No capability grants, no principals. The data plane keeps its existing
     session token, origin check and loopback bind, unchanged.
@@ -261,10 +262,6 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     exercised**, not an exception to it: `viewport_query`'s new `filter` field shipped together with
     the `skp/0.1` version bump, every fixture on both sides of the wire updated in the same commit
     (`CUT-STATE.md` P1) — a tolerant reader was never introduced.
-
-    **`skp/0.5` is a further instance of this rule** — its whole field set (§8's `skp/0.5` entry)
-    landed in this piece's own commits, before merge, and freezes at merge exactly as `skp/0.2`
-    through `skp/0.4` did.
 
     **`skp/0.2` (§8) is the second instance of this rule, and the first assembled across several
     commits.** Its field set grew after the literal was bumped (P2's `CrsInfo.definition_provenance`,
@@ -277,6 +274,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     literal. Condition (iv) is what makes (ii) load-bearing: the §8 entry is the version's full
     field set, and after merge it is a historical record, not a growing one. **`skp/0.4` is a
     further instance of this rule**, and it freezes at merge exactly as `skp/0.2` and `skp/0.3` did.
+
+    **`skp/0.5` was assembled across several commits, and condition (iii) did not hold for one of
+    them**: one commit changed the Rust-side literal and fixtures, and the TypeScript side followed
+    in a later commit (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §10, Amendment 5 item 2). It is
+    therefore not an instance of this rule. Its whole field set is §8's `skp/0.5` entry, and it
+    freezes at merge as `skp/0.2` through `skp/0.4` did.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
