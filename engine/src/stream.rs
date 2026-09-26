@@ -24,6 +24,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
+use arrow::datatypes::DataType;
 use duckdb::ToSql;
 
 use crate::cancel::CancelToken;
@@ -1819,13 +1820,14 @@ fn produce(
                 let col = chunk.column_by_name(f.name()).ok_or_else(|| {
                     EngineError::Query(format!("result has no `{}` column", f.name()))
                 })?;
+                let col = decode_dictionary_chunk_column(col, f.data_type())?;
                 if col.data_type() != f.data_type() {
                     return Err(EngineError::EncodingMismatch {
                         claimed: format!("attribute `{}` is {}", f.name(), f.data_type()),
                         found: col.data_type().to_string(),
                     });
                 }
-                Ok(col.clone())
+                Ok(col)
             })
             .collect::<Result<_>>()?;
 
@@ -2084,10 +2086,28 @@ fn estimate_bytes(rows: usize, vertices: usize) -> usize {
 /// boundary derived from how much capacity a buffer happens to have reserved would move between two
 /// runs over identical data, and every partition hash in a bundle depends on where the boundaries
 /// fall.
+/// Decode a chunk column to `declared` when it arrived dictionary-encoded, before any check runs
+/// against it — round 17 item 3; the chunk-loop half of E-12. **A named copy** (ADR-004): a
+/// dictionary index is an ordinal, and this is the one place in the live path that turns one into
+/// the value type the envelope actually declares.
+///
+/// **Unreachable through `read_parquet` today** (H2, confirmed by P0): DuckDB's parquet reader never
+/// reports an Arrow `Dictionary` in this pinned version. The decode runs on `col`'s own actual type,
+/// not on that finding, so a source that does carry one is still handled correctly rather than
+/// merely refused as an `EncodingMismatch` a few lines below this function's own caller.
+fn decode_dictionary_chunk_column(col: &ArrayRef, declared: &DataType) -> Result<ArrayRef> {
+    if matches!(col.data_type(), DataType::Dictionary(_, _)) {
+        arrow::compute::cast(col, declared)
+            .map_err(|e| EngineError::Arrow(format!("dictionary decode: {e}")))
+    } else {
+        Ok(col.clone())
+    }
+}
+
 fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     use arrow::array::{
-        BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, LargeStringArray,
-        StringArray, StringViewArray, UInt16Array, UInt32Array, UInt8Array,
+        BooleanArray, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array,
+        LargeStringArray, StringArray, StringViewArray, UInt16Array, UInt32Array, UInt8Array,
     };
     let mut total = 0usize;
     for col in chunk_attrs {
@@ -2120,6 +2140,10 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
         } else if col.as_any().downcast_ref::<Int32Array>().is_some()
             || col.as_any().downcast_ref::<UInt32Array>().is_some()
         {
+            4
+        } else if col.as_any().downcast_ref::<Float32Array>().is_some() {
+            // E-11: Float32 is admitted and emitted as its own type (round 17 item 3), never
+            // widened — its own 4-byte arm, not folded into the 8-byte Int64/Float64 one.
             4
         } else if col.as_any().downcast_ref::<Int64Array>().is_some()
             || col.as_any().downcast_ref::<UInt64Array>().is_some()
@@ -2297,6 +2321,51 @@ mod tests {
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) < MAX_BATCH_BYTES);
         // A geometry-free batch of the maximum row count leaves room for real geometry.
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) * 4 < MAX_BATCH_BYTES);
+    }
+
+    /// E-11: `float32_costs_four_bytes_in_the_estimate`. Mutation: remove the arm (falls through to
+    /// the 8-byte catch-all).
+    #[test]
+    fn float32_costs_four_bytes_in_the_estimate() {
+        let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));
+        // 1 validity bit (rounded to a byte) + 4 bytes for the value.
+        assert_eq!(attr_row_bytes(&[col], 0), 1 + 4);
+    }
+
+    /// E-12: `a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_
+    /// the_envelope` — proven over a real arrow-rs `DictionaryArray`, directly against the
+    /// chunk-loop's own decode function, per round 17 item 4 stop item 6's accepted pattern (H2
+    /// makes this unreachable through `read_parquet` itself). Mutation: skip the decode (return
+    /// `col.clone()` unconditionally) — the test then observes the still-dictionary-typed array
+    /// rather than the value-typed one, and the assertion on `data_type()` fails by name.
+    #[test]
+    fn a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope()
+    {
+        use arrow::array::{DictionaryArray, StringArray};
+        use arrow::datatypes::Int32Type;
+
+        let keys = arrow::array::Int32Array::from(vec![1, 0, 1]);
+        let values = StringArray::from(vec!["industrial", "residential"]);
+        let dict: ArrayRef =
+            std::sync::Arc::new(DictionaryArray::<Int32Type>::try_new(keys, Arc::new(values)).unwrap());
+        assert!(matches!(dict.data_type(), DataType::Dictionary(_, _)));
+
+        let decoded = decode_dictionary_chunk_column(&dict, &DataType::Utf8).unwrap();
+        // No index reaches the caller: the returned array is the value type, not a dictionary.
+        assert_eq!(decoded.data_type(), &DataType::Utf8);
+        let strings = decoded.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(strings.value(0), "residential");
+        assert_eq!(strings.value(1), "industrial");
+        assert_eq!(strings.value(2), "residential");
+    }
+
+    /// A column that never arrived dictionary-encoded passes through unchanged (no copy, no
+    /// panic) — the common case this function must not slow down or alter.
+    #[test]
+    fn a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged() {
+        let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));
+        let out = decode_dictionary_chunk_column(&col, &DataType::Float32).unwrap();
+        assert_eq!(out.data_type(), &DataType::Float32);
     }
 
     #[test]
