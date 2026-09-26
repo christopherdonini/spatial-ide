@@ -33,8 +33,9 @@ export const REAL_SOURCE_CHANGED_TERMINAL_DETAIL =
  * `REAL_SOURCE_CHANGED_TERMINAL_DETAIL` above, from a real `cargo test -- --nocapture` run of
  * `spatial_kernel::skp::terminal_detail_of(&EngineError::SourceCoverageLost { detail:
  * "overflow".to_string() })` -- pinned as an exact-equality assertion on the producing side in
- * `kernel/tests/typed_terminal_codes.rs`. The `[P6 placeholder]` mark is part of the real string;
- * it is pinned along with the rest, not stripped.
+ * `kernel/tests/typed_terminal_codes.rs`'s
+ * `a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text`. The `[P6 placeholder]`
+ * mark is part of the real string; it is pinned along with the rest, not stripped.
  */
 export const REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL =
   "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source lost " +
@@ -47,7 +48,10 @@ export const REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL =
  * (`kernel/src/skp.rs::viewport_query`'s `live_or_mint` error arm, through `error_of`), in the same
  * `"<code>: <message>"` shape `liveTicketSet.ts::refusalDetailOf` builds. Captured the same way,
  * from a real `spatial_kernel::skp::error_of(&EngineError::SourceCoverageLost { .. })` call over
- * the exact detail text `viewport_query`'s own arm uses.
+ * the exact detail text `viewport_query`'s own arm uses -- pinned as an exact-equality assertion on
+ * the producing side in `kernel/tests/typed_terminal_codes.rs`'s
+ * `a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text`, driven through a real
+ * `SkpHost` with an injected watch signalling `CoverageLost` after admission.
  */
 export const REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL =
   "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source lost " +
