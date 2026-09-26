@@ -98,6 +98,16 @@ kernel_minted_handle!(
     "A single-use, expiring ticket minted by `viewport_query` and redeemed exactly once by the data \
      plane (ADR-019). Authorizes one stream's worth of data to flow."
 );
+kernel_minted_handle!(
+    SessionRef,
+    "sr",
+    "`skp/0.5`, the advisory source-change watcher: a per-open handle minted by `open_dataset` \
+     (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b, ADR-035 D4), returned once as \
+     `OpenDatasetResponse.session` and carried again only on the `dataset_session_ended` event that \
+     ends it. **No command's request type accepts it** — it authorizes nothing and is never looked \
+     up; its only reads are the transition report and the event (round 21 item 1, rider (a)). Never \
+     persisted, never published, never logged."
+);
 
 /// Names an in-flight `open_dataset` call so `cancel` can stop it before it returns a
 /// [`DatasetHandle`]. **Client-minted** — its only power is to stop the caller's own call, so there

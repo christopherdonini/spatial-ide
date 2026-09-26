@@ -45,5 +45,8 @@
   "sanity": {
     "level": "metadata",
     "reason": "read from the geometry column's own `geo` bbox [7.24, 46.75, 7.64, 47.15] under the format rule geoparquet:1.1.0#crs-absent-key-default"
-  }
+  },
+  "coverage": { "state": "watching", "reason": null },
+  "checks": { "state": "degraded", "components": ["mtime"] },
+  "session_end": "observed-change"
 }

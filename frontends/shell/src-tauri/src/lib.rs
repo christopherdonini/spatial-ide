@@ -268,7 +268,33 @@ pub fn run() {
             // between the command layer and the data-plane server below.
             let catalog = Arc::new(Catalog::new());
             let tickets = spatial_kernel::skp::StreamRegistry::new();
-            let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone()));
+            // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a/§2b: `PlatformWatch` is the product
+            // `SourceWatchArm`, constructed exactly here, where `SkpHost` is built — its only
+            // product caller. `session_end_channel` is the bounded queue
+            // `SessionInvalidator::end_generation` (the single emission point) sends on.
+            let watch_arm: Arc<dyn spatial_engine::SourceWatchArm> =
+                Arc::new(spatial_engine::PlatformWatch::new());
+            let (session_end_tx, session_end_rx) = spatial_kernel::skp::session_end_channel();
+            let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone(), watch_arm, session_end_tx));
+
+            // §2b: one emitter thread, draining the bounded receiver and calling the Tauri emit for
+            // each ended dataset-session generation. **Never logs a payload** (rider (b)) — the
+            // reference and the reason cross into the webview and nowhere else in this process.
+            // Outlives `setup()`: the thread's own `recv()` loop ends only when every
+            // `SessionEndSender` clone (the one `host` holds) is dropped, which happens when the
+            // process is tearing down.
+            {
+                let app_handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    while let Ok(event) = session_end_rx.recv() {
+                        // Advisory 5a (architect gate-1): logged on failure, never silently
+                        // dropped — the error only, never `event` itself (rider (b) still holds).
+                        if let Err(e) = app_handle.emit(spatial_skp::v0::DATASET_SESSION_ENDED_EVENT, &event) {
+                            eprintln!("[spatial-ide-shell] dataset-session-ended emit failed: {e}");
+                        }
+                    }
+                });
+            }
 
             // Opened first, before the origin mirror below, so a fail-closed refusal
             // (`OriginError::DevUrlNotConfigured`, condition 4) has somewhere to log to before the

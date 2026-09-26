@@ -17,19 +17,55 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use std::path::Path;
+
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
 use spatial_engine::{
-    AdmittedPredicate, CancelToken, Dataset, EngineError, FilterError, PredicateAdmitError,
-    ViewportQuery,
+    AdmittedPredicate, ArmOutcome, ArmedWatch, CancelToken, Dataset, EngineError, FilterError,
+    PredicateAdmitError, SourceWatchArm, ViewportQuery, WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
-    CancelKey, CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, CrsInfo,
-    CrsUnit, DatasetHandle, DecU64, DescribeRequest, DescribeResponse, Extent, FieldInfo,
+    CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
+    CloseDatasetResponse, CoverageState, CrsInfo, CrsUnit, DatasetHandle, DatasetSessionEnded,
+    DecU64, DescribeRequest, DescribeResponse, EndReason as WireEndReason, Extent, FieldInfo,
     GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest, OpenDatasetResponse, RowCount,
-    SkpError, SourceInfo, StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
+    SessionRef, SkpError, SourceChecks, SourceCoverage, SourceInfo, StreamHandle,
+    ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
 };
 
 use crate::{open_engine_stream, wrap_for_data_plane, Catalog};
+
+/// `engine/SOURCE-WATCHER-PREREGISTRATION.md` §7: events enqueued and not yet emitted; each open
+/// ends at most once.
+pub const SESSION_END_EVENT_QUEUE_BOUND: usize = 64;
+
+/// The channel the watcher's single emission point (`SessionInvalidator::end_generation`) sends
+/// on, and the shell's `run` `setup` closure drains — one emitter thread, never a payload logged.
+pub type SessionEndSender = std::sync::mpsc::SyncSender<DatasetSessionEnded>;
+pub type SessionEndReceiver = std::sync::mpsc::Receiver<DatasetSessionEnded>;
+
+/// A bounded channel for dataset-session-ended events (§7's declared bound). `try_send` never
+/// blocks and never waits — a full queue loses the event and never skips or blocks the end
+/// (§2b's single emission point; Decision 2).
+pub fn session_end_channel() -> (SessionEndSender, SessionEndReceiver) {
+    std::sync::mpsc::sync_channel(SESSION_END_EVENT_QUEUE_BOUND)
+}
+
+/// Why a dataset-session generation ended — the kernel's own record, never on the wire directly
+/// (the wire's `EndReason`, `spatial_skp::v0::EndReason`, is the projection `end_reason_of` below
+/// makes of this one).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SessionEndReason {
+    ObservedChange,
+    CoverageLost,
+}
+
+fn end_reason_of(r: SessionEndReason) -> WireEndReason {
+    match r {
+        SessionEndReason::ObservedChange => WireEndReason::ObservedChange,
+        SessionEndReason::CoverageLost => WireEndReason::CoverageLost,
+    }
+}
 
 /// ADR-019: an unredeemed ticket is swept and its slot freed.
 pub const TICKET_TTL: Duration = Duration::from_secs(30);
@@ -348,9 +384,12 @@ pub struct GenerationRegistry {
 
 #[derive(Default)]
 struct GenerationState {
-    /// The generation currently live for each open dataset. A dataset absent from this map has no
-    /// live generation — either it never opened, or its generation was invalidated.
-    live: HashMap<String, u64>,
+    /// The generation currently live for each open dataset, paired with its kernel-minted
+    /// [`SessionRef`] (Amendment 1: every generation carries one, never `Option` — a generation
+    /// minted by [`GenerationRegistry::live_or_mint`] rather than `mint_for_open` gets one no
+    /// client holds). A dataset absent from this map has no live generation — either it never
+    /// opened, or its generation was invalidated.
+    live: HashMap<String, (u64, SessionRef)>,
     /// Which generation each minted ticket belongs to. Boundary 4's "every batch is attributed to
     /// a generation via its ticket", held here rather than on the wire.
     /// `handle → (dataset, generation, when it was attributed)`. The instant is what
@@ -373,11 +412,16 @@ struct GenerationState {
     /// resurrecting exactly what the never-resurrect rule exists to prevent — so the safe fix is
     /// not the small one and is not taken here.
     ///
-    /// What it costs: one `String` per dataset that was invalidated and then neither reopened nor
+    /// What it costs: one entry per dataset that was invalidated and then neither reopened nor
     /// closed, for the life of the process. Bounded by distinct dataset handles, and `close_dataset`
     /// is the ordinary end of every one of them. Recorded rather than fixed blind (P3 attempt-2
     /// should-fix).
-    invalidated: std::collections::HashSet<String>,
+    ///
+    /// **`HashMap<String, SessionEndReason>`, not a `HashSet`** (`SOURCE-WATCHER-PREREGISTRATION.md`
+    /// §2b's Reason section): the first mark stands — [`GenerationRegistry::invalidate`] never
+    /// overwrites an existing entry, so [`GenerationRegistry::ended_reason`] always answers with the
+    /// reason the generation actually ended for, not whichever call happened to race last.
+    invalidated: HashMap<String, SessionEndReason>,
     /// Handles whose generation was **ended by a detected change**, so that a redemption arriving
     /// after the invalidation can be refused **by name** instead of being answered as though the
     /// ticket had merely expired (P3b §2c; Brief A boundary 4).
@@ -400,7 +444,11 @@ struct GenerationState {
     /// Dropping an entry here only degrades the refusal to `StreamRegistry::redeem`'s own
     /// "unknown" answer for a handle nothing else in the process still knows about; it never
     /// admits a stream.
-    dead_tickets: HashMap<String, (String, Instant)>,
+    ///
+    /// `(dataset, reason, when it was ended)` — the reason added so
+    /// [`GenerationRegistry::ticket_liveness`] can answer [`TicketLiveness::EndedByCoverageLoss`]
+    /// as well as [`TicketLiveness::EndedBySourceChange`] (`SOURCE-WATCHER-PREREGISTRATION.md` §2b).
+    dead_tickets: HashMap<String, (String, SessionEndReason, Instant)>,
     next: u64,
 }
 
@@ -420,6 +468,9 @@ pub enum TicketLiveness {
     /// This handle's generation was ended because the source was observed to have changed. The
     /// only value a caller may refuse by name on.
     EndedBySourceChange,
+    /// This handle's generation was ended because the advisory watch lost coverage of the source
+    /// (`SOURCE-WATCHER-PREREGISTRATION.md` §2a) — never a claim that the file changed.
+    EndedByCoverageLoss,
     /// This registry has **no record** of the handle — never minted, already swept, or minted
     /// against a `Catalog` entry opened through an entry point that never touched this registry.
     /// Says nothing at all about the file; the caller must answer from whatever else it knows
@@ -432,12 +483,13 @@ impl GenerationRegistry {
         Arc::new(Self::default())
     }
 
-    /// Mint a fresh generation for one open. Called once per successful `open_dataset`.
+    /// Mint a fresh generation for one open, carrying the [`SessionRef`] `open_dataset` already
+    /// minted for it. Called once per successful `open_dataset`.
     ///
     /// Counts up and never reuses a value, so an invalidated generation can never be confused with
     /// a later one for the same dataset name — the handle is minted fresh per open too, but the
     /// two are independent and this does not rely on that.
-    pub fn mint_for_open(&self, dataset: &str) -> u64 {
+    pub fn mint_for_open(&self, dataset: &str, session: SessionRef) -> u64 {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         // Prunes like every other mutating method — this one was missed at attempt 2, so a process
         // that only ever opened datasets (never queried) accumulated attributions from earlier
@@ -446,7 +498,7 @@ impl GenerationRegistry {
         Self::prune_locked(&mut st);
         st.next += 1;
         let g = st.next;
-        st.live.insert(dataset.to_string(), g);
+        st.live.insert(dataset.to_string(), (g, session));
         // A fresh open clears an earlier invalidation for the same name: that is what reopening
         // *is*, and boundary 4's refusals say "until reopen" in as many words.
         st.invalidated.remove(dataset);
@@ -454,29 +506,35 @@ impl GenerationRegistry {
         // ended cannot be redeemed after a reopen anyway — `StreamRegistry` swept it long before —
         // so keeping the record past the reopen would only grow the map for the life of the
         // process. Scoped to this dataset: another dataset's dead handles are untouched.
-        st.dead_tickets.retain(|_, (d, _)| d != dataset);
+        st.dead_tickets.retain(|_, (d, _, _)| d != dataset);
         g
     }
 
     /// The dataset's live generation, minting one if it has never had a generation and has not been
-    /// invalidated.
+    /// invalidated. `Err(reason)` when the dataset's generation was invalidated — the reason the
+    /// first mark recorded (`SOURCE-WATCHER-PREREGISTRATION.md` §2b's Reason section).
     ///
     /// Exists because this host shares its `Catalog` with entry points that do not run
     /// `open_dataset` — a dataset that arrived by one of those still gets a session rather than no
-    /// session. It never resurrects an invalidated generation: that returns `None`.
-    pub fn live_or_mint(&self, dataset: &str) -> Option<u64> {
+    /// session. It never resurrects an invalidated generation.
+    ///
+    /// **Amendment 1 (round 22 item 1): a generation minted here still carries a kernel-minted
+    /// `SessionRef` — one no client ever holds**, because this path never returns one to a caller.
+    /// The reference is unheld, not absent, so this generation's end still emits (`EndReport.session`
+    /// is never `Option`).
+    pub fn live_or_mint(&self, dataset: &str) -> Result<u64, SessionEndReason> {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
-        if st.invalidated.contains(dataset) {
-            return None;
+        if let Some(reason) = st.invalidated.get(dataset).copied() {
+            return Err(reason);
         }
-        if let Some(g) = st.live.get(dataset).copied() {
-            return Some(g);
+        if let Some((g, _)) = st.live.get(dataset) {
+            return Ok(*g);
         }
         st.next += 1;
         let g = st.next;
-        st.live.insert(dataset.to_string(), g);
-        Some(g)
+        st.live.insert(dataset.to_string(), (g, SessionRef::mint()));
+        Ok(g)
     }
 
     /// Attribute a freshly minted ticket to the dataset's live generation.
@@ -487,7 +545,8 @@ impl GenerationRegistry {
     pub fn attribute_ticket(&self, handle: &str, dataset: &str) -> bool {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
-        let Some(g) = st.live.get(dataset).copied() else { return false };
+        let Some((g, _)) = st.live.get(dataset) else { return false };
+        let g = *g;
         st.tickets.insert(handle.to_string(), (dataset.to_string(), g, Instant::now()));
         true
     }
@@ -534,14 +593,19 @@ impl GenerationRegistry {
     pub fn ticket_liveness(&self, handle: &str) -> TicketLiveness {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
-        if st.dead_tickets.contains_key(handle) {
-            return TicketLiveness::EndedBySourceChange;
+        if let Some((_, reason, _)) = st.dead_tickets.get(handle) {
+            return match reason {
+                SessionEndReason::ObservedChange => TicketLiveness::EndedBySourceChange,
+                SessionEndReason::CoverageLost => TicketLiveness::EndedByCoverageLoss,
+            };
         }
         // Checked against `live` rather than taken from the map's mere presence: `prune_locked`
         // above already drops attributions naming a dead generation, and this says the same thing a
         // second way rather than resting on that call's ordering.
         match st.tickets.get(handle) {
-            Some((dataset, g, _)) if st.live.get(dataset) == Some(g) => TicketLiveness::Live,
+            Some((dataset, g, _)) if st.live.get(dataset).map(|(live_g, _)| live_g) == Some(g) => {
+                TicketLiveness::Live
+            }
             _ => TicketLiveness::Unknown,
         }
     }
@@ -583,8 +647,10 @@ impl GenerationRegistry {
     ///    as well, so keeping it buys nothing and costs memory.
     fn prune_locked(st: &mut GenerationState) {
         let max_age = TICKET_TTL + TERMINAL_ENTRY_MAX_AGE;
+        let live = &st.live;
         st.tickets.retain(|_, (dataset, g, attributed_at)| {
-            attributed_at.elapsed() <= max_age && st.live.get(dataset) == Some(g)
+            attributed_at.elapsed() <= max_age
+                && live.get(dataset).map(|(live_g, _)| live_g) == Some(g)
         });
         // P3b §2c: the dead-ticket record, bounded by the **same sum** rather than by a second
         // value of its own (§7's declared table). Only condition 1 applies to it — a dead handle's
@@ -592,24 +658,39 @@ impl GenerationRegistry {
         // was written. Past this window `StreamRegistry` no longer answers for the handle either
         // (`sweep_locked`), so the refusal this record would have produced degrades to `redeem`'s
         // own "unknown" answer — a weaker statement, never a wrong one, and never an admission.
-        st.dead_tickets.retain(|_, (_, ended_at)| ended_at.elapsed() <= max_age);
+        st.dead_tickets.retain(|_, (_, _, ended_at)| ended_at.elapsed() <= max_age);
     }
 
-    /// End a dataset's generation, and return every ticket handle that belonged to it.
+    /// The reason this dataset's generation ended, if it has. Round 18 item 3: `describe`'s
+    /// `session_end` reads this. The first mark stands — this is the reason [`Self::invalidate`]
+    /// recorded on its **first** call for this dataset, never a later one.
     ///
-    /// Called when the source is observed to have changed — at the pre-check, where the refusal is
-    /// synchronous, or at a stream's post-check, where the change may be found only after that
-    /// stream has finished reading (boundary 4's declared limit). The caller cancels the returned
-    /// tickets through the **existing** cancel; nothing new is introduced for it.
-    ///
-    /// Idempotent: invalidating an already-invalidated generation removes nothing and returns an
-    /// empty list.
-    pub fn invalidate(&self, dataset: &str) -> Vec<String> {
+    /// Product caller: the kernel's `describe` assembly.
+    pub fn ended_reason(&self, dataset: &str) -> Option<SessionEndReason> {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        st.invalidated.insert(dataset.to_string());
-        let Some(g) = st.live.remove(dataset) else {
+        Self::prune_locked(&mut st);
+        st.invalidated.get(dataset).copied()
+    }
+
+    /// End a dataset's generation. `Some` exactly when this call removed the dataset's live
+    /// generation (ADR-035 D3's transition report) — idempotent, so the pre-check and a post-check
+    /// (or the watcher's sink) observing the same change do not double-report, and a source whose
+    /// post-check fires on several concurrent tile streams ends one session rather than N.
+    ///
+    /// **The reference is taken under this guard, in the same step as the removal** — the report's
+    /// `session` is `EndReport.session`, never absent (Amendment 1: `live_or_mint`'s own generation
+    /// carries one too).
+    ///
+    /// **The first mark stands** (§2b's Reason section): if this dataset was already invalidated,
+    /// `st.invalidated`'s existing entry is never overwritten by a later call's `reason` — the
+    /// reason returned in the report (when one is returned) is always the first one recorded.
+    pub fn invalidate(&self, dataset: &str, reason: SessionEndReason) -> Option<EndReport> {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        st.invalidated.entry(dataset.to_string()).or_insert(reason);
+        let recorded_reason = st.invalidated[dataset];
+        let Some((g, session)) = st.live.remove(dataset) else {
             Self::prune_locked(&mut st);
-            return Vec::new();
+            return None;
         };
         let ended: Vec<String> = st
             .tickets
@@ -621,17 +702,18 @@ impl GenerationRegistry {
         // that record exists.** `prune_locked` below sweeps these same attributions in this same
         // call, after which a dead ticket is indistinguishable from an unknown one in `tickets` —
         // so a redemption arriving a moment later could only ever be answered "unknown". Recording
-        // them here is what lets `ticket_liveness` say `EndedBySourceChange` for exactly the
-        // handles this call ended, and `Unknown` for every other.
+        // them here is what lets `ticket_liveness` say the right one of `EndedBySourceChange` /
+        // `EndedByCoverageLoss` for exactly the handles this call ended, and `Unknown` for every
+        // other.
         let ended_at = Instant::now();
         for h in &ended {
-            st.dead_tickets.insert(h.clone(), (dataset.to_string(), ended_at));
+            st.dead_tickets.insert(h.clone(), (dataset.to_string(), recorded_reason, ended_at));
         }
         // The generation these entries name is gone as of the line above, so `prune_locked`'s
         // second condition now sweeps them — collected first, because the caller still has to
         // cancel them.
         Self::prune_locked(&mut st);
-        ended
+        Some(EndReport { session, reason: recorded_reason, tickets: ended })
     }
 
     /// Forget a dataset entirely — its live generation and every ticket attributed to it. Called
@@ -644,8 +726,19 @@ impl GenerationRegistry {
         // P3b §2c: "entirely" includes the dead-ticket record — a closed dataset's handles are
         // gone from `StreamRegistry` too, so the record could only answer about tickets nothing
         // else in the process still knows.
-        st.dead_tickets.retain(|_, (d, _)| d != dataset);
+        st.dead_tickets.retain(|_, (d, _, _)| d != dataset);
     }
+}
+
+/// The transition report [`GenerationRegistry::invalidate`] returns — ADR-035 D3.
+///
+/// `session` is never absent (Amendment 1): every generation, including one
+/// [`GenerationRegistry::live_or_mint`] minted for a caller that never held it, carries a
+/// kernel-minted [`SessionRef`].
+pub struct EndReport {
+    pub session: SessionRef,
+    pub reason: SessionEndReason,
+    pub tickets: Vec<String>,
 }
 
 /// **Ending a dataset-session generation, as one callable thing two callers share.**
@@ -662,23 +755,56 @@ impl GenerationRegistry {
 pub struct SessionInvalidator {
     generations: Arc<GenerationRegistry>,
     tickets: Arc<StreamRegistry>,
+    events: SessionEndSender,
 }
 
 impl SessionInvalidator {
-    pub fn new(generations: Arc<GenerationRegistry>, tickets: Arc<StreamRegistry>) -> Arc<Self> {
-        Arc::new(Self { generations, tickets })
+    pub fn new(
+        generations: Arc<GenerationRegistry>,
+        tickets: Arc<StreamRegistry>,
+        events: SessionEndSender,
+    ) -> Arc<Self> {
+        Arc::new(Self { generations, tickets, events })
     }
 
-    /// End `dataset`'s generation and cancel every ticket that belonged to it. Returns how many
-    /// tickets this call actually cancelled.
+    /// **Record half of the single emission point** (§2b step 1; phase-2 delta 5). Takes the
+    /// [`EndReport`] under `GenerationRegistry`'s own guard, which the guard's release (inside
+    /// `invalidate`) already completes before this returns. Private: its product caller is
+    /// [`Self::end_generation`] below; the in-crate `ticket_drop_under_lock_regression` test module
+    /// reaches it as a descendant of this module.
+    fn record(&self, dataset: &str, reason: SessionEndReason) -> Option<EndReport> {
+        self.generations.invalidate(dataset, reason)
+    }
+
+    /// **Enqueue half of the single emission point** (§2b step 2; phase-2 delta 5). `try_send`s one
+    /// [`DatasetSessionEnded`] event for an already-taken [`EndReport`] — called only after
+    /// [`Self::record`]'s guard has been released, never under it. Never waits and never blocks the
+    /// end: a full queue loses the event (Decision 2).
+    fn enqueue(&self, report: &EndReport) {
+        let _ = self.events.try_send(DatasetSessionEnded {
+            session: report.session.clone(),
+            reason: end_reason_of(report.reason),
+        });
+    }
+
+    /// **The single emission point** (§2b). End `dataset`'s generation for `reason`, emit at most
+    /// one [`DatasetSessionEnded`] event, then cancel every ticket that belonged to it. Returns how
+    /// many tickets this call actually cancelled.
     ///
-    /// **Idempotent**, so the pre-check and a post-check observing the same change do not
-    /// double-cancel, and so a source whose post-check fires on several concurrent tile streams
-    /// ends one session rather than N.
-    pub fn end_generation(&self, dataset: &str) -> u32 {
-        let handles = self.generations.invalidate(dataset);
+    /// **Order, exactly** (§2b): 1. [`Self::record`] takes the report; 2. after the guard is
+    /// released (`invalidate` has already returned by this point — the enqueue never runs under
+    /// `GenerationRegistry`'s own lock), [`Self::enqueue`] sends one event; 3. cancel the report's
+    /// tickets through the existing `StreamRegistry::cancel`. The emission never waits and never
+    /// blocks the end — a full queue loses the event (Decision 2 keeps that safe).
+    ///
+    /// **Idempotent**, so the pre-check and a post-check (or the watcher's sink) observing the same
+    /// change do not double-cancel or double-emit, and so a source whose post-check fires on
+    /// several concurrent tile streams ends one session rather than N.
+    pub fn end_generation(&self, dataset: &str, reason: SessionEndReason) -> u32 {
+        let Some(report) = self.record(dataset, reason) else { return 0 };
+        self.enqueue(&report);
         let mut cancelled = 0u32;
-        for h in handles {
+        for h in report.tickets {
             if matches!(self.tickets.cancel(&h), CancelOutcome::Requested) {
                 cancelled += 1;
             }
@@ -737,6 +863,52 @@ impl Drop for OpenGuard<'_> {
     }
 }
 
+/// Whether a dataset's source is under active watch — fixed at admission, never rewritten by a
+/// later loss (rule 3). `describe`'s `coverage` is read straight from this.
+enum CoverageOutcome {
+    Watching,
+    ChecksOnly { reason: String },
+}
+
+/// One open's watch bookkeeping, held in [`SkpHost::watches`]. `watch` is `None` exactly when
+/// arming produced [`ArmOutcome::ChecksOnly`].
+struct OpenRecord {
+    /// Never read back — held only so `close_dataset`'s removal drops (disarms and joins) it.
+    #[allow(dead_code)]
+    watch: Option<Box<dyn ArmedWatch>>,
+    coverage: CoverageOutcome,
+}
+
+/// The per-open latch the sink writes into before admission (§2b's "Open and admission"). Lock
+/// order: latch, then generations — the admission code below is the only place that ever holds
+/// both, latch outer; the sink's own `Admitted` arm always drops the latch guard before it ever
+/// reaches into `generations` (via `SessionInvalidator::end_generation`), so the two are never
+/// held by two different threads in opposite order.
+enum LatchState {
+    PreAdmission { recorded: Option<WatchSignal> },
+    Admitted,
+}
+
+fn reason_of_signal(signal: &WatchSignal) -> SessionEndReason {
+    match signal {
+        WatchSignal::Change { .. } => SessionEndReason::ObservedChange,
+        WatchSignal::CoverageLost { .. } => SessionEndReason::CoverageLost,
+    }
+}
+
+/// The refusal a signal recorded **before admission** takes (§2b step 1): "A `Change` refuses as
+/// `engine.source_changed`, with a detail naming a notification before admission; a `CoverageLost`
+/// refuses as `engine.source_coverage_lost`."
+fn engine_error_of_pre_admission_signal(signal: WatchSignal) -> EngineError {
+    match signal {
+        WatchSignal::Change { .. } => EngineError::SourceChanged {
+            detail: "{[P6 placeholder] a notification arrived for this source before admission}"
+                .to_string(),
+        },
+        WatchSignal::CoverageLost { cause } => EngineError::SourceCoverageLost { detail: cause },
+    }
+}
+
 /// The composition SKP v0 needs: a shared catalog, a shared ticket registry, and an open-call
 /// registry local to this host. One `SkpHost` per running shell process.
 pub struct SkpHost {
@@ -751,13 +923,32 @@ pub struct SkpHost {
     /// the same one: a stream's post-check runs on its own thread, long after this host's call
     /// returned, and has to be able to end the session it found changed.
     invalidator: Arc<SessionInvalidator>,
+    /// Arms a watch over one open's source (`SOURCE-WATCHER-PREREGISTRATION.md` §2a). Product
+    /// constructor: `PlatformWatch`, built in the shell's `run` `setup` closure.
+    arm: Arc<dyn SourceWatchArm>,
+    /// One [`OpenRecord`] per currently-open dataset — the watch itself (dropped, which disarms and
+    /// joins, on `close_dataset`) and the coverage fact `describe` reads.
+    watches: Mutex<HashMap<String, OpenRecord>>,
 }
 
 impl SkpHost {
-    pub fn new(catalog: Arc<Catalog>, tickets: Arc<StreamRegistry>) -> Self {
+    pub fn new(
+        catalog: Arc<Catalog>,
+        tickets: Arc<StreamRegistry>,
+        arm: Arc<dyn SourceWatchArm>,
+        events: SessionEndSender,
+    ) -> Self {
         let generations = GenerationRegistry::new();
-        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
-        Self { catalog, tickets, opens: OpenRegistry::default(), generations, invalidator }
+        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone(), events);
+        Self {
+            catalog,
+            tickets,
+            opens: OpenRegistry::default(),
+            generations,
+            invalidator,
+            arm,
+            watches: Mutex::new(HashMap::new()),
+        }
     }
 
     /// The catalog this host mutates. `frontends/shell/src-tauri`'s app setup gives the identical
@@ -805,15 +996,149 @@ impl SkpHost {
         let identity = req.identity.map(host_minted_identity_declaration);
         // The handle IS the catalog name — never user-controlled text (`kernel/src/lib.rs`'s own
         // "names, never paths" rule, one level up: now also "names, never chosen by the caller").
+        // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: arm before `open_cancellable`, and so before the
+        // descriptor read in `Dataset::open_inner`. The sink writes into a per-open latch that
+        // starts pre-admission; a signal recorded there is read back at admission, below.
+        let dataset_name = handle.as_str().to_string();
+        let latch = Arc::new(Mutex::new(LatchState::PreAdmission { recorded: None }));
+        let sink: WatchSink = {
+            let latch = latch.clone();
+            let invalidator = self.invalidator.clone();
+            let dataset_name = dataset_name.clone();
+            Arc::new(move |signal: WatchSignal| {
+                let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                match &mut *guard {
+                    LatchState::PreAdmission { recorded } => {
+                        if recorded.is_none() {
+                            *recorded = Some(signal);
+                        }
+                    }
+                    LatchState::Admitted => {
+                        // Admission's own critical section (below) always mints this dataset's
+                        // generation before it ever sets the latch to `Admitted`, so by the time
+                        // this arm is reached the generation this call ends is guaranteed to exist
+                        // (Amendment 1: it always carries a `SessionRef`, even one no client
+                        // holds). Dropped before reaching into `generations` — lock order.
+                        drop(guard);
+                        let reason = reason_of_signal(&signal);
+                        // Phase-2 delta 8, following `kernel/src/lib.rs`'s own post-check
+                        // `eprintln!` convention: the reason's wire spelling only — no reference, no
+                        // dataset handle, no duration (the operator-visible-text rule; ADR-018).
+                        //
+                        // Advisory 2 (architect gate-1): this line runs before `end_generation`
+                        // and unconditionally, so after another route (or the other handle) has
+                        // already ended the generation, an "observed" wording would state an end
+                        // this call did not make. Worded as the signal itself, which this call
+                        // always did just receive, rather than as a claimed consequence — the
+                        // round-7 engine-facts rule (`SkpHost::end_generation`'s signature is
+                        // unchanged; the alternative of logging only when `record` returns `Some`
+                        // was not taken, to keep this fix to the wording alone).
+                        eprintln!(
+                            "the advisory source watcher signalled {}",
+                            match reason {
+                                SessionEndReason::ObservedChange => "observed-change",
+                                SessionEndReason::CoverageLost => "coverage-lost",
+                            }
+                        );
+                        invalidator.end_generation(&dataset_name, reason);
+                    }
+                }
+            })
+        };
+        let arm_outcome = self.arm.arm(Path::new(&req.path), sink);
+
         let outcome =
             self.catalog.open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
-        outcome.map_err(|e| error_of(&e))?;
-        // **Minted per open, and only for an open that succeeded** (boundary 3). A file that
-        // refused has no generation and can never produce `engine.source_changed` — the M-2
-        // truncated fixture's registered outcome. The value stays here: it is never persisted,
-        // never published, and never put on the wire (A2, §13 D).
-        self.generations.mint_for_open(handle.as_str());
-        Ok(OpenDatasetResponse { dataset: handle })
+        if let Err(e) = outcome {
+            // The open itself refused before admission was ever reached: disarm, nothing else to
+            // clean up (the catalog entry was never inserted).
+            drop(arm_outcome);
+            return Err(error_of(&e));
+        }
+
+        // Admission, under the latch — the whole decision, including `mint_for_open` on the
+        // success arm, runs inside this one critical section (lock order: latch, then
+        // generations), so the sink's own `Admitted` arm can never race a still-in-progress
+        // admission (it always finds either `PreAdmission` or a fully-admitted generation).
+        let session = match arm_outcome {
+            ArmOutcome::Watching(watch) => {
+                let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                let recorded = match &*guard {
+                    LatchState::PreAdmission { recorded } => recorded.clone(),
+                    LatchState::Admitted => {
+                        unreachable!("this call is the only place the latch is ever admitted")
+                    }
+                };
+                // Reviewer gate-1 B3 / §8 item 3 (Amendment 5 item 1): a signal recorded
+                // before admission, or the watch's own internal state disagreeing
+                // (belt-and-suspenders on the sink's asynchronous callback), now take the
+                // *same* refusal path — its code is the recorded signal's kind, never a
+                // hardcoded `SourceChanged`. The old two-step form assumed a false
+                // `resolves_unchanged()` with no recorded signal meant a `Change`; the
+                // product watch sets its own `fired` flag before it ever calls the sink, so
+                // the pending signal reaching the sink next can be a `CoverageLost`.
+                let resolves_unchanged = watch.resolves_unchanged();
+                if recorded.is_some() || !resolves_unchanged {
+                    // The latch stays `PreAdmission`: this call never sets `Admitted` on a
+                    // refused open, so the sink's own `Admitted` arm (its log line and
+                    // `end_generation`) is unreachable for it and leaves no `invalidated`
+                    // mark. No third latch state is added — after the drop below, no watch
+                    // thread remains to call the sink at all.
+                    drop(guard);
+                    self.catalog.remove(handle.as_str());
+                    // Drop the watch, which joins its threads. `ArmedWatch::resolves_unchanged`'s
+                    // contract: `false` means a signal has been delivered to the sink, or
+                    // will be before this `Drop` returns — so the latch's recorded signal,
+                    // read back below, is settled by the time this returns.
+                    drop(watch);
+                    let guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                    let recorded = match &*guard {
+                        LatchState::PreAdmission { recorded } => recorded.clone(),
+                        LatchState::Admitted => {
+                            unreachable!("this call is the only place the latch is ever admitted")
+                        }
+                    };
+                    drop(guard);
+                    return Err(error_of(&match recorded {
+                        Some(signal) => engine_error_of_pre_admission_signal(signal),
+                        // The conservative fallback (Amendment 5 item 1): `resolves_unchanged()`
+                        // was false, so the contract above promises a signal, but none is
+                        // recorded even after the watch's `Drop` returned. Refusing as a
+                        // coverage loss here never breaks §8 item 3; refusing a real coverage
+                        // loss as `SourceChanged` would.
+                        None => EngineError::SourceCoverageLost {
+                            detail: "[P6 placeholder] a notification arrived for this source \
+                                     before admission, but its kind could not be recovered \
+                                     after disarming"
+                                .to_string(),
+                        },
+                    }));
+                }
+                // Step 3: mint, still under the latch, before it flips to `Admitted`.
+                let session = SessionRef::mint();
+                self.generations.mint_for_open(handle.as_str(), session.clone());
+                *guard = LatchState::Admitted;
+                drop(guard);
+                self.watches
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(dataset_name, OpenRecord { watch: Some(watch), coverage: CoverageOutcome::Watching });
+                session
+            }
+            ArmOutcome::ChecksOnly { reason } => {
+                let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                let session = SessionRef::mint();
+                self.generations.mint_for_open(handle.as_str(), session.clone());
+                *guard = LatchState::Admitted;
+                drop(guard);
+                self.watches.lock().unwrap_or_else(|e| e.into_inner()).insert(
+                    dataset_name,
+                    OpenRecord { watch: None, coverage: CoverageOutcome::ChecksOnly { reason } },
+                );
+                session
+            }
+        };
+        Ok(OpenDatasetResponse { dataset: handle, session })
     }
 
     pub fn describe(&self, req: DescribeRequest) -> Result<DescribeResponse, SkpError> {
@@ -822,7 +1147,52 @@ impl SkpHost {
             .catalog
             .get(req.dataset.as_str())
             .ok_or_else(|| SkpError::unknown_dataset(req.dataset.as_str()))?;
-        Ok(describe_dataset(&ds))
+        let mut resp = describe_dataset(&ds);
+
+        resp.coverage = {
+            let watches = self.watches.lock().unwrap_or_else(|e| e.into_inner());
+            match watches.get(req.dataset.as_str()) {
+                Some(OpenRecord { coverage: CoverageOutcome::Watching, .. }) => {
+                    SourceCoverage { state: CoverageState::Watching, reason: None }
+                }
+                Some(OpenRecord { coverage: CoverageOutcome::ChecksOnly { reason }, .. }) => {
+                    SourceCoverage { state: CoverageState::ChecksOnly, reason: Some(reason.clone()) }
+                }
+                // No `OpenRecord`: this dataset was opened through an entry point other than this
+                // host's own `open_dataset` (`Catalog::open`/`open_cancellable` directly), so no
+                // watch was ever armed for it.
+                None => SourceCoverage {
+                    state: CoverageState::ChecksOnly,
+                    reason: Some(
+                        "[P6 placeholder] no watch was armed for this dataset".to_string(),
+                    ),
+                },
+            }
+        };
+        resp.checks = {
+            let components = ds.descriptor().unestablished_components();
+            if components.is_empty() {
+                SourceChecks { state: ChecksState::Full, components: Vec::new() }
+            } else {
+                SourceChecks {
+                    state: ChecksState::Degraded,
+                    components: components
+                        .into_iter()
+                        .map(|c| match c {
+                            "mtime" => CheckComponent::Mtime,
+                            "footer-hash" => CheckComponent::FooterHash,
+                            other => unreachable!(
+                                "SourceDescriptor::unestablished_components produced an unknown \
+                                 component: {other}"
+                            ),
+                        })
+                        .collect(),
+                }
+            }
+        };
+        resp.session_end = self.generations.ended_reason(req.dataset.as_str()).map(end_reason_of);
+
+        Ok(resp)
     }
 
     pub fn viewport_query(
@@ -862,11 +1232,20 @@ impl SkpHost {
         // the catalog deliberately — `describe` still answers, and the operator is told to reopen
         // rather than finding the name gone. A dataset that simply never had a generation minted is
         // not that, and `live_or_mint` below gives it one rather than accusing its file.
-        if self.generations.live_or_mint(&dataset_name).is_none() {
-            return Err(error_of(&EngineError::SourceChanged {
-                detail: "{this dataset's session ended when its source was observed to have \
-                         changed}"
-                    .to_string(),
+        // **Refusals take their code from the reason, never `SourceChanged` for a coverage loss**
+        // (`SOURCE-WATCHER-PREREGISTRATION.md` §2b; block-on-sight 3).
+        if let Err(reason) = self.generations.live_or_mint(&dataset_name) {
+            return Err(error_of(&match reason {
+                SessionEndReason::ObservedChange => EngineError::SourceChanged {
+                    detail: "{this dataset's session ended when its source was observed to have \
+                             changed}"
+                        .to_string(),
+                },
+                SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
+                    detail: "{[P6 placeholder] this dataset's session ended when the advisory \
+                             watch on its source lost coverage}"
+                        .to_string(),
+                },
             }));
         }
         let query = build_viewport_query(&ds, &req).map_err(predicate_admit_error_of)?;
@@ -877,7 +1256,9 @@ impl SkpHost {
         // here, synchronously and typed. **The generation ends on that refusal** — the check is
         // what detected the change, and leaving the generation live would let the next
         // `viewport_query` mint another ticket against a file that is no longer the one that
-        // opened. Every ticket that belonged to it is cancelled through the existing cancel.
+        // opened. Every ticket that belonged to it is cancelled through the existing cancel. This
+        // is the engine's own descriptor pre-check, never the watcher, so it always passes
+        // `ObservedChange`, as §2b's single emission point assigns to the pre-check.
         let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| {
             if matches!(e, EngineError::SourceChanged { .. }) {
                 self.end_generation(&dataset_name);
@@ -907,9 +1288,27 @@ impl SkpHost {
         // just minted rather than hand out one that is already dead.
         if !self.generations.attribute_ticket(handle.as_str(), &dataset_name) {
             self.tickets.cancel(handle.as_str());
-            return Err(error_of(&EngineError::SourceChanged {
-                detail: "{this dataset's session ended while this query was being prepared}"
-                    .to_string(),
+            // The actual reason this generation ended, never hardcoded to `SourceChanged`
+            // (block-on-sight 3) — falls back to `ObservedChange` only in the practically
+            // unreachable case that `attribute_ticket` failed for a reason `ended_reason` cannot
+            // yet see (the two reads are not one atomic step).
+            let reason = self
+                .generations
+                .ended_reason(&dataset_name)
+                .unwrap_or(SessionEndReason::ObservedChange);
+            // Phase-2 delta 9: one detail string per reason, so the coverage-lost one carries its
+            // own `[P6 placeholder]` mark (§7; §8 item 9) — the observed-change one is the existing,
+            // already-unmarked sentence this arm has always used for that reason.
+            return Err(error_of(&match reason {
+                SessionEndReason::ObservedChange => EngineError::SourceChanged {
+                    detail: "{this dataset's session ended while this query was being prepared}"
+                        .to_string(),
+                },
+                SessionEndReason::CoverageLost => EngineError::SourceCoverageLost {
+                    detail: "{[P6 placeholder] this dataset's session ended while this query was \
+                             being prepared}"
+                        .to_string(),
+                },
             }));
         }
         Ok(ViewportQueryResponse { stream: handle, expires_in_ms: TICKET_TTL.as_millis() as u32 })
@@ -930,7 +1329,9 @@ impl SkpHost {
     /// double-cancel. The operation itself lives on [`SessionInvalidator`], which the producer side
     /// also holds — one implementation, two callers.
     pub fn end_generation(&self, dataset: &str) -> u32 {
-        self.invalidator.end_generation(dataset)
+        // The engine's own pre-check descriptor comparison — never the watcher — so this always
+        // passes `ObservedChange`, as §2b's single emission point assigns to the pre-check.
+        self.invalidator.end_generation(dataset, SessionEndReason::ObservedChange)
     }
 
     pub fn cancel(&self, req: CancelRequest) -> Result<CancelResponse, SkpError> {
@@ -954,6 +1355,12 @@ impl SkpHost {
         if self.catalog.get(name).is_none() {
             return Err(SkpError::unknown_dataset(name));
         }
+        // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: the `OpenRecord` (and so the watch) is removed
+        // under the map guard and dropped only after release — disarming and joining the watch
+        // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
+        // `forget_dataset`.
+        let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
+        drop(removed_watch);
         // Invalidate/cancel every ticket first, then remove the name — never the other order,
         // which would let a `viewport_query` racing this call mint a ticket against a name already
         // gone from the catalog.
@@ -1206,6 +1613,11 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
                 |a| a.sanity_reason.clone(),
             ),
         },
+        // `skp/0.5`: placeholder shapes, always overwritten by `SkpHost::describe` (this function
+        // has no access to the host's watch/generation state) — never read as final values.
+        coverage: SourceCoverage { state: CoverageState::ChecksOnly, reason: None },
+        checks: SourceChecks { state: ChecksState::Full, components: Vec::new() },
+        session_end: None,
     }
 }
 
@@ -1337,6 +1749,12 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "timing_dependent_ordering",
             vec![("ordering", ordering.to_string()), ("cut", cut.to_string())],
         ),
+        // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a: a distinct code, never
+        // `engine.source_changed` for a coverage loss (block-on-sight 3). The engine never raises
+        // this itself; its product callers are this module's watcher-sink and admission-latch sites.
+        EngineError::SourceCoverageLost { detail } => {
+            ("source_coverage_lost", vec![("detail", detail.clone())])
+        }
         // **The same kind of stub the `FormatDefaultContradicted` arm above records, and for the
         // same reason: this match has no wildcard.** `engine/LOD-PREREGISTRATION.md` §7 declares the
         // LOD refusal identifiers, and `EngineError::LodRefused` carries whichever one fired. No SKP
@@ -1420,6 +1838,67 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
             [("detail", detail.clone())],
         ),
     }
+}
+
+/// A [`SourceWatchArm`] that always returns `ChecksOnly` — every test in this file that constructs
+/// an [`SkpHost`] and does not care about watch behaviour uses this, rather than a test-only
+/// constructor on `SkpHost` itself (§2a: "Tier-1 tests implement the two traits themselves, so no
+/// constructor exists for tests only").
+#[cfg(test)]
+struct NoWatchArm;
+#[cfg(test)]
+impl SourceWatchArm for NoWatchArm {
+    fn arm(&self, _path: &Path, _sink: WatchSink) -> ArmOutcome {
+        ArmOutcome::ChecksOnly { reason: "test fixture: no watch armed".to_string() }
+    }
+}
+#[cfg(test)]
+fn no_watch_arm() -> Arc<dyn SourceWatchArm> {
+    Arc::new(NoWatchArm)
+}
+
+/// K15's fixture (`SOURCE-WATCHER-PREREGISTRATION.md` §10 Amendment 5 item 1): an [`ArmedWatch`]
+/// that reproduces the product watch's own ordering — `resolves_unchanged()` already `false` by
+/// the time admission ever checks it, with the signal itself delivered to the sink only from
+/// `Drop`, exactly the race the unified refusal path (`SkpHost::open_dataset`) exists for.
+#[cfg(test)]
+struct RacingCoverageLossWatch {
+    sink: WatchSink,
+}
+#[cfg(test)]
+impl ArmedWatch for RacingCoverageLossWatch {
+    fn resolves_unchanged(&self) -> bool {
+        false
+    }
+}
+#[cfg(test)]
+impl Drop for RacingCoverageLossWatch {
+    fn drop(&mut self) {
+        (self.sink)(WatchSignal::CoverageLost {
+            cause: "K15 fixture: a coverage loss racing admission".to_string(),
+        });
+    }
+}
+#[cfg(test)]
+struct RacingCoverageLossArm;
+#[cfg(test)]
+impl SourceWatchArm for RacingCoverageLossArm {
+    fn arm(&self, _path: &Path, sink: WatchSink) -> ArmOutcome {
+        ArmOutcome::Watching(Box::new(RacingCoverageLossWatch { sink }))
+    }
+}
+#[cfg(test)]
+// K15's own two registered mutations are recorded on the test itself, below in
+// `ticket_drop_under_lock_regression` — this constructor carries no mutation of its own.
+fn racing_coverage_loss_arm() -> Arc<dyn SourceWatchArm> {
+    Arc::new(RacingCoverageLossArm)
+}
+
+/// A fresh, never-drained event channel's sender — for tests that construct an `SkpHost` without
+/// caring about the emitted events themselves.
+#[cfg(test)]
+fn discard_session_end_events() -> SessionEndSender {
+    session_end_channel().0
 }
 
 #[cfg(test)]
@@ -1839,7 +2318,8 @@ mod tests {
         .expect("write fixture");
 
         let catalog = Arc::new(Catalog::new());
-        let host = SkpHost::new(catalog, StreamRegistry::new());
+        let host =
+            SkpHost::new(catalog, StreamRegistry::new(), no_watch_arm(), discard_session_end_events());
         let open = host
             .open_dataset(OpenDatasetRequest {
                 skp: SKP_VERSION.to_string(),
@@ -2032,7 +2512,8 @@ mod ticket_drop_under_lock_regression {
 
         let tickets = StreamRegistry::new();
         let generations = GenerationRegistry::new();
-        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
+        let invalidator =
+            SessionInvalidator::new(generations.clone(), tickets.clone(), discard_session_end_events());
         let (source, source_cancel) = crate::wrap_for_data_plane(
             stream,
             cancel,
@@ -2042,7 +2523,7 @@ mod ticket_drop_under_lock_regression {
             Some(invalidator),
         );
 
-        generations.mint_for_open(dataset);
+        generations.mint_for_open(dataset, SessionRef::mint());
         let handle = tickets.mint(dataset, source, source_cancel).expect("mint a pending ticket");
         assert!(
             generations.attribute_ticket(handle.as_str(), dataset),
@@ -2216,13 +2697,15 @@ mod ticket_drop_under_lock_regression {
         // dataset's own pre-check descriptor.
         catalog.open(&name, &path, None).expect("open dataset");
         let tickets = StreamRegistry::new();
-        let host = SkpHost::new(catalog, tickets.clone());
+        let host =
+            SkpHost::new(catalog, tickets.clone(), no_watch_arm(), discard_session_end_events());
         let generations = host.generations();
-        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone());
+        let invalidator =
+            SessionInvalidator::new(generations.clone(), tickets.clone(), discard_session_end_events());
         let (source, source_cancel) =
             crate::wrap_for_data_plane(stream, cancel, name.clone(), reuses, None, Some(invalidator));
 
-        generations.mint_for_open(&name);
+        generations.mint_for_open(&name, SessionRef::mint());
         let handle = tickets.mint(&name, source, source_cancel).expect("mint a pending ticket");
         assert!(generations.attribute_ticket(handle.as_str(), &name));
 
@@ -2243,5 +2726,294 @@ mod ticket_drop_under_lock_regression {
         };
         let refused = host.viewport_query(request).expect_err("the ended generation refuses");
         assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // E5, E7, E8 (`SOURCE-WATCHER-PREREGISTRATION.md` §4) — in-crate, reusing this module's own
+    // helpers, per the doc's own placement note.
+    //
+    // **Phase-2 delta 5/6.** `SessionInvalidator::end_generation` is now split into two private
+    // methods, `record` (the `GenerationRegistry::invalidate` call, returning `Option<EndReport>`)
+    // and `enqueue` (`events.try_send` for an already-taken `EndReport`) — see their doc comments
+    // just above `end_generation` in this same `impl SessionInvalidator` block. `end_generation`
+    // itself calls them in that order, then cancels the report's tickets, exactly as before.
+    //
+    // The withdrawn no-window claim from this comment's earlier revision (phase 1, superseded at
+    // `4137f4d`, Amendment 3 item 2) is not repeated here. E8 below no longer argues from a claimed
+    // absence of a window; it drives the window directly, by calling `record` and `enqueue` itself
+    // on the test's own thread around a real `host.close_dataset` call — the same shape ADR-035
+    // Decision 3's close bullet describes for a data-plane thread that records an end, releases the
+    // guard, lets `close_dataset`'s `forget_dataset` run, and only then enqueues.
+
+    /// E5 `a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang`. The non-hang half of this
+    /// claim is already `sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang`
+    /// above; this test's own addition is the event itself, on a real channel this time rather than
+    /// `discard_session_end_events()`.
+    ///
+    /// RECORDED MUTATION: same as E1 — move `SessionInvalidator::end_generation`'s `try_send` into
+    /// `SkpHost::end_generation` only. Expected failure: this test's own sweep-triggered drop never
+    /// goes through `SkpHost::end_generation` (nothing here ever calls it), so the event never
+    /// arrives.
+    #[test]
+    fn a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang() {
+        let path = fixture("sweep-emits-path");
+        let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
+        let reuses = spatial_engine::Dataset::open(&path)
+            .expect("reopen for connection config")
+            .connections()
+            .config()
+            .reuses_connections();
+
+        let dataset = "ds_sweep_emits_path";
+        let tickets = StreamRegistry::new();
+        let generations = GenerationRegistry::new();
+        let (tx, rx) = super::session_end_channel();
+        let invalidator = SessionInvalidator::new(generations.clone(), tickets.clone(), tx);
+        let (source, source_cancel) = crate::wrap_for_data_plane(
+            stream,
+            cancel,
+            dataset.to_string(),
+            reuses,
+            None,
+            Some(invalidator),
+        );
+
+        generations.mint_for_open(dataset, SessionRef::mint());
+        let handle = tickets.mint(dataset, source, source_cancel).expect("mint a pending ticket");
+        assert!(generations.attribute_ticket(handle.as_str(), dataset));
+
+        // Seeded past `TICKET_TTL`, exactly as the non-hang test above does — see that test's own
+        // comment for why a real wait is never used here (ADR-018).
+        let expired_minted_at = std::time::Instant::now()
+            .checked_sub(TICKET_TTL + Duration::from_secs(1))
+            .expect("system uptime exceeds TICKET_TTL; re-run once the machine has been up longer");
+        {
+            let mut map = tickets.tickets.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(TicketState::Pending { built, dataset: d, .. }) = map.remove(handle.as_str())
+            else {
+                panic!("seeding did not leave a Pending entry");
+            };
+            map.insert(
+                handle.as_str().to_string(),
+                TicketState::Pending { built, dataset: d, minted_at: expired_minted_at },
+            );
+        }
+
+        run_with_timeout(HANG_TIMEOUT, {
+            let tickets = tickets.clone();
+            move || tickets.sweep_expired()
+        })
+        .unwrap_or_else(|| {
+            panic!("StreamRegistry::sweep_expired did not return within {HANG_TIMEOUT:?}")
+        });
+
+        let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event, within the bound");
+        assert_eq!(event.reason, WireEndReason::ObservedChange);
+        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    }
+
+    /// E7 `a_pending_drop_inside_close_emits_once_with_its_session_reference`. A real `SkpHost`, a
+    /// real `open_dataset` (so this test knows the exact reference the event must carry), and one
+    /// `Pending` ticket for that same dataset wired through the **host's own** invalidator — so
+    /// closing the dataset drops it via `cancel_all_for_dataset` (`SkpHost::close_dataset`, the
+    /// removal-then-cancel-then-forget order documented on that method), strictly before
+    /// `forget_dataset` runs.
+    ///
+    /// RECORDED MUTATION (registered, §4's own text for E7: "look the reference up after the
+    /// guard"): `SessionInvalidator::enqueue` re-reads the session from `GenerationRegistry`'s
+    /// `live` map (keyed by dataset) instead of using the one already taken into `report` by
+    /// `record`. Applied, run and reverted on this branch (`enqueue` and its one product call site
+    /// in `end_generation` temporarily took a `dataset: &str` parameter to make the re-read
+    /// possible; this test's own direct call below was updated to match, then both were reverted):
+    /// `panicked at kernel\src\skp.rs:2870:14: one event, carrying the open's own reference: Timeout` —
+    /// 1 failed. `record` (`GenerationRegistry::invalidate`) already removes the dataset's `live`
+    /// entry as part of taking the report, strictly before `enqueue` ever runs, so any re-read
+    /// finds nothing and the mutated `enqueue` returns without sending.
+    ///
+    /// RECORDED EXTRA (the mutation this doc's earlier revision mislabelled as E7's registered
+    /// one, gate-1 B3): move the `enqueue` call out of `SessionInvalidator::end_generation` into
+    /// `SkpHost::end_generation`'s own wrapper only, so the post-check/drop/close routes — which
+    /// reach `SessionInvalidator::end_generation` directly, never through that wrapper — stop
+    /// emitting. Observed failure (performed on this branch, then reverted): this test's
+    /// `recv_timeout` timed out with "one event, carrying the open's own reference" never
+    /// satisfied.
+    ///
+    /// RECORDED MUTATION (second, phase 1's own finding): swap `close_dataset`'s two lines —
+    /// `self.generations.forget_dataset(name)` before `self.tickets.cancel_all_for_dataset(name)`.
+    /// Observed failure (performed once on this branch, then reverted): by the time the ticket's
+    /// drop reaches `GenerationRegistry::invalidate`, `forget_dataset` has already removed the live
+    /// entry, so `invalidate` returns `None`, `end_generation` returns `0`, and no event is ever
+    /// enqueued — this test's `recv_timeout` timed out.
+    #[test]
+    fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
+        let path = fixture("close-drop-path");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
+        let open = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "e7".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect("open");
+        let name = open.dataset.as_str().to_string();
+
+        let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
+        let reuses = spatial_engine::Dataset::open(&path)
+            .expect("reopen for connection config")
+            .connections()
+            .config()
+            .reuses_connections();
+        // The host's OWN invalidator, cloned from its private field (accessible: this test module is
+        // a descendant of the module `SkpHost` is defined in) — so this ticket's drop reaches the
+        // exact channel `host`'s constructor was given, the same one `rx` above reads.
+        let (source, source_cancel) = crate::wrap_for_data_plane(
+            stream,
+            cancel,
+            name.clone(),
+            reuses,
+            None,
+            Some(host.invalidator.clone()),
+        );
+        let handle = host.tickets().mint(&name, source, source_cancel).expect("mint a pending ticket");
+        assert!(host.generations().attribute_ticket(handle.as_str(), &name));
+
+        host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
+            .expect("close");
+
+        let event = rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("one event, carrying the open's own reference");
+        assert_eq!(event.session, open.session);
+        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    }
+
+    /// E8 `an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference`
+    /// (rebuilt, phase 2 delta 6). ADR-035 Decision 3's close bullet names a route E7 alone cannot
+    /// reach: a data-plane thread records the end (`record`, under `GenerationRegistry`'s guard),
+    /// releases that guard, `close_dataset`'s `forget_dataset` then runs on the close's own thread,
+    /// and only *afterwards* does the first thread's `enqueue` run. This test drives that window
+    /// directly instead of arguing from ticket-drop timing: it calls `SessionInvalidator::record`
+    /// itself (reachable — this module is a descendant of `skp`, `record` and `enqueue` are private
+    /// to that module), then runs a real `host.close_dataset` to completion, then calls `enqueue` on
+    /// the already-taken `EndReport` — proving the reference recorded before `forget_dataset` still
+    /// carries correctly on an enqueue that runs after it.
+    ///
+    /// RECORDED MUTATION (registered, phase 2 delta 6): `enqueue` reads the reference from
+    /// `GenerationRegistry` instead of from the already-taken `EndReport`. Observed failure
+    /// (performed on this branch, then reverted): by the time this test's `enqueue` call runs,
+    /// `close_dataset`'s `forget_dataset` has already removed the dataset's `live` entry, so the
+    /// re-read finds nothing and no event carries the reference — this test's `recv_timeout` timed
+    /// out with its one-event expectation (the `expect` in the test body below) never satisfied.
+    ///
+    /// RECORDED MUTATION (registered, phase 2 delta 6, second): `enqueue` is skipped when
+    /// `ended_reason(dataset)` is `None`. Observed failure (performed on this branch, then
+    /// reverted): `forget_dataset` clears `invalidated` along with `live`
+    /// (`GenerationRegistry::forget_dataset`), so by the time this test's `enqueue` call runs,
+    /// `ended_reason` already answers `None` for the (now-closed) dataset, and the mutated `enqueue`
+    /// sends nothing — this test's `recv_timeout` timed out the same way.
+    // Mutation: see the two RECORDED MUTATIONs above (enqueue re-reads GenerationRegistry; enqueue
+    // skipped when ended_reason is None).
+    #[test]
+    fn an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference() {
+        let path = fixture("close-drop-race-path");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
+        let open = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "e8".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect("open");
+        let name = open.dataset.as_str().to_string();
+
+        // The data-plane thread's own step 1 (§2b), performed here on the test's own thread, before
+        // `close_dataset` ever runs: take the report under `GenerationRegistry`'s guard, which the
+        // guard's own release (inside `invalidate`) already completes before `record` returns.
+        let report = host
+            .invalidator
+            .record(&name, SessionEndReason::ObservedChange)
+            .expect("a live generation to end");
+
+        // The close's own thread runs to completion — including `forget_dataset` — while the
+        // report above is only held locally, its `enqueue` not yet called.
+        host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
+            .expect("close");
+
+        // The data-plane thread's own step 2 (§2b), run only now — strictly after `forget_dataset`.
+        host.invalidator.enqueue(&report);
+
+        let event = rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("one event, carrying the reference recorded before forget_dataset ran");
+        assert_eq!(event.session, open.session);
+        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    }
+
+    /// K15 `a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark`
+    /// (`SOURCE-WATCHER-PREREGISTRATION.md` §10 Amendment 5 item 1). In-crate, beside E5, E7 and
+    /// E8 — `GenerationState`'s `invalidated` map is private, and an accessor for it would be the
+    /// test-only `pub` item §5 forbids. [`RacingCoverageLossWatch`] reports `false` at admission
+    /// and delivers `CoverageLost` to the sink from its own `Drop`, the product watch's order.
+    ///
+    /// RECORDED MUTATION: in the unified refusal path (`SkpHost::open_dataset`), refuse with a
+    /// hardcoded `EngineError::SourceChanged` — the code at `ee6fa38` — instead of mapping the
+    /// signal recorded after the drop by its own kind. Applied, run and reverted on this branch:
+    /// `assertion `left == right` failed: refused: the source file changed while it was open
+    /// ({[P6 placeholder] a notification arrived for this source before admission}). ...`, `left:
+    /// "engine.source_changed"`, `right: "engine.source_coverage_lost"` — 1 failed.
+    ///
+    /// SECOND RECORDED MUTATION: set the latch to `LatchState::Admitted` before the watch is
+    /// dropped — the order at `ee6fa38`. Applied, run and reverted on this branch: the sink's
+    /// `Admitted` arm ran from the watch's own `Drop` and reached this call's own re-lock below,
+    /// which panicked — `internal error: entered unreachable code: this call is the only place
+    /// the latch is ever admitted` — 1 failed, never reaching this test's `invalidated`-mark
+    /// assertion.
+    #[test]
+    fn a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark() {
+        let path = fixture("k15-coverage-loss-race");
+        let (tx, rx) = super::session_end_channel();
+        let host =
+            SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), racing_coverage_loss_arm(), tx);
+
+        let refused = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "k15".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect_err("a coverage loss racing admission refuses the open");
+        assert_eq!(refused.code, "engine.source_coverage_lost", "{}", refused.message);
+
+        assert!(
+            host.catalog().names().is_empty(),
+            "a refused-before-admission open must leave no catalog entry behind"
+        );
+
+        // In-crate access to `GenerationRegistry`'s private state (no test-only `pub` item): a
+        // fresh registry, touched by nothing but this one refused open, so an empty map proves
+        // both "no live generation" and "no invalidated mark" without needing to know the
+        // internally minted dataset handle this call never returned.
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert!(st.live.is_empty(), "a refused-before-admission open must mint no generation");
+            assert!(
+                st.invalidated.is_empty(),
+                "a refused-before-admission open must leave no invalidated mark"
+            );
+        }
+
+        assert!(
+            rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "an open refused before admission must never emit"
+        );
     }
 }
