@@ -246,3 +246,43 @@ header above describes. They move into the next release's list when that release
     a missed detection; it says nothing about a change item 19 itself records as undetectable, which no
     later query surfaces either.
     <!-- frontends/shell/OWNER-INVALIDATION-PREREGISTRATION.md:954 (Amendment 11 (b), the small-pan/no-query finding; reproduced here only as "until a query is next issued", its own framing, not a verbatim quote); frontends/shell/MANUAL-WALKTHROUGH.md:951 (Part N row N8, "This is not a missed detection" stated verbatim, sourcing the closing sentence); engine/src/descriptor.rs:13-18 (the module doc: "may detect a change during a query only after that query has finished reading" and the same-size, four-component-match file the preregistration registers as not detected — the case this item's scope excludes) -->
+
+24. **The advisory source-change watch runs on Windows only.** Off Windows, arming a watch always
+    returns checks-only, naming the platform as the reason, and never claims to be watching — a
+    dataset there answers `describe.coverage.state = "checks-only"` unconditionally, and every source
+    change this piece can detect while idle is instead caught only at the next query's own pre-check
+    or post-check, exactly as it was before this piece.
+    <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §2a ("Off Windows, PlatformWatch::arm returns ChecksOnly naming the platform, and never Watching") and §1 ("May not claim: ... anything off Windows (tier note, §4)"); engine/src/watch.rs (PlatformWatch::arm's non-Windows arm) -->
+
+25. **A signal for an in-place write is not guaranteed before the writer's own handle closes.** The
+    watch's own hypothesis (H2) is only that such a write is signalled no later than that close — an
+    application that writes across a long-held, still-open handle, or whose writes are buffered by a
+    layer this check does not see, may leave the watch silent until the handle finally closes. Nothing
+    about the engine's own pre-check/post-check descriptor comparison changes because of this: it is
+    the backstop that still catches the change at the next query either way, and this line names only
+    when the OS notification itself is guaranteed to arrive, never a data-integrity claim.
+    <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §0.3 ("H2. An in-place write is signalled no later than the writer's handle close.") and §1 ("May not claim: any OS delivery deadline ... or a latency"); Amendment 3 item 6 ("H2 by A1 passing") -->
+
+26. **Only one ancestor above the watched file is watched, and a symlink retargeted after admission is
+    not seen while idle.** The watch covers the file's own parent directory and, unless that parent is
+    a volume root, its grandparent — nothing further up the tree. A rename or deletion above the
+    grandparent, or a symlink in the resolved path that is repointed after the dataset was admitted, is
+    therefore not signalled while the canvas is otherwise idle; either is still caught at the next
+    query's own pre-check or post-check, the same backstop item 25 names.
+    <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §2a ("Unless P is a volume root ... open P's parent, G, and issue its read"; round 17 item 2, S2 as recommended) and §5 ("Declared unchanged: the descriptor's comparison and refusal paths, the pre-check and the post-check") -->
+
+27. **A rename that changes only a character whose uppercase form is not exactly one character is not
+    recognised as the same name.** Name matching folds case per character through `to_uppercase`
+    where that produces exactly one character, and falls back to the original, unfolded character
+    everywhere else — so two names differing only in such a character's case can fail to match, and a
+    rename of that shape is read as the source going away rather than as the same file under a new
+    spelling. Declared as a residual by §7's own table rather than discovered afterward.
+    <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §7 ("Name comparison | ... compared per `char` through `to_uppercase` where 1:1, otherwise exact ... | a match. The residual goes to KNOWN-LIMITATIONS"); engine/src/watch.rs (`names_match`'s `fold` closure, the `(Some(u), None) => u, _ => c` arm) -->
+
+28. **A `dataset_session_ended` event can be lost, and nothing re-sends it.** The event channel is
+    bounded (`SESSION_END_EVENT_QUEUE_BOUND`, 64 events enqueued and not yet emitted); a full queue
+    drops the event rather than blocking or skipping the end it describes. A lost event is not a lost
+    fact: the generation still ended, and the operator still reaches the same refusal at the next
+    query issued against that dataset — this line names only that the event itself, as a live update,
+    is best-effort, never that the end goes unenforced.
+    <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §2b ("The emission never waits and takes no lock ... A full queue loses the event and never skips or blocks the end (Decision 2 keeps that safe)") and §7 (`SESSION_END_EVENT_QUEUE_BOUND` | 64 | "events enqueued and not yet emitted; each open ends at most once"); kernel/src/skp.rs (`SessionInvalidator::enqueue`'s `try_send`) -->
