@@ -240,17 +240,17 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 // K6 — a signal between arming and admission refuses the open
 // -------------------------------------------------------------------------------------------
 
-/// **Corrected scope, discovered while writing this test.** Reordering step 3 ahead of *only*
-/// step 1 (the latch's recorded-signal check) does not break this test: step 2
-/// (`watch.resolves_unchanged()`) is deliberate "belt-and-suspenders on the sink's asynchronous
+/// **Corrected scope, discovered while writing this test.** The recorded-signal check and
+/// `watch.resolves_unchanged()` are now one refusal path (Amendment 5 item 1), not two ordered
+/// steps: `resolves_unchanged()` is deliberate "belt-and-suspenders on the sink's asynchronous
 /// callback" (§2b's own words) and independently catches the same injected signal, because a real
 /// event flips both the latch and the watch's own `fired` flag together — this test's
 /// `InjectedArm::fire_on_next_arm` reproduces that coupling faithfully rather than decoupling it
-/// for convenience. The discriminating mutation skips both checks.
+/// for convenience. The discriminating mutation skips the refusal path entirely.
 ///
 /// RECORDED MUTATION: in `SkpHost::open_dataset`, mint the `SessionRef` and call
-/// `generations.mint_for_open` before checking the latch's recorded signal, skipping both step 1
-/// (the recorded signal) and step 2 (`resolves_unchanged()`) as no-ops. Expected/observed failure:
+/// `generations.mint_for_open` before ever reaching the refusal path, skipping it (both the
+/// recorded signal and `resolves_unchanged()`) as a no-op. Expected/observed failure:
 /// `open_dataset` below no longer refuses — it admits a source this test already told the kernel
 /// had changed before admission ever ran.
 ///
@@ -265,7 +265,7 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// before the retry runs at all. "No generation" stays unproven here: an accessor for it would be
 /// the test-only `pub` item §5 forbids, so that clause is not asserted (Amendment 3 item 4's own
 /// reduction).
-// Mutation: see the RECORDED MUTATION above (mint before the latch check, skipping steps 1-2).
+// Mutation: see the RECORDED MUTATION above (mint before the latch check, skipping the refusal path).
 #[test]
 fn a_signal_between_arming_and_admission_refuses_the_open() {
     let arm = injected_watch::InjectedArm::new();

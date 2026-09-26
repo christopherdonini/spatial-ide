@@ -1060,25 +1060,49 @@ impl SkpHost {
                         unreachable!("this call is the only place the latch is ever admitted")
                     }
                 };
-                // Step 1: a signal was recorded before admission.
-                if let Some(signal) = recorded {
-                    *guard = LatchState::Admitted;
+                // Reviewer gate-1 B3 / §8 item 3 (Amendment 5 item 1): a signal recorded
+                // before admission, or the watch's own internal state disagreeing
+                // (belt-and-suspenders on the sink's asynchronous callback), now take the
+                // *same* refusal path — its code is the recorded signal's kind, never a
+                // hardcoded `SourceChanged`. The old two-step form assumed a false
+                // `resolves_unchanged()` with no recorded signal meant a `Change`; the
+                // product watch sets its own `fired` flag before it ever calls the sink, so
+                // the pending signal reaching the sink next can be a `CoverageLost`.
+                let resolves_unchanged = watch.resolves_unchanged();
+                if recorded.is_some() || !resolves_unchanged {
+                    // The latch stays `PreAdmission`: this call never sets `Admitted` on a
+                    // refused open, so the sink's own `Admitted` arm (its log line and
+                    // `end_generation`) is unreachable for it and leaves no `invalidated`
+                    // mark. No third latch state is added — after the drop below, no watch
+                    // thread remains to call the sink at all.
                     drop(guard);
                     self.catalog.remove(handle.as_str());
+                    // Drop the watch, which joins its threads. `ArmedWatch::resolves_unchanged`'s
+                    // contract: `false` means a signal has been delivered to the sink, or
+                    // will be before this `Drop` returns — so the latch's recorded signal,
+                    // read back below, is settled by the time this returns.
                     drop(watch);
-                    return Err(error_of(&engine_error_of_pre_admission_signal(signal)));
-                }
-                // Step 2: the watch's own internal state disagrees (belt-and-suspenders on the
-                // sink's asynchronous callback).
-                if !watch.resolves_unchanged() {
-                    *guard = LatchState::Admitted;
+                    let guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                    let recorded = match &*guard {
+                        LatchState::PreAdmission { recorded } => recorded.clone(),
+                        LatchState::Admitted => {
+                            unreachable!("this call is the only place the latch is ever admitted")
+                        }
+                    };
                     drop(guard);
-                    self.catalog.remove(handle.as_str());
-                    drop(watch);
-                    return Err(error_of(&EngineError::SourceChanged {
-                        detail: "{[P6 placeholder] a notification arrived for this source before \
-                                 admission}"
-                            .to_string(),
+                    return Err(error_of(&match recorded {
+                        Some(signal) => engine_error_of_pre_admission_signal(signal),
+                        // The conservative fallback (Amendment 5 item 1): `resolves_unchanged()`
+                        // was false, so the contract above promises a signal, but none is
+                        // recorded even after the watch's `Drop` returned. Refusing as a
+                        // coverage loss here never breaks §8 item 3; refusing a real coverage
+                        // loss as `SourceChanged` would.
+                        None => EngineError::SourceCoverageLost {
+                            detail: "[P6 placeholder] a notification arrived for this source \
+                                     before admission, but its kind could not be recovered \
+                                     after disarming"
+                                .to_string(),
+                        },
                     }));
                 }
                 // Step 3: mint, still under the latch, before it flips to `Admitted`.
@@ -1823,6 +1847,42 @@ impl SourceWatchArm for NoWatchArm {
 fn no_watch_arm() -> Arc<dyn SourceWatchArm> {
     Arc::new(NoWatchArm)
 }
+
+/// K15's fixture (`SOURCE-WATCHER-PREREGISTRATION.md` §10 Amendment 5 item 1): an [`ArmedWatch`]
+/// that reproduces the product watch's own ordering — `resolves_unchanged()` already `false` by
+/// the time admission ever checks it, with the signal itself delivered to the sink only from
+/// `Drop`, exactly the race the unified refusal path (`SkpHost::open_dataset`) exists for.
+#[cfg(test)]
+struct RacingCoverageLossWatch {
+    sink: WatchSink,
+}
+#[cfg(test)]
+impl ArmedWatch for RacingCoverageLossWatch {
+    fn resolves_unchanged(&self) -> bool {
+        false
+    }
+}
+#[cfg(test)]
+impl Drop for RacingCoverageLossWatch {
+    fn drop(&mut self) {
+        (self.sink)(WatchSignal::CoverageLost {
+            cause: "K15 fixture: a coverage loss racing admission".to_string(),
+        });
+    }
+}
+#[cfg(test)]
+struct RacingCoverageLossArm;
+#[cfg(test)]
+impl SourceWatchArm for RacingCoverageLossArm {
+    fn arm(&self, _path: &Path, sink: WatchSink) -> ArmOutcome {
+        ArmOutcome::Watching(Box::new(RacingCoverageLossWatch { sink }))
+    }
+}
+#[cfg(test)]
+fn racing_coverage_loss_arm() -> Arc<dyn SourceWatchArm> {
+    Arc::new(RacingCoverageLossArm)
+}
+
 /// A fresh, never-drained event channel's sender — for tests that construct an `SkpHost` without
 /// caring about the emitted events themselves.
 #[cfg(test)]
@@ -2870,5 +2930,67 @@ mod ticket_drop_under_lock_regression {
             .expect("one event, carrying the reference recorded before forget_dataset ran");
         assert_eq!(event.session, open.session);
         assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    }
+
+    /// K15 `a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark`
+    /// (`SOURCE-WATCHER-PREREGISTRATION.md` §10 Amendment 5 item 1). In-crate, beside E5, E7 and
+    /// E8 — `GenerationState`'s `invalidated` map is private, and an accessor for it would be the
+    /// test-only `pub` item §5 forbids. [`RacingCoverageLossWatch`] reports `false` at admission
+    /// and delivers `CoverageLost` to the sink from its own `Drop`, the product watch's order.
+    ///
+    /// RECORDED MUTATION: in the unified refusal path (`SkpHost::open_dataset`), refuse with a
+    /// hardcoded `EngineError::SourceChanged` — the code at `ee6fa38` — instead of mapping the
+    /// signal recorded after the drop by its own kind. Applied, run and reverted on this branch:
+    /// `assertion `left == right` failed: refused: the source file changed while it was open
+    /// ({[P6 placeholder] a notification arrived for this source before admission}). ...`, `left:
+    /// "engine.source_changed"`, `right: "engine.source_coverage_lost"` — 1 failed.
+    ///
+    /// SECOND RECORDED MUTATION: set the latch to `LatchState::Admitted` before the watch is
+    /// dropped — the order at `ee6fa38`. Applied, run and reverted on this branch: the sink's
+    /// `Admitted` arm ran from the watch's own `Drop` and reached this call's own re-lock below,
+    /// which panicked — `internal error: entered unreachable code: this call is the only place
+    /// the latch is ever admitted` — 1 failed, never reaching this test's `invalidated`-mark
+    /// assertion.
+    #[test]
+    fn a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark() {
+        let path = fixture("k15-coverage-loss-race");
+        let (tx, rx) = super::session_end_channel();
+        let host =
+            SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), racing_coverage_loss_arm(), tx);
+
+        let refused = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "k15".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect_err("a coverage loss racing admission refuses the open");
+        assert_eq!(refused.code, "engine.source_coverage_lost", "{}", refused.message);
+
+        assert!(
+            host.catalog().names().is_empty(),
+            "a refused-before-admission open must leave no catalog entry behind"
+        );
+
+        // In-crate access to `GenerationRegistry`'s private state (no test-only `pub` item): a
+        // fresh registry, touched by nothing but this one refused open, so an empty map proves
+        // both "no live generation" and "no invalidated mark" without needing to know the
+        // internally minted dataset handle this call never returned.
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert!(st.live.is_empty(), "a refused-before-admission open must mint no generation");
+            assert!(
+                st.invalidated.is_empty(),
+                "a refused-before-admission open must leave no invalidated mark"
+            );
+        }
+
+        assert!(
+            rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "an open refused before admission must never emit"
+        );
     }
 }
