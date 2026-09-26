@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `96a057f64a9807649cf86be3e074669d85ebacab72ac83452a665fee94cfb4bd`) at `2026-09-26T09:34:52.332Z`.
+Generated from `PLAN.yaml` (sha256 `a350e519b6f4c918e4d0d41c91c20d150b32d3acae5eaaed78807c54851f232d`) at `2026-09-26T09:39:09.303Z`.
 
 ## 1. Next
 
@@ -54,6 +54,13 @@ Generated from `PLAN.yaml` (sha256 `96a057f64a9807649cf86be3e074669d85ebacab72ac
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **b1-shell-half** — Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable) (phase `prototype`) — never queued until placed
+- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2) (phase `prototype`) — never queued until placed
+- **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
+- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) (phase `prototype`) — never queued until placed
+- **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
+- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (phase `prototype`) — never queued until placed
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (phase `prototype`) — never queued until placed
+- **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

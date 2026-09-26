@@ -2325,7 +2325,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it."
+    summary: "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md)."
     dates: {opened: 2026-09-25, done: null}
 
   - id: adr-035-decision-4-note
@@ -2452,4 +2452,130 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: publish-refusal-codes-and-attempt-lifecycle
+    title: "Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2)"
+    kind: task
+    lane: publish-viewer
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 180
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: shell-session-log-line-framing
+    title: "The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. frontends/shell/src-tauri/src/state.rs's append interpolates level raw and escapes only newlines in message, against its own one-line contract (state/cloud/wave1/A1.md, Finding A1-2)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: engine-cancel-before-stream-window
+    title: "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: tile-issue-epoch-growth
+    title: "TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. issueEpoch grows with the distinct tile keys visited and is freed when the dataset closes: a per-session growth with a ceiling (state/cloud/wave1/A5.md)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: audit-reader-char-boundary
+    title: "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)"
+    kind: task
+    lane: publish-viewer
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: skp-cancel-state-closed-set
+    title: "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: suites-and-toolchain-beyond-windows
+    title: "The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation."
     dates: {opened: 2026-09-26, done: null}
