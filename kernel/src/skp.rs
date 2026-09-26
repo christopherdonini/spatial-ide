@@ -2808,12 +2808,24 @@ mod ticket_drop_under_lock_regression {
     /// removal-then-cancel-then-forget order documented on that method), strictly before
     /// `forget_dataset` runs.
     ///
-    /// RECORDED MUTATION (registered, phase 2 delta 6 — same as E1): move the `enqueue` call out of
-    /// `SessionInvalidator::end_generation` into `SkpHost::end_generation`'s own wrapper only, so the
-    /// post-check/drop/close routes — which reach `SessionInvalidator::end_generation` directly,
-    /// never through that wrapper — stop emitting. Observed failure (performed on this branch, then
-    /// reverted): this test's `recv_timeout` timed out with "one event, carrying the open's own
-    /// reference" never satisfied.
+    /// RECORDED MUTATION (registered, §4's own text for E7: "look the reference up after the
+    /// guard"): `SessionInvalidator::enqueue` re-reads the session from `GenerationRegistry`'s
+    /// `live` map (keyed by dataset) instead of using the one already taken into `report` by
+    /// `record`. Applied, run and reverted on this branch (`enqueue` and its one product call site
+    /// in `end_generation` temporarily took a `dataset: &str` parameter to make the re-read
+    /// possible; this test's own direct call below was updated to match, then both were reverted):
+    /// `panicked at kernel\skp.rs:2870:14: one event, carrying the open's own reference: Timeout` —
+    /// 1 failed. `record` (`GenerationRegistry::invalidate`) already removes the dataset's `live`
+    /// entry as part of taking the report, strictly before `enqueue` ever runs, so any re-read
+    /// finds nothing and the mutated `enqueue` returns without sending.
+    ///
+    /// RECORDED EXTRA (the mutation this doc's earlier revision mislabelled as E7's registered
+    /// one, gate-1 B3): move the `enqueue` call out of `SessionInvalidator::end_generation` into
+    /// `SkpHost::end_generation`'s own wrapper only, so the post-check/drop/close routes — which
+    /// reach `SessionInvalidator::end_generation` directly, never through that wrapper — stop
+    /// emitting. Observed failure (performed on this branch, then reverted): this test's
+    /// `recv_timeout` timed out with "one event, carrying the open's own reference" never
+    /// satisfied.
     ///
     /// RECORDED MUTATION (second, phase 1's own finding): swap `close_dataset`'s two lines —
     /// `self.generations.forget_dataset(name)` before `self.tickets.cancel_all_for_dataset(name)`.
