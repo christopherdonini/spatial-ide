@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { CrsInfo, IdentityInfo } from "../skp/types";
+import type { CrsInfo, IdentityInfo, SourceChecks, SourceCoverage } from "../skp/types";
 
 /**
  * `DescribeSummary`'s CRS line -- factored out as a pure function so the asserted-ness rendering
@@ -66,4 +66,30 @@ export function sessionStatementLine(identity: IdentityInfo): string | null {
  */
 export function displayConventionLine(crs: CrsInfo): string | null {
   return crs.display_convention;
+}
+
+/**
+ * `DescribeSummary`'s checks-only row (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d, the
+ * `sessionStatementLine` precedent). Renders only for `coverage.state === "checks-only"`, with its
+ * reason -- `null` (no row) for `"watching"`. A placeholder and a migration-inventory item (§7):
+ * its wording is not settled.
+ */
+export function checksOnlyStatusLine(coverage: SourceCoverage): string | null {
+  if (coverage.state !== "checks-only") {
+    return null;
+  }
+  return `[P6 placeholder] checks-only — ${coverage.reason ?? "(no reason on the payload)"}`;
+}
+
+/**
+ * `DescribeSummary`'s degraded-checks row (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d). Renders
+ * only for `checks.state === "degraded"`, listing which structural-descriptor components this open
+ * could not establish (`components` is non-empty exactly for `degraded`, per `skp/0.5`'s own
+ * discipline) -- `null` (no row) for `"full"`. A placeholder and a migration-inventory item (§7).
+ */
+export function degradedChecksLine(checks: SourceChecks): string | null {
+  if (checks.state !== "degraded") {
+    return null;
+  }
+  return `[P6 placeholder] degraded — unestablished: ${checks.components.join(", ")}`;
 }

@@ -69,7 +69,13 @@ geo-traits = "0.3.0"
 # conveyed artifact's notice set), and the one feature named here is a module gate on that crate,
 # not another dependency. The in-tree precedent for calling a Win32 API this way is
 # `protocol/transport-bakeoff/src/memory.rs:18-40`. Windows-gated, because the call is.
-windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }
+# `Win32_System_IO`: the advisory source-change watcher's overlapped `ReadDirectoryChangesW`
+# (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a) — `OVERLAPPED`, `GetOverlappedResult` and
+# `CancelIoEx` live in that module (`windows-sys 0.61.2`, the version `Cargo.lock` resolves;
+# `mio 1.2.2`'s own manifest enables the same feature on the same crate, per that entry). Exactly
+# one feature added to the crate already declared above — no new crate, no version change, both
+# lockfiles stay byte-identical.
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem", "Win32_System_IO"] }
 
 [dev-dependencies]
 # Enables the fixture writer for this crate's own tests without putting it in the shipped surface.

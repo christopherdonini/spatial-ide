@@ -3,10 +3,12 @@
 
 import { describe, expect, it } from "vitest";
 
-import type { CrsInfo, IdentityInfo } from "../skp/types";
+import type { CrsInfo, IdentityInfo, SourceChecks, SourceCoverage } from "../skp/types";
 import {
+  checksOnlyStatusLine,
   crsProvenanceLine,
   crsSummaryLine,
+  degradedChecksLine,
   displayConventionLine,
   identitySummaryLine,
   sessionStatementLine,
@@ -162,5 +164,31 @@ describe("displayConventionLine (DECISIONS-PENDING.md RULED 2026-09-23 (late), e
 
     const projected = fileCrs({ display_convention: null });
     expect(displayConventionLine(projected)).toBeNull();
+  });
+});
+
+describe("checksOnlyStatusLine (engine/SOURCE-WATCHER-PREREGISTRATION.md §4, SH1)", () => {
+  // RECORDED MUTATION for SH1: render the row unconditionally (drop the `state !== "checks-only"`
+  // guard, i.e. `return` the line whatever `coverage.state` is). Expected failure: the second
+  // assertion below (`"watching"` renders no row) fails -- it would receive a non-null string.
+  it("renders only for checks-only, with its reason -- watching renders no row", () => {
+    const checksOnly: SourceCoverage = { state: "checks-only", reason: "<checks-only reason placeholder>" };
+    expect(checksOnlyStatusLine(checksOnly)).toContain("<checks-only reason placeholder>");
+
+    const watching: SourceCoverage = { state: "watching", reason: null };
+    expect(checksOnlyStatusLine(watching)).toBeNull();
+  });
+});
+
+describe("degradedChecksLine (engine/SOURCE-WATCHER-PREREGISTRATION.md §4, SH2)", () => {
+  // RECORDED MUTATION for SH2: drop the components from the rendered line (e.g. render a bare
+  // "degraded" with no component list). Expected failure: the first assertion below fails -- the
+  // rendered line no longer contains "mtime".
+  it("lists components only for degraded -- full renders no row", () => {
+    const degraded: SourceChecks = { state: "degraded", components: ["mtime"] };
+    expect(degradedChecksLine(degraded)).toContain("mtime");
+
+    const full: SourceChecks = { state: "full", components: [] };
+    expect(degradedChecksLine(full)).toBeNull();
   });
 });
