@@ -266,3 +266,13 @@ Assertions only: entry counts, stream ids and their order, `is_cancelled()`, and
 ## §10. Amendments
 
 *(Opens empty and is append-only. Results are recorded in the closing amendment as references and hashes only, under the record cap.)*
+
+### Amendment 1 — 2026-09-26, written after the worker's results were seen: the closing record
+
+References and hashes only (the record cap, 2026-09-18). Each row names its template class. Each hash is `git show <rev>:<path> | sed -n '<a>,<b>p' | sha256sum` over LF bytes.
+
+1. **Class 1, the commits:** `2b99551` (the fix and T1–T5, one commit, per §4) and `e061cb1` (the mutation records); `state/consults/2026-09-26-stream-registry-bound-worker-report.md:7-9 @ 370b2ba sha256:e7170bef7438d0e4bd856f70acbded21c70dd7561e9ad5e164e1274fac34ab19`.
+2. **Class 1, the test-first run against §4:** `state/consults/2026-09-26-stream-registry-bound-worker-report.md:11 @ 370b2ba sha256:3fe69c2e2ae585df263b62d05714154f2743098c1f28eaf2580ba07723c584fb`.
+3. **Class 1, §4's five mutations:** the worker's runs, recorded above T1–T5 at `e061cb1`, are the observation of record; `state/consults/2026-09-26-stream-registry-bound-worker-report.md:25-32 @ 370b2ba sha256:2fb374370363e1f5f98ba7e27cb2886dada7553febb8c3131f014a2afc70bdc1`. T4's mutation fails T4 by name at its backdating lookup, before its retention assertion, which is therefore proven on the shipped build by assertion only.
+4. **Class 2, §7's line budget, §7 not edited** (round 23, item 4, O7): declared at most 450; final 570, `git diff --numstat 522493a...e061cb1 -- protocol/data-plane/src/server.rs protocol/data-plane/tests/stream_registry_bound.rs` (243 and 327); Scope unchanged.
+5. **Class 1, §9's `cargo fmt --check`:** not clean at `522493a` (seven files of the crate, `server.rs` among them) and at `e061cb1` (the same seven and the new test file); `.github/workflows/product-ci-rust.yml` at `370b2ba` runs no `cargo fmt` and no `cargo clippy` step. The worker's clippy run and the other suites: `state/consults/2026-09-26-stream-registry-bound-worker-report.md:13-23 @ 370b2ba sha256:675840a52494234b8993cb8a3374fba4f62d2ea8d4c09a84e92e55f514b2a576`.
