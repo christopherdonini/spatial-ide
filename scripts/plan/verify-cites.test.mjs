@@ -192,3 +192,27 @@ test('runVerifyCites gates a broken rooted reference, ignores doc-number, advise
   assert.equal(advisory.length, 1, JSON.stringify(advisory));
   assert.match(advisory[0].target, /pool\.rs:999/);
 });
+
+test('a_broken_rooted_cite_in_a_filed_gate_report_is_advisory_and_its_siblings_stay_gated', () => {
+  const dir = gitTree({
+    'engine/src/pool.rs': 'a\nb\nc\n',
+    'state/consults/gates/2026-09-27-example-gate1-reviewer.md': 'see engine/src/pool.rs:99',
+    'state/drafts/example.md': 'see engine/src/pool.rs:98',
+    'state/consults/2026-09-27-example-consult.md': 'see engine/src/pool.rs:97',
+    'state/consults/gates-example.md': 'see engine/src/pool.rs:96',
+  });
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 2, JSON.stringify(gated));
+    assert.ok(gated.some((f) => f.relPath === 'state/consults/2026-09-27-example-consult.md'), JSON.stringify(gated));
+    assert.ok(gated.some((f) => f.relPath === 'state/consults/gates-example.md'), JSON.stringify(gated));
+    assert.equal(advisory.length, 2, JSON.stringify(advisory));
+    assert.ok(
+      advisory.some((f) => f.relPath === 'state/consults/gates/2026-09-27-example-gate1-reviewer.md'),
+      JSON.stringify(advisory),
+    );
+    assert.ok(advisory.some((f) => f.relPath === 'state/drafts/example.md'), JSON.stringify(advisory));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
