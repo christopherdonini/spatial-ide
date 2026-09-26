@@ -372,3 +372,18 @@ suite.
 ## 8. What stays true after the promotion
 
 The report schema, the S1/S2/S3 triage rule and the pinned-baseline discipline are worth keeping for any worker that lacks the custodian's context. None of it depends on the credit.
+
+## Deviation 2, 2026-09-25 — C and D carry §3's worker fields, pasted
+
+Appended by the custodian at batch 2's launch; nothing above is edited.
+- The A prompts paste §3's worker fields at their `[paste §3's schema, worker fields only]` placeholder.
+- C's and D's OUTPUT paragraphs name the schema, `(§3 schema, worker fields)`, but carry no placeholder. As written, each session would have to find §3 for itself.
+- §7 says: "Every prompt below repeats the common rules in full, by design; no session relies on shared context."
+
+So the custodian appends §3's worker fields verbatim, the same lines the A prompts carry, directly after C's and D's OUTPUT paragraphs. Nothing else in either prompt changes. The assembly is by script, and the launched texts are recorded beside their session IDs in `state/cloud/wave1/C-prompt.md` and `D-prompt.md`.
+
+## Deviation 3, 2026-09-26 — B carries §3's worker fields, pasted, as C and D do
+
+Appended by the custodian at batch 3's launch; nothing above is edited. B's OUTPUT paragraph also names the schema, `(§3 schema, worker fields)`, but carries no placeholder. For deviation 2's reason, the custodian appends §3's worker fields verbatim, by the same script, directly after B's OUTPUT paragraph. Nothing else in B changes.
+
+D's report showed a side effect: a prompt that names neither its item nor a branch leaves §3's `Item` field without a source, and D's worker left it blank (`state/cloud/wave1/D.md`, its custodian fields). B names its branch, `cloud/wave1-B`, as C's prompt names its own, so no further text is added. The launched text is recorded beside its session ID in `state/cloud/wave1/B-prompt.md`.

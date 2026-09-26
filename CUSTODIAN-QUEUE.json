@@ -1,27 +1,84 @@
 {
-  "generated_at": "2026-09-26T01:20:01.118Z",
-  "plan_hash": "36f3036feef78adc1178c71d888b9a5ffb2b9c242db08966bf6548ec0efef4bb",
+  "generated_at": "2026-09-26T10:13:13.800Z",
+  "plan_hash": "84c1fec581c2082b354902f3f256381b491c7a68344fc54bb8433f613bf6852e",
   "priorities_approved": true,
   "next": {
-    "id": "test-claims-landedness-bound",
-    "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
-    "lane": "governance",
+    "id": "corpus-reproducibility-record",
+    "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
+    "lane": "engine",
     "phase": "prototype",
     "status": "ready",
-    "order": 2,
-    "budget_minutes": 90,
+    "order": null,
+    "budget_minutes": 180,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": null,
+      "opened": "2026-09-26",
       "done": null
     },
-    "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions."
+    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
   },
   "ready": [
+    {
+      "id": "corpus-reproducibility-record",
+      "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+    },
+    {
+      "id": "data-plane-origin-non-ascii",
+      "title": "The data plane refuses a stated Origin that is not visible ASCII, as any foreign origin (wave-1 A1-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; runs now, in parallel with the watcher (disjoint files), under full gating; it restores the accepted posture of ADR-020. Evidence: state/cloud/wave1/A1.md, Finding A1-1, reproduced on Windows. Its own preregistration before any code."
+    },
+    {
+      "id": "bundle-viewer-partition-offset-bounds",
+      "title": "The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b))",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; independent of the other two; carries a KNOWN-LIMITATIONS line for bundles already published. A3 3(a)'s S2, the wrong failure state, rides along. Evidence: state/cloud/wave1/A3.md, its triage update, reproduced on Windows."
+    },
     {
       "id": "test-claims-landedness-bound",
       "title": "verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16)",
@@ -39,7 +96,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions."
+      "summary": "STOPPED 2026-09-24 before code: every candidate makes P3b's three held planned claims binding, against the human's round-16 item-4 hold (DECISIONS-PENDING.md entry 125). Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 5: placed and approved by the human; a light-lane fix to a tool that can silently skip tests, not new policy. Recorded before merge as the architect required: nothing forces a non-done node forward, so a piece could merge, its node stay in-progress, its named tests never exist, and CI stay green with one advisory line. Candidates (the custodian's declared choice, not the human's): (a) key the exemption on the claiming file's own piece being unlanded rather than on plan status; (b) a declared staleness window after which a planned claim binds; (c) a verify:plan cross-check that a node whose evidence PR is merged must be done. Single reviewer gate; five-line short form RULED 2026-09-24, question round 17, item 8 (entry 125): after the superseded-name scanner, then design (c) -- verify fails a node whose evidence PR is merged but which is not done -- once the scanner has retired P3b's three mentions. Carried from governance-test-claims-superseded-followups, architect attempt 2 (state/consults/2026-09-26-test-claims-followups-gate2-architect.md, notes N2-N6; N1 applied there at b82941e): N2 two computeWithdrawnRows/runVerifyTestClaims doc pointers to cite section 2.1(c); N3 the not-on-main test comment to name the new test; N4 the a_pin_with_no_rev comment to point to the record, with an optional class-4 mutation dropping both the COMMIT_ID_RE guard and the revResolvesToCommit call; N5 AUTONOMY.md section 6a item 3 to cite round 23 item 4, same line; N6 main()s note wording."
     }
   ],
   "waiting_on_human": {
@@ -76,6 +133,28 @@
       ]
     },
     {
+      "id": "data-plane-stream-registry-bound",
+      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows.",
+      "blocked_by": [
+        "data-plane-origin-non-ascii"
+      ]
+    },
+    {
       "id": "kernel-generation-close-races",
       "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
       "lane": "kernel-protocol",
@@ -92,7 +171,7 @@
         "opened": "2026-09-25",
         "done": null
       },
-      "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it.",
+      "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md).",
       "blocked_by": [
         "engine-source-change-watcher"
       ]
@@ -273,7 +352,7 @@
         "opened": "2026-09-18",
         "done": null
       },
-      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged. 2026-09-24, after PR #116 merged: ADR-035's read under a fresh count (round 19 item 1) dispatched on PR #114. RULED 2026-09-24, question round 21, item 1 (red line, typed): ADR-035 accepted as merged, Decision 4 confirmed with a rider; riders (a) and (b) bind this preregistration -- the session reference carries no batch or ticket attribution and routes only the ended-session event to its open; never persisted or published; the recipe and bundle leakage tests name it too. After PR #114 merges, one fully gated docs piece sets Accepted, appends the Acceptance section and appends to SKP-V0's section 8 the dated note of rider (c).",
+      "summary": "STOPPED 2026-09-24 at two stop-list items beyond the brief and the seven additions (DECISIONS-PENDING.md entry 122: S1 the idle push path does not exist; S2 a watched-directory rename needs a grandparent watch); the preregistration is filed uncommitted-as-gate at state/consults/2026-09-24-source-change-watcher.md. SIGHTED 2026-09-24 by the human (RULED 2026-09-24, the watcher sight; state/directives/2026-09-24-watcher-sight.md): the brief is accepted as the record of the settled direction, with seven additions binding on its preregistration -- two independent describe facts (coverage: watching | checks-only{reason}; checks: full | degraded{components}), which corrects entry 119 item (3)'s value list, degradation delivered by checks; coverage loss its own typed refusal, never SourceChanged, with P3b's ended-generation state carrying the reason through the same owner-side path; no new status surface; the idle push path named and proven by case (f); the directory never locked; the final path resolved at arming; the describe fields take the SKP literal after crs-unit-fact-and-bounds. RULED 2026-09-24 (night) item (2): its branch is cut from crs-unit-fact-and-bounds' branch (both touch describe), and B1 takes the literal after the watcher's. Night program 2026-09-24, item 4b (after item 4): the preregistration, the architect consult and the implementation on a branch under both gates, no merge; a preregistration choice beyond these points stops the piece and queues it. Its status display stays held for Map studio (shell direction item (b)). RULED 2026-09-23 (late), entry 119 item (3): its detection-state field on describe, with degradation as one of its values, delivers ADR-016 A1 item 2's owed degradation display -- no separate wire field for degradation alone. Shell direction item (b): its status display waits for the new shell structure (shell-redesign-map-studio). PLACED 2026-09-22 by the human: after Brief A closes, a bounded advisory-detection piece reusing the corrected invalidation/reopen lifecycle; no automatic reload and no stronger snapshot claim; its own preregistration. Windows-only advisory detection for the open dataset's source file, via `ReadDirectoryChangesW` on the parent directory through the `windows-sys` edge already in the engine (no new crate), feeding P3b's existing invalidation path. The existing pre-check and post-check stay unchanged; the watcher adds signals and replaces nothing. RULED 2026-09-24, question round 17, item 2 (entry 122): S1 one SKP control-plane event, dataset_session_ended, advisory delivery never the authority, carrying only the session reference and the typed reason (riders (a) and (b), verbatim in the RULED block); its ADR filed Proposed before the preregistration; S2 one grandparent watch, ancestors above it a KNOWN-LIMITATIONS line. The branch is cut from cut/crs-unit-fact-and-bounds. RULED 2026-09-24, question round 18, items 1-3 (entries 129-130): ADR-035 continues one text round under a fresh count; the session reference is kernel-minted and non-authorising, returned by open_dataset; rider (a) reads as every later generation-scoped call, and describe answered after the end carries the ended state and its typed reason (item 3's rider, on the watcher's literal). RULED 2026-09-24, question round 19, item 1 (entry 132): the kernel ticket-drop fix (PR #116) lands first; then one ADR-035 read under a fresh count stating the ruling -- dataset_session_ended is emitted at the single place the kernel records a generation's end, so every end emits whatever caused it; rider (a) unchanged. 2026-09-24, after PR #116 merged: ADR-035's read under a fresh count (round 19 item 1) dispatched on PR #114. RULED 2026-09-24, question round 21, item 1 (red line, typed): ADR-035 accepted as merged, Decision 4 confirmed with a rider; riders (a) and (b) bind this preregistration -- the session reference carries no batch or ticket attribution and routes only the ended-session event to its open; never persisted or published; the recipe and bundle leakage tests name it too. After PR #114 merges, one fully gated docs piece sets Accepted, appends the Acceptance section and appends to SKP-V0's section 8 the dated note of rider (c). RULED 2026-09-26, question round 24, item 4: PR #123 (wave-1 C, SKP conformance fixtures at skp/0.4) is held until this piece merges; then the custodian merges main into cloud/wave1-C, updates its fixtures to skp/0.5, re-runs its harness, records the counts, and brings it back for the human.",
       "evidence_label": "PR #114"
     },
     {
@@ -584,6 +663,139 @@
         "done": null
       },
       "summary": "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio."
+    },
+    {
+      "id": "publish-refusal-codes-and-attempt-lifecycle",
+      "title": "Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md)."
+    },
+    {
+      "id": "shell-session-log-line-framing",
+      "title": "The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. frontends/shell/src-tauri/src/state.rs's append interpolates level raw and escapes only newlines in message, against its own one-line contract (state/cloud/wave1/A1.md, Finding A1-2)."
+    },
+    {
+      "id": "engine-cancel-before-stream-window",
+      "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md)."
+    },
+    {
+      "id": "tile-issue-epoch-growth",
+      "title": "TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. issueEpoch grows with the distinct tile keys visited and is freed when the dataset closes: a per-session growth with a ceiling (state/cloud/wave1/A5.md)."
+    },
+    {
+      "id": "audit-reader-char-boundary",
+      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md)."
+    },
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list."
+    },
+    {
+      "id": "suites-and-toolchain-beyond-windows",
+      "title": "The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4)",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation."
     }
   ],
   "unscheduled": [
