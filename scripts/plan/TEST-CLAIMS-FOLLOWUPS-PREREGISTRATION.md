@@ -221,3 +221,9 @@ Superseded index: Amendment 3 items 1–5's class labels, by item 1; Amendment 3
 3. Final figure at 0f865e8, by Amendment 1's command: 1,088, class 2, the growth being b82941e and 0f865e8.
 
 Superseded index: Amendment 3 item 6's figure (1,087), by item 3.
+
+### Amendment 6 — 2026-09-26 (UTC), written after gate attempt 3's results were seen (`state/gate-log.json`, node governance-test-claims-superseded-followups, attempt 3): Amendment 5 item 1's class reduced (`state/directives/2026-09-18-record-cap.md`, point (3))
+
+1. 0f865e8's change to the RECORDED MUTATION comment above `a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both` (reviewer S1) is class 4; its reviewer R1 changes are class 3.
+
+Superseded index: Amendment 5 item 1's class for S1, by item 1.
