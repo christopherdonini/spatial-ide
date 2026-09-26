@@ -129,14 +129,18 @@ the human, round 14 item 2): a claim at line L of file F that does not exist in 
 reported advisory, never a binding finding, when F's own text carries a matching row that (a) pins a
 hash reference to `F:L` (or a range containing L) — `` `path:a[-b]` @ <rev> sha256:<hex> ``, DERIVED
 FROM the reference grammar `verify-quotes.mjs`'s `HASH_REF_RE` uses (round 12, item 1's quote-by-
-reference mechanism) as it stands on `governance/verify-quotes` @
-1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a tool claim names the tool's commit); only an
-explicit path equal to F's own repo-relative path is recognized, not a bare `:line` — (b) carries the
-word `superseded` on that same line, outside any backtick span (single **or double**); (c) the hash
-recomputes against `git show <rev>:F`'s own lines a..b, the blob's bytes as committed (not normalized
-to LF — a CRLF-committed blob hashes with its own CRs), so a pin proves the line's age and identity,
-not the name's disappearance; (d) those same historical bytes
-CONTAIN the claimed name — a pin that merely hashes a line it already has, without ever naming the
+reference mechanism) as it stands on `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a tool claim names the tool's commit); only an
+explicit path equal to F's own repo-relative path is recognized, not a bare `:line`, and `<rev>` must
+RESOLVE to a real commit, not merely look like one (§2.4: a hex-named branch or tag — a ref whose own
+name happens to be a run of hex digits — is refused the same way a non-commit `<rev>` is; see
+`revResolvesToCommit`) — (b) the word `superseded` or `Superseded`, exactly those two castings, sits
+on that same line, outside any backtick span (single **or double**): ALL CAPS or any other casing is
+refused, and so is the word when the whole word immediately before it is `not`/`never`, in either
+capitalization (§2.6); (c) the hash recomputes against `git show <rev>:F`'s own lines a..b, the blob's
+bytes as committed (not normalized to LF — a CRLF-committed blob hashes with its own CRs), so a pin
+proves the line's age and identity, not the name's disappearance; (d) the claim's OWN historical LINE
+— not the whole pinned span (§2.3's wide-span residual; a single-line pin is unaffected) —
+CONTAINS the claimed name — a pin that merely hashes a line it already has, without ever naming the
 claim, exempts nothing it was written to explain; and (e) `<rev>` is shown to be an ancestor of
 `origin/main` (refused, not merely unproven, when it is not — a commit that lives only on an unmerged
 branch can become unreachable from every fetched ref after a squash- or rebase-merge, which would
@@ -147,8 +151,9 @@ heading, the same way the planned set is, and never counts toward the exit code.
 `supersededSpans` and `findSupersededSpan` in the module.
 
 **The boundary** (adopted from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 1):
-SUPERSEDED means **renamed**: the pinned historical span must itself contain the claimed name, and
-the replacement name must be claimed and exist elsewhere in the same record. The check proves only
+SUPERSEDED means **renamed**: the claim's own historical LINE (not the whole pinned span; §2.3) must
+itself contain the claimed name, and the replacement name must be claimed and exist elsewhere in the
+same record. The check proves only
 the first half mechanically — that this line, at that commit, carried this name. That the obligation
 moved rather than vanished is proven by the record's own rows and read by the gate, not by this
 tool; a claim marked superseded with no replacement anywhere in the file is a defect this check does
@@ -161,7 +166,8 @@ already means something else on a round-15(g) withdrawal row) and restricted to 
 **Row position**: a withdrawal ATTEMPT is a line whose first two bytes are `- `, the marker following
 immediately, then a byte outside `[A-Za-z0-9_-]` or the line's end — the colon after the marker is not
 part of this predicate. A line carrying the marker anywhere else — indented, after another bullet's own
-first word, in a heading, in prose — is a MENTION, never an attempt: neither accepted nor refused.
+first word, in a heading, in prose, or opening with a DIFFERENT bullet marker (`* ` or `+ ` in place of
+`- `) — is a MENTION, never an attempt: neither accepted nor refused.
 
 Every line in ROW POSITION is checked on its own (round 21 item 2; round 22 item 3), whatever the state
 of the claim on its pinned line and whatever its node's status: a line yielding no accepted row — no
@@ -173,8 +179,10 @@ all) — a row failing any of these is the same kind of binding finding, naming 
 reason. Both riders (`ruling:`/`carrier:`) are read in the same call: the grammar or pin reason first,
 any rider failure appended after `; `; a row whose grammar and pin conditions both hold but whose
 riders fail is the rider-failure text alone. Neither kind of row-level finding is ever planned, and a
-row that fails its own pin conditions (not a grammar refusal) is never also reported a second time as
-an ordinary "not found" claim on the same pinned line. The gate reads two distinct semantic
+row that is grammar-accepted (own path, single line, commit-id-shaped rev) but then fails its own pin
+conditions OR its riders is never also reported a second time as an ordinary "not found" claim on the
+same pinned line — only a row refused at the grammar level (never capable of exempting anything to
+begin with) carries no such suppression. The gate reads two distinct semantic
 halves here, same as SUPERSEDED's own boundary above: this tool proves only that the named ruling and
 carrier citations *resolve* to a RULED block or an entry line in the current `DECISIONS-PENDING.md` —
 never that the cited ruling actually *names the removal*, and never that the named carrier actually
