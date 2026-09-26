@@ -198,7 +198,7 @@ async fn run_finished_stream(dp: &RunningDataPlane) -> String {
 /// another, the registry retains exactly `MAX_TERMINAL_RECORDS` — the last opened, in order.
 // MUTATION (T1), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the count prune is removed; only the age
 // prune runs. `the_registry_retains_at_most_the_declared_count_of_finished_streams` failed:
-// Declared excerpt (copied by script):
+// Declared excerpt (copied by script; its line numbers are this file's at 2b99551, before these records):
 // test the_registry_retains_at_most_the_declared_count_of_finished_streams ... FAILED
 //
 // failures:
@@ -235,7 +235,7 @@ async fn the_registry_retains_at_most_the_declared_count_of_finished_streams() {
 /// does terminate, its own record is the newest.
 // MUTATION (T2), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the count prune evicts the oldest entry in
 // admission order, live or terminal. `a_live_stream_is_never_pruned_at_the_count_ceiling` failed:
-// Declared excerpt (copied by script):
+// Declared excerpt (copied by script; its line numbers are this file's at 2b99551, before these records):
 // test a_live_stream_is_never_pruned_at_the_count_ceiling ... FAILED
 //
 // failures:
@@ -289,7 +289,7 @@ async fn a_live_stream_is_never_pruned_at_the_count_ceiling() {
 // MUTATION (T3), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14), outside this diff in `adapter_ws::drive`:
 // the reader is aborted as soon as the terminal frame is sent, skipping the PEER_DRAIN_TIMEOUT
 // wait. `a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer` failed:
-// Declared excerpt (copied by script):
+// Declared excerpt (copied by script; its line numbers are this file's at 2b99551, before these records):
 // test a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer ... FAILED
 //
 // failures:

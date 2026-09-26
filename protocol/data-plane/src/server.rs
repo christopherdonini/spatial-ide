@@ -622,7 +622,7 @@ mod tests {
     // MUTATION (T4), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): `record_terminal` removes the entry whose
     // terminal it records -- the drop at the terminal the ruling forbids.
     // `a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age` failed:
-    // Declared excerpt (copied by script):
+    // Declared excerpt (copied by script; its line numbers are the mutated tree's, not 2b99551's):
     // test server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age ... FAILED
     //
     // failures:
@@ -677,7 +677,7 @@ mod tests {
     /// unrelated live entry recorded before it is untouched.
     // MUTATION (T5), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the age prune is removed; only the count
     // prune runs. `a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record` failed:
-    // Declared excerpt (copied by script):
+    // Declared excerpt (copied by script; its line numbers are the mutated tree's, not 2b99551's):
     // test server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record ... FAILED
     //
     // failures:
