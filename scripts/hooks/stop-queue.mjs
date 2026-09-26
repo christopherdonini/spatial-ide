@@ -148,8 +148,8 @@ function leaseHeldBy(projectRoot, sessionId) {
   } catch {
     return { held: false, reason: 'CUSTODIAN-LEASE absent (or unreadable)' };
   }
-  const match = /^lease:\s*(\S+)\s+refreshed:/.exec(first);
-  if (!match) return { held: false, reason: 'CUSTODIAN-LEASE holds no active lease line (relinquished or malformed)' };
+  const match = /^lease:\s*(\S+)/.exec(first);
+  if (!match) return { held: false, reason: 'CUSTODIAN-LEASE holds no active lease line (relinquished, malformed or empty)' };
   if (match[1] !== sessionId) return { held: false, reason: "CUSTODIAN-LEASE holds another session's lease" };
   return { held: true };
 }
