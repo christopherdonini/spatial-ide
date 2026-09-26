@@ -189,3 +189,17 @@ All assertions; no measurement. The temp-directory check counts `verify-test-cla
 2. **Final figure:** 919 by Amendment 1's command at ea3b21d (mjs 235+65, test 520+39, README 37+23). Still class 2; the §7 line is not edited.
 
 Superseded index: Amendment 1 item 1's final figure (912), and Amendment 1 item 3's second bullet (the new tests' comments now carry their commit).
+
+### Amendment 3 — 2026-09-26 (UTC), written after gate attempt 1's results were seen (architect and reviewer FAIL at f6ccfd2; `state/gate-log.json`, node governance-test-claims-superseded-followups, attempt 1): the fix round's record
+
+1. **Code, class 5 (a gate settling the piece).** Architect B3, B4 and A4, and reviewer B6 and A5: 7400dac.
+2. **Tests, class 4.**
+   - Architect B1/reviewer B1, architect B2/reviewer B5, and architect B5/reviewer B4: 4d9644b.
+   - The new test `a_valid_row_with_condition_e_skipped_sets_withdrawn_main_unchecked` (architect B4/reviewer B6): 4d9644b.
+   - `a_withdrawn_test_row_whose_rev_is_not_on_main_fails_by_name` records §4's "skip the row-level (e) check" as the drop of its refusal line only: 4d9644b.
+3. **Comments, class 3** (reviewer B2 and B3): a2e6025 re-observes every recorded mutation in this piece's comments at 7400dac, on Node v24.18.1.
+4. **A result, class 2.** At 7400dac, `a_pin_with_no_rev_does_not_exempt`'s recorded mutation fails no test (55 of 55 pass): §2.4's `revResolvesToCommit` refuses the same rev. The test predates this piece; a2e6025 records this in its comment.
+5. **Docs, class 3** (architect A2, reviewer A2, A3 and A6): af9d34d (README) and 603940d (`AUTONOMY.md` §6a item 3, one line in place). PLAN, architect A6/reviewer A7: 8fb4999.
+6. **Final figures at 8fb4999**, by Amendment 1's command: 1,087 (mjs 261+84, test 616+56, README 46+24), class 2. Non-generated files: 6 of ≤ 6.
+
+Superseded index: Amendment 1 item 1's final figure (912) and its file count (5), by item 6; Amendment 2 item 1's bullets, by item 3; Amendment 2 item 2's figure (919), by item 6; Amendment 2 item 2's second sentence, withdrawn as a restatement of Amendment 1 item 1.
