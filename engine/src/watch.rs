@@ -42,6 +42,10 @@ pub trait ArmedWatch: Send {
     /// (and a second check beside) whatever bookkeeping the sink's own caller keeps from the
     /// asynchronous callback, so a signal that raced the caller's own admission check is still
     /// caught even if the caller's own record of it has not yet been observed.
+    ///
+    /// **The contract the kernel's admission path relies on** (`SOURCE-WATCHER-PREREGISTRATION.md`
+    /// §2b, "Open and admission"): `false` means a signal has been delivered to the sink, or will
+    /// be before this watch's own [`Drop`] returns.
     fn resolves_unchanged(&self) -> bool;
 }
 
@@ -64,7 +68,7 @@ pub trait SourceWatchArm: Send + Sync {
 
 /// The declared buffer size for each handle's `ReadDirectoryChangesW` call (§7), DWORD-aligned.
 /// Overflow past it is [`WatchSignal::CoverageLost`], never silently dropped.
-pub const WATCH_BUFFER_BYTES: usize = 65536;
+pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
 
 /// The product [`SourceWatchArm`]. Off Windows, [`SourceWatchArm::arm`] always returns
 /// `ArmOutcome::ChecksOnly` naming the platform, and never `Watching` (§2a).
@@ -200,22 +204,6 @@ mod windows_watch {
         Ok(file.into_raw_handle() as HANDLE)
     }
 
-    /// Cancel `pending`'s outstanding read and **synchronize on the cancellation** before its
-    /// buffer and `OVERLAPPED` block are freed — closing or freeing either while the driver may
-    /// still be writing a (cancelled) completion into them is a use-after-free waiting to happen.
-    /// Used only on the two early-failure paths in [`arm`] that have not yet handed the read to a
-    /// watch thread (whose own `GetOverlappedResult` call in [`watch_thread`] already provides this
-    /// synchronization before its own `pending` drops).
-    fn cancel_and_synchronize(pending: &PendingRead) {
-        unsafe {
-            CancelIoEx(pending.handle, std::ptr::null());
-        }
-        let mut transferred = 0u32;
-        unsafe {
-            GetOverlappedResult(pending.handle, pending.overlapped.as_ref(), &mut transferred, 1);
-        }
-    }
-
     /// One pending (issued, not yet completed) overlapped read, owning the buffer and the
     /// `OVERLAPPED` block the kernel writes into for as long as the read is outstanding.
     struct PendingRead {
@@ -230,6 +218,27 @@ mod windows_watch {
     // thread no longer touches them, which is exactly the ownership transfer `arm` performs when it
     // moves a freshly-issued `PendingRead` into the one watch thread that owns it from then on.
     unsafe impl Send for PendingRead {}
+
+    impl Drop for PendingRead {
+        /// Cancel this read specifically (**never null** — reviewer B2's flagged follow-on: a
+        /// null cancel from a value that does not know whether some other read on the same
+        /// handle has since been issued could cancel that unrelated read instead) and
+        /// **synchronize on the cancellation** before `buffer` and `overlapped` are freed —
+        /// closing or freeing either while the driver may still be writing a (cancelled)
+        /// completion into them is a use-after-free waiting to happen. This makes dropping a
+        /// `PendingRead` always safe, including when a failed `Builder::spawn` drops the
+        /// closure that captured it without ever running [`watch_thread`]'s own
+        /// `GetOverlappedResult` (reviewer B2).
+        fn drop(&mut self) {
+            unsafe {
+                CancelIoEx(self.handle, self.overlapped.as_ref());
+            }
+            let mut transferred = 0u32;
+            unsafe {
+                GetOverlappedResult(self.handle, self.overlapped.as_ref(), &mut transferred, 1);
+            }
+        }
+    }
 
     /// Issue one overlapped `ReadDirectoryChangesW` on `handle`. `Err` names the OS error; the
     /// caller treats that as an arm failure (`ChecksOnly`), never a signal.
@@ -321,7 +330,25 @@ mod windows_watch {
                 None => {
                     // A non-matching name: re-issue and keep waiting (§2a's mapping table).
                     match issue_read(handle, filter) {
-                        Ok(next) => pending = next,
+                        Ok(next) => {
+                            pending = next;
+                            // Reviewer B1: `disarming` may have flipped between the
+                            // completion just handled and this re-issue — `SourceWatch::drop`'s
+                            // own `CancelIoEx` landed on the read that just completed, not on
+                            // this new one, so without this check the new read is never
+                            // cancelled and this thread's next wait below blocks until some
+                            // later, unrelated change. Re-check and cancel this read's own
+                            // `OVERLAPPED` (never null: a null cancel here would also cancel a
+                            // still-later read some other re-issue of this same loop might
+                            // already have in flight) so the loop's next wait wakes with
+                            // `ERROR_OPERATION_ABORTED` and returns through the top-of-loop
+                            // disarm check above.
+                            if disarming.load(Ordering::SeqCst) {
+                                unsafe {
+                                    CancelIoEx(handle, pending.overlapped.as_ref());
+                                }
+                            }
+                        }
                         Err(e) => {
                             if fired.swap(true, Ordering::SeqCst) {
                                 return;
@@ -349,7 +376,8 @@ mod windows_watch {
             // SAFETY: `buffer` is at least 12 bytes past `offset` (checked above), which is
             // `FILE_NOTIFY_INFORMATION`'s three fixed `u32` members read here individually and
             // unaligned — the structure's own layout is not naturally aligned inside this byte
-            // buffer, which is why every read here is `read_unaligned` rather than a cast.
+            // buffer, which is why every read here is `from_ne_bytes` over a copied, aligned
+            // array rather than a cast onto the buffer's own (possibly misaligned) bytes.
             let next_entry_offset = u32::from_ne_bytes(buffer[offset..offset + 4].try_into().unwrap());
             let action = u32::from_ne_bytes(buffer[offset + 4..offset + 8].try_into().unwrap());
             let file_name_length =
@@ -526,10 +554,10 @@ mod windows_watch {
                         }
                         Err(e) => {
                             // A failure to arm G is checks-only too (the conservative reading
-                            // ruled as recommended) — disarm P's own not-yet-threaded read first,
-                            // synchronizing before its buffer is freed (no thread exists yet to
-                            // do that for us), then release both directories.
-                            cancel_and_synchronize(&p_pending);
+                            // ruled as recommended) — dropping P's own not-yet-threaded read here
+                            // cancels and synchronizes it (`PendingRead::drop`) before its buffer
+                            // is freed (no thread exists yet to do that for us), then both
+                            // directories are released.
                             drop(p_pending);
                             unsafe {
                                 CloseHandle(parent_handle);
@@ -544,7 +572,8 @@ mod windows_watch {
                         }
                     },
                     Err(e) => {
-                        cancel_and_synchronize(&p_pending);
+                        // Dropping P's own not-yet-threaded read cancels and synchronizes it
+                        // (`PendingRead::drop`) before its buffer is freed.
                         drop(p_pending);
                         unsafe {
                             CloseHandle(parent_handle);
@@ -560,12 +589,13 @@ mod windows_watch {
             }
         }
 
-        // Step 6: only once every read is pending, spawn one thread per handle.
+        // Step 6: only once every read is pending, spawn one thread per handle. Reviewer B2: a
+        // failed spawn is a fallible OS call on a product path, never an `.expect()` panic — it
+        // falls back to `ChecksOnly` like every other arming failure above.
         let fired = Arc::new(AtomicBool::new(false));
 
-        let mut handles = Vec::with_capacity(2);
         let p_disarming = Arc::new(AtomicBool::new(false));
-        let p_join = {
+        let p_spawn = {
             let sink = sink.clone();
             let fired = fired.clone();
             let disarming = p_disarming.clone();
@@ -574,13 +604,36 @@ mod windows_watch {
                 .spawn(move || {
                     watch_thread(p_pending, p_names, WatchKind::Parent, P_FILTER, sink, fired, disarming)
                 })
-                .expect("spawn the parent watch thread")
         };
+        let p_join = match p_spawn {
+            Ok(j) => j,
+            Err(e) => {
+                // The closure above, including its `p_pending`, was already dropped by the
+                // failed `spawn` call — `PendingRead::drop` already cancelled and synchronized
+                // that outstanding read before its buffer was freed. Only the raw handles this
+                // function still owns need releasing.
+                unsafe {
+                    CloseHandle(parent_handle);
+                }
+                if let Some((g_handle, g_pending, _)) = grandparent_armed {
+                    drop(g_pending);
+                    unsafe {
+                        CloseHandle(g_handle);
+                    }
+                }
+                return ArmOutcome::ChecksOnly {
+                    reason: format!(
+                        "[P6 placeholder] could not spawn the parent watch thread: {e}"
+                    ),
+                };
+            }
+        };
+        let mut handles = Vec::with_capacity(2);
         handles.push(Handle { raw: parent_handle, disarming: p_disarming, join: Some(p_join) });
 
         if let Some((g_handle, g_pending, g_names)) = grandparent_armed {
             let g_disarming = Arc::new(AtomicBool::new(false));
-            let g_join = {
+            let g_spawn = {
                 let sink = sink.clone();
                 let fired = fired.clone();
                 let disarming = g_disarming.clone();
@@ -597,9 +650,27 @@ mod windows_watch {
                             disarming,
                         )
                     })
-                    .expect("spawn the grandparent watch thread")
             };
-            handles.push(Handle { raw: g_handle, disarming: g_disarming, join: Some(g_join) });
+            match g_spawn {
+                Ok(j) => {
+                    handles.push(Handle { raw: g_handle, disarming: g_disarming, join: Some(j) });
+                }
+                Err(e) => {
+                    // `g_pending` was already dropped inside the failed `spawn` call above,
+                    // cancelled and synchronized by its own `Drop`. Build and drop a
+                    // `SourceWatch` holding only P, which disarms, joins and closes it, then
+                    // close G.
+                    drop(SourceWatch { fired: fired.clone(), handles });
+                    unsafe {
+                        CloseHandle(g_handle);
+                    }
+                    return ArmOutcome::ChecksOnly {
+                        reason: format!(
+                            "[P6 placeholder] could not spawn the grandparent watch thread: {e}"
+                        ),
+                    };
+                }
+            }
         }
 
         ArmOutcome::Watching(Box::new(SourceWatch { fired, handles }))

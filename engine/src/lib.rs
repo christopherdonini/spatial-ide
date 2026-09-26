@@ -132,7 +132,7 @@ pub use pool::{
     MAX_PHYSICAL_CONNECTIONS, MAX_STREAM_CONNECTIONS,
 };
 pub use rowgroup::{RowGroupIndex, RowGroupRefusal, RowGroupSelection};
-pub use watch::{ArmOutcome, ArmedWatch, PlatformWatch, SourceWatchArm, WatchSignal, WatchSink, WATCH_BUFFER_BYTES};
+pub use watch::{ArmOutcome, ArmedWatch, PlatformWatch, SourceWatchArm, WatchSignal, WatchSink};
 pub use stream::{
     BatchCut, BatchCutPolicy, BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox,
     ConnectionFacts, FilterPlan, RowOrdering, StreamStats, ViewportQuery,
