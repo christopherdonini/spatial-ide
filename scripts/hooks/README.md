@@ -46,7 +46,7 @@ reason to allow — that is what a continuation looks like; the caps and the pro
 loop protection.")
 
 **Decision order** (AUTONOMY.md §3, with §18's HALT switch as step 2 — the human's second
-directive):
+directive — and §24's lease check as step 3):
 
 1. `background_tasks` non-empty → allow.
 2. `CUSTODIAN_STOP_HOOK=off` (environment) → allow. Or `state/CUSTODIAN-HALT` exists, locally or
@@ -59,7 +59,9 @@ directive):
 3. Lease check (AUTONOMY.md §24): reads `CUSTODIAN-LEASE` at the project root. Unless its first
    line is an active `lease: <id> ...` line whose `<id>` equals the stdin `session_id` → allow,
    stderr names which case applied (absent, relinquished, another session's lease, or no
-   `session_id`). This session's own held lease continues to the steps below unchanged.
+   `session_id`). This session's own held lease continues to the steps below unchanged; a session
+   that allows here never reaches step 5, so it sends no human-blocked Telegram notice (HALT's own
+   notice at step 2 still fires for every session, lease or not).
 4. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
 5. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
    count; sends one Telegram message listing the waiting items (id, kind, minutes, total), deduped
@@ -236,7 +238,9 @@ exported decision functions (`decide`, `checkHalt`, `decidePrecompact`, `checkFr
 block on the two-node fixture's ready node; allow when only its human-blocked node remains; allow
 on non-empty `background_tasks`; allow via the environment override; allow on a local
 `state/CUSTODIAN-HALT` file (its first line surfaced on stderr); allow at the session and daily
-continuation caps. `checkFreshness`'s own git calls are injectable (`{ git: (args) => ... }`) so the
+continuation caps; the lease check (§24): allow when this session's lease is relinquished, allow
+when this session holds no lease (file absent, or another session's lease), and block as before
+when `CUSTODIAN-LEASE` holds this session's own lease. `checkFreshness`'s own git calls are injectable (`{ git: (args) => ... }`) so the
 "fresh" branch can be tested deterministically — a real git commit's tracked content cannot state
 that same commit's own resulting hash (the hash is computed from the content), so the achievable,
 literal test of "fresh" uses an injected git rather than a self-referencing commit.
