@@ -22,7 +22,11 @@ import { DATASET_SESSION_ENDED_EVENT, DatasetSessionEnded, EndReason } from "./t
  */
 export function decodeDatasetSessionEnded(payload: unknown): DatasetSessionEnded {
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
-    throw new Error(`dataset_session_ended: payload is not an object (${JSON.stringify(payload)})`);
+    // Reviewer S3 (architect gate-1): states the payload's KIND only -- null, array, or its
+    // `typeof` -- never `JSON.stringify(payload)`, which could serialize an object carrying a
+    // `session` value into this thrown message (§8 item 19 in principle).
+    const kind = payload === null ? "null" : Array.isArray(payload) ? "array" : typeof payload;
+    throw new Error(`dataset_session_ended: payload is not an object (kind: ${kind})`);
   }
   const obj = payload as Record<string, unknown>;
   const keys = Object.keys(obj).sort();
