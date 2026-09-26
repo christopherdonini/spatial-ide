@@ -1080,6 +1080,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    */
   function endCandidateSession(detail: string): void {
     sessionEnded = true;
+    // Amendment 4 item 8: cancels a running untiled stream through the existing
+    // `cancelUntiledStream` -- the same self-cancel-marking cancel `relinquishFill`'s own
+    // frame-exists path and `stop()`'s teardown both reuse -- so the untiled `onBatch`'s existing
+    // `untiledStreamHandle !== stream` check drops any batch still on the wire for it. A no-op when
+    // no untiled stream is currently running.
+    cancelUntiledStream();
     canvas?.clearAllTiles();
     logSessionEvent(
       "candidate-session-ended-source-changed",
@@ -1274,6 +1280,14 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     if (stopped) {
       await skpCancel(stream).catch(() => {});
       return { kind: "stopped" };
+    }
+    // Amendment 4 item 8 (the wave-1 fold-in, candidate arm's own untiled sink): the session-ended
+    // latch read beside `stopped`, same guarded position -- a late-minted untiled ticket, resolved
+    // after an event-route end already set this latch, is cancelled and never admitted (never
+    // assigned to `untiledStreamHandle` below).
+    if (sessionEnded) {
+      await skpCancel(stream).catch(() => {});
+      return { kind: "session-ended" };
     }
     untiledStreamHandle = stream;
     syncScanLiveness(); // P5f should-fix 3: the untiled first-look/reissue stream just became outstanding
