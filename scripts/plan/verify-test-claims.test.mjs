@@ -343,9 +343,11 @@ test('a_pin_to_a_different_line_does_not_exempt', () => {
 // Condition (d), attempt-1 architect gate B1. v1's line 3 is unrelated historical prose; v2 REPLACES
 // that line with the claim and appends a pin whose hash matches v1's own (unrelated) bytes -- valid
 // range, valid hash, marked superseded, but the historical text never names the claim.
-// RECORDED MUTATION: in findSupersededSpan, drop the `if (!slice.includes(name)) continue;` check →
-// fails: "AssertionError [ERR_ASSERTION]: a pin whose span lacks the claimed name must not exempt:
-// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3 @ <sha> sha256:<hash>`"}]" then "1 !== 0".
+// RECORDED MUTATION: in findMarkedSpan, drop the `if (claimLine === null || !claimLine.includes(name))
+// continue;` check (condition (d)'s current equivalent, since §2.3's residual fix replaced the earlier
+// whole-span `slice.includes(name)` check) -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted. Not isolated: this same mutation also fails
+// `a_range_pin_whose_claim_line_never_carried_the_name_does_not_exempt` below.
 test('a_pin_whose_span_lacks_the_claimed_name_does_not_exempt', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-namemismatch-'));
   const v1 = '# Doc\n\nNothing interesting on this historical line.\n';
@@ -614,11 +616,10 @@ test('a_withdrawn_test_row_whose_carrier_does_not_resolve_fails_by_name', () => 
   assert.equal(findings[0].message, 'unresolvable carrier: round 2, item 99', JSON.stringify(findings));
 });
 
-// A row carrying both markers ("superseded" as a word, "withdrawn-test" as the token), as a RANGE
-// reference: refused as a withdrawn-test SPAN outright (round 15(d)'s "one row, one line" --
-// `withdrawnTestSpans` filters any range via `singleLineOnly`), so the row-level check never even sees
-// it and cannot suppress anything for it (round 21 item 2's `invalidRowLines` mechanism only ever fires
-// for a reference `withdrawnTestSpans` accepts as a span in the first place). The only thing standing
+// A row carrying both markers ("superseded" as a word, "withdrawn-test" as the token), with
+// `superseded` as the bullet's own first word: NOT in row position (§2.1(a) -- the marker must be the
+// line's own first word, immediately after `- `), so it is a MENTION, never a withdrawal attempt, and
+// the row-level check (`computeWithdrawnRows`) never even processes the line. The only thing standing
 // between this claim and a wrongful SUPERSEDED exemption (which asks nothing of a ruling or a carrier)
 // is `supersededSpans`'s own precedence exclusion of any line ALSO carrying the `withdrawn-test` token.
 // RECORDED MUTATION: in supersededSpans, drop the `&& !containsWithdrawnTestOutsideBackticks(lineText)`
@@ -683,8 +684,7 @@ test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
 // real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; fails at its
 // FIRST assertion (the claim wrongly lands in `withdrawn`): "AssertionError [ERR_ASSERTION]: a row
 // naming a different path must not exempt this file's claim: [{"relPath":"X-PREREGISTRATION.md",
-// "line":3,"name":"an_obsolete_test_name_here","reference":"`Y-PREREGISTRATION.md:3` @ <sha>
-// sha256:<hash>","ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0".
+// "line":3,"name":"an_obsolete_test_name_here","reference":"`Y-PREREGISTRATION.md:3` @ <sha> sha256:<hash>","ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0".
 // Not isolated: this same mutation also fails
 // `a_withdrawn_test_line_pinning_another_files_path_fails_by_name` (52 of 54 pass; observed at c1e315b).
 test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
@@ -974,12 +974,10 @@ test('a_withdrawn_test_line_with_no_commit_id_rev_fails_by_name', () => {
 
 // §2.1(d): both riders are read on a REFUSED line too, in one call, the grammar reason first and any
 // rider failure appended after `; ` (§7).
-// RECORDED MUTATION (shared with the mutation above -- both blank the range reason's own text): applied
-// for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: [{"relPath":
-// "X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":"; unresolvable ruling: round 99,
-// item 1"}]" then "'; unresolvable ruling: round 99, item 1' !== 'refused: a line range; unresolvable
-// ruling: round 99, item 1'" (51 of 54 pass; see the mutation recorded on the test above; observed at
-// c1e315b).
+// RECORDED MUTATION (§4's own text: riders are not read on refused lines): in computeWithdrawnRows,
+// replace `const riders = withdrawnRiders(root, lineText);` with `const riders = reason === undefined
+// ? withdrawnRiders(root, lineText) : { ok: true };` -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted.
 test('a_refused_withdrawn_test_line_names_its_unresolvable_ruling', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 99, item 1; carrier: round 2, item 5\n`,
@@ -1041,11 +1039,11 @@ test('a_range_pin_whose_claim_line_never_carried_the_name_does_not_exempt', () =
 // §2.4's rev resolution (index 87; index 171 S4): a `<rev>` that only LOOKS like a commit id (a branch
 // literally NAMED with hex digits) must not exempt, even when it happens to point at the very commit
 // whose bytes hash-match.
-// RECORDED MUTATION: in findMarkedSpan, drop the `if (!revResolvesToCommit(root, span.rev)) continue;`
-// check -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: a hex-named
-// branch rev must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,"name":
-// "an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3 @ deadbeef sha256:<hash>`"}]" then
-// "1 !== 0" (53 of 54 pass, isolated to this test; observed at c1e315b).
+// RECORDED MUTATION (§4's own text: drop only the resolved-id prefix check, not the whole
+// `revResolvesToCommit` call): in revResolvesToCommit, replace `ok = resolved.startsWith(rev);` with
+// `ok = true;` -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`,
+// then reverted. Not isolated: `revResolvesToCommit` is shared, so this same mutation also fails
+// `a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name` below (its own row-level (r) check).
 test('a_pin_whose_rev_is_a_hex_named_branch_does_not_exempt', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-hexbranch-'));
   const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
@@ -1275,12 +1273,14 @@ test('a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name', () => {
 
 // §2.2's last bullet: a row that fails BOTH its own pin conditions and its riders names both, in one
 // message (§7: the pin reason first, the rider failure appended after `; `).
-// RECORDED MUTATION (shared with the mutation above -- both remove the hash comparison in
-// `withdrawnRowPinCondition`): applied for real, run, then reverted; fails: "AssertionError
-// [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":
-// "unresolvable ruling: round 99, item 1"}]" then "'unresolvable ruling: round 99, item 1' !==
-// 'refused: hash does not recompute; unresolvable ruling: round 99, item 1'" (52 of 54 pass; see the
-// mutation recorded on the test above; observed at c1e315b).
+// RECORDED MUTATION (§4's own text: riders are not read when the pin fails -- the same single code
+// change as `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` above, since this
+// implementation reads riders conditionally on `reason` regardless of whether that reason came from
+// the grammar or the pin): in computeWithdrawnRows, replace `const riders =
+// withdrawnRiders(root, lineText);` with `const riders = reason === undefined ?
+// withdrawnRiders(root, lineText) : { ok: true };` -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted; not isolated (see the mutation recorded on
+// the test above).
 test('a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both', () => {
   const { dir } = withdrawnFixture({ hash: '0'.repeat(64), ruling: 'round 99, item 1' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1305,4 +1305,27 @@ test('a_marker_in_row_position_without_its_colon_is_still_checked', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
   assert.equal(findings[0].kind, 'withdrawn-row', JSON.stringify(findings));
   assert.equal(findings[0].message, 'unresolvable ruling: round 99, item 1', JSON.stringify(findings));
+});
+
+// §2.2(e) at the ROW level (architect B4, reviewer B6): a fully valid row's own condition (e) SKIP (no
+// `origin/main` in the scanned tree, no remote at all here) must surface via `withdrawnMainUnchecked`
+// even when the row's own claim already exists and never becomes a `withdrawn` entry (`testExists`
+// short-circuits the per-claim loop before it ever asks the row for an exemption) -- isolating the
+// row-level surfacing from the pre-existing per-claim one.
+// RECORDED MUTATION: in computeWithdrawnRows, drop the `else if (pin.mainUnchecked) mainUnchecked =
+// true;` branch (the row-level SKIP no longer sets the flag) -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted.
+test('a_valid_row_with_condition_e_skipped_sets_withdrawn_main_unchecked', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-mainunchecked-'));
+  withRealTestFile(dir);
+  const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, DOC_WITH_REAL_CLAIM);
+  const hash = sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:3\` @ ${v1Rev} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${DOC_WITH_REAL_CLAIM}\n${row}`);
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  commitAll(dir, 'v2');
+  const { findings, withdrawn, withdrawnMainUnchecked } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  assert.equal(findings.length, 0, JSON.stringify(findings));
+  assert.equal(withdrawnMainUnchecked, true);
 });
