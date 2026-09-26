@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T12:12:00.419Z",
+  "generated_at": "2026-09-26T12:46:02.487Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,7 +12,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 23513931776,
+        "bytes": 23011098624,
         "total": 510319915008
       },
       {
@@ -33,7 +33,7 @@
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 76
+    "n": 77
   },
   "gate_first_pass": {
     "present": true,
@@ -67,8 +67,9 @@
       "governance-test-claims-withdrawn-marker": 2,
       "governance-hooks-cloud-inert": 1,
       "governance-test-claims-superseded-followups": 1,
-      "data-plane-origin-non-ascii": 1
+      "data-plane-origin-non-ascii": 1,
+      "engine-source-change-watcher": 1
     },
-    "total": 39
+    "total": 40
   }
 }

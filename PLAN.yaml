@@ -1823,7 +1823,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [69, 77, 90]
-    summary: "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it"
+    summary: "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it RULED 2026-09-26, question round 25, item 4: the next release's notes carry the KNOWN-LIMITATIONS line of bundle-viewer-partition-offset-bounds (bundles published before the fix keep a viewer that can stall on crafted offsets); no GitHub advisory."
     dates: {opened: null, done: null}
 
   # Appended by the custodian; unplaced. Only the human sets `order` on these.
@@ -2459,18 +2459,18 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: done
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {path: state/consults/2026-09-26-catalog-open-drop-reproduction.md}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-26, question round 25, item 1, (d) promoted: reproduction first, before the other five. Catalog::open drops a replaced dataset while holding the catalog write lock. The reproduction determines whether any Drop reached from it can block or reacquire the catalog lock (the #116 pattern). If it can: S1, a cut with #116's fix shape (drop after the guard is released). If it cannot: S2, a latency note, filed like the rest. Evidence so far: state/questions/round-25.md item 1 (d); state/cloud/wave1/A2.md, observation 5."
-    dates: {opened: 2026-09-26, done: null}
+    summary: "RULED 2026-09-26, question round 25, item 1, (d) promoted: reproduction first, before the other five. Catalog::open drops a replaced dataset while holding the catalog write lock. The reproduction determines whether any Drop reached from it can block or reacquire the catalog lock (the #116 pattern). If it can: S1, a cut with #116's fix shape (drop after the guard is released). If it cannot: S2, a latency note, filed like the rest. Evidence so far: state/questions/round-25.md item 1 (d); state/cloud/wave1/A2.md, observation 5. DONE 2026-09-26: S2 (state/consults/2026-09-26-catalog-open-drop-reproduction.md); filed as catalog-open-replace-drop-latency-note."
+    dates: {opened: 2026-09-26, done: 2026-09-26}
 
   - id: timing-tests-assert-property-not-budget
     title: "The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a))"
@@ -2578,6 +2578,42 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: catalog-open-replace-drop-latency-note
+    title: "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: watcher-e5-pin-on-main
+    title: "The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: blocked
+    order: null
+    depends_on: [engine-source-change-watcher]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 15
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Residual of engine/SOURCE-WATCHER-PREREGISTRATION.md's Amendment 6, row 13 (on the watcher branch until it merges). Once the watcher merges by a merge commit that keeps 4137f4d reachable (no squash), the E5 pin is appended on main as that preregistration's next amendment: lines 2626-2644 of kernel/src/skp.rs at 4137f4d, sha256 c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a (round 15 (e): hash pins only at main commits). The architect's gate-3 condition: the queue carries it before the merge."
     dates: {opened: 2026-09-26, done: null}
 
   - id: publish-refusal-codes-and-attempt-lifecycle

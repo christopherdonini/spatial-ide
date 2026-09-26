@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f03fd6350bce249fb4c61f845d1f2464465957a9f3aefb1e4a62e1e92d65151b`) at `2026-09-26T12:12:00.322Z`.
+Generated from `PLAN.yaml` (sha256 `8aec56dd43184becc086522127638501a1e5fe2b4b7f0c7c1bf43bfc7a9606b0`) at `2026-09-26T12:46:02.404Z`.
 
 ## 1. Next
 
-- **catalog-open-drop-reproduction** — Reproduction: can a Drop reached from Catalog::open's replaced dataset block or reacquire the catalog lock (weekly window (d); wave-1 A2 observation 5) (lane `engine`)
+- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`)
 
 ## 2. Ready
 
-- **catalog-open-drop-reproduction** — Reproduction: can a Drop reached from Catalog::open's replaced dataset block or reacquire the catalog lock (weekly window (d); wave-1 A2 observation 5) (lane `engine`, order null, budget 90 min)
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
 - **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
@@ -22,6 +21,7 @@ Generated from `PLAN.yaml` (sha256 `f03fd6350bce249fb4c61f845d1f2464465957a9f3ae
 ## 4. Blocked on dependencies
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: engine-source-change-watcher, b1-engine-kernel-half
+- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) — blocked by: engine-source-change-watcher
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — blocked by: engine-source-change-watcher
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: engine-source-change-watcher
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
@@ -59,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `f03fd6350bce249fb4c61f845d1f2464465957a9f3ae
 - **extent-degenerate-zoom-doc** — extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c)) (phase `prototype`) — never queued until placed
 - **verify-quotes-show-cites-narrowed** — verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e)) (phase `prototype`) — never queued until placed
 - **adr-023-s2-widenings-adr-021-consult** — Consult: whether ADR-023's section 2 widenings owe ADR-021 a note (weekly window (f)) (phase `prototype`) — never queued until placed
+- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (phase `prototype`) — never queued until placed
 - **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2) (phase `prototype`) — never queued until placed
 - **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
 - **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) (phase `prototype`) — never queued until placed
