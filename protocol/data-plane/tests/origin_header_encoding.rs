@@ -93,6 +93,11 @@ async fn attempt(dp: &RunningDataPlane, origin_bytes: Option<&[u8]>) -> Result<(
     }
 }
 
+// Mutation (§4 T1): request_allowed's `Some(o)` arm in session.rs also admits `sec_fetch_site == Some("same-origin")`. Applied, run, reverted.
+// Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
+//     left: Ok(())
+//    right: Err(403)
+//   test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
 #[tokio::test(flavor = "multi_thread")]
 async fn a_stated_foreign_ascii_origin_with_a_same_origin_claim_is_refused_as_an_origin() {
     // F1, the control: an ASCII foreign Origin is refused even under a forged same-origin claim,
@@ -104,6 +109,13 @@ async fn a_stated_foreign_ascii_origin_with_a_same_origin_claim_is_refused_as_an
     dp.shutdown().await;
 }
 
+// Mutation (§4 T2): the fix's refusal arm in server.rs fires only when the value is valid UTF-8; a non-UTF-8 value is read as `None` instead. Applied, run, reverted.
+// Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
+//     left: Ok(())
+//    right: Err(403)
+//     left: Ok(())
+//    right: Err(403)
+//   test result: FAILED. 3 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 #[tokio::test(flavor = "multi_thread")]
 async fn a_stated_origin_with_a_non_utf8_byte_is_refused_as_a_foreign_origin() {
     // F2, Finding A1-1's own reproduction: a present Origin with a byte `to_str` refuses used to be
@@ -114,6 +126,11 @@ async fn a_stated_origin_with_a_non_utf8_byte_is_refused_as_a_foreign_origin() {
     dp.shutdown().await;
 }
 
+// Mutation (§4 T3): the fix's refusal arm in server.rs fires only when the value is NOT valid UTF-8; a valid-UTF-8 non-ASCII value is read as `None` instead. Applied, run, reverted.
+// Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
+//     left: Ok(())
+//    right: Err(403)
+//   test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 #[tokio::test(flavor = "multi_thread")]
 async fn a_stated_origin_with_a_utf8_non_ascii_character_is_refused_as_a_foreign_origin() {
     // F3: valid UTF-8, but not visible ASCII -- `to_str` refuses this too (H1), and it must be
@@ -124,6 +141,15 @@ async fn a_stated_origin_with_a_utf8_non_ascii_character_is_refused_as_a_foreign
     dp.shutdown().await;
 }
 
+// Mutation (§4 T4): the fix reverted -- the Origin read restored to `.and_then(|v| v.to_str().ok())`. Applied, run, reverted.
+// Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
+//     left: Ok(())
+//    right: Err(403)
+//     left: Ok(())
+//    right: Err(403)
+//     left: Ok(())
+//    right: Err(403)
+//   test result: FAILED. 2 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 #[tokio::test(flavor = "multi_thread")]
 async fn a_stated_non_ascii_origin_is_refused_under_a_host_declared_expected_origin() {
     // F4a and F4b: the same refusal holds once a host declares `expected_origin` (ADR-020) -- both
@@ -137,6 +163,11 @@ async fn a_stated_non_ascii_origin_is_refused_under_a_host_declared_expected_ori
     dp.shutdown().await;
 }
 
+// Mutation (§4 T5): `upgrade` in server.rs returns 403 whenever the Origin header is absent. Applied, run, reverted.
+// Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
+//     left: Err(403)
+//    right: Ok(())
+//   test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 #[tokio::test(flavor = "multi_thread")]
 async fn an_absent_origin_with_a_same_origin_claim_is_still_admitted() {
     // F5: the fallback for a truly absent Origin (`request_allowed`'s `None` arm) must stay
