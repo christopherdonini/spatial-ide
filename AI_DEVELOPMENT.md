@@ -719,3 +719,11 @@ patch-level bumps — is recorded as a precedent, not here: `PRECEDENTS.md` P-03
   semantically (both sides' node changes kept), regenerate (`queue.mjs`, `health.mjs`, `site.mjs`),
   `verify.mjs`, commit, push, CI. Applied first to PRs #90 and #91 on 2026-09-19 (`AUTONOMY.md` §2 carries
   the mechanic).
+
+## Amendment 4 to the Custodian role — the round-25 process rules (2026-09-26, appended on the human's ruling of the same day, round 25, item 2; appended at the end so that no line a record cites above it moves)
+
+- **The rules and where they live.** Round 25, item 2 adopted the week's five proposals as one governance piece, this week's allowance under the record cap; the next weekly window falls due 2026-10-02. Classes 8 and 9, the mutation-observation wording and the commit-named test-text span are in `docs/PREREGISTRATION-TEMPLATE.md`'s Round 25 additions; gate-report filing and the full form at dispatch are `AUTONOMY.md` §24. The custodian's half is below.
+- **Filing a gate report.** File it under `state/consults/gates/`, byte-identical below a one-line filing note naming the gate, the attempt, the PLAN node and `Reviewed: <branch> @ <commit id>`. Take the commit from the report's own first line; where the report names none, take it from the dispatch that launched the gate and say so in the note. No branch-only cite is rewritten. A branch whose commit a filed report names is not deleted until that commit is reachable from main or from its PR's ref. Reports filed before this amendment's merge are not moved.
+- **Dispatch.** Before writing a five-line form, draft its `Out-of-scope` line; if it names a §21a category as touched, write the full form instead and dispatch the piece for full gating.
+- **A commit-named test-text span.** When a piece carries a class-3 test-text row named by a branch commit, its PR body names the row and asks for a merge that keeps that commit reachable, never a squash; the custodian adds a PLAN node, blocked on the piece, that appends the hash pin on main after the merge (the precedent is the source-change watcher's E5 pin).
+- **Briefs and mutations.** A brief never asks for a `verify-mutation` run as a mutation's observation; it asks for the mutation applied, the test run, the failure recorded by name with its commit, and the mutation reverted.

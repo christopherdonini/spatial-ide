@@ -192,3 +192,42 @@ test('runVerifyCites gates a broken rooted reference, ignores doc-number, advise
   assert.equal(advisory.length, 1, JSON.stringify(advisory));
   assert.match(advisory[0].target, /pool\.rs:999/);
 });
+
+// RECORDED MUTATION (round 25, item 2 (b)): three mutations were applied one at a time to the
+// archived-prefix list feeding `a_broken_rooted_cite_in_a_filed_gate_report_is_advisory_and_its_siblings_stay_gated`,
+// each run with `node --test scripts/plan/verify-cites.test.mjs`, then reverted, leaving
+// `git status` clean.
+// M1: the prefix covering filed gate reports was removed from the list. The fixture's filed
+//   gate report's broken cite, previously advisory, became gated, and the new test failed by
+//   name (and no other test) at 522e448.
+// M2: that same prefix was written without its trailing slash. The fixture's markdown file that
+//   sits alongside the gate-reports directory but is not itself under it -- a sibling file whose
+//   name happens to start with the same word -- was wrongly swept into the archived set, so its
+//   broken cite went advisory instead of gated, and the new test failed by name (and no other
+//   test) at 522e448.
+// M3: the drafts prefix was removed from the list. The fixture's drafted file's broken cite,
+//   previously advisory, became gated, and the new test failed by name (and no other test) at
+//   522e448.
+test('a_broken_rooted_cite_in_a_filed_gate_report_is_advisory_and_its_siblings_stay_gated', () => {
+  const dir = gitTree({
+    'engine/src/pool.rs': 'a\nb\nc\n',
+    'state/consults/gates/2026-09-27-example-gate1-reviewer.md': 'see engine/src/pool.rs:99',
+    'state/drafts/example.md': 'see engine/src/pool.rs:98',
+    'state/consults/2026-09-27-example-consult.md': 'see engine/src/pool.rs:97',
+    'state/consults/gates-example.md': 'see engine/src/pool.rs:96',
+  });
+  try {
+    const { gated, advisory } = runVerifyCites({ repoRoot: dir });
+    assert.equal(gated.length, 2, JSON.stringify(gated));
+    assert.ok(gated.some((f) => f.relPath === 'state/consults/2026-09-27-example-consult.md'), JSON.stringify(gated));
+    assert.ok(gated.some((f) => f.relPath === 'state/consults/gates-example.md'), JSON.stringify(gated));
+    assert.equal(advisory.length, 2, JSON.stringify(advisory));
+    assert.ok(
+      advisory.some((f) => f.relPath === 'state/consults/gates/2026-09-27-example-gate1-reviewer.md'),
+      JSON.stringify(advisory),
+    );
+    assert.ok(advisory.some((f) => f.relPath === 'state/drafts/example.md'), JSON.stringify(advisory));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
