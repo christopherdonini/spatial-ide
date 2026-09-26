@@ -1,0 +1,67 @@
+{
+  "url": "http://127.0.0.1:3812/viewer/index.html",
+  "expect_failure": null,
+  "served_manifest_hash": "sha256:1e5b4dc10bab298a9aa56cbaf180c62df35520584b96fbebfcc6459935765377",
+  "manifest_url": "http://127.0.0.1:3812/manifest.json",
+  "browser": "Chrome/153.0.8010.48",
+  "page": {
+    "status": "1/1 partitions verified · 84 features drawn, 0 outside the view",
+    "bannerVisible": false,
+    "banner": null,
+    "legend": [],
+    "crs": "EPSG:2056 → EPSG:2056 · transform: none — rendered in source CRS",
+    "identity": "file:id · verified-at-open-full-file",
+    "grade": "reproducibility: Snapshot",
+    "boundsBasis": "bounds: computed-over-published-rows",
+    "license": "license and attribution: unknown / not-declared",
+    "log": "loaded 1 partitions, 84 features"
+  },
+  "hover": {
+    "probes": 256,
+    "resolved": 16,
+    "samples": [
+      {
+        "id": "639",
+        "attributes": ""
+      },
+      {
+        "id": "5",
+        "attributes": ""
+      },
+      {
+        "id": "10",
+        "attributes": ""
+      },
+      {
+        "id": "646",
+        "attributes": ""
+      },
+      {
+        "id": "12",
+        "attributes": ""
+      },
+      {
+        "id": "648",
+        "attributes": ""
+      },
+      {
+        "id": "14",
+        "attributes": ""
+      },
+      {
+        "id": "19",
+        "attributes": ""
+      }
+    ]
+  },
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "console_errors_accounted_for": [
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "reason": "browser-initiated /favicon.ico request; the page references only ./app.js"
+    }
+  ],
+  "verdict": "rendered-and-hover-resolved"
+}
