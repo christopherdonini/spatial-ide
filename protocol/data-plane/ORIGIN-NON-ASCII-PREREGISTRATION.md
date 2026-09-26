@@ -186,3 +186,12 @@ Assertions only: the HTTP status of the upgrade response, or an admitted upgrade
 ## §10. Amendments
 
 *(Opens empty; append-only. Results are recorded in the closing amendment as references and hashes only, per the record cap.)*
+
+### Amendment 1 — 2026-09-26 (UTC), written after both gates' attempt-1 results were seen (`state/gate-log.json`, node data-plane-origin-non-ascii, attempt 1): the closing record
+
+1. Commits: 3a9ed80 (this form), d445c86 (§2's fix and §4's tests), fff5114 (the mutation records), 1a000a0 and 8d7ef9f (the records' attribution and excerpt form; architect gate-1 F1). c907f30, the worker's first records commit, exceeded §7's line ceiling; fff5114 replaced it on d445c86 by a force-push with lease before any consumer read the branch.
+2. §4: each test's observed failure under its mutation is the record above it @ 8d7ef9f; the reviewer's reruns at 1a000a0 are `state/consults/2026-09-26-origin-non-ascii-gate1-reviewer.md`, section Runs, item 3.
+3. §5: H1 by T3's mutation; H2 by T4's mutation for F2, F3 and F4a; F4b's before-column is not discriminated by T4 as written, and the reviewer's own run observed it (the same report, section Runs, item 2); H3 by the tests constructing their requests. T2's mutation also fails T4, outside §4's statement and not against it.
+4. §9's suites @ 1a000a0 and §7's figure, 196 of 200 across 3 files: the reviewer's attempt-1 gate-log record.
+
+Superseded index: none.
