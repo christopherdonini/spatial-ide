@@ -2825,7 +2825,7 @@ mod ticket_drop_under_lock_regression {
     /// `record`. Applied, run and reverted on this branch (`enqueue` and its one product call site
     /// in `end_generation` temporarily took a `dataset: &str` parameter to make the re-read
     /// possible; this test's own direct call below was updated to match, then both were reverted):
-    /// `panicked at kernel\skp.rs:2870:14: one event, carrying the open's own reference: Timeout` —
+    /// `panicked at kernel\src\skp.rs:2870:14: one event, carrying the open's own reference: Timeout` —
     /// 1 failed. `record` (`GenerationRegistry::invalidate`) already removes the dataset's `live`
     /// entry as part of taking the report, strictly before `enqueue` ever runs, so any re-read
     /// finds nothing and the mutated `enqueue` returns without sending.

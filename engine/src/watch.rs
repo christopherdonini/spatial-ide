@@ -220,7 +220,7 @@ mod windows_watch {
     unsafe impl Send for PendingRead {}
 
     impl Drop for PendingRead {
-        /// Cancel this read specifically (**never null** — reviewer B2's flagged follow-on: a
+        /// Cancel this read specifically (**never null** — the fix ruling's §4 item 3, beyond B2: a
         /// null cancel from a value that does not know whether some other read on the same
         /// handle has since been issued could cancel that unrelated read instead) and
         /// **synchronize on the cancellation** before `buffer` and `overlapped` are freed —
@@ -338,9 +338,9 @@ mod windows_watch {
                             // this new one, so without this check the new read is never
                             // cancelled and this thread's next wait below blocks until some
                             // later, unrelated change. Re-check and cancel this read's own
-                            // `OVERLAPPED` (never null: a null cancel here would also cancel a
-                            // still-later read some other re-issue of this same loop might
-                            // already have in flight) so the loop's next wait wakes with
+                            // `OVERLAPPED` (named, not null: one read is ever outstanding per
+                            // handle, so both cancel the same read here, and naming it keeps
+                            // the cancel exact if that changes) so the loop's next wait wakes with
                             // `ERROR_OPERATION_ABORTED` and returns through the top-of-loop
                             // disarm check above.
                             if disarming.load(Ordering::SeqCst) {
@@ -458,8 +458,8 @@ mod windows_watch {
             for h in &self.handles {
                 h.disarming.store(true, Ordering::SeqCst);
                 // SAFETY: `h.raw` is a handle this watch owns exclusively until this `Drop` runs;
-                // cancelling with a null `OVERLAPPED` cancels every outstanding I/O this thread
-                // issued on it, which is exactly the one outstanding read by construction.
+                // cancelling with a null `OVERLAPPED` cancels every outstanding I/O on it from any
+                // thread in this process, which is exactly the one outstanding read by construction.
                 unsafe {
                     CancelIoEx(h.raw, std::ptr::null());
                 }

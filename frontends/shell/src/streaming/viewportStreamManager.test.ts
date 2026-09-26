@@ -792,7 +792,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   });
 
   /**
-   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH7 (Amendment 4 item 1's own precedent on the
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d, not SH7 (Amendment 4 item 1's own precedent on the
    * tiled sibling, `tileViewportStreamManager.test.ts`'s "notifySessionEnded ends the session
    * exactly as a tile terminal does"): the event route into THIS (baseline) manager, added by §2d
    * -- it did not exist before this piece. Clears residency through `onSuperseded`, exactly as the

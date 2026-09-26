@@ -255,8 +255,8 @@ fn a_sibling_change_signals_nothing_and_a_later_source_write_does() {
 /// two named shapes.
 ///
 /// RECORDED MUTATION: treat a 0-byte completion as no event (re-issue and keep waiting) in
-/// `engine::watch`'s completion handling. Expected failure: this test times out — the one shape
-/// H3 predicts most often on this hardware is silently swallowed instead of reported.
+/// `engine::watch`'s completion handling. Expected failure: this test times out — the shape H3
+/// predicts on this hardware (a 0-byte success) is silently swallowed instead of reported.
 // Raw Win32 declarations, not `windows-sys` (§5's invalidator: no crate added for this file). Two
 // calls only: find this process's own watch thread by the name `engine::watch` gives it, and
 // suspend it for a bounded window — the only reliable way found (two throughput-based attempts,

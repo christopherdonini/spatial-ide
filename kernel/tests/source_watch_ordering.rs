@@ -242,8 +242,8 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 
 /// **Corrected scope, discovered while writing this test.** The recorded-signal check and
 /// `watch.resolves_unchanged()` are now one refusal path (Amendment 5 item 1), not two ordered
-/// steps: `resolves_unchanged()` is deliberate "belt-and-suspenders on the sink's asynchronous
-/// callback" (§2b's own words) and independently catches the same injected signal, because a real
+/// steps: `resolves_unchanged()` is a second check beside the latch's own record (its doc, on
+/// `ArmedWatch`), and independently catches the same injected signal, because a real
 /// event flips both the latch and the watch's own `fired` flag together — this test's
 /// `InjectedArm::fire_on_next_arm` reproduces that coupling faithfully rather than decoupling it
 /// for convenience. The discriminating mutation skips the refusal path entirely.

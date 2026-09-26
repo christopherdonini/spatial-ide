@@ -240,7 +240,7 @@ fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
 /// (`injected_watch::InjectedArm`, per `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a's "no
 /// constructor exists for tests only") and a signal fired **after** admission — `SkpHost::
 /// open_dataset`'s sink's own `Admitted` arm — never a signal recorded before admission, which
-/// takes a different, already-pinned path (`SOURCE_CHANGED_CODE` above's sibling refusal).
+/// takes a different path (`SOURCE_CHANGED_CODE` above's sibling refusal).
 ///
 /// **The exact bytes the shell's own tests are written against**:
 /// `REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL` in
