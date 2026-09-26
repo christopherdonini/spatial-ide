@@ -213,3 +213,11 @@ Superseded index: Amendment 1 item 1's final figure (912) and its file count (5)
 5. Amendment 2 was written after the results Amendment 1 item 2 records; its first line omits that.
 
 Superseded index: Amendment 3 items 1–5's class labels, by item 1; Amendment 3 item 3's scope, by item 2; Amendment 3 item 4, by item 3; Amendment 2's first line, as to when it was written, by item 5.
+
+### Amendment 5 — 2026-09-26 (UTC), written after gate attempt 2's results were seen (`state/gate-log.json`, node governance-test-claims-superseded-followups, attempt 2): the attempt-2 fixes, references only
+
+1. Reviewer R2 (architect N1): b82941e. Reviewer R1 and S1: 0f865e8, class 3, re-observed at b82941e.
+2. Reviewer R3: Amendment 4 item 5.
+3. Final figure at 0f865e8, by Amendment 1's command: 1,088, class 2, the growth being b82941e and 0f865e8.
+
+Superseded index: Amendment 3 item 6's figure (1,087), by item 3.
