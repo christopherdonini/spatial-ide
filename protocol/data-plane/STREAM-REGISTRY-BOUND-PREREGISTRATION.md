@@ -276,3 +276,10 @@ References and hashes only (the record cap, 2026-09-18). Each row names its temp
 3. **Class 1, §4's five mutations:** the worker's runs, recorded above T1–T5 at `e061cb1`, are the observation of record; `state/consults/2026-09-26-stream-registry-bound-worker-report.md:25-32 @ 370b2ba sha256:2fb374370363e1f5f98ba7e27cb2886dada7553febb8c3131f014a2afc70bdc1`. T4's mutation fails T4 by name at its backdating lookup, before its retention assertion, which is therefore proven on the shipped build by assertion only.
 4. **Class 2, §7's line budget, §7 not edited** (round 23, item 4, O7): declared at most 450; final 570, `git diff --numstat 522493a...e061cb1 -- protocol/data-plane/src/server.rs protocol/data-plane/tests/stream_registry_bound.rs` (243 and 327); Scope unchanged.
 5. **Class 1, §9's `cargo fmt --check`:** not clean at `522493a` (seven files of the crate, `server.rs` among them) and at `e061cb1` (the same seven and the new test file); `.github/workflows/product-ci-rust.yml` at `370b2ba` runs no `cargo fmt` and no `cargo clippy` step. The worker's clippy run and the other suites: `state/consults/2026-09-26-stream-registry-bound-worker-report.md:13-23 @ 370b2ba sha256:675840a52494234b8993cb8a3374fba4f62d2ea8d4c09a84e92e55f514b2a576`.
+
+### Amendment 2 — 2026-09-26, record correction after the gates, attempt 1 (class 3)
+
+1. Amendment 1 row 5's `cargo fmt --check` results are the custodian's runs of `cargo fmt -p spatial-data-plane -- --check` under rustfmt 1.9.0-stable (8bab26f4f6 2026-07-14), at `522493a` and at `e061cb1` (round 15 (c)).
+2. The five mutation excerpts' panic locations are qualified at `8ed5228`: T1–T3's line numbers are the test file's at `2b99551`, before the records; T4's and T5's are the mutated tree's (§8 item 15).
+
+Superseded: nothing; row 5 gains its tool, and the excerpts their line-number basis.
