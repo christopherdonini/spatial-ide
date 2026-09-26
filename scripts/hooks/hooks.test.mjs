@@ -56,6 +56,12 @@ function baseStopInput(overrides = {}) {
   };
 }
 
+// §24: write a CUSTODIAN-LEASE this sessionId holds, so a test can exercise the steps after the
+// lease check unchanged.
+function writeHeldLease(projectRoot, sessionId) {
+  fs.writeFileSync(path.join(projectRoot, 'CUSTODIAN-LEASE'), `lease: ${sessionId} refreshed: ${new Date().toISOString()}\n`);
+}
+
 // ---------------------------------------------------------------------------
 // stop-queue.mjs — the dry run of AUTONOMY.md §3, in script form.
 // ---------------------------------------------------------------------------
@@ -64,7 +70,65 @@ test('stop-queue: blocks on the two-node fixture (a ready node exists)', async (
   const projectRoot = makeTempDir('stop-block-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
   try {
-    const result = await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
+    assert.equal(result.decision, 'block');
+    assert.match(result.reason, /^next: two-nodes-ready/);
+  } finally {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  }
+});
+
+// RECORDED MUTATION: in leaseHeldBy's regexp match branch, `match[1] !== sessionId` inverted to
+// `match[1] === sessionId` (relinquished/malformed read as held) -> `stop-queue: allows when this
+// session's lease is relinquished` fails: decision 'block' where 'allow' is expected.
+test("stop-queue: allows when this session's lease is relinquished", async () => {
+  const projectRoot = makeTempDir('stop-allow-relinquished-');
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
+  try {
+    const input = baseStopInput();
+    fs.writeFileSync(path.join(projectRoot, 'CUSTODIAN-LEASE'), `relinquished: ${input.session_id}\n`);
+    const result = await decide(input, { projectRoot });
+    assert.equal(result.decision, 'allow');
+    assert.match(result.stderr, /holds no active lease line/);
+  } finally {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  }
+});
+
+// RECORDED MUTATION: leaseHeldBy's absent-file catch changed to `return { held: true }` (an
+// absent file read as held) -> `stop-queue: allows when this session holds no lease (file absent,
+// or another session's lease)` fails: decision 'block' where 'allow' is expected.
+test('stop-queue: allows when this session holds no lease (file absent, or another session\'s lease)', async () => {
+  const absentRoot = makeTempDir('stop-allow-nolease-absent-');
+  const otherRoot = makeTempDir('stop-allow-nolease-other-');
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
+  try {
+    const input = baseStopInput();
+    const absentResult = await decide(input, { projectRoot: absentRoot });
+    assert.equal(absentResult.decision, 'allow');
+    assert.match(absentResult.stderr, /CUSTODIAN-LEASE absent/);
+
+    fs.writeFileSync(path.join(otherRoot, 'CUSTODIAN-LEASE'), `lease: some-other-session refreshed: ${new Date().toISOString()}\n`);
+    const otherResult = await decide(input, { projectRoot: otherRoot });
+    assert.equal(otherResult.decision, 'allow');
+    assert.match(otherResult.stderr, /another session's lease/);
+  } finally {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  }
+});
+
+// RECORDED MUTATION: leaseHeldBy's `match[1] !== sessionId` operator flipped to `===` (the id
+// comparison inverted) -> `stop-queue: blocks as before when CUSTODIAN-LEASE holds this session's
+// own lease` fails: decision 'allow' where 'block' is expected.
+test('stop-queue: blocks as before when CUSTODIAN-LEASE holds this session\'s own lease', async () => {
+  const projectRoot = makeTempDir('stop-block-own-lease-');
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
+  try {
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'block');
     assert.match(result.reason, /^next: two-nodes-ready/);
   } finally {
@@ -76,7 +140,9 @@ test('stop-queue: allows when only the human-blocked node remains', async () => 
   const projectRoot = makeTempDir('stop-allow-human-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
   try {
-    const result = await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'allow');
     assert.match(result.stderr, /waiting on human/);
   } finally {
@@ -159,6 +225,7 @@ test('stop-queue: allows at the session continuation cap', async () => {
   process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
   try {
     const sessionId = 'capped-session';
+    writeHeldLease(projectRoot, sessionId);
     const statePath = path.join(projectRoot, '.claude', 'state', `stop-hook-${sessionId}.json`);
     fs.mkdirSync(path.dirname(statePath), { recursive: true });
     fs.writeFileSync(
@@ -181,7 +248,9 @@ test('stop-queue: allows at the daily continuation cap', async () => {
     const dailyPath = path.join(projectRoot, '.claude', 'state', `stop-hook-daily-${today}.json`);
     fs.mkdirSync(path.dirname(dailyPath), { recursive: true });
     fs.writeFileSync(dailyPath, JSON.stringify({ count: 40 }));
-    const result = await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'allow');
     assert.match(result.stderr, /daily continuation cap/);
   } finally {
@@ -193,7 +262,9 @@ test('stop-queue: block reason names the lane and budget', async () => {
   const projectRoot = makeTempDir('stop-block-reason-');
   process.env.CUSTODIAN_PLAN_PATH = path.join(fixturesDir, 'valid-plan.yaml');
   try {
-    const result = await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'block');
     assert.match(result.reason, /lane shell, budget 50 min/);
     assert.match(result.reason, /Regenerate CUSTODIAN-QUEUE\.md if PLAN\.yaml changed; ledger before ending\./);
@@ -206,14 +277,16 @@ test('stop-queue: notifies on the human-blocked-only allow, deduped on the waiti
   const projectRoot = makeTempDir('stop-notify-dedupe-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesHumanOnlyPlan;
   try {
-    await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    await decide(input, { projectRoot });
     const dedupePath = path.join(projectRoot, '.claude', 'state', 'telegram-sent.json');
     assert.ok(fs.existsSync(dedupePath), 'expected a dedupe record to be written');
     const before = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
     assert.equal(Object.keys(before).length, 1);
 
     // A second allow for the same waiting set, moments later, must not add a second key.
-    await decide(baseStopInput(), { projectRoot });
+    await decide(input, { projectRoot });
     const after = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
     assert.deepEqual(before, after);
   } finally {
@@ -224,8 +297,10 @@ test('stop-queue: notifies on the human-blocked-only allow, deduped on the waiti
 test('stop-queue CLI: piping stdin JSON blocks on the two-node fixture', () => {
   const projectRoot = makeTempDir('stop-cli-');
   const scriptPath = path.join(here, 'stop-queue.mjs');
+  const input = baseStopInput();
+  writeHeldLease(projectRoot, input.session_id);
   const result = spawnSync(process.execPath, [scriptPath], {
-    input: JSON.stringify(baseStopInput()),
+    input: JSON.stringify(input),
     encoding: 'utf8',
     env: { ...process.env, CLAUDE_PROJECT_DIR: projectRoot, CUSTODIAN_PLAN_PATH: twoNodesPlan },
   });
@@ -239,7 +314,9 @@ test('stop-queue: never throws to the shell on a missing plan file (allows)', as
   const projectRoot = makeTempDir('stop-missing-plan-');
   process.env.CUSTODIAN_PLAN_PATH = path.join(projectRoot, 'does-not-exist.yaml');
   try {
-    const result = await decide(baseStopInput(), { projectRoot });
+    const input = baseStopInput();
+    writeHeldLease(projectRoot, input.session_id);
+    const result = await decide(input, { projectRoot });
     assert.equal(result.decision, 'allow');
     assert.match(result.stderr, /no PLAN\.yaml/);
   } finally {
