@@ -2433,7 +2433,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-26, question round 24, item 1: an S1 cut; independent of the other two; carries a KNOWN-LIMITATIONS line for bundles already published. A3 3(a)'s S2, the wrong failure state, rides along. Evidence: state/cloud/wave1/A3.md, its triage update, reproduced on Windows."
+    summary: "RULED 2026-09-26, question round 24, item 1: an S1 cut; independent of the other two; carries a KNOWN-LIMITATIONS line for bundles already published. A3 3(a)'s S2, the wrong failure state, rides along. Evidence: state/cloud/wave1/A3.md, its triage update, reproduced on Windows. 2026-09-26: attempt 2 (record round) PASS, both gates at 64ceb79; PR #128 open for the human's click and wording sight (round 25 item 4), to merge after #127, which gives its KNOWN-LIMITATIONS item the number 29."
     dates: {opened: 2026-09-26, done: null}
 
   - id: corpus-reproducibility-record
