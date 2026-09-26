@@ -262,3 +262,26 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
       - the reviewer on B1–B7.
     - P1 and P2 hold, the enumeration agrees on the merge with main, the temp-directory delta is 0, and the hashes match.
     - One batched fix round is with the same worker: code, tests, re-observation, then docs. Amendment 3, the custodian's, is references only and is the piece's last record-correction round.
+- 2026-09-26T02:00Z - **Wave 1 closed: B reported, round 24 ruled (three S1 cuts), the S2 records written. The watcher failed gate 1 and its fix round is running. The follow-ups are at attempt 2. A1-1's preregistration is being drafted.**
+  - **B** (d926a3f): batch delta $2; the wave cost $31 in total ($250 → $219).
+    - The corpus is not reproducible from the tracked tree: its scripts and full-hash manifest sit untracked on this machine.
+    - Licences for eleven of the twelve files are unrecorded.
+    - PR #124 is open, with its DCO check green.
+  - **Round 24** (`state/questions/round-24.md`, mirrored first; RULED block at 4d0e727):
+    - item 1 (typed): all three S1s are cuts.
+      - `data-plane-origin-non-ascii` runs now, in parallel with the watcher, under full gating.
+      - `data-plane-stream-registry-bound` follows it: a time bound plus a count ceiling, and no drop at the terminal.
+      - `bundle-viewer-partition-offset-bounds` is independent, with a KNOWN-LIMITATIONS line for bundles already published.
+    - item 2: A2-1 is S1, and the fold-in stands.
+    - item 3 (typed): #124 is held; `corpus-reproducibility-record` tracks the scripts, commands and hashes, with no data; licences go to the human before any merge.
+    - item 4: #123 is held until the watcher merges.
+  - **S2 records** (137cd3c): seven proposed PLAN nodes, plus the close-race intake in `kernel-generation-close-races`.
+  - **The watcher:**
+    - Phase 2 finished at d99b7a6. Part Q, the operator rows with a blank log, was added at ee6fa38.
+    - Gate 1 FAILed at ee6fa38 (dfdc8fb): the architect on B1–B4, the reviewer on B1–B7. Both reports are filed (04b3680).
+    - The reviewer's report had six cites to branch-only files, which reddened verify-cites on main. They were rewritten to the worktree path, disclosed in its filing note (4d0e727); main's CI was green after.
+    - The architect's fix ruling (f2316db): §8 item 3 governs §2b step 2. Amendment 5 was appended at 2daf371, with hashes computed by script. A fresh worker-high is on the fix list.
+  - **The follow-ups:**
+    - The fix round is done at 8fb4999; Amendment 3 is at 761915c. Its item 1 mislabels the code fixes as class 5, flagged to the architect.
+    - Both gates are at attempt 2. This is the last record round: if the record fails again, the architect reduces it.
+  - **A1-1:** an architect consult is drafting its full-form preregistration.
