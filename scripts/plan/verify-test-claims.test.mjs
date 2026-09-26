@@ -909,7 +909,7 @@ function rowTextFixture(rowText, { doc = WITHDRAWN_V1, ledger = SYNTH_LEDGER, wi
 // fails: "AssertionError [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":
 // "withdrawn-row","message":""},{"relPath":"X-PREREGISTRATION.md","line":3,"name":
 // "an_obsolete_test_name_here","kind":"claim"}]" then "'' !== 'refused: no pinned reference'" (53 of 54
-// pass, isolated to this test).
+// pass, isolated to this test; observed at c1e315b).
 test('a_withdrawn_test_line_with_no_pinned_reference_fails_by_name', () => {
   const row = '- withdrawn-test: no reference at all here; ruling: round 1, item 1; carrier: round 2, item 5\n';
   const { dir } = rowTextFixture(row);
@@ -925,7 +925,7 @@ test('a_withdrawn_test_line_with_no_pinned_reference_fails_by_name', () => {
 // [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":""}]" then
 // "'' !== 'refused: a line range'". Not isolated: this same mutation also fails
 // `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` below and the existing
-// `a_withdrawn_test_row_pinning_a_line_range_does_not_exempt` (51 of 54 pass).
+// `a_withdrawn_test_row_pinning_a_line_range_does_not_exempt` (51 of 54 pass; observed at c1e315b).
 test('a_withdrawn_test_line_pinning_a_line_range_fails_by_name', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 1, item 1; carrier: round 2, item 5\n`,
@@ -942,7 +942,7 @@ test('a_withdrawn_test_line_pinning_a_line_range_fails_by_name', () => {
 // `reason = '';` -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]:
 // [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":""}]" then
 // "'' !== \"refused: another file's path\"". Not isolated: this same mutation also fails the existing
-// `a_withdrawn_name_claimed_in_another_file_stays_a_finding` (52 of 54 pass).
+// `a_withdrawn_name_claimed_in_another_file_stays_a_finding` (52 of 54 pass; observed at c1e315b).
 test('a_withdrawn_test_line_pinning_another_files_path_fails_by_name', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test: \`Y-PREREGISTRATION.md:3\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 1, item 1; carrier: round 2, item 5\n`,
@@ -958,7 +958,7 @@ test('a_withdrawn_test_line_pinning_another_files_path_fails_by_name', () => {
 // RECORDED MUTATION: in computeWithdrawnRows, replace `reason = 'refused: no commit-id rev';` with
 // `reason = '';` -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]:
 // [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":""}]" then
-// "'' !== 'refused: no commit-id rev'" (53 of 54 pass, isolated to this test).
+// "'' !== 'refused: no commit-id rev'" (53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_withdrawn_test_line_with_no_commit_id_rev_fails_by_name', () => {
   const { dir } = rowTextFixture(`- withdrawn-test: \`${WITHDRAWN_DOC}:3\` sha256:${'a'.repeat(64)}; ruling: round 1, item 1; carrier: round 2, item 5\n`, {
     doc: DOC_WITH_REAL_CLAIM,
@@ -977,7 +977,8 @@ test('a_withdrawn_test_line_with_no_commit_id_rev_fails_by_name', () => {
 // for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: [{"relPath":
 // "X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":"; unresolvable ruling: round 99,
 // item 1"}]" then "'; unresolvable ruling: round 99, item 1' !== 'refused: a line range; unresolvable
-// ruling: round 99, item 1'" (51 of 54 pass; see the mutation recorded on the test above).
+// ruling: round 99, item 1'" (51 of 54 pass; see the mutation recorded on the test above; observed at
+// c1e315b).
 test('a_refused_withdrawn_test_line_names_its_unresolvable_ruling', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 99, item 1; carrier: round 2, item 5\n`,
@@ -996,7 +997,8 @@ test('a_refused_withdrawn_test_line_names_its_unresolvable_ruling', () => {
 // [ERR_ASSERTION]: a refused withdrawn-test line must not be merely planned: [{"relPath":
 // "X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":"refused: a line range"}]" then
 // "1 !== 0". Not isolated: this same mutation also fails the existing
-// `a_withdrawn_test_row_in_a_planned_gate_file_still_fails_by_name` (52 of 54 pass).
+// `a_withdrawn_test_row_in_a_planned_gate_file_still_fails_by_name` (52 of 54 pass; observed at
+// c1e315b).
 test('a_refused_withdrawn_test_line_in_a_planned_gate_file_still_fails_by_name', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test: \`${WITHDRAWN_DOC}:3-4\` @ ${rev} sha256:${'a'.repeat(64)}; ruling: round 1, item 1; carrier: round 2, item 5\n`,
@@ -1019,7 +1021,7 @@ test('a_refused_withdrawn_test_line_in_a_planned_gate_file_still_fails_by_name',
 // reverted; fails: "AssertionError [ERR_ASSERTION]: a range pin whose claim line never carried the
 // name must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here",
 // "reference":"`X-PREREGISTRATION.md:3-4 @ <sha> sha256:<hash>`"}]" then "1 !== 0" (the range's OTHER
-// line wrongly saves the pin; 53 of 54 pass, isolated to this test).
+// line wrongly saves the pin; 53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_range_pin_whose_claim_line_never_carried_the_name_does_not_exempt', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-widespan-'));
   const v1 = `# Doc\n\nSome unrelated line.\nMentions ${SUPERSEDED_CLAIM_NAME} in passing, elsewhere.\n`;
@@ -1042,7 +1044,7 @@ test('a_range_pin_whose_claim_line_never_carried_the_name_does_not_exempt', () =
 // check -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: a hex-named
 // branch rev must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,"name":
 // "an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3 @ deadbeef sha256:<hash>`"}]" then
-// "1 !== 0" (53 of 54 pass, isolated to this test).
+// "1 !== 0" (53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_pin_whose_rev_is_a_hex_named_branch_does_not_exempt', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-superseded-hexbranch-'));
   const v1Rev = gitRepoAt(dir, SUPERSEDED_DOC, SUPERSEDED_V1);
@@ -1062,7 +1064,7 @@ test('a_pin_whose_rev_is_a_hex_named_branch_does_not_exempt', () => {
 // run, then reverted; fails: "AssertionError [ERR_ASSERTION]: \"not superseded\" must not exempt:
 // [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","reference":
 // "`X-PREREGISTRATION.md:3 @ <sha> sha256:<hash>`"}]" then "1 !== 0" (53 of 54 pass, isolated to this
-// test).
+// test; observed at c1e315b).
 test('a_pin_marked_not_superseded_does_not_exempt', () => {
   const { dir } = supersededFixture({ word: 'not superseded' });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
@@ -1077,7 +1079,8 @@ test('a_pin_marked_not_superseded_does_not_exempt', () => {
 // [ERR_ASSERTION]: SUPERSEDED in all caps must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,
 // "name":"an_old_test_name_here","reference":"`X-PREREGISTRATION.md:3 @ <sha> sha256:<hash>`"}]" then
 // "1 !== 0". Not isolated: this same mutation also fails `a_pin_marked_not_superseded_does_not_exempt`
-// above, since the restored regex carries no negation guard either (52 of 54 pass).
+// above, since the restored regex carries no negation guard either (52 of 54 pass; observed at
+// c1e315b).
 test('a_pin_marked_superseded_only_in_capitals_does_not_exempt', () => {
   const { dir } = supersededFixture({ word: 'SUPERSEDED' });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
@@ -1095,7 +1098,8 @@ test('a_pin_marked_superseded_only_in_capitals_does_not_exempt', () => {
 // pinned reference; no ruling"}]" then "2 !== 0". Not isolated: this same mutation also fails
 // `a_marker_after_other_text_on_a_bullet_does_not_exempt` and
 // `the_two_landed_mention_lines_are_not_withdrawal_attempts` below, and the existing
-// `a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded` (50 of 54 pass).
+// `a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded` (50 of 54 pass; observed
+// at c1e315b).
 test('a_heading_or_clause_that_mentions_the_marker_is_not_a_withdrawal_attempt', () => {
   const doc = '# Doc\n\n## Some withdrawn-test rule\n\nThe withdrawn-test marker means something, in prose.\n';
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-mention-'));
@@ -1111,7 +1115,7 @@ test('a_heading_or_clause_that_mentions_the_marker_is_not_a_withdrawal_attempt',
 // [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_obsolete_test_name_here","reference":
 // "`X-PREREGISTRATION.md:3` @ <sha> sha256:<hash>","ruling":"round 1, item 1","carrier":"round 2, item
 // 5"}]" then "1 !== 0" -- the claim wrongly lands in `withdrawn` instead of `findings` (see the
-// mutation recorded on the test above; 50 of 54 pass).
+// mutation recorded on the test above; 50 of 54 pass; observed at c1e315b).
 test('a_marker_after_other_text_on_a_bullet_does_not_exempt', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-notrow-'));
   const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
@@ -1135,7 +1139,8 @@ const MENTION_LINES_COMMIT = 'd90f91998fafc06cc6da083fb6c0bd6e72bc4d6f';
 // [{"relPath":"X-PREREGISTRATION.md","line":3,"kind":"withdrawn-row","message":"refused: no pinned
 // reference; no ruling"},{"relPath":"X-PREREGISTRATION.md","line":4,"kind":"withdrawn-row","message":
 // "refused: no pinned reference; no ruling"}]" then "2 !== 0" (see the mutation recorded on
-// `a_heading_or_clause_that_mentions_the_marker_is_not_a_withdrawal_attempt` above; 50 of 54 pass).
+// `a_heading_or_clause_that_mentions_the_marker_is_not_a_withdrawal_attempt` above; 50 of 54 pass;
+// observed at c1e315b).
 test('the_two_landed_mention_lines_are_not_withdrawal_attempts', () => {
   const bytes1 = `${execFileSync('git', ['show', `${MENTION_LINES_COMMIT}:scripts/plan/TEST-CLAIMS-WITHDRAWN-PREREGISTRATION.md`], { cwd: REPO_ROOT, encoding: 'utf8' }).split('\n')[96]}\n`;
   const bytes2 = `${execFileSync('git', ['show', `${MENTION_LINES_COMMIT}:scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md`], { cwd: REPO_ROOT, encoding: 'utf8' }).split('\n')[137]}\n`;
@@ -1157,7 +1162,8 @@ test('the_two_landed_mention_lines_are_not_withdrawal_attempts', () => {
 // falls through to an ordinary finding instead: "AssertionError [ERR_ASSERTION]: [{"relPath":
 // "X-PREREGISTRATION.md","line":3,"name":"an_obsolete_test_name_here","kind":"claim"}]" then
 // "'claim' !== 'withdrawn-row'". Not isolated: this same mutation also fails
-// `a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both` below (52 of 54 pass).
+// `a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both` below (52 of 54 pass; observed at
+// c1e315b).
 test('a_withdrawn_test_row_whose_hash_does_not_recompute_fails_by_name', () => {
   const { dir } = withdrawnFixture({ hash: '0'.repeat(64) });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1173,7 +1179,7 @@ test('a_withdrawn_test_row_whose_hash_does_not_recompute_fails_by_name', () => {
 // 0) return { ok: false, reason: 'refused: pinned line names no test' };` check -- applied for real,
 // run, then reverted; the row's own doc names no OTHER claim either, so with (d) skipped the row falls
 // straight to `ok: true` and every finding vanishes: "AssertionError [ERR_ASSERTION]: []" then
-// "0 !== 1" (53 of 54 pass, isolated to this test).
+// "0 !== 1" (53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_withdrawn_test_row_whose_pinned_line_names_no_test_fails_by_name', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-noname-'));
   const v1 = '# Doc\n\nNothing here names a test.\n';
@@ -1231,7 +1237,7 @@ function withdrawnFixtureWithRemote({ ancestorOfMain }) {
 // entirely (the function returns `{ ok: true }` right after condition (d)) -- applied for real, run,
 // then reverted; the row wrongly becomes valid, and the underlying claim already exists in the tree
 // (`testExists` short-circuits it), so every finding vanishes: "AssertionError [ERR_ASSERTION]: []"
-// then "0 !== 1" (53 of 54 pass, isolated to this test).
+// then "0 !== 1" (53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_withdrawn_test_row_whose_rev_is_not_on_main_fails_by_name', () => {
   const { dir } = withdrawnFixtureWithRemote({ ancestorOfMain: false });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1248,7 +1254,7 @@ test('a_withdrawn_test_row_whose_rev_is_not_on_main_fails_by_name', () => {
 // reverted; the branch's own hash still matches, `origin/main` does not resolve in this fixture (e is
 // SKIPPED), and the underlying claim already exists in the tree (`testExists` short-circuits it), so
 // with (r) skipped every finding vanishes: "AssertionError [ERR_ASSERTION]: []" then "0 !== 1" (53 of
-// 54 pass, isolated to this test).
+// 54 pass, isolated to this test; observed at c1e315b).
 test('a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-hexbranch-'));
   withRealTestFile(dir);
@@ -1273,7 +1279,7 @@ test('a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name', () => {
 // [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":
 // "unresolvable ruling: round 99, item 1"}]" then "'unresolvable ruling: round 99, item 1' !==
 // 'refused: hash does not recompute; unresolvable ruling: round 99, item 1'" (52 of 54 pass; see the
-// mutation recorded on the test above).
+// mutation recorded on the test above; observed at c1e315b).
 test('a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both', () => {
   const { dir } = withdrawnFixture({ hash: '0'.repeat(64), ruling: 'round 99, item 1' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1287,7 +1293,7 @@ test('a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both', () => {
 // RECORDED MUTATION: replace `ROW_POSITION_RE` with `/^- withdrawn-test:(?![A-Za-z0-9_-])/` (the colon
 // required) -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]:
 // [] / 0 !== 1" (the row never enters the check at all, and the underlying claim already exists, so no
-// finding appears; 53 of 54 pass, isolated to this test).
+// finding appears; 53 of 54 pass, isolated to this test; observed at c1e315b).
 test('a_marker_in_row_position_without_its_colon_is_still_checked', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test \`${WITHDRAWN_DOC}:3\` @ ${rev} sha256:${sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3))}; ruling: round 99, item 1; carrier: round 2, item 5\n`,
