@@ -323,3 +323,4 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Attempt 1: both FAIL on the record only. Row 5's fmt claim named no rustfmt; the mutation excerpts' panic locations were bare, and T4's and T5's came from the mutated tree.
     - Corrected at 8ed5228 and a4aa7f3 (Amendment 2). Attempt 2 (record round): both PASS.
     - The architect ruled that no fmt pass is owed in the piece; a crate-wide fmt piece goes to the human.
+- 2026-09-26T14:00Z - **corpus-reproducibility-record started:** an architect consult is drafting its preregistration from the local corpus of record (target/fixtures/compat-corpus/, untracked: MANIFEST.json, PROBE.json, README.md and nine scripts; no user-path strings found by grep) and PR #124's held proposal (copied to the scratchpad). The licence table goes to the human before merge (round 24 item 3).
