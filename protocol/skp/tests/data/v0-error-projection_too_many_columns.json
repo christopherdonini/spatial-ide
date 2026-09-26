@@ -1,0 +1,8 @@
+{
+  "code": "skp.projection_too_many_columns",
+  "message": "refused: the declared projection names 33 column(s), over the declared ceiling of 32",
+  "fields": {
+    "limit": "32",
+    "saw": "33"
+  }
+}

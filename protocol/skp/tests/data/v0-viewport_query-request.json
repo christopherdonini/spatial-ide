@@ -9,5 +9,6 @@
   },
   "bbox_crs": null,
   "limit": "5000",
-  "filter": null
+  "filter": null,
+  "columns": null
 }

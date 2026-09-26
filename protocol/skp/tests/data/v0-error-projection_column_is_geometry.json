@@ -1,0 +1,7 @@
+{
+  "code": "skp.projection_column_is_geometry",
+  "message": "refused: `geometry` is the geometry column; it already travels as GeoArrow",
+  "fields": {
+    "column": "geometry"
+  }
+}

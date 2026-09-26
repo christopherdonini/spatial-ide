@@ -1,0 +1,5 @@
+{
+  "code": "skp.projection_empty_list",
+  "message": "refused: an empty projection (`columns: []`) is not admitted; omit `columns` (or send `null`) for no projection",
+  "fields": {}
+}

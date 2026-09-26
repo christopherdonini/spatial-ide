@@ -1,0 +1,7 @@
+{
+  "code": "skp.projection_column_duplicated",
+  "message": "refused: `zone` is named twice in the declared projection",
+  "fields": {
+    "column": "zone"
+  }
+}

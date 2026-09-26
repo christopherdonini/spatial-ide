@@ -4,9 +4,6 @@
   "bbox": null,
   "bbox_crs": null,
   "limit": null,
-  "filter": {
-    "predicate": "zone = 3 AND area > 100",
-    "dialect": "duckdb-expr/0"
-  },
-  "columns": null
+  "filter": null,
+  "columns": ["zone", "area"]
 }
