@@ -651,8 +651,8 @@ test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded'
 // [ERR_ASSERTION]: a line-range pin must not exempt: [{"relPath":"X-PREREGISTRATION.md","line":3,
 // "name":"an_obsolete_test_name_here","reference":"`X-PREREGISTRATION.md:3-4` @ <sha> sha256:<hash>",
 // "ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0". Not isolated to this test:
-// this same mutation also fails `a_withdrawn_name_claimed_in_another_file_stays_a_finding` below (33 of
-// 35 pass).
+// this same mutation also fails `a_withdrawn_test_line_pinning_a_line_range_fails_by_name` and
+// `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` (51 of 54 pass; observed at c1e315b).
 test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
   const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-range-'));
@@ -684,8 +684,9 @@ test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
 // FIRST assertion (the claim wrongly lands in `withdrawn`): "AssertionError [ERR_ASSERTION]: a row
 // naming a different path must not exempt this file's claim: [{"relPath":"X-PREREGISTRATION.md",
 // "line":3,"name":"an_obsolete_test_name_here","reference":"`Y-PREREGISTRATION.md:3` @ <sha>
-// sha256:<hash>","ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0" (the other 34
-// tests pass).
+// sha256:<hash>","ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0".
+// Not isolated: this same mutation also fails
+// `a_withdrawn_test_line_pinning_another_files_path_fails_by_name` (52 of 54 pass; observed at c1e315b).
 test('a_withdrawn_name_claimed_in_another_file_stays_a_finding', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-otherpath-'));
   const v1Rev = gitRepoAt(dir, WITHDRAWN_DOC, WITHDRAWN_V1);
