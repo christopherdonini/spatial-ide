@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `31e460f711d8e95de6fb2918a65fdae8cafd66e9ef04e007a8785b97e256a14f`) at `2026-09-26T12:48:55.620Z`.
+Generated from `PLAN.yaml` (sha256 `cd8831d8e16a371aa78f9e6af0833b6716ae371aa00e4e34bd1b7a295a6df25d`) at `2026-09-26T12:49:56.692Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `31e460f711d8e95de6fb2918a65fdae8cafd66e9ef04
 ## 2. Ready
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
-- **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
@@ -34,6 +33,7 @@ Generated from `PLAN.yaml` (sha256 `31e460f711d8e95de6fb2918a65fdae8cafd66e9ef04
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
+- **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) — evidence: branch `cut/data-plane-stream-registry-bound`
 
 ## 6. Proposed / unscheduled
 
