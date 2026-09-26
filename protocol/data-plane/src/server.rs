@@ -27,7 +27,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::State;
@@ -95,12 +95,25 @@ pub const CROWDED_START_TIMEOUT: Duration = Duration::from_secs(5);
 /// capacity.
 pub const PEER_DRAIN_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// How many finished streams' state and terminal this registry retains, at most (ADR-010 rule 6:
+/// declared, not derived). Declared floor: at least `MAX_CONCURRENT_STREAMS`, so a full admission
+/// window's streams are all retained when they end. Set below Finding A5-1's 200 finished streams
+/// so that `stream_registry_bound.rs`'s count test actually discriminates.
+pub const MAX_TERMINAL_RECORDS: usize = 64;
+/// How long a terminal record survives a later stream event, mirroring the kernel's own
+/// `TERMINAL_ENTRY_MAX_AGE` but declared independently: the data plane does not depend on the
+/// kernel. After this age, a finished stream's state is no longer readable through `snapshot()`,
+/// and no cancel reads it.
+pub const TERMINAL_RECORD_MAX_AGE: Duration = Duration::from_secs(300);
+
 // Checked at compile time rather than in a test: as runtime assertions these were constant-folded
 // and could not fail. An edit that drops a ceiling below its floor stops the build.
 const _: () = assert!(MAX_CONCURRENT_STREAMS >= 1);
 const _: () = assert!(MAX_INFLIGHT_BATCHES >= 1);
 const _: () = assert!(MAX_FRAME_BYTES >= 1024 * 1024);
 const _: () = assert!(MAX_IDLE_CONNECTIONS >= 1);
+const _: () = assert!(MAX_TERMINAL_RECORDS >= MAX_CONCURRENT_STREAMS);
+const _: () = assert!(TERMINAL_RECORD_MAX_AGE.as_secs() >= 1);
 
 pub struct DataPlaneConfig {
     pub factory: Arc<dyn SourceFactory>,
@@ -115,30 +128,97 @@ pub struct DataPlaneConfig {
     pub expected_origin: Option<String>,
 }
 
-/// Every stream this process has served, for instrumentation and tests. Producer-side facts only —
-/// a client-side observation of cancellation is not evidence about the producer (spike M5).
+/// Bounded record of the streams this process has served, for instrumentation and tests. A live
+/// entry — recorded but with no terminal recorded yet — is never removed; a finished stream's
+/// state and its terminal are retained until the first of two events: the terminal record grows
+/// older than `TERMINAL_RECORD_MAX_AGE` at a later `record` or `record_terminal`, or more than
+/// `MAX_TERMINAL_RECORDS` newer terminal records come to exist. An idle process therefore keeps up
+/// to `MAX_TERMINAL_RECORDS` terminal records of any age until the next stream event: the count
+/// bound is what bounds memory, and the age bound acts only at those events, exactly as the
+/// kernel's own `StreamRegistry` acts on its own terminal entries.
+///
+/// The data plane's cancel reads nothing here: a CANCEL frame carries no stream id, being scoped
+/// to its own connection. The only readers, in this workspace, are instruments and tests.
+///
+/// Producer-side facts only — a client-side observation of cancellation is not evidence about the
+/// producer (spike M5).
 #[derive(Default)]
 pub struct StreamRegistry {
-    streams: Mutex<Vec<Arc<StreamState>>>,
-    terminals: Mutex<Vec<(String, Terminal)>>,
+    state: Mutex<StreamRegistryState>,
     refusals: AtomicU64,
+}
+
+#[derive(Default)]
+struct StreamRegistryState {
+    /// Every recorded stream, live or finished, in admission order. A finished stream's entry is
+    /// removed only when its terminal record below is pruned — never by the call that records its
+    /// own terminal.
+    streams: Vec<Arc<StreamState>>,
+    /// Finished streams' terminals, in the order they were recorded.
+    terminals: Vec<TerminalRecord>,
+}
+
+struct TerminalRecord {
+    stream: String,
+    terminal: Terminal,
+    ended_at: Instant,
 }
 
 impl StreamRegistry {
     fn record(&self, s: Arc<StreamState>) {
-        self.streams.lock().unwrap_or_else(|e| e.into_inner()).push(s);
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        state.streams.push(s);
+        Self::prune_locked(&mut state);
     }
     fn record_terminal(&self, stream: &StreamId, t: Terminal) {
-        self.terminals
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .push((stream.as_str().to_string(), t));
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        state.terminals.push(TerminalRecord {
+            stream: stream.as_str().to_string(),
+            terminal: t,
+            ended_at: Instant::now(),
+        });
+        Self::prune_locked(&mut state);
     }
+
+    /// Bounds the finished-stream state this registry retains. Run under this registry's own lock
+    /// at the end of `record` and of `record_terminal`, never on a read. A terminal record strictly
+    /// older than `TERMINAL_RECORD_MAX_AGE` is evicted (the kernel's own `>` comparison), and then,
+    /// while more than `MAX_TERMINAL_RECORDS` terminal records remain, the earliest-recorded excess
+    /// is evicted. Each eviction takes the matching `StreamState` with it. A live entry — one with
+    /// no terminal record — is never touched: only ids already present in `terminals` are ever
+    /// removed from `streams`, and the entry a `record_terminal` call has just recorded is the
+    /// newest, so the count step never removes it. Neither `StreamState` nor `Terminal` implements
+    /// `Drop`, so an evicted value dropping under this guard is not the kernel's own reentrancy
+    /// hazard.
+    fn prune_locked(state: &mut StreamRegistryState) {
+        let mut evicted: Vec<String> = Vec::new();
+        state.terminals.retain(|r| {
+            if r.ended_at.elapsed() > TERMINAL_RECORD_MAX_AGE {
+                evicted.push(r.stream.clone());
+                false
+            } else {
+                true
+            }
+        });
+        while state.terminals.len() > MAX_TERMINAL_RECORDS {
+            evicted.push(state.terminals.remove(0).stream);
+        }
+        if !evicted.is_empty() {
+            state.streams.retain(|s| !evicted.iter().any(|id| id == s.stream.as_str()));
+        }
+    }
+
     pub fn snapshot(&self) -> Vec<Arc<StreamState>> {
-        self.streams.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        self.state.lock().unwrap_or_else(|e| e.into_inner()).streams.clone()
     }
     pub fn terminals(&self) -> Vec<(String, Terminal)> {
-        self.terminals.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .terminals
+            .iter()
+            .map(|r| (r.stream.clone(), r.terminal.clone()))
+            .collect()
     }
     pub fn refusals(&self) -> u64 {
         self.refusals.load(std::sync::atomic::Ordering::SeqCst)
@@ -440,14 +520,18 @@ async fn handle(st: AppState, mut socket: WebSocket) {
         Err(e) => {
             // The producer never got a thread. Nothing was streamed, so the slot goes back before
             // the drain, and the peer is told why rather than having its socket dropped.
+            //
+            // **This is the one path through this function that records a stream and never
+            // reaches `record_terminal` below** (§2 item 6 of
+            // `STREAM-REGISTRY-BOUND-PREREGISTRATION.md`): `record` above already ran for `state`,
+            // so without this the entry would stay live for ever. The detail string is computed
+            // once and reused for both the consumer-facing terminal frame and this registry's own
+            // record.
             drop(permit);
-            terminal_and_drain(
-                socket,
-                wire::TERM_PRODUCER_FAILED,
-                &format!("could not start the producer: {e}"),
-                &st.json_frames_seen,
-            )
-            .await;
+            let detail = format!("could not start the producer: {e}");
+            terminal_and_drain(socket, wire::TERM_PRODUCER_FAILED, &detail, &st.json_frames_seen)
+                .await;
+            st.registry.record_terminal(&state.stream, Terminal::ProducerFailed(detail));
             return;
         }
     };
@@ -526,3 +610,99 @@ async fn read_start(
     Ok(None)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// F4 (`STREAM-REGISTRY-BOUND-PREREGISTRATION.md` §3): a terminal record survives its own
+    /// terminal and stays retained while younger than the declared age. Mirrors the kernel's own
+    /// backdating shape (`kernel::skp::StreamRegistry`'s
+    /// `sweep_expired_reclaims_an_old_cancelled_before_redeem_entry`): `ended_at` is backdated
+    /// under this registry's own lock rather than waiting on real time.
+    #[test]
+    fn a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age() {
+        let reg = StreamRegistry::default();
+
+        let fresh = StreamState::new(OperationId::new(), StreamId::new());
+        reg.record(fresh.clone());
+        reg.record_terminal(&fresh.stream, Terminal::Completed);
+
+        let aging = StreamState::new(OperationId::new(), StreamId::new());
+        reg.record(aging.clone());
+        reg.record_terminal(&aging.stream, Terminal::Completed);
+        {
+            let mut state = reg.state.lock().unwrap();
+            let r = state
+                .terminals
+                .iter_mut()
+                .find(|r| r.stream == aging.stream.as_str())
+                .expect("recorded above");
+            r.ended_at = Instant::now()
+                .checked_sub(TERMINAL_RECORD_MAX_AGE - Duration::from_secs(1))
+                .expect(
+                    "process uptime exceeds TERMINAL_RECORD_MAX_AGE; re-run once the machine has \
+                     been up longer",
+                );
+        }
+
+        // The next `record` runs the prune (this file's `prune_locked`) without waiting on either
+        // bound.
+        reg.record(StreamState::new(OperationId::new(), StreamId::new()));
+
+        let ids: Vec<String> = reg.terminals().into_iter().map(|(id, _)| id).collect();
+        assert!(
+            ids.contains(&fresh.stream.as_str().to_string()),
+            "the entry at its own terminal must survive it"
+        );
+        assert!(
+            ids.contains(&aging.stream.as_str().to_string()),
+            "younger than the declared age, so it is kept"
+        );
+    }
+
+    /// F5: a terminal record older than the declared age is pruned on the next `record`, and the
+    /// unrelated live entry recorded before it is untouched.
+    #[test]
+    fn a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record() {
+        let reg = StreamRegistry::default();
+
+        let live = StreamState::new(OperationId::new(), StreamId::new());
+        reg.record(live.clone());
+
+        let old = StreamState::new(OperationId::new(), StreamId::new());
+        reg.record(old.clone());
+        reg.record_terminal(&old.stream, Terminal::Completed);
+        {
+            let mut state = reg.state.lock().unwrap();
+            let r = state
+                .terminals
+                .iter_mut()
+                .find(|r| r.stream == old.stream.as_str())
+                .expect("recorded above");
+            r.ended_at = Instant::now()
+                .checked_sub(TERMINAL_RECORD_MAX_AGE + Duration::from_secs(1))
+                .expect(
+                    "process uptime exceeds TERMINAL_RECORD_MAX_AGE; re-run once the machine has \
+                     been up longer",
+                );
+        }
+
+        reg.record(StreamState::new(OperationId::new(), StreamId::new()));
+
+        let ids: Vec<String> = reg.terminals().into_iter().map(|(id, _)| id).collect();
+        assert!(
+            !ids.contains(&old.stream.as_str().to_string()),
+            "older than the declared age, so it is pruned"
+        );
+
+        let snap = reg.snapshot();
+        assert!(
+            snap.iter().any(|s| s.stream.as_str() == live.stream.as_str()),
+            "the live entry, never terminal, must be retained"
+        );
+        assert!(
+            !snap.iter().any(|s| s.stream.as_str() == old.stream.as_str()),
+            "the pruned terminal record's StreamState must be dropped with it"
+        );
+    }
+}
