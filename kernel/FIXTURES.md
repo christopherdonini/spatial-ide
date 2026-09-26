@@ -115,3 +115,10 @@ the D: copy (new table row, above). Two lines of defence now stand: the D: secon
 generator's deterministic regenerability (confirmed twice, above) as the deeper story. The
 cross-machine/cross-toolchain caveat above still applies to any regeneration on D:'s own toolchain —
 re-verify the hash there and record any mismatch, exactly as for any other machine.
+
+## The GeoParquet compatibility corpus: pointer only
+
+- **Local path:** `target/fixtures/compat-corpus/`, under the main checkout. It is untracked.
+- **Local manifest sha256:** 4b1fbca6c565ad4fd1c59d6d8f79927d20ed170611d448dbc8f39c13224af6b3. Its byte-identical tracked twin is `engine/compat-corpus/of-record/MANIFEST.json`.
+- **Record:** provenance, hazards and verify commands are in `engine/compat-corpus/RECORD.md`. Licences are in `engine/compat-corpus/LICENCES.md`.
+- **No data file from this corpus is tracked.** Only its manifest, probe, README, derivations and generator scripts are copied, under `engine/compat-corpus/of-record/`.
