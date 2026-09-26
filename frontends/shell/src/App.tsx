@@ -1207,13 +1207,23 @@ export default function App() {
         dispatch: endSessionForReason,
         logUnknownSessionDrop: (line) => logSessionEvent("warn", line),
       });
-    }).then((u) => {
-      if (cancelled) {
-        u();
-        return;
-      }
-      unlisten = u;
-    });
+    })
+      .then((u) => {
+        if (cancelled) {
+          u();
+          return;
+        }
+        unlisten = u;
+      })
+      .catch((e) => {
+        // Reviewer S4 / advisory 5b (architect gate-1): logged so a failed registration is
+        // visible, rather than silently leaving this session with no listener at all -- never a
+        // payload (there is none at this point, only the registration's own error).
+        logSessionEvent(
+          "warn",
+          `dataset_session_ended: listener registration failed: ${e instanceof Error ? e.message : String(e)}`
+        );
+      });
     return () => {
       cancelled = true;
       unlisten?.();
