@@ -179,3 +179,13 @@ All assertions; no measurement. The temp-directory check counts `verify-test-cla
    - §2.9's temp-directory sweep is one whole-file `after()` hook over a single `fs.mkdtempSync` wrapper, not per-test cleanup.
    - The nineteen new tests' recorded-mutation comments carry no commit citation. Only the §2.9 qualifiers on existing comments carry one.
 4. **Commits:** e6ac5c8 (this form), c617ddc and a30ff02 (§2.1–§2.9), 10ec8f4 (§2.8 (a)–(d), (f)), c1e315b (§2.8 (e), `AUTONOMY.md` §6a item 3, one line in place).
+
+### Amendment 2 — 2026-09-25 (UTC), before either gate: §8 item 9 applied to the new comments (class 3; the final figure)
+
+1. **The comments.** §8 item 9 names every test comment, not only §2.9's existing ones.
+   - fbf90f0 qualifies the nineteen new tests' recorded-mutation comments "observed at c1e315b". Each mutation was re-applied at that code and reverted, and the worker reports each observation byte-identical to the comment it qualifies.
+   - ea3b21d corrects the two changed tests' comments, `a_withdrawn_test_row_pinning_a_line_range_does_not_exempt` and `a_withdrawn_name_claimed_in_another_file_stays_a_finding`, to the custodian's re-observation at c1e315b: 51 of 54 and 52 of 54 pass. The companion tests are named as observed.
+   - Comments only in both commits.
+2. **Final figure:** 919 by Amendment 1's command at ea3b21d (mjs 235+65, test 520+39, README 37+23). Still class 2; the §7 line is not edited.
+
+Superseded index: Amendment 1 item 1's final figure (912), and Amendment 1 item 3's second bullet (the new tests' comments now carry their commit).
