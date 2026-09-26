@@ -1,15 +1,18 @@
 {
-  "generated_at": "2026-09-26T13:56:45.310Z",
+  "generated_at": "2026-09-26T13:58:40.708Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 16717656064,
+        "bytes": 16710602752,
         "total": 510319915008
       },
       {
