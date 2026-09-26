@@ -11,6 +11,15 @@ from memory. Node's standard library only.
 piece's own rule: "handles a missing plan file (allow)" generalized to "never blocks Claude Code's
 own lifecycle on this tooling's own bugs."
 
+**In a cloud session every hook here is inert** (RULED 2026-09-25, the cloud hooks, item (1);
+`HOOKS-CLOUD-INERT-PREREGISTRATION.md`): each script exits 0 at its entry point, before reading
+stdin and with no output, when `CLAUDE_CODE_REMOTE` is exactly `true` — the marker the
+cloud-environments documentation names, quoted in `cloud.mjs`. The hooks are the custodian's; a
+cloud worker gets no continuity block, no Stop-hook continuation, no flush demand and no Telegram
+attempt. The variable was checked unset in the custodian's local Remote Control session (Claude
+Code 2.1.282, 2026-09-25). `cloud.test.mjs` dry-runs every command in `.claude/settings.json` with
+the marker set, and each hook with and without it.
+
 ## Stop — `stop-queue.mjs`
 
 **Contract, quoted (Appendix B):**

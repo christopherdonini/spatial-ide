@@ -204,3 +204,19 @@ describe("refusalGuidance for Brief A P3's new states", () => {
     expect(refusalGuidance("publish.row_filter_not_recordable")).toBeNull();
   });
 });
+
+/**
+ * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH3/SH4: the coverage-lost guidance, marked
+ * `[P6 placeholder]` (§7) -- unlike `engine.source_changed` immediately above, its wording is not
+ * settled and no test asserts it verbatim.
+ */
+describe("refusalGuidance for engine.source_coverage_lost (SH3/SH4)", () => {
+  // Mutation: remove the `engine.source_coverage_lost` case (falls through to `default: null`).
+  // Expected failure: the first assertion below fails (`null` where a string was expected).
+  it("is a marked placeholder, distinct from engine.source_changed's wording", () => {
+    const guidance = refusalGuidance("engine.source_coverage_lost");
+    expect(guidance).not.toBeNull();
+    expect(guidance).toMatch(/^\[P6 placeholder\]/);
+    expect(guidance).not.toBe(refusalGuidance("engine.source_changed"));
+  });
+});

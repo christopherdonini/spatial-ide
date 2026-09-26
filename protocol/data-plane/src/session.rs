@@ -100,6 +100,9 @@ impl Session {
     /// rejecting on absence would reject the consumer page's own requests. The fix is a *positive*
     /// same-origin signal from Fetch Metadata, which page script cannot forge. A client sending
     /// neither is rejected.
+    ///
+    /// `None` here means the header is absent. A caller never passes `None` for a header that is
+    /// present but unreadable -- `server::upgrade` refuses that case itself, before this is called.
     pub fn request_allowed(&self, origin: Option<&str>, sec_fetch_site: Option<&str>) -> bool {
         match origin {
             Some("null") => false,

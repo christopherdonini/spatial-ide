@@ -1,0 +1,1173 @@
+<!doctype html>
+<!-- Design reference, not Authority. Copied on 2026-09-25 from the human's prototype folder outside the repository (prototype/map-studio-v7-codex.html; sha256 5ff8d1efbb48511e3cdbf4b05e6aeb88f09e50c55f7f50240492f2a8b1f04ed5 of the source bytes), on the human's instruction (state/directives/2026-09-25-cloud-hooks.md sections 4 and 5). A prototype of the Map studio direction (PLAN node shell-redesign-map-studio), on synthetic data: it rules nothing, authorises no work, and no piece cites it as Authority. Apart from this comment, inserted after the doctype line, the file is byte-identical to the source. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map Studio v7 · Search, scope and discoverable commands</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f2f3f1,#16191d);--panel:light-dark(#fafbf9,#20242a);--head:light-dark(#eef0ed,#252a31);--paper:light-dark(#fff,#292e36);--text:light-dark(#26302d,#e4e9ed);--sub:light-dark(#65706a,#a0adb8);--line:light-dark(#dce1db,#363e48);--accent:light-dark(#2868af,#7db4ed);--tint:light-dark(#e6eef8,#283a50);--warn:light-dark(#966223,#e4b66b);--danger:light-dark(#af443c,#ed958b);--good:light-dark(#487442,#9cc88f);--map:light-dark(#e6ebe2,#191f1c);--muted:light-dark(#a0a99e,#66705e);--prop:light-dark(#775ba2,#c0a8e0)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 "Segoe UI",system-ui,sans-serif}button,input,select{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.5}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button{background:transparent;border:1px solid transparent;border-radius:4px}button:hover:not(:disabled){background:var(--tint)}input,select{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:5px 7px;min-width:0}.muted{color:var(--sub)}.prop{color:var(--prop);font-size:10px;letter-spacing:.03em;margin-left:5px}.demo{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:9px 16px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px}.demo strong{font-weight:600;margin-right:7px}.demo button{border-color:var(--line);padding:4px 8px}.demo .explain{color:var(--sub);margin-left:auto}.stage{padding:12px 16px;overflow:hidden}.scaler{transform-origin:top left}.app{position:relative;width:1366px;height:768px;display:grid;grid-template-rows:38px auto minmax(0,1fr) 27px;background:var(--panel);border:1px solid var(--line);border-radius:7px;overflow:hidden}.top{display:flex;align-items:center;gap:4px;padding:0 8px;background:var(--head);border-bottom:1px solid var(--line);z-index:20;min-width:0}.menus{display:flex;align-items:center;gap:1px;flex:0 0 auto}.menus button{padding:4px 7px;font-size:12px}.brand{font-weight:600;padding-right:5px}.search-dock{position:relative;flex:1 1 570px;max-width:610px;min-width:260px;margin:0 auto;border:1px solid var(--line);border-radius:5px;background:var(--paper)}.search-top{display:flex;align-items:center;gap:6px;padding:0 8px;height:28px}.search-top>span{color:var(--sub)}.search-top input{flex:1;width:100%;background:transparent;border:0;padding:2px 0;outline:none}.search-top kbd{font:11px "Segoe UI",sans-serif;color:var(--sub);white-space:nowrap}.search-dock.open{border-color:var(--accent);border-bottom-left-radius:0;border-bottom-right-radius:0}.search-popup{position:absolute;left:-1px;right:-1px;top:100%;border:1px solid var(--accent);border-top:1px solid var(--line);border-radius:0 0 6px 6px;background:var(--paper);box-shadow:0 12px 26px #0002;display:none;overflow:hidden;max-height:610px;flex-direction:column}.search-dock.open .search-popup{display:flex}.search-scope{padding:7px 10px;background:var(--head);font-size:11px;color:var(--sub);display:flex;justify-content:space-between;gap:10px}.search-results{overflow:auto;min-height:0;max-height:510px;padding:4px}.search-group{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub);padding:8px 7px 3px}.choice{padding:7px 8px;min-height:34px;border-radius:3px;display:flex;align-items:center;gap:10px;cursor:pointer}.choice.active,.choice:hover{background:var(--tint)}.choice .choice-label{flex:1;min-width:0}.choice .choice-help{font-size:11px;color:var(--sub);text-align:right}.choice .check{width:13px;color:var(--accent)}.search-help{font-size:11px;color:var(--sub);padding:6px 10px;border-top:1px solid var(--line)}.quick{display:flex;gap:3px;align-items:center;margin-left:9px}.quick button{height:27px;padding:4px 6px;display:flex;gap:6px;align-items:center;font-size:12px}.quick button[aria-pressed=true]{color:var(--accent);background:var(--tint)}.quick .layout-button{border-color:var(--line)}.glyph{width:15px;height:12px;border:1px solid currentColor;border-radius:2px;display:block;position:relative}.glyph:after{content:"";position:absolute;background:currentColor}.glyph.left:after{inset:1px auto 1px 1px;width:4px}.glyph.right:after{inset:1px 1px 1px auto;width:4px}.glyph.bottom:after{inset:auto 1px 1px;height:3px}.notice{display:none;padding:6px 10px;background:var(--tint);color:var(--text);border-bottom:1px solid var(--line);align-items:center;gap:9px;font-size:12px}.notice.on{display:flex}.notice span{flex:1}.notice.error{color:var(--danger)}.notice button{border-color:currentColor;padding:2px 8px}.work{display:grid;grid-template-columns:258px 5px minmax(0,1fr) 5px 304px;min-height:0;min-width:0}.side{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}.pane{min-width:0;min-height:0;overflow:auto;background:var(--panel);flex:1}.pane[hidden]{display:none}.side.history-stack #layers{flex:0 0 155px;border-bottom:1px solid var(--line)}.side.history-stack #inspector{flex:1.6 1 0;border-bottom:1px solid var(--line)}.side.history-stack #history{flex:1 1 0}.pane-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:5px;padding:6px 8px;min-height:33px;background:var(--head);border-bottom:1px solid var(--line);font-size:12px;font-weight:600}.pane-head>span:first-child{flex:1}.pane-head button{padding:1px 5px;min-width:22px;height:22px;font-weight:400}.pane-head select{max-width:102px;font-size:11px;padding:2px 3px;font-weight:400}.split{cursor:col-resize;background:var(--line)}.split:hover{background:var(--tint)}.layer-list{padding:7px}.layer-row{border:1px solid var(--accent);background:var(--tint);padding:7px 8px;border-radius:5px;font-size:12px}.layer-name{display:flex;align-items:center;gap:8px}.swatch{display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid var(--line);flex-shrink:0}.layer-summary{margin-top:5px;font-size:11px;color:var(--sub)}.history-tools{padding:6px;display:flex;gap:4px;border-bottom:1px solid var(--line)}.history-tools input{width:100%;font-size:11px;padding:4px 6px}.history-tools select{width:85px;font-size:11px;padding:3px}.history-meta{padding:5px 9px;color:var(--sub);font-size:11px;border-bottom:1px solid var(--line)}.history-group{padding:8px 9px 3px;text-transform:uppercase;letter-spacing:.04em;font-size:10px;color:var(--sub)}.history-list{padding:3px 5px}.hrow{display:flex;align-items:center;min-height:37px;border:1px solid transparent;border-radius:4px;margin:1px 0;gap:2px}.hrow.current{border-color:var(--accent);background:var(--tint)}.hrow.future{opacity:.42}.hrow.disabled .action-name{text-decoration:line-through;color:var(--sub)}.hrow button.jump{flex:1;min-width:0;display:grid;grid-template-columns:22px minmax(0,1fr);gap:0 3px;text-align:left;padding:3px 4px}.hrow .step{grid-row:1/3;color:var(--sub);font-size:10px;align-self:center}.action-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.action-layer{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hrow .more{padding:3px 5px;font-size:15px;flex-shrink:0}.history-baseline{font-size:11px;padding:7px;color:var(--sub);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.map-column{display:flex;flex-direction:column;min-width:0;min-height:0}.mapwrap{position:relative;flex:1;min-height:90px;overflow:hidden;background:var(--map)}#map{display:block;width:100%;height:100%;touch-action:none;cursor:grab}#map.select{cursor:crosshair}.maptools{position:absolute;left:10px;top:10px;display:flex;gap:1px;padding:2px;background:var(--panel);border:1px solid var(--line);border-radius:5px}.maptools button{padding:3px 8px;font-size:12px}.maptools button[aria-pressed=true]{background:var(--tint);color:var(--accent)}.mapnote{position:absolute;left:10px;bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:2px 6px;font-size:10px;color:var(--sub);pointer-events:none}.mapzoom{position:absolute;right:10px;bottom:10px;display:flex;gap:1px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:2px}.mapzoom button{padding:2px 8px;font-size:14px}.veil{position:absolute;inset:0;background:var(--map);display:none;align-items:center;justify-content:center;font-size:13px;color:var(--sub)}.progress{position:absolute;top:0;left:0;height:3px;background:var(--accent);width:0}.bottom-grip{height:5px;flex:0 0 5px;background:var(--line);cursor:row-resize}.bottom-grip:hover{background:var(--tint)}.bottom{flex:0 0 200px;min-height:0;overflow:hidden;display:flex;flex-direction:column;border-top:1px solid var(--line)}.bottom[hidden],.bottom-grip[hidden]{display:none}.bottom.max{flex:1}.tabs{display:flex;align-items:center;gap:2px;padding:0 4px;border-bottom:1px solid var(--line);background:var(--head);flex-wrap:wrap;min-height:34px}.tabs button{padding:6px 8px;border-radius:0;font-size:12px;border-bottom:2px solid transparent}.tabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}.tabs .actions{display:flex;margin-left:auto;gap:1px}.tabs .actions button{padding:4px 5px}.bottom-content{overflow:auto;min-height:0;flex:1;padding:8px 10px;font-size:12px}.bottom-content.table-mode{padding:0}.row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.row .grow{flex:1}.small{font-size:11px;color:var(--sub)}.inspector-body{padding:10px}.section{margin-bottom:17px}.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--sub)}.section-title button{text-transform:none;letter-spacing:0;font-weight:400;color:var(--accent);font-size:12px}.filter-card{display:flex;gap:4px;align-items:flex-start;padding:7px 5px;border:1px solid var(--line);border-radius:4px;margin-bottom:5px;background:var(--paper)}.filter-card.off{opacity:.55}.filter-card input{margin:3px 3px 0 0;accent-color:var(--accent)}.filter-card .filter-label{flex:1;min-width:0;text-align:left;padding:0 2px;font-family:Consolas,monospace;font-size:12px;overflow-wrap:anywhere}.filter-card.off .filter-label{text-decoration:line-through}.filter-card .remove{padding:0 4px}.and-label{font-size:10px;color:var(--sub);margin:0 0 5px 5px}.hint{font-size:11px;color:var(--sub);line-height:1.5}.button{border:1px solid var(--line);padding:4px 9px;background:var(--paper);font-size:12px}.button.primary{border-color:var(--accent);background:var(--tint);color:var(--accent)}.style-row{display:flex;gap:6px;align-items:center;margin:7px 0}.style-row select{flex:1;min-width:0;font-size:12px}.legend{display:grid;grid-template-columns:12px 1fr;gap:5px 8px;font-size:11px;margin:8px 0}.style-row input[type=range]{width:140px;accent-color:var(--accent);padding:0}.kv{display:grid;grid-template-columns:90px minmax(0,1fr);gap:5px 9px;font-size:12px}.kv dt{color:var(--sub);overflow-wrap:anywhere}.kv dd{margin:0;overflow-wrap:anywhere}.kv .wide{grid-column:1/-1}.selection-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.status{display:flex;align-items:center;gap:0;background:var(--head);border-top:1px solid var(--line);font-size:11px;min-width:0;overflow:hidden}.status>span,.status>button{padding:3px 8px;border-right:1px solid var(--line);white-space:nowrap;flex-shrink:0}.status .grow{flex:1;border:0;min-width:0}.status .source{max-width:220px;overflow:hidden;text-overflow:ellipsis;flex-shrink:1}.scale-control{display:flex;align-items:center;gap:5px;padding:0 5px;flex-shrink:0}.scale-control label{color:var(--sub)}.scale-control input{width:87px;height:22px;padding:1px 4px;font-size:11px}.scale-control button{font-size:11px;padding:1px 5px;border-color:var(--line)}.context-menu{position:absolute;z-index:40;min-width:200px;background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:4px;box-shadow:0 10px 25px #0002}.context-menu[hidden]{display:none}.context-menu button{display:block;width:100%;text-align:left;padding:6px 8px;font-size:12px}.context-menu .menu-heading{padding:4px 8px;font-size:10px;color:var(--sub)}.modal-veil{position:absolute;inset:0;background:#0005;display:flex;align-items:center;justify-content:center;z-index:50}.modal-veil[hidden]{display:none}.modal{width:470px;max-width:90%;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:18px;box-shadow:0 12px 30px #0003}.modal h2{font-size:16px;margin:0 0 7px;font-weight:600}.modal p{font-size:12px;color:var(--sub);margin:8px 0}.modal label{display:block;font-size:12px;margin:12px 0 5px}.modal input,.modal select{width:100%}.modal .buttons{display:flex;justify-content:flex-end;gap:6px;margin-top:14px}.modal .error{color:var(--danger)}.modal .progress-track{height:5px;background:var(--line);margin:13px 0}.modal .progress-track div{height:100%;background:var(--accent);width:0}.attributes{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}.attributes td,.attributes th{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line)}.attributes th{position:sticky;top:0;background:var(--panel);font-weight:500}.attributes tr.selected{background:var(--tint)}.attributes td button{font-size:12px}.toast{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);max-width:80%;background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:8px 12px;box-shadow:0 6px 20px #0002;z-index:35;font-size:12px}.toast[hidden]{display:none}
+.side[hidden]{display:none}.pane.collapsed{flex:0 0 33px!important;overflow:hidden}.pane.collapsed>:not(.pane-head){display:none}.pane-head .pane-title{flex:1;min-width:0;text-align:left;font-weight:600;padding-left:1px}.history-preview{display:flex;align-items:center;gap:5px;padding:6px 8px;border-bottom:1px solid var(--line);background:var(--tint);font-size:11px}.history-preview>span{flex:1;min-width:0;overflow-wrap:anywhere}.history-preview small{display:block;color:var(--sub);font-size:10px}.history-preview .button{padding:3px 6px;font-size:11px}.hrow.selected{background:var(--tint)}.hrow.current .step{color:var(--accent);font-weight:700}.pane-head .pane-title:hover{background:var(--tint)}.demo button[aria-pressed=true]{background:var(--tint);border-color:var(--accent)}.layer-name{min-width:0}.layer-filename{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}.search-results .choice{min-height:35px}.scale-control input{width:96px}.status .source{max-width:205px}.history-meta{font-size:10px}#historyDetail[hidden]{display:none}
+.top{grid-row:1}.notice{grid-row:2}.work{grid-row:3}.status{grid-row:4}.glyph.lower:after{inset:auto 1px 1px;height:3px}.quick .glyph{flex:none}.quick .glyph.lower{height:12px;min-height:0}.demo .explain{flex-basis:100%;text-align:right;font-size:11px}.status #warningStatus{color:var(--warn);cursor:pointer}
+.search-dock.layout-mode .search-results{max-height:280px}.search-dock.layout-mode .choice{padding-top:5px;padding-bottom:5px;min-height:31px}
+
+/* Selection is a set; inspecting and pinning never change membership. */
+#map{touch-action:none;user-select:none}.maptools{max-width:calc(100% - 60px);flex-wrap:wrap}.maptools select{padding:2px 4px;font-size:11px;max-width:115px}.maptools select[hidden]{display:none}.mapnote{max-width:calc(100% - 20px)}.selection-summary{padding:7px 10px;border-bottom:1px solid var(--line);font-size:11px;background:var(--tint)}.selection-summary .summary-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.selection-summary strong{flex:1}.selection-summary button{font-size:11px;padding:2px 5px}.selection-detail{display:block;color:var(--sub);margin-top:3px}.selection-list{max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:4px;margin:6px 0 10px}.selection-item{display:flex;align-items:center;gap:6px;min-height:27px;padding:1px 6px;border-bottom:1px solid var(--line)}.selection-item:last-child{border-bottom:0}.selection-item button{flex:1;min-width:0;display:flex;justify-content:space-between;gap:4px;text-align:left;padding:3px;font-size:11px}.selection-item small{color:var(--sub)}.selection-item.focused{box-shadow:inset 3px 0 #b67a13;background:var(--tint)}.selection-item input,.attributes input{accent-color:var(--accent);width:13px;height:13px;padding:0}.selection-head{gap:5px;flex-wrap:wrap}.selection-head strong{flex:1}.selection-head button{font-size:11px}.selection-legend{font-size:11px;color:var(--sub);margin:7px 0}.selection-legend .selected-key{color:#296cbd}.selection-legend .inspect-key{color:#b67a13}.table-toolbar{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line);font-size:11px;flex-wrap:wrap}.table-toolbar select{padding:2px 4px}.attributes tr.inspected td:first-child{box-shadow:inset 3px 0 #b67a13}.attributes td:first-child,.attributes th:first-child{width:32px}.attributes tr.selected{background:var(--tint)}.selection-empty{font-size:12px;color:var(--sub);margin:8px 0}
+
+/* Repeat and workflow exploration is page-local; no source edits or files. */
+.modal.workflow-dialog{width:630px;max-height:calc(100% - 50px);overflow:auto}.workflow-intro{font-size:12px}.workflow-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.workflow-grid label{margin-top:5px}.workflow-grid .wide{grid-column:1/-1}.workflow-grid input[type=checkbox]{width:auto;margin-right:5px}.workflow-scope{padding:8px 10px;background:var(--tint);border:1px solid var(--line);border-radius:4px;font-size:12px;margin:10px 0}.workflow-scope small{display:block;color:var(--sub);margin-top:4px}.workflow-steps{list-style:none;margin:12px 0;padding:0;border:1px solid var(--line);border-radius:5px}.workflow-steps li{padding:7px 10px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:22px 1fr auto;gap:7px;align-items:start}.workflow-steps li:last-child{border:0}.workflow-steps small{display:block;color:var(--sub);font-size:11px}.workflow-steps .step-state{font-size:10px;color:var(--warn);max-width:110px;text-align:right}.workflow-steps .step-state.unchanged{color:var(--sub)}.workflow-preview{padding:8px 10px;border-left:3px solid var(--accent);background:var(--tint);font-size:12px}.workflow-preview strong{font-size:15px;font-weight:600}.workflow-last{font-size:11px;color:var(--sub);margin:8px 0}.workflow-save{padding-top:7px;border-top:1px solid var(--line);margin-top:10px}.workflow-save summary{cursor:pointer;font-size:12px}.workflow-save .inline{display:flex;gap:6px;margin:7px 0}.workflow-save .inline input{flex:1}.workflow-save button{white-space:nowrap}.modal .workflow-error{color:var(--danger);font-size:12px;min-height:17px;margin:8px 0 0}.summary-actions{display:flex;gap:5px;margin-top:5px}.summary-actions button{font-size:11px;border-color:var(--line)}.run-card{padding:9px 10px;border:1px solid var(--line);border-radius:5px;margin:8px 0;background:var(--paper)}.run-heading{display:flex;gap:8px;justify-content:space-between;align-items:center}.run-heading strong{font-weight:600}.run-card p{margin:4px 0;font-size:11px;color:var(--sub)}.run-controls{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.run-controls button{font-size:11px;padding:3px 6px;border-color:var(--line)}.run-badge{font-size:10px;color:var(--sub)}.run-badge.completed{color:var(--accent)}.run-badge.cancelled,.run-badge.failed{color:var(--warn)}.run-status-text{font-size:11px;color:var(--sub)}.workflow-options{display:flex;justify-content:space-between;gap:8px;align-items:center}.workflow-options button{font-size:11px}.workflow-ids{overflow-wrap:anywhere;max-height:110px;overflow:auto;font-size:11px}.workflow-dialog .buttons{position:sticky;bottom:-18px;background:var(--paper);padding:10px 0;margin-top:8px;border-top:1px solid var(--line)}
+/* v7: one attached search surface; discoverability without new permanent panels. */
+.search-modes{display:flex;gap:3px;align-items:center;padding:5px 7px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}.search-modes button{font-size:11px;padding:3px 6px}.search-modes button[aria-pressed=true]{background:var(--tint);color:var(--accent)}.search-modes kbd{font:12px Consolas,monospace;color:var(--accent);margin-right:4px}.search-modes select{font-size:11px;padding:2px 4px;max-width:150px;margin-left:auto}.search-context{padding:6px 10px;border-bottom:1px solid var(--line);font-size:11px;color:var(--sub)}.choice[aria-disabled=true]{opacity:.65}.choice .choice-help{max-width:48%;white-space:normal}.field-launcher{margin-left:auto;display:flex;align-items:center;gap:5px}.field-launcher button{font-size:11px;border-color:var(--line)}.modal{max-height:calc(100% - 44px);overflow:auto}.modal:has(.catalogue-list){width:650px}.catalogue-list{max-height:250px;overflow:auto;margin:9px 0;border-top:1px solid var(--line)}.catalogue-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}.catalogue-row>span{flex:1}.catalogue-row small{display:block;color:var(--sub)}.catalogue-row button{font-size:11px;border-color:var(--line);flex-shrink:0}.contract-json{font:11px/1.5 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:210px;overflow:auto;background:var(--head);padding:9px;border-radius:4px}.field-actions{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.field-actions button{font-size:12px;border-color:var(--line);padding:4px 7px}.field-facts{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px}.field-facts dt{color:var(--sub)}.field-facts dd{margin:0}.state-note{padding:8px 10px;background:var(--tint);border-left:3px solid var(--accent);font-size:12px;margin:10px 0}.state-note.warn{border-left-color:var(--warn)}.prefix-examples{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin:12px 0;font-size:12px}.prefix-examples code{color:var(--accent)}.preview-table{width:100%;border-collapse:collapse;font-size:12px}.preview-table th,.preview-table td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line)}.preview-table th{font-weight:500}.search-help{min-height:29px}.search-scope span:first-child{min-width:0}.search-scope span:last-child{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="demo"><strong>Map Studio v7 · Design proposal</strong><button data-frame="laptop">Laptop 1366 × 768</button><button data-frame="ultra">Ultrawide 3440 × 1440</button><button id="demoSource">Simulate source change</button><button id="demoLoad">Simulate loading</button><span class="explain">Synthetic map · / commands · @ fields · # features · ? help · no kernel connection or file writes</span></div>
+<div id="stage" class="stage"><div id="scaler" class="scaler"><div id="app" class="app">
+<header class="top">
+<div class="menus"><span class="brand">Spatial</span><button data-command="file">File</button><button data-command="edit">Edit</button><button data-command="layout">View</button><button data-command="settings">Settings</button><button data-command="actions">Actions</button></div>
+<div id="searchDock" class="search-dock">
+<div class="search-top"><span aria-hidden="true">⌕</span><input id="search" aria-label="Search commands, settings and filters" placeholder="Search commands, settings, filters…" role="combobox" aria-autocomplete="list" aria-controls="results" aria-expanded="false" autocomplete="off"><kbd>Ctrl+K</kbd></div>
+<div id="searchPopup" class="search-popup"><div class="search-scope"><span id="searchScope">All commands</span><span>Bern parcels</span></div><div id="results" class="search-results" role="listbox"></div><div id="searchHelp" class="search-help">↑ ↓ choose · Tab complete · Enter run · Esc close</div></div>
+</div>
+<div class="quick"><button id="toggleLeft" aria-label="Toggle primary sidebar" title="Toggle primary sidebar · Ctrl+B"><i class="glyph left"></i></button><button id="toggleBottom" aria-label="Toggle bottom panel" title="Toggle bottom panel · Ctrl+J"><i class="glyph bottom"></i></button><button id="toggleRight" aria-label="Toggle inspector" title="Toggle inspector · Ctrl+I"><i class="glyph right"></i></button><button id="layoutButton" class="layout-button">Layout</button></div>
+</header>
+<div id="notice" class="notice" role="status"></div>
+<div id="work" class="work">
+<div id="leftSide" class="side history-stack">
+<section id="layers" class="pane"><header class="pane-head"><span>Layers</span><button data-command="layers" aria-label="Hide Layers">×</button></header><div class="layer-list"><div class="layer-row"><div class="layer-name"><span class="swatch" style="background:#a6c88b"></span>Bern parcels</div><div id="layerSummary" class="layer-summary"></div></div><p class="hint">170 synthetic parcels · EPSG:2056 units</p></div></section>
+<section id="history" class="pane"><header class="pane-head"><span>History</span><button id="undo" title="Undo workspace action · Ctrl+Z" aria-label="Undo workspace action">↶</button><button id="redo" title="Redo workspace action · Ctrl+Shift+Z" aria-label="Redo workspace action">↷</button><button id="moveHistory" title="Move History to other side" aria-label="Move History to other side">⇄</button><button data-command="history" aria-label="Hide History">×</button></header><div class="history-tools"><input id="historySearch" placeholder="Search history…" aria-label="Search history"><select id="historyGroup" aria-label="Group history"><option value="time">Time</option><option value="layer">Layer</option><option value="type">Action</option></select></div><div class="history-tools"><select id="branchSelect" aria-label="History branch" style="width:100%"></select></div><div id="historyMeta" class="history-meta"></div><div id="historyList" class="history-list"></div></section>
+</div><div id="splitLeft" class="split" title="Resize sidebar"></div>
+<main id="mapColumn" class="map-column">
+<div id="mapwrap" class="mapwrap"><svg id="map" xmlns="http://www.w3.org/2000/svg" aria-label="Synthetic parcel map" role="img"><title>Synthetic parcels for testing navigation and filters</title><g id="parcels"></g><g id="inspectionHalo" pointer-events="none"></g><rect id="selectionBox" fill="#296cbd22" stroke="#296cbd" stroke-width="1.5" vector-effect="non-scaling-stroke" pointer-events="none" visibility="hidden"/></svg><div class="maptools"><button id="navigate" aria-pressed="true">Navigate</button><button id="selectTool" aria-pressed="false" title="Click features or drag a selection box">Select</button><select id="selectionMode" aria-label="Selection mode" hidden><option value="toggle">Add / remove</option><option value="replace">Replace</option><option value="add">Add only</option><option value="remove">Remove only</option></select><button id="mapSelectionCount" title="Show selection and inspected feature">0 selected</button><button data-command="bookmark">Save view</button></div><div class="mapzoom"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button></div><div class="mapnote" id="mapToolHint">Drag to pan · click to inspect · selection stays unchanged</div><div id="progress" class="progress"></div><div id="veil" class="veil">Source session ended. Reopen or use a prepared revision.</div></div>
+<div id="bottomGrip" class="bottom-grip" hidden title="Resize bottom panel"></div>
+<section id="bottom" class="bottom" hidden><header class="tabs"><button data-tab="console">Console</button><button data-tab="problems">Problems</button><button data-tab="jobs">Jobs</button><button data-tab="table">Table</button><span class="actions"><button id="expandBottom" aria-label="Expand bottom panel" title="Expand / restore">□</button><button id="closeBottom" aria-label="Close bottom panel">×</button></span></header><div id="bottomContent" class="bottom-content"></div></section>
+</main><div id="splitRight" class="split" title="Resize inspector"></div>
+<div id="rightSide" class="side">
+<section id="inspector" class="pane"><header class="pane-head"><span>Inspector</span><button data-command="inspector" aria-label="Hide inspector">×</button></header><div class="tabs"><button id="layerTab" aria-selected="true">Layer</button><button id="featureTab" aria-selected="false">Selection / feature</button></div><div id="selectionSummary" class="selection-summary" aria-live="polite"></div><div id="inspectorBody" class="inspector-body"></div></section>
+</div>
+</div>
+<footer class="status"><span id="sourceStatus" class="source">Bern parcels</span><span id="detectionStatus">Checks per query</span><span title="Source declares EPSG:2056; this mockup uses synthetic metre coordinates">EPSG:2056</span><span id="jobStatus" hidden></span><span class="grow"></span><span id="countStatus"></span><div class="scale-control"><label for="mapScale">Scale</label><input id="mapScale" list="scales" aria-label="Map scale ratio" title="Nominal scale at 96 CSS pixels per inch. Enter 10000 or 1:10000."><datalist id="scales"><option value="1:500"><option value="1:1,000"><option value="1:2,500"><option value="1:5,000"><option value="1:10,000"><option value="1:25,000"></datalist><button id="fitLayer" title="Fit all source parcels, not just the filtered subset">Zoom to layer</button></div></footer>
+<div id="contextMenu" class="context-menu" hidden></div>
+<div id="modalVeil" class="modal-veil" hidden><section id="modal" class="modal" role="dialog" aria-modal="true" aria-label="Prototype dialog"></section></div>
+<div id="toast" class="toast" role="status" hidden></div>
+</div></div></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = value => structuredClone(value);
+const SOURCE = 'Bern_Parcels_2026_Delivery_Cadastral_Review.parquet';
+const LAYER = 'Bern parcels';
+const fields = {area_m2:'number',zone:'text',land_use:'text',parcel_id:'number'};
+const colours = {W1:'#a6c88b',W2:'#e1bf74',W3:'#85b8cf',A:'#b5a1cd',G:'#d7a38d',F:'#8ab8a1'};
+const parcels = Array.from({length:170}, (_,i) => ({
+ parcel_id:6401+i, area_m2:250+(i*137)%2300, zone:Object.keys(colours)[i%6],
+ land_use:['vineyard','pasture','residential','orchard'][i%4],
+ x:18+(i%17)*56+(Math.floor(i/17)%2)*5, y:18+Math.floor(i/17)*53, w:48, h:45
+}));
+const S = {
+ sourceGeneration:1, sourceMode:'reference', ended:false, prepared:false, selection:new Set(), inspected:null, pinned:null, inspectorTab:'layer',
+ partial:false,loadedIds:null,publishFailed:false,justReopened:false,
+ left:true,right:true,history:true,historySide:'left',collapsed:new Set(), leftWidth:258,rightWidth:304,
+ bottom:false,bottomTab:'console',bottomHeight:210,bottomMax:false,frame:'laptop',
+ branches:[{id:1,name:'Main',source:1,actions:[],cursor:0}],branch:1,selectedHistory:null,
+ historyGroup:'time',historyQuery:'',actionId:0,filterId:0,branchId:1,
+ model:{filters:[],style:'single',opacity:100},
+ camera:{cx:490,cy:278,res:1.3,rotation:0,crs:'EPSG:2056'}, bookmarks:[],
+ summaryRuns:[],summaryRunId:0,lastSummary:null,pendingSummary:null,summaryDraft:null,summaryTemplates:[],
+ logs:['Opened the synthetic Bern parcels layer. No external source is connected.'],
+ job:null,tool:'navigate',selectionMode:'toggle',tableScope:'matches',theme:'system',searchChoices:[],searchIndex:0,modalReturn:null
+};
+const activeBranch = () => S.branches.find(b => b.id === S.branch);
+function log(message){S.logs.push(message);if(S.bottom&&S.bottomTab==='console')renderBottom();}
+let toastTimer;
+function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3800);}
+function filterText(f){return f.field+' '+f.op+' '+(fields[f.field]==='text' ? '"'+f.value+'"' : f.value);}
+function parseFilter(text){
+ const m=text.trim().replace(/^filter\s+/i,'').match(/^(area_m2|parcel_id|zone|land_use)\s*(>=|<=|!=|=|>|<)\s*(.+)$/i);
+ if(!m)return null;
+ const field=m[1].toLowerCase(),op=m[2],raw=m[3].trim();
+ if(fields[field]==='number'){
+  if(!/^-?\d+(?:\.\d+)?$/.test(raw)||!Number.isFinite(Number(raw)))return null;
+  return {field,op,value:Number(raw)};
+ }
+ if(!['=','!='].includes(op))return null;
+ const value=raw.replace(/^["']|["']$/g,'');
+ if(!value||/["']/.test(value))return null;
+ return {field,op,value};
+}
+function matches(p,f){
+ const a=p[f.field],b=f.value;
+ return f.op==='='?a===b:f.op==='!='?a!==b:f.op==='>'?a>b:f.op==='<'?a<b:f.op==='>='?a>=b:a<=b;
+}
+function visibleParcels(){return parcels.filter(p=>S.model.filters.every(f=>!f.enabled||matches(p,f)));}
+function drawnParcels(){return visibleParcels().filter(p=>(!S.partial||p.x<560)&&(S.loadedIds===null||S.loadedIds.has(p.parcel_id)));}
+function selectionFacts(){
+ const matched=new Set(visibleParcels().map(p=>p.parcel_id)),drawn=new Set(drawnParcels().map(p=>p.parcel_id));
+ const ids=[...S.selection];
+ return {total:ids.length,hidden:ids.filter(id=>!matched.has(id)).length,unloaded:ids.filter(id=>matched.has(id)&&!drawn.has(id)).length};
+}
+function inspectedId(){return S.pinned||S.inspected;}
+function showSelection(){S.inspectorTab='feature';S.right=true;S.collapsed.delete('inspector');applyLayout();renderInspector();}
+function renderSelectionSummary(){
+ const f=selectionFacts(),detail=[f.hidden?f.hidden+' filtered out':'',f.unloaded?f.unloaded+' not drawn in partial/loading view':''].filter(Boolean).join(' · ');
+ $('selectionSummary').innerHTML='<div class="summary-row"><strong>'+f.total+' selected · '+LAYER+'</strong><button id="viewSelection" title="Inspect without changing selection">View</button><button id="clearSelection" '+(!f.total||S.ended?'disabled':'')+'>Clear</button></div><span class="selection-detail">'+(S.ended?'Previous session · read-only':detail||'Selection and inspected feature are independent.')+'</span>';
+ $('selectionSummary').insertAdjacentHTML('beforeend','<div class="summary-actions"><button id="summarySelection" '+(S.ended?'disabled':'')+'>Create summary… <span class="prop">DEMO</span></button><button id="repeatSelection" '+(!S.lastSummary||S.ended?'disabled':'')+'>Repeat…</button></div>');
+ $('summarySelection').onclick=()=>openSummary('new');$('repeatSelection').onclick=()=>openSummary('repeat');
+ $('viewSelection').onclick=showSelection;$('clearSelection').onclick=()=>updateSelection([],'replace');
+ $('mapSelectionCount').textContent=f.total+' selected';
+ $('mapSelectionCount').title=f.total+' selected in '+LAYER+(detail?' · '+detail:'')+' · Show selection';
+}
+function updateSelection(ids,mode='toggle'){
+ if(S.ended)return;
+ const valid=ids.filter(id=>parcels.some(p=>p.parcel_id===id));
+ if(mode==='replace')S.selection=new Set(valid);
+ else for(const id of valid){
+  if(mode==='remove'||(mode==='toggle'&&S.selection.has(id)))S.selection.delete(id);else S.selection.add(id);
+ }
+ if(valid.length)S.inspected=valid[valid.length-1];
+ renderMap();renderInspector();renderStatus();if(S.bottom&&S.bottomTab==='table')renderBottom();
+}
+function inspectParcel(id){
+ if(S.ended)return;
+ S.inspected=id;if(!S.pinned)S.inspectorTab='feature';
+ S.right=true;S.collapsed.delete('inspector');applyLayout();renderMap();renderInspector();
+}
+function zoomToSelection(){
+ if(S.ended)return;
+ const items=parcels.filter(p=>S.selection.has(p.parcel_id));
+ if(!items.length){toast('Select at least one parcel.');return;}
+ if(S.bottom&&S.bottomMax){S.bottomMax=false;applyLayout();}
+ const x=Math.min(...items.map(p=>p.x)),y=Math.min(...items.map(p=>p.y)),r=Math.max(...items.map(p=>p.x+p.w)),b=Math.max(...items.map(p=>p.y+p.h));
+ S.camera.cx=(x+r)/2;S.camera.cy=(y+b)/2;S.camera.res=Math.max((r-x+50)/$('mapwrap').clientWidth,(b-y+50)/$('mapwrap').clientHeight);updateCamera();
+ if(selectionFacts().hidden)toast('Fitted all selected parcels. Filters still hide some of them.');
+}
+function replay(branch){
+ const model={filters:[],style:'single',opacity:100};const errors=[];
+ branch.actions.slice(0,branch.cursor).forEach(a=>{
+  if(a.disabled||a.removed)return;
+  if(a.type==='filter.add'){model.filters.push({...a.payload});return;}
+  if(a.type.startsWith('filter.')){
+   const i=model.filters.findIndex(f=>f.id===a.payload.id);
+   if(i<0){errors.push(a.id);return;}
+   if(a.type==='filter.remove')model.filters.splice(i,1);
+   if(a.type==='filter.toggle')model.filters[i].enabled=a.payload.enabled;
+   if(a.type==='filter.edit')model.filters[i]={...model.filters[i],...a.payload};
+  }
+  if(a.type==='style')model.style=a.payload.value;
+  if(a.type==='opacity')model.opacity=a.payload.value;
+ });
+ return {model,errors};
+}
+function actionLabel(a){
+ if(a.type==='filter.add')return 'Add '+filterText(a.payload);
+ if(a.type==='filter.edit')return 'Edit '+filterText(a.payload);
+ if(a.type==='filter.toggle')return (a.payload.enabled?'Enable':'Disable')+' filter '+a.payload.id;
+ if(a.type==='filter.remove')return 'Remove filter '+a.payload.id;
+ if(a.type==='style')return a.payload.value==='zone'?'Colour by zone':'Single-colour style';
+ return 'Opacity '+a.payload.value+'%';
+}
+function fork(reason){
+ const old=activeBranch(), b={...clone(old),id:++S.branchId,name:'Branch '+S.branchId+' · '+reason};
+ S.branches.push(b);S.branch=b.id;return b;
+}
+function commit(type,payload){
+  if(S.ended){toast('The source session ended. Reopen before changing the workspace.');renderInspector();return false;}
+ let b=activeBranch();
+ if(b.source!==S.sourceGeneration){toast('This history belongs to an earlier source session. Reopen history cannot silently rebind it.');return false;}
+ if(b.cursor<b.actions.length){b=fork('after step '+b.cursor);b.actions=b.actions.slice(0,b.cursor);}
+ const a={id:++S.actionId,type,payload:clone(payload),layer:LAYER,disabled:false,removed:false};
+ b.actions.push(a);b.cursor=b.actions.length;S.selectedHistory=a.id;
+ const result=replay(b);
+ if(result.errors.length){b.actions.pop();b.cursor--;toast('Action refused: its prerequisite filter is not present.');return false;}
+ S.model=result.model;log(actionLabel(a)+' · '+LAYER);renderData();return true;
+}
+function setCursor(n){
+ const b=activeBranch();
+ if(S.ended||b.source!==S.sourceGeneration){toast('History cannot cross this source boundary. Reopen explicitly.');return;}
+ b.cursor=Math.max(0,Math.min(n,b.actions.length));S.model=replay(b).model;
+ S.selectedHistory=b.cursor?b.actions[b.cursor-1].id:null;
+ log('Workspace restored to step '+b.cursor+' · '+b.name);renderData();
+}
+function renderMap(){
+ const visible=new Set(drawnParcels().map(p=>p.parcel_id));
+ $('parcels').innerHTML=parcels.map(p=>'<rect data-parcel="'+p.parcel_id+'" x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" rx="2" fill="'+(S.model.style==='zone'?colours[p.zone]:'#a6c88b')+'" fill-opacity="'+(visible.has(p.parcel_id)?S.model.opacity/100:0.035)+'" stroke="'+(S.selection.has(p.parcel_id)?'#296cbd':'#72866a')+'" stroke-width="'+(S.selection.has(p.parcel_id)?2.8:0.55)+'" style="pointer-events:'+(visible.has(p.parcel_id)?'auto':'none')+'"><title>Parcel '+p.parcel_id+' · '+p.zone+' · '+p.area_m2+' m²</title></rect>').join('');
+ const inspected=parcels.find(p=>p.parcel_id===inspectedId()&&visible.has(p.parcel_id));
+ $('inspectionHalo').innerHTML=inspected?'<rect x="'+(inspected.x-2)+'" y="'+(inspected.y-2)+'" width="'+(inspected.w+4)+'" height="'+(inspected.h+4)+'" rx="3" fill="none" stroke="#b67a13" stroke-width="2" stroke-dasharray="4 2" vector-effect="non-scaling-stroke"/>':'';
+ $('veil').style.display=S.ended?'flex':'none';$('veil').textContent='Source session ended. Reopen explicitly to continue.';
+ $('parcels').querySelectorAll('rect').forEach(r=>r.style.display=visible.has(Number(r.dataset.parcel))?'':'none');
+ updateCamera();
+}
+function updateCamera(){
+ const w=$('mapwrap').clientWidth,h=$('mapwrap').clientHeight,c=S.camera;
+ if(!w||!h)return;
+ $('map').setAttribute('viewBox',[c.cx-w*c.res/2,c.cy-h*c.res/2,w*c.res,h*c.res].join(' '));
+ $('map').setAttribute('preserveAspectRatio','none');
+ if(document.activeElement!==$('mapScale'))$('mapScale').value='1:'+Math.round(c.res*96/0.0254).toLocaleString('en-US');
+}
+function parseScale(text){
+ const raw=text.trim().replace(/^scale\s*/i,'').replace(/^1\s*:\s*/,'').replace(/[, ]/g,'');
+ if(!/^\d+(?:\.\d+)?$/.test(raw))return null;
+ const value=Number(raw);return value>=10&&value<=1000000000?value:null;
+}
+function setScale(value){
+ const n=parseScale(String(value));if(!n){toast('Use a scale such as 1:10,000 or 10000 (minimum 1:10).');return false;}
+ S.camera.res=n*0.0254/96;updateCamera();log('Set nominal map scale 1:'+n.toLocaleString('en-US'));return true;
+}
+function fitLayer(){
+ if(S.ended){toast('Reopen the source before Zoom to layer.');return;}
+ if(S.bottom&&S.bottomMax){S.bottomMax=false;applyLayout();}
+ S.camera.cx=494;S.camera.cy=278;
+ S.camera.res=Math.max(1015/$('mapwrap').clientWidth,580/$('mapwrap').clientHeight);updateCamera();
+}
+function renderStatus(){
+ const n=drawnParcels().length;
+ $('sourceStatus').textContent=SOURCE;$('sourceStatus').title=SOURCE+' · synthetic fixture, not an opened GeoParquet';
+ $('detectionStatus').textContent=S.ended?'Source ended':'Checks per query';
+ $('countStatus').textContent=S.ended?'Session ended':n+' loaded · '+(S.partial?'total unknown':visibleParcels().length+' match');
+ $('layerSummary').textContent=n+' shown · '+S.model.filters.filter(f=>f.enabled).length+' active filters';
+ $('fitLayer').disabled=S.ended;renderSelectionSummary();
+ $('jobStatus').hidden=!S.job;$('jobStatus').textContent=S.job?'1 job · '+S.job.progress+'%':'';
+ $('progress').style.width=S.job?S.job.progress+'%':'0';
+ if($('summarySteps'))renderSummaryDraft();
+ if($('summaryRunning'))$('summaryRunning').textContent=S.job?'Simulated progress · '+S.job.progress+'% · '+(S.job.progress<34?'1 / 3: filter captured inputs':S.job.progress<67?'2 / 3: compute area summary':'3 / 3: install page-local result'):'';
+
+ if($('warningStatus')){$('warningStatus').hidden=!S.partial&&!S.publishFailed;$('warningStatus').textContent=S.partial?'Partial view':S.publishFailed?'Publish failed':'';}
+}
+function renderInspector(){
+ renderSelectionSummary();
+ $('layerTab').setAttribute('aria-selected',String(S.inspectorTab==='layer'));
+ $('featureTab').setAttribute('aria-selected',String(S.inspectorTab==='feature'));
+ if(S.inspectorTab==='feature'){
+  const p=parcels.find(p=>p.parcel_id===inspectedId()),f=selectionFacts(),matched=new Set(visibleParcels().map(p=>p.parcel_id));
+  const selected=parcels.filter(p=>S.selection.has(p.parcel_id));
+  $('inspectorBody').innerHTML='<div class="section-title">Selected parcels <button id="fitSelection" '+(!f.total||S.ended?'disabled':'')+'>Zoom to selection</button></div>'+
+   (selected.length?'<div class="selection-list">'+selected.map(q=>'<div class="selection-item '+(q.parcel_id===inspectedId()?'focused':'')+'"><input type="checkbox" checked '+(S.ended?'disabled':'')+' data-unselect="'+q.parcel_id+'" aria-label="Remove parcel '+q.parcel_id+' from selection"><button data-inspect="'+q.parcel_id+'" '+(S.ended?'disabled':'')+'><span>'+q.parcel_id+'</span><small>'+(!matched.has(q.parcel_id)?'filtered out':q.zone)+'</small></button></div>').join('')+'</div>':'<p class="selection-empty">Choose Select, then click several parcels or drag a box. You can also tick rows in the Table.</p>')+
+   '<div class="selection-legend"><span class="selected-key">Blue: selected</span> · <span class="inspect-key">Amber dashed: inspected</span></div>'+
+   (p?'<div class="selection-head"><strong>Inspecting '+p.parcel_id+'</strong><button class="button" id="toggleInspected" '+(S.ended?'disabled':'')+'>'+(S.selection.has(p.parcel_id)?'Deselect':'Select')+'</button><button class="button" id="pinFeature">'+(S.pinned?'Unpin':'Pin')+'</button></div><p class="hint">'+(S.pinned?'Pinned inspection. Other clicks do not replace this card. ': '')+(!matched.has(p.parcel_id)?'Hidden by the current layer filters. ':'')+'Inspecting does not change selection.</p><dl class="kv"><dt>Layer</dt><dd>'+LAYER+'</dd>'+['parcel_id','zone','area_m2','land_use'].map(k=>'<dt>'+k+'</dt><dd>'+esc(p[k])+'</dd>').join('')+'</dl><p class="hint">Illustrative attributes only. Feature editing is not implemented.</p>':'<p class="hint">Click a parcel in Navigate mode or an ID in the Table to inspect without selecting.</p>');
+  $('fitSelection').onclick=zoomToSelection;
+  $('inspectorBody').querySelectorAll('[data-inspect]').forEach(el=>el.onclick=()=>inspectParcel(Number(el.dataset.inspect)));
+  $('inspectorBody').querySelectorAll('[data-unselect]').forEach(el=>el.onchange=()=>updateSelection([Number(el.dataset.unselect)],'remove'));
+  if($('toggleInspected'))$('toggleInspected').onclick=()=>updateSelection([p.parcel_id]);
+  if($('pinFeature'))$('pinFeature').onclick=()=>{S.pinned=S.pinned?null:p.parcel_id;renderMap();renderInspector();};
+  return;
+ }
+ const filters=S.model.filters;
+ $('inspectorBody').innerHTML='<section class="section"><div class="section-title">Filters <button id="addFilter">+ Add via search</button></div><p class="hint">All enabled filters must match (AND). Untick to bypass; × removes the clause.</p>'+
+ (filters.length?filters.map(f=>'<div class="filter-card '+(!f.enabled?'off':'')+'"><input type="checkbox" data-filter-toggle="'+f.id+'" '+(f.enabled?'checked':'')+' aria-label="Enable '+esc(filterText(f))+'"><button class="filter-label" data-filter-edit="'+f.id+'" title="Edit this filter">'+esc(filterText(f))+'</button><button class="remove" data-filter-remove="'+f.id+'" aria-label="Remove '+esc(filterText(f))+'">×</button></div>').join(''):'<p class="hint">No filters. Try <button class="button" id="exampleFilter">area_m2 &gt; 1000</button></p>')+
+ '</section><section class="section"><div class="section-title">Style</div><div class="style-row"><label for="styleChoice">Colour</label><select id="styleChoice"><option value="single">Single colour</option><option value="zone">By zone · PROPOSED</option></select></div>'+
+ (S.model.style==='zone'?'<div class="legend">'+Object.entries(colours).map(([k,v])=>'<span class="swatch" style="background:'+v+'"></span><span>Zone '+k+'</span>').join('')+'</div>':'<div class="legend"><span class="swatch" style="background:#a6c88b"></span><span>All parcels</span></div>')+
+ '<div class="style-row"><label for="opacity">Opacity</label><input id="opacity" type="range" min="10" max="100" value="'+S.model.opacity+'"><output id="opacityValue">'+S.model.opacity+'%</output></div></section><section class="section"><div class="section-title">Source</div><dl class="kv"><dt class="wide" title="'+SOURCE+'">'+SOURCE+'</dt><dt>CRS</dt><dd>EPSG:2056 · declared</dd><dt>Feature IDs</dt><dd>Declared parcel_id</dd><dt>Verification</dt><dd>'+(S.sourceMode==='prepared'?'Prepared · simulated':'Reference · unverified')+'</dd></dl><p class="hint">All controls here operate on this page’s synthetic fixture, not on a real dataset.</p></section>';
+ $('styleChoice').value=S.model.style;$('styleChoice').onchange=e=>commit('style',{value:e.target.value});
+ $('addFilter').onclick=()=>openSearch('filter ');
+ if($('exampleFilter'))$('exampleFilter').onclick=()=>openSearch('filter area_m2 > 1000');
+ $('opacity').oninput=e=>{S.model.opacity=Number(e.target.value);$('opacityValue').textContent=e.target.value+'%';renderMap();};
+ $('opacity').onchange=e=>commit('opacity',{value:Number(e.target.value)});
+ $('inspectorBody').querySelectorAll('[data-filter-toggle]').forEach(el=>el.onchange=()=>commit('filter.toggle',{id:el.dataset.filterToggle,enabled:el.checked}));
+ $('inspectorBody').querySelectorAll('[data-filter-remove]').forEach(el=>el.onclick=()=>commit('filter.remove',{id:el.dataset.filterRemove}));
+ $('inspectorBody').querySelectorAll('[data-filter-edit]').forEach(el=>el.onclick=()=>editCurrentFilter(el.dataset.filterEdit));
+}
+function renderData(){
+ renderNotice();
+ renderMap();renderInspector();renderHistory();renderStatus();if(S.bottom)renderBottom();
+}
+function openModal(title,body,setup){
+ closeSearch();$('contextMenu').hidden=true;S.modalReturn=document.activeElement;
+ $('modal').classList.remove('workflow-dialog');
+ $('modal').innerHTML='<h2>'+esc(title)+'</h2>'+body;
+ $('modalVeil').hidden=false;
+ $('modal').querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
+ if(setup)setup();
+ requestAnimationFrame(()=>($('modal').querySelector('input,select,button')||$('modal')).focus());
+}
+function closeModal(){
+ if(S.job&&S.job.kind==='prepare'){toast('Cancel the simulated preparation before closing this dialog.');return;}
+ $('modalVeil').hidden=true;
+ if(S.modalReturn&&S.modalReturn.isConnected){S.modalReturn.focus();if(S.modalReturn===$('search'))closeSearch();}
+}
+function confirmAction(title,message,button,run){
+ openModal(title,'<p>'+message+'</p><div class="buttons"><button class="button" data-close>Cancel</button><button id="confirm" class="button primary">'+esc(button)+'</button></div>',()=>{
+ $('confirm').onclick=()=>{closeModal();run();};
+ });
+}
+function editCurrentFilter(id){
+ const f=S.model.filters.find(f=>f.id===id);
+ openModal('Edit filter · '+LAYER,'<label for="filterInput">One clause</label><input id="filterInput" value="'+esc(filterText(f))+'"><p>Simple AND clauses in this mockup. Complex SQL remains a separate advanced mode.</p><p class="error" id="filterError"></p><div class="buttons"><button class="button" data-close>Cancel</button><button class="button primary" id="applyFilter">Apply</button></div>',()=>{
+ $('applyFilter').onclick=()=>{const v=parseFilter($('filterInput').value);if(!v){$('filterError').textContent='Choose a known field and a valid operator/value.';return;}closeModal();commit('filter.edit',{id,...v});};
+ $('filterInput').onkeydown=e=>{if(e.key==='Enter')$('applyFilter').click();};
+ });
+}
+function actionGroup(a){return a.type.startsWith('filter.')?'Filters':a.type==='style'?'Style':'Opacity';}
+function renderHistory(){
+ const b=activeBranch();
+ $('undo').disabled=b.cursor===0||S.ended||b.source!==S.sourceGeneration;
+ $('redo').disabled=b.cursor===b.actions.length||S.ended||b.source!==S.sourceGeneration;
+ $('branchSelect').innerHTML=S.branches.map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.source!==S.sourceGeneration?' · older source':'')+'</option>').join('');
+ $('branchSelect').value=String(b.id);
+ $('historyMeta').textContent='Step '+b.cursor+' / '+b.actions.length+' · '+(b.actions.length-b.cursor)+' redo · proposed / session-only';
+ const q=S.historyQuery.toLowerCase().trim();
+ const indexed=b.actions.map((a,i)=>({a,i})).filter(({a})=>(actionLabel(a)+' '+a.layer+' '+actionGroup(a)).toLowerCase().includes(q));
+ const groups=new Map();
+ indexed.forEach(item=>{const key=S.historyGroup==='layer'?item.a.layer:S.historyGroup==='type'?actionGroup(item.a):'';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);});
+ let html='<div class="history-baseline"><span>Opened source · boundary</span><button id="selectBaseline" title="Select the initial workspace state">Inspect</button></div>';
+ for(const [group,items] of groups){
+  if(group)html+='<div class="history-group">'+esc(group)+'</div>';
+  html+=items.map(({a,i})=>'<div class="hrow '+(i+1===b.cursor?'current ':'')+(i>=b.cursor?'future ':'')+((a.disabled||a.removed)?'disabled ':'')+(S.selectedHistory===a.id?'selected':'')+'" data-history-row="'+a.id+'"><button class="jump" data-history-select="'+a.id+'" aria-label="Inspect step '+(i+1)+': '+esc(actionLabel(a))+'"><span class="step">'+(i+1)+'</span><span class="action-name">'+esc(actionLabel(a))+'</span><span class="action-layer">'+esc(a.layer)+(a.removed?' · removed on this branch':a.disabled?' · disabled':'')+'</span></button><button class="more" data-history-more="'+a.id+'" aria-label="Actions for step '+(i+1)+'">⋯</button></div>').join('');
+ }
+ if(!indexed.length)html+='<p class="hint" style="padding:8px">'+(q?'No matching steps. Filtering this list does not change the workspace.':'Apply a filter or commit a style change to start. Navigation is not added to workspace history.')+'</p>';
+ $('historyList').innerHTML=html;
+ $('selectBaseline').onclick=()=>{S.selectedHistory=0;renderHistoryDetail();};
+ $('historyList').querySelectorAll('[data-history-select]').forEach(el=>el.onclick=()=>{S.selectedHistory=Number(el.dataset.historySelect);renderHistory();});
+ $('historyList').querySelectorAll('[data-history-more]').forEach(el=>el.onclick=e=>actionMenu(Number(el.dataset.historyMore),e));
+ renderHistoryDetail();
+}
+function renderHistoryDetail(){
+ let detail=$('historyDetail');if(!detail){detail=document.createElement('div');detail.id='historyDetail';$('historyMeta').after(detail);}
+ const b=activeBranch(),i=b.actions.findIndex(a=>a.id===S.selectedHistory),a=b.actions[i];
+ if(S.selectedHistory===null){detail.hidden=true;return;}
+ detail.hidden=false;const n=a?i+1:0;
+ detail.innerHTML='<div class="history-preview"><span>'+esc(a?actionLabel(a):'Initial workspace')+'<small>'+LAYER+' · '+(b.source===S.sourceGeneration?'current source':'earlier source boundary')+'</small></span><button id="restoreHistory" class="button" '+((n===b.cursor||S.ended||b.source!==S.sourceGeneration)?'disabled':'')+' title="Restore this state; later steps remain available for Redo">Restore</button></div>';
+ $('restoreHistory').onclick=()=>setCursor(n);
+}
+function actionMenu(id,event){
+ event.stopPropagation();const a=activeBranch().actions.find(x=>x.id===id);S.selectedHistory=id;renderHistoryDetail();
+ const editable=['filter.add','filter.edit','style','opacity'].includes(a.type)&&!a.removed;
+ const menu=$('contextMenu');menu.innerHTML='<div class="menu-heading">'+esc(LAYER)+' · '+actionGroup(a)+'</div>'+
+ '<button data-act="edit" '+(!editable?'disabled':'')+'>Edit on a new branch…</button><button data-act="disable" '+(a.removed?'disabled':'')+'>'+(a.disabled?'Enable':'Disable')+' effect on a new branch…</button><button data-act="remove" '+(a.removed?'disabled':'')+'>Remove from a new branch…</button>';
+ const rect=$('app').getBoundingClientRect(),scale=rect.width/$('app').offsetWidth;
+ menu.style.left=Math.min($('app').clientWidth-265,Math.max(4,(event.clientX-rect.left)/scale))+'px';
+ menu.style.top=Math.min($('app').clientHeight-150,Math.max(40,(event.clientY-rect.top)/scale))+'px';menu.hidden=false;
+ menu.querySelectorAll('button').forEach(el=>el.onclick=()=>{menu.hidden=true;el.dataset.act==='edit'?editHistory(id):mutateHistory(id,el.dataset.act);});
+}
+function finishHistoryMutation(id,change,reason){
+ if(S.ended||activeBranch().source!==S.sourceGeneration){toast('History cannot modify an ended or different source session.');return;}
+ const candidate=clone(activeBranch());change(candidate.actions.find(a=>a.id===id));
+ const savedCursor=candidate.cursor;candidate.cursor=candidate.actions.length;
+ const invalid=replay(candidate).errors;
+ invalid.forEach(bad=>{const action=candidate.actions.find(a=>a.id===bad);action.disabled=true;});
+ candidate.cursor=savedCursor;
+ const apply=()=>{
+  const b=fork(reason);b.actions=candidate.actions;S.model=replay(b).model;
+  S.selectedHistory=id;log(reason+' · '+b.name+'; original branch preserved');renderData();
+ };
+ confirmAction(reason,
+  'This creates a new branch and preserves the original. '+(invalid.length?'<strong>'+invalid.length+' later dependent step'+(invalid.length>1?'s':'')+' must also be disabled</strong> because the filter they reference no longer exists. ':'')+
+  'Only the prototype’s filter and style state is replayed. Source boundaries and published outputs are not undone.',
+  invalid.length?'Branch and disable dependants':'Create branch',apply);
+}
+function mutateHistory(id,kind){
+ const a=activeBranch().actions.find(a=>a.id===id);
+ finishHistoryMutation(id,x=>{if(kind==='remove')x.removed=true;else x.disabled=!x.disabled;},kind==='remove'?'Remove earlier step':a.disabled?'Enable earlier step':'Disable earlier step');
+}
+function editHistory(id){
+ const a=activeBranch().actions.find(x=>x.id===id);
+ const isFilter=a.type.startsWith('filter.');
+ const control=isFilter?'<input id="historicalValue" value="'+esc(filterText(a.payload))+'">':a.type==='style'?'<select id="historicalValue"><option value="single">Single colour</option><option value="zone">By zone · PROPOSED</option></select>':'<input id="historicalValue" type="number" min="10" max="100" value="'+a.payload.value+'">';
+ openModal('Edit earlier step · new branch','<p>'+esc(LAYER)+' · '+esc(actionLabel(a))+'</p><label for="historicalValue">Replacement</label>'+control+'<p class="hint">The original branch stays intact. Later compatible steps will be replayed.</p><p class="error" id="historicalError"></p><div class="buttons"><button class="button" data-close>Cancel</button><button class="button primary" id="reviewEdit">Review branch</button></div>',()=>{
+ if(a.type==='style')$('historicalValue').value=a.payload.value;
+ $('reviewEdit').onclick=()=>{
+  const value=$('historicalValue').value;let payload;
+  if(isFilter){const f=parseFilter(value);if(!f){$('historicalError').textContent='Invalid filter clause.';return;}payload={...a.payload,...f};}
+  else if(a.type==='opacity'){const v=Number(value);if(!Number.isFinite(v)||v<10||v>100){$('historicalError').textContent='Opacity must be 10–100.';return;}payload={value:v};}
+  else payload={value};
+  closeModal();finishHistoryMutation(id,x=>x.payload=payload,'Edit earlier step');
+ };
+ });
+}
+function legacyRenderBottom(){
+ $('bottom').hidden=!S.bottom;$('bottomGrip').hidden=!S.bottom||S.bottomMax;
+ $('bottom').classList.toggle('max',S.bottomMax);
+ $('bottom').style.flexBasis=S.bottomMax?'0':S.bottomHeight+'px';
+ $('mapwrap').style.display=S.bottom&&S.bottomMax?'none':'';
+ $('bottom').querySelectorAll('[data-tab]').forEach(el=>el.setAttribute('aria-selected',String(el.dataset.tab===S.bottomTab)));
+ $('bottomContent').classList.toggle('table-mode',S.bottomTab==='table');
+ if(S.bottomTab==='console')$('bottomContent').innerHTML='<p class="hint">Prototype activity, not the production audit log.</p>'+S.logs.slice().reverse().map(t=>'<div class="row">'+esc(t)+'</div>').join('');
+ if(S.bottomTab==='problems')$('bottomContent').innerHTML=
+ (S.ended?'<div class="row"><span class="grow">Source changed · engine.source_changed<br><small>Generation ended. No automatic reload.</small></span><button class="button" id="problemReopen">Reopen</button></div>':'')+
+ (S.publishFailed?'<div class="row"><span class="grow">Publish failed: destination folder is not empty.<br><small>Simulated warning; reopening the source does not resolve it.</small></span><button class="button" id="dismissPublish">Dismiss</button></div>':'')+
+ (S.partial?'<div class="row">Partial view: this sample omits some geometry. Total for the view is unknown.</div>':'')+
+ (!S.ended&&!S.publishFailed&&!S.partial?'<p class="hint">No active problems.</p>':'');
+ if($('dismissPublish'))$('dismissPublish').onclick=()=>{S.publishFailed=false;renderData();};
+ if($('problemReopen'))$('problemReopen').onclick=()=>reopen();
+ if(S.bottomTab==='jobs'){renderSummaryRuns();}
+ if($('cancelJob'))$('cancelJob').onclick=cancelJob;
+ if(S.bottomTab==='table'){
+  const rows=S.tableScope==='selected'?parcels.filter(p=>S.selection.has(p.parcel_id)):visibleParcels(),matched=new Set(visibleParcels().map(p=>p.parcel_id));
+  const checked=rows.filter(p=>S.selection.has(p.parcel_id)).length;
+  $('bottomContent').innerHTML='<div class="table-toolbar"><label for="tableScope">Rows</label><select id="tableScope"><option value="matches">Matching layer filters</option><option value="selected">Selected, including filtered-out</option></select><span>'+rows.length+' rows · '+S.selection.size+' selected in layer</span><span class="muted">Checkbox selects · ID inspects</span></div><table class="attributes"><thead><tr><th><input id="selectTableRows" type="checkbox" aria-label="Select or deselect all '+rows.length+' displayed table rows" '+(!rows.length||S.ended?'disabled':'')+'></th><th>parcel_id</th><th>zone</th><th>area_m2</th><th>land_use</th></tr></thead><tbody>'+rows.map(p=>'<tr class="'+(S.selection.has(p.parcel_id)?'selected ':'')+(p.parcel_id===inspectedId()?'inspected':'')+'"><td><input type="checkbox" data-select-parcel="'+p.parcel_id+'" aria-label="Select parcel '+p.parcel_id+'" '+(S.selection.has(p.parcel_id)?'checked ':'')+(S.ended?'disabled':'')+'></td><td><button data-inspect="'+p.parcel_id+'" '+(S.ended?'disabled':'')+'>'+p.parcel_id+'</button>'+(!matched.has(p.parcel_id)?' <small class="muted">filtered out</small>':'')+'</td><td>'+p.zone+'</td><td>'+p.area_m2+'</td><td>'+p.land_use+'</td></tr>').join('')+'</tbody></table>';
+  $('tableScope').value=S.tableScope;$('tableScope').onchange=e=>{S.tableScope=e.target.value;renderBottom();};
+  $('selectTableRows').checked=rows.length>0&&checked===rows.length;$('selectTableRows').indeterminate=checked>0&&checked<rows.length;
+  $('selectTableRows').onchange=e=>updateSelection(rows.map(p=>p.parcel_id),e.target.checked?'add':'remove');
+  $('bottomContent').querySelectorAll('[data-select-parcel]').forEach(el=>el.onchange=()=>updateSelection([Number(el.dataset.selectParcel)],el.checked?'add':'remove'));
+  $('bottomContent').querySelectorAll('[data-inspect]').forEach(el=>el.onclick=()=>inspectParcel(Number(el.dataset.inspect)));
+ }
+}
+function togglePane(id){S.collapsed.has(id)?S.collapsed.delete(id):S.collapsed.add(id);applyLayout();}
+function applyLayout(){
+ $('layers').hidden=!S.left;$('history').hidden=!S.history;$('inspector').hidden=!S.right;
+ const historyParent=S.historySide==='left'?$('leftSide'):$('rightSide');
+ if($('history').parentElement!==historyParent)historyParent.append($('history'));
+ const leftVisible=S.left||(S.history&&S.historySide==='left'),rightVisible=S.right||(S.history&&S.historySide==='right');
+ $('leftSide').hidden=!leftVisible;$('rightSide').hidden=!rightVisible;
+ $('splitLeft').hidden=!leftVisible;$('splitRight').hidden=!rightVisible;
+ $('work').style.gridTemplateColumns=(leftVisible?S.leftWidth+'px 5px':'0px 0px')+' minmax(160px,1fr) '+(rightVisible?'5px '+S.rightWidth+'px':'0px 0px');
+ ['leftSide','rightSide'].forEach(id=>$(id).classList.toggle('history-stack',S.history&&$('history').parentElement===$(id)));
+ ['layers','history','inspector'].forEach(id=>{$(id).classList.toggle('collapsed',S.collapsed.has(id));const b=$(id).querySelector('[data-collapse]');if(b){b.setAttribute('aria-expanded',String(!S.collapsed.has(id)));b.textContent=(S.collapsed.has(id)?'▸ ':'▾ ')+id[0].toUpperCase()+id.slice(1);}});
+ $('toggleLeft').setAttribute('aria-pressed',String(leftVisible));$('toggleRight').setAttribute('aria-pressed',String(S.right));$('toggleBottom').setAttribute('aria-pressed',String(S.bottom));
+ renderBottom();requestAnimationFrame(updateCamera);
+}
+function moveHistory(){
+ S.historySide=S.historySide==='left'?'right':'left';S.history=true;
+ if(S.historySide==='right'){S.collapsed.add('history');toast('History moved right and collapsed. Expand its header when needed.');}
+ else S.collapsed.delete('history');
+ applyLayout();
+}
+function preset(name){
+ S.left=true;S.right=true;S.history=true;S.historySide='left';S.bottom=false;S.bottomMax=false;S.leftWidth=258;S.rightWidth=304;S.collapsed.clear();
+ if(name==='inspect'){S.bottom=true;S.bottomTab='table';S.collapsed.add('history');}
+ if(name==='review'){S.bottom=true;S.bottomTab='problems';S.collapsed.add('layers');}
+ if(name==='focus'){S.left=false;S.right=false;S.history=false;}
+ applyLayout();
+}
+function openSearch(text=''){
+ $('search').value=text;$('searchDock').classList.add('open');$('search').setAttribute('aria-expanded','true');
+ S.searchIndex=0;renderSearch();$('search').focus();$('search').setSelectionRange(text.length,text.length);
+}
+function closeSearch(){$('searchDock').classList.remove('open');$('search').setAttribute('aria-expanded','false');$('search').removeAttribute('aria-activedescendant');}
+function showPanel(tab){S.bottom=true;S.bottomTab=tab;applyLayout();}
+
+// Results below use only the in-page fixture. They are not engine jobs, saved files,
+// feature edits, an audit log, or an implementation of durable reproducibility.
+function summaryName(){
+ let n=1;while(S.summaryRuns.some(r=>r.status==='completed'&&r.name.toLowerCase()==='parcel summary '+n))n++;
+ return 'Parcel summary '+n;
+}
+function summaryInputs(scope){
+ return {ids:scope==='matching'?visibleParcels().map(p=>p.parcel_id):[...S.selection],generation:S.sourceGeneration,scope,filterNote:S.model.filters.filter(f=>f.enabled).map(filterText).join(' AND ')||'No layer filter'};
+}
+function summaryCompute(d){
+ const wanted=new Set(d.capture.ids),input=parcels.filter(p=>wanted.has(p.parcel_id));
+ const rows=input.filter(p=>!d.threshold||p.area_m2>=d.minArea),area=rows.reduce((total,p)=>total+p.area_m2,0);
+ return {ids:rows.map(p=>p.parcel_id),inputCount:input.length,count:rows.length,area_m2:area,value:d.unit==='ha'?area/10000:area,unit:d.unit};
+}
+function summaryError(d){
+ if(S.ended||d.capture.generation!==S.sourceGeneration)return 'Source session changed. Close this draft and choose targets from the current session.';
+ if(!d.capture.ids.length)return 'No targets captured. Select parcels or explicitly choose all matching parcels.';
+ if(!['m²','ha'].includes(d.unit))return 'Choose a supported area unit.';
+ if(d.threshold&&(!Number.isFinite(d.minArea)||d.minArea<0))return 'Minimum area must be a finite number of square metres, zero or greater.';
+ if(!d.name.trim())return 'Give the result a name.';
+ if(S.summaryRuns.some(r=>r.status==='completed'&&r.name.toLowerCase()===d.name.trim().toLowerCase()))return 'That result name already exists. Choose a new name; this prototype never overwrites results.';
+ if(S.job)return 'Another job is running. Finish or cancel it before starting this one.';
+ return '';
+}
+function sameSummaryTargets(a,b){
+ return a.generation===b.generation&&JSON.stringify([...a.ids].sort((x,y)=>x-y))===JSON.stringify([...b.ids].sort((x,y)=>x-y));
+}
+function openSummary(mode='new',given=null){
+ if(S.ended){toast('Reopen the source before configuring an action.');return;}
+ const base=given&&mode!=='template'?given:S.lastSummary,settings=mode==='template'?given:mode==='new'?null:base;
+ if(['again','edit'].includes(mode)&&!base){toast('Run a summary first; there is no earlier run to reopen.');return;}
+ if(mode==='repeat'&&!base){toast('Create a summary first, then repeat it on another selection.');return;}
+ if(['again','edit'].includes(mode)&&base.capture.generation!==S.sourceGeneration){toast('Earlier-source inputs cannot be rerun in this session. Use Repeat to choose current targets explicitly.');return;}
+ const capture=['again','edit'].includes(mode)?clone(base.capture):summaryInputs('selection');
+ const d={capture,threshold:settings?.threshold||false,minArea:settings?.minArea??1000,unit:settings?.unit||'ha',name:summaryName(),reference:mode==='new'||mode==='template'?null:base?.id,mode};
+ S.summaryDraft=d;
+ const previous=base&&mode!=='new'&&mode!=='template'?'<p class="workflow-last">Previous result: <strong>'+esc(base.name)+'</strong> · '+base.result.count+' parcels · retained unchanged until you explicitly select another result.</p>':'';
+ openModal((mode==='repeat'?'Repeat on new targets':mode==='again'?'Run again with captured targets':mode==='edit'?'Edit an earlier workflow step':'Create parcel summary')+' · DEMO',
+  '<p class="workflow-intro">A reusable action over the synthetic parcels. No dataset is edited and no file is created. Progress timing is simulated.</p>'+previous+
+  '<div class="workflow-grid"><div><label for="summaryScope">Target source</label><select id="summaryScope">'+(['again','edit'].includes(mode)?'<option value="previous">Previous captured targets</option>':'')+'<option value="selection">Current selection</option><option value="matching">All matching layer filters</option></select></div><div><label for="summaryUnit">Area unit</label><select id="summaryUnit"><option value="ha">Hectares (ha)</option><option value="m²">Square metres (m²)</option></select></div></div>'+
+  '<div id="summaryTargetInfo" class="workflow-scope"></div><div class="workflow-options"><button class="button" id="refreshSummaryTargets">Capture targets again</button><button class="button" id="pickSummaryTargets">Close and pick on map</button></div>'+
+  '<div class="workflow-grid"><div><label><input id="summaryThreshold" type="checkbox">Minimum parcel area</label><input id="summaryMinArea" type="number" min="0" step="any" aria-label="Minimum area in square metres"><small class="muted">Always measured in m²; bypassing does not remove inputs.</small></div><div><label for="summaryName">New result name (not a file path)</label><input id="summaryName" maxlength="80"><button class="button" id="summaryUniqueName">Suggest unused name</button></div></div>'+
+  '<ol class="workflow-steps" id="summarySteps"></ol><div id="summaryPreview" class="workflow-preview"></div><p id="summaryError" class="workflow-error" role="status"></p>'+
+  '<details class="workflow-save"><summary>Save settings as a reusable action · session only</summary><p>Stores the threshold and unit, not feature IDs, a source session or an output name. Each use captures a new target.</p><div class="inline"><input id="summaryTemplateName" placeholder="For example: Large-parcel area" aria-label="Reusable action name"><button id="saveSummaryTemplate" class="button">Save action</button></div><p id="summaryTemplateFeedback" role="status"></p></details>'+
+  '<div class="buttons"><button class="button" data-close>Cancel</button><button id="runSummary" class="button primary">Run demo</button></div>',()=>{
+   $('modal').classList.add('workflow-dialog');
+   $('summaryScope').value=['again','edit'].includes(mode)?'previous':'selection';
+   $('summaryUnit').value=d.unit;$('summaryThreshold').checked=d.threshold;$('summaryMinArea').value=d.minArea;$('summaryName').value=d.name;
+   const update=()=>{d.unit=$('summaryUnit').value;d.threshold=$('summaryThreshold').checked;d.minArea=$('summaryMinArea').value===''?NaN:Number($('summaryMinArea').value);d.name=$('summaryName').value;renderSummaryDraft();};
+   ['summaryUnit','summaryThreshold','summaryMinArea','summaryName'].forEach(id=>$(id).addEventListener(id==='summaryUnit'||id==='summaryThreshold'?'change':'input',update));
+   $('summaryScope').onchange=e=>{d.capture=e.target.value==='previous'?clone(base.capture):summaryInputs(e.target.value);renderSummaryDraft();};
+   $('refreshSummaryTargets').onclick=()=>{const scope=$('summaryScope').value;if(scope==='previous'){toast('Previous targets are fixed. Choose Current selection to replace them.');return;}d.capture=summaryInputs(scope);renderSummaryDraft();};
+   $('summaryUniqueName').onclick=()=>{d.name=summaryName();$('summaryName').value=d.name;renderSummaryDraft();};
+   $('pickSummaryTargets').onclick=()=>{closeModal();toast('Choose your selection, then reopen the action from Actions or Repeat. This unrun draft is discarded.');};
+   $('saveSummaryTemplate').onclick=()=>{
+    const name=$('summaryTemplateName').value.trim();
+    if(!name){$('summaryTemplateFeedback').textContent='Give the reusable action a name.';return;}
+    if(d.threshold&&(!Number.isFinite(d.minArea)||d.minArea<0)){$('summaryTemplateFeedback').textContent='Correct the minimum area first.';return;}
+    if(S.summaryTemplates.some(t=>t.name.toLowerCase()===name.toLowerCase())){$('summaryTemplateFeedback').textContent='That action name already exists. Choose another name.';return;}
+    S.summaryTemplates.push({name,threshold:d.threshold,minArea:Number.isFinite(d.minArea)?d.minArea:1000,unit:d.unit});
+    $('summaryTemplateFeedback').textContent='Saved for this page session. Search “action '+name+'”. No target IDs saved.';
+   };
+   $('runSummary').onclick=()=>runSummaryDraft();
+   renderSummaryDraft();
+  });
+}
+function renderSummaryDraft(){
+ const d=S.summaryDraft;if(!d||!$('summarySteps'))return;
+ const base=S.summaryRuns.find(r=>r.id===d.reference),matched=new Set(visibleParcels().map(p=>p.parcel_id)),drawn=new Set(drawnParcels().map(p=>p.parcel_id));
+ const hidden=d.capture.ids.filter(id=>!matched.has(id)).length,notDrawn=d.capture.ids.filter(id=>matched.has(id)&&!drawn.has(id)).length;
+ $('summaryTargetInfo').innerHTML='<strong>'+d.capture.ids.length+' captured parcels · '+LAYER+'</strong><small>Source session '+d.capture.generation+' · '+(d.capture.scope==='matching'?'query matches':'selection membership')+' · '+hidden+' currently filtered out'+(notDrawn?' · '+notDrawn+' currently not drawn':'')+'</small><small>Targets stay fixed for this run. Changing a map selection or filter does not silently retarget it.</small>';
+ $('summaryMinArea').disabled=!d.threshold;
+ const changed1=!base||!sameSummaryTargets(d.capture,base.capture)||d.threshold!==base.threshold||(d.threshold&&d.minArea!==base.minArea);
+ const changed2=changed1||!base||d.unit!==base.unit;
+ const states=[changed1?(base?'Changed → recalculate':'New'):'Unchanged',changed2?(changed1&&base?'Depends on step 1':base?'Changed → recalculate':'New'):'Unchanged','New result; prior retained'];
+ const descriptions=[d.threshold?'Keep captured parcels with area ≥ '+d.minArea+' m²':'Minimum-area step bypassed; use every captured parcel','Sum the area_m2 attribute; display in '+d.unit,'Install “'+d.name+'” in this page only'];
+ $('summarySteps').innerHTML=['Filter captured inputs','Calculate area summary','Create named result'].map((name,i)=>'<li><span>'+(i+1)+'</span><span>'+name+'<small>'+esc(descriptions[i])+'</small></span><span class="step-state '+(states[i]==='Unchanged'?'unchanged':'')+'">'+esc(states[i])+'</span></li>').join('');
+ const problem=summaryError(d),valid=!d.threshold||(Number.isFinite(d.minArea)&&d.minArea>=0);
+ const result=valid?summaryCompute(d):null;
+ $('summaryPreview').innerHTML=result?'<strong>'+result.count+' parcels · '+result.value.toLocaleString('en-US',{maximumFractionDigits:4})+' '+d.unit+'</strong><br><small>Preview from '+result.inputCount+' captured inputs. Uses the fixture’s area attribute, not geometric area. The demo recomputes the whole result; step labels show dependency impact.</small>':'Correct the minimum area to preview.';
+ $('summaryError').textContent=problem;$('runSummary').disabled=!!problem;
+ $('runSummary').textContent='Run demo on '+d.capture.ids.length+' captured parcels';
+}
+function runSummaryDraft(){
+ const d=S.summaryDraft,problem=summaryError(d);
+ if(problem){$('summaryError').textContent=problem;return;}
+ const run={...clone(d),id:++S.summaryRunId,name:d.name.trim(),status:'running',result:null,hidden:false};
+ S.summaryRuns.push(run);S.pendingSummary=run;closeModal();
+ startJob('parcel summary',()=>{
+  if(S.pendingSummary!==run)return;
+  S.pendingSummary=null;
+  if(S.ended||run.capture.generation!==S.sourceGeneration){run.status='failed';run.reason='Source session changed; no result installed.';}
+  else if(S.summaryRuns.some(r=>r!==run&&r.status==='completed'&&r.name.toLowerCase()===run.name.toLowerCase())){run.status='failed';run.reason='Result name collision; no output overwritten.';}
+  else{run.result=summaryCompute(run);run.status='completed';S.lastSummary=run;log('Summary #'+run.id+' completed · '+run.result.count+' parcels · '+run.name+' · page-local only');}
+  renderStatus();if(S.bottom&&S.bottomTab==='jobs')renderBottom();renderSelectionSummary();
+ });
+ showPanel('jobs');
+}
+function renderSummaryRuns(){
+ const current=S.job?'<div class="row"><span class="grow">Simulated '+esc(S.job.kind)+' · '+S.job.progress+'%<br><small id="summaryRunning" class="run-status-text"></small></span><button class="button" id="cancelJob">Cancel</button></div>':'<p class="hint">No running jobs.</p>';
+ const runs=S.summaryRuns.filter(r=>!r.hidden).slice().reverse(),hidden=S.summaryRuns.filter(r=>r.hidden).length;
+ $('bottomContent').innerHTML=current+'<div class="section-title">Results & run records <span class="prop">SESSION DEMO</span></div><p class="hint">Not workspace undo or the production audit log. Hiding a record changes this list only.</p>'+
+ (runs.length?runs.map(r=>'<div class="run-card" data-run="'+r.id+'"><div class="run-heading"><strong>'+esc(r.name)+'</strong><span class="run-badge '+r.status+'">'+r.status+'</span></div><p>'+LAYER+' · source session '+r.capture.generation+' · '+r.capture.ids.length+' captured inputs'+(r.capture.generation!==S.sourceGeneration?' · earlier source':'')+'</p>'+
+ (r.result?'<p><strong>'+r.result.count+' parcels · '+r.result.value.toLocaleString('en-US',{maximumFractionDigits:4})+' '+r.unit+'</strong> · result preserved independently of later runs</p>':r.reason?'<p>'+esc(r.reason)+'</p>':'<p>Nothing installed yet. Cancel keeps earlier results.</p>')+
+ '<div class="run-controls"><button data-run-details="'+r.id+'">Details</button>'+
+ (r.status==='completed'?'<button data-run-repeat="'+r.id+'" '+(S.ended?'disabled':'')+'>Repeat on selection…</button><button data-run-edit="'+r.id+'" '+(S.ended||r.capture.generation!==S.sourceGeneration?'disabled':'')+'>Edit steps…</button><button data-run-select="'+r.id+'" '+(S.ended||r.capture.generation!==S.sourceGeneration?'disabled':'')+'>Select result</button>':'')+
+ '<button data-run-hide="'+r.id+'" '+(r.status==='running'?'disabled':'')+'>Hide record</button></div></div>').join(''):'<p class="hint">Use Actions → Create parcel summary to try a reusable operation.</p>')+
+ (hidden?'<button id="showHiddenRuns" class="button">Show '+hidden+' hidden run records</button>':'');
+ const find=el=>S.summaryRuns.find(r=>r.id===Number(Object.values(el.dataset)[0]));
+ $('bottomContent').querySelectorAll('[data-run-details]').forEach(el=>el.onclick=()=>showSummaryDetails(find(el)));
+ $('bottomContent').querySelectorAll('[data-run-repeat]').forEach(el=>el.onclick=()=>openSummary('repeat',find(el)));
+ $('bottomContent').querySelectorAll('[data-run-edit]').forEach(el=>el.onclick=()=>openSummary('edit',find(el)));
+ $('bottomContent').querySelectorAll('[data-run-select]').forEach(el=>el.onclick=()=>{const r=find(el);if(S.ended||r.capture.generation!==S.sourceGeneration)return;updateSelection(r.result.ids,'replace');toast('Selected the result membership. Layer filters remain unchanged.');});
+ $('bottomContent').querySelectorAll('[data-run-hide]').forEach(el=>el.onclick=()=>{find(el).hidden=true;renderBottom();toast('Record hidden; its result and effects are unchanged.');});
+ if($('showHiddenRuns'))$('showHiddenRuns').onclick=()=>{S.summaryRuns.forEach(r=>r.hidden=false);renderBottom();};
+}
+function showSummaryDetails(r){
+ openModal('Run #'+r.id+' · '+r.name,'<p>'+LAYER+' · source session '+r.capture.generation+' · '+r.status+'</p><dl class="kv"><dt>Target</dt><dd>'+r.capture.ids.length+' captured '+r.capture.scope+' features</dd><dt>Minimum area</dt><dd>'+(r.threshold?r.minArea+' m²':'Bypassed')+'</dd><dt>Area unit</dt><dd>'+r.unit+'</dd><dt>Captured filter context</dt><dd>'+esc(r.capture.filterNote)+'</dd></dl><p>Inputs and settings belong to this run. Hiding this record does not undo anything. Results are lost when the page reloads.</p><details><summary>Captured feature IDs</summary><p class="workflow-ids">'+r.capture.ids.join(', ')+'</p></details><div class="buttons"><button class="button" data-close>Close</button>'+(r.status==='completed'?'<button id="runAgainDetails" class="button" '+(S.ended||r.capture.generation!==S.sourceGeneration?'disabled':'')+'>Run again…</button>':'')+'</div>',()=>{
+  if($('runAgainDetails'))$('runAgainDetails').onclick=()=>openSummary('again',r);
+ });
+}
+
+function baseCommandList(){
+ const item=(id,label,keywords,run,help='',extra={})=>({id,label,keywords,run,help,...extra});
+ return [
+ item('filter','Add a filter…','filter query predicate',()=>openSearch('filter '),'Tab to build a clause',{complete:'filter '}),
+ item('actions','Action gallery…','actions reusable repeat workflow',()=>openSearch('action '),'Page-local demos'),
+ item('summary','Create parcel summary…','action summary summarize selection calculate',()=>openSummary('new'),'PROPOSED · synthetic data only'),
+ item('repeatSummary','Repeat summary on current selection…','action repeat current selection summary',()=>openSummary('repeat'),'Reuses parameters, chooses new targets'),
+ item('againSummary','Run previous summary again…','action rerun previous summary same inputs',()=>openSummary('again'),'Previous captured targets'),
+ item('workflowSummary','Edit summary workflow…','action workflow earlier step dependencies summary',()=>openSummary('edit'),'Review downstream impact'),
+ ...S.summaryTemplates.map((t,i)=>item('summaryTemplate'+i,'Action: '+t.name,'action saved template '+t.name,()=>openSummary('template',t),'Reusable settings · new target required')),
+ item('selection','Show selection','selection selected inspect features',showSelection,'Selected set + inspected feature'),
+ item('selectionAll','Select all matching parcels','selection select all matches filter',()=>updateSelection(visibleParcels().map(p=>p.parcel_id),'replace'),'Whole synthetic layer query, not only drawn geometry'),
+ item('selectionClear','Clear selection','selection deselect clear',()=>updateSelection([],'replace'),'Does not change filters'),
+ item('selectionFit','Zoom to selection','selection zoom selected extent',zoomToSelection,'Includes filtered-out selected parcels'),
+ item('fit','Zoom to layer','zoom fit layer extent navigate',fitLayer,'Full layer extent'),
+ item('scale','Set map scale…','zoom scale ratio resolution',()=>openSearch('scale '),'e.g. 1:10,000',{complete:'scale '}),
+ item('bookmark','Save current view…','bookmark camera extent view',saveView,'Centre + resolution + CRS'),
+ item('settings','Open Settings','preferences options theme settings',showSettings,'Ctrl+,'),
+ item('themeLight','Theme: Light','settings theme light appearance',()=>setTheme('light'),'Appearance'),
+ item('themeDark','Theme: Dark','settings theme dark appearance',()=>setTheme('dark'),'Appearance'),
+ item('themeSystem','Theme: Follow system','settings theme system appearance',()=>setTheme('system'),'Appearance'),
+ item('file','File commands','open save prepare publish file',()=>openSearch('file ')),
+ item('open','Open dataset…','file open dataset',openDataset,'Mock source chooser'),
+ item('reopen','Reopen source','file reopen source changed',reopen,'New source session'),
+ item('save','Save reference…','file save recipe reference',saveReference,'PROPOSED · no whole-file scan'),
+ item('prepare','Prepare verified copy…','file prepare verified snapshot',prepareDialog,'PROPOSED · protected capture'),
+ item('publish','Publish subset…','file publish bundle export',publishDialog,'Prototype dialog'),
+ item('single','Style: Single colour','style single colour color',()=>commit('style',{value:'single'}),'Current style surface'),
+ item('zone','Style: Colour by zone','style category categorical zone colour color',()=>commit('style',{value:'zone'}),'PROPOSED'),
+ item('undo','Undo workspace action','edit undo history previous',()=>setCursor(activeBranch().cursor-1),'Ctrl+Z'),
+ item('redo','Redo workspace action','edit redo history next',()=>setCursor(activeBranch().cursor+1),'Ctrl+Shift+Z'),
+ item('layout','Customize layout…','layout view panels customize',()=>openSearch('layout '),'Top-anchored choices'),
+ item('layers','Layout: Layers','layout view layers sidebar',()=>{S.left=!S.left;applyLayout();},'Show / hide',{layout:true,checked:()=>S.left}),
+ item('inspector','Layout: Inspector','layout view inspector secondary sidebar',()=>{S.right=!S.right;applyLayout();},'Ctrl+I',{layout:true,checked:()=>S.right}),
+ item('history','Layout: History','layout view history sidebar',()=>{S.history=!S.history;applyLayout();},'Show / hide',{layout:true,checked:()=>S.history}),
+ item('bottom','Layout: Bottom panel','layout view bottom panel console problems jobs table',()=>{S.bottom=!S.bottom;applyLayout();},'Ctrl+J',{layout:true,checked:()=>S.bottom}),
+ item('historySide','Layout: Move History '+(S.historySide==='left'?'right':'left'),'layout history move side',moveHistory,'Right defaults collapsed',{layout:true}),
+ item('studio','Layout preset: Map studio','layout preset studio reset default',()=>preset('studio'),'Layers · map · inspector',{layout:true}),
+ item('inspection','Layout preset: Data inspection','layout preset data inspection table',()=>preset('inspect'),'Table open',{layout:true}),
+ item('review','Layout preset: Review','layout preset review history problems',()=>preset('review'),'History + Problems',{layout:true}),
+ item('focus','Layout preset: Map focus','layout preset map focus zen',()=>preset('focus'),'Hide surrounding panels',{layout:true}),
+ ...['console','problems','jobs','table'].map(tab=>item(tab,'Show '+tab[0].toUpperCase()+tab.slice(1),'panel activity '+tab,()=>showPanel(tab),'Bottom panel')),
+ ...S.bookmarks.map((b,i)=>item('view'+i,'View: '+b.name,'bookmark saved view '+b.name,()=>{S.camera=clone(b.camera);updateCamera();toast('Restored centre and resolution. The visible extent depends on panel size.');},'1:'+Math.round(b.camera.res*96/0.0254).toLocaleString('en-US')))
+ ];
+}
+function runCommand(id){
+ const c=commandList().find(c=>c.id===id);
+ if(c){closeSearch();c.run();}
+}
+function filterChoices(query){
+ const body=query.replace(/^filter\s*/i,'');
+ const complete=(label,text,help='Tab completes · does not apply')=>({label,complete:text,help,run:()=>openSearch(text)});
+ const parsed=parseFilter(query);
+ if(parsed&&fields[parsed.field]==='text'&&!/["']/.test(query)){
+  const values=parsed.field==='zone'?Object.keys(colours):['vineyard','pasture','residential','orchard'];
+  const matching=values.filter(v=>v.toLowerCase().startsWith(String(parsed.value).toLowerCase()));
+  if(matching.length&&!values.includes(parsed.value))return matching.map(v=>complete(parsed.field+' '+parsed.op+' "'+v+'"','filter '+parsed.field+' '+parsed.op+' "'+v+'"','Tab completes value; Enter applies on the next step'));
+ }
+ if(parsed)return [{label:'Apply '+filterText(parsed),help:'AND · '+LAYER,complete:'filter '+filterText(parsed),run:()=>commit('filter.add',{id:'f'+(++S.filterId),...parsed,enabled:true})}];
+ const field=Object.keys(fields).find(f=>body.toLowerCase().startsWith(f+' '));
+ if(!field)return Object.keys(fields).filter(f=>f.startsWith(body.trim().toLowerCase())).map(f=>complete(f,'filter '+f+' ',fields[f]+' field · '+LAYER));
+ const rest=body.slice(field.length).trimStart();
+ const op=rest.match(/^(>=|<=|!=|=|>|<)(?:\s|$)/);
+ const ops=fields[field]==='number'?['>','>=','<','<=','=','!=']:['=','!='];
+ if(!op)return ops.filter(x=>x.startsWith(rest.trim())).map(x=>complete(field+' '+x,'filter '+field+' '+x+' '));
+ const value=rest.slice(op[0].length).trim().replace(/^["']/,'');
+ const values=field==='zone'?Object.keys(colours):field==='land_use'?['vineyard','pasture','residential','orchard']:field==='parcel_id'?['6401','6450','6500']:['500','1000','1500','2000'];
+ return values.filter(v=>v.toLowerCase().startsWith(value.toLowerCase())).map(v=>complete(field+' '+op[1]+' '+v,'filter '+field+' '+op[1]+' '+(fields[field]==='text'?'"'+v+'"':v),'Complete value, then Enter to apply'));
+}
+function legacyRenderSearch(){
+ const q=$('search').value,trim=q.trim().toLowerCase();
+ $('searchDock').classList.toggle('layout-mode',trim.startsWith('layout'));
+ let choices;
+ if(/^filter\s/i.test(q)){choices=filterChoices(q);$('searchScope').textContent='Add filter · all clauses use AND';}
+ else if(/^scale(?:\s|$)/i.test(q)||/^1\s*:/.test(q)){
+  const n=parseScale(q);
+  choices=n?[{label:'Set scale 1:'+n.toLocaleString('en-US'),help:'Nominal · 96 CSS px/in',complete:'scale 1:'+n,run:()=>setScale(n)}]:
+  [500,1000,2500,5000,10000,25000].map(n=>({label:'Scale 1:'+n.toLocaleString('en-US'),help:'Centre stays unchanged',complete:'scale 1:'+n,run:()=>setScale(n)}));
+  $('searchScope').textContent='Map scale · metre-based projected view';
+ } else {
+  const tokens=trim.match(/[a-z0-9_]+/g)||[];
+  choices=commandList().filter(c=>{
+   const words=(c.label+' '+c.keywords).toLowerCase().match(/[a-z0-9_]+/g)||[];
+   return tokens.every(t=>words.some(w=>w.startsWith(t)));
+  });
+  if(trim==='layout')choices=choices.filter(c=>c.id!=='layout');
+  $('searchScope').textContent=trim==='layout'?'Customize layout · changes preview immediately':'Commands, settings & saved views';
+ }
+ S.searchChoices=choices;S.searchIndex=Math.max(0,Math.min(S.searchIndex,choices.length-1));
+ $('results').innerHTML=choices.length?choices.map((c,i)=>'<div id="choice-'+i+'" class="choice '+(i===S.searchIndex?'active':'')+'" role="option" aria-selected="'+(i===S.searchIndex)+'" data-choice="'+i+'"><span class="check">'+(c.checked?(c.checked()?'✓':'○'):'')+'</span><span class="choice-label">'+esc(c.label)+'</span><span class="choice-help">'+esc(c.help||'')+'</span></div>').join(''):'<p class="hint" style="padding:10px">No matching command or valid clause. Try “filter area_m2 &gt; 1000”. Feature search across real datasets is not built in this mockup.</p>';
+ if(choices.length)$('search').setAttribute('aria-activedescendant','choice-'+S.searchIndex);else $('search').removeAttribute('aria-activedescendant');
+ $('results').querySelectorAll('[data-choice]').forEach(el=>{el.onmousedown=e=>e.preventDefault();el.onclick=()=>activateChoice(Number(el.dataset.choice));});
+ $('searchHelp').textContent='↑ ↓ choose · Tab completes text only · Enter runs · Esc closes';
+}
+function legacyActivateChoice(i){
+ const c=S.searchChoices[i];if(!c)return;
+ if(c.layout){c.run();renderSearch();$('search').focus();return;}
+ closeSearch();c.run();
+}
+function setTheme(theme){S.theme=theme;document.documentElement.style.colorScheme=theme==='system'?'light dark':theme;log('Appearance: '+theme);}
+function showSettings(){
+ openModal('Settings','<p>Search is the shared gateway to commands, settings and layout. This prototype exposes only the settings below.</p><label for="themeSetting">Appearance</label><select id="themeSetting"><option value="system">Follow system</option><option value="light">Light</option><option value="dark">Dark</option></select><p><strong>Map scale:</strong> ratio 1:N, using 96 CSS pixels per inch. This is a nominal screen scale, not a calibration of your monitor.</p><p><strong>Saved views:</strong> centre, map units per CSS pixel, CRS and rotation. At another window size, the same resolution shows a different extent.</p><p><strong>History:</strong> no fixed step cap in this page, but it is session-only and limited by memory. Durable long-term history needs an on-disk journal, source versions and an explicit retention policy.</p><p><strong>Future:</strong> shortcut editing, named persistent layouts, docking and detached windows are proposed, not implemented here.</p><div class="buttons"><button class="button" data-close>Done</button></div>',()=>{
+ $('themeSetting').value=S.theme;$('themeSetting').onchange=e=>setTheme(e.target.value);
+ });
+}
+function saveView(){
+ openModal('Save view · this session','<label for="viewName">Name</label><input id="viewName" value="View '+(S.bookmarks.length+1)+'"><p>Saves centre, resolution, CRS and rotation. Search “View:” to return here. No source data or file is saved.</p><div class="buttons"><button class="button" data-close>Cancel</button><button id="saveView" class="button primary">Save view</button></div>',()=>{
+ $('saveView').onclick=()=>{const name=$('viewName').value.trim();if(!name)return;S.bookmarks.push({name,camera:clone(S.camera)});closeModal();toast('View saved for this session. Find it in search.');};
+ });
+}
+function openDataset(){
+ openModal('Open dataset · prototype','<p>There is no file reader in this design. Opening the sample starts a fresh mock source session.</p><p>'+SOURCE+'</p><div class="buttons"><button class="button" data-close>Cancel</button><button id="openSample" class="button primary">Open sample</button></div>',()=>{$('openSample').onclick=()=>{closeModal();reopen();};});
+}
+function saveReference(){
+ openModal('Save reference · PROPOSED','<p>Save the source locator, its descriptor as an identity hint, and the current filter, style and view.</p><p><strong>Best effort · no whole-file scan.</strong> This does not freeze source bytes or guarantee exact replay.</p><p>Current sample: '+visibleParcels().length+' features match '+S.model.filters.filter(f=>f.enabled).length+' enabled clauses. This demonstration writes no file.</p><div class="buttons"><button class="button" data-close>Cancel</button><button id="saveReference" class="button primary">Simulate reference save</button></div>',()=>{
+ $('saveReference').onclick=()=>{log('Reference save simulated · best effort · no data frozen');closeModal();toast('Reference save simulated. Nothing was written to disk.');};
+ });
+}
+function prepareDialog(){
+ if(S.ended){toast('Reopen the source before preparing it.');return;}
+ openModal('Prepare verified copy · PROPOSED','<p>An explicit protected capture, with progress and cancellation. In production, this must read from the protected handle and install the validated copy atomically.</p><p><strong>Disk preflight before start:</strong> one complete source copy, plus operation-specific temporary space and overhead. For a 5 GB source, at least another 5 GB is needed before that overhead. The actual source and free space must be measured.</p><p>This mockup creates no files and provides no snapshot guarantee.</p><div class="progress-track"><div id="prepareProgress"></div></div><p id="prepareLabel">Ready to simulate</p><div class="buttons"><button class="button" id="cancelPrepare">Cancel</button><button class="button primary" id="startPrepare">Simulate preparation</button></div>',()=>{
+ $('cancelPrepare').onclick=()=>{if(S.job&&S.job.kind==='prepare')cancelJob();closeModal();};
+ $('startPrepare').onclick=()=>{
+  if(S.job){toast('Finish or cancel the current job first.');return;}
+  $('startPrepare').disabled=true;startJob('prepare',()=>{
+   S.prepared=true;$('prepareLabel').textContent='Prepared sample available · simulation only';
+   $('startPrepare').textContent='Switch to prepared sample';$('startPrepare').disabled=false;
+   $('startPrepare').onclick=()=>{closeModal();reopen(true);};renderInspector();
+  });
+ };
+ });
+}
+function publishDialog(){
+ if(S.ended){toast('The source session ended. Reopen before publishing.');return;}
+ openModal('Publish subset · prototype','<p><strong>'+visibleParcels().length+' matching sample features</strong> · '+S.model.filters.filter(f=>f.enabled).length+' enabled clauses · '+(S.model.style==='zone'?'colour by zone':'single colour')+'.</p><p>This flow uses the layer filters, not the selection. This demonstrates where the existing publish approval belongs. No bundle or external side effect is created here. The moved production approval surface still needs its exposure review.</p><p>Publish-from-recipe is proposed and would require a prepared artifact; a reference-only recipe cannot silently gain an exactness claim.</p><label><input id="publishApprove" type="checkbox" style="width:auto"> I reviewed the simulated scope</label><div class="buttons"><button class="button" data-close>Cancel</button><button id="publishNow" class="button primary" disabled>Simulate publish</button></div>',()=>{
+ $('publishApprove').onchange=e=>$('publishNow').disabled=!e.target.checked;
+ $('publishNow').onclick=()=>{log('Publish simulated · '+visibleParcels().length+' matching features · explicit scope approval');closeModal();toast('Publish simulated. No bundle created.');};
+ });
+}
+let jobTimer;
+function startJob(kind,done){
+ if(S.job){toast('A job is already running.');return;}
+ if(S.ended){toast('Reopen before starting a job.');return;}
+ if(kind==='loading'){S.loadedIds=new Set();renderMap();}
+ S.job={kind,progress:0};renderStatus();if(S.bottom&&S.bottomTab==='jobs')renderBottom();
+ jobTimer=setInterval(()=>{
+  if(!S.job){clearInterval(jobTimer);return;}
+  S.job.progress=Math.min(100,S.job.progress+4);
+  if(kind==='loading'){S.loadedIds=new Set(parcels.slice(0,Math.ceil(parcels.length*S.job.progress/100)).map(p=>p.parcel_id));renderMap();}
+  renderStatus();
+  if($('prepareProgress'))$('prepareProgress').style.width=S.job.progress+'%';
+  if($('prepareLabel'))$('prepareLabel').textContent='Simulated capture · '+S.job.progress+'%';
+  if(S.job.progress===100){clearInterval(jobTimer);log('Simulated '+kind+' completed');S.job=null;renderStatus();if(S.bottom&&S.bottomTab==='jobs')renderBottom();if(done)done();}
+ },120);
+}
+function cancelJob(){
+ if(!S.job)return;clearInterval(jobTimer);
+ const summary=S.pendingSummary;
+ if(summary){summary.status='cancelled';summary.reason='Cancelled before installation; earlier results retained.';S.pendingSummary=null;}
+ log('Cancelled '+S.job.kind+' · no artifact installed');S.job=null;renderStatus();if(S.bottom)renderBottom();
+ toast(summary?'Cancelled. Earlier summary results are unchanged.':'Cancelled. No prepared copy installed; current view retained.');
+}
+function renderNotice(){
+ const notice=$('notice');notice.className='notice';
+ if(S.ended){
+  notice.className='notice on error';notice.innerHTML='<span><strong>Source changed.</strong> Session ended. Reopen explicitly.'+(S.publishFailed?' <button id="moreProblems">+1 more</button>':'')+'</span><button id="reopenNotice">Reopen</button>'+(S.prepared?'<button id="preparedNotice">Use prepared sample · PROPOSED</button>':'')+'<button id="problemDetails">Details</button>';
+  $('reopenNotice').onclick=()=>reopen();$('problemDetails').onclick=()=>showPanel('problems');
+  if($('moreProblems'))$('moreProblems').onclick=()=>showPanel('problems');
+  if($('preparedNotice'))$('preparedNotice').onclick=()=>reopen(true);
+ }else if(S.publishFailed){
+  notice.className='notice on';notice.innerHTML='<span>Publish failed: destination folder is not empty.</span><button id="problemDetails">Details</button><button id="dismissPublishNotice">Dismiss</button>';
+  $('problemDetails').onclick=()=>showPanel('problems');$('dismissPublishNotice').onclick=()=>{S.publishFailed=false;renderData();};
+ }else if(S.justReopened){
+  notice.className='notice on';notice.innerHTML='<span>Source reopened. New session; earlier-source history cannot silently rebind it.</span><button id="dismissNotice">Dismiss</button>';
+  $('dismissNotice').onclick=()=>{S.justReopened=false;renderNotice();};
+ }
+}
+function sourceChanged(){
+ cancelJob();S.ended=true;
+ $('notice').className='notice on error';$('notice').innerHTML='<span><strong>Source changed.</strong> This session has ended. Reopen to continue.</span><button id="reopenNotice">Reopen</button><button id="problemDetails">Details</button>';
+ $('reopenNotice').onclick=()=>reopen();$('problemDetails').onclick=()=>showPanel('problems');renderData();
+}
+function reopen(usePrepared=false){
+ if(usePrepared&&!S.prepared){toast('No prepared sample exists.');return;}
+ cancelJob();S.sourceGeneration++;S.ended=false;S.selection=new Set();S.inspected=null;S.pinned=null;S.tableScope='matches';S.inspectorTab='layer';
+ S.partial=false;S.loadedIds=null;S.justReopened=true;S.sourceMode=usePrepared?'prepared':'reference';
+ const b={id:++S.branchId,name:'Session '+S.sourceGeneration+(usePrepared?' · prepared':' · reopened'),source:S.sourceGeneration,actions:[],cursor:0};
+ S.branches.push(b);S.branch=b.id;S.selectedHistory=null;S.model=replay(b).model;
+ $('notice').className='notice on';$('notice').innerHTML='<span>Source reopened. New session; earlier source history cannot silently rebind it.</span><button id="dismissNotice">Dismiss</button>';
+ $('dismissNotice').onclick=()=>$('notice').className='notice';log('Explicit reopen · source generation '+S.sourceGeneration);renderData();fitLayer();
+}
+function setFrame(frame){
+ S.frame=frame;const wide=frame==='ultra';$('app').style.width=(wide?3440:1366)+'px';$('app').style.height=(wide?1440:768)+'px';resizeFrame();
+ document.querySelectorAll('[data-frame]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.frame===frame)));
+}
+function resizeFrame(){
+ const width=S.frame==='ultra'?3440:1366,height=S.frame==='ultra'?1440:768;
+ const scale=Math.min(1,Math.max(320,window.innerWidth-32)/width);
+ $('scaler').style.transform='scale('+scale+')';$('stage').style.height=(height*scale+26)+'px';
+}
+function setupSplitter(id,axis){
+ const el=$(id);
+ el.onpointerdown=e=>{
+  if(e.button!==0)return;e.preventDefault();el.setPointerCapture(e.pointerId);
+  const scale=$('app').getBoundingClientRect().width/$('app').offsetWidth,start=axis==='y'?e.clientY:e.clientX;
+  const initial=id==='splitLeft'?S.leftWidth:id==='splitRight'?S.rightWidth:S.bottomHeight;
+  const move=ev=>{
+   const d=((axis==='y'?ev.clientY:ev.clientX)-start)/scale;
+   if(id==='splitLeft')S.leftWidth=Math.max(220,Math.min(420,initial+d));
+   else if(id==='splitRight')S.rightWidth=Math.max(250,Math.min(480,initial-d));
+   else S.bottomHeight=Math.max(100,Math.min($('mapColumn').clientHeight-140,initial-d));
+   applyLayout();
+  };
+  const end=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',end);el.removeEventListener('pointercancel',end);};
+  el.addEventListener('pointermove',move);el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+ };
+ el.setAttribute('role','separator');el.setAttribute('aria-orientation',axis==='y'?'horizontal':'vertical');el.tabIndex=0;
+ el.onkeydown=e=>{
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();
+  const d=['ArrowRight','ArrowDown'].includes(e.key)?10:-10;
+  if(id==='splitLeft')S.leftWidth=Math.max(220,Math.min(420,S.leftWidth+d));
+  else if(id==='splitRight')S.rightWidth=Math.max(250,Math.min(480,S.rightWidth-d));
+  else S.bottomHeight=Math.max(100,Math.min($('mapColumn').clientHeight-140,S.bottomHeight-d));applyLayout();
+ };
+}
+function init(){
+ document.querySelector('#toggleBottom i').className='glyph lower';
+ ['Normal','Partial view','Two conditions'].forEach((label,i)=>{
+  const b=document.createElement('button');b.textContent=label;b.id=['demoNormal','demoPartial','demoMulti'][i];
+  $('demoSource').before(b);b.onclick=()=>{
+   cancelJob();S.partial=false;S.loadedIds=null;S.publishFailed=false;S.justReopened=false;
+   if(i===2){S.publishFailed=true;sourceChanged();return;}
+   if(S.ended)reopen();S.justReopened=false;if(i===1)S.partial=true;renderData();
+  };
+ });
+ document.querySelector('.layer-name').innerHTML='<span class="swatch" style="background:#a6c88b"></span><span class="layer-filename" title="'+SOURCE+'">'+SOURCE+'</span>';
+ $('veil').textContent='Source session ended. Reopen explicitly to continue.';
+ ['layers','history','inspector'].forEach(id=>{
+  const title=$(id).querySelector('.pane-head>span:first-child'),button=document.createElement('button');
+  button.className='pane-title';button.dataset.collapse=id;button.setAttribute('aria-label','Collapse or expand '+id);button.onclick=()=>togglePane(id);
+  title.replaceWith(button);
+ });
+ const featureStatus=document.createElement('span');featureStatus.id='identityStatus';featureStatus.textContent='IDs: declared';featureStatus.title='Feature identity: declared parcel_id; independent of source revision and source-change detection.';
+ $('detectionStatus').after(featureStatus);
+ document.querySelector('.status span[title^="Source declares"]').textContent='EPSG:2056 · declared';
+ const warning=document.createElement('span');warning.id='warningStatus';warning.hidden=true;warning.onclick=()=>showPanel('problems');$('detectionStatus').before(warning);
+ $('sourceStatus').tabIndex=0;$('sourceStatus').setAttribute('role','button');$('sourceStatus').onclick=()=>openModal('Source & feature identity','<p><strong>Source:</strong> '+SOURCE+'</p><p><strong>Source revision:</strong> reference-only in this mockup; no exact-byte assertion.</p><p><strong>Feature identity:</strong> declared parcel_id. A stable feature ID is not a source snapshot.</p><div class="buttons"><button class="button" data-close>Close</button></div>');
+ $('sourceStatus').onkeydown=e=>{if(e.key==='Enter')$('sourceStatus').click();};
+ document.querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>{if(b.dataset.command==='edit')openSearch('edit ');else runCommand(b.dataset.command);});
+ document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>setFrame(b.dataset.frame));
+ $('layoutButton').onclick=()=>openSearch('layout ');
+ $('toggleLeft').onclick=()=>{const visible=S.left||(S.history&&S.historySide==='left');S.left=!visible;if(S.historySide==='left')S.history=!visible;applyLayout();};
+ $('toggleRight').onclick=()=>{S.right=!S.right;applyLayout();};
+ $('toggleBottom').onclick=()=>{S.bottom=!S.bottom;applyLayout();};
+ $('closeBottom').onclick=()=>{S.bottom=false;applyLayout();};
+ $('expandBottom').onclick=()=>{S.bottomMax=!S.bottomMax;applyLayout();};
+ $('bottom').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.bottomTab=b.dataset.tab;renderBottom();});
+ $('layerTab').onclick=()=>{S.inspectorTab='layer';renderInspector();};
+ $('featureTab').onclick=()=>{S.inspectorTab='feature';renderInspector();};
+ $('undo').onclick=()=>setCursor(activeBranch().cursor-1);$('redo').onclick=()=>setCursor(activeBranch().cursor+1);$('moveHistory').onclick=moveHistory;
+ $('historySearch').oninput=e=>{S.historyQuery=e.target.value;renderHistory();};
+ $('historyGroup').onchange=e=>{S.historyGroup=e.target.value;renderHistory();};
+ $('branchSelect').onchange=e=>{
+  const id=Number(e.target.value),target=S.branches.find(b=>b.id===id);e.target.value=String(S.branch);
+  if(target.source!==S.sourceGeneration){toast('Earlier-source branch retained for reference. Restoring across sources requires admission; this prototype refuses it.');return;}
+  if(S.ended){toast('Reopen the source before switching history branches.');return;}
+  confirmAction('Switch history branch','Restore the workspace state at step '+target.cursor+' of <strong>'+esc(target.name)+'</strong>? Current branch remains available.','Switch branch',()=>{S.branch=id;S.selectedHistory=null;S.model=replay(target).model;renderData();});
+ };
+ $('search').onfocus=()=>{$('searchDock').classList.add('open');$('search').setAttribute('aria-expanded','true');renderSearch();};
+ $('search').oninput=()=>{S.searchIndex=0;renderSearch();};
+ $('search').onkeydown=e=>{
+  if(e.key==='Escape'){e.preventDefault();closeSearch();$('search').blur();return;}
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+   e.preventDefault();S.searchIndex=Math.max(0,Math.min(S.searchChoices.length-1,S.searchIndex+(e.key==='ArrowDown'?1:-1)));renderSearch();$('choice-'+S.searchIndex)?.scrollIntoView({block:'nearest'});return;
+  }
+  if(e.key==='Tab'&&!e.shiftKey&&S.searchChoices.length){
+   e.preventDefault();const c=S.searchChoices[S.searchIndex];
+   $('search').value=c.complete||c.label;S.searchIndex=0;renderSearch();return;
+  }
+  if(e.key==='Enter'){e.preventDefault();activateChoice(S.searchIndex);}
+ };
+ $('mapScale').onkeydown=e=>{
+  if(e.key==='Enter'){e.preventDefault();const ok=setScale(e.target.value);if(ok){e.target.blur();updateCamera();}}
+  if(e.key==='Escape'){e.target.blur();updateCamera();}
+ };
+ $('mapScale').onchange=e=>{if(!setScale(e.target.value)){e.target.blur();updateCamera();}};
+ $('fitLayer').onclick=fitLayer;
+ $('zoomIn').onclick=()=>{S.camera.res=Math.max(10*0.0254/96,S.camera.res/1.5);updateCamera();};
+ $('zoomOut').onclick=()=>{S.camera.res=Math.min(1000000000*0.0254/96,S.camera.res*1.5);updateCamera();};
+ const setTool=tool=>{
+  S.tool=tool;$('map').classList.toggle('select',tool==='select');$('navigate').setAttribute('aria-pressed',String(tool==='navigate'));$('selectTool').setAttribute('aria-pressed',String(tool==='select'));
+  $('selectionMode').hidden=tool!=='select';
+  $('mapToolHint').textContent=tool==='select'?'Click or drag a box · Ctrl toggle · Shift add · Alt remove':'Drag to pan · click to inspect · selection stays unchanged';
+ };
+ $('navigate').onclick=()=>setTool('navigate');$('selectTool').onclick=()=>setTool('select');
+ $('selectionMode').onchange=e=>S.selectionMode=e.target.value;
+ $('mapSelectionCount').onclick=showSelection;
+ let gesture=null;
+ const worldPoint=e=>{
+  const point=new DOMPoint(e.clientX,e.clientY).matrixTransform($('map').getScreenCTM().inverse());return {x:point.x,y:point.y};
+ };
+ const stopGesture=()=>{gesture=null;$('map').style.cursor='';$('selectionBox').setAttribute('visibility','hidden');};
+ $('map').onpointerdown=e=>{
+  if(S.ended||e.button!==0)return;e.preventDefault();
+  gesture={tool:S.tool,x:e.clientX,y:e.clientY,cx:S.camera.cx,cy:S.camera.cy,point:worldPoint(e),id:Number(e.target.dataset.parcel)||null,dragged:false,mode:e.altKey?'remove':e.ctrlKey||e.metaKey?'toggle':e.shiftKey?'add':S.selectionMode};
+  $('map').setPointerCapture(e.pointerId);if(S.tool==='navigate')$('map').style.cursor='grabbing';
+ };
+ $('map').onpointermove=e=>{
+  if(!gesture)return;
+  if(Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y)>4)gesture.dragged=true;
+  if(!gesture.dragged)return;
+  if(gesture.tool==='select'){
+   const a=gesture.point,b=worldPoint(e),box=$('selectionBox');box.setAttribute('x',Math.min(a.x,b.x));box.setAttribute('y',Math.min(a.y,b.y));box.setAttribute('width',Math.abs(b.x-a.x));box.setAttribute('height',Math.abs(b.y-a.y));box.setAttribute('visibility','visible');
+  }else{
+   const scale=$('app').getBoundingClientRect().width/$('app').offsetWidth;
+   S.camera.cx=gesture.cx-(e.clientX-gesture.x)*S.camera.res/scale;S.camera.cy=gesture.cy-(e.clientY-gesture.y)*S.camera.res/scale;updateCamera();
+  }
+ };
+ $('map').onpointerup=e=>{
+  if(!gesture)return;
+  const g=gesture,point=worldPoint(e);stopGesture();
+  if($('map').hasPointerCapture(e.pointerId))$('map').releasePointerCapture(e.pointerId);
+  if(S.ended)return;
+  if(g.tool==='navigate'){if(!g.dragged&&g.id)inspectParcel(g.id);return;}
+  let ids=g.id?[g.id]:[];
+  if(g.dragged){
+   const x=Math.min(g.point.x,point.x),y=Math.min(g.point.y,point.y),r=Math.max(g.point.x,point.x),b=Math.max(g.point.y,point.y);
+   ids=drawnParcels().filter(p=>p.x<=r&&p.x+p.w>=x&&p.y<=b&&p.y+p.h>=y).map(p=>p.parcel_id);
+  }
+  updateSelection(ids,g.mode);
+ };
+ $('map').onpointercancel=stopGesture;$('map').onlostpointercapture=stopGesture;
+ $('map').addEventListener('wheel',e=>{
+  if(S.ended)return;e.preventDefault();
+  const rect=$('map').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width-.5,y=(e.clientY-rect.top)/rect.height-.5;
+  const old=S.camera.res,next=Math.max(10*0.0254/96,Math.min(1000000000*0.0254/96,old*Math.exp(e.deltaY*.001)));
+  S.camera.cx+=x*$('mapwrap').clientWidth*(old-next);S.camera.cy+=y*$('mapwrap').clientHeight*(old-next);S.camera.res=next;updateCamera();
+ },{passive:false});
+ $('demoSource').onclick=sourceChanged;$('demoLoad').onclick=()=>startJob('loading');
+ $('jobStatus').style.cursor='pointer';$('jobStatus').onclick=()=>showPanel('jobs');
+ setupSplitter('splitLeft','x');setupSplitter('splitRight','x');setupSplitter('bottomGrip','y');
+ document.addEventListener('pointerdown',e=>{
+  if(!$('searchDock').contains(e.target)&&e.target!==$('layoutButton'))closeSearch();
+  if(!$('contextMenu').contains(e.target))$('contextMenu').hidden=true;
+ });
+ document.addEventListener('keydown',e=>{
+  if(!$('modalVeil').hidden){
+   if(e.key==='Escape'){e.preventDefault();closeModal();}
+   if(e.key==='Tab'){
+    const els=[...$('modal').querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled)')];
+    const first=els[0],last=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+   }
+   return;
+  }
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key===','){e.preventDefault();showSettings();return;}
+  if(typing)return;
+  if(e.ctrlKey||e.metaKey){
+   const key=e.key.toLowerCase();
+   if(key==='z'){e.preventDefault();setCursor(activeBranch().cursor+(e.shiftKey?1:-1));}
+   if(key==='y'){e.preventDefault();setCursor(activeBranch().cursor+1);}
+   if(key==='j'){e.preventDefault();$('toggleBottom').click();}
+   if(key==='b'){e.preventDefault();$('toggleLeft').click();}
+   if(key==='i'){e.preventDefault();$('toggleRight').click();}
+  }
+ });
+ window.addEventListener('resize',resizeFrame);
+ new ResizeObserver(updateCamera).observe($('mapwrap'));
+ setFrame('laptop');renderData();applyLayout();requestAnimationFrame(fitLayer);
+}
+// V7 additions are page-local design experiments, not an SKP implementation.
+const FIELD_INFO = {
+ parcel_id:{label:'Parcel identifier',unit:null,meaning:'Declared identifier in this synthetic fixture; not an immutable source revision.'},
+ zone:{label:'Planning zone',unit:null,meaning:'Synthetic categorical attribute. W1, W2, W3, A, G and F.'},
+ area_m2:{label:'Recorded area',unit:'m²',meaning:'Synthetic stored area attribute; not measured from the rectangle geometry.'},
+ land_use:{label:'Land use',unit:null,meaning:'Synthetic land-use category; no inference from imagery.'}
+};
+const SEARCH_MODES=[['/','Commands'],['@','Fields'],['#','Features'],['?','Help']];
+function commandList(){
+ return [...baseCommandList(),
+  {id:'fields',label:'Explore fields…',keywords:'fields columns attributes schema',help:'Types, units and actions',run:()=>openSearch('@'),complete:'@'},
+  {id:'features',label:'Find a feature…',keywords:'features find search parcel id',help:'Bounded synthetic fixture',run:()=>openSearch('#'),complete:'#'},
+  {id:'capabilities',label:'Inspect command catalogue…',keywords:'capabilities registry manifest contract discovery skp',help:'Prototype only · no kernel claims',run:showCatalogue},
+  {id:'help',label:'Search help and prefixes…',keywords:'help syntax prefixes slash at hash shortcuts',help:'Keyboard guide',run:showSearchHelp}
+ ].map(c=>({...c,complete:c.complete?( /^(filter|scale) /.test(c.complete)?'/'+c.complete:c.complete):'/'+c.id,
+  run:c.id==='filter'?()=>openSearch('/filter '):c.id==='scale'?()=>openSearch('/scale '):c.run}));
+}
+function paintChoices(choices,scope,help){
+ S.searchChoices=choices;S.searchIndex=Math.max(0,Math.min(S.searchIndex,choices.length-1));
+ $('searchScope').textContent=scope;
+ $('results').innerHTML=choices.length?choices.map((c,i)=>'<div id="choice-'+i+'" class="choice '+(i===S.searchIndex?'active':'')+'" role="option" aria-selected="'+(i===S.searchIndex)+'" aria-disabled="'+!!c.disabled+'" data-choice="'+i+'"><span class="check">'+(c.checked?(c.checked()?'✓':'○'):'')+'</span><span class="choice-label">'+esc(c.label)+'</span><span class="choice-help">'+esc(c.help||'')+'</span></div>').join(''):'<p class="hint" style="padding:10px">No matches in this scope. Try ? for help. This is not a search of external files.</p>';
+ if(choices.length)$('search').setAttribute('aria-activedescendant','choice-'+S.searchIndex);else $('search').removeAttribute('aria-activedescendant');
+ $('results').querySelectorAll('[data-choice]').forEach(el=>{el.onmousedown=e=>e.preventDefault();el.onclick=()=>activateChoice(Number(el.dataset.choice));});
+ $('searchHelp').textContent=help||'↑ ↓ choose · Tab completes, never runs · Enter opens / applies · Esc closes';
+}
+function featureChoices(query){
+ const rows=S.featureSearchScope==='all'?parcels:visibleParcels();
+ const tokens=query.slice(1).trim().toLowerCase().split(/\s+/).filter(Boolean);
+ const hits=rows.filter(p=>tokens.every(t=>Object.keys(fields).some(k=>String(p[k]).toLowerCase().includes(t))));
+ const matched=new Set(visibleParcels().map(p=>p.parcel_id)),drawn=new Set(drawnParcels().map(p=>p.parcel_id));
+ const context=S.ended?'Session ended · reopen required':hits.length+' matches · first '+Math.min(20,hits.length)+' displayed';
+ $('searchContext').textContent=context+' · '+rows.length+' synthetic records searched · selection unchanged';
+ return hits.slice(0,20).map(p=>({label:'Parcel '+p.parcel_id+' · '+p.zone+' · '+p.land_use,
+  help:!matched.has(p.parcel_id)?'Filtered out · inspect only':!drawn.has(p.parcel_id)?'Not drawn · attributes available':'Enter inspects · does not select',
+  complete:'#'+p.parcel_id,generation:S.sourceGeneration,run:()=>inspectSearchFeature(p.parcel_id)}));
+}
+function fieldChoices(query){
+ const body=query.slice(1),key=body.trim().toLowerCase(),field=Object.keys(fields).find(f=>body.toLowerCase().startsWith(f+' '));
+ if(field){
+  const actions=[
+   {label:'Inspect '+field,help:'Origin, type and units',complete:'@'+field,run:()=>showField(field)},
+   {label:'Filter by '+field+'…',help:'Build an explicit layer filter',complete:'/filter '+field+' ',run:()=>openSearch('/filter '+field+' ')},
+   {label:'Statistics for '+field+'…',help:'Choose selected / matching / full fixture',complete:'@'+field+' statistics',run:()=>showFieldStats(field)},
+   {label:'Show '+field+' in Table',help:'Existing source column',complete:'@'+field+' table',run:()=>{showPanel('table');toast('Table opened · '+field+' is a source column.');}}
+  ];
+  if(field==='zone')actions.push({label:'Colour by zone',help:'PROPOSED · workspace style only',complete:'/zone',run:()=>commit('style',{value:'zone'})});
+  if(field==='area_m2')actions.push({label:'Preview m² → hectares…',help:'Read-only preview · no field write',complete:'@area_m2 hectares',run:()=>showCalculationPreview()});
+  const term=body.slice(field.length).trim().toLowerCase();
+  return actions.filter(a=>!term||(a.label+' '+a.complete).toLowerCase().includes(term)).map(a=>({...a,generation:S.sourceGeneration}));
+ }
+ return Object.keys(fields).filter(f=>(f+' '+FIELD_INFO[f].label).toLowerCase().includes(key)).map(f=>({label:f+' · '+FIELD_INFO[f].label,help:fields[f]+(FIELD_INFO[f].unit?' · '+FIELD_INFO[f].unit:'')+' · source attribute',complete:'@'+f+' ',generation:S.sourceGeneration,run:()=>showField(f)}));
+}
+function renderSearch(){
+ const q=$('search').value,raw=q.trimStart(),prefix=raw[0]||'';
+ if(!$('searchModes'))return legacyRenderSearch();
+ $('searchModes').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.prefix===prefix)));
+ $('featureSearchScope').hidden=prefix!=='#';$('searchContext').hidden=prefix!=='#';
+ $('searchDock').classList.toggle('layout-mode',/^\/?layout/i.test(raw));
+ if(prefix==='#'){paintChoices(featureChoices(raw),'Feature search · '+(S.featureSearchScope==='all'?'full fixture':'layer-filter matches'));return;}
+ if(prefix==='@'){paintChoices(fieldChoices(raw),'Fields · '+LAYER);return;}
+ if(prefix==='?'){
+  const entries=SEARCH_MODES.slice(0,3).map(([p,label])=>({label:p+'  '+label,help:p==='/'?'Settings, layout, filters, scale':p==='@'?'Inspect fields, statistics, filter':'Literal attribute search · explicit scope',complete:p,run:()=>openSearch(p)}));
+  entries.push({label:'Search keyboard guide',help:'Prefixes are optional; plain text still works',run:showSearchHelp,complete:'? guide'});
+  entries.push({label:'Prototype command catalogue',help:'Generated from these UI entries · not SKP',run:showCatalogue,complete:'/capabilities'});
+  const term=raw.slice(1).trim().toLowerCase();paintChoices(entries.filter(e=>!term||(e.label+' '+e.help).toLowerCase().includes(term)),'Search help');return;
+ }
+ if(prefix==='/'){
+  const text=raw.slice(1),trim=text.trim().toLowerCase();
+  if(/^filter\s/i.test(text)){
+   paintChoices(filterChoices(text).map(c=>({...c,complete:'/'+c.complete,generation:S.sourceGeneration})), 'Add layer filter · AND · '+LAYER);return;
+  }
+  if(/^scale(?:\s|$)/i.test(text)){
+   const n=parseScale(text);const scales=n?[n]:[500,1000,2500,5000,10000,25000];
+   paintChoices(scales.map(n=>({label:'Set scale 1:'+n.toLocaleString('en-US'),help:'Nominal screen scale · 96 CSS px/in',complete:'/scale 1:'+n,run:()=>setScale(n)})),'Map scale · metre-based projected view');return;
+  }
+  const commands=commandList(),exact=commands.find(c=>c.id.toLowerCase()===trim);
+  const tokens=trim.match(/[a-z0-9_]+/g)||[];
+  const options=commands.filter(c=>tokens.every(t=>(c.id+' '+c.label+' '+c.keywords).toLowerCase().split(/[^a-z0-9_]+/).some(w=>w.startsWith(t))));
+  if(exact&&trim!=='layout')options.splice(0,options.length,exact);
+  if(trim==='layout')options.splice(0,options.length,...commands.filter(c=>c.layout));
+  paintChoices(options.map(c=>({...c,complete:c.complete.startsWith('filter ')?'/'+c.complete:c.complete.startsWith('scale ')?'/'+c.complete:c.complete})),trim==='layout'?'Customize layout · changes preview immediately':'Commands · type a name or complete with Tab');return;
+ }
+ legacyRenderSearch();
+ if(/^filter\s/i.test(raw))S.searchChoices=S.searchChoices.map(c=>({...c,generation:S.sourceGeneration}));
+}
+function activateChoice(i){
+ const choice=S.searchChoices[i];if(!choice||choice.disabled)return;
+ if(choice.generation!==undefined&&(S.ended||choice.generation!==S.sourceGeneration)){showSourceRefusal(choice.generation);return;}
+ // A completion remains a completion when reached with Enter; it never applies early.
+ if(choice.complete&&/^\/filter/.test($('search').value)&&choice.help?.includes('complete')&&!choice.label.startsWith('Apply ')){
+  openSearch(choice.complete);return;
+ }
+ legacyActivateChoice(i);
+}
+function showSourceRefusal(expected){
+ const current=S.sourceGeneration,ended=S.ended;
+ const outcome={kind:'refused',code:ended?'prototype.source_ended':'prototype.stale_context',owner:'prototype.session',expectedGeneration:expected,currentGeneration:current,effects:'none',remediation:ended?{command:'prototype.ui.reopen',requiresConfirmation:true}:{command:'prototype.ui.features',requiresConfirmation:false}};
+ openModal('This action needs a current source','<div class="state-note warn">'+(ended?'The source session ended. Reopen explicitly before acting.':'The result belongs to an earlier source session. Search again; it must not silently target the new one.')+'</div><p>This is a simulated refusal and a locally supplied remedy, not an implemented SKP error contract.</p><details><summary>Machine-readable example</summary><pre class="contract-json">'+esc(JSON.stringify(outcome,null,2))+'</pre></details><div class="buttons"><button class="button" data-close>Cancel</button><button class="button primary" id="sourceRemedy">'+(ended?'Reopen sample · new session':'Search current session')+'</button></div>',()=>{
+  $('sourceRemedy').onclick=()=>{if(S.sourceGeneration!==current||S.ended!==ended){showSourceRefusal(current);return;}closeModal();if(ended)reopen();else openSearch('#');};
+ });
+}
+function inspectSearchFeature(id){
+ const p=parcels.find(p=>p.parcel_id===id),generation=S.sourceGeneration;if(!p)return;
+ if(S.pinned&&S.pinned!==id){
+  confirmAction('Replace pinned inspection?','Inspect parcel '+id+' without changing the selected set? The pinned inspector currently shows '+S.pinned+'.','Unpin and inspect',()=>withSource(generation,()=>{S.pinned=null;inspectParcel(id);}));return;
+ }
+ inspectParcel(id);
+ const matchesFilter=visibleParcels().some(p=>p.parcel_id===id),drawn=drawnParcels().some(p=>p.parcel_id===id);
+ toast(!matchesFilter?'Inspected '+id+'. Still hidden by layer filters; selection unchanged.':!drawn?'Inspected '+id+'. Geometry not currently drawn; selection unchanged.':'Inspected '+id+'. Use Pan to inspected in the inspector; selection unchanged.');
+}
+function showSearchHelp(){
+ openModal('Search is the common entry point','<p>Prefixes narrow the search; they are optional. The dropdown stays attached to the input.</p><div class="prefix-examples"><code>/settings</code><span>Open settings</span><code>/filter zone = "W1"</code><span>Apply an explicit layer filter</span><code>/scale 1:10000</code><span>Set a reproducible nominal scale</span><code>@area_m2</code><span>Inspect a field; Tab exposes its actions</span><code>#6401</code><span>Find and inspect a feature, without selecting</span><code>/layout</code><span>Change the workspace layout</span><code>/capabilities</code><span>Inspect the prototype command catalogue</span></div><p><strong>Tab completes only.</strong> Enter chooses an action or advances an incomplete command. Settings and layout remain reachable without prefixes. There is no free-form SQL or AI interpretation in this search.</p><p>Feature searches examine at most the 170 records embedded here, with 20 results per view. A real dataset search needs its own bounded engine query.</p><div class="buttons"><button class="button" data-close>Done</button></div>');
+}
+function withSource(generation,run){
+ if(S.ended||generation!==S.sourceGeneration){showSourceRefusal(generation);return false;}run();return true;
+}
+function fieldRows(scope){return scope==='selected'?parcels.filter(p=>S.selection.has(p.parcel_id)):scope==='all'?parcels:visibleParcels();}
+function scopeLabel(scope){return scope==='selected'?'Selected features, including filtered-out':scope==='all'?'Full synthetic fixture':'Layer-filter matches';}
+function scopeKey(scope){
+ return JSON.stringify([S.sourceGeneration,scope,scope==='selected'?[...S.selection].sort((a,b)=>a-b):scope==='matches'?S.model.filters:[]]);
+}
+function scopeSelect(id,value){
+ return '<label for="'+id+'">Target scope · '+LAYER+'</label><select id="'+id+'"><option value="matches" '+(value==='matches'?'selected':'')+'>Layer-filter matches</option><option value="selected" '+(value==='selected'?'selected':'')+'>Selected, including filtered-out</option><option value="all" '+(value==='all'?'selected':'')+'>Full synthetic fixture (170 records)</option></select>';
+}
+function showField(field){
+ const info=FIELD_INFO[field],generation=S.sourceGeneration;
+ openModal(field+' · '+info.label,'<dl class="field-facts"><dt>Layer</dt><dd>'+LAYER+'</dd><dt>Type</dt><dd>'+fields[field]+'</dd><dt>Origin</dt><dd>Source attribute · synthetic fixture</dd><dt>Units</dt><dd>'+esc(info.unit||'Not applicable')+'</dd><dt>Writable</dt><dd>No · feature editing is not implemented</dd></dl><p>'+esc(info.meaning)+'</p><div class="field-actions"><button id="fieldFilter">Filter…</button><button id="fieldStats">Statistics…</button><button id="fieldTable">Show table</button>'+(field==='zone'?'<button id="fieldStyle">Colour by zone · PROPOSED</button>':'')+(field==='area_m2'?'<button id="fieldCalculate">Preview hectares…</button>':'')+'</div><p>Field origin, calculation method and writability are separate facts. A joined field could also be calculated; one label cannot express all three.</p><div class="buttons"><button class="button" data-close>Done</button></div>',()=>{
+  $('fieldFilter').onclick=()=>withSource(generation,()=>{closeModal();openSearch('/filter '+field+' ');});
+  $('fieldStats').onclick=()=>withSource(generation,()=>showFieldStats(field));
+  $('fieldTable').onclick=()=>withSource(generation,()=>{closeModal();showPanel('table');});
+  if($('fieldStyle'))$('fieldStyle').onclick=()=>withSource(generation,()=>{closeModal();commit('style',{value:'zone'});});
+  if($('fieldCalculate'))$('fieldCalculate').onclick=()=>withSource(generation,showCalculationPreview);
+ });
+}
+function captureStats(field,scope){
+ const rows=fieldRows(scope),values=rows.map(p=>p[field]).filter(v=>v!==null&&v!==undefined),numeric=fields[field]==='number';
+ return {field,scope,key:scopeKey(scope),generation:S.sourceGeneration,count:rows.length,missing:rows.length-values.length,
+  hiddenSelected:scope==='selected'?selectionFacts().hidden:0,
+  min:numeric&&values.length?Math.min(...values):null,max:numeric&&values.length?Math.max(...values):null,
+  mean:numeric&&values.length?values.reduce((a,b)=>a+b,0)/values.length:null,
+  categories:numeric?null:[...new Set(values)].map(v=>[v,values.filter(x=>x===v).length])};
+}
+function showFieldStats(field){
+ const generation=S.sourceGeneration;S.statsDraft=captureStats(field,'matches');
+ openModal('Statistics · '+field,scopeSelect('statsScope','matches')+'<div id="statsOutput" aria-live="polite"></div><p>Counts are exact over the chosen in-page fixture, not a production scan or a claim about externally changed files. Partial rendering does not limit this fixture query.</p><div class="buttons"><button class="button" data-close>Done</button><button class="button" id="statsRefresh">Recalculate</button></div>',()=>{
+  $('statsScope').onchange=e=>withSource(generation,()=>{S.statsDraft=captureStats(field,e.target.value);renderStatsDraft();});
+  $('statsRefresh').onclick=()=>withSource(generation,()=>{S.statsDraft=captureStats(field,$('statsScope').value);renderStatsDraft();});
+  renderStatsDraft();
+ });
+}
+function renderStatsDraft(){
+ if(!$('statsOutput')||!S.statsDraft)return;
+ const d=S.statsDraft,stale=S.ended||d.generation!==S.sourceGeneration||d.key!==scopeKey(d.scope),unit=FIELD_INFO[d.field].unit;
+ const number=n=>n===null?'No values':n.toLocaleString('en-US',{maximumFractionDigits:3})+(unit?' '+unit:'');
+ $('statsOutput').innerHTML='<div class="state-note '+(stale?'warn':'')+'"><strong>Coverage: all '+d.count+' records in captured scope</strong><br>Freshness: '+(stale?'older / invalidated context · recalculate or reopen':'current synthetic context')+' · source session '+d.generation+'</div><dl class="field-facts"><dt>Missing values</dt><dd>'+d.missing+'</dd>'+(d.hiddenSelected?'<dt>Filtered-out selected</dt><dd>'+d.hiddenSelected+'</dd>':'')+(d.categories?d.categories.map(([v,n])=>'<dt>'+esc(v)+'</dt><dd>'+n+'</dd>').join(''):'<dt>Minimum</dt><dd>'+number(d.min)+'</dd><dt>Maximum</dt><dd>'+number(d.max)+'</dd><dt>Mean</dt><dd>'+number(d.mean)+'</dd>')+'</dl>'+(d.field==='parcel_id'?'<p class="hint">Numeric summaries of identifiers are rarely meaningful. IDs are keys, not measured quantities.</p>':'');
+}
+function showCalculationPreview(){
+ const generation=S.sourceGeneration;
+ openModal('Preview area conversion · no writes','<p>Convert the stored <strong>area_m2</strong> attribute to hectares by dividing by 10,000. This is a unit conversion, not a geometry measurement.</p>'+scopeSelect('calculationScope','matches')+'<div id="calculationOutput" aria-live="polite"></div><p>A future Apply command needs a declared output field, source revision, target scope, permission and recovery contract. There is intentionally no Apply button in this preview.</p><div class="buttons"><button class="button" data-close>Done</button></div>',()=>{
+  const render=()=>withSource(generation,()=>{
+   const scope=$('calculationScope').value,rows=fieldRows(scope),shown=rows.slice(0,5);S.calculationDraft={scope,key:scopeKey(scope),generation};
+   $('calculationOutput').innerHTML='<div class="state-note">'+rows.length+' target features · '+scopeLabel(scope)+'<br>Previewing '+shown.length+' records · no source writes · no calculation stored<br><span id="calculationState"></span></div><table class="preview-table"><thead><tr><th>Parcel</th><th>Before · m²</th><th>After · ha</th></tr></thead><tbody>'+shown.map(p=>'<tr><td>'+p.parcel_id+'</td><td>'+p.area_m2+'</td><td>'+(p.area_m2/10000).toFixed(4)+'</td></tr>').join('')+'</tbody></table>';renderCalculationState();
+  });$('calculationScope').onchange=render;render();
+ });
+}
+function renderBottom(){
+ const scroll=$('bottomContent').scrollTop;legacyRenderBottom();
+ if(S.bottomTab==='table'&&$('tableScope')){
+  const tools=document.createElement('span');tools.className='field-launcher';
+  tools.innerHTML='<button id="tableFields">@ Fields</button><button id="tablePreview">Preview calculation…</button>';
+  document.querySelector('.table-toolbar').append(tools);
+  $('tableFields').onclick=()=>openSearch('@');$('tablePreview').onclick=()=>withSource(S.sourceGeneration,showCalculationPreview);
+  $('bottomContent').scrollTop=scroll;
+ }
+}
+function catalogueSnapshot(){
+ // Projection of executable UI entries, never an independent list of kernel capabilities.
+ return {schemaVersion:'prototype.ui-catalogue.v1',authority:'standalone-v7-ui-only',kernelManifest:null,
+  conformance:{status:'not_evaluated',note:'No SKP transport or kernel is connected.'},
+  commands:commandList().map(c=>({id:'prototype.ui.'+c.id,title:c.label,completion:c.complete,
+   description:c.help||'Prototype UI entrypoint',kind:'ui_entrypoint',
+   inputSchema:{type:'object',properties:{},additionalProperties:false},
+   domainContract:'not_declared',execution:'page_local',durability:'session_only'}))};
+}
+function showCatalogue(){
+ openModal('Command catalogue · prototype only','<p>Generated from the same entries used by command search. This is <strong>not an SKP capability manifest</strong>: no kernel conformance, authorization or transport is asserted.</p><label for="catalogueSearch">Find a command</label><input id="catalogueSearch" placeholder="filter, settings, publish…"><div id="catalogueList" class="catalogue-list"></div><details><summary>Machine-readable catalogue</summary><pre id="catalogueJson" class="contract-json"></pre></details><div class="buttons"><button class="button" data-close>Done</button></div>',()=>{
+  const manifest=catalogueSnapshot();$('catalogueJson').textContent=JSON.stringify(manifest,null,2);
+  const render=()=>{
+   const term=$('catalogueSearch').value.toLowerCase();
+   $('catalogueList').innerHTML=manifest.commands.filter(c=>(c.id+' '+c.title+' '+c.description).toLowerCase().includes(term)).map(c=>'<div class="catalogue-row"><span>'+esc(c.title)+'<small>'+esc(c.id)+'</small></span><button data-contract="'+esc(c.id)+'">Inspect</button><button data-stage="'+esc(c.id)+'">Stage</button></div>').join('')||'<p class="hint">No matching entry.</p>';
+   $('catalogueList').querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{const c=manifest.commands.find(c=>c.id===b.dataset.stage);closeModal();openSearch(c.completion);});
+   $('catalogueList').querySelectorAll('[data-contract]').forEach(b=>b.onclick=()=>{
+    const c=manifest.commands.find(c=>c.id===b.dataset.contract);
+    openModal(c.title,'<p>This schema describes opening a no-argument UI entrypoint. It does not describe or authorize the underlying future kernel operation.</p><pre class="contract-json">'+esc(JSON.stringify(c,null,2))+'</pre><div class="buttons"><button class="button" id="backCatalogue">Back</button><button class="button primary" id="stageContract">Stage in search</button></div>',()=>{
+     $('backCatalogue').onclick=showCatalogue;$('stageContract').onclick=()=>{closeModal();openSearch(c.completion);};
+    });
+   });
+  };$('catalogueSearch').oninput=render;render();
+ });
+}
+const v6Inspector=renderInspector;
+renderInspector=function(){
+ v6Inspector();
+ const id=inspectedId(),p=parcels.find(p=>p.parcel_id===id);
+ if(S.inspectorTab==='feature'&&p&&$('pinFeature')){
+  const generation=S.sourceGeneration,button=document.createElement('button');button.id='panInspected';button.className='button';button.textContent='Pan to inspected';button.disabled=S.ended;
+  button.onclick=()=>withSource(generation,()=>{
+   if(S.bottom&&S.bottomMax){S.bottomMax=false;applyLayout();}
+   S.camera.cx=p.x+p.w/2;S.camera.cy=p.y+p.h/2;updateCamera();
+   if(!drawnParcels().some(q=>q.parcel_id===id))toast('Camera moved. This parcel remains filtered out or not drawn; no filter was changed.');
+  });$('pinFeature').after(button);
+ }
+};
+function renderCalculationState(){
+ const d=S.calculationDraft;if(!$('calculationState')||!d)return;
+ $('calculationState').textContent='Source session '+d.generation+' · '+(S.ended||d.generation!==S.sourceGeneration||d.key!==scopeKey(d.scope)?'older / invalidated context':'current synthetic context');
+}
+const v6Status=renderStatus;
+renderStatus=function(){v6Status();renderStatsDraft();renderCalculationState();};
+function initV7(){
+ S.featureSearchScope='matches';S.statsDraft=null;S.calculationDraft=null;
+ $('search').placeholder='/ commands · @ fields · # features · ? help';
+ $('search').setAttribute('aria-label','Search commands, fields, features and settings');
+ const modes=document.createElement('div');modes.id='searchModes';modes.className='search-modes';
+ modes.innerHTML=SEARCH_MODES.map(([p,label])=>'<button data-prefix="'+p+'"><kbd>'+p+'</kbd>'+label+'</button>').join('')+'<select id="featureSearchScope" aria-label="Feature search scope" hidden><option value="matches">Layer-filter matches</option><option value="all">Full fixture (170)</option></select>';
+ document.querySelector('.search-scope').after(modes);
+ const context=document.createElement('div');context.id='searchContext';context.className='search-context';context.hidden=true;context.setAttribute('aria-live','polite');modes.after(context);
+ modes.querySelectorAll('button').forEach(b=>b.onclick=()=>openSearch(b.dataset.prefix));
+ $('featureSearchScope').onchange=e=>{S.featureSearchScope=e.target.value;S.searchIndex=0;renderSearch();};
+ document.addEventListener('keydown',e=>{
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)||document.activeElement.isContentEditable;
+  if(!typing&&$('modalVeil').hidden&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&['/','@','#','?'].includes(e.key)){e.preventDefault();openSearch(e.key);}
+ });
+}
+initV7();
+init();
+</script>
+</body>
+</html>

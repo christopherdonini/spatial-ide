@@ -134,3 +134,13 @@ Corrections:
 - R7: the two gate-log passages quoted in scripts/plan/verify-mutation.test.mjs's comments are replaced by references (node, gate, attempt, commit).
 
 Results (Amendment 6): tools @ 3dcf6a6 (no script logic changed by this amendment) — `node --test scripts/plan/*.test.mjs scripts/hooks/*.test.mjs` rc 0 (262 pass); `node scripts/plan/verify-quotes.mjs` rc 0; `node scripts/plan/verify-cites.mjs` rc 0; `node scripts/plan/verify-test-claims.mjs` rc 0; `node scripts/plan/verify-mutation.mjs --base origin/main --head HEAD` rc 0; `node scripts/plan/verify.mjs --offline` rc 0. The tracked-scan-alone mutation (findTestsInFile's Rust branch replaced by `trackedRustScan(rel, lines)` alone, verify-mutation.mjs @ 3dcf6a6) run against scripts/plan/verify-mutation.test.mjs fails four tests by name: `the_six_reviewer_fixtures_are_found_by_the_union_no_loss_by_construction`, `deleting_the_per_line_half_of_the_union_loses_a_test_main_finds`, `a_false_entry_from_a_misjudged_attribute_close_is_flagged_and_still_listed`, `a_string_parity_flip_can_lose_the_gain_but_never_loses_what_main_finds`.
+
+## Amendment 7 — withdrawn-test rows (class 1, round 15(g))
+
+Authority: round 20, item 1 (entry 134); carrier: round 18, item 4. Names: Amendment 6's superseded index.
+
+- withdrawn-test: `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md:17` @ 90de3e94924f8d4d7a0307de0092fe5b5fc61095 sha256:bb089074c55924bb1e094817eb60d292ef9b342b3bb22749227c9fb205ae0eb4; ruling: round 20, item 1; carrier: round 18, item 4
+- withdrawn-test: `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md:39` @ 90de3e94924f8d4d7a0307de0092fe5b5fc61095 sha256:887fc52d3f9c88a31091d7d9a263e7ebd66a8a75c3dc93954882936c1501caba; ruling: round 20, item 1; carrier: round 18, item 4
+- withdrawn-test: `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md:45` @ 90de3e94924f8d4d7a0307de0092fe5b5fc61095 sha256:7781a7a643d8a14a6735c9323de360986f085f671f087f264c5895fe8203ef87; ruling: round 20, item 1; carrier: round 18, item 4
+- withdrawn-test: `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md:61` @ 90de3e94924f8d4d7a0307de0092fe5b5fc61095 sha256:0e558819d447d7ccadc592e2cc295f14af4ba91eb9236ea2747f912a56b865f7; ruling: round 20, item 1; carrier: round 18, item 4
+- withdrawn-test: `scripts/plan/VERIFY-MUTATION-MULTILINE-ATTRS-PREREGISTRATION.md:63` @ 90de3e94924f8d4d7a0307de0092fe5b5fc61095 sha256:56bf96da553eea9046dc335b053b7feaaa488834619d25ff6753959a93a8a68f; ruling: round 20, item 1; carrier: round 18, item 4

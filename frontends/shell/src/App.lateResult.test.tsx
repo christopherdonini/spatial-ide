@@ -168,6 +168,11 @@ function describeFixture(): import("./skp/types").DescribeResponse {
     extent: { basis: "not-established-at-open", value: null },
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
     sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
+    // skp/0.5, the advisory source-change watcher: additive, so this builder keeps the wire's
+    // baseline (unpopulated) shape.
+    coverage: { state: "watching", reason: null },
+    checks: { state: "full", components: [] },
+    session_end: null,
   };
 }
 
@@ -190,7 +195,10 @@ vi.mock("./skp/client", () => {
     SkpCallError,
     openDataset: async (): Promise<import("./skp/types").OpenDatasetResponse> => {
       mintCounter += 1;
-      return { dataset: `ds_${mintCounter.toString(16).padStart(32, "0")}` };
+      return {
+        dataset: `ds_${mintCounter.toString(16).padStart(32, "0")}`,
+        session: `sr_${mintCounter.toString(16).padStart(32, "0")}`,
+      };
     },
     describe: async (): Promise<import("./skp/types").DescribeResponse> => describeFixture(),
     closeDataset: async (): Promise<import("./skp/types").CloseDatasetResponse> => ({ cancelled_streams: 0 }),
@@ -201,6 +209,16 @@ vi.mock("./skp/client", () => {
     },
   };
 });
+
+// `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: `App`'s own `[]`-effect now registers the real
+// `dataset_session_ended` listener (`skp/events.ts::listenDatasetSessionEnded`), which reaches
+// `@tauri-apps/api/event`'s `listen` -- unavailable in this jsdom suite, which has no Tauri IPC
+// shim. Mocked at the module boundary, the same discipline `./skp/client` gets above: a no-op
+// listener that resolves to an unlisten function and never calls back, since no test in this file
+// exercises the event route itself.
+vi.mock("./skp/events", () => ({
+  listenDatasetSessionEnded: async () => () => {},
+}));
 
 // The baseline stream-manager boundary. Every `RequestOutcome` promise this suite drives is a
 // deferred this file controls directly (`viewportMockState` above). `stop()` now honours the real
@@ -514,7 +532,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // discriminating fact from everything else in the sequence.
   //
   // RECORDED MUTATION for "an engine.source_changed rejection issued FOR the live generation still ends it -- the guard is generation-specific, not a dead path":
-  // remove `if (isSourceChangedRefusal(e)) endSession(refusalDetailOf(e), forDataset);` from `reportViewportOutcome`'s rejected arm
+  // remove `if (isSessionEndedRefusal(e)) endSession(refusalDetailOf(e), forDataset);` from `reportViewportOutcome`'s rejected arm
   // entirely (App.tsx). Expected failure: B's own `engine.source_changed` rejection no longer ends B's session at all.
   // OBSERVED 2026-09-23: FAILED -- AssertionError: expected null not to be null. Reverted after observing.
   it("an engine.source_changed rejection issued FOR the live generation still ends it -- the guard is generation-specific, not a dead path", async () => {
@@ -527,6 +545,31 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
     expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
     expect(container.querySelector(".canvas-session-ended .admission-refusal-code")?.textContent).toBe("engine.source_changed");
+    expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
+  });
+
+  // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH4: the same control, on the advisory watch's
+  // own code -- `isSessionEndedRefusal` (renamed §2d) matches it too, never only
+  // `engine.source_changed` (block-on-sight 3 is a kernel-side rule; this is its client mirror).
+  //
+  // RECORDED MUTATION for the test below: narrow
+  // `reportViewportOutcome`'s guard back to `e.skpError.code === "engine.source_changed"` (undoing
+  // the §2d rename's widening). Expected failure: the first assertion below fails -- no
+  // `.canvas-session-ended` block appears.
+  it("an engine.source_coverage_lost pre-check refusal also ends the session", async () => {
+    const handleA = await openPathAndCaptureHandle();
+    const handleB = await openPathAndCaptureHandle();
+    expect(handleB).not.toBe(handleA);
+
+    await rejectFirstRequest(
+      handleB,
+      new SkpCallError({ code: "engine.source_coverage_lost", message: "coverage was lost", fields: {} })
+    );
+
+    expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
+    expect(container.querySelector(".canvas-session-ended .admission-refusal-code")?.textContent).toBe(
+      "engine.source_coverage_lost"
+    );
     expect(container.querySelector(".hover-readout-session-ended")).not.toBeNull();
   });
 

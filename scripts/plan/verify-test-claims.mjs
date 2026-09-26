@@ -43,11 +43,11 @@
 // actually assert what the prose says (this checks the name exists, not its body); a fabricated claim
 // that reuses an existing test's name; and, by the conservative recognizer, a test claim phrased
 // without a narrative prefix AND far from the word "test" (a recall gap, not a false alarm). Node's
-// standard library only. SUPERSEDED (below) adds one more, disclosed rather than mechanized (byte-
-// copied from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 2, itself item 1's own
-// closing sentence): "That the obligation moved rather than vanished is proven by the record's own
-// rows and read by the gate, not by this tool; a claim marked superseded with no replacement anywhere
-// in the file is a defect this check does not catch, disclosed here."
+// standard library only. SUPERSEDED (below) adds one more, disclosed rather than mechanized (adopted
+// from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 2, itself item 1's own closing
+// sentence): that the obligation moved rather than vanished is proven by the record's own rows and
+// read by the gate, not by this tool; a claim marked superseded with no replacement anywhere in the
+// file is a defect this check does not catch, disclosed here.
 //
 // SUPERSEDED (TEST-CLAIMS-SUPERSEDED-PREREGISTRATION.md; the human, round 14 item 2 -- a pinned
 // `path:line @ <rev> sha256:<hex>` reference is a historical pin, never silently read as current; the
@@ -57,15 +57,23 @@
 // historical text also names the claim, and whose commit is shown to be on main -- an append-only
 // record's own later row PROVING, not merely asserting, "this line is old, and a rename happened".
 // Five conditions, all required: (a) the reference's line range covers L; (b) the word `superseded`
-// sits on the reference's own line, outside any backtick span; (c) the hash recomputes against
-// `git show <rev>:F`'s own historical bytes; (d) those same historical bytes contain the claimed name
-// (a pin that hashes a line it already has, without ever naming the claim, exempts nothing it was not
-// written to explain -- architect gate, attempt 1, B1); (e) `<rev>` is shown to be an ancestor of
-// `origin/main` -- REFUSED, not merely unproven, when it is not (a rev not yet on main is not
-// something main's own record can rely on surviving a squash/rebase merge -- reviewer gate, attempt 1,
-// S3), SKIPPED rather than failed when `origin/main` does not resolve in the scanned tree at all (true
-// of every unit-test fixture here). Recognized by `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s
-// own reference grammar (round 12's "quote by reference" mechanism) as it stands on
+// or `Superseded` -- exactly those two castings, refused in ALL CAPS and refused when the whole word
+// immediately before it is `not`/`never`, in either capitalization (§2.6,
+// TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md) -- sits on the reference's own line, outside any backtick
+// span; (c) the hash recomputes against `git show <rev>:F`'s own historical bytes; (d) the claim's OWN
+// historical LINE -- not the whole pinned span (§2.3, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md's wide-
+// span residual; a single-line pin is unaffected) -- contains the claimed name (a pin that hashes a
+// line it already has, without ever naming the claim, exempts nothing it was not written to explain --
+// architect gate, attempt 1, B1); (e) `<rev>` is shown to be an ancestor of `origin/main` -- REFUSED,
+// not merely unproven, when it is not (a rev not yet on main is not something main's own record can
+// rely on surviving a squash/rebase merge -- reviewer gate, attempt 1, S3), SKIPPED rather than failed
+// when `origin/main` does not resolve in the scanned tree at all (true of most unit-test fixtures
+// here; `supersededFixtureWithRemote`/`withdrawnFixtureWithRemote` are the two that now carry a real
+// bare `origin` remote, testing the REFUSED branch instead). A `<rev>` that merely LOOKS like a commit
+// id (`COMMIT_ID_RE`) but does not RESOLVE to one -- a hex-named branch or tag -- is refused the same
+// way as a non-commit `<rev>` (§2.4, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; see
+// `revResolvesToCommit`). Recognized by `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s
+// own reference grammar (round 12, item 1's quote-by-reference mechanism) as it stands on
 // `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (round 15(c): a record
 // statement about a tool's behaviour names the tool's commit) -- see that constant's own comment for
 // the one grammar-level divergence this tool keeps (the path group is REQUIRED) and the policy layer
@@ -139,12 +147,11 @@ export function extractClaimedTests(text) {
 // `HASH_REF_RE`, DERIVED FROM `verify-quotes.mjs`'s own `HASH_REF_RE` as it stands on
 // `governance/verify-quotes` @ 1254cddd4c3b47c9431375874ad327754ef038e9 (its `GAP`/`HASH_REF_RE`
 // constants, lines 554 and 555 at that commit -- round 19 item 2's correction (attempt-2 reviewer
-// gate, entry 133): the earlier text read 553/554, one line short of each constant's own opening
-// line -- not written as a `path:line` token here, since that
-// file is not tracked on this branch and `verify-cites.mjs` (as it stands on `main` @
-// 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f, round 15(c): a tool claim names the tool's commit)
-// resolves every such token against the CURRENT tree, gate S4/N4's own disclosed limit). `GAP` is
-// that source's own
+// gate, `state/gate-log.json` index 87): the earlier text read 553/554, one line short of each
+// constant's own opening line -- not written as a `path:line` token here: that file is tracked as of
+// 6191a7c, but `verify-cites.mjs` (as it stands on `main` @ 7104cd3a2f961e6e1fa0073c1df77f9d3dea2f7f,
+// round 15(c): a tool claim names the tool's commit) resolves every such token against the CURRENT
+// tree, not the pinned historical commit, gate S4/N4's own disclosed limit). `GAP` is that source's own
 // name and definition, standing in for a plain `\s*` so a reference rustfmt (or, here, a table cell)
 // has wrapped across exactly one `//`-comment continuation still binds, exactly as the source binds
 // it. ONE necessary grammar-level divergence, and the only one kept: group 2 (path) is REQUIRED --
@@ -153,9 +160,10 @@ export function extractClaimedTests(text) {
 // rule already requires a real self-referencing pin to spell the file's own path in full, so nothing
 // this tool needs to recognize is lost by requiring it. `<rev>` (group 5) is matched at the GRAMMAR
 // level exactly as the source matches it (any non-whitespace, non-backtick run, optional) -- this
-// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans`
-// below, not in the shared pattern, because that policy is this tool's own exemption to refuse, not a
-// property of the reference shape itself (round 15(e); architect/reviewer gate, attempt 1, B1/B2).
+// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans` and
+// `computeWithdrawnRows` below, not in the shared pattern, because that policy is this tool's own
+// exemption to refuse, not a property of the reference shape itself (round 15(e); architect/reviewer
+// gate, attempt 1, B1/B2).
 const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
 const HASH_REF_RE = new RegExp(
   '(byte-copied from\\s+)?`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\\d+)(?:-(\\d+))?`?' +
@@ -170,6 +178,32 @@ const HASH_REF_RE = new RegExp(
 // passed to `execFileSync`).
 const COMMIT_ID_RE = /^[0-9a-f]{7,40}$/;
 
+// §2.4's rev resolution (TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; index 87; index 171 S4): a `<rev>`
+// that merely LOOKS like a commit id (passes `COMMIT_ID_RE`, a grammar-level, format-only check)
+// exempts only when it also RESOLVES to one -- `git rev-parse --verify --quiet <rev>^{commit}`
+// succeeds and the resolved id begins with the literal `<rev>` typed. This refuses a HEX-NAMED branch
+// or tag: a ref whose own NAME happens to be a run of hex digits resolves to whatever commit that ref
+// currently points at, not to a commit BY that id -- exactly the "read as current" round 14's
+// root-cause rule forbids. Memoized by (root, rev).
+const revResolvesCache = new Map();
+function revResolvesToCommit(root, rev) {
+  const key = `${root}\u0000${rev}`;
+  if (revResolvesCache.has(key)) return revResolvesCache.get(key);
+  let ok = false;
+  try {
+    const resolved = execFileSync('git', ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+    ok = resolved.startsWith(rev);
+  } catch {
+    ok = false;
+  }
+  revResolvesCache.set(key, ok);
+  return ok;
+}
+
 function lineTextOf(text, lineNo) {
   return text.split('\n')[lineNo - 1] ?? '';
 }
@@ -183,21 +217,46 @@ function lineTextOf(text, lineNo) {
 // delimiters form, leaving the word between them (`` ``superseded`` ``) wrongly read as outside.
 const BACKTICK_SPAN_RE = /(`{1,2})(?:(?!\1)[\s\S])*?\1/g;
 
-/** Condition (b): the word `superseded` appears on the reference's own line, outside any backtick span. */
+// Condition (b)'s word (§2.6, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; index 87; round 23 item 4, O6
+// as recommended): `superseded` or `Superseded` as a WHOLE word -- exactly those two castings; ALL
+// CAPS (`SUPERSEDED`) and any other casing are refused -- and refused, whichever casing, when the
+// whole word immediately before it (case-insensitive) is `not` or `never`.
+const SUPERSEDED_WORD_RE = /\b[Ss]uperseded\b/g;
+
+/** Condition (b): the word `superseded`/`Superseded` appears on the reference's own line, outside any
+ * backtick span, and is not negated by an immediately preceding `not`/`never` (§2.6). */
 function containsSupersededOutsideBackticks(lineText) {
-  return /\bsuperseded\b/i.test(lineText.replace(BACKTICK_SPAN_RE, ''));
+  const stripped = lineText.replace(BACKTICK_SPAN_RE, '');
+  SUPERSEDED_WORD_RE.lastIndex = 0;
+  let m;
+  while ((m = SUPERSEDED_WORD_RE.exec(stripped))) {
+    const prevWord = /([A-Za-z]+)\s*$/.exec(stripped.slice(0, m.index))?.[1]?.toLowerCase();
+    if (prevWord !== 'not' && prevWord !== 'never') return true;
+  }
+  return false;
+}
+
+// The withdrawn-test marker (round 20 item 1; `state/consults/2026-09-24-withdrawn-marker.md` §1):
+// NOT a bare `withdrawn` -- landed records already carry that word on lines that pin their own file
+// (round 15(g) withdrawal rows), so a bare-word marker would turn main red. Matched case-sensitively,
+// outside any backtick span, with no word or hyphen character adjacent on either side (so
+// `non-withdrawn-test` or `withdrawn-testing` do not match).
+const WITHDRAWN_TEST_TOKEN_RE = /(?<![A-Za-z0-9_-])withdrawn-test(?![A-Za-z0-9_-])/;
+function containsWithdrawnTestOutsideBackticks(lineText) {
+  return WITHDRAWN_TEST_TOKEN_RE.test(lineText.replace(BACKTICK_SPAN_RE, ''));
 }
 
 /**
- * Every hash-pinned, `superseded`-marked, EXPLICIT-commit-rev reference in `text` whose path is
- * `relPath` itself (F's own path) -- conditions (a) and (b) of the rule, NOT (c)/(d)/(e) (checked
- * lazily, per claim, in `findSupersededSpan`, so a file with no matching claim never pays for a
- * `git show`). A reference with no `@ <rev>`, or whose `<rev>` is not a bare commit id, is never a
- * span at all: the HEAD default the shared grammar would otherwise apply is this tool's own exemption
- * to refuse (round 15(e); attempt-1 B1/B2), not a property to inherit from the source.
- * Returns [{ startLine, endLine, rev, hash, reference }].
+ * Every hash-pinned, EXPLICIT-commit-rev reference in `text` whose path is `relPath` itself (F's own
+ * path) and whose own line satisfies `containsMarker` -- conditions (a) and (b) of the SUPERSEDED rule,
+ * NOT (c)/(d)/(e) (checked lazily, per claim, in `findMarkedSpan`, so
+ * a file with no matching claim never pays for a `git show`). A reference with no `@ <rev>`, or whose
+ * `<rev>` is not a bare commit id, is never a span at all: the HEAD default the shared grammar would
+ * otherwise apply is this tool's own exemption to refuse (round 15(e); attempt-1 B1/B2), not a
+ * property to inherit from the source. Returns
+ * `[{ startLine, endLine, rev, hash, reference, lineText }]`.
  */
-function supersededSpans(relPath, text) {
+function markedSpans(relPath, text, containsMarker) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
   let m;
@@ -206,16 +265,24 @@ function supersededSpans(relPath, text) {
     const rev = m[5];
     if (!rev || !COMMIT_ID_RE.test(rev)) continue;
     const refLine = lineOf(text, m.index);
-    if (!containsSupersededOutsideBackticks(lineTextOf(text, refLine))) continue;
-    out.push({
-      startLine: Number(m[3]),
-      endLine: m[4] !== undefined ? Number(m[4]) : Number(m[3]),
-      rev,
-      hash: m[6].toLowerCase(),
-      reference: m[0],
-    });
+    const lineText = lineTextOf(text, refLine);
+    if (!containsMarker(lineText)) continue;
+    const startLine = Number(m[3]);
+    const endLine = m[4] !== undefined ? Number(m[4]) : Number(m[3]);
+    out.push({ startLine, endLine, rev, hash: m[6].toLowerCase(), reference: m[0], lineText });
   }
   return out;
+}
+
+/** SUPERSEDED's own spans (round 14 item 2). Excludes any line also marked `withdrawn-test`
+ * (the consult's Row-grammar precedence: a withdrawn row that fails its own riders must not fall
+ * back to exempting as superseded). */
+function supersededSpans(relPath, text) {
+  return markedSpans(
+    relPath,
+    text,
+    (lineText) => containsSupersededOutsideBackticks(lineText) && !containsWithdrawnTestOutsideBackticks(lineText),
+  );
 }
 
 // Memoized by (root, rev, relPath): the motivating record alone carries ten spans over one file, and
@@ -254,7 +321,8 @@ function sha256Hex(s) {
 }
 
 // Condition (e): memoized per `root`, `origin/main`'s own commit id, or `null` when that ref does not
-// resolve in the scanned tree at all (true of every unit-test fixture below -- none carries a remote).
+// resolve in the scanned tree at all (true of most unit-test fixtures below;
+// `supersededFixtureWithRemote`/`withdrawnFixtureWithRemote` are the two that carry one).
 const originMainCache = new Map();
 function originMainSha(root) {
   if (originMainCache.has(root)) return originMainCache.get(root);
@@ -275,44 +343,294 @@ function originMainSha(root) {
  * exemption and turning main red on a landed piece -- attempt-1 reviewer/architect S3; refusing here
  * is the fail-closed direction). Returns `{ checked, ok }`; `checked: false` when `origin/main` does
  * not resolve at all -- the caller SKIPS the condition rather than failing it, and is responsible for
- * surfacing that once (see `runVerifyTestClaims`'s `supersededMainUnchecked`).
+ * surfacing that once (see `runVerifyTestClaims`'s `supersededMainUnchecked`). Memoized by (root, rev)
+ * (§2.5, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; index 87; index 171 S4).
  */
+const ancestorOfMainCache = new Map();
 function isAncestorOfMain(root, rev) {
   const mainSha = originMainSha(root);
   if (!mainSha) return { checked: false, ok: false };
+  const key = `${root}\u0000${rev}`;
+  if (ancestorOfMainCache.has(key)) return ancestorOfMainCache.get(key);
+  let result;
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', rev, mainSha], { cwd: root, stdio: 'ignore' });
-    return { checked: true, ok: true };
+    result = { checked: true, ok: true };
   } catch {
-    return { checked: true, ok: false };
+    result = { checked: true, ok: false };
   }
+  ancestorOfMainCache.set(key, result);
+  return result;
 }
 
 /**
- * Conditions (c)-(e), checked against `spans` in order; the first span satisfying all three wins.
- * (c) the hash recomputes against `git show <rev>:relPath`'s own historical bytes. (d) those same
- * historical bytes CONTAIN the claimed `name` -- attempt-1 architect B1: a pin that merely hashes a
- * line it already has, without the claimed name ever appearing in it, exempts nothing it was written
- * to explain. (e) `isAncestorOfMain` above. A span outside `line`'s range, an unresolvable rev/path, a
- * hash mismatch, a span missing the claimed name, or a rev shown NOT to be on main is not a match --
- * the claim stays a binding finding (or planned), exactly as if no pin existed.
+ * Conditions (r), (c)-(e), checked against `spans` in order; the first span satisfying all wins.
+ * (r) `revResolvesToCommit` (§2.4). (c) the hash recomputes against `git show <rev>:relPath`'s own
+ * historical bytes. (d) the claim's OWN historical LINE -- `line`, not the whole `[startLine,endLine]`
+ * span (§2.3's wide-span residual, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md; a single-line pin, where
+ * `line === startLine === endLine`, is unaffected) -- CONTAINS the claimed `name` -- attempt-1
+ * architect B1: a pin that merely hashes a line it already has, without the claimed name ever
+ * appearing in it, exempts nothing it was written to explain. (e) `isAncestorOfMain` above. A span
+ * outside `line`'s range, an unresolvable rev/path, a hash mismatch, a claim line missing the claimed
+ * name, or a rev shown NOT to be on main is not a match -- the claim stays a binding finding (or
+ * planned), exactly as if no pin existed.
  * Returns `{ span, mainUnchecked }` (`span: null` when nothing matched); `mainUnchecked` is true when
  * condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
  */
-function findSupersededSpan(root, relPath, line, name, spans) {
+function findMarkedSpan(root, relPath, line, name, spans, extra) {
   for (const span of spans) {
     if (line < span.startLine || line > span.endLine) continue;
+    if (!revResolvesToCommit(root, span.rev)) continue;
     const content = gitShowFile(root, span.rev, relPath);
     if (content === null) continue;
     const slice = linesWithLF(content, span.startLine, span.endLine);
     if (slice === null) continue;
     if (sha256Hex(slice) !== span.hash) continue;
-    if (!slice.includes(name)) continue;
+    const claimLine = linesWithLF(content, line, line);
+    if (claimLine === null || !claimLine.includes(name)) continue;
     const anc = isAncestorOfMain(root, span.rev);
     if (anc.checked && !anc.ok) continue;
+    if (extra && !extra(span)) continue;
     return { span, mainUnchecked: !anc.checked };
   }
   return { span: null, mainUnchecked: false };
+}
+
+function findSupersededSpan(root, relPath, line, name, spans) {
+  return findMarkedSpan(root, relPath, line, name, spans);
+}
+
+// Rider (a)/(b), mechanically (round 20 item 1; consult §2/§3): resolved once against the CURRENT
+// tree's DECISIONS-PENDING.md -- never pinned by hash, because the ledger is never cited by line or
+// pinned (round 12(a), round 14(a')). "Names the removal" is read by the gate, not checked here (the
+// README's boundary paragraph discloses this, as SUPERSEDED's replacement half is disclosed).
+const decisionsPendingCache = new Map();
+function loadDecisionsPending(root) {
+  if (decisionsPendingCache.has(root)) return decisionsPendingCache.get(root);
+  let text = null;
+  try {
+    text = fs.readFileSync(path.join(root, 'DECISIONS-PENDING.md'), 'utf8');
+  } catch {
+    text = null;
+  }
+  decisionsPendingCache.set(root, text);
+  return text;
+}
+
+// A line starting `**RULED <date>[ (...)] — question round N` -- the RULED block header.
+const RULED_HEADER_RE = /^\*\*RULED \d{4}-\d{2}-\d{2}(?: \([^)]*\))? — question round (\d+)/;
+// A line `- *Item M —` at column 0, inside a RULED block.
+const RULED_ITEM_RE = /^- \*Item (\d+) —/;
+// The next block/heading boundary that closes a RULED block's own span.
+const BLOCK_BOUNDARY_RE = /^(\*\*|## )/;
+
+/** `round N, item M` resolves when N's own RULED header exists and item M sits inside its block. */
+function ledgerRoundItemResolves(ledgerText, round, item) {
+  const lines = ledgerText.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const hm = RULED_HEADER_RE.exec(lines[i]);
+    if (!hm || Number(hm[1]) !== round) continue;
+    for (let j = i + 1; j < lines.length; j++) {
+      if (BLOCK_BOUNDARY_RE.test(lines[j])) break;
+      const im = RULED_ITEM_RE.exec(lines[j]);
+      if (im && Number(im[1]) === item) return true;
+    }
+  }
+  return false;
+}
+
+/** `entry K` resolves when a line starting `K. **[RULED` exists (the custodian's reading of rider (a)'s
+ * "or entry id" form -- `state/consults/2026-09-24-withdrawn-marker.md`, Custodian's notes, item 1). */
+function ledgerEntryResolves(ledgerText, entry) {
+  const re = new RegExp('^' + entry + '\\.\\s*\\*\\*\\[RULED');
+  return ledgerText.split('\n').some((l) => re.test(l));
+}
+
+const CITATION_RE = /round\s+(\d+)\s*,\s*item\s+(\d+)|entry\s+(\d+)/i;
+
+/** Resolves a `round N, item M` or `entry K` citation string against the ledger text. */
+function resolveCitation(ledgerText, citationText) {
+  if (ledgerText === null) return false;
+  const m = CITATION_RE.exec(citationText ?? '');
+  if (!m) return false;
+  if (m[3] !== undefined) return ledgerEntryResolves(ledgerText, Number(m[3]));
+  return ledgerRoundItemResolves(ledgerText, Number(m[1]), Number(m[2]));
+}
+
+// Round 21 item 2 (entry 136), should-fix (a): `ruling:`/`carrier:` are matched as WHOLE keys --
+// `(?<![A-Za-z0-9_-])` refuses a match starting mid-word (`overruling:`, `miscarrier:`) -- outside any
+// backtick span (`withdrawnRiders` strips `BACKTICK_SPAN_RE` before matching, the same discipline
+// `containsSupersededOutsideBackticks` uses), and the citation text after the key must be EXACTLY
+// `round N, item M` or `entry K` with nothing else on either side (`CITATION_EXACT_RE`, anchored with
+// `^`/`$`): a leading `not `, or trailing prose, is refused rather than read as containing a valid
+// citation -- anchored to the consult's own row grammar (`state/consults/2026-09-24-withdrawn-marker.md`
+// §1: "ruling: round N, item M; carrier: round N, item M").
+const CITATION_TEXT_SRC = '(?:round\\s+\\d+\\s*,\\s*item\\s+\\d+|entry\\s+\\d+)';
+const CITATION_EXACT_RE = new RegExp(`^${CITATION_TEXT_SRC}$`, 'i');
+const KEY_NOT_MIDWORD = '(?<![A-Za-z0-9_-])';
+const WITHDRAWN_RULING_RE = new RegExp(`${KEY_NOT_MIDWORD}ruling:\\s*([^;]*)`, 'i');
+const WITHDRAWN_CARRIER_RE = new RegExp(`${KEY_NOT_MIDWORD}carrier:\\s*(.*)$`, 'i');
+
+/**
+ * Riders (a) and (b) (round 20 item 1; anchoring per round 21 item 2): the withdrawn-test row's own
+ * line must carry a whole `ruling:` key outside any backtick span, whose citation text is EXACTLY
+ * `round N, item M` or `entry K` and resolves against the current tree's `DECISIONS-PENDING.md`; the
+ * same for `carrier:`. Returns `{ ok: true, ruling, carrier }` when both hold, or `{ ok: false,
+ * failure }` naming exactly what's wrong -- `no ruling` / `unresolvable ruling: <text>` / `no carrier`
+ * / `unresolvable carrier: <text>` -- so a caller can name the row's own file:line and the unresolved
+ * citation text (or "no carrier") in a finding, per round 20, item 1, riders (a) and (b).
+ */
+function withdrawnRiders(root, lineText) {
+  const outside = lineText.replace(BACKTICK_SPAN_RE, '');
+  const rulingMatch = WITHDRAWN_RULING_RE.exec(outside);
+  if (!rulingMatch) return { ok: false, failure: 'no ruling' };
+  const rulingText = rulingMatch[1].trim();
+  if (!CITATION_EXACT_RE.test(rulingText) || !resolveCitation(loadDecisionsPending(root), rulingText)) {
+    return { ok: false, failure: `unresolvable ruling: ${rulingText}` };
+  }
+  const carrierMatch = WITHDRAWN_CARRIER_RE.exec(outside);
+  if (!carrierMatch) return { ok: false, failure: 'no carrier' };
+  const carrierText = carrierMatch[1].trim();
+  if (!CITATION_EXACT_RE.test(carrierText) || !resolveCitation(loadDecisionsPending(root), carrierText)) {
+    return { ok: false, failure: `unresolvable carrier: ${carrierText}` };
+  }
+  return { ok: true, ruling: rulingText, carrier: carrierText };
+}
+
+/** withdrawn-test's own (c)-(e) plus riders (a)/(b); attaches `ruling`/`carrier` onto the winning span. */
+function findWithdrawnTestSpan(root, relPath, line, name, spans) {
+  return findMarkedSpan(root, relPath, line, name, spans, (span) => {
+    const riders = withdrawnRiders(root, span.lineText);
+    if (!riders.ok) return false;
+    span.ruling = riders.ruling;
+    span.carrier = riders.carrier;
+    return true;
+  });
+}
+
+// Row position (round 22 item 3; round 23 item 4's O1 line; §2.1(a), the only copy of this predicate
+// -- TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md §7): a withdrawn-test ROW is a line whose first two
+// bytes are `- `, the marker token following immediately, followed by a byte outside
+// `[A-Za-z0-9_-]` or the line's end. The colon after the marker is NOT part of this predicate. Only a
+// line in row position is a withdrawal ATTEMPT; a line carrying the token anywhere else (a heading, a
+// prose mention, a bullet whose first word is not the marker) is a MENTION -- neither accepted nor
+// refused (§2.1(b)).
+const ROW_POSITION_RE = /^- withdrawn-test(?![A-Za-z0-9_-])/;
+
+/** Every hash-pinned reference in `text`, keyed by the line its match STARTS on (first-seen wins,
+ * i.e. the leftmost/first reference on that line, per §7) -- unfiltered by path/rev shape, so a row's
+ * own grammar refusal reason (§7) can be read from whatever reference it actually carries. */
+function firstHashRefsByLine(text) {
+  const byLine = new Map();
+  HASH_REF_RE.lastIndex = 0;
+  let m;
+  while ((m = HASH_REF_RE.exec(text))) {
+    const line = lineOf(text, m.index);
+    if (byLine.has(line)) continue;
+    byLine.set(line, {
+      path: m[2],
+      startLine: Number(m[3]),
+      endLine: m[4] !== undefined ? Number(m[4]) : Number(m[3]),
+      rev: m[5],
+      hash: m[6] ? m[6].toLowerCase() : undefined,
+      full: m[0],
+    });
+  }
+  return byLine;
+}
+
+/**
+ * §2.2's pin conditions (r), (c), (d), (e), checked in that order against ONE candidate reference on
+ * an already grammar-accepted withdrawn-test row (own path, single line, commit-id-shaped rev).
+ * (r) `revResolvesToCommit` (§2.4). (c) the pinned line's hash recomputes. (d) that same historical
+ * line, read by `extractClaimedTests`, names at least one test -- the row-level analogue of
+ * `findMarkedSpan`'s per-claim condition (d), generic rather than name-specific because a row is
+ * checked on its own, independent of any one claim (§2.2). (e) `isAncestorOfMain`, SKIPPED (not
+ * failed) when `origin/main` does not resolve. Returns `{ ok: true, mainUnchecked }` or `{ ok: false,
+ * reason }` using §7's exact pin-refusal text; `mainUnchecked` is true when condition (e) could not run
+ * at all (no `origin/main` in the scanned tree) for a row that otherwise held -- the caller ORs this
+ * into `withdrawnMainUnchecked` the same way a per-claim exemption's own SKIP does.
+ */
+function withdrawnRowPinCondition(root, relPath, ref) {
+  if (!revResolvesToCommit(root, ref.rev)) return { ok: false, reason: 'refused: rev is not a commit' };
+  const content = gitShowFile(root, ref.rev, relPath);
+  const slice = content === null ? null : linesWithLF(content, ref.startLine, ref.endLine);
+  if (slice === null || sha256Hex(slice) !== ref.hash) return { ok: false, reason: 'refused: hash does not recompute' };
+  if (extractClaimedTests(slice).length === 0) return { ok: false, reason: 'refused: pinned line names no test' };
+  const anc = isAncestorOfMain(root, ref.rev);
+  if (anc.checked && !anc.ok) return { ok: false, reason: 'refused: rev not on main' };
+  return { ok: true, mainUnchecked: !anc.checked };
+}
+
+/**
+ * Round 22 item 3 / round 23 item 4 (§2.1, §2.2, TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md): every
+ * withdrawn-test ROW -- a line in ROW POSITION (`ROW_POSITION_RE`), whatever it otherwise reads like
+ * -- is resolved on its own, independent of any claim, whatever the state of any claim on its pinned
+ * line and whatever its node's status. A row that fails its own grammar (no pinned reference, another
+ * file's path, no commit-id rev, a line range -- §7, checked in that order on the first reference that
+ * starts on the row's own line) or its own pin conditions (`withdrawnRowPinCondition`) yields a
+ * `withdrawn-row` finding at the row's own line, the grammar/pin reason first, any rider failure
+ * appended after `; ` (§7); both riders are always read on the row's own line, in one call (§2.1(d)).
+ * A row whose grammar and pin conditions both hold but whose riders fail yields the rider-failure text
+ * alone, unchanged from round 21 item 2's own shape. A row that fully holds (grammar, pin conditions
+ * AND riders) is never a finding and becomes a candidate for per-claim exemption
+ * (`findWithdrawnTestSpan`). Returns `{ findings, validSpans, invalidRowLines }` -- `invalidRowLines`
+ * is the Set of PINNED target lines (`ref.startLine`) for a row that passed grammar (own path, single
+ * line, commit-id-shaped rev) but then failed its pin conditions or its riders, so the per-claim loop
+ * does not also report that row's own defect as an ordinary "not found" claim (round 21 item 2); a row
+ * refused at the grammar level never joins it -- a reference naming another file's path, or a range,
+ * was never capable of exempting anything in the first place, so nothing needs suppressing for it
+ * (§5's invalidator: P2(b) differs recorded, not stopped -- a mention is not an attempt, and the same
+ * reasoning keeps a grammar-refused row from swallowing an unrelated claim's own finding).
+ */
+function computeWithdrawnRows(root, relPath, text) {
+  const findings = [];
+  const validSpans = [];
+  const invalidRowLines = new Set();
+  let mainUnchecked = false;
+  const refsByLine = firstHashRefsByLine(text);
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const lineText = lines[i];
+    if (!ROW_POSITION_RE.test(lineText)) continue;
+    const lineNo = i + 1;
+    const ref = refsByLine.get(lineNo);
+    let reason;
+    let grammarAccepted = false;
+    if (!ref) {
+      reason = 'refused: no pinned reference';
+    } else if (ref.path !== relPath) {
+      reason = "refused: another file's path";
+    } else if (!ref.rev || !COMMIT_ID_RE.test(ref.rev)) {
+      reason = 'refused: no commit-id rev';
+    } else if (ref.startLine !== ref.endLine) {
+      reason = 'refused: a line range';
+    } else {
+      grammarAccepted = true;
+      const pin = withdrawnRowPinCondition(root, relPath, ref);
+      if (!pin.ok) reason = pin.reason;
+      else if (pin.mainUnchecked) mainUnchecked = true;
+    }
+    const riders = withdrawnRiders(root, lineText);
+    const ok = reason === undefined && riders.ok;
+    if (grammarAccepted && !ok) invalidRowLines.add(ref.startLine);
+    if (ok) {
+      validSpans.push({
+        startLine: ref.startLine,
+        endLine: ref.endLine,
+        rev: ref.rev,
+        hash: ref.hash,
+        reference: ref.full,
+        lineText,
+        ruling: riders.ruling,
+        carrier: riders.carrier,
+      });
+      continue;
+    }
+    const message = reason === undefined ? riders.failure : riders.ok ? reason : `${reason}; ${riders.failure}`;
+    findings.push({ relPath, line: lineNo, kind: 'withdrawn-row', message });
+  }
+  return { findings, validSpans, invalidRowLines, mainUnchecked };
 }
 
 const RUST_FN_RE = /\bfn\s+([a-z_][A-Za-z0-9_]*)/g;
@@ -392,15 +710,40 @@ export function plannedGateFiles(plan) {
 }
 
 /**
- * Returns { findings, planned, superseded, scanned, claims, supersededMainUnchecked }. Each entry:
- * { relPath, line, name } (`superseded` entries additionally carry `reference`, the matched pin text).
- * `plannedGates` is a Set of repo-relative paths whose unmatched claims are advisory, not binding
- * (see PLANNED vs BINDING above); anything not in it is binding. A claim that does not exist is
- * SUPERSEDED, and reported under that heading instead of `planned`/`findings`, when the claiming
- * file's own text pins that exact line as historical and proves it (see the module's own SUPERSEDED
- * disclosure above and `supersededSpans`/`findSupersededSpan`) — checked whether or not the file is
- * also planned. `supersededMainUnchecked` is true when at least one superseded claim's condition (e)
- * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim.
+ * Returns { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked,
+ * withdrawnMainUnchecked }. A claim entry is { relPath, line, name, kind: 'claim' } (`superseded`/
+ * `withdrawn` entries additionally carry `reference`, the matched pin text; `withdrawn` entries also
+ * carry `ruling` and `carrier`, the two resolved citations). `plannedGates` is a Set of repo-relative
+ * paths whose unmatched claims are advisory, not binding (see PLANNED vs BINDING above); anything not
+ * in it is binding. A claim that does not exist is SUPERSEDED, and reported under that heading instead
+ * of `planned`/`findings`, when the claiming file's own text pins that exact line as historical and
+ * proves it (see the module's own SUPERSEDED disclosure above and `supersededSpans`/
+ * `findSupersededSpan`) — checked whether or not the file is also planned. A claim pinned by a
+ * `withdrawn-test` reference is WITHDRAWN instead, when its own line's `ruling:`/`carrier:` citations
+ * both resolve against `DECISIONS-PENDING.md` (round 20 item 1; see
+ * `computeWithdrawnRows`/`findWithdrawnTestSpan`); a withdrawn-test line is never also read as
+ * superseded. `supersededMainUnchecked` is true when at least one superseded claim's condition (e)
+ * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim;
+ * `withdrawnMainUnchecked` is the same surfacing for a withdrawn claim's own condition (e), ORed with
+ * a row-level SKIP of the same condition (`computeWithdrawnRows`'s own `mainUnchecked`) so a valid
+ * accepted row is surfaced even when it never becomes a `withdrawn` entry (its claim already exists,
+ * so the per-claim loop never asks).
+ *
+ * Round 21 item 2 (entry 136); round 22 item 3 and round 23 item 4 (§2.1, §2.2,
+ * TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md): every line in ROW POSITION (`ROW_POSITION_RE`) is ALSO
+ * checked ON ITS OWN by `computeWithdrawnRows`, independent of the per-claim loop below (which only
+ * ever runs for a claim that does not already exist, and only ever asks whether THIS ONE claim is
+ * exempted) — whatever the state of the claim on its pinned line (even a claim that still exists, or
+ * no claim at all) and whatever its node's status (planned claims are never exempt from this). A row
+ * that fails its own grammar (no pinned reference, another file's path, no commit-id rev, a line
+ * range) or its own pin conditions is a `kind: 'withdrawn-row'` finding naming the ROW's own file:line
+ * and, per §7, the grammar/pin reason with any rider failure appended — always pushed to `findings`
+ * (never `planned`), one per invalid row, since a row "covers every claim on its pinned line" (consult
+ * §1) rather than being reported once per claim: a name on an invalid, but grammar-accepted, row's own
+ * pinned line is therefore never ALSO reported as an ordinary "not found" finding by the per-claim loop
+ * below (it would be the same defect reported twice) — a row refused at the grammar level carries no
+ * such suppression, since it was never capable of exempting anything to begin with (§2.1(b): a mention,
+ * or a reference to another path or a range, is not a withdrawal attempt).
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -411,15 +754,35 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const findings = [];
   const planned = [];
   const superseded = [];
+  const withdrawn = [];
   let claims = 0;
   let supersededMainUnchecked = false;
+  let withdrawnMainUnchecked = false;
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
     const isPlanned = exempt.has(rel);
+    const {
+      findings: rowFindings,
+      validSpans: withdrawnSpans,
+      invalidRowLines,
+      mainUnchecked: rowMainUnchecked,
+    } = computeWithdrawnRows(root, rel, text);
+    if (rowMainUnchecked) withdrawnMainUnchecked = true;
+    findings.push(...rowFindings);
     const spans = supersededSpans(rel, text);
+
     for (const c of extractClaimedTests(text)) {
       claims++;
       if (testExists(c.name, index)) continue;
+      if (invalidRowLines.has(c.line)) continue; // reported once, at row level (round 21 item 2)
+      if (withdrawnSpans.length) {
+        const { span, mainUnchecked } = findWithdrawnTestSpan(root, rel, c.line, c.name, withdrawnSpans);
+        if (span) {
+          if (mainUnchecked) withdrawnMainUnchecked = true;
+          withdrawn.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference, ruling: span.ruling, carrier: span.carrier });
+          continue;
+        }
+      }
       const { span, mainUnchecked } = spans.length
         ? findSupersededSpan(root, rel, c.line, c.name, spans)
         : { span: null, mainUnchecked: false };
@@ -428,10 +791,10 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
         superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference });
         continue;
       }
-      (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name });
+      (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name, kind: 'claim' });
     }
   }
-  return { findings, planned, superseded, scanned: targets.length, claims, supersededMainUnchecked };
+  return { findings, planned, superseded, withdrawn, scanned: targets.length, claims, supersededMainUnchecked, withdrawnMainUnchecked };
 }
 
 function main() {
@@ -446,7 +809,7 @@ function main() {
     // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
     console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
   }
-  const { findings, planned, superseded, scanned, claims, supersededMainUnchecked } = runVerifyTestClaims({
+  const { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked, withdrawnMainUnchecked } = runVerifyTestClaims({
     repoRoot: REPO_ROOT,
     plannedGates,
   });
@@ -465,15 +828,30 @@ function main() {
       console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one claim above.');
     }
   }
+  if (withdrawn.length > 0 && !quiet) {
+    console.error(`verify:test-claims withdrawn (advisory) — ${withdrawn.length} claimed test(s) pinned withdrawn by a ruling and a carrier:`);
+    for (const w of withdrawn) {
+      console.error(`  - ${w.relPath}:${w.line} — claims test \`${w.name}\` — withdrawn — pinned by ${w.reference} — ruling: ${w.ruling}; carrier: ${w.carrier}`);
+    }
+  }
+  if (withdrawnMainUnchecked && !quiet) {
+    console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim or accepted row above.');
+  }
   if (findings.length === 0) {
-    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned or superseded (${planned.length} planned, ${superseded.length} superseded, advisory).`);
+    console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned, superseded or withdrawn (${planned.length} planned, ${superseded.length} superseded, ${withdrawn.length} withdrawn, advisory).`);
     return;
   }
   if (!quiet) {
-    console.error(`verify:test-claims FAIL — ${findings.length} claimed test(s) with no matching test:`);
-    for (const f of findings) console.error(`  - ${f.relPath}:${f.line} — claims test \`${f.name}\` — not found in any test file`);
+    console.error(`verify:test-claims FAIL — ${findings.length} finding(s):`);
+    for (const f of findings) {
+      if (f.kind === 'withdrawn-row') {
+        console.error(`  - ${f.relPath}:${f.line} — withdrawn-test row invalid — ${f.message}`);
+      } else {
+        console.error(`  - ${f.relPath}:${f.line} — claims test \`${f.name}\` — not found in any test file`);
+      }
+    }
   } else {
-    console.error(`verify:test-claims FAIL — ${findings.length} unmatched claim(s) across ${scanned} file(s).`);
+    console.error(`verify:test-claims FAIL — ${findings.length} finding(s) across ${scanned} file(s).`);
   }
   process.exitCode = 1;
 }

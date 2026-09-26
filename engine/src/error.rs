@@ -229,6 +229,19 @@ pub enum EngineError {
     /// crate's own N+1 refusal is, and nothing here may be cited as evidence about ADR-014.
     ConnectionsExhausted { class: &'static str, capacity: usize },
 
+    /// The advisory source-change watcher lost coverage of this source — an overflowed or aborted
+    /// OS notification stream, never a detected content change (`engine::watch`,
+    /// `SOURCE-WATCHER-PREREGISTRATION.md` §2a).
+    ///
+    /// **Belongs to the session-ended family and is not retryable**, exactly as
+    /// [`Self::SourceChanged`] is, but is a **distinct** code (block-on-sight 3: a coverage loss
+    /// must never surface as `engine.source_changed`) — this is a statement that the watch stopped
+    /// telling this session anything, not a statement that the file changed.
+    ///
+    /// **This engine never raises it.** Its product callers are the kernel's refusal sites
+    /// (`kernel::skp`), which map a [`crate::watch::WatchSignal::CoverageLost`] onto it.
+    SourceCoverageLost { detail: String },
+
     /// A stream asked for a declared row order **and** a time-budgeted first batch.
     ///
     /// **Refused by construction, and the refusal is the whole protection.** ADR-017 §12's
@@ -379,6 +392,16 @@ impl fmt::Display for EngineError {
                 "refused: this dataset's {class} connection capacity ({capacity}) is fully leased. \
                  The engine refuses rather than queueing; queueing would decide an admission \
                  policy that is reserved elsewhere"
+            ),
+            // [P6 placeholder]: the human's wording is owed at P6 (§7's placeholder list); this
+            // states the engine's own fact only — a lost OS notification stream, never a claim
+            // about the file's bytes — and no consequence (the operator-visible-text rule).
+            Self::SourceCoverageLost { detail } => write!(
+                f,
+                "[P6 placeholder] refused: the advisory watch on this source lost coverage ({detail}). \
+                 This is not a statement that the file changed — the OS notification stream this \
+                 session was relying on stopped reporting, and this check cannot see whether the \
+                 file changed while it was not"
             ),
             Self::TimingDependentOrdering { ordering, cut } => write!(
                 f,

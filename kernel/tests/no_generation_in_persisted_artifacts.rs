@@ -53,8 +53,10 @@
 //! `#[cfg(test)]`, but the workspace root `Cargo.toml`'s `exclude` list names that crate); nothing
 //! outside the four families and the one exclusion resolves.
 
+mod watch_support;
+
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
 use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
 use spatial_engine::lod::{build_tiers, LOD_BUILD_WORKERS_ARM_S};
@@ -66,7 +68,9 @@ use spatial_kernel::publish::{
     publish_unguarded, CorrespondingSource, CorrespondingSourceKind, PublishRequest, ViewerAsset,
     ViewerAssets, ViewerLicenseInput,
 };
-use spatial_kernel::skp::{error_of, terminal_detail_of};
+use spatial_kernel::skp::{error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry};
+use spatial_kernel::Catalog;
+use spatial_skp::v0::{OpenDatasetRequest, SKP_VERSION};
 
 const STYLE: &str = r##"{
   "style_version": 1,
@@ -449,5 +453,151 @@ fn one_permission_audit_log_line_carries_no_generation_substring() {
     assert!(
         !contains_ascii_ci(&bytes, b"generation"),
         "the substring \"generation\" appears in the permission audit log"
+    );
+}
+
+/// Case-sensitive scan for the exact shape [`spatial_skp::v0::SessionRef::mint`] produces: `"sr_"`
+/// followed by 32 lowercase hex digits. Deliberately not case-insensitive (unlike
+/// `contains_ascii_ci` above, built for English prose that could carry any case) — this format is
+/// always lowercase by construction (`protocol/skp/src/v0/handles.rs::mint_hex_id`), so a
+/// case-sensitive scan is the more precise check and cannot be defeated by an incidental uppercase
+/// "SR_..." appearing in unrelated text.
+fn contains_a_session_reference_shape(bytes: &[u8]) -> bool {
+    const PREFIX: &[u8] = b"sr_";
+    if bytes.len() < PREFIX.len() + 32 {
+        return false;
+    }
+    for start in 0..=bytes.len() - PREFIX.len() - 32 {
+        if &bytes[start..start + PREFIX.len()] == PREFIX {
+            let hex = &bytes[start + PREFIX.len()..start + PREFIX.len() + 32];
+            if hex.iter().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(b)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// As [`walk_keys`], generalized to any needle — added here rather than widening `walk_keys` itself,
+/// so every existing test in this file (and its own RECORDED MUTATION notes, which quote `walk_keys`'
+/// exact behaviour) stays byte-unchanged.
+fn walk_keys_named(v: &serde_json::Value, path: &str, needle: &str, offending: &mut Vec<String>) {
+    match v {
+        serde_json::Value::Object(map) => {
+            for (k, child) in map {
+                if k.to_ascii_lowercase().contains(needle) {
+                    offending.push(format!("{path}.{k}"));
+                }
+                walk_keys_named(child, &format!("{path}.{k}"), needle, offending);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for (i, child) in items.iter().enumerate() {
+                walk_keys_named(child, &format!("{path}[{i}]"), needle, offending);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// **R-a's own reference, at rest** (`engine/SOURCE-WATCHER-PREREGISTRATION.md`, round 21 item 1,
+/// rider (b)). A real `SkpHost::open_dataset` mints a real [`spatial_skp::v0::SessionRef`]; this test
+/// publishes that exact open's `Dataset` through the same real `publish_unguarded` path every other
+/// test in this file uses, then proves the published bundle carries neither the key `"session"` nor
+/// any value shaped like a session reference — by key (schema walk, `manifest.json`/`style.json`) and
+/// by byte (every file in the bundle, both the exact minted value and the general `sr_` + 32-hex
+/// shape, so a *different* session reference value slipping in some other way would still be caught).
+///
+/// RECORDED MUTATION: add a `("session", Json::str(<an sr_ value>))` member to `Manifest::to_json`'s
+/// top-level object (`kernel/src/bundle/mod.rs`, the same call site the file's own
+/// `the_published_manifest_and_style_carry_no_generation_key` mutation note names for `"generation"`).
+/// Expected failure: the schema walk below finds `$.session`, and the byte scan independently finds
+/// the planted `sr_` value — both, since a key match is also a byte match, exactly as the file's own
+/// existing precedent for `"generation"` states above.
+#[test]
+fn the_published_bundle_carries_no_session_reference_key_or_value() {
+    let d = workspace("session-reference");
+    let path = fixture(&d);
+
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    let open = host
+        .open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: "r-b".to_string(),
+            crs_assertion: None,
+            identity: None,
+        })
+        .expect("open");
+    let minted_session = open.session.as_str().to_string();
+    assert!(
+        contains_a_session_reference_shape(minted_session.as_bytes()),
+        "the vacuity check's own planted value must itself match the shape it plants"
+    );
+
+    let ds = host.catalog().get(open.dataset.as_str()).expect("the catalog holds the open dataset");
+    ds.pin_content(&CancelToken::new()).expect("pin");
+    let v = viewer();
+    let dest = d.join("bundle");
+    publish_a_bundle(dest.clone(), &ds, &v);
+
+    // Typed-schema half: no key named "session" in the manifest or the style.
+    let manifest_bytes = std::fs::read(dest.join(bundle::MANIFEST_PATH)).unwrap();
+    let manifest: serde_json::Value = serde_json::from_slice(&manifest_bytes).unwrap();
+    let mut offending_keys = Vec::new();
+    walk_keys_named(&manifest, "$", "session", &mut offending_keys);
+    assert!(
+        offending_keys.is_empty(),
+        "manifest.json carries a key naming a session reference: {offending_keys:?}"
+    );
+
+    let style_bytes = std::fs::read(dest.join(bundle::STYLE_PATH)).unwrap();
+    let style: serde_json::Value = serde_json::from_slice(&style_bytes).unwrap();
+    let mut offending_style_keys = Vec::new();
+    walk_keys_named(&style, "$", "session", &mut offending_style_keys);
+    assert!(
+        offending_style_keys.is_empty(),
+        "style.json carries a key naming a session reference: {offending_style_keys:?}"
+    );
+
+    // Byte half: every file in the bundle, scanned for the exact minted value AND for the general
+    // `sr_` + 32-hex shape (so a different reference value would not slip past a scan for only this
+    // one open's own).
+    let mut files = Vec::new();
+    every_file(&dest, &mut files);
+    assert!(!files.is_empty(), "the bundle wrote nothing; this scan would be vacuous");
+
+    let mut offending_bytes = Vec::new();
+    for f in &files {
+        let bytes = std::fs::read(f).unwrap();
+        let carries_exact = contains_ascii_ci(&bytes, minted_session.as_bytes());
+        let carries_shape = contains_a_session_reference_shape(&bytes);
+        if carries_exact || carries_shape {
+            offending_bytes.push(format!(
+                "{} (exact={carries_exact}, shape={carries_shape})",
+                f.strip_prefix(&dest).unwrap_or(f).display()
+            ));
+        }
+    }
+    assert!(
+        offending_bytes.is_empty(),
+        "a session reference appears in these published bundle files: {offending_bytes:?}"
+    );
+
+    // The scan is only meaningful if it can fire at all — same vacuity discipline as
+    // `the_published_bundles_bytes_carry_no_generation_substring` above, planting this open's own
+    // real minted value rather than a synthetic one.
+    std::fs::write(dest.join("planted.txt"), format!("this line plants {minted_session} on purpose"))
+        .unwrap();
+    let planted_bytes = std::fs::read(dest.join("planted.txt")).unwrap();
+    assert!(
+        contains_ascii_ci(&planted_bytes, minted_session.as_bytes())
+            && contains_a_session_reference_shape(&planted_bytes),
+        "the scan cannot detect what it claims to"
     );
 }

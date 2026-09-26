@@ -1,14 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c5205fe4b201231c5ea6be10`) at `2026-09-24T22:50:59.128Z`.
+Generated from `PLAN.yaml` (sha256 `1a572cbf83a6d9a9596080027e42df0a260ac02cf61fbb67144e8eebc1c6cc24`) at `2026-09-26T19:10:35.189Z`.
 
 ## 1. Next
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`)
+- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`)
 
 ## 2. Ready
 
-- **governance-test-claims-withdrawn-marker** — verify:test-claims WITHDRAWN -- a distinct withdrawn marker for a claimed test a ruling removed with no replacement (lane `governance`, order 1, budget 90 min)
+- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
+- **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
+- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) (lane `kernel-protocol`, order null, budget 15 min)
+- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) (lane `kernel-protocol`, order 2, budget 240 min)
+- **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
+- **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -17,8 +23,7 @@ Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c520
 
 ## 4. Blocked on dependencies
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: engine-source-change-watcher, b1-engine-kernel-half
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: engine-source-change-watcher
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: b1-engine-kernel-half
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -28,15 +33,13 @@ Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c520
 
 ## 5. In progress
 
-- **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
-- **governance-verify-mutation-multiline-attrs** — verify-mutation.mjs -- a multi-line string attribute (an ignore reason continued with a line-continuation) clears the pending test state, so the test behind it is silently skipped, never listed and never MISS; found on the LOD fixture-race fix, two tests unseen — evidence: PR #108
+- (none)
 
 ## 6. Proposed / unscheduled
 
 ### Proposed
 
 - **governance-hash-grammar-shared** — Share the path:line @ rev sha256:hex reference grammar between verify-test-claims.mjs and verify-quotes.mjs (phase `prototype`) — never queued until placed
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (phase `prototype`) — never queued until placed
 - **lod-tier-selection** — LOD tier selection -- which tier a viewport draws (renderer/shell, under its own gate); the named product caller of build_tiers (RULED 2026-09-17, round 8); the prepare report and the two labels' shell surface owed here; the operator walkthrough (phase `prototype`) — never queued until placed
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (phase `prototype`) — never queued until placed
 - **crs-zoom-constants-per-unit** — ADR-013 A1 item 6, the remaining class -- MAX_ZOOM and extent.ts's fit and degenerate zoom constants declared per CRS unit (crs-unit's STOP LIST Q2) (phase `prototype`) — never queued until placed
@@ -50,6 +53,23 @@ Generated from `PLAN.yaml` (sha256 `052ae9eea02ec06cffb75e2ff0daa1b7cb197c62c520
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (phase `prototype`) — never queued until placed
+- **b1-shell-half** — Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable) (phase `prototype`) — never queued until placed
+- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) (phase `prototype`) — never queued until placed
+- **verify-mutation-test-temp-dirs** — verify-mutation's own tests remove their mkdtemp directories (weekly window (b)) (phase `prototype`) — never queued until placed
+- **extent-degenerate-zoom-doc** — extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c)) (phase `prototype`) — never queued until placed
+- **verify-quotes-show-cites-narrowed** — verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e)) (phase `prototype`) — never queued until placed
+- **adr-023-s2-widenings-adr-021-consult** — Consult: whether ADR-023's section 2 widenings owe ADR-021 a note (weekly window (f)) (phase `prototype`) — never queued until placed
+- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (phase `prototype`) — never queued until placed
+- **data-plane-crate-fmt** — spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a)) (phase `prototype`) — never queued until placed
+- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (phase `prototype`) — never queued until placed
+- **verify-cites-test-temp-dirs** — verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c)) (phase `prototype`) — never queued until placed
+- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2) (phase `prototype`) — never queued until placed
+- **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
+- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) (phase `prototype`) — never queued until placed
+- **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
+- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (phase `prototype`) — never queued until placed
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (phase `prototype`) — never queued until placed
+- **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

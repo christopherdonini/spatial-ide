@@ -1,14 +1,14 @@
 # CUT-STATE — opened 2026-09-24 (the post-tag arc's ledger archived; the work continues)
 
 ## SESSION-CONTINUITY
-flushed_at: 2026-09-24T22:56:05Z
-tip: 1ac335d4e6a77110c2d3e8a4748dc4f2c055de12
-branches: Ready for the human's click (merge commit): #114 docs/adr-035-dataset-session-ended @ f8e77ad (ADR-035, Proposed; fresh count PASS/PASS plus the architect's scoped PASS; CI 5/5; ACCEPTED AS MERGED by round 21 item 1 -- the acceptance edits come in a follow-up docs PR after the merge). In flight: #118 governance/test-claims-withdrawn @ dc769fd (the correction round, worker-high, worktree .claude/worktrees/test-claims-withdrawn). Merged today: #97, #104-#109, #111-#113, #115-#117. Closed unmerged: #110.
-position: 2026-09-24 23:00Z -- rounds 17-21 ruled and applied; main green. context: 532.3k/800k (67%) by the human's /context at about 23:00Z (371.4k at 21:55Z).
-half-made judgments: After #114 merges: apply the architect's drafted acceptance texts (filed at state/consults/2026-09-24-adr-035-acceptance-drafts.md, 1ac335d) (Status Accepted; Acceptance section with round 21 item 1's words byte-copied by script from DECISIONS-PENDING; the SKP-V0's section 8 dated note of rider (c), not widening the rule) on a fresh branch; regenerate the ADR index; both gates (red-line content: the words must be byte-exact). Riders (a) and (b) go into the watcher's preregistration requirements. #118: if this correction round's gates FAIL on substance, the piece stops under Rule 7 and #108's node reverts to not-done with advisory names (round 21 item 2); a record-only FAIL goes to the architect's reduction (the custodian's reading from round 19 item 2, stated in the RULED block's Applied text). PLAN summaries must avoid a digit followed by whitespace and 'sec' (site.mjs's duration pattern): write 'SKP-V0's section'. Owed PLAN node: the ADR-035 drafter's two kernel notes (post-close invalidated entry; live_or_mint close race).
-intended sequencing (next session): Resume from this block and the ledger's 22:52Z entry. (1) On the architect's acceptance drafts: hold until #114 merges, then branch, apply, gate. (2) On #118's correction report: verify mechanically (CI, file PLAN.yaml, the named probe test fails by name, 15 withdrawn/0 findings, append-only both forms), then both gates (attempt 2). (3) After #118 lands: governance-test-claims-superseded-followups, then test-claims-landedness-bound, in sequence. (4) The watcher's preregistration (engine-source-change-watcher) after ADR-035's acceptance lands, carrying rounds 17-21 including riders (a)/(b). (5) Weekly window 2026-09-25: raise the unreported findings.
-unreported findings: For the 2026-09-25 weekly window: the skp_admission timing flake (cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock) recurred on #114's CI and passed on rerun -- not the ticket-drop defect; cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flakes; main's verify-mutation mkdtemp tests leave 263+263 temp dirs; ADR-023 section 2 widenings vs ADR-021 notes; extent.ts degenerate-zoom doc drift; the class-3 row / round 15 (e) tension; Catalog's write guard drop; verify-quotes --show-cites narrowed gives false FAILs; the #116 architect's process note (an Out-of-scope line naming a section-21a category takes the full form); the gate-log node id governance-test-claims-superseded differs from the PLAN id; whether B1's build may start before the watcher lands; a removal marked superseded still passes verify:test-claims; the template's class 6 is short-form only and a full form's overrun has no class but 2 (the #118 gates).
-in-flight gate states: Running: #118's correction round (worker-high). The ADR-035 acceptance drafts are filed; waiting on #114's click. gate-log: 185 records.
+flushed_at: 2026-09-26T18:39:32Z
+tip: a48f90e7e9c8abd30ea92d917fddcef7213909aa
+branches: Pushed, awaiting the human's click (merge commit only; squash and rebase are being disabled in the repository settings, round 26 item 3): cut/source-change-watcher @ c42ab65 (PR #127, main merged in at a48f90e, MERGEABLE, CI running); viewer/partition-offset-bounds @ 2ceecdb (PR #128, CONFLICTING -- re-merge main after #127 merges); governance/weekly-proposals-2026-09-26 @ 4c4ec06 (PR #129, CONFLICTING); cut/data-plane-stream-registry-bound @ d44f59d (PR #130, CONFLICTING). LOCAL ONLY, NOT PUSHED (public exposure, red line: the human sights LICENCES.md and C6's hit list first): cut/corpus-reproducibility-record @ ae0220b, worktree C:/dev/wt/corpus-record (488b641 the preregistration; 5f46abf .gitattributes; e1e999c the 13 byte-identical copies; 22dbedb RECORD.md; baede98 LICENCES.md; ae0220b the kernel/FIXTURES.md append). Held: PR #124 (wave-1 B; its fate after the corpus piece merges, round 26 item 1 (f)), PR #123 (wave-1 C; until the watcher merges). Other worktrees: C:/dev/wt/source-change-watcher, C:/dev/wt/viewer-offset-bounds, C:/dev/wt/governance-weekly, C:/dev/wt/stream-registry-bound, C:/dev/wt/triage-a3-obs3 (untracked scratch: the cuts' reproductions), .claude/worktrees/verify-mutation-header-token (dropped, unmerged -- keep).
+position: 2026-09-26 18:38Z -- human-directed handover. Round 26's four answers are recorded verbatim (b9def61). The Origin fix (A1-1, data-plane-origin-non-ascii) is DONE, PR #126 merged (ff346fa). The watcher (#127), the viewer offset bounds (#128), round 25's governance proposals (#129) and the registry time bound (A5-1, #130) have all passed their gates and wait for the human's click. The corpus record is built on a local branch and checkpointed there (ae0220b), its Amendment 1 not yet written. B1 waits on the watcher's merge (round 25 item 3). #123 and #124 held. Lease relinquished at this flush.
+half-made judgments: (1) #127 first: the human merges it; then re-merge origin/main into #128 with a signed-off merge commit, never a rebase -- main's side for every generated file (CUSTODIAN-QUEUE.*, site/, site/data/plan.json), PLAN.yaml and KNOWN-LIMITATIONS resolved semantically keeping both sides, regenerate, gate on verify/queue/site/cites/quotes/claims and the scripts suite, push, let CI confirm; then fill #128's [[KL-N]] with the next free item number (29 once #127's items 24-28 are on main) and apply the human's wording choice at #128 (the gates suggest opening the fix sentence with 'The specific limit is fixed for'); re-merge main into #129 and #130 the same way after each merge lands. (2) After #127 merges: append the E5 pin on main (PLAN node watcher-e5-pin-on-main: lines 2626-2644 of kernel/src/skp.rs at 4137f4d, sha256 c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a); PR #123's integration to skp/0.5 (merge main into cloud/wave1-C, fixtures to skp/0.5, re-run, counts, back to the human); then B1's build. (3) The corpus record, where it stopped: built and checked (C1-C4, C7 pass; C5(i) and C6 fail by the letter on the preregistration commit's bookkeeping files, pre-existing lines and non-path escapes; #12 'procedure recorded: no' against a predicted yes; licences: #11 Apache-2.0 reproducible, #12 multi-licence local-only pending the human, R-2..R-4 unidentified), report state/consults/2026-09-26-corpus-record-worker-report.md. NEXT: the preregistration's Amendment 1 -- an architect consult was drafting it at handover (the rulings of round 26 items 1-2 with riders (d) an explicit SPDX exemption path list, home undecided since no automated SPDX check exists, and (e) the PR's grep for Users-folder paths; the project-generated files moving to the reproducible set by regeneration; the results recorded as results, never by redefining a check); if its draft is not in state/drafts/corpus-amendment-1.draft.md, re-dispatch it. Then a worker applies what the amendment lists, both gates, then the human sights LICENCES.md and the C6 hit list before the branch is pushed or merged.
+intended sequencing (next session): (1) React to the human's merges: #127, then #128 (re-merge, KL-N, wording), #129 and #130 (re-merge after each). (2) After #127: the E5 pin, #123's integration, B1. (3) The corpus record: Amendment 1, the worker's application, gates, the human's sight, then push and PR. (4) Proposed nodes when capacity allows: the five weekly-window defects, the Catalog latency note, data-plane-crate-fmt, data-plane-crowded-start-detail-spaces, verify-cites-test-temp-dirs. (5) The next weekly window falls due 2026-10-02: a CI fmt step is its proposal. Disk: C: about 22 GB free.
+unreported findings: None outstanding: round 26 took the squash contingency, the fmt piece, the crowded-start string and the verify-cites temp leak. The viewer reviewer's S1 stands as a suggestion (PR #128's Amendment 2 row 3 cites the worker's summary naming B3 for M8, where G3 catches it; the reviewer's run is the observation of record).
+in-flight gate states: gate-log: 223 records. All four open PRs passed their gates: #127 (watcher attempt 3, record round, architect cap-(3) reduction and reviewer PASS at 1644aa3), #128 (attempt 2 PASS both at 64ceb79), #129 (attempt 1 PASS both at f205478), #130 (attempt 2 PASS both at a4aa7f3). The corpus record has no gate yet.
 
 Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the post-tag arc, 2026-09-13 → 2026-09-24; archived byte-identical by `git mv`; its last flush named tip d4362bd). Before it: `state/cut-archive/CUT-STATE-2026-09-13-release-0.1.0.md` (the release cut; v0.1.0 = b391e43).
 
@@ -113,3 +113,224 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Item 2: one correction round for #118. The reviewer's probe becomes a named regression test. If the round fails again, Rule 7 stops the piece.
     - A worker-high round was dispatched.
   - **Main red for one run.** The round-21 PLAN commit f086085 was pushed by a chain whose `;` bypassed a failed `site.mjs`. The PLAN summary's "SKP-V0 section 8" had tripped the duration pattern. It was fixed at 618dada (reworded, regenerated), and Governance is green again. The lesson is appended to the gate-on-exit-code memory.
+- 2026-09-25T00:32Z - **Handoff: round 21 applied; three PRs ready; wave 1 prepared as the recorded program; the lease relinquished.** The human's instruction of 2026-09-25 had four items: finish the current task and apply round 21's two rulings; copy the wave-1 prompts; set the baseline; write the program, then flush, push and relinquish.
+  - **Round 21 item 1 (ADR-035 accepted as merged):**
+    - #114 was merged by the human.
+    - PR #119 carries the acceptance texts (the architect's drafts, `state/consults/2026-09-24-adr-035-acceptance-drafts.md`): the Status line Accepted; the Acceptance section with the human's words byte-copied by script; the SKP-V0 §8 note of rider (c).
+    - Reviewer PASS and architect PASS at 3c7a638. The note's three wording should-fixes are at d2936d7, with the architect's scoped PASS (gate-log node `adr-035-acceptance`).
+    - Ready: merge commit, immutable after merge.
+  - **Round 21 item 2 (#118's one correction round):**
+    - Attempt 2 was a FAIL from both gates, record-only; the substance is fixed and proven (indices 185 and 186).
+    - The architect's reduction was applied byte-exact at 9bf9fc1.
+    - The scoped confirmation (index 187) found five comment pointers, repointed mechanically at 5f03481. CI 3/3. Ready: merge commit.
+    - With it, `governance-verify-mutation-multiline-attrs` closes as done (its rows are in the PR).
+  - **For the human's word** (the refused-line residual, on the followups node): a line carrying the `withdrawn-test` marker whose reference the grammar refuses exempts nothing but is never named. The architect reads rider (a) as governing withdrawals only; the human may read it otherwise.
+  - **Wave 1: the prompts.** `state/cloud/wave1-prompts.md` is the tracked record of the prompts, byte-identical to the draft except for the baseline SHA and one marked custodian note. Nothing tracked cites the untracked original.
+  - **Wave 1: the baseline.**
+    - Re-pinned from 59406134a447d6187fae4a6a79fb9f390c8efefb to bb98f71f43a2891d317b10a124387df9d5ee0ebf, uniformly (6 places).
+    - Why: #114's merge changed code under `frontends/`, one header string in `frontends/shell/scripts/adrIndex.mjs` and its test naming ADR-034 as reserved. Nothing changed under `engine/`, `kernel/`, `protocol/` or `renderer/`.
+    - Product CI was dispatched on bb98f71 and is green: Rust workspace https://github.com/christopherdonini/spatial-ide/actions/runs/36076675466, shell https://github.com/christopherdonini/spatial-ide/actions/runs/36076678443, bundle viewer https://github.com/christopherdonini/spatial-ide/actions/runs/36076681073.
+    - Every main commit after bb98f71 touches `state/` only. #119 and #118, if merged, add only a docs change under `protocol/` (the SKP-V0 note) and `scripts/plan/` tooling, neither of them product code.
+  - **RECORDED PROGRAM — wave 1** (from `state/cloud/wave1-prompts.md` §5 and §6; while it exists, its order governs, per the session-start ruling (1)):
+    1. **Calibration first: A3** (panics reachable from untrusted input), alone.
+       - It is bounded and read-mostly like the other audits, so it predicts their cost.
+       - It is the audit most likely to need a compiled reproducer, so it tests the build path and the DCO proof before anything depends on them.
+    2. **After calibration, decide by what the platform shows:**
+       - If per-session spend is visible:
+         - batch 1: A1, A2, A4 and A5 in parallel;
+         - batch 2: C and D in parallel (both build heavily, independently);
+         - batch 3: B alone (the network exception, and the licences need attention).
+       - If only the shared balance moves:
+         - the same batches, but batch 1 runs as two pairs, A1+A2 and then A4+A5, recording each pair's balance delta;
+         - never parallelise past the point where a delta can still be tied to a named batch.
+    3. **Recording (§6, custodian only):**
+       - `state/cloud/wave1.md` holds the ledger. It is created with the baseline line and the table header of §6.
+       - Each report goes verbatim into `state/cloud/wave1/<item>.md`, as immutable evidence.
+       - Balance is recorded before and after *each* launch batch, even when per-session figures exist, so the two can be reconciled.
+       - Spend is never estimated from tokens. A figure that is not shown reads "not attributable".
+       - The custodian fields of §3 are filled locally, never by the worker.
+    4. **Prompt assembly (§7):**
+       - A2–A5 are built by copying A1 in full and swapping exactly the item id, the branch name and the TASK block. "[paste §3's schema]" becomes §3's worker fields verbatim.
+       - The exact assembled text of each prompt is recorded beside its session ID.
+    5. **Triage (§4):** the custodian decides severity. S1 candidates go to the human in one batch after the wave, with evidence. Nothing becomes a cut in this wave.
+  - **Lease:** relinquished by this session (856bc41b), on the human's word. `CUSTODIAN-LEASE` is rewritten to a single `relinquished:` line. The incoming session verifies the relinquish and that origin's tip matches this flush before taking the lease.
+- 2026-09-25T01:40Z - **Handover taken; the cloud launch path checked against the docs; the cloud-hook ruling applied; wave 1 held for PR #120.**
+  - **Lease:** the relinquish was verified (`CUSTODIAN-LEASE` read `relinquished:`; origin's tip 4c757e1 = the final flush, parent c2289dc), then taken by 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg).
+  - **The human's messages** are verbatim in `state/directives/2026-09-25-cloud-hooks.md` (§1 the wave-1 instruction, §2 the cloud-hook ruling, §3 the #118 merge, §4 the wave-1 block relayed from Fable, §5 the confirmation and the baseline correction).
+  - **The cloud launch path (the Claude Code docs, fetched 2026-09-25):**
+    - `claude --cloud "<task>"` creates a cloud session from the current directory's GitHub remote at the current branch.
+    - The environment is the `/remote-env` pick or a fallback. The Default environment has Trusted network (package registries).
+    - A one-repo session runs the repository's `.claude/settings.json` hooks and loads `CLAUDE.md`.
+    - `git push` works only against the session's current working branch, so A3's push to `cloud/wave1-A3` may be refused. That is a calibration watch-point.
+  - **The finding and the ruling:** at the baseline the repo's hooks would have fired in a cloud worker: the continuity block at startup, up to six Stop-hook continuations toward the ready governance node, and a PreCompact demand to write and push `state/CUT-STATE.md`. The human ruled without a question round (RULED 2026-09-25, the cloud hooks):
+    - (1) the hooks are made inert in a cloud session;
+    - (2) every prompt uses a worktree at `/tmp/wave1-baseline`;
+    - (3) the baseline stays bb98f71, per the correction beside the ruling. The ruling's 59406134 was superseded by the human.
+  - **Applied:**
+    - PR #120 (`governance/hooks-cloud-inert`, single combined gate). The marker is `CLAUDE_CODE_REMOTE` = `true`, quoted from the cloud-environments docs; it was checked unset in this local Remote Control session. Reviewer attempt 1 FAILED (index 191): two existing CLI tests inherited the marker. Fixed at 3bd2b2d. Attempt 2 FAILED record-only (index 192): the superseded index was missing. Appended at cde1d31. Attempt 3, the scoped confirmation, PASSED (index 193). Record rounds: two, the cap. Marked ready; the human's click.
+    - Wave-1 prompts deviation 1 (c69ad28): four baseline instructions and §3's "Baseline SHA" field move to the worktree, with the originals byte-copied.
+    - `governance-test-claims-withdrawn-marker` done (evidence pr 118; a646d59).
+    - The two design references were copied to `state/drafts/design/` (c16f41d).
+  - **The wave-1 block (§4), confirmed (§5).** Its triage rules govern wave 1's reports. Round 21's rulings were already applied, so skipped. The architect redrafted B1's preregistration (round 17 items 3–4) and the watcher's (rounds 17–21, ADR-035); see the next entry.
+  - **Balance before A3:** Cloud session credits "$250 of $250 left" (expires November 5), read in claude.ai Settings → Usage at about 00:45Z. The A3 prompt is assembled by script from the amended §7 (63 lines, sha256 a408c1d81ed3bd6552e8024312c7a76c93f093774dc83bdac7812da616eefe46). It launches after #120 merges and its dry run passes on main.
+  - **Worktrees:** `C:/dev/wt/adr-035-dataset-session-ended` swept (merged at #114, clean, pushed, no process). Added: `.claude/worktrees/hooks-cloud-inert` (#120).
+- 2026-09-25T06:30Z - **Both preregistrations committed; round 22 ruled; the watcher's phase 1 dispatched.**
+  - **The architect's two consults** are filed verbatim at 9e6faf9, extracted by script from the hand-backs (the tasks output files were 0 bytes; the subagent transcripts under the session's `subagents/` directory carried the text):
+    - `state/consults/2026-09-25-b1-prereg-revision.md`: B1 revised to round 17 items 3–4; stop list O1–O8.
+    - `state/consults/2026-09-25-source-watcher-prereg.md`: the watcher redrafted to rounds 17–21 and ADR-035; stop item X1 for the human; X2–X4 sequencing and mechanics.
+  - **B1's preregistration:** PR #121 (`docs/b1-preregistration`), docs-only under `AUTONOMY.md` §9 (`docsOnly.mjs` eligible). `b1-engine-kernel-half`'s gate names it. Its Amendment 1 (4fa387d) resolves O1–O8 by round 22 item 2. Merged by the custodian once CI and drift are green.
+  - **The watcher's preregistration:** the first commit on `cut/source-change-watcher` (596511b; worktree `C:/dev/wt/source-change-watcher`). The node's gate names it, and its evidence is the branch. Amendment 1 (d5d262e) resolves X1 by round 22 item 1. X2–X4 are applied under existing rules, as listed in `state/questions/round-22.md`'s last paragraph.
+  - **Round 22** (b78ba94; `state/questions/round-22.md`, mirrored to Telegram first). Recorded verbatim in the RULED block:
+    - item 1, X1 as an invariant (typed; a red line);
+    - item 2, O1–O8 as recommended;
+    - item 3, the refused-line residual fails by name, with the condition that the follow-ups PR corrects or reduces every such line already on main.
+  - **PLAN (b78ba94):**
+    - `kernel-generation-close-races` is placed immediately after the watcher (kernel-protocol, order 1). It carries the ADR-035 drafter's two notes and whatever wave-1 A2 reports about the close race.
+    - Proposed: `adr-035-decision-4-note` (after #119 merges) and `b1-shell-half` (O7).
+    - `governance-test-claims-superseded-followups` is ready at order 1, ahead of `test-claims-landedness-bound` at order 2.
+  - **Watcher phase 1 dispatched:** worker-high at the agent default (sonnet). Scope: engine, protocol with both fixture sides, kernel and the src-tauri wiring, with their §4 tests. Phase 2 (the shell consumer, SH1–SH11, the E2E and the KNOWN-LIMITATIONS lines) goes to a fresh worker after the hand-back.
+  - **Worktrees added:** `.claude/worktrees/b1-prereg` (#121) and `C:/dev/wt/source-change-watcher`.
+- 2026-09-25T22:40Z - **A3 calibrated and reported; #119–#122 merged; rounds 23 ruled; wave 1 pair 1 (A1+A2) running; the watcher's phase 1 built.**
+  - **Merged:**
+    - by the human: #120 (85bbe8d, the hooks inert in cloud sessions), #119 (9f764c8, ADR-035 accepted) and #122 (4628610, ADR-035's Note 2026-09-25);
+    - by the custodian, docs-only under §9: #121 (31d7d34, B1's preregistration).
+  - **PLAN:** done — `governance-hooks-cloud-inert` (pr 120) and `adr-035-decision-4-note` (pr 122).
+  - **The dry run before A3:** it passed on main at 9f764c8 — the six cloud tests; the scripts suite 291/291 with the marker set; every hook silent.
+  - **A3 (calibration):**
+    - `claude --cloud` refused from the custodian's shell ("requires an interactive terminal") and created nothing. A3 was launched from claude.ai/code instead: the Default environment, spatial-ide on main, Opus 5.5 at Medium.
+    - The prompt was pasted from the clipboard and hash-checked in the composer before sending (a408c1d8).
+    - session_01STxb5ot2J5RaYpnzffmSq6 ran 06:41:30Z to about 06:54Z. The balance went $250 → $243: a batch delta of $7, in whole dollars only, with no per-session figure anywhere.
+    - Result: 0 findings, 5 unproven observations, triaged in `state/cloud/wave1/A3.md` — 1 RECORD S2; 2 DISCARD S3; 3(a) RECORD S2; 3(b) an S1 candidate; 4 and 5 DISCARD S3.
+    - Observation 3 was reproduced on Windows by a tester (worktree `C:/dev/wt/triage-a3-obs3`, kept for the after-wave S1 batch). (a) reproduced. (b)'s mechanism reproduced: linear, about 46 ns per ring-offset iteration, 4.6 s at 1e8, no exception; a run past 60 s was extrapolated, not observed.
+    - Watch-points: the push to `cloud/wave1-A3` was accepted (db9527f); the DCO proof worked; the build path worked; the worktree deviation held; the hooks stayed quiet.
+  - **The ADR-035 note (#122):** the architect's draft was appended with the human's words byte-copied by script. Reviewer PASS (index 194). Architect PASS with F1 (195); F1 was applied byte-exact at f227036 and got a scoped PASS (196).
+  - **Round 23** (`state/questions/round-23.md`, mirrored first; RULED block at 7f8095f):
+    - item 1: pairs as planned;
+    - item 2 (a red line, typed): S1 yes, with the containment rider;
+    - item 3: S2–S4 as recommended;
+    - item 4 (typed): the follow-ups form's O1 by use versus mention, not in place; O3 widened by the human; the rest as recommended.
+  - **Wave 1, batch 1, pair 1 launched** from claude.ai/code with the balance at $243 of $250 (about 22:24Z):
+    - A1: session_01Dvwb34AguXpmzqPFN5SLGQ at 22:24:22Z;
+    - A2: session_012sfSh2fvSkNDCVbQ2o27Rm at 22:24:56Z.
+    - Both prompts are recorded beside their session IDs and hash-checked in the composer.
+  - **The watcher's phase 1** (worker-high, sonnet default; `cut/source-change-watcher` @ 4137f4d, 8 commits):
+    - Built: engine, protocol `skp/0.5`, kernel and the src-tauri wiring. 54/54 new tests carry recorded mutations, and every suite is green.
+    - H1–H5 were confirmed on the real Windows adapter.
+    - Budget: engine 1,848 against 1,100 and kernel 2,334 against 2,000 are over their rows; the total, 4,677 of 4,830 across 54 files, is within.
+    - Deviations disclosed in code: E5, E7 and E8 have no record/enqueue split, so they test the synchronous design; A7 cannot isolate case-folding, and `names_match_folds_case` does; K5's and K6's mutations were corrected.
+    - An architect consult is drafting Amendments 2 (round 23 items 2–3) and 3 (the phase-1 record) and the phase-2 deltas.
+  - **The follow-ups form:** an architect consult is revising it to round 23 item 4.
+  - **Disk:** C: 24 GB free after the phase-1 builds. Worktrees swept: #120's, #119's, #121's and #122's.
+- 2026-09-25T23:00Z - **Wave 1 pair 1 reported and triaged; pair 2 (A4+A5) running; two new S1 candidates; the watcher's phase 2 dispatched with A2-1 folded in.**
+  - **Pair 1** (5af4e84): A1 and A2 reported by about 22:30Z. Both reports are recorded verbatim with custodian fields in `state/cloud/wave1/A1.md` and `A2.md`. The balance went $243 → $237: a batch delta of $6 for the pair, not attributable per session.
+  - **Triage against main at ab4eb65:** every cited file is unchanged since bb98f71, so every item is still-present.
+    - **A1-1, S1 candidate:** a stated non-ASCII Origin is admitted as absent. Reproduced on Windows in `C:/dev/wt/triage-a3-obs3`: rc 101, 2 of 3 failing as in the cloud run. It goes to the after-wave batch.
+    - **A2-1, S1 candidate:** the untiled manager re-admits a late-minted ticket after session end, against ADR-028 Amendment 4 item 2's client half; the kernel masks it end to end. Reproduced on Windows: the vitest, 1 passed. It is in the watcher's code, so it folds in under wave-1 rule 2 and also goes to the after-wave batch.
+    - **RECORD S2:** A1-2, A1 observations 1–2 and A2 observation 2. Observation 2 and A2's close race go to `kernel-generation-close-races`' intake.
+    - **DISCARD S3:** the rest.
+    - **Watch-point for D:** `npm ci` refused under npm 10.9.7 at the baseline.
+  - **Pair 2** (37eee20), launched from claude.ai/code with the balance at $237 of $250:
+    - A4: session_01NZDimj5kbXchTDKA9MQrPT at 22:48:55Z;
+    - A5: session_018DZybsCUV4Zb8z81uUUEAQ at 22:49:26Z.
+    - Both prompts were hash-checked in the composer and are recorded beside their session IDs.
+  - **The watcher:**
+    - Phase 2 is dispatched to a worker-high on `cut/source-change-watcher` @ 09104f4: merge main, deltas 1–12, §2d, SH1–SH11, the E2E, the KNOWN-LIMITATIONS lines and the checks.
+    - Step F, the A2-1 fold-in, waits for Amendment 4. An architect consult is drafting it: the class, since no template class names a widening; the fix's shape; the SH rows.
+  - **The follow-ups worker** (`governance/test-claims-followups`) is still running.
+  - **Disk:** C: 23 GB free.
+- 2026-09-26T00:35Z - **Wave 1: all launches done (B running); pair 2 and batch 2 triaged; A5-1 a fourth S1 candidate. The watcher's Amendment 4 is with its phase-2 worker. The follow-ups failed both gates at attempt 1; a batched fix round is running.**
+  - **Pair 2** (3a0f22d): A4 and A5 reported. The balance went $237 → $225, a batch delta of $12. A5's session still showed a running task at the reading.
+    - A5-1, S1 candidate: the data plane's `StreamRegistry` retains every stream served, with no ceiling. Reproduced on Windows (rc 101, 200 retained). It goes to the after-wave batch.
+    - RECORD S2: A4-1 to A4-4 (one class: a refusal's code lost on the publish or raw path), A5-2, and A5's observations 4 and 5.
+    - The rest DISCARD S3.
+  - **Batch 2** (0527390): C and D reported. The balance went $225 → $221, a batch delta of $4.
+    - C: one divergence, C-1, RECORD S2, plus the ambiguity list. Draft PR #123 is open with its checks green; merging it is the human's decision.
+    - D, the Linux catalogue: D-1, D-2 and D-4 are one class (the default Rust suites assume Windows), and D-3 is `npm ci` refusing under npm 10. All RECORD S2.
+    - D's prompt names no item, so its worker left Item blank and labelled its findings B-1 to B-4. They are recorded as D-1 to D-4.
+  - **Deviations appended to `state/cloud/wave1-prompts.md`:** 2 (45441d5) and 3 (cc74a23). C, D and B carry §3's worker fields, pasted after their OUTPUT paragraphs.
+  - **Batch 3** (e619486): B, session_01VQQsDu87TyJwwusSdt4GL8, launched at 00:20:10Z with the balance at $221 of $250.
+  - **S1 candidates for the after-wave batch:** A3 3(b), A1-1, A2-1 (its fix is folding into the watcher) and A5-1. All four were reproduced on Windows.
+  - **The watcher:**
+    - Amendment 4's consult is filed at 001115f and sent to the phase-2 worker, which appends it byte-exact as its own commit before the fold-in code.
+    - Its item 8, the candidate arm's untiled sink, was triaged by the custodian and folded in beside A2-1.
+    - Phase 2 is running.
+  - **The follow-ups:**
+    - The worker stopped at §7's budget line; §7 itself records an overrun as class 2, so it continued. §2.8 was done at c1e315b.
+    - The custodian's closing Amendment 1 went in at 556ee94. §8 item 9 was then applied to the new comments at fbf90f0, and ea3b21d re-observed the two changed tests. Amendment 2 went in at f6ccfd2.
+    - Both gates FAILed attempt 1 at f6ccfd2 (4b568d9):
+      - the architect on B1–B6;
+      - the reviewer on B1–B7.
+    - P1 and P2 hold, the enumeration agrees on the merge with main, the temp-directory delta is 0, and the hashes match.
+    - One batched fix round is with the same worker: code, tests, re-observation, then docs. Amendment 3, the custodian's, is references only and is the piece's last record-correction round.
+- 2026-09-26T02:00Z - **Wave 1 closed: B reported, round 24 ruled (three S1 cuts), the S2 records written. The watcher failed gate 1 and its fix round is running. The follow-ups are at attempt 2. A1-1's preregistration is being drafted.**
+  - **B** (d926a3f): batch delta $2; the wave cost $31 in total ($250 → $219).
+    - The corpus is not reproducible from the tracked tree: its scripts and full-hash manifest sit untracked on this machine.
+    - Licences for eleven of the twelve files are unrecorded.
+    - PR #124 is open, with its DCO check green.
+  - **Round 24** (`state/questions/round-24.md`, mirrored first; RULED block at 4d0e727):
+    - item 1 (typed): all three S1s are cuts.
+      - `data-plane-origin-non-ascii` runs now, in parallel with the watcher, under full gating.
+      - `data-plane-stream-registry-bound` follows it: a time bound plus a count ceiling, and no drop at the terminal.
+      - `bundle-viewer-partition-offset-bounds` is independent, with a KNOWN-LIMITATIONS line for bundles already published.
+    - item 2: A2-1 is S1, and the fold-in stands.
+    - item 3 (typed): #124 is held; `corpus-reproducibility-record` tracks the scripts, commands and hashes, with no data; licences go to the human before any merge.
+    - item 4: #123 is held until the watcher merges.
+  - **S2 records** (137cd3c): seven proposed PLAN nodes, plus the close-race intake in `kernel-generation-close-races`.
+  - **The watcher:**
+    - Phase 2 finished at d99b7a6. Part Q, the operator rows with a blank log, was added at ee6fa38.
+    - Gate 1 FAILed at ee6fa38 (dfdc8fb): the architect on B1–B4, the reviewer on B1–B7. Both reports are filed (04b3680).
+    - The reviewer's report had six cites to branch-only files, which reddened verify-cites on main. They were rewritten to the worktree path, disclosed in its filing note (4d0e727); main's CI was green after.
+    - The architect's fix ruling (f2316db): §8 item 3 governs §2b step 2. Amendment 5 was appended at 2daf371, with hashes computed by script. A fresh worker-high is on the fix list.
+  - **The follow-ups:**
+    - The fix round is done at 8fb4999; Amendment 3 is at 761915c. Its item 1 mislabels the code fixes as class 5, flagged to the architect.
+    - Both gates are at attempt 2. This is the last record round: if the record fails again, the architect reduces it.
+  - **A1-1:** an architect consult is drafting its full-form preregistration.
+- 2026-09-26T12:25Z - **A1-1 merged; round 25 applied; the watcher to its record round.**
+  - **PR #126 (A1-1)** merged by the human (ff346fa). `data-plane-origin-non-ascii` is done, and `data-plane-stream-registry-bound` (A5-1) is ready.
+  - **Round 25** is ruled and applied at 3319073: the RULED block in DECISIONS-PENDING.md, and seven PLAN nodes.
+    - The Catalog::open drop reproduction runs first (a tester-high, in the scratch worktree C:/dev/wt/catalog-drop-repro). Its outcome makes S1 (a cut) or S2 (a note).
+    - Five weekly-window defects are proposed nodes behind it.
+    - The week's five process proposals are one ready governance piece.
+    - B1 starts after the watcher merges.
+    - The v0.1.0 bundles get no advisory; the viewer's KNOWN-LIMITATIONS line is reworded.
+  - **The watcher's gate 2** (both FAIL, record only) is filed at 3dfc622, from the session transcript: the hand-backs had not been saved.
+    - The fixes are at b178ee5: comments and Part Q's Q2 only, line counts held.
+    - Main was merged at 722a551.
+    - Amendment 6, the closing record, is at c7c009d. Its rows are the architect's gate-2 section 6, and every hash was computed by script. A deliberate one-digit corruption failed verify-quotes, so the hashes are gated.
+    - Row 13 names the E5 pin without its hash, per round 15 (e) and the fix ruling's residual row.
+    - The scoped gate 3 is running.
+  - **The viewer piece:** the worker deleted the acceptance artifact its section 9 requires filed, so a tester is re-running it.
+    - The V010 check holds: partition.ts is byte-identical at b391e43 and 28bb51c, and main.ts's load().catch routing is the same lines.
+    - The artifact files on main, not the branch, because an in-tree file on the branch would be outside its declared Scope.
+- 2026-09-26T13:12Z - **The watcher and the viewer to the human's click; A5-1 and the governance piece building.**
+  - **The Catalog::open reproduction resolved S2** (a tester-high; state/consults/2026-09-26-catalog-open-drop-reproduction.md; 02ec6a3). No Drop reached from a replaced dataset reacquires or waits on the catalog lock. The replaced dataset's DuckDB teardown runs under the write guard, and no product path replaces a dataset. It is filed as the proposed catalog-open-replace-drop-latency-note; the five weekly-window nodes behind it are unblocked.
+  - **The watcher.**
+    - Attempt 3 (record round): the architect failed six misquoted comment spans and invoked the record cap's point (3), giving the exact replacement lines. They were applied at 2b8aaaf, each checked present byte-exact by script.
+    - The reviewer confirmed that commit, then its full sweep found five more branch-added misquotes and four scare quotes, reduced the same way at 1644aa3. Reviewer PASS; the piece lands with no attempt 4.
+    - My own per-line sweep had missed the multi-line and non-section-attributed quotes the reviewer found.
+    - PR #127 is open. Its body puts the windows-sys Win32_System_IO feature in front of the human (declared in the watcher preregistration's section 0, no crate and no version change).
+  - **The viewer.**
+    - The acceptance run was re-run by a tester and filed on main with its artifact, not on the branch, because of Scope.
+    - The item was reworded per round 25 item 4 (c855b77). Amendments 1 and 2 are at 874c72f.
+    - Attempt 1: both gates failed on the record only; the architect's Amendment 3 was appended at 64ceb79. Attempt 2 (record round): both PASS.
+    - PR #128 is open, to merge after #127; [[PR]] is filled on the branch, and [[KL-N]] waits for #127.
+  - **A5-1:** the architect's full-form preregistration is committed at 8dbaec5, with one quote of server.rs's struct doc made byte-exact before landing. A worker-high is building.
+  - **The governance piece (round 25 item 2):** the architect's full form is committed at 340f516. Classes 8 and 9; AUTONOMY section 24; AI_DEVELOPMENT Amendment 4 to the Custodian role; the three agent files; the verify-cites state/consults/gates/ exemption and its test. A worker is applying it.
+- 2026-09-26T13:58Z - **Four PRs for the human's click; nothing running.**
+  - **#129, the round-25 governance proposals:** preregistration 340f516; T1-T6 applied and byte-checked; the verify-cites state/consults/gates/ exemption with its test and M1-M3. T6's block has no closing fence, so its first application left an extra empty line, removed at dd47574 and recorded in Amendment 1. Attempt 1: both PASS at f205478.
+  - **Main red, briefly.** A filing chain printed a verify-cites FAIL and committed anyway (6a7a2d9). The cause was a gate report citing a worktree path with mixed separators. It was fixed at b7499fc, and the memory on gating commits gained the grep-FAIL shape. Every later main commit gated on the rcs.
+  - **#130, A5-1:** preregistration 8dbaec5, with one quote made byte-exact before landing. Built at 2b99551 and e061cb1; 570 lines against 450 declared, class 2. Amendment 1 at b6d1664.
+    - Attempt 1: both FAIL on the record only. Row 5's fmt claim named no rustfmt; the mutation excerpts' panic locations were bare, and T4's and T5's came from the mutated tree.
+    - Corrected at 8ed5228 and a4aa7f3 (Amendment 2). Attempt 2 (record round): both PASS.
+    - The architect ruled that no fmt pass is owed in the piece; a crate-wide fmt piece goes to the human.
+- 2026-09-26T14:00Z - **corpus-reproducibility-record started:** an architect consult is drafting its preregistration from the local corpus of record (target/fixtures/compat-corpus/, untracked: MANIFEST.json, PROBE.json, README.md and nine scripts; no user-path strings found by grep) and PR #124's held proposal (copied to the scratchpad). The licence table goes to the human before merge (round 24 item 3).
+- 2026-09-26T18:40Z - **Round 26 ruled; the corpus record built locally; #127 re-merged; handover.**
+  - **Round 26** (b9def61): the corpus piece's readings adopted with riders (d), an explicit-path SPDX exemption, and (e), a Users-path grep in the PR. The project-generated files are reproducible by regeneration, with no licence declared. No PR whose commits a record cites is squash-merged; the human is disabling squash and rebase in the settings. Three defects are filed as proposed nodes.
+  - **The corpus record** (cut/corpus-reproducibility-record, local, not pushed): the preregistration at 488b641; the build at 5f46abf..ae0220b by a general-purpose agent under the worker's instructions, for web access. Its report is at a48f90e. Amendment 1 is not yet written; an architect consult was drafting it at handover.
+  - **The human's handover instructions (verbatim in this session's messages):** re-merge origin/main into #127 and #128 with signed-off merge commits, main's side for generated files. #127 was re-merged at c42ab65 (generated files only conflicted; PLAN.yaml auto-merged, both sides kept) and pushed; it shows MERGEABLE, CI running. #128 waits for #127's merge. #129 and #130 also show CONFLICTING and are re-merged the same way after each merge.
+- 2026-09-26T18:40Z - **Handover: session 5d626cec (claude-session session_01JeU7h98xrTorztiep3Zgmg) relinquishes the lease** on the human's word, after this flush. The origin tip equals the flushed tip.
+- 2026-09-26T19:06Z - **Takeover by session 81107ddf (claude-session session_01JeU7h98xrTorztiep3Zgmg); the corpus record's Amendment 1 appended; its apply round dispatched.**
+  - **Takeover:** `CUSTODIAN-LEASE` held session 5d626cec's `relinquished:` line, and origin/main equalled 524ead5, the flush commit that records the handover. The lease was taken by 81107ddf. The commit-msg fence was armed and rejected an unsigned message (exit 1).
+  - **Amendment 1:** the architect consult's draft, saved untracked at handover, is committed as returned at d9e72d6 (`state/drafts/corpus-amendment-1.draft.md`). Its fenced block (the draft's lines 18 to 117, extracted by script and compared with `cmp`) is appended after the `*(none)*` line of the preregistration's §10 on `cut/corpus-reproducibility-record` at dd59b90: 101 insertions, 0 removals, local and unpushed.
+  - **Apply round:** a worker (the definition's default model, no override) is applying Amendment 1 item 3 (3.1 to 3.4) at dd59b90, local only: `LICENCES.md`, `RECORD.md`, the `LICENSES/README.md` section, then the checks. The custodian's steps before any push stay as the amendment lists them: the generated set remedied, C8 in the PR body, the human's sight of `LICENCES.md`, C6's hit list and D1 to D5.
+  - **#127 merged** by the human at 19:03:32Z, merge commit 9a42af2. #128 is re-merged with main next; the E5 pin, #123's integration and B1 follow per the flushed sequencing.

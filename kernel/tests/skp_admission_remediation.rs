@@ -14,8 +14,10 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+mod watch_support;
+
 use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON};
-use spatial_kernel::skp::{SkpHost, StreamRegistry};
+use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
     CrsAssertion, DescribeRequest, IdentityDeclaration, OpenDatasetRequest, SKP_VERSION,
@@ -41,7 +43,12 @@ fn small_spec() -> FixtureSpec {
 }
 
 fn host() -> SkpHost {
-    SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new())
+    SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    )
 }
 
 fn open_req(
