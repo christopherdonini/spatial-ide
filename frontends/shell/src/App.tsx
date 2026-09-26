@@ -720,11 +720,17 @@ export function routeDatasetSessionEndedEvent(
     admittedSession: string | null;
     admittedDataset: string | null;
     dispatch: (reason: EndReason, forDataset: string) => void;
-    logUnknownSessionDrop: (reason: EndReason) => void;
+    logUnknownSessionDrop: (line: string) => void;
   }
 ): void {
   if (event.session !== deps.admittedSession) {
-    deps.logUnknownSessionDrop(event.reason);
+    // My B2 / reviewer S2 (architect gate-1): the line is built HERE, from `event.reason` only --
+    // never from `event.session` or `deps.admittedSession` -- so the property SH11 needs is
+    // asserted on this function's own real output, not inferred from a regex over App.tsx's source
+    // text (round 21 item 1, rider (b); Amendment 2 S3).
+    deps.logUnknownSessionDrop(
+      `dataset_session_ended: dropped for an unknown session (reason=${event.reason})`
+    );
     return;
   }
   if (deps.admittedDataset === null) return;
@@ -1192,11 +1198,7 @@ export default function App() {
         admittedSession: admittedSessionRef.current,
         admittedDataset: admittedDatasetRef.current,
         dispatch: endSessionForReason,
-        logUnknownSessionDrop: (reason) =>
-          logSessionEvent(
-            "warn",
-            `dataset_session_ended: dropped for an unknown session (reason=${reason})`
-          ),
+        logUnknownSessionDrop: (line) => logSessionEvent("warn", line),
       });
     }).then((u) => {
       if (cancelled) {

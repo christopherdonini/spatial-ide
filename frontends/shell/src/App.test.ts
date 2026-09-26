@@ -1343,7 +1343,13 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
   //
   // RECORDED MUTATION for SH9: skip the comparison (dispatch unconditionally). Expected failure:
   // the first assertion below fails -- `dispatch` would be called despite the mismatch.
-  it("drops an event whose session does not match, and logs the reason only (SH9, SH11)", () => {
+  // RECORDED MUTATION for SH11: write `event.session` into the dropped-event log line (e.g.
+  // `` `dataset_session_ended: dropped for an unknown session ${event.session} (reason=${event.reason})` ``).
+  // Applied, run and reverted on this branch: `AssertionError: expected 'dataset_session_ended:
+  // dropped for an…' not to contain 'sr_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'` -- 1 failed. Against this
+  // function's own real return value, not a regex over App.tsx's source text, per My B2 / reviewer
+  // S2 (architect gate-1).
+  it("drops an event whose session does not match, and logs a line naming the reason only (SH9, SH11)", () => {
     const dispatch = vi.fn();
     const logUnknownSessionDrop = vi.fn();
     routeDatasetSessionEndedEvent(EVENT, {
@@ -1356,17 +1362,12 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
     // SH11: the dropped-event log line names the reason only -- never the event's `session` value
     // nor any `sr_`-shaped value (round 21 item 1, rider (b); Amendment 2 S3).
     expect(logUnknownSessionDrop).toHaveBeenCalledTimes(1);
-    expect(logUnknownSessionDrop).toHaveBeenCalledWith("observed-change");
+    const [line] = logUnknownSessionDrop.mock.calls[0] as [string];
+    expect(line).not.toContain(EVENT.session);
+    expect(line).not.toMatch(/sr_[0-9a-f]{32}/);
+    expect(line).toContain("reason=observed-change");
   });
 
-  // RECORDED MUTATION for SH11: write the event's `session` into the dropped-event log line (e.g.
-  // `deps.logUnknownSessionDrop` called with a string containing it). Expected failure: this
-  // function's own contract is that `logUnknownSessionDrop` receives only the reason -- a caller
-  // that logs `` `${reason} (${event.session})` `` would still pass this unit test (the mock only
-  // inspects what THIS function passes it), so the real assertion of record is `App.tsx`'s own
-  // call site, which passes exactly the reason and nothing else (read the source, not inferred):
-  // `logSessionEvent("warn", \`dataset_session_ended: dropped for an unknown session (reason=${reason})\`)`
-  // carries no `sr_`-shaped value anywhere in its template.
   // Mutation: drop the final `deps.dispatch(...)` call from `routeDatasetSessionEndedEvent`.
   // Expected failure: the assertion below fails -- `dispatch` is never called at all.
   it("a matching event dispatches for the currently admitted dataset", () => {
@@ -1393,26 +1394,5 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
     });
     expect(dispatch).not.toHaveBeenCalled();
     expect(logUnknownSessionDrop).not.toHaveBeenCalled();
-  });
-});
-
-describe("App.tsx's own dropped-event log line carries no session reference (SH11)", () => {
-  // The real call site, read from source rather than re-implemented: this is the record-fidelity
-  // discipline this codebase uses elsewhere (`the_pre_check_refusal_latches_the_session_in_the_
-  // untiled_catch`, above) for a closure App.tsx cannot export.
-  //
-  // RECORDED MUTATION for SH11: change the template to
-  // `` `dataset_session_ended: dropped for an unknown session ${event.session} (reason=${event.reason})` ``
-  // (writing the reference into the line). Expected failure: the regex below, which requires the
-  // line to contain no `sr_` followed by 32 lowercase hex digits, would then match the mutated
-  // source's own template text and fail this test.
-  it("the listener logs no session reference, only the reason", () => {
-    const appSource = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "App.tsx"), "utf8");
-    const callSite = appSource.match(/logUnknownSessionDrop: \(reason\) =>\s*\n?\s*logSessionEvent\(\s*\n?\s*"warn",\s*\n?\s*`([^`]*)`/);
-    expect(callSite).not.toBeNull();
-    const template = callSite![1];
-    expect(template).not.toMatch(/sr_[0-9a-f]{32}/);
-    expect(template).not.toContain("event.session");
-    expect(template).toContain("reason=");
   });
 });
