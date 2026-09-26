@@ -320,8 +320,8 @@ async function main() {
 
   try {
     console.log(`source-watch-idle: waiting for the app to mount (up to ${MOUNT_READY_TIMEOUT_MS}ms)...`);
-    const ready = await waitForMountReady(page);
-    console.log(`source-watch-idle: mount-readiness gate PASSED (after ${ready.readyAfterMs}ms of waiting, a bound not a result)`);
+    await waitForMountReady(page);
+    console.log("source-watch-idle: mount-readiness gate PASSED");
 
     // ------------------------------------------------------------------------------------
     // W1: open the scratch copy through the real admission path.
@@ -471,7 +471,7 @@ async function main() {
         while (Date.now() - start < IDLE_END_WAIT_TIMEOUT_MS) {
           last = await statusStack(page);
           if (last.sessionEndedPresent) {
-            return `.canvas-session-ended appeared after ${Date.now() - start}ms of waiting (a bound, not a measurement)`;
+            return ".canvas-session-ended appeared";
           }
           await sleep(IDLE_END_POLL_MS);
         }
