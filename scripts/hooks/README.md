@@ -56,18 +56,22 @@ directive):
    actually completed — never a fetch failure) is cached in `.claude/state/halt-probe-cache.json`
    for 60 seconds (`HALT_CACHE_TTL_MS`, reviewer finding 17), so a stop that keeps recurring
    within a minute does not re-fetch every time; the local-file check is always live.
-3. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
-4. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
+3. Lease check (AUTONOMY.md §24): reads `CUSTODIAN-LEASE` at the project root. Unless its first
+   line is an active `lease: <id> ...` line whose `<id>` equals the stdin `session_id` → allow,
+   stderr names which case applied (absent, relinquished, another session's lease, or no
+   `session_id`). This session's own held lease continues to the steps below unchanged.
+4. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
+5. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
    count; sends one Telegram message listing the waiting items (id, kind, minutes, total), deduped
    on a hash of the waiting set (item 16b).
-5. Continuation accounting: `.claude/state/stop-hook-<session_id>.json` and
+6. Continuation accounting: `.claude/state/stop-hook-<session_id>.json` and
    `.claude/state/stop-hook-daily-<YYYY-MM-DD>.json` (gitignored). Consecutive resets to 0 on
    progress (HEAD or the plan hash changed since the last block). Session cap `6` (declared
    `SESSION_CONSECUTIVE_CAP` — under Claude Code's own 8-consecutive-block override quoted above;
    `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` is never touched here). Daily cap `40` (declared
    `DAILY_CONTINUATION_CAP`, §3: "daily cap `DAILY_CONTINUATION_CAP` = 40 across sessions"). At
    either cap → allow.
-6. Otherwise → block, with the exact reason text AUTONOMY.md §3 specifies, reordered
+7. Otherwise → block, with the exact reason text AUTONOMY.md §3 specifies, reordered
    `smallFirst` and spike/measurement-lane-deferred past 75% of the daily cap (declared
    `NEAR_DAILY_CAP_RATIO`, §10).
 
