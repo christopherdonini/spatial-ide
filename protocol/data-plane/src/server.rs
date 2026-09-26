@@ -619,6 +619,19 @@ mod tests {
     /// backdating shape (`kernel::skp::StreamRegistry`'s
     /// `sweep_expired_reclaims_an_old_cancelled_before_redeem_entry`): `ended_at` is backdated
     /// under this registry's own lock rather than waiting on real time.
+    // MUTATION (T4), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): `record_terminal` removes the entry whose
+    // terminal it records -- the drop at the terminal the ruling forbids.
+    // `a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age` failed:
+    // Declared excerpt (copied by script):
+    // test server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age ... FAILED
+    //
+    // failures:
+    //
+    // ---- server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age stdout ----
+    //
+    // thread 'server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age' (39468) panicked at protocol\data-plane\src\server.rs:642:18:
+    // recorded above
+    // Reverted; `git diff --stat` was empty afterward.
     #[test]
     fn a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age() {
         let reg = StreamRegistry::default();
@@ -662,6 +675,18 @@ mod tests {
 
     /// F5: a terminal record older than the declared age is pruned on the next `record`, and the
     /// unrelated live entry recorded before it is untouched.
+    // MUTATION (T5), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the age prune is removed; only the count
+    // prune runs. `a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record` failed:
+    // Declared excerpt (copied by script):
+    // test server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record ... FAILED
+    //
+    // failures:
+    //
+    // ---- server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record stdout ----
+    //
+    // thread 'server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record' (48648) panicked at protocol\data-plane\src\server.rs:686:9:
+    // older than the declared age, so it is pruned
+    // Reverted; `git diff --stat` was empty afterward.
     #[test]
     fn a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record() {
         let reg = StreamRegistry::default();

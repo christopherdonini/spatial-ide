@@ -196,6 +196,20 @@ async fn run_finished_stream(dp: &RunningDataPlane) -> String {
 
 /// T1 (F1, the finding's shape made to pass): after `STREAMS` finished streams, run one after
 /// another, the registry retains exactly `MAX_TERMINAL_RECORDS` — the last opened, in order.
+// MUTATION (T1), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the count prune is removed; only the age
+// prune runs. `the_registry_retains_at_most_the_declared_count_of_finished_streams` failed:
+// Declared excerpt (copied by script):
+// test the_registry_retains_at_most_the_declared_count_of_finished_streams ... FAILED
+//
+// failures:
+//
+// ---- the_registry_retains_at_most_the_declared_count_of_finished_streams stdout ----
+//
+// thread 'the_registry_retains_at_most_the_declared_count_of_finished_streams' (50196) panicked at protocol\data-plane\tests\stream_registry_bound.rs:208:5:
+// assertion `left == right` failed: 200 finished streams must not all be retained
+//   left: 200
+//  right: 64
+// Reverted; `git diff --stat` was empty afterward.
 #[tokio::test]
 async fn the_registry_retains_at_most_the_declared_count_of_finished_streams() {
     let dp = start().await;
@@ -219,6 +233,18 @@ async fn the_registry_retains_at_most_the_declared_count_of_finished_streams() {
 
 /// T2 (F2): a live stream (no terminal recorded) is never pruned at the count ceiling, and once it
 /// does terminate, its own record is the newest.
+// MUTATION (T2), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14): the count prune evicts the oldest entry in
+// admission order, live or terminal. `a_live_stream_is_never_pruned_at_the_count_ceiling` failed:
+// Declared excerpt (copied by script):
+// test a_live_stream_is_never_pruned_at_the_count_ceiling ... FAILED
+//
+// failures:
+//
+// ---- a_live_stream_is_never_pruned_at_the_count_ceiling stdout ----
+//
+// thread 'a_live_stream_is_never_pruned_at_the_count_ceiling' (9856) panicked at protocol\data-plane\tests\stream_registry_bound.rs:233:9:
+// the live entry must never be pruned while it has no terminal record
+// Reverted; `git diff --stat` was empty afterward.
 #[tokio::test]
 async fn a_live_stream_is_never_pruned_at_the_count_ceiling() {
     let dp = start().await;
@@ -260,6 +286,19 @@ async fn a_live_stream_is_never_pruned_at_the_count_ceiling() {
 /// T3 (F3, the data plane's late cancel): a CANCEL sent after the TERMINAL frame, during the peer
 /// drain, is still observed by the producer, and the recorded terminal stays `Completed`. This
 /// property predates and is unchanged by the fix (§1 "May claim").
+// MUTATION (T3), run at 2b99551, rustc 1.97.1 (8bab26f4f 2026-07-14), outside this diff in `adapter_ws::drive`:
+// the reader is aborted as soon as the terminal frame is sent, skipping the PEER_DRAIN_TIMEOUT
+// wait. `a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer` failed:
+// Declared excerpt (copied by script):
+// test a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer ... FAILED
+//
+// failures:
+//
+// ---- a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer stdout ----
+//
+// thread 'a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer' (16988) panicked at protocol\data-plane\tests\stream_registry_bound.rs:285:5:
+// the producer still observes a cancel sent during its own drain
+// Reverted; `git diff --stat` was empty afterward.
 #[tokio::test]
 async fn a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer() {
     let dp = start().await;
