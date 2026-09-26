@@ -269,3 +269,17 @@ this same acknowledgement (`renderer/bundle-viewer/notice.mjs`'s `notice()`) —
 Use, per the terms' own "Ownership… must be acknowledged in any publication or transmission…" and
 "You are obliged to inform anyone… of these Terms of Use" clauses (quoted verbatim in
 `DEPENDENCY-LICENSES.md`).
+
+## Byte-identical copies without an SPDX header
+
+*Appended 2026-09-26 by `corpus-reproducibility-record` (round 26, item 1, rider (d)).* The files below are exempt from the SPDX-header requirement (`CONTRIBUTING.md`; `PRE-PUBLIC-CHECKLIST.md` §1's header audit) by explicit path, never by pattern. Each is a byte-identical copy of a project-authored script, pinned by sha256 in `engine/compat-corpus/RECORD.md`, and a header would break that identity. They are in the core layer, `AGPL-3.0-or-later`, like the rest of `engine/`.
+
+- `engine/compat-corpus/of-record/scripts/build_manifest.py`
+- `engine/compat-corpus/of-record/scripts/gen_duckdb.py`
+- `engine/compat-corpus/of-record/scripts/gen_gdal.py`
+- `engine/compat-corpus/of-record/scripts/gen_geopandas.py`
+- `engine/compat-corpus/of-record/scripts/gen_mutations.py`
+- `engine/compat-corpus/of-record/scripts/gen_qgis.py`
+- `engine/compat-corpus/of-record/scripts/observe.py`
+- `engine/compat-corpus/of-record/scripts/probe_producers.py`
+- `engine/compat-corpus/of-record/scripts/qgis_env.py`
