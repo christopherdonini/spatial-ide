@@ -622,7 +622,6 @@ function computeWithdrawnRows(root, relPath, text) {
         hash: ref.hash,
         reference: ref.full,
         lineText,
-        refLine: lineNo,
         ruling: riders.ruling,
         carrier: riders.carrier,
       });
