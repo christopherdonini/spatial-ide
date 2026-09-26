@@ -598,3 +598,7 @@ References and hashes only (`state/directives/2026-09-18-record-cap.md`). The ro
 13. **Residual, the E5 pin** (lines 2626-2644 of `kernel/src/skp.rs` at `4137f4d`): appended on main only after a merge that keeps `4137f4d` reachable (no squash); the custodian's queue carries it.
 14. **Round 7:** each discharge names its test.
 15. **Superseded index:** Amendment 3 item 5's last sentence → row 2.
+
+### Amendment 7 — 2026-09-26, written after the merge (PR #127, merge commit 9a42af2): the E5 pin on main
+
+Class 1, discharging Amendment 6 row 13. `4137f4d` is reachable from main through the merge commit `9a42af2` (a merge commit, not a squash). The E5 pin: `kernel/src/skp.rs:2626-2644 @ 4137f4d sha256:c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a`.
