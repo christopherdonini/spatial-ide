@@ -2441,12 +2441,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md
+    evidence: {branch: cut/corpus-reproducibility-record}
     budget_minutes: 180
     generation: 1
     felt_verdict: false

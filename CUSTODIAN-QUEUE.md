@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e13ae74c3d76ba5d6eb1733577740799f65a2b40ac2b32513b91c68b98aa123c`) at `2026-09-26T13:58:40.623Z`.
+Generated from `PLAN.yaml` (sha256 `1994c83aa35c0dafa7d8bc35e5155c2aa8facf178ba4086ed16df2d6706537a1`) at `2026-09-26T14:13:27.186Z`.
 
 ## 1. Next
 
-- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`)
+- **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
 - **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
@@ -34,6 +33,7 @@ Generated from `PLAN.yaml` (sha256 `e13ae74c3d76ba5d6eb1733577740799f65a2b40ac2b
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
+- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) — evidence: branch `cut/corpus-reproducibility-record`
 
 ## 6. Proposed / unscheduled
 
