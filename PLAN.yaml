@@ -2405,12 +2405,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: [data-plane-origin-non-ascii]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: protocol/data-plane/STREAM-REGISTRY-BOUND-PREREGISTRATION.md
+    evidence: {branch: cut/data-plane-stream-registry-bound}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
