@@ -461,7 +461,7 @@ function assertRefused(fixture, expectedWords) {
 }
 
 /**
- * M0 (B4 written with `<` instead of `<=`) fails this test by name, at commit
+ * Mutation M0 (B4 written with `<` instead of `<=`) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure (the
  * thrown BundleFailure, excerpted — the stack trace and object dump are elided): `BundleFailure:
  * partition-decode-failed (data/part-00000.arrows): ring offsets end at 14, past the
@@ -488,7 +488,7 @@ test('decodes a well-formed partition, with offsets ending exactly at their boun
 });
 
 /**
- * M1 (delete B4) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
+ * Mutation M1 (delete B4) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
  * v24.18.1, npm 11.16.0). Printed failure: `AssertionError [ERR_ASSERTION]: Missing expected
  * exception.` — decodePartition returns normally instead of throwing.
  */
@@ -497,7 +497,7 @@ test('refuses ring offsets that end past the coordinate pairs', () => {
 });
 
 /**
- * M2 (delete B3's monotone loop) fails this test by name, at commit
+ * Mutation M2 (delete B3's monotone loop) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: Missing expected exception.` — decodePartition returns normally
  * instead of throwing.
@@ -507,7 +507,7 @@ test('refuses ring offsets that decrease', () => {
 });
 
 /**
- * M3 (delete B2) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
+ * Mutation M3 (delete B2) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
  * v24.18.1, npm 11.16.0). Printed failure: `AssertionError [ERR_ASSERTION]: detail "ring offsets
  * decrease at ring 3: 12 then undefined" does not include "polygon offsets"` — B3's loop reads one
  * past r1 and throws under the wrong clause, which this test's wording assertion catches.
@@ -517,7 +517,7 @@ test('refuses polygon offsets that end past the rings', () => {
 });
 
 /**
- * M4 (delete B1's monotone loop) fails this test by name, at commit
+ * Mutation M4 (delete B1's monotone loop) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: Missing expected exception.` — decodePartition returns normally
  * instead of throwing.
@@ -527,7 +527,7 @@ test('refuses polygon offsets that decrease', () => {
 });
 
 /**
- * M5 (delete B1's start clause) fails this test by name, at commit
+ * Mutation M5 (delete B1's start clause) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: detail "ring offsets start at undefined, below 0" does not
  * include "polygon offsets"` — B3's own start check reads ringOffsets[-1] and throws under the
@@ -538,7 +538,7 @@ test('refuses polygon offsets that start below 0', () => {
 });
 
 /**
- * M6 (delete B3's start clause) fails this test by name, at commit
+ * Mutation M6 (delete B3's start clause) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: Missing expected exception.` — decodePartition returns normally
  * instead of throwing (a negative first ring offset is still "monotone" relative to what follows
@@ -549,7 +549,7 @@ test('refuses ring offsets that start below 0', () => {
 });
 
 /**
- * M7 (delete G1) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
+ * Mutation M7 (delete G1) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
  * v24.18.1, npm 11.16.0). Printed failure: `AssertionError [ERR_ASSERTION]: expected a
  * BundleFailure, got TypeError: Cannot read properties of undefined (reading 'valueOffsets')`.
  */
@@ -558,7 +558,7 @@ test('refuses a flat geometry column as partition-decode-failed, not a raw TypeE
 });
 
 /**
- * M8 (delete G2) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
+ * Mutation M8 (delete G2) fails this test by name, at commit a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node
  * v24.18.1, npm 11.16.0). Printed failure: `AssertionError [ERR_ASSERTION]: detail "geometry
  * column: the coordinate values are not float64" does not include "ring level"` — G3 happens to
  * catch this shape too, under the wrong clause, which this test's wording assertion catches.
@@ -568,7 +568,7 @@ test('refuses a geometry column one list level short', () => {
 });
 
 /**
- * M9 (G3 reduced to a presence check) fails this test by name, at commit
+ * Mutation M9 (G3 reduced to a presence check) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: expected a BundleFailure, got TypeError: Cannot convert a
  * BigInt value to a number`.
@@ -578,7 +578,7 @@ test('refuses coordinate values that are not float64', () => {
 });
 
 /**
- * M10 (G3's `?.` replaced by `.`) fails this test by name, at commit
+ * Mutation M10 (G3's `?.` replaced by `.`) fails this test by name, at commit
  * a411fc4f55a3f29f36f51a6f8e97a12860cc49cc (node v24.18.1, npm 11.16.0). Printed failure:
  * `AssertionError [ERR_ASSERTION]: expected a BundleFailure, got TypeError: Cannot read properties
  * of undefined (reading 'values')`.
