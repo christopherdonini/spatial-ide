@@ -20,6 +20,8 @@ import {
   REAL_SOURCE_CHANGED_TERMINAL_DETAIL,
   REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL,
 } from "../testUtils/terminalShapes";
+import { dispatchSessionEndedToOwner, endSessionForDataset, routeDatasetSessionEndedEvent } from "../App";
+import type { DatasetSessionEnded } from "../skp/types";
 
 function mockStream(handle: string) {
   viewportQueryMock.mockResolvedValueOnce({ stream: handle, expires_in_ms: 30_000 });
@@ -827,6 +829,71 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     sinkFor(0).onTerminal(sourceChangedTerminal());
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
 
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH7 (fix-list item 11, reviewer gate-1 B7): the
+   * FULL route -- a real `dataset_session_ended` event through `App.tsx`'s own
+   * `routeDatasetSessionEndedEvent` and `dispatchSessionEndedToOwner`, ending a real
+   * `ViewportStreamManager` with a resident batch, its `onSessionEnded` wired to the exported
+   * `endSessionForDataset`. Distinct from the test just above, which calls
+   * `manager.notifySessionEnded` directly rather than through the event route.
+   *
+   * RECORDED MUTATION (§4's own text for SH7, Amendment 5 item 3): delete this manager's
+   * `notifySessionEnded` call in `dispatchSessionEndedToOwner` (`App.tsx`), keeping the early
+   * `return`. Applied, run and reverted on this branch: `AssertionError: expected "vi.fn()" to be
+   * called 1 times, but got 0 times` on the `onSuperseded` assertion below -- 1 failed.
+   */
+  it("SH7: a matching dataset_session_ended event ends a real baseline manager's session through the full route", async () => {
+    mockStream("sh_a");
+    const onSuperseded = vi.fn();
+    const setSessionEnded = vi.fn();
+    const setHover = vi.fn();
+    let sessionEndedFlag = false;
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded,
+      onSessionEnded: (detail) =>
+        endSessionForDataset(detail, "ds_x", {
+          getCurrentDataset: () => "ds_x",
+          isAlreadyEnded: () => sessionEndedFlag,
+          setSessionEnded: (refusal) => {
+            sessionEndedFlag = true;
+            setSessionEnded(refusal);
+          },
+          setHover,
+        }),
+    });
+    await manager.requestViewport(null, null, 1_000);
+    sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
+    onSuperseded.mockClear();
+
+    const event: DatasetSessionEnded = { session: "sr_" + "a".repeat(32), reason: "coverage-lost" };
+    const endSessionDirectly = vi.fn();
+    routeDatasetSessionEndedEvent(event, {
+      admittedSession: event.session,
+      admittedDataset: "ds_x",
+      dispatch: (reason, forDataset) =>
+        dispatchSessionEndedToOwner(reason, forDataset, {
+          baseline: manager,
+          candidate: null,
+          endSessionDirectly,
+        }),
+      logUnknownSessionDrop: vi.fn(),
+    });
+
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(setSessionEnded).toHaveBeenCalledTimes(1);
+    expect(setHover).toHaveBeenCalledWith({ kind: "session-ended" });
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+
+    // Refused until reopen, same as the direct-call test above.
     viewportQueryMock.mockClear();
     const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
     expect(outcome).toEqual({ kind: "session-ended" });

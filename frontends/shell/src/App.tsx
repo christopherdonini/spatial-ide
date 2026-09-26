@@ -686,21 +686,37 @@ export function buildSessionEndedOwnerDetail(reason: EndReason): string {
 /**
  * **§2d's reason-keyed entry, extracted pure** (the `endSessionForDataset`/`handleSessionEnded`
  * shape above, applied to the event route): tries the baseline manager, then the candidate manager,
- * and falls back to ending the session directly only when neither manager exists yet. Each
- * `notify*` callback reports whether a manager existed and was called, so this function calls at
+ * and falls back to ending the session directly only when neither manager exists yet -- calling at
  * most one of the three.
+ *
+ * **Reviewer gate-1 B7 (fix-list item 11): the two `notifySessionEnded` calls live HERE**, not at
+ * `endSessionForReason`'s call site -- SH7 and SH8 need a real `ViewportStreamManager` /
+ * `TileViewportStreamManager` to route into, and a boolean-returning `notify*` closure could not be
+ * distinguished from one that never called anything at all. `baseline`/`candidate` take the
+ * managers directly (or `null`, when none is live yet); the `Pick<..., "notifySessionEnded">` types
+ * let the compiler hold the seam to the real managers without this module importing either class
+ * for more than its one method's shape. Builds `detail` itself, through
+ * `buildSessionEndedOwnerDetail`, so its one caller (`endSessionForReason`, below) passes only the
+ * reason.
  */
 export function dispatchSessionEndedToOwner(
-  detail: string,
+  reason: EndReason,
   forDataset: string,
   deps: {
-    notifyBaselineManager: () => boolean;
-    notifyCandidateManager: () => boolean;
+    baseline: Pick<ViewportStreamManager, "notifySessionEnded"> | null;
+    candidate: Pick<TileViewportStreamManager, "notifySessionEnded"> | null;
     endSessionDirectly: (detail: string, forDataset: string) => void;
   }
 ): void {
-  if (deps.notifyBaselineManager()) return;
-  if (deps.notifyCandidateManager()) return;
+  const detail = buildSessionEndedOwnerDetail(reason);
+  if (deps.baseline) {
+    deps.baseline.notifySessionEnded(detail);
+    return;
+  }
+  if (deps.candidate) {
+    deps.candidate.notifySessionEnded(detail);
+    return;
+  }
   deps.endSessionDirectly(detail, forDataset);
 }
 
@@ -1163,18 +1179,9 @@ export default function App() {
    */
   const endSessionForReason = useCallback(
     (reason: EndReason, forDataset: string) => {
-      const detail = buildSessionEndedOwnerDetail(reason);
-      dispatchSessionEndedToOwner(detail, forDataset, {
-        notifyBaselineManager: () => {
-          if (!managerRef.current) return false;
-          managerRef.current.notifySessionEnded(detail);
-          return true;
-        },
-        notifyCandidateManager: () => {
-          if (!candidateManagerRef.current) return false;
-          candidateManagerRef.current.notifySessionEnded(detail);
-          return true;
-        },
+      dispatchSessionEndedToOwner(reason, forDataset, {
+        baseline: managerRef.current,
+        candidate: candidateManagerRef.current,
         endSessionDirectly: endSession,
       });
     },

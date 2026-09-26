@@ -1288,35 +1288,31 @@ describe("buildSessionEndedOwnerDetail (§2d: the event route's owner detail)", 
 });
 
 describe("dispatchSessionEndedToOwner (§2d: baseline, then candidate, then endSession directly)", () => {
-  // RECORDED MUTATION for "tries the baseline manager first": swap the two `if` calls' order.
-  // Expected failure: the assertion below fails -- the candidate notifier would be called too (or
-  // instead), when the baseline one reported it handled it.
+  // RECORDED MUTATION for "tries the baseline manager first": swap the two `if` blocks' order.
+  // Expected failure: the assertion below fails -- the candidate would be notified too (or
+  // instead), when the baseline one was live.
   it("tries the baseline manager first, and calls at most one of the three", () => {
-    const notifyBaselineManager = vi.fn(() => true);
-    const notifyCandidateManager = vi.fn(() => true);
+    const baseline = { notifySessionEnded: vi.fn() };
+    const candidate = { notifySessionEnded: vi.fn() };
     const endSessionDirectly = vi.fn();
-    dispatchSessionEndedToOwner("detail", "ds_a", {
-      notifyBaselineManager,
-      notifyCandidateManager,
-      endSessionDirectly,
-    });
-    expect(notifyBaselineManager).toHaveBeenCalledTimes(1);
-    expect(notifyCandidateManager).not.toHaveBeenCalled();
+    dispatchSessionEndedToOwner("observed-change", "ds_a", { baseline, candidate, endSessionDirectly });
+    expect(baseline.notifySessionEnded).toHaveBeenCalledTimes(1);
+    expect(candidate.notifySessionEnded).not.toHaveBeenCalled();
     expect(endSessionDirectly).not.toHaveBeenCalled();
   });
 
   // RECORDED MUTATION for "falls to the candidate manager when no baseline manager exists": always
-  // call `endSessionDirectly` regardless of what the notifiers report. Expected failure: the
-  // assertion below fails -- `endSessionDirectly` would also have been called.
+  // call `endSessionDirectly` regardless of `baseline`/`candidate`. Expected failure: the assertion
+  // below fails -- `endSessionDirectly` would also have been called.
   it("falls to the candidate manager when no baseline manager exists", () => {
-    const notifyCandidateManager = vi.fn(() => true);
+    const candidate = { notifySessionEnded: vi.fn() };
     const endSessionDirectly = vi.fn();
-    dispatchSessionEndedToOwner("detail", "ds_a", {
-      notifyBaselineManager: () => false,
-      notifyCandidateManager,
+    dispatchSessionEndedToOwner("observed-change", "ds_a", {
+      baseline: null,
+      candidate,
       endSessionDirectly,
     });
-    expect(notifyCandidateManager).toHaveBeenCalledTimes(1);
+    expect(candidate.notifySessionEnded).toHaveBeenCalledTimes(1);
     expect(endSessionDirectly).not.toHaveBeenCalled();
   });
 
@@ -1326,12 +1322,15 @@ describe("dispatchSessionEndedToOwner (§2d: baseline, then candidate, then endS
   // constructed would be silently lost.
   it("ends the session directly when neither manager exists yet", () => {
     const endSessionDirectly = vi.fn();
-    dispatchSessionEndedToOwner("detail", "ds_a", {
-      notifyBaselineManager: () => false,
-      notifyCandidateManager: () => false,
+    dispatchSessionEndedToOwner("observed-change", "ds_a", {
+      baseline: null,
+      candidate: null,
       endSessionDirectly,
     });
-    expect(endSessionDirectly).toHaveBeenCalledWith("detail", "ds_a");
+    expect(endSessionDirectly).toHaveBeenCalledWith(
+      buildSessionEndedOwnerDetail("observed-change"),
+      "ds_a"
+    );
   });
 });
 

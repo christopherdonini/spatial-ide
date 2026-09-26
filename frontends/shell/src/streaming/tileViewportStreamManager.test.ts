@@ -40,6 +40,8 @@ import type { StreamSink } from "./transport";
 import type { TileResidencyAccessor, TileViewportStreamManagerOptions } from "./tileViewportStreamManager";
 import { TileViewportStreamManager } from "./tileViewportStreamManager";
 import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
+import { dispatchSessionEndedToOwner, routeDatasetSessionEndedEvent } from "../App";
+import type { DatasetSessionEnded } from "../skp/types";
 
 const ANCHOR = { xmin: 0, ymin: 0, xmax: 100, ymax: 100 };
 
@@ -1531,6 +1533,54 @@ describe("TileViewportStreamManager on a source-changed terminal (boundary 4)", 
     manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
 
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH8 (fix-list item 11, reviewer gate-1 B7): the
+   * FULL route -- a real `dataset_session_ended` event through `App.tsx`'s own
+   * `routeDatasetSessionEndedEvent` and `dispatchSessionEndedToOwner`, ending a real
+   * `TileViewportStreamManager` with an in-flight tile, asserting that all tiles are cleared
+   * (`clearAll`'s own cancel, inside `endSession`). Distinct from the test just above, which calls
+   * `manager.notifySessionEnded` directly rather than through the event route.
+   *
+   * RECORDED MUTATION (§4's own text for SH8, Amendment 5 item 3): delete this manager's
+   * `notifySessionEnded` call in `dispatchSessionEndedToOwner` (`App.tsx`), keeping the early
+   * `return`. Applied, run and reverted on this branch: `AssertionError: expected "vi.fn()" to be
+   * called with arguments: [ 'sh_1' ]`, `Number of calls: 0` -- 1 failed.
+   */
+  it("SH8: a matching dataset_session_ended event clears all tiles in a real candidate manager through the full route", async () => {
+    const onSessionEnded = vi.fn();
+    const { manager } = makeManager({ onSessionEnded });
+    manager.establishGridFrame(ANCHOR, "metre");
+    viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+    const frame = manager.gridFrame!;
+    const cellSize = frame.baseSpan / 16;
+    const bbox = { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+    manager.onCameraChange(bbox);
+    await flushMicrotasks();
+    expect(manager.inFlightCount).toBe(1);
+    cancelMock.mockClear();
+
+    const event: DatasetSessionEnded = { session: "sr_" + "a".repeat(32), reason: "observed-change" };
+    const endSessionDirectly = vi.fn();
+    routeDatasetSessionEndedEvent(event, {
+      admittedSession: event.session,
+      admittedDataset: "ds_x",
+      dispatch: (reason, forDataset) =>
+        dispatchSessionEndedToOwner(reason, forDataset, {
+          baseline: null,
+          candidate: manager,
+          endSessionDirectly,
+        }),
+      logUnknownSessionDrop: vi.fn(),
+    });
+
+    // All tiles cleared: the in-flight tile's own stream is cancelled and nothing remains in flight.
+    expect(cancelMock).toHaveBeenCalledWith("sh_1");
+    expect(manager.inFlightCount).toBe(0);
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(endSessionDirectly).not.toHaveBeenCalled();
     expect(manager.onCameraChange(ANCHOR)).toEqual({ kind: "session-ended" });
   });
 });
