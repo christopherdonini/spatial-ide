@@ -287,9 +287,9 @@ async fn serve_file(st: &AppState, name: &str) -> Response {
 // ---------------------------------------------------------------------------------------------
 
 async fn upgrade(State(st): State<AppState>, headers: HeaderMap, ws: WebSocketUpgrade) -> Response {
-    // A present `Origin` that `to_str` refuses (any byte outside visible ASCII -- ADR-020 Decision;
-    // docs/09 "Local listening sockets") is refused directly, before the credential check, rather
-    // than folded into the "absent" case: `Session::request_allowed`'s `None` arm exists for a
+    // A present `Origin` that `to_str` refuses (`http`'s `HeaderValue::to_str` refuses any byte outside
+    // visible ASCII) is refused directly, before the credential check (ADR-020 Decision; docs/09 "Local
+    // listening sockets"), rather than read as absent: `Session::request_allowed`'s `None` arm exists for a
     // header that is truly absent, and admitting on that arm for a header that is present but
     // unreadable would let a same-origin claim rescue a stated foreign origin.
     let origin = match headers.get("origin") {
