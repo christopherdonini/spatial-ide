@@ -203,3 +203,13 @@ Superseded index: Amendment 1 item 1's final figure (912), and Amendment 1 item 
 6. **Final figures at 8fb4999**, by Amendment 1's command: 1,087 (mjs 261+84, test 616+56, README 46+24), class 2. Non-generated files: 6 of ≤ 6.
 
 Superseded index: Amendment 1 item 1's final figure (912) and its file count (5), by item 6; Amendment 2 item 1's bullets, by item 3; Amendment 2 item 2's figure (919), by item 6; Amendment 2 item 2's second sentence, withdrawn as a restatement of Amendment 1 item 1.
+
+### Amendment 4 — 2026-09-26 (UTC), written after gate attempt 2's results were seen (`state/gate-log.json`, node governance-test-claims-superseded-followups, attempt 2): Amendment 3 reduced to references (`state/directives/2026-09-18-record-cap.md`, point (3))
+
+1. Amendment 3 is class 1, as its first line says; its item labels other than item 6's class 2 are withdrawn. Its test-comment changes are class 3 by the template's test-text exception and its mutation changes class 4, each observed failure in the RECORDED MUTATION comment above the named test in `scripts/plan/verify-test-claims.test.mjs` @ 8fb4999, each superseded span its commit's parent's bytes. Its code and docs changes apply §2 and carry no class.
+2. Amendment 3 item 3 covers the RECORDED MUTATION comments that name 7400dac @ 8fb4999; a comment naming an earlier commit keeps §2.9's no-re-run qualifier.
+3. Amendment 3 item 4 is superseded by the comment above `a_pin_with_no_rev_does_not_exempt` @ 8fb4999 (class 3, item 1).
+4. Amendment 3 item 6's growth over Amendment 2 item 2's figure is the fix round f6ccfd2..8fb4999 (class 2's reason).
+5. Amendment 2 was written after the results Amendment 1 item 2 records; its first line omits that.
+
+Superseded index: Amendment 3 items 1–5's class labels, by item 1; Amendment 3 item 3's scope, by item 2; Amendment 3 item 4, by item 3; Amendment 2's first line, as to when it was written, by item 5.
