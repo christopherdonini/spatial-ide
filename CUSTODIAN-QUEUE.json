@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T12:33:54.296Z",
-  "plan_hash": "20407b515df1b98f66d786249e73801e031ea474983b085a66dc8d3d8b47d99b",
+  "generated_at": "2026-09-26T12:35:00.581Z",
+  "plan_hash": "2628c091fc4df77c7379a8ca7475caf7454e4e1aa1612ecaf2d62346105d5fbb",
   "priorities_approved": true,
   "next": {
     "id": "corpus-reproducibility-record",
@@ -507,7 +507,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it"
+      "summary": "Prerequisites before placing (the human, 2026-09-22): Brief A closed (P6, the N8 piece, the five acceptances), PR #97's dependency piece, the three clean-clone repairs; then the custodian brings a small v0.1.1 scope and its remaining gates -- not waiting for all of Brief B; tagging, publishing and the human's decisions separately gated. A patch release after v0.1.0. Not scheduled: 69a stands (dynamic CRT declared, no static build to land), so v0.1.1 has no forcing content yet. The human places it when there is a reason to cut it; M13's re-test, the SignPath application draft and the from-v0.1.1 release-artifacts trigger all ride it RULED 2026-09-26, question round 25, item 4: the next release's notes carry the KNOWN-LIMITATIONS line of bundle-viewer-partition-offset-bounds (bundles published before the fix keep a viewer that can stall on crafted offsets); no GitHub advisory."
     },
     {
       "id": "adr-032-decision",
