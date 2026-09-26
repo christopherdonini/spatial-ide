@@ -35,6 +35,26 @@ fn fixture(name: &str) -> PathBuf {
     path
 }
 
+/// Generous relative to any real send this test performs; the only thing this bounds is how long a
+/// pre-fix run of E10 waits before failing (reviewer S5). Same discipline as
+/// `kernel/src/skp.rs`'s own `ticket_drop_under_lock_regression::HANG_TIMEOUT`.
+const HANG_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Run `f` on a spawned thread; `None` means it did not finish within `timeout` — turning a hang
+/// into an ordinary, named test failure instead of hanging the whole suite. The spawned thread
+/// itself is not joined and is deliberately leaked on a real hang, mirroring
+/// `kernel/src/skp.rs`'s own `ticket_drop_under_lock_regression::run_with_timeout`.
+fn run_with_timeout<T: Send + 'static>(
+    timeout: Duration,
+    f: impl FnOnce() -> T + Send + 'static,
+) -> Option<T> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = tx.send(f());
+    });
+    rx.recv_timeout(timeout).ok()
+}
+
 fn touch_modification_time(path: &std::path::Path) {
     let later = std::time::SystemTime::now() + Duration::from_secs(120);
     std::fs::File::options()
@@ -284,9 +304,10 @@ fn a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
 // -------------------------------------------------------------------------------------------
 
 /// RECORDED MUTATION: in `SessionInvalidator::end_generation`, replace `try_send` with a blocking
-/// `send` (via an unbounded or manually-drained channel semantics). Expected failure: this test
-/// either hangs (a `send` on a full bounded `sync_channel` blocks) or the "returns quickly"
-/// assertion fails, depending on the channel's exact capacity semantics under the change.
+/// `send` (via an unbounded or manually-drained channel semantics). Expected failure: under the
+/// mutation the call below hangs rather than merely failing an assertion — reviewer S5 — so it runs
+/// through [`run_with_timeout`], which turns that hang into a named, bounded test failure instead of
+/// hanging the whole suite.
 #[test]
 fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_refuses() {
     let generations = GenerationRegistry::new();
@@ -302,11 +323,18 @@ fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_ref
     }
 
     // One more: the queue is now full. This must return promptly (never block) even though its
-    // own event is lost.
+    // own event is lost. Reviewer S5: run through `run_with_timeout` so a mutation that makes this
+    // block hangs this one call, bounded, rather than the whole suite.
     let overflow_name = "ds_overflow";
     generations.mint_for_open(overflow_name, SessionRef::mint());
     let started = std::time::Instant::now();
-    invalidator.end_generation(overflow_name, SessionEndReason::ObservedChange);
+    run_with_timeout(HANG_TIMEOUT, {
+        let invalidator = invalidator.clone();
+        move || invalidator.end_generation(overflow_name, SessionEndReason::ObservedChange)
+    })
+    .unwrap_or_else(|| {
+        panic!("SessionInvalidator::end_generation did not return within {HANG_TIMEOUT:?}")
+    });
     assert!(started.elapsed() < Duration::from_secs(2), "the end must never block on a full queue");
 
     // The end itself still took effect, event or no event: the next call refuses by name.
