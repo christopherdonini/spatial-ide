@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T10:28:41.199Z",
-  "plan_hash": "d68d7ffab59f5260c20a23eb4831dfb153cd4f54755269b709fdeb4c588221dd",
+  "generated_at": "2026-09-26T10:47:27.082Z",
+  "plan_hash": "42d210ea151f8b14ce7559dd6fed37f41e77c7af77fe226867a03caa930f217b",
   "priorities_approved": true,
   "next": {
     "id": "corpus-reproducibility-record",
@@ -59,25 +59,6 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; independent of the other two; carries a KNOWN-LIMITATIONS line for bundles already published. A3 3(a)'s S2, the wrong failure state, rides along. Evidence: state/cloud/wave1/A3.md, its triage update, reproduced on Windows."
-    },
-    {
-      "id": "governance-test-claims-superseded-followups",
-      "title": "verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 1,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Deferred at PR #117's landing under the architect's scope ruling (state/gate-log.json indices 86, 87, 171 and 172 name every item): code -- the wide-span residual (the claim's own historical line must carry the name), memoize isAncestorOfMain, COMMIT_ID_RE rejecting a hex-named ref; wording -- adopted-from for byte-copied-from (the module header and the README boundary lead-in), the README forgery clause (a pin proves age and identity, not disappearance), the quote-by-reference quotation, the stale comments (no fixture carries a remote; verify-quotes not tracked; 46cde2c unmerged; entry 133 for the attempt-2 reviewer gate), AUTONOMY section 6a's SKIPPED-branch clause; nits -- not-superseded satisfying (b), wrapped mutation comments, a constant hash called variable, test temp directories never cleaned, the gate-log node id differing from the PLAN id. Refused-line residual (PR #118 attempt-2 gates, state/gate-log.json indices 185 and 186; surfaced to the human): a line carrying the withdrawn-test marker whose reference the row grammar refuses (a range, another file's path, no commit-id rev) is never checked, so an unresolvable ruling or carrier on it is never named -- it exempts nothing, but pinning an existing test it stays silent -- and it needs a by-name finding of its own. RULED 2026-09-25, question round 22, item 3: the withdrawn-test rider (a) governs every line carrying the marker, not only accepted ones -- a malformed or unresolvable withdrawal attempt fails by name with the grammar's reason; condition: this PR also corrects or reduces every such line already on main, so verify never reddens main when it merges. RULED 2026-09-25, question round 23, item 4: no landed preregistration is edited; O1 by use versus mention (the marker is a withdrawal attempt only in its row position; fallback: exactly the two historical lines exempted by hash pin, append-never); O3 widened by the human -- pin-condition failures on accepted rows are named too, in the same finding shape; O2 and O4-O9 as recommended."
     },
     {
       "id": "test-claims-landedness-bound",

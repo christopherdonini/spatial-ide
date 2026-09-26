@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d68d7ffab59f5260c20a23eb4831dfb153cd4f54755269b709fdeb4c588221dd`) at `2026-09-26T10:28:41.199Z`.
+Generated from `PLAN.yaml` (sha256 `42d210ea151f8b14ce7559dd6fed37f41e77c7af77fe226867a03caa930f217b`) at `2026-09-26T10:47:27.082Z`.
 
 ## 1. Next
 
@@ -10,7 +10,6 @@ Generated from `PLAN.yaml` (sha256 `d68d7ffab59f5260c20a23eb4831dfb153cd4f547552
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing (lane `governance`, order 1, budget 60 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
