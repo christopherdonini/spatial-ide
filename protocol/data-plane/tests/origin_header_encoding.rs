@@ -109,7 +109,7 @@ async fn a_stated_foreign_ascii_origin_with_a_same_origin_claim_is_refused_as_an
     dp.shutdown().await;
 }
 
-// Mutation (§4 T2): the fix's refusal arm in server.rs fires only when the value is valid UTF-8; a non-UTF-8 value is read as `None` instead. Applied, run, reverted.
+// Mutation (§4 T2): the fix's refusal arm in server.rs fires only when the value is valid UTF-8; a non-UTF-8 value is read as `None` instead. Applied, run, reverted. It fails T4 and T2, printed in that order.
 // Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
 //     left: Ok(())
 //    right: Err(403)
@@ -141,7 +141,7 @@ async fn a_stated_origin_with_a_utf8_non_ascii_character_is_refused_as_a_foreign
     dp.shutdown().await;
 }
 
-// Mutation (§4 T4): the fix reverted -- the Origin read restored to `.and_then(|v| v.to_str().ok())`. Applied, run, reverted.
+// Mutation (§4 T4): the fix reverted -- the Origin read restored to `.and_then(|v| v.to_str().ok())`. Applied, run, reverted. It fails T4, T2 and T3, printed in that order.
 // Printed failure (observed at d445c86, rustc 1.97.1), by script, not retyped:
 //     left: Ok(())
 //    right: Err(403)
