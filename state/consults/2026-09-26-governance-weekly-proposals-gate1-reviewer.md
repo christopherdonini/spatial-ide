@@ -1,4 +1,4 @@
-*Custodian's filing note (2026-09-26): the reviewer gate's attempt-1 report for PLAN node `governance-weekly-proposals-2026-09-26`, reviewed at governance/weekly-proposals-2026-09-26 @ f205478, filed as returned under state/consults/ (the piece's own rule on gate-report filing starts at its merge; extracted by script from the agent's hand-back; byte-identical). Everything below the rule is the agent's text.*
+*Custodian's filing note (2026-09-26): the reviewer gate's attempt-1 report for PLAN node `governance-weekly-proposals-2026-09-26`, reviewed at governance/weekly-proposals-2026-09-26 @ f205478, filed as returned under state/consults/ (the piece's own rule on gate-report filing starts at its merge; extracted by script from the agent's hand-back; byte-identical). Everything below the rule is the agent's text, as returned, except one cite on this file's line 93: its worktree path mixed separators, so `verify-cites` read the forward-slash tail as a rooted cite into main's tree, and a script rewrote that tail's forward slashes as backslashes. Nothing else changed.*
 
 ---
 
@@ -90,7 +90,7 @@ I applied each mutation myself at f205478 by `sed` on `scripts/plan/verify-cites
   - T3's "not deleted until that commit is reachable" rule for branches.
 
   I read each as implementing (a)–(e) or the ruling's condition, and they were preregistered at 340f516. Whether that is in scope is the architect's call.
-- **S2:** because T6 has no closing fence, GitHub renders Amendment 1 (`C:\dev\wt\governance-weekly\scripts/plan/GOVERNANCE-WEEKLY-PROPOSALS-2026-09-26-PREREGISTRATION.md:178-180`) inside T6's code block. Also, the phrase "the form's last line" in Amendment 1 is true only at 340f516. The form is append-only, so this is a disclosure, not a fix.
+- **S2:** because T6 has no closing fence, GitHub renders Amendment 1 (`C:\dev\wt\governance-weekly\scripts\plan\GOVERNANCE-WEEKLY-PROPOSALS-2026-09-26-PREREGISTRATION.md:178-180`) inside T6's code block. Also, the phrase "the form's last line" in Amendment 1 is true only at 340f516. The form is append-only, so this is a disclosure, not a fix.
 - **S3:** Amendment 1 sits at the end of the file, not under §10 ("opens empty"). That placement follows from append-only. A reader looking in §10 will find it empty.
 - **S4 (ledger finding for 2026-10-02, per §1):** the existing test `runVerifyCites gates a broken rooted reference, ignores doc-number, advises a loose one` never removes its `gitTree` directory. OS temp already holds 317 `verify-cites-git-*` entries, and each full-suite run adds one. This is outside this piece (§8 item 5 forbids touching it). It sits beside round 25 item 1 (b).
 - **N1:** the new test's lines 197, 222, 223, 226 and 229 exceed 100 columns.
