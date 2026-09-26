@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3a05d0fe2fd50fa3e53332f95fc8f2f3ae65b7113a4167ebabb5d28f50931a38`) at `2026-09-26T10:29:54.031Z`.
+Generated from `PLAN.yaml` (sha256 `86ce113fb932f04ad67dd732d35bd0672b63488f7335accb57a8ee3f4efcbfb1`) at `2026-09-26T10:46:49.482Z`.
 
 ## 1. Next
 
@@ -33,7 +33,6 @@ Generated from `PLAN.yaml` (sha256 `3a05d0fe2fd50fa3e53332f95fc8f2f3ae65b7113a41
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
-- **governance-test-claims-superseded-followups** — verify:test-claims SUPERSEDED -- the should-fixes and nits deferred at PR #117's landing — evidence: branch `governance/test-claims-followups`
 
 ## 6. Proposed / unscheduled
 
