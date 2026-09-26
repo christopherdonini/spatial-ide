@@ -154,9 +154,12 @@ wherever its only power is to stop the caller's *own already-authorized* work.
 DatasetHandle  "ds_" + 32 lowercase hex   kernel-minted, OS CSPRNG
 StreamHandle   "sh_" + 32 lowercase hex   kernel-minted, OS CSPRNG, single-use ticket (ADR-019)
 CancelKey      client-minted, 1..=64 chars of [A-Za-z0-9_-]
+SessionRef     "sr_" + 32 lowercase hex   kernel-minted, OS CSPRNG (skp/0.5, ADR-035 D4)
 ```
 
-All three are session-scoped and non-persistable. None may be written to disk, logged, or reused
+**`skp/0.5`'s third minting rule, stated beside the first two:** the kernel mints a value wherever the value only names a kernel-side session and authorizes nothing, and no command accepts it as input. `SessionRef` is that value. The kernel mints one for every dataset-session generation, from the OS CSPRNG, and never reuses one. For a generation a successful `open_dataset` creates, the reference is handed back exactly once, on `OpenDatasetResponse.session`. For a generation created any other way, no response returns it and no client holds it. Either way it is not looked up, and its only other appearance is on the `dataset_session_ended` event that names the generation it ends (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2b and Amendment 2; `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` Decision 4 and its Note 2026-09-25; round 21 item 1, rider (a); round 23, items 2 and 3).
+
+All four are session-scoped and non-persistable. None may be written to disk, logged, or reused
 across a process restart — docs/11's ResourceRef model and ADR-016's "stability across reopen" OPEN
 block are both unsatisfied, so no handle may address a feature or dataset across sessions.
 `protocol/data-plane`'s own `OperationId`/`StreamId` are transport-internal instrument identities,
@@ -184,7 +187,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    no `style`, no `publish` (ADR-017's acceptance condition keeps publish unreachable regardless).
    **v0.1 (§7 below) does not add a sixth command** — `viewport_query` gains an optional row-filter
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
-2. **Transport bindings** — one: Tauri invoke. No control-plane websocket, no stdio, no MCP adapter.
+2. **Transport bindings** — one: Tauri invoke, for the five commands. **`skp/0.5` adds exactly one
+   more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
+   server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
+   stdio, no MCP adapter.
 3. **Version negotiation** — *"beyond a version field" means, minimally:* every request carries
    `skp: "skp/0"`, compared with `==`. No ranges, no min/max, no capability sets, no per-command
    versions, no downgrade path, no handshake. A client and host that disagree fail on the first call.
@@ -223,7 +229,11 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    filtered scan.
 6. **Backpressure** — data-plane credit only (`MAX_INFLIGHT_BATCHES = 4`, unchanged). None on the
    control plane; commands are unqueued, bounded only by the declared ticket/stream ceilings.
-7. **Subscriptions and events** — none. No server-to-client push on the control plane in any form.
+7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
+   Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
+   generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
+   turn it off, and no request or response on any of the five commands mentions it. No other
+   server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §6. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
    taxonomy — still no new error *invented outside a declared, exhaustive taxonomy*: every one of the
@@ -237,8 +247,11 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    pool. `cancel`'s idempotence is a property of `CancelToken::cancel` and `StreamState::observe_cancel`
    already keeping the first instant — an accident of two existing implementations, not a mechanism,
    and must not be cited as one.
-10. **Stable vs temporary handles** — all three handle kinds are temporary and session-scoped (§3).
-    No stable resource URI; the publish path's `spatial://dataset/<name>` is not reachable here.
+10. **Stable vs temporary handles** — every handle kind is temporary and session-scoped (§3).
+    `SessionRef` (`skp/0.5`) is minted per dataset-session generation (§3's third rule), a value
+    kind that is not a handle; never persisted, never published, never logged, and does not survive
+    a reopen. No stable resource URI; the publish path's `spatial://dataset/<name>` is not reachable
+    here.
 11. **Authentication and authorization** — none on the control plane beyond "only this shell's own
     webview can invoke it." No capability grants, no principals. The data plane keeps its existing
     session token, origin check and loopback bind, unchanged.
@@ -261,6 +274,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     literal. Condition (iv) is what makes (ii) load-bearing: the §8 entry is the version's full
     field set, and after merge it is a historical record, not a growing one. **`skp/0.4` is a
     further instance of this rule**, and it freezes at merge exactly as `skp/0.2` and `skp/0.3` did.
+
+    **`skp/0.5` was assembled across several commits, and condition (iii) did not hold for one of
+    them**: one commit changed the Rust-side literal and fixtures, and the TypeScript side followed
+    in a later commit (`engine/SOURCE-WATCHER-PREREGISTRATION.md` §10, Amendment 5 item 2). It is
+    therefore not an instance of this rule. Its whole field set is §8's `skp/0.5` entry, and it
+    freezes at merge as `skp/0.2` through `skp/0.4` did.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -746,3 +765,59 @@ The reference the ruling names is the session reference of
 `docs/adr/ADR-035-dataset-session-ended-control-plane-event.md` Decision 4, which the watcher
 piece introduces on `skp/0.5` (that ADR's Decision 6). A reference that fails any condition gets no
 clarification from this note.
+
+### skp/0.5 — the advisory source-change watcher (`engine/SOURCE-WATCHER-PREREGISTRATION.md`)
+
+**The version's FULL field set, as §8's own discipline requires — every member `skp/0.5` adds, in
+one list.**
+
+`open_dataset` **response** gains one member:
+
+- **`session: SessionRef`** (`"sr_" + 32 lowercase hex`, kernel-minted) — minted once per
+  successful open, after admission. Authorizes nothing; no request type ever accepts it back.
+
+`describe` **response** gains three top-level, always-present members, kept independent by
+construction (addition 1 — none ever rewrites another):
+
+- **`coverage: { state: "watching" | "checks-only", reason: string | null }`** — fixed at
+  admission and never rewritten by a later loss (rule 3). `reason` is `Some` exactly for
+  `checks-only`.
+- **`checks: { state: "full" | "degraded", components: ("mtime" | "footer-hash")[] }`** —
+  `engine::descriptor::SourceDescriptor::unestablished_components()`'s vocabulary, carried on the
+  wire for the first time (ADR-016 A1 item 2's owed display). `components` is non-empty exactly
+  for `degraded`.
+- **`session_end: "observed-change" | "coverage-lost" | null`** — `Some` exactly once this
+  dataset's generation has ended.
+
+One new typed refusal:
+
+- **`engine.source_coverage_lost`**, `fields.detail` — the session-ended family, not retryable, on
+  `error_of`'s existing `EngineError` + variant-name rule. Never `engine.source_changed` for a
+  coverage loss (block-on-sight 3).
+
+One new control-plane event, the sole server-to-client push this spec defines (§4 item 7):
+
+- **`skp://dataset_session_ended`**, payload `{ session: SessionRef, reason: "observed-change" |
+  "coverage-lost" }`, `deny_unknown_fields`, exactly two members. Emitted at most once per ended
+  dataset-session generation.
+
+**What `skp/0.5` deliberately does not add.** No generation value anywhere on the wire (rider (a)).
+No OS delivery deadline, event ordering against a data-plane frame, or latency claim (ADR-035
+Consequences). No new command. `protocol/data-plane/` has an empty diff.
+
+Mechanics, the `skp/0.2`–`skp/0.4` precedent followed exactly: one literal bumped once,
+`"skp/0.4"` → `"skp/0.5"`; plain `==` comparison retained; `deny_unknown_fields` kept both
+directions; every fixture on both the Rust (`protocol/skp/tests/data/*.json`,
+`protocol/skp/tests/fixtures.rs`) and TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`)
+sides of the wire updated in the same commit as each addition. `skp/1` stays RESERVED.
+
+### Second note to the `skp/0.3` entry: a session reference no client holds (2026-09-25)
+
+**Appended on the human's ruling of 2026-09-25** (`DECISIONS-PENDING.md`, RULED 2026-09-25 — question round 23, item 2; a red line, answered in typed text). The `skp/0.3` entry and the note of 2026-09-24 above are unchanged; this note clarifies the rule in writing and does not reinterpret it. It is paraphrased here; the ruling's words govern.
+
+`skp/0.5`'s kernel mints a `SessionRef` for every dataset-session generation, including one that `open_dataset` did not create (`docs/adr/ADR-035-dataset-session-ended-control-plane-event.md`, Note 2026-09-25). No response returns that reference, so no client holds it. It appears only on the `dataset_session_ended` event that ends its generation, which the shell drops as naming an unknown session.
+
+- That reference does not engage the `skp/0.3` rule that no generation value crosses the wire, under round 21 item 1's riders: it carries no ticket attribution, and it is never persisted or published.
+- It is containment for the close race, not a protocol feature. PLAN node `kernel-generation-close-races` makes the path that mints it unreachable and adds a test proving that.
+
+A reference that fails any condition in this note or in the 2026-09-24 note gets no clarification from either.

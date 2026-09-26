@@ -11,6 +11,10 @@ import { formatRefusal, FormattedRefusal } from "./formatRefusal";
 export interface Admitted {
   dataset: string;
   describe: DescribeResponse;
+  /** `skp/0.5` (ADR-035 D4): this open's kernel-minted session reference, returned once on
+   * `OpenDatasetResponse.session`. Authorizes nothing; used only to route a later
+   * `dataset_session_ended` event to this open (`skp/events.ts`; `App.tsx`'s listener). */
+  session: string;
 }
 
 export type AdmissionOutcome =
@@ -41,7 +45,7 @@ export async function admitDataset(
   const identity = options.identity ?? null;
   begin("open_dataset");
   try {
-    const { dataset } = await openDataset(path, cancelKey, crsAssertion, identity);
+    const { dataset, session } = await openDataset(path, cancelKey, crsAssertion, identity);
     end("open_dataset");
 
     begin("describe");
@@ -49,7 +53,7 @@ export async function admitDataset(
     end("describe");
     traceDescribeBounds(dataset, describeResult.extent);
 
-    return { kind: "admitted", admitted: { dataset, describe: describeResult } };
+    return { kind: "admitted", admitted: { dataset, describe: describeResult, session } };
   } catch (e) {
     end("open_dataset");
     end("describe");

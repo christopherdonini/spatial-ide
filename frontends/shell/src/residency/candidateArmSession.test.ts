@@ -3620,7 +3620,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
   // through that one method. The session-side latch was therefore a branch no input could take, and
   // it was REMOVED rather than kept with a mutation that cannot bite (finding recorded in
   // `OWNER-INVALIDATION-PREREGISTRATION.md` §10). This test still asserts the property, now against
-  // the guard that actually provides it -- see M6's mutation above ("notifySourceChanged no-op"),
+  // the guard that actually provides it -- see M6's mutation above ("notifySessionEnded no-op"),
   // which fails this block by name.
   it("the owner is told once, whichever sink or however many terminals", async () => {
     const canvas = fakeCanvas();
@@ -3632,7 +3632,7 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
     const sink = lastSink();
     sink.onTerminal(sourceChangedTerminal());
     sink.onTerminal(sourceChangedTerminal());
-    session.manager.notifySourceChanged(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+    session.manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
 
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
     expect(canvas.clearAllTiles).toHaveBeenCalledTimes(1);
@@ -3678,5 +3678,70 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
 
     expect(canvas.clearAllTiles).not.toHaveBeenCalled();
     expect(onSessionEnded).not.toHaveBeenCalled();
+  });
+
+  /**
+   * **Amendment 4 item 8 (the wave-1 fold-in, candidate arm's own untiled sink), SH15.** An
+   * event-route end while the untiled first look's own ticket is still minting -- caught at
+   * `issueUntiledQuery`'s one guard, positioned beside `stopped` after `dataPlaneAttach` (the
+   * amendment's own placement; there is no separate guard after `viewportQuery`, so an end that
+   * lands during that earlier await is only observed here, at the next check point).
+   *
+   * RECORDED MUTATION (SH15, registered): the check after `dataPlaneAttach` reads `stopped` only
+   * (drop the `if (sessionEnded) { ...; return { kind: "session-ended" }; }` block added beside
+   * it). Observed failure (performed on this branch, then reverted): the outcome no longer equals
+   * `{kind: "session-ended"}` -- the late ticket is admitted and `startStream` is reached instead.
+   */
+  it("SH15: an event-route end while the first look's viewportQuery is pending ends it", async () => {
+    const canvas = fakeCanvas();
+    const onSessionEnded = vi.fn();
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, onSessionEnded });
+
+    let resolveViewportQuery!: (v: { stream: string }) => void;
+    viewportQueryMock.mockReset().mockReturnValueOnce(
+      new Promise((r) => {
+        resolveViewportQuery = r;
+      })
+    );
+    cancelMock.mockClear();
+    startStreamMock.mockClear();
+    const outcomePromise = session.reissueUnrestricted(null, null);
+
+    session.manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+
+    resolveViewportQuery({ stream: "sh_late" });
+    const outcome = await outcomePromise;
+
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(cancelMock).toHaveBeenCalledWith("sh_late");
+    expect(startStreamMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * **Amendment 4 item 8, SH16.** An untiled batch delivered after an event-route end reaches no
+   * `pushTileBatch`, and the untiled handle is cancelled -- `endCandidateSession`'s new
+   * `cancelUntiledStream()` call, so the untiled `onBatch`'s existing `untiledStreamHandle !==
+   * stream` check drops it (the same mechanism a supersede already relies on).
+   *
+   * RECORDED MUTATION (SH16, registered): `endCandidateSession` omits `cancelUntiledStream()`.
+   * Expected/observed failure: `cancelMock` is never called for the untiled handle, and (because
+   * `untiledStreamHandle` is never cleared) a late batch on it would still be admitted --
+   * this test's first assertion catches the omission directly.
+   */
+  it("SH16: an untiled batch after an event-route end reaches no pushTileBatch, and the untiled handle is cancelled", async () => {
+    const canvas = fakeCanvas();
+    const session = startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas });
+    await session.reissueUnrestricted(null, null);
+    const sink = lastSink();
+    cancelMock.mockClear();
+    (canvas.pushTileBatch as ReturnType<typeof vi.fn>).mockClear();
+
+    session.manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+
+    expect(cancelMock).toHaveBeenCalledWith("sh_1");
+
+    // The old socket delivering late, on the still-registered sink.
+    sink.onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(canvas.pushTileBatch).not.toHaveBeenCalled();
   });
 });

@@ -1485,3 +1485,42 @@ Fill in after running the row above.
 - **Run by:**
 - **Build/commit:**
 - **P1:**
+
+---
+
+## Part Q — the source-change watcher: case (f), the session ended while idle (P6)
+
+This Part is the Operator gate of `engine/SOURCE-WATCHER-PREREGISTRATION.md` §9: case (f) felt, the wording of every §7 placeholder, and "read the last amendment first". It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018).
+
+**Before Q1:**
+- Read the preregistration's §10, its last amendment first.
+- Copy `100k-happy-path.parquet` to a scratch filename under `target\fixtures\manual-walkthrough\`, for example `100k-scratch-partQ.parquet`.
+- Verify the original's hash as Part N's "Before N1" note describes.
+
+This Part is Windows only: the watcher arms on Windows alone (KNOWN-LIMITATIONS).
+
+| Fixture | Path | Used by |
+|---|---|---|
+| 100k happy path, a scratch copy of it | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\100k-happy-path.parquet`, copied to a scratch filename before the sitting | Q1 |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| Q1 | **Case (f), felt.** Open the scratch copy and let its first view settle. Pan or zoom once, so features are actually resident (Part A's A4 shows what "settled" looks like). Then, **without touching the app again**, run in a terminal: `(Get-Item '<scratch path>').LastWriteTime = (Get-Date).AddMinutes(2)`. This touches the modification time only and leaves the bytes untouched, as Part N's N6 does. Do not pan, zoom or click afterwards. Last, hover a point that showed a feature before the touch. | **While the app stays idle, with no input from you, the canvas ends the session.** The resident features clear, and a `.canvas-session-ended` block appears in the status stack. Its code chip reads `engine.source_changed`. Its message comes from the watcher's event route, `buildSessionEndedOwnerDetail` in `frontends/shell/src/App.tsx`, and starts with the `[P6 placeholder]` mark. The hover shows the session-ended readout, as in Part N's N7: never an `id <number>` line, and never silence. Record the block's message and guidance verbatim. Record in your own words whether it was clear that the file had changed and why the canvas emptied. |
+| Q2 | **The wording of every §7 placeholder.** Each is a string whose text starts with `[P6 placeholder]`. One is seen in Q1. The rest need a coverage loss or an arming failure, which a sitting does not provoke, so read them where they are written. Search for `[P6 placeholder]` in: `frontends/shell/src/admission/describeSummaryText.ts` (`checksOnlyStatusLine`, `degradedChecksLine`), `frontends/shell/src/admission/DescribeSummary.tsx` (the two `<dt>` labels of the checks-only and degraded rows), `frontends/shell/src/admission/formatRefusal.ts` (`engine.source_coverage_lost`'s guidance), `frontends/shell/src/App.tsx` (`buildSessionEndedOwnerDetail`, one message per end reason), `engine/src/error.rs` (`SourceCoverageLost`'s `Display`), `kernel/src/skp.rs` and `kernel/src/lib.rs` (the coverage-lost details), and `engine/src/watch.rs` (the arming-failure and off-Windows reasons). | For each string, the log records either the wording you want in its place, or "keep". Until then every one stays a placeholder, and none ships as settled wording. |
+
+**If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. In Q1, the deviation this row exists to catch is a canvas that keeps its features, or shows no block, until you touch it.
+
+**Sitting estimate (scheduling only, not a claim about the app):** a few minutes for Q1 and a reading pass for Q2.
+
+---
+
+## Result log
+
+Fill in after running the rows above.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **Q1:**
+- **Q2:**

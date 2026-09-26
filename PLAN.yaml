@@ -2209,8 +2209,8 @@ nodes:
     order: 7
     depends_on: [briefa-p6-part-n-acceptances, briefa-p6-n8-reopen-reset, crs-unit-fact-and-bounds, kernel-ticket-drop-under-registry-lock]
     needs_human: {kind: none, minutes: 0}
-    gate: state/briefs/source-change-watcher-brief.md
-    evidence: {pr: 114}
+    gate: engine/SOURCE-WATCHER-PREREGISTRATION.md
+    evidence: {branch: cut/source-change-watcher}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

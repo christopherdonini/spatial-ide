@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2628c091fc4df77c7379a8ca7475caf7454e4e1aa1612ecaf2d62346105d5fbb`) at `2026-09-26T12:45:48.675Z`.
+Generated from `PLAN.yaml` (sha256 `8aec56dd43184becc086522127638501a1e5fe2b4b7f0c7c1bf43bfc7a9606b0`) at `2026-09-26T12:46:02.404Z`.
 
 ## 1. Next
 
@@ -33,7 +33,7 @@ Generated from `PLAN.yaml` (sha256 `2628c091fc4df77c7379a8ca7475caf7454e4e1aa161
 
 ## 5. In progress
 
-- **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
+- **engine-source-change-watcher** — The advisory source-change watcher — evidence: branch `cut/source-change-watcher`
 
 ## 6. Proposed / unscheduled
 

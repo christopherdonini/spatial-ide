@@ -226,6 +226,28 @@ impl SourceDescriptor {
         (!self.degradations.is_empty()).then(|| self.degradations.join("; "))
     }
 
+    /// Every component this descriptor could **not** establish, named in
+    /// [`Self::components_differing_from`]'s own vocabulary — `"mtime"` when no modification time
+    /// was reported, `"footer-hash"` when the footer was over [`FOOTER_DESCRIPTOR_MAX_BYTES`] and
+    /// was not read. `"size"` and `"footer-length"` are never unestablished — both are read from
+    /// metadata this call always has.
+    ///
+    /// **`engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a's checks accessor.** Distinct from
+    /// [`Self::degradation`]: that returns the operator-facing sentence (still shown nowhere in
+    /// P3a); this returns the closed component vocabulary a wire enum can carry
+    /// (`protocol/skp`'s `CheckComponent`). Product caller: the kernel's `describe` assembly
+    /// (`kernel::skp::SkpHost::describe`).
+    pub fn unestablished_components(&self) -> Vec<&'static str> {
+        let mut out = Vec::new();
+        if self.modified_nanos.is_none() {
+            out.push("mtime");
+        }
+        if self.footer_hash.is_none() {
+            out.push("footer-hash");
+        }
+        out
+    }
+
     /// Every component in which `self` and `now` differ, named — or an empty list.
     ///
     /// **Names every component that differed, not the first one** (§4's adopted rule: no fixture
@@ -394,6 +416,26 @@ mod tests {
         let degraded_open = descriptor(100, Some(1), 10, None);
         let degraded_now = descriptor(100, Some(1), 10, None);
         assert!(degraded_open.components_differing_from(&degraded_now).is_empty());
+    }
+
+    /// RECORDED MUTATION: `unestablished_components` returns an empty list unconditionally.
+    /// Expected/observed failure: this test fails — `["mtime"]` is expected, `[]` is produced.
+    #[test]
+    fn an_absent_modification_time_is_an_unestablished_component() {
+        let with_mtime = descriptor(100, Some(1), 10, Some("aa"));
+        assert!(with_mtime.unestablished_components().is_empty());
+        let without_mtime = descriptor(100, None, 10, Some("aa"));
+        assert_eq!(without_mtime.unestablished_components(), vec!["mtime"]);
+    }
+
+    /// RECORDED MUTATION: `unestablished_components` omits the `"footer-hash"` push. Expected/
+    /// observed failure: this test fails — `["footer-hash"]` is expected, `[]` is produced.
+    #[test]
+    fn a_footer_hash_not_taken_is_an_unestablished_component() {
+        let hashed = descriptor(100, Some(1), 10, Some("aa"));
+        assert!(hashed.unestablished_components().is_empty());
+        let unhashed = descriptor(100, Some(1), 10, None);
+        assert_eq!(unhashed.unestablished_components(), vec!["footer-hash"]);
     }
 
     /// Mutation: change `FOOTER_DESCRIPTOR_MAX_BYTES` to any other value. Expected failure:

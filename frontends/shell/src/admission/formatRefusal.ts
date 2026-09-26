@@ -69,6 +69,17 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  */
 export function refusalGuidance(code: string): string | null {
   switch (code) {
+    case "engine.source_coverage_lost":
+      // Per `engine/SOURCE-WATCHER-PREREGISTRATION.md` §1, user-visible wording is the human's at
+      // P6 (addition 2), and every new string is a marked placeholder (§7). This is one of those --
+      // written so the state exists and can be read end to end; its wording is not settled and no
+      // test asserts it verbatim (the `engine.source_changed` precedent immediately below is the
+      // one exception, for the round-5 reason its own comment states).
+      return (
+        "[P6 placeholder] The advisory watch on this source lost coverage of it while it was open " +
+        "-- this is not a statement that the file changed, only that this session can no longer " +
+        "tell. Reopen the dataset to continue."
+      );
     case "engine.source_changed":
       // **The human's ruling of 2026-09-16 (round 5, item 1), verbatim**: "a false status string
       // does not sit on main between P3a and P3b. Replace P3a's 'Everything read so far has been

@@ -17,18 +17,29 @@
 //!
 //! No duration, no rate and no performance word appears in this file (ADR-018; A6). The
 //! concurrency test asserts a *count*, never a time.
+//!
+//! **`SOURCE-WATCHER-PREREGISTRATION.md` §2b's Amendment 1 update.** `mint_for_open` now takes the
+//! `SessionRef` `open_dataset` mints (here, a bare `SessionRef::mint()` — these tests exercise the
+//! registry directly, never `open_dataset`); `live_or_mint` answers `Result<u64, SessionEndReason>`
+//! (`Err` where it used to answer `None`); `invalidate` takes a reason and answers
+//! `Option<EndReport>` (`.tickets` where it used to answer a bare `Vec<String>` directly).
+
+mod watch_support;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
-use spatial_kernel::skp::{GenerationRegistry, SkpHost, StreamRegistry, TicketLiveness};
+use spatial_kernel::skp::{
+    session_end_channel, GenerationRegistry, SessionEndReason, SkpHost, StreamRegistry,
+    TicketLiveness,
+};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
-use spatial_skp::v0::{DatasetHandle, StreamHandle, ViewportQueryRequest, SKP_VERSION};
+use spatial_skp::v0::{DatasetHandle, SessionRef, StreamHandle, ViewportQueryRequest, SKP_VERSION};
 
 /// Mutation recorded in-source (`scripts/plan/verify-mutation.mjs`): deleting the
-/// `st.invalidated.contains(dataset)` guard in `live_or_mint` makes an invalidated dataset resurrect
+/// `st.invalidated.get(dataset)` guard in `live_or_mint` makes an invalidated dataset resurrect
 /// and this test fail.
 #[test]
 fn the_state_is_three_valued_never_minted_is_not_invalidated() {
@@ -40,13 +51,12 @@ fn the_state_is_three_valued_never_minted_is_not_invalidated() {
     let first = g.live_or_mint("ds_never_seen").expect("a dataset with no history gets a session");
 
     // 2. Live: the same call is idempotent and returns the same generation.
-    assert_eq!(g.live_or_mint("ds_never_seen"), Some(first), "an existing session is not re-minted");
+    assert_eq!(g.live_or_mint("ds_never_seen"), Ok(first), "an existing session is not re-minted");
 
     // 3. Invalidated: and only now does it refuse.
-    g.invalidate("ds_never_seen");
-    assert_eq!(
-        g.live_or_mint("ds_never_seen"),
-        None,
+    g.invalidate("ds_never_seen", SessionEndReason::ObservedChange);
+    assert!(
+        g.live_or_mint("ds_never_seen").is_err(),
         "only an invalidated dataset refuses — that is the whole point of the third state"
     );
 }
@@ -56,27 +66,27 @@ fn the_state_is_three_valued_never_minted_is_not_invalidated() {
 #[test]
 fn a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is() {
     let g = GenerationRegistry::new();
-    let before = g.mint_for_open("ds_a");
-    g.invalidate("ds_a");
-    assert_eq!(g.live_or_mint("ds_a"), None);
+    let before = g.mint_for_open("ds_a", SessionRef::mint());
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
+    assert!(g.live_or_mint("ds_a").is_err());
 
-    let after = g.mint_for_open("ds_a");
+    let after = g.mint_for_open("ds_a", SessionRef::mint());
     assert_ne!(after, before, "a reopen mints a new generation, never reuses the ended one");
     assert!(
-        g.live_or_mint("ds_a").is_some(),
+        g.live_or_mint("ds_a").is_ok(),
         "boundary 4's refusals say 'until reopen'; this is the reopen"
     );
 }
 
 /// Mutation recorded in-source: making `live_or_mint` mint over an invalidated entry (dropping its
-/// early `return None`) resurrects a dead session and this test fails.
+/// early `return Err(reason)`) resurrects a dead session and this test fails.
 #[test]
 fn live_or_mint_never_resurrects_an_invalidated_generation() {
     let g = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
-    g.invalidate("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
     for _ in 0..5 {
-        assert_eq!(g.live_or_mint("ds_a"), None, "repeated asking must not eventually succeed");
+        assert!(g.live_or_mint("ds_a").is_err(), "repeated asking must not eventually succeed");
     }
 }
 
@@ -85,13 +95,13 @@ fn live_or_mint_never_resurrects_an_invalidated_generation() {
 #[test]
 fn a_ticket_is_attributable_only_under_a_live_generation() {
     let g = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
     assert!(g.attribute_ticket("sh_1", "ds_a"), "a live dataset attributes its ticket");
     assert_eq!(g.attributed_ticket_count(), 1);
 
     // The false path: a dataset with no live generation cannot attribute one, and the caller must
     // refuse rather than record a ticket under a generation that does not exist.
-    g.invalidate("ds_a");
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
     assert!(!g.attribute_ticket("sh_2", "ds_a"), "an ended session attributes nothing");
     // And the ticket from the ended generation is gone with it — nothing is left answering about a
     // generation that no longer exists.
@@ -104,13 +114,16 @@ fn a_ticket_is_attributable_only_under_a_live_generation() {
 #[test]
 fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     let g = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
-    g.mint_for_open("ds_b");
+    g.mint_for_open("ds_a", SessionRef::mint());
+    g.mint_for_open("ds_b", SessionRef::mint());
     assert!(g.attribute_ticket("sh_a1", "ds_a"));
     assert!(g.attribute_ticket("sh_a2", "ds_a"));
     assert!(g.attribute_ticket("sh_b1", "ds_b"));
 
-    let mut ended = g.invalidate("ds_a");
+    let mut ended = g
+        .invalidate("ds_a", SessionEndReason::ObservedChange)
+        .expect("ds_a has a live generation to end")
+        .tickets;
     ended.sort();
     assert_eq!(ended, vec!["sh_a1".to_string(), "sh_a2".to_string()]);
 
@@ -118,10 +131,13 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     // dataset's changed source says nothing about another's. Its ticket survives the prune that
     // swept `ds_a`'s, which is the observable form of "untouched".
     assert_eq!(g.attributed_ticket_count(), 1);
-    assert!(g.live_or_mint("ds_b").is_some());
+    assert!(g.live_or_mint("ds_b").is_ok());
 
     // Idempotent: invalidating again ends nothing further and returns nothing.
-    assert!(g.invalidate("ds_a").is_empty(), "a second invalidation has nothing left to end");
+    assert!(
+        g.invalidate("ds_a", SessionEndReason::ObservedChange).is_none(),
+        "a second invalidation has nothing left to end"
+    );
 }
 
 /// Mutation recorded in-source: dropping either `st.live.remove` or the `tickets.retain` line in
@@ -129,9 +145,9 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
 #[test]
 fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution() {
     let g = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
     g.attribute_ticket("sh_a1", "ds_a");
-    g.invalidate("ds_a");
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
 
     g.forget_dataset("ds_a");
 
@@ -139,7 +155,7 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
     // The invalidation is gone too, so the name is a stranger again rather than a refused one —
     // `close_dataset` then `open_dataset` under the same name is an ordinary reopen.
     assert!(
-        g.live_or_mint("ds_a").is_some(),
+        g.live_or_mint("ds_a").is_ok(),
         "forgetting clears the invalidation as well as the generation"
     );
 }
@@ -159,9 +175,9 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
 fn dead_generation_attributions_are_pruned_rather_than_accumulating() {
     let g = GenerationRegistry::new();
     for round in 0..50 {
-        g.mint_for_open("ds_a");
+        g.mint_for_open("ds_a", SessionRef::mint());
         assert!(g.attribute_ticket(&format!("sh_{round}"), "ds_a"));
-        g.invalidate("ds_a");
+        g.invalidate("ds_a", SessionEndReason::ObservedChange);
     }
     // Every ticket above belongs to a generation that has since ended, and the last `invalidate`
     // swept them. Only a live one would survive, and there is none.
@@ -181,7 +197,7 @@ fn dead_generation_attributions_are_pruned_rather_than_accumulating() {
 #[test]
 fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
     let g: Arc<GenerationRegistry> = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
 
     let mut handles = Vec::new();
     for thread in 0..2u32 {
@@ -198,8 +214,8 @@ fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
                     let _ = g.attributed_ticket_count();
                 }
                 if i % 50 == 49 {
-                    g.invalidate("ds_a");
-                    g.mint_for_open("ds_a");
+                    g.invalidate("ds_a", SessionEndReason::ObservedChange);
+                    g.mint_for_open("ds_a", SessionRef::mint());
                 }
             }
             attributed
@@ -210,7 +226,7 @@ fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
 
     // Bounded afterwards, by the same rule the single-threaded test asserts: end the session and
     // nothing from it survives.
-    g.invalidate("ds_a");
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
     assert_eq!(g.attributed_ticket_count(), 0, "no attribution outlived the generation it named");
 }
 
@@ -269,7 +285,7 @@ fn touch_modification_time(path: &Path) {
 ///
 /// RECORDED MUTATION: delete the `TicketLiveness::EndedBySourceChange` arm from
 /// `EngineSourceFactory::create_from_ticket` (`kernel/src/lib.rs`), leaving `Live | Unknown |
-/// EndedBySourceChange => tickets.redeem(..)`. Expected failure:
+/// EndedBySourceChange | EndedByCoverageLoss => tickets.redeem(..)`. Expected failure:
 /// `a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code` fails on the prefix
 /// assertion, the refusal having degraded to `redeem`'s "was cancelled before it was redeemed".
 #[test]
@@ -279,7 +295,12 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
     let catalog = Arc::new(Catalog::new());
     catalog.open(dataset.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
 
     let request = |d: DatasetHandle| ViewportQueryRequest {
         skp: SKP_VERSION.to_string(),
@@ -383,9 +404,9 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 fn the_dead_ticket_record_is_bounded() {
     let g = GenerationRegistry::new();
 
-    g.mint_for_open("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
     assert!(g.attribute_ticket("sh_a1", "ds_a"));
-    g.invalidate("ds_a");
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
     assert_eq!(g.dead_ticket_count(), 1, "the ended handle is recorded");
 
     // Closing the dataset forgets it entirely — `StreamRegistry` no longer answers for the handle
@@ -394,18 +415,18 @@ fn the_dead_ticket_record_is_bounded() {
     assert_eq!(g.dead_ticket_count(), 0, "close clears this dataset's dead handles");
 
     // And so does a reopen, which is what boundary 4's "until reopen" means.
-    g.mint_for_open("ds_b");
+    g.mint_for_open("ds_b", SessionRef::mint());
     assert!(g.attribute_ticket("sh_b1", "ds_b"));
-    g.invalidate("ds_b");
+    g.invalidate("ds_b", SessionEndReason::ObservedChange);
     assert_eq!(g.dead_ticket_count(), 1);
-    g.mint_for_open("ds_b");
+    g.mint_for_open("ds_b", SessionRef::mint());
     assert_eq!(g.dead_ticket_count(), 0, "reopen clears this dataset's dead handles");
 
     // Scoped per dataset, never wholesale: one dataset's reopen must not retire another's record.
-    g.mint_for_open("ds_c");
+    g.mint_for_open("ds_c", SessionRef::mint());
     assert!(g.attribute_ticket("sh_c1", "ds_c"));
-    g.invalidate("ds_c");
-    g.mint_for_open("ds_d");
+    g.invalidate("ds_c", SessionEndReason::ObservedChange);
+    g.mint_for_open("ds_d", SessionRef::mint());
     assert_eq!(g.dead_ticket_count(), 1, "another dataset's open left ds_c's record alone");
 }
 
@@ -420,11 +441,11 @@ fn the_dead_ticket_record_is_bounded() {
 #[test]
 fn a_ticket_whose_generation_ended_is_recorded_dead_before_the_prune_sweeps_it() {
     let g = GenerationRegistry::new();
-    g.mint_for_open("ds_a");
+    g.mint_for_open("ds_a", SessionRef::mint());
     assert!(g.attribute_ticket("sh_a1", "ds_a"));
     assert_eq!(g.ticket_liveness("sh_a1"), TicketLiveness::Live);
 
-    g.invalidate("ds_a");
+    g.invalidate("ds_a", SessionEndReason::ObservedChange);
 
     // The attribution is gone — this is the sweep the record exists to survive.
     assert_eq!(g.attributed_ticket_count(), 0, "invalidate's own prune swept the attribution");

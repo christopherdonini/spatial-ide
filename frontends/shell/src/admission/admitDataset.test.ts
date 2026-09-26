@@ -49,6 +49,11 @@ function describeFixture(): DescribeResponse {
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
     // skp/0.3 (Brief A boundary 9). "none" means NOT CHECKED -- never "nothing wrong".
     sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
+    // skp/0.5, the advisory source-change watcher: additive, so this builder keeps the wire's
+    // baseline (unpopulated) shape.
+    coverage: { state: "watching", reason: null },
+    checks: { state: "full", components: [] },
+    session_end: null,
   };
 }
 
@@ -74,7 +79,7 @@ describe("admitDataset", () => {
     // The real product-truth check: the same request shape open_dataset's own fixture declares.
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.4",
+        skp: "skp/0.5",
         path: "C:/data/parcels.parquet",
         cancel_key: "open-1",
         crs_assertion: null,
@@ -82,7 +87,7 @@ describe("admitDataset", () => {
       },
     });
     expect(invokeMock).toHaveBeenNthCalledWith(2, "describe", {
-      request: { skp: "skp/0.4", dataset: "ds_00000000000000000000000000000000" },
+      request: { skp: "skp/0.5", dataset: "ds_00000000000000000000000000000000" },
     });
   });
 
@@ -134,7 +139,7 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.4",
+        skp: "skp/0.5",
         path: "C:/data/no-crs.parquet",
         cancel_key: "open-crs",
         crs_assertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
@@ -156,7 +161,7 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.4",
+        skp: "skp/0.5",
         path: "C:/data/missing-identity.parquet",
         cancel_key: "open-identity",
         crs_assertion: null,

@@ -16,6 +16,8 @@ import {
   admitAndResetStaleUiState,
   ApplyFilterDeps,
   applyFilter,
+  buildSessionEndedOwnerDetail,
+  dispatchSessionEndedToOwner,
   endSessionForDataset,
   handleCanvasCeilingRefusal,
   handleSessionEnded,
@@ -27,12 +29,14 @@ import {
   nextScanState,
   requestViewportWithSingleRetry,
   ResidencyStatus,
+  routeDatasetSessionEndedEvent,
   ScanEvent,
   ScanState,
   scanLivenessText,
   scanLivenessTextShouldShow,
   SCAN_LIVENESS_DELAY_MS,
 } from "./App";
+import type { DatasetSessionEnded } from "./skp/types";
 import { SkpCallError } from "./skp/client";
 import { encodeHexF64 } from "./skp/codec";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "./skp/types";
@@ -100,11 +104,16 @@ function describeFixture(): DescribeResponse {
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },
     // skp/0.3 (Brief A boundary 9). "none" means NOT CHECKED -- never "nothing wrong".
     sanity: { level: "none", reason: "the file declares its own CRS, so no format rule was applied and there is nothing assumed to check. Not checked" },
+    // skp/0.5, the advisory source-change watcher: additive, so this builder keeps the wire's
+    // baseline (unpopulated) shape.
+    coverage: { state: "watching", reason: null },
+    checks: { state: "full", components: [] },
+    session_end: null,
   };
 }
 
 function admittedFixture(dataset: string): Admitted {
-  return { dataset, describe: describeFixture() };
+  return { dataset, describe: describeFixture(), session: "sr_" + "a".repeat(32) };
 }
 
 function pickResultFixture(): PickResult {
@@ -1174,12 +1183,12 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    *
    * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch":
    * change the catch to `e.skpError.message.includes("source file
-   * changed")`. Expected failure: that test fails on the `isSourceChangedRefusal` pattern -- the
+   * changed")`. Expected failure: that test fails on the `isSessionEndedRefusal` (renamed §2d) pattern -- the
    * pinned message is the human's prose and is not required to contain the code (§4 T6's own
    * mutation).
    *
    * OBSERVED: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…' to match
-   * /if \(isSourceChangedRefusal\(e\)\) en…/`.
+   * /if \(isSessionEndedRefusal\(e\)\) en…/`.
    *
    * N8 correction round 1: the original record above was overwritten (not appended) by the N8
    * piece's first commit; restored here verbatim from `git show origin/main:frontends/shell/src/
@@ -1191,7 +1200,7 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
    * `endSession(refusalDetailOf(e))` (drop `forDataset`). Expected failure: the
    * `endSession(refusalDetailOf(e), forDataset)` pattern fails to match.
    * OBSERVED 2026-09-22: FAILED -- `AssertionError: expected '// SPDX-License-Identifier: AGPL-3.0-…'
-   * to match /if \(isSourceChangedRefusal\(e\)\) en…/`. Reverted after observing.
+   * to match /if \(isSessionEndedRefusal\(e\)\) en…/`. Reverted after observing.
    *
    * RECORDED MUTATION for "the_pre_check_refusal_latches_the_session_in_the_untiled_catch"
    * (correction round 1, both `viewportRefusal` writes guarded, not only `endSession`): remove the
@@ -1207,7 +1216,9 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
       "utf8"
     );
     expect(appSource).toMatch(/setViewportRefusal\(formatRefusal\(e\.skpError\)\);/);
-    expect(appSource).toMatch(/if \(isSourceChangedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
+    // §2d: `isSourceChangedRefusal` renamed `isSessionEndedRefusal` -- it now also matches a
+    // coverage-lost pre-check refusal, never only a source-changed one.
+    expect(appSource).toMatch(/if \(isSessionEndedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
     // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
     expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
     // N8 correction round 1 (reviewer B1): a late arrival from a superseded generation must not
@@ -1263,5 +1274,125 @@ describe("endSessionForDataset (N8: a late callback from an ended generation mus
     expect(calls.setSessionEnded[0].code).toBe("engine.source_changed");
     expect(calls.setHover).toEqual([{ kind: "session-ended" }]);
     expect(ended.current).toBe(true);
+  });
+});
+
+describe("buildSessionEndedOwnerDetail (§2d: the event route's owner detail)", () => {
+  // Mutation: return the same code for both reasons. Expected failure: the second assertion below
+  // fails -- coverage-lost would carry the source-changed code.
+  it("maps each reason to its own code, [P6 placeholder]-marked", () => {
+    expect(buildSessionEndedOwnerDetail("observed-change")).toMatch(/^engine\.source_changed: /);
+    expect(buildSessionEndedOwnerDetail("coverage-lost")).toMatch(/^engine\.source_coverage_lost: /);
+    expect(buildSessionEndedOwnerDetail("observed-change")).toContain("[P6 placeholder]");
+  });
+});
+
+describe("dispatchSessionEndedToOwner (§2d: baseline, then candidate, then endSession directly)", () => {
+  // RECORDED MUTATION for "tries the baseline manager first": swap the two `if` blocks' order.
+  // Expected failure: the assertion below fails -- the candidate would be notified too (or
+  // instead), when the baseline one was live.
+  it("tries the baseline manager first, and calls at most one of the three", () => {
+    const baseline = { notifySessionEnded: vi.fn() };
+    const candidate = { notifySessionEnded: vi.fn() };
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("observed-change", "ds_a", { baseline, candidate, endSessionDirectly });
+    expect(baseline.notifySessionEnded).toHaveBeenCalledTimes(1);
+    expect(candidate.notifySessionEnded).not.toHaveBeenCalled();
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "falls to the candidate manager when no baseline manager exists": always
+  // call `endSessionDirectly` regardless of `baseline`/`candidate`. Expected failure: the assertion
+  // below fails -- `endSessionDirectly` would also have been called.
+  it("falls to the candidate manager when no baseline manager exists", () => {
+    const candidate = { notifySessionEnded: vi.fn() };
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("observed-change", "ds_a", {
+      baseline: null,
+      candidate,
+      endSessionDirectly,
+    });
+    expect(candidate.notifySessionEnded).toHaveBeenCalledTimes(1);
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+  });
+
+  // RECORDED MUTATION for "ends the session directly when neither manager exists yet": drop the
+  // `endSessionDirectly` fallback call entirely. Expected failure: the assertion below fails --
+  // `endSessionDirectly` would never be called, and an end delivered before either manager is
+  // constructed would be silently lost.
+  it("ends the session directly when neither manager exists yet", () => {
+    const endSessionDirectly = vi.fn();
+    dispatchSessionEndedToOwner("observed-change", "ds_a", {
+      baseline: null,
+      candidate: null,
+      endSessionDirectly,
+    });
+    expect(endSessionDirectly).toHaveBeenCalledWith(
+      buildSessionEndedOwnerDetail("observed-change"),
+      "ds_a"
+    );
+  });
+});
+
+describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/drop logic; SH9, SH11)", () => {
+  const EVENT: DatasetSessionEnded = { session: "sr_" + "a".repeat(32), reason: "observed-change" };
+
+  // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH9: an event whose `session` does not match is
+  // dropped.
+  //
+  // RECORDED MUTATION for SH9: skip the comparison (dispatch unconditionally). Expected failure:
+  // the first assertion below fails -- `dispatch` would be called despite the mismatch.
+  // RECORDED MUTATION for SH11: write `event.session` into the dropped-event log line (e.g.
+  // `` `dataset_session_ended: dropped for an unknown session ${event.session} (reason=${event.reason})` ``).
+  // Applied, run and reverted on this branch: `AssertionError: expected 'dataset_session_ended:
+  // dropped for an…' not to contain 'sr_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'` -- 1 failed. Against this
+  // function's own real return value, not a regex over App.tsx's source text, per My B2 / reviewer
+  // S2 (architect gate-1).
+  // Mutation: see the two RECORDED MUTATIONs above (SH9's comparison skip; SH11's session write).
+  it("drops an event whose session does not match, and logs a line naming the reason only (SH9, SH11)", () => {
+    const dispatch = vi.fn();
+    const logUnknownSessionDrop = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: "sr_" + "b".repeat(32),
+      admittedDataset: "ds_a",
+      dispatch,
+      logUnknownSessionDrop,
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+    // SH11: the dropped-event log line names the reason only -- never the event's `session` value
+    // nor any `sr_`-shaped value (round 21 item 1, rider (b); Amendment 2 S3).
+    expect(logUnknownSessionDrop).toHaveBeenCalledTimes(1);
+    const [line] = logUnknownSessionDrop.mock.calls[0] as [string];
+    expect(line).not.toContain(EVENT.session);
+    expect(line).not.toMatch(/sr_[0-9a-f]{32}/);
+    expect(line).toContain("reason=observed-change");
+  });
+
+  // Mutation: drop the final `deps.dispatch(...)` call from `routeDatasetSessionEndedEvent`.
+  // Expected failure: the assertion below fails -- `dispatch` is never called at all.
+  it("a matching event dispatches for the currently admitted dataset", () => {
+    const dispatch = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: EVENT.session,
+      admittedDataset: "ds_a",
+      dispatch,
+      logUnknownSessionDrop: vi.fn(),
+    });
+    expect(dispatch).toHaveBeenCalledWith("observed-change", "ds_a");
+  });
+
+  // Mutation: drop the `if (deps.admittedDataset === null) return;` guard. Expected failure: the
+  // first assertion below fails -- `dispatch` would be called with `null` as `forDataset`.
+  it("a matching event with no dataset currently admitted is dropped silently", () => {
+    const dispatch = vi.fn();
+    const logUnknownSessionDrop = vi.fn();
+    routeDatasetSessionEndedEvent(EVENT, {
+      admittedSession: EVENT.session,
+      admittedDataset: null,
+      dispatch,
+      logUnknownSessionDrop,
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(logUnknownSessionDrop).not.toHaveBeenCalled();
   });
 });
