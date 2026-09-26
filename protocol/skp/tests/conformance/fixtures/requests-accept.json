@@ -1,0 +1,205 @@
+[
+ {
+  "id": "req-open-nulls",
+  "spec": "\u00a71 open_dataset; \u00a78 skp/0.2 (null = none declared, key present)",
+  "wire_type": "open_dataset.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "req-open-populated",
+  "spec": "\u00a71 open_dataset; \u00a78 skp/0.2 first bullet",
+  "wire_type": "open_dataset.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": {
+    "identifier": "EPSG:2056",
+    "definition_json": "{}"
+   },
+   "identity": {
+    "column": "id"
+   }
+  }
+ },
+ {
+  "id": "req-open-omitted-optional-keys",
+  "spec": "\u00a77.2 Correction 2026-08-18 (omitted crs_assertion/identity tolerated as none declared)",
+  "wire_type": "open_dataset.request",
+  "expect": "accept",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1"
+  }
+ },
+ {
+  "id": "req-describe",
+  "spec": "\u00a71 describe; \u00a73 DatasetHandle",
+  "wire_type": "describe.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  }
+ },
+ {
+  "id": "req-viewport-all-null",
+  "spec": "\u00a71 viewport_query; \u00a77.2 (filter: null declares no filter)",
+  "wire_type": "viewport_query.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  }
+ },
+ {
+  "id": "req-viewport-populated",
+  "spec": "\u00a71 viewport_query; \u00a73 HexF64/DecU64; \u00a77.2 dialect duckdb-expr/0",
+  "wire_type": "viewport_query.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "4142f58400000000",
+    "ymin": "4130673800000000",
+    "xmax": "41459f2800000000",
+    "ymax": "4133c68000000000"
+   },
+   "bbox_crs": "EPSG:2056",
+   "limit": "1000",
+   "filter": {
+    "predicate": "height > 10",
+    "dialect": "duckdb-expr/0"
+   }
+  }
+ },
+ {
+  "id": "req-viewport-hex-zero-and-negzero",
+  "spec": "\u00a73 HexF64 (finite bit patterns, lowercase, 16 digits)",
+  "wire_type": "viewport_query.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": {
+    "xmin": "8000000000000000",
+    "ymin": "0000000000000000",
+    "xmax": "3ff0000000000000",
+    "ymax": "3ff0000000000000"
+   },
+   "bbox_crs": null,
+   "limit": null,
+   "filter": null
+  }
+ },
+ {
+  "id": "req-viewport-decu64-max",
+  "spec": "\u00a73 DecU64 (every u64 as a decimal string)",
+  "wire_type": "viewport_query.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "bbox_crs": null,
+   "limit": "18446744073709551615",
+   "filter": null
+  }
+ },
+ {
+  "id": "req-viewport-omitted-filter-bboxcrs",
+  "spec": "\u00a77.2 Correction 2026-08-18 (omitted bbox_crs/filter tolerated)",
+  "wire_type": "viewport_query.request",
+  "expect": "accept",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "bbox": null,
+   "limit": null
+  }
+ },
+ {
+  "id": "req-cancel-stream-handle",
+  "spec": "\u00a71 cancel (handle is a StreamHandle or a CancelKey)",
+  "wire_type": "cancel.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "handle": "sh_fedcba9876543210fedcba9876543210"
+  }
+ },
+ {
+  "id": "req-cancel-cancel-key",
+  "spec": "\u00a71 cancel; \u00a73 CancelKey",
+  "wire_type": "cancel.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "handle": "open-1"
+  }
+ },
+ {
+  "id": "req-open-cancel-key-64",
+  "spec": "\u00a73 CancelKey 1..=64 chars of [A-Za-z0-9_-]",
+  "wire_type": "open_dataset.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz0_-9",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "req-open-cancel-key-1",
+  "spec": "\u00a73 CancelKey lower bound",
+  "wire_type": "open_dataset.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "k",
+   "crs_assertion": null,
+   "identity": null
+  }
+ },
+ {
+  "id": "req-close",
+  "spec": "\u00a71 close_dataset",
+  "wire_type": "close_dataset.request",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "skp": "skp/0.4",
+   "dataset": "ds_0123456789abcdef0123456789abcdef"
+  }
+ }
+]
