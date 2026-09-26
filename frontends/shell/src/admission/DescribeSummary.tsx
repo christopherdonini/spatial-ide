@@ -74,14 +74,16 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
             precedent immediately above. */}
         {checksOnlyStatusLine(describe.coverage) !== null && (
           <>
-            <dt>Source watch</dt>
+            {/* Reviewer gate-1 B5: the label itself is a new operator string too, distinct from
+                `checksOnlyStatusLine`'s own already-marked `<dd>` text (§7's placeholder list). */}
+            <dt>[P6 placeholder] Source watch</dt>
             <dd>{checksOnlyStatusLine(describe.coverage)}</dd>
           </>
         )}
 
         {degradedChecksLine(describe.checks) !== null && (
           <>
-            <dt>Structural checks</dt>
+            <dt>[P6 placeholder] Structural checks</dt>
             <dd>{degradedChecksLine(describe.checks)}</dd>
           </>
         )}
