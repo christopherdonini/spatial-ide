@@ -1,12 +1,13 @@
 [
  {
   "id": "resp-open",
-  "spec": "\u00a71 open_dataset response; \u00a73 DatasetHandle",
+  "spec": "\u00a71 open_dataset response; \u00a73 DatasetHandle; \u00a78 skp/0.5 OpenDatasetResponse.session (SessionRef)",
   "wire_type": "open_dataset.response",
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "dataset": "ds_0123456789abcdef0123456789abcdef"
+   "dataset": "ds_0123456789abcdef0123456789abcdef",
+   "session": "sr_fedcba9876543210fedcba9876543210"
   }
  },
  {
