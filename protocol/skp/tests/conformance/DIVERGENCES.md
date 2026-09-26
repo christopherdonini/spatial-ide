@@ -1,7 +1,9 @@
 # Divergences: spec-derived fixtures vs `protocol/skp` wire types
 
-Baseline `bb98f71f43a2891d317b10a124387df9d5ee0ebf`. Linux evidence only. Run:
-`cargo test -p spatial-skp --test conformance -- --nocapture` → `pass=62 deferred_to_host=15 diverged=1`.
+Baseline `bb98f71f43a2891d317b10a124387df9d5ee0ebf`; fixtures re-run at `skp/0.5` (merge of `main`
+into this branch, commit `18fe4c0`). Linux evidence only. Run:
+`cargo test -p spatial-skp --test conformance -- --nocapture` → `pass=62 deferred_to_host=15 diverged=1`
+(unchanged from the `skp/0.4` run).
 
 ## D1 — `cancel` response `state` accepts any string
 
@@ -9,10 +11,10 @@ Baseline `bb98f71f43a2891d317b10a124387df9d5ee0ebf`. Linux evidence only. Run:
 - **Fixture:** `fixtures/refusals-at-deserialize.json` → `rej-resp-cancel-bad-state`
   (`{"state":"cancelled"}` as `CancelResponse`).
 - **Observed:** accepted at deserialize; re-serialized as `{"state":"cancelled"}`.
-  `CancelResponse.state` is `String` (`protocol/skp/src/v0/commands.rs:381-385`); the three values
-  appear only in its doc comment. The host writer is closed (`kernel/src/skp.rs:61-73`,
+  `CancelResponse.state` is `String` (`protocol/skp/src/v0/commands.rs:447-452`); the three values
+  appear only in its doc comment. The host writer is closed (`kernel/src/skp.rs:97-109`,
   `CancelOutcome::as_str`), so the open set is on the reading side only; the TypeScript mirror
-  reads it as `string` too (`frontends/shell/src/skp/types.ts:217`).
+  reads it as `string` too (`frontends/shell/src/skp/types.ts:257-258`).
 - **Which side appears wrong:** undetermined. §1 states a closed value set but does not say that a
   reader must refuse a value outside it (the same layer question as `AMBIGUITIES.md` A3).
 
@@ -21,5 +23,5 @@ Baseline `bb98f71f43a2891d317b10a124387df9d5ee0ebf`. Linux evidence only. Run:
 15 `refused_any_layer` fixtures are accepted at the type layer, because `skp`
 (all request structs) and `open_dataset.cancel_key` are `String` fields: the 9 version-literal
 fixtures and the 6 malformed-cancel-key fixtures. The spec does not say which layer refuses them
-(A3). Code path only, not executed here: `kernel/src/skp.rs:969-974` (`check_version`, `==`) and
-`kernel/src/skp.rs:790-791` (`CancelKey::try_from` → `skp.malformed_cancel_key`).
+(A3). Code path only, not executed here: `kernel/src/skp.rs:1376-1381` (`check_version`, `==`) and
+`kernel/src/skp.rs:981-982` (`CancelKey::try_from` → `skp.malformed_cancel_key`).

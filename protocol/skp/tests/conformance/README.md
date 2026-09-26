@@ -28,5 +28,7 @@ Run: `cargo test -p spatial-skp --test conformance -- --nocapture`.
 
 Observed divergences are in `DIVERGENCES.md`. The harness asserts the observed divergence set
 equals `REPORTED_DIVERGENCES` in `main.rs` in both directions, so a new divergence fails the run and
-so does a reported one that stops diverging; neither is absorbed silently. No existing fixture or
-implementation file was changed.
+so does a reported one that stops diverging; neither is absorbed silently. Phases 1 and 2 (baseline
+`bb98f71`) changed no existing fixture or implementation file. This directory's fixtures were since
+updated in place, to the `skp/0.5` literal current on `main` (RULED 2026-09-26, question round 24,
+item 4); no implementation file changed for that update either.
