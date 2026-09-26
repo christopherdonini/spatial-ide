@@ -247,3 +247,23 @@ A deviation is recorded as class 2 with the final figure. This section is never 
 ## §10. Amendments — opens empty, append-only
 
 *Classes per `docs/PREREGISTRATION-TEMPLATE.md` §10. The closing amendment is references and hashes only (the record cap, 2026-09-18). Record-round target: zero.*
+
+### Amendment 1 — 2026-09-26, written after the worker's results were seen: RULED 2026-09-26, question round 25, item 4 (a red line)
+
+Class 5, a ruling settling the piece. The ruling: `DECISIONS-PENDING.md:40 @ e562e9b sha256:d76437e5265f90d440335107e1ea8d51d47126538e485437ee1f230714331b88`.
+
+1. §2h's text is superseded by the item landed at `c855b77` in `KNOWN-LIMITATIONS.md`: the general truth first (a bundle carries its author's viewer code; open bundles only from sources you trust), then the specific limit (bundles published before the fix keep a viewer that can stall on crafted offsets). §2h's placement, its `[[KL-N]]` and `[[PR]]` placeholders and §8 item 9 are unchanged; the item keeps its DRAFT marker until the human sights the final wording at the PR.
+2. No GitHub advisory. The next release's notes carry the same line (PLAN node `release-v0-1-1`).
+
+### Amendment 2 — 2026-09-26, the closing record
+
+References and hashes only (the record cap, 2026-09-18). Each row names its template class. Each hash is `git show <rev>:<path> | sed -n '<a>,<b>p' | sha256sum` over LF bytes.
+
+1. **Class 1, the commits:** `d986725` (commit 2, the tests), `a411fc4` (commit 3, the fix), `cf7462e` and `aaa6020` (the M0–M10 records), `38b7a7c` (the item), `ea8cdb0` (main merged), `c855b77` (Amendment 1's item); the worker's list, `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:9-14 @ e562e9b sha256:be1222e5e86b6e02289b50800162214e8fa08861ba6cf01cfe16d11d7e59023e`.
+2. **Class 1, the pre-fix run against §5:** `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:16 @ e562e9b sha256:90435540d49d38bcc50e7f7eba4f52e41feac69b5b8e413fff14cd9ccc939513`.
+3. **Class 1, M0–M10:** recorded above each test (`cf7462e`, reworded at `aaa6020` so that `verify-mutation` finds each record; that tool checks a record exists and runs no mutation); the worker's summary, `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:20 @ e562e9b sha256:3372fd310c3b68a94f6f62510cf3347cff6252ba90506a102d64b07baf2a1cf8`. The reviewer gate's run, commit named, is the observation of record.
+4. **Class 1, the seam (§9):** the re-run, `state/consults/2026-09-26-partition-offset-bounds-acceptance.md:42-56 @ 02ec6a3 sha256:61d2f6903686137262ffd5469c0dfb60f7f3c56d721963151154945f2518ee42`. `[[MANIFEST-SHA256]]` is 1e5b4dc10bab298a9aa56cbaf180c62df35520584b96fbebfcc6459935765377. `[[ACCEPTANCE-ARTIFACT-SHA256]]` is 6c47cc8ebfecc926475ffd2e44a8f817dbe0a2926d0ccb528ac4dbd6a606d99d, the artifact filed as `state/consults/2026-09-26-partition-offset-bounds-acceptance.json` at `02ec6a3`. The worker's own run kept no artifact, `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:22 @ e562e9b sha256:4de27649e2d7a9eb4ffad734e090804f32e4303c60bd1d4fa4feae996b56f00e`.
+5. **Class 1, `[[V010-CHECK]]`: it holds**, so "including every v0.1.0 bundle" stands. `renderer/bundle-viewer/src/partition.ts:1-226 @ b391e43 sha256:72c4a89507260fa98a0eb0c65d382d945e1abda399df7990f47f0b4f02cbfa74` equals `renderer/bundle-viewer/src/partition.ts:1-226 @ 515a8b3 sha256:72c4a89507260fa98a0eb0c65d382d945e1abda399df7990f47f0b4f02cbfa74`, this piece's base; the `load().catch` routing, `renderer/bundle-viewer/src/main.ts:478-479 @ b391e43 sha256:034c96d52b4655606a0dabfc323028fbc152bc9cf6bcca62d1077ed2323c0270`, equals `renderer/bundle-viewer/src/main.ts:577-578 @ 515a8b3 sha256:034c96d52b4655606a0dabfc323028fbc152bc9cf6bcca62d1077ed2323c0270`.
+6. **Class 2, the budget (§7), final figures against main:** `partition.ts` 89 (≤ 70 declared); the two scripts 596 (≤ 350); `KNOWN-LIMITATIONS.md` 12 (≤ 12, after `c855b77`); 4 files besides this one. The worker's figures at `aaa6020`: `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:26 @ e562e9b sha256:8ef696298a0a484a1600407bd43998b5f87c18ced78007893fcae38c3915db94`.
+7. **Class 2, the fixtures and the deviations:** F3 is built by write-then-patch at a differential location, as F5 and F6 are, and two IPC-writer behaviours are documented in the test file's module doc: `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:28-32 @ e562e9b sha256:4dac4b78b55c5fd2dcb9eb268f1a9ef3b591ba382e0365b124ef94e5af7d02ac`.
+8. **Residual:** `[[KL-N]]` and `[[PR]]` are filled in `KNOWN-LIMITATIONS.md` at merge; §2h keeps them as written.
