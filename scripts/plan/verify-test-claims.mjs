@@ -160,9 +160,10 @@ export function extractClaimedTests(text) {
 // rule already requires a real self-referencing pin to spell the file's own path in full, so nothing
 // this tool needs to recognize is lost by requiring it. `<rev>` (group 5) is matched at the GRAMMAR
 // level exactly as the source matches it (any non-whitespace, non-backtick run, optional) -- this
-// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans`
-// below, not in the shared pattern, because that policy is this tool's own exemption to refuse, not a
-// property of the reference shape itself (round 15(e); architect/reviewer gate, attempt 1, B1/B2).
+// tool's stricter POLICY (no HEAD default, no non-commit `<rev>`) is enforced in `supersededSpans` and
+// `computeWithdrawnRows` below, not in the shared pattern, because that policy is this tool's own
+// exemption to refuse, not a property of the reference shape itself (round 15(e); architect/reviewer
+// gate, attempt 1, B1/B2).
 const GAP = '[ \\t]*(?:\\n[ \\t]*//[ \\t]?)?[ \\t]*';
 const HASH_REF_RE = new RegExp(
   '(byte-copied from\\s+)?`?([A-Za-z0-9_][A-Za-z0-9_./+-]*):(\\d+)(?:-(\\d+))?`?' +
@@ -247,17 +248,15 @@ function containsWithdrawnTestOutsideBackticks(lineText) {
 
 /**
  * Every hash-pinned, EXPLICIT-commit-rev reference in `text` whose path is `relPath` itself (F's own
- * path) and whose own line satisfies `containsMarker` -- conditions (a) and (b) of the SUPERSEDED rule
- * (or the withdrawn-test analogue), NOT (c)/(d)/(e) (checked lazily, per claim, in `findMarkedSpan`, so
+ * path) and whose own line satisfies `containsMarker` -- conditions (a) and (b) of the SUPERSEDED rule,
+ * NOT (c)/(d)/(e) (checked lazily, per claim, in `findMarkedSpan`, so
  * a file with no matching claim never pays for a `git show`). A reference with no `@ <rev>`, or whose
  * `<rev>` is not a bare commit id, is never a span at all: the HEAD default the shared grammar would
  * otherwise apply is this tool's own exemption to refuse (round 15(e); attempt-1 B1/B2), not a
- * property to inherit from the source. `singleLineOnly`, when true, refuses a range reference
- * (`startLine !== endLine`) outright -- the withdrawn-test row grammar's own "one row, one line" rule
- * (a range reference is not read as spanning multiple withdrawn claims). Returns
+ * property to inherit from the source. Returns
  * `[{ startLine, endLine, rev, hash, reference, lineText }]`.
  */
-function markedSpans(relPath, text, containsMarker, { singleLineOnly = false } = {}) {
+function markedSpans(relPath, text, containsMarker) {
   const out = [];
   HASH_REF_RE.lastIndex = 0;
   let m;
@@ -270,12 +269,7 @@ function markedSpans(relPath, text, containsMarker, { singleLineOnly = false } =
     if (!containsMarker(lineText)) continue;
     const startLine = Number(m[3]);
     const endLine = m[4] !== undefined ? Number(m[4]) : Number(m[3]);
-    if (singleLineOnly && startLine !== endLine) continue;
-    // `refLine`: the ROW's own line (where the reference itself sits), not the pinned target line --
-    // round 21 item 2 (entry 136)'s row-level check reports a bad withdrawn-test row at the row's own
-    // file:line, which for an appended-at-the-end row (the common case) differs from `startLine`/
-    // `endLine` (the historical line elsewhere that the row pins).
-    out.push({ startLine, endLine, rev, hash: m[6].toLowerCase(), reference: m[0], lineText, refLine });
+    out.push({ startLine, endLine, rev, hash: m[6].toLowerCase(), reference: m[0], lineText });
   }
   return out;
 }
@@ -552,8 +546,10 @@ function firstHashRefsByLine(text) {
  * line, read by `extractClaimedTests`, names at least one test -- the row-level analogue of
  * `findMarkedSpan`'s per-claim condition (d), generic rather than name-specific because a row is
  * checked on its own, independent of any one claim (§2.2). (e) `isAncestorOfMain`, SKIPPED (not
- * failed) when `origin/main` does not resolve. Returns `{ ok: true }` or `{ ok: false, reason }` using
- * §7's exact pin-refusal text.
+ * failed) when `origin/main` does not resolve. Returns `{ ok: true, mainUnchecked }` or `{ ok: false,
+ * reason }` using §7's exact pin-refusal text; `mainUnchecked` is true when condition (e) could not run
+ * at all (no `origin/main` in the scanned tree) for a row that otherwise held -- the caller ORs this
+ * into `withdrawnMainUnchecked` the same way a per-claim exemption's own SKIP does.
  */
 function withdrawnRowPinCondition(root, relPath, ref) {
   if (!revResolvesToCommit(root, ref.rev)) return { ok: false, reason: 'refused: rev is not a commit' };
@@ -563,7 +559,7 @@ function withdrawnRowPinCondition(root, relPath, ref) {
   if (extractClaimedTests(slice).length === 0) return { ok: false, reason: 'refused: pinned line names no test' };
   const anc = isAncestorOfMain(root, ref.rev);
   if (anc.checked && !anc.ok) return { ok: false, reason: 'refused: rev not on main' };
-  return { ok: true };
+  return { ok: true, mainUnchecked: !anc.checked };
 }
 
 /**
@@ -584,13 +580,14 @@ function withdrawnRowPinCondition(root, relPath, ref) {
  * does not also report that row's own defect as an ordinary "not found" claim (round 21 item 2); a row
  * refused at the grammar level never joins it -- a reference naming another file's path, or a range,
  * was never capable of exempting anything in the first place, so nothing needs suppressing for it
- * (§2's invalidator: P2(b) differs recorded, not stopped -- a mention is not an attempt, and the same
+ * (§5's invalidator: P2(b) differs recorded, not stopped -- a mention is not an attempt, and the same
  * reasoning keeps a grammar-refused row from swallowing an unrelated claim's own finding).
  */
 function computeWithdrawnRows(root, relPath, text) {
   const findings = [];
   const validSpans = [];
   const invalidRowLines = new Set();
+  let mainUnchecked = false;
   const refsByLine = firstHashRefsByLine(text);
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
@@ -612,6 +609,7 @@ function computeWithdrawnRows(root, relPath, text) {
       grammarAccepted = true;
       const pin = withdrawnRowPinCondition(root, relPath, ref);
       if (!pin.ok) reason = pin.reason;
+      else if (pin.mainUnchecked) mainUnchecked = true;
     }
     const riders = withdrawnRiders(root, lineText);
     const ok = reason === undefined && riders.ok;
@@ -633,7 +631,7 @@ function computeWithdrawnRows(root, relPath, text) {
     const message = reason === undefined ? riders.failure : riders.ok ? reason : `${reason}; ${riders.failure}`;
     findings.push({ relPath, line: lineNo, kind: 'withdrawn-row', message });
   }
-  return { findings, validSpans, invalidRowLines };
+  return { findings, validSpans, invalidRowLines, mainUnchecked };
 }
 
 const RUST_FN_RE = /\bfn\s+([a-z_][A-Za-z0-9_]*)/g;
@@ -727,7 +725,10 @@ export function plannedGateFiles(plan) {
  * `computeWithdrawnRows`/`findWithdrawnTestSpan`); a withdrawn-test line is never also read as
  * superseded. `supersededMainUnchecked` is true when at least one superseded claim's condition (e)
  * could not run (no `origin/main` in the scanned tree) — the caller surfaces that once, not per claim;
- * `withdrawnMainUnchecked` is the same surfacing for a withdrawn claim's own condition (e).
+ * `withdrawnMainUnchecked` is the same surfacing for a withdrawn claim's own condition (e), ORed with
+ * a row-level SKIP of the same condition (`computeWithdrawnRows`'s own `mainUnchecked`) so a valid
+ * accepted row is surfaced even when it never becomes a `withdrawn` entry (its claim already exists,
+ * so the per-claim loop never asks).
  *
  * Round 21 item 2 (entry 136); round 22 item 3 and round 23 item 4 (§2.1, §2.2,
  * TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md): every line in ROW POSITION (`ROW_POSITION_RE`) is ALSO
@@ -761,7 +762,13 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   for (const rel of targets) {
     const text = fs.readFileSync(path.join(root, rel), 'utf8');
     const isPlanned = exempt.has(rel);
-    const { findings: rowFindings, validSpans: withdrawnSpans, invalidRowLines } = computeWithdrawnRows(root, rel, text);
+    const {
+      findings: rowFindings,
+      validSpans: withdrawnSpans,
+      invalidRowLines,
+      mainUnchecked: rowMainUnchecked,
+    } = computeWithdrawnRows(root, rel, text);
+    if (rowMainUnchecked) withdrawnMainUnchecked = true;
     findings.push(...rowFindings);
     const spans = supersededSpans(rel, text);
 
@@ -827,9 +834,9 @@ function main() {
     for (const w of withdrawn) {
       console.error(`  - ${w.relPath}:${w.line} — claims test \`${w.name}\` — withdrawn — pinned by ${w.reference} — ruling: ${w.ruling}; carrier: ${w.carrier}`);
     }
-    if (withdrawnMainUnchecked) {
-      console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim above.');
-    }
+  }
+  if (withdrawnMainUnchecked && !quiet) {
+    console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim or accepted row above.');
   }
   if (findings.length === 0) {
     console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned, superseded or withdrawn (${planned.length} planned, ${superseded.length} superseded, ${withdrawn.length} withdrawn, advisory).`);
