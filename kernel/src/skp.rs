@@ -1024,8 +1024,17 @@ impl SkpHost {
                         // Phase-2 delta 8, following `kernel/src/lib.rs`'s own post-check
                         // `eprintln!` convention: the reason's wire spelling only — no reference, no
                         // dataset handle, no duration (the operator-visible-text rule; ADR-018).
+                        //
+                        // Advisory 2 (architect gate-1): this line runs before `end_generation`
+                        // and unconditionally, so after another route (or the other handle) has
+                        // already ended the generation, an "observed" wording would state an end
+                        // this call did not make. Worded as the signal itself, which this call
+                        // always did just receive, rather than as a claimed consequence — the
+                        // round-7 engine-facts rule (`SkpHost::end_generation`'s signature is
+                        // unchanged; the alternative of logging only when `record` returns `Some`
+                        // was not taken, to keep this fix to the wording alone).
                         eprintln!(
-                            "session ended for a dataset: the advisory source watcher observed {}",
+                            "the advisory source watcher signalled {}",
                             match reason {
                                 SessionEndReason::ObservedChange => "observed-change",
                                 SessionEndReason::CoverageLost => "coverage-lost",
