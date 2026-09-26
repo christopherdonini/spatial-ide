@@ -673,10 +673,15 @@ test('a_withdrawn_test_row_also_marked_superseded_does_not_exempt_as_superseded'
 // "ruling":"round 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0" (observed at 7400dac, Node
 // v24.18.1). Not isolated: this same mutation also fails
 // `a_withdrawn_test_line_pinning_a_line_range_fails_by_name` and
-// `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` below (52 of 55 pass) -- but with a
-// DIFFERENT printed reason there, since those two fixtures pin a placeholder hash: "+ actual - expected
-// \n\n+ 'refused: hash does not recompute'\n- 'refused: a line range'" (the row falls to the pin-
-// condition branch and fails there instead, on the fixture's own deliberately-wrong hash).
+// `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` below (52 of 55 pass). Both of those
+// fixtures pin a placeholder hash, so the row falls to the pin-condition branch; as printed at b82941e
+// (Node v24.18.1), the first: "AssertionError [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md",
+// "line":5,"kind":"withdrawn-row","message":"refused: hash does not recompute"}]" then "+ actual -
+// expected" then "+ 'refused: hash does not recompute'" then "- 'refused: a line range'" then a caret
+// line; the second: "AssertionError [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md","line":5,
+// "kind":"withdrawn-row","message":"refused: hash does not recompute; unresolvable ruling: round 99,
+// item 1"}]" then "+ actual - expected" then "+ 'refused: hash does not recompute; unresolvable ruling:
+// round 99, item 1'" then "- 'refused: a line range; unresolvable ruling: round 99, item 1'".
 test('a_withdrawn_test_row_pinning_a_line_range_does_not_exempt', () => {
   const v1 = `${WITHDRAWN_V1}Second line, not itself a claim.\n`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-withdrawn-range-'));
@@ -1324,17 +1329,14 @@ test('a_withdrawn_test_row_whose_rev_is_not_a_commit_fails_by_name', () => {
 
 // §2.2's last bullet: a row that fails BOTH its own pin conditions and its riders names both, in one
 // message (§7: the pin reason first, the rider failure appended after `; `).
-// RECORDED MUTATION (§4's own text: riders are not read when the pin fails -- the same single code
-// change as `a_refused_withdrawn_test_line_names_its_unresolvable_ruling` above, since this
-// implementation reads riders conditionally on `reason` regardless of whether that reason came from
-// the grammar or the pin): in computeWithdrawnRows, replace `const riders =
-// withdrawnRiders(root, lineText);` with `const riders = reason === undefined ?
-// withdrawnRiders(root, lineText) : { ok: true };` -- applied for real, run via `node --test
-// scripts/plan/verify-test-claims.test.mjs`, then reverted; fails: "AssertionError [ERR_ASSERTION]:
-// [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":"withdrawn-row","message":"refused: hash does not
-// recompute"}]" then "+ actual - expected\n\n+ 'refused: hash does not recompute'\n- 'refused: hash
-// does not recompute; unresolvable ruling: round 99, item 1'" (observed at 7400dac, Node v24.18.1); not
-// isolated (see the mutation recorded on the test above; 53 of 55 pass).
+// RECORDED MUTATION (§4's own text: riders are not read when the pin fails): in computeWithdrawnRows,
+// replace `const riders = withdrawnRiders(root, lineText);` with
+// `const riders = grammarAccepted && reason !== undefined ? { ok: true } : withdrawnRiders(root, lineText);`
+// -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// fails: "AssertionError [ERR_ASSERTION]: [{"relPath":"X-PREREGISTRATION.md","line":5,"kind":
+// "withdrawn-row","message":"refused: hash does not recompute"}]" then "+ actual - expected" then
+// "+ 'refused: hash does not recompute'" then "- 'refused: hash does not recompute; unresolvable ruling:
+// round 99, item 1'" (54 of 55 pass, isolated to this test; observed at b82941e, Node v24.18.1).
 test('a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both', () => {
   const { dir } = withdrawnFixture({ hash: '0'.repeat(64), ruling: 'round 99, item 1' });
   const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir });
@@ -1346,9 +1348,9 @@ test('a_withdrawn_test_row_whose_pin_and_ruling_both_fail_names_both', () => {
 
 // §2.1(a): the row-position predicate does not require the colon after the marker.
 // RECORDED MUTATION: replace `ROW_POSITION_RE` with `/^- withdrawn-test:(?![A-Za-z0-9_-])/` (the colon
-// required) -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]:
-// [] / 0 !== 1" (the row never enters the check at all, and the underlying claim already exists, so no
-// finding appears; 54 of 55 pass, isolated to this test; observed at 7400dac, Node v24.18.1).
+// required) -- applied for real, run, then reverted; fails: "AssertionError [ERR_ASSERTION]: []" then
+// "0 !== 1" (the row never enters the check at all, and the underlying claim already exists, so no
+// finding appears; 54 of 55 pass, isolated to this test; observed at b82941e, Node v24.18.1).
 test('a_marker_in_row_position_without_its_colon_is_still_checked', () => {
   const { dir } = rowTextFixture(
     (rev) => `- withdrawn-test \`${WITHDRAWN_DOC}:3\` @ ${rev} sha256:${sha256Hex(nthLineOf(DOC_WITH_REAL_CLAIM, 3))}; ruling: round 99, item 1; carrier: round 2, item 5\n`,
