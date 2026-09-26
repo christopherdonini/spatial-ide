@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d9da0609eeb687c4b8d10c6576ad9c57deb916adfa5723abe36d8ff6622baa8a`) at `2026-09-26T18:36:44.626Z`.
+Generated from `PLAN.yaml` (sha256 `1a572cbf83a6d9a9596080027e42df0a260ac02cf61fbb67144e8eebc1c6cc24`) at `2026-09-26T19:10:35.189Z`.
 
 ## 1. Next
 
@@ -10,6 +10,9 @@ Generated from `PLAN.yaml` (sha256 `d9da0609eeb687c4b8d10c6576ad9c57deb916adfa57
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
 - **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
+- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) (lane `kernel-protocol`, order null, budget 15 min)
+- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) (lane `kernel-protocol`, order 2, budget 240 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
@@ -20,10 +23,7 @@ Generated from `PLAN.yaml` (sha256 `d9da0609eeb687c4b8d10c6576ad9c57deb916adfa57
 
 ## 4. Blocked on dependencies
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: engine-source-change-watcher, b1-engine-kernel-half
-- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) — blocked by: engine-source-change-watcher
-- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — blocked by: engine-source-change-watcher
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — blocked by: engine-source-change-watcher
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: b1-engine-kernel-half
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -33,7 +33,7 @@ Generated from `PLAN.yaml` (sha256 `d9da0609eeb687c4b8d10c6576ad9c57deb916adfa57
 
 ## 5. In progress
 
-- **engine-source-change-watcher** — The advisory source-change watcher — evidence: branch `cut/source-change-watcher`
+- (none)
 
 ## 6. Proposed / unscheduled
 
