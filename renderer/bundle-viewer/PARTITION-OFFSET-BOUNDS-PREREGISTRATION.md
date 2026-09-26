@@ -267,3 +267,11 @@ References and hashes only (the record cap, 2026-09-18). Each row names its temp
 6. **Class 2, the budget (§7), final figures against main:** `partition.ts` 89 (≤ 70 declared); the two scripts 596 (≤ 350); `KNOWN-LIMITATIONS.md` 12 (≤ 12, after `c855b77`); 4 files besides this one. The worker's figures at `aaa6020`: `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:26 @ e562e9b sha256:8ef696298a0a484a1600407bd43998b5f87c18ced78007893fcae38c3915db94`.
 7. **Class 2, the fixtures and the deviations:** F3 is built by write-then-patch at a differential location, as F5 and F6 are, and two IPC-writer behaviours are documented in the test file's module doc: `state/consults/2026-09-26-partition-offset-bounds-worker-report.md:28-32 @ e562e9b sha256:4dac4b78b55c5fd2dcb9eb268f1a9ef3b591ba382e0365b124ef94e5af7d02ac`.
 8. **Residual:** `[[KL-N]]` and `[[PR]]` are filled in `KNOWN-LIMITATIONS.md` at merge; §2h keeps them as written.
+
+### Amendment 3 — 2026-09-26, record correction after the architect gate, attempt 1 (class 3 for the pointers; class 1 for the withdrawals, round 15 (g))
+
+1. Amendment 1 pins the ledger by line, which round 12 (a) and round 14 (a′) forbid; its reference is RULED 2026-09-26, question round 25, item 4, and item 1's two parentheticals are withdrawn, the item landed at `c855b77` being its reference.
+2. Amendment 2 row 3 states a tool's behaviour without its commit (round 15 (c)); the tool is `scripts/plan/verify-mutation.mjs:17-25 @ e562e9b sha256:fc4d55b2995a3c1e23598eeac22010ae5c3e82a5d8d57c09387a0437658b39ea`, and M0–M10's observation of record is `state/consults/2026-09-26-partition-offset-bounds-gate1-reviewer.md:49-65 @ 522493a sha256:29663cd49c53b17d30514a278fabf9dfa5295544cc6ea44335a23f097af83ff8`.
+3. Amendment 2 row 6's figures are over `git diff --numstat e562e9b...c855b77`, and row 8 is class 1.
+
+Superseded: Amendment 1's `DECISIONS-PENDING.md:40` pin and item 1's two parentheticals; Amendment 2 row 3's parenthetical and its last sentence; row 6's "against main"; row 7's clause before its reference.
