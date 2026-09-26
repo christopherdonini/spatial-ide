@@ -1,4 +1,4 @@
-*Custodian's filing note (2026-09-26): the reviewer gate's attempt-1 report for PLAN node `engine-source-change-watcher` at ee6fa38, filed as returned (extracted by script from the agent's hand-back; byte-identical). Everything below the rule is the agent's text. Its gate-log record is in `state/gate-log.json` (commit dfdc8fb).*
+*Custodian's filing note (2026-09-26): the reviewer gate's attempt-1 report for PLAN node `engine-source-change-watcher` at ee6fa38, filed as returned (extracted by script from the agent's hand-back; byte-identical). Everything below the rule is the agent's text, as returned at 04b3680, except six rooted cites to files that exist only on the branch, on this file's lines 11, 17, 34, 36, 135, 191. On 2026-09-26 a script rewrote each of the six to the reviewer's worktree path, `C:\dev\wt\source-change-watcher\` followed by the same path and lines, because `verify-cites` resolves rooted cites against main's tree. Nothing else changed; `git diff 04b3680` on this file shows the six tokens and this sentence. Its gate-log record is in `state/gate-log.json` (commit dfdc8fb).*
 
 ---
 
@@ -8,13 +8,13 @@ Every suite is green and every mutation I applied was observed. Seven blocking f
 
 ## Blocking
 
-**B1. `engine/src/watch.rs:323-324` vs `:430-437`: a race between re-issuing a read and disarming it can hang `close_dataset`.** Rule: docs/01 principle 7 (never block; every operation cancellable).
+**B1. `C:\dev\wt\source-change-watcher\engine\src\watch.rs:323-324` vs `:430-437`: a race between re-issuing a read and disarming it can hang `close_dataset`.** Rule: docs/01 principle 7 (never block; every operation cancellable).
 - After a completion with a non-matching name, the watch thread re-issues `ReadDirectoryChangesW` and waits in `GetOverlappedResult(bWait=TRUE)`. It never re-checks `disarming`.
 - If `SourceWatch::drop`'s `CancelIoEx(h.raw, null)` lands between that completion and the re-issue, the new read is never cancelled. `Drop` then blocks in `join()` until some later change in the directory matches or overflows.
 - `close_dataset` drops the watch synchronously (`kernel/src/skp.rs`, `close_dataset`), so the close hangs. Any change to a file beside the source (a "sibling") opens this window.
 - Fix: after `issue_read` succeeds, re-check `disarming` and `CancelIoEx` the handle's own read.
 
-**B2. `engine/src/watch.rs:577` and `:600`: `.expect("spawn the parent/grandparent watch thread")` on a fallible product path.** Rule: checklist 1.
+**B2. `C:\dev\wt\source-change-watcher\engine\src\watch.rs:577` and `:600`: `.expect("spawn the parent/grandparent watch thread")` on a fallible product path.** Rule: checklist 1.
 - A failed spawn panics inside `SkpHost::open_dataset`.
 - If the grandparent spawn fails, the parent thread and its handle are already running and leak. `Handle` has no `Drop` of its own; only `SourceWatch` does.
 - Fix: return `ChecksOnly { reason }` and disarm and join whatever already started.
@@ -31,9 +31,9 @@ Every suite is green and every mutation I applied was observed. Seven blocking f
 - `protocol/skp/SKP-V0.md:265` then calls `skp/0.5` "a further instance of this rule". That is false: the version was assembled across commits. Condition (iii) failed, so it is not an instance.
 - Squash-merging would conflict with the E5 pin at 4137f4d (see the note under the figures). So this needs a record row, not a squash.
 
-**B5. `frontends/shell/src/admission/DescribeSummary.tsx:77` and `:84`: two new operator strings are unmarked.** `<dt>Source watch</dt>` and `<dt>Structural checks</dt>` lack `[P6 placeholder]`. Rule: §8 item 9 (§7: "each new operator string starts `[P6 placeholder]`").
+**B5. `C:\dev\wt\source-change-watcher\frontends\shell\src\admission\DescribeSummary.tsx:77` and `:84`: two new operator strings are unmarked.** `<dt>Source watch</dt>` and `<dt>Structural checks</dt>` lack `[P6 placeholder]`. Rule: §8 item 9 (§7: "each new operator string starts `[P6 placeholder]`").
 
-**B6. `engine/tests/source_watch_adapter.rs:349-353` (A6's doc comment) states a rate and a speed comparison.** It reads "529 655 touches in 10 s", "zero signals in 10 s", "this adapter's re-issue loop drains far faster than any of these could generate volume, on this hardware". Rule: §8 item 11; §1 (no duration); checklist 5 (no docs/08 row). Fix: keep "throughput attempts produced no overflow" and drop the figures and the comparison.
+**B6. `C:\dev\wt\source-change-watcher\engine\tests\source_watch_adapter.rs:349-353` (A6's doc comment) states a rate and a speed comparison.** It reads "529 655 touches in 10 s", "zero signals in 10 s", "this adapter's re-issue loop drains far faster than any of these could generate volume, on this hardware". Rule: §8 item 11; §1 (no duration); checklist 5 (no docs/08 row). Fix: keep "throughput attempts produced no overflow" and drop the figures and the comparison.
 
 **B7. SH7's and SH8's registered mutations fail no vitest test, and the recorded mutations were replaced without disclosure.** Rule: §4 (SH7/SH8 mutation "the entry skips `notifySessionEnded`"); §9; the seam rule.
 - SH7 applied at ee6fa38 (`App.tsx:1162`, `endSessionForReason` returns true without calling the baseline manager's `notifySessionEnded`): `npx vitest run` rc=0, 1086/1086 passed.
@@ -132,7 +132,7 @@ I also ran the registered E2E mutation (listener never registered), then reverte
 - Phase 1's engine figure of 1,848 is 1,365 plus 483, the preregistration's length at 4137f4d (`git show 4137f4d:engine/SOURCE-WATCHER-PREREGISTRATION.md | wc -l`). The preregistration was counted by mistake; the engine code is identical.
 - Fold-in commits: d90837d carries the `viewportStreamManager.ts` guards mixed with the §2d groundwork; e372848 adds 205 lines.
 
-**Withdrawn E5 comment** (the dashed rule through "…never built."): `kernel/src/skp.rs:2626-2644 @ 4137f4d sha256:c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a`. Computed with `git show 4137f4d:kernel/src/skp.rs | sed -n '2626,2644p' | sha256sum`, LF bytes, no CR present. Lines 2627–2644 without the rule hash to c9a531722a10156a9545ae9db3fe7be1c4ccb29c76e1d8effd214f27e9a2a955. **4137f4d is not on main**, so round 15 (e) cannot be met until it is: merge with history, not a squash.
+**Withdrawn E5 comment** (the dashed rule through "…never built."): `C:\dev\wt\source-change-watcher\kernel\src\skp.rs:2626-2644 @ 4137f4d sha256:c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a`. Computed with `git show 4137f4d:kernel/src/skp.rs | sed -n '2626,2644p' | sha256sum`, LF bytes, no CR present. Lines 2627–2644 without the rule hash to c9a531722a10156a9545ae9db3fe7be1c4ccb29c76e1d8effd214f27e9a2a955. **4137f4d is not on main**, so round 15 (e) cannot be met until it is: merge with history, not a squash.
 
 ## Checks
 
@@ -188,7 +188,7 @@ I also ran the registered E2E mutation (listener never registered), then reverte
 
 - **S1.** Fix B3's side effects (the stale `invalidated` entry and the false log line) with a third latch state, "Refused".
 - **S2.** `App.test.ts:1409` checks SH11's S3 assertion against `App.tsx`'s source text, not the logged line. The regex passes any spelling other than `event.session`. Extract the line builder and assert on its output.
-- **S3.** `frontends/shell/src/skp/events.ts:25` puts `JSON.stringify(payload)` into the log message for a payload that is not an object. That contradicts its own doc ("never the raw payload") and §8 item 19 in principle.
+- **S3.** `C:\dev\wt\source-change-watcher\frontends\shell\src\skp\events.ts:25` puts `JSON.stringify(payload)` into the log message for a payload that is not an object. That contradicts its own doc ("never the raw payload") and §8 item 19 in principle.
 - **S4.** `listenDatasetSessionEnded(...)` at `App.tsx:1190` has no `.catch`.
 - **S5.** E10 (`session_end_event.rs:309`) has no timeout wrapper: under its registered mutation it hangs rather than fails.
 
