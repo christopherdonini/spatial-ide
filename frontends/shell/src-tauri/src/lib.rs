@@ -287,7 +287,11 @@ pub fn run() {
                 let app_handle = app.handle().clone();
                 std::thread::spawn(move || {
                     while let Ok(event) = session_end_rx.recv() {
-                        let _ = app_handle.emit(spatial_skp::v0::DATASET_SESSION_ENDED_EVENT, &event);
+                        // Advisory 5a (architect gate-1): logged on failure, never silently
+                        // dropped — the error only, never `event` itself (rider (b) still holds).
+                        if let Err(e) = app_handle.emit(spatial_skp::v0::DATASET_SESSION_ENDED_EVENT, &event) {
+                            eprintln!("[spatial-ide-shell] dataset-session-ended emit failed: {e}");
+                        }
                     }
                 });
             }
