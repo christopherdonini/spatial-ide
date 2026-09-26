@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T13:54:31.679Z",
+  "generated_at": "2026-09-26T13:56:45.310Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,7 +9,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 16717721600,
+        "bytes": 16717656064,
         "total": 510319915008
       },
       {
@@ -66,8 +66,9 @@
       "governance-test-claims-superseded-followups": 1,
       "data-plane-origin-non-ascii": 1,
       "engine-source-change-watcher": 1,
-      "bundle-viewer-partition-offset-bounds": 1
+      "bundle-viewer-partition-offset-bounds": 1,
+      "data-plane-stream-registry-bound": 1
     },
-    "total": 41
+    "total": 42
   }
 }
