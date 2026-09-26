@@ -346,12 +346,9 @@ mod raw_win32 {
     }
 }
 
-/// **Two throughput-based attempts, tried and discarded before this one.** A single-thread tight
-/// rename-toggle burst (10 rounds of 5 000) and a 64-thread rename-toggle burst both completed with
-/// **zero** signals in 10 s; a 64-thread pure-mtime-touch burst issued 529 655 touches in 10 s with
-/// **still zero** signals — this adapter's re-issue loop drains far faster than any of these could
-/// generate volume, on this hardware. What actually forces the condition: suspending the real watch
-/// thread (found by the name `engine::watch::arm` gives it) for a bounded window, then flooding the
+/// **Two throughput-based attempts, tried and discarded before this one: throughput attempts
+/// produced no overflow.** What actually forces the condition: suspending the real watch thread
+/// (found by the name `engine::watch::arm` gives it) for a bounded window, then flooding the
 /// directory while it cannot drain at all.
 ///
 /// RECORDED MUTATION: treat a 0-byte completion as no event (re-issue and keep waiting) in
@@ -402,15 +399,14 @@ fn a_forced_overflow_signals_coverage_lost() {
 /// self-rename delivers `RENAMED_OLD_NAME` on `"source.dat"` (this watch's own exact stored
 /// spelling — a byte-exact match regardless of any fold logic) immediately before
 /// `RENAMED_NEW_NAME` on `"SOURCE.DAT"` (the fold-dependent one), and "at most one signal per
-/// handle" means the first (byte-exact) record is the one this test can ever observe. Structural,
-/// not a gap in this test alone: every real rename-based scenario that could produce a
-/// fold-dependent match is preceded by a same-handle record naming the file's own current
-/// (already-matching) spelling — confirmed for A3's scenario too (that test's own corrected
-/// comment). Kept here because it still proves the real end-to-end path end to end (case (b));
-/// dropping the fold from `names_match` does **not** make this test fail — the unit test below
-/// does.
+/// handle" means the first (byte-exact) record is the one this test can ever observe. Not a gap in
+/// this test alone: A3's own scenario is preceded by the same same-handle, byte-exact record for
+/// the same structural reason (that test's own corrected comment) — this is confirmed for those two
+/// scenarios, not generalized to every rename-based scenario. Kept here because it still proves the
+/// real end-to-end path end to end (case (b)); dropping the fold from `names_match` does **not**
+/// make this test fail — the unit test below does.
 ///
-/// RECORDED MUTATION: none isolates `a7_a_differently_cased_name_renamed_over_the_source_signals_change`
+/// RECORDED MUTATION: none isolates `a_differently_cased_name_renamed_over_the_source_signals_change`
 /// on its own — by the structural reason above, dropping the fold from `names_match` leaves this
 /// test passing unchanged (confirmed above). The isolating mutation is recorded on
 /// `names_match_folds_case` below instead, which is where it belongs.
