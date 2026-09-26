@@ -920,6 +920,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    * `this.generation`), and the late ticket is admitted and started exactly as an ordinary
    * successful mint would be.
    */
+  // Mutation: see RECORDED MUTATION (SH13, registered) above.
   it("SH13: the same window, ended by the event route (notifySessionEnded)", async () => {
     mockStream("sh_a");
     const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
@@ -955,6 +956,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
    * else in this scenario bumps `this.generation` before `dataPlaneAttach` resolves, so the
    * unaffected generation check alone lets the mint through to `startStream`.
    */
+  // Mutation: see RECORDED MUTATION (SH14, registered) above.
   it("SH14: the end lands while dataPlaneAttach is pending", async () => {
     mockStream("sh_late");
     const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });

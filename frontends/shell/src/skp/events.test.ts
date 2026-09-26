@@ -62,6 +62,8 @@ describe("decodeDatasetSessionEnded (SH6)", () => {
     expect(() => decodeDatasetSessionEnded(42)).toThrow();
   });
 
+  // Mutation: drop the `typeof session !== "string" || session.length === 0` check. Expected
+  // failure: both assertions below fail -- neither malformed `session` throws.
   it("refuses an empty or non-string session", () => {
     const payload = loadFixturePayload();
     expect(() => decodeDatasetSessionEnded({ ...payload, session: "" })).toThrow();

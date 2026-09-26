@@ -1367,6 +1367,8 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
   // call site, which passes exactly the reason and nothing else (read the source, not inferred):
   // `logSessionEvent("warn", \`dataset_session_ended: dropped for an unknown session (reason=${reason})\`)`
   // carries no `sr_`-shaped value anywhere in its template.
+  // Mutation: drop the final `deps.dispatch(...)` call from `routeDatasetSessionEndedEvent`.
+  // Expected failure: the assertion below fails -- `dispatch` is never called at all.
   it("a matching event dispatches for the currently admitted dataset", () => {
     const dispatch = vi.fn();
     routeDatasetSessionEndedEvent(EVENT, {
@@ -1378,6 +1380,8 @@ describe("routeDatasetSessionEndedEvent (§2d: the listener's own comparison/dro
     expect(dispatch).toHaveBeenCalledWith("observed-change", "ds_a");
   });
 
+  // Mutation: drop the `if (deps.admittedDataset === null) return;` guard. Expected failure: the
+  // first assertion below fails -- `dispatch` would be called with `null` as `forDataset`.
   it("a matching event with no dataset currently admitted is dropped silently", () => {
     const dispatch = vi.fn();
     const logUnknownSessionDrop = vi.fn();

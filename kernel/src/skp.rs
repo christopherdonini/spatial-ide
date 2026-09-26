@@ -2831,6 +2831,8 @@ mod ticket_drop_under_lock_regression {
     /// (`GenerationRegistry::forget_dataset`), so by the time this test's `enqueue` call runs,
     /// `ended_reason` already answers `None` for the (now-closed) dataset, and the mutated `enqueue`
     /// sends nothing — this test's `recv_timeout` timed out the same way.
+    // Mutation: see the two RECORDED MUTATIONs above (enqueue re-reads GenerationRegistry; enqueue
+    // skipped when ended_reason is None).
     #[test]
     fn an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference() {
         let path = fixture("close-drop-race-path");

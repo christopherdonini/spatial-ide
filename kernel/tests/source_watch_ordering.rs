@@ -210,6 +210,7 @@ fn coverage_loss_refuses_with_its_own_code_never_source_changed() {
 /// **Phase-2 delta 11 (optional, taken):** injects `CoverageLost` rather than `Change`, matching
 /// case (c)'s own trigger (`Cases → tests`: "(c) A6, K4, K5") — a small change, since nothing below
 /// reads the refusal's specific code.
+// Mutation: see the RECORDED MUTATION above (delete the `Watching`-arm `self.watches` insert).
 #[test]
 fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
     let arm = injected_watch::InjectedArm::new();
@@ -264,6 +265,7 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 /// before the retry runs at all. "No generation" stays unproven here: an accessor for it would be
 /// the test-only `pub` item §5 forbids, so that clause is not asserted (Amendment 3 item 4's own
 /// reduction).
+// Mutation: see the RECORDED MUTATION above (mint before the latch check, skipping steps 1-2).
 #[test]
 fn a_signal_between_arming_and_admission_refuses_the_open() {
     let arm = injected_watch::InjectedArm::new();
