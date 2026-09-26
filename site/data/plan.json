@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T09:39:11.129Z",
-  "plan_hash": "a350e519b6f4c918e4d0d41c91c20d150b32d3acae5eaaed78807c54851f232d",
+  "generated_at": "2026-09-26T09:43:37.953Z",
+  "plan_hash": "44057b2f552c62966d935709dd765317992c0bfb8f18159add379aed8ff4bc7a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3936,15 +3936,17 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "protocol/data-plane/ORIGIN-NON-ASCII-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/data-plane-origin-non-ascii"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,

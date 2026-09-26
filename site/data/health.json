@@ -1,18 +1,15 @@
 {
-  "generated_at": "2026-09-26T09:39:09.391Z",
+  "generated_at": "2026-09-26T09:43:35.969Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": false,
-    "failures": [
-      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
-    ]
+    "ok": true,
+    "failures": []
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 25029070848,
+        "bytes": 24988717056,
         "total": 510319915008
       },
       {
@@ -23,10 +20,10 @@
     ]
   },
   "stray_processes": {
-    "total": 3,
+    "total": 6,
     "by_name": {
       "cargo": 0,
-      "node": 3,
+      "node": 6,
       "spatial-ide-shell": 0
     }
   },

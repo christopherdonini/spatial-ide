@@ -2387,12 +2387,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: protocol/data-plane/ORIGIN-NON-ASCII-PREREGISTRATION.md
+    evidence: {branch: cut/data-plane-origin-non-ascii}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
