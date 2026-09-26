@@ -2577,7 +2577,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02."
+    summary: "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click."
     dates: {opened: 2026-09-26, done: null}
 
   - id: catalog-open-replace-drop-latency-note
