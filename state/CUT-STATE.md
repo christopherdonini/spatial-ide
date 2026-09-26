@@ -238,3 +238,27 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Step F, the A2-1 fold-in, waits for Amendment 4. An architect consult is drafting it: the class, since no template class names a widening; the fix's shape; the SH rows.
   - **The follow-ups worker** (`governance/test-claims-followups`) is still running.
   - **Disk:** C: 23 GB free.
+- 2026-09-26T00:35Z - **Wave 1: all launches done (B running); pair 2 and batch 2 triaged; A5-1 a fourth S1 candidate. The watcher's Amendment 4 is with its phase-2 worker. The follow-ups failed both gates at attempt 1; a batched fix round is running.**
+  - **Pair 2** (3a0f22d): A4 and A5 reported. The balance went $237 → $225, a batch delta of $12. A5's session still showed a running task at the reading.
+    - A5-1, S1 candidate: the data plane's `StreamRegistry` retains every stream served, with no ceiling. Reproduced on Windows (rc 101, 200 retained). It goes to the after-wave batch.
+    - RECORD S2: A4-1 to A4-4 (one class: a refusal's code lost on the publish or raw path), A5-2, and A5's observations 4 and 5.
+    - The rest DISCARD S3.
+  - **Batch 2** (0527390): C and D reported. The balance went $225 → $221, a batch delta of $4.
+    - C: one divergence, C-1, RECORD S2, plus the ambiguity list. Draft PR #123 is open with its checks green; merging it is the human's decision.
+    - D, the Linux catalogue: D-1, D-2 and D-4 are one class (the default Rust suites assume Windows), and D-3 is `npm ci` refusing under npm 10. All RECORD S2.
+    - D's prompt names no item, so its worker left Item blank and labelled its findings B-1 to B-4. They are recorded as D-1 to D-4.
+  - **Deviations appended to `state/cloud/wave1-prompts.md`:** 2 (45441d5) and 3 (cc74a23). C, D and B carry §3's worker fields, pasted after their OUTPUT paragraphs.
+  - **Batch 3** (e619486): B, session_01VQQsDu87TyJwwusSdt4GL8, launched at 00:20:10Z with the balance at $221 of $250.
+  - **S1 candidates for the after-wave batch:** A3 3(b), A1-1, A2-1 (its fix is folding into the watcher) and A5-1. All four were reproduced on Windows.
+  - **The watcher:**
+    - Amendment 4's consult is filed at 001115f and sent to the phase-2 worker, which appends it byte-exact as its own commit before the fold-in code.
+    - Its item 8, the candidate arm's untiled sink, was triaged by the custodian and folded in beside A2-1.
+    - Phase 2 is running.
+  - **The follow-ups:**
+    - The worker stopped at §7's budget line; §7 itself records an overrun as class 2, so it continued. §2.8 was done at c1e315b.
+    - The custodian's closing Amendment 1 went in at 556ee94. §8 item 9 was then applied to the new comments at fbf90f0, and ea3b21d re-observed the two changed tests. Amendment 2 went in at f6ccfd2.
+    - Both gates FAILed attempt 1 at f6ccfd2 (4b568d9):
+      - the architect on B1–B6;
+      - the reviewer on B1–B7.
+    - P1 and P2 hold, the enumeration agrees on the merge with main, the temp-directory delta is 0, and the hashes match.
+    - One batched fix round is with the same worker: code, tests, re-observation, then docs. Amendment 3, the custodian's, is references only and is the piece's last record-correction round.
