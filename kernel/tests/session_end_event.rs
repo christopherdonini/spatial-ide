@@ -270,7 +270,7 @@ fn a_watcher_signal_after_admission_emits_once() {
 /// RECORDED MUTATION: in `GenerationRegistry::invalidate`, key the emission on whether `ended`
 /// (the collected ticket list) is non-empty rather than on `st.live.remove` actually finding a
 /// live entry — i.e. `Self::prune_locked`'s own idempotency guard is bypassed and every repeated
-/// call re-enqueues. Expected failure: this test's "exactly one event total" assertion fails.
+/// call re-enqueues. Expected failure: this test's exactly-one-event assertion fails.
 #[test]
 fn a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
     let arm = injected_watch::InjectedArm::new();

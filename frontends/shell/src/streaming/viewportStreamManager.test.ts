@@ -957,7 +957,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     startStreamMock.mockClear();
     const outcomePromise = manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
 
-    // "Another stream's [terminal] ends the session" while the mint above is still pending -- the
+    // SH12's case, another stream's terminal ending the session, while the mint above is still pending -- the
     // first stream's own terminal, which reaches `endSession` regardless of self-cancel status
     // (the self-cancel suppression only gates `opts.onTerminal`, never the session-ended check).
     firstSink.onTerminal(sourceChangedTerminal());

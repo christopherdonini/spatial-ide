@@ -47,7 +47,7 @@
 //   `dataset_session_ended` event the kernel still emits reaches no code in this process, so the
 //   session never ends while the canvas is idle. `.canvas-session-ended` never appears (F1) and
 //   resident vertices stay non-zero (F2). F0 is unaffected (there was never a query to begin
-//   with) and would still read "no new viewport_query", vacuously.
+//   with) and would still pass, with no new viewport_query, vacuously.
 //
 // A run is bounded and never kills anything it did not start (`attachOrLaunch`'s own contract);
 // unlike `source-changed.mjs`'s own sibling-run policy, THIS driver always calls `session.stop()`

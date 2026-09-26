@@ -2906,7 +2906,7 @@ mod ticket_drop_under_lock_regression {
     /// (performed on this branch, then reverted): by the time this test's `enqueue` call runs,
     /// `close_dataset`'s `forget_dataset` has already removed the dataset's `live` entry, so the
     /// re-read finds nothing and no event carries the reference — this test's `recv_timeout` timed
-    /// out with "one event, carrying the recorded reference" never satisfied.
+    /// out with its one-event expectation (the `expect` in the test body below) never satisfied.
     ///
     /// RECORDED MUTATION (registered, phase 2 delta 6, second): `enqueue` is skipped when
     /// `ended_reason(dataset)` is `None`. Observed failure (performed on this branch, then

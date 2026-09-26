@@ -50,8 +50,8 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `skp/0.5` (the advisory source-change watcher, `engine/SOURCE-WATCHER-PREREGISTRATION.md`):
 /// `OpenDatasetResponse` gains `session: SessionRef`; `DescribeResponse` gains `coverage`, `checks`
 /// and `session_end`; and one new control-plane event, [`DatasetSessionEnded`] on
-/// [`DATASET_SESSION_ENDED_EVENT`] — the one named exception to §4 item 7's "no server-to-client
-/// push". No generation value crosses the wire (rider (a)). Same discipline again:
+/// [`DATASET_SESSION_ENDED_EVENT`] — the one named exception to §4 item 7's rule against
+/// server-to-client push. No generation value crosses the wire (rider (a)). Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
 /// updated in this commit (`SKP-V0.md` §8's `skp/0.5` entry lists the full field set).
 pub const SKP_VERSION: &str = "skp/0.5";

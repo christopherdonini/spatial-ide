@@ -3,9 +3,9 @@
 
 //! **R-a** — `engine/SOURCE-WATCHER-PREREGISTRATION.md`'s round 21 item 1, rider (a):
 //! [`spatial_skp::v0::SessionRef`] routes only the end event and attributes no ticket. Its own
-//! doc comment states the shape this test proves: "no command's request type accepts it; it
-//! authorizes nothing and is never looked up; its only reads are the transition report and the
-//! event."
+//! doc comment states the shape this test proves (paraphrased): no command's request type accepts
+//! it, it authorizes nothing and is never looked up, and its only reads are the transition report
+//! and the event.
 
 mod watch_support;
 

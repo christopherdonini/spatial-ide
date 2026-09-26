@@ -552,7 +552,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // own code -- `isSessionEndedRefusal` (renamed §2d) matches it too, never only
   // `engine.source_changed` (block-on-sight 3 is a kernel-side rule; this is its client mirror).
   //
-  // RECORDED MUTATION for "a coverage-lost pre-check refusal also ends the session": narrow
+  // RECORDED MUTATION for the test below: narrow
   // `reportViewportOutcome`'s guard back to `e.skpError.code === "engine.source_changed"` (undoing
   // the §2d rename's widening). Expected failure: the first assertion below fails -- no
   // `.canvas-session-ended` block appears.

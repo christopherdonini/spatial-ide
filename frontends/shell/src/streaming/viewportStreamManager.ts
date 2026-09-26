@@ -324,7 +324,7 @@ export class ViewportStreamManager {
         // lives with the owner (`App.tsx`'s `latchedHoverReadout` call site), reached through
         // `onSessionEnded` below.
         //
-        // `endSession`'s own `if (this.sessionEnded) return` makes "exactly once" structural rather
+        // `endSession`'s own `if (this.sessionEnded) return` makes exactly-once structural rather
         // than argued (Amendment 4 item 1: the terminal route and §2d's event route now share one
         // private end method). P3a's version set the latch without guarding re-entry, which was
         // harmless while the branch only logged; with an owner callback on the other side of it, "at
@@ -421,7 +421,7 @@ export class ViewportStreamManager {
    * fold-in of Finding A2-1) -- the shape `TileViewportStreamManager.endSession`/
    * `notifySourceChanged` already establishes. Both routes that can learn this dataset's session
    * ended -- the terminal route above, and `notifySessionEnded` below (the event route, `engine/
-   * SOURCE-WATCHER-PREREGISTRATION.md` §2d) -- call this one method, so "exactly once" is this
+   * SOURCE-WATCHER-PREREGISTRATION.md` §2d) -- call this one method, so exactly-once is this
    * guard, not two.
    */
   private endSession(detail: string): void {
