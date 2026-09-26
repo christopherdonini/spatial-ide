@@ -80,9 +80,10 @@ test('stop-queue: blocks on the two-node fixture (a ready node exists)', async (
   }
 });
 
-// RECORDED MUTATION: in leaseHeldBy's regexp match branch, `match[1] !== sessionId` inverted to
-// `match[1] === sessionId` (relinquished/malformed read as held) -> `stop-queue: allows when this
-// session's lease is relinquished` fails: decision 'block' where 'allow' is expected.
+// RECORDED MUTATION: leaseHeldBy's `if (!match) return { held: false, ... }` branch changed to
+// `return { held: true }` (a relinquished/malformed/empty first line read as held) ->
+// `stop-queue: allows when this session's lease is relinquished` fails: decision 'block' where
+// 'allow' is expected.
 test("stop-queue: allows when this session's lease is relinquished", async () => {
   const projectRoot = makeTempDir('stop-allow-relinquished-');
   process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
@@ -152,7 +153,7 @@ test('stop-queue: allows when only the human-blocked node remains', async () => 
 
 test('stop-queue: allows on non-empty background_tasks, before even reading the plan', async () => {
   const projectRoot = makeTempDir('stop-allow-bg-');
-  // No CUSTODIAN_PLAN_PATH set and no PLAN.yaml in projectRoot -- if this reached step 3 it would
+  // No CUSTODIAN_PLAN_PATH set and no PLAN.yaml in projectRoot -- if this reached step 4 it would
   // still allow (missing plan), but we assert the earlier, more specific reason fires first.
   const input = baseStopInput({ background_tasks: [{ id: 'bg-1' }] });
   const result = await decide(input, { projectRoot });
@@ -285,8 +286,12 @@ test('stop-queue: notifies on the human-blocked-only allow, deduped on the waiti
     const before = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
     assert.equal(Object.keys(before).length, 1);
 
-    // A second allow for the same waiting set, moments later, must not add a second key.
-    await decide(input, { projectRoot });
+    // A second allow for the same waiting set, moments later, from a DIFFERENT session (its own
+    // held lease) -- the dedupe key is on the waiting set, not the session, so this must still
+    // not add a second key.
+    const secondInput = baseStopInput();
+    writeHeldLease(projectRoot, secondInput.session_id);
+    await decide(secondInput, { projectRoot });
     const after = JSON.parse(fs.readFileSync(dedupePath, 'utf8'));
     assert.deepEqual(before, after);
   } finally {
