@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-26T13:58:40.623Z",
-  "plan_hash": "e13ae74c3d76ba5d6eb1733577740799f65a2b40ac2b32513b91c68b98aa123c",
+  "generated_at": "2026-09-26T18:34:34.880Z",
+  "plan_hash": "2be1b281b34802182d7c68a75572cc090509ae6a299551b0a2d7430b0f8ccc2a",
   "priorities_approved": true,
   "next": {
     "id": "corpus-reproducibility-record",
@@ -19,7 +19,7 @@
       "opened": "2026-09-26",
       "done": null
     },
-    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-09-26",
         "done": null
       },
-      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
     },
     {
       "id": "data-plane-stream-registry-bound",
@@ -774,6 +774,63 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3)."
+    },
+    {
+      "id": "data-plane-crate-fmt",
+      "title": "spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md)."
+    },
+    {
+      "id": "data-plane-crowded-start-detail-spaces",
+      "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7)."
+    },
+    {
+      "id": "verify-cites-test-temp-dirs",
+      "title": "verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c))",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 26, item 4 (c): a pre-existing test in scripts/plan/verify-cites.test.mjs leaves one verify-cites-git- temp directory per run; beside verify-mutation-test-temp-dirs. Found by the governance piece's reviewer gate (state/consults/2026-09-26-governance-weekly-proposals-gate1-reviewer.md, S4)."
     },
     {
       "id": "publish-refusal-codes-and-attempt-lifecycle",

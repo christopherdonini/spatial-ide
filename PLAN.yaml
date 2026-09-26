@@ -2451,7 +2451,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md."
+    summary: "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
     dates: {opened: 2026-09-26, done: null}
 
   - id: catalog-open-drop-reproduction
@@ -2614,6 +2614,60 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Residual of engine/SOURCE-WATCHER-PREREGISTRATION.md's Amendment 6, row 13 (on the watcher branch until it merges). Once the watcher merges by a merge commit that keeps 4137f4d reachable (no squash), the E5 pin is appended on main as that preregistration's next amendment: lines 2626-2644 of kernel/src/skp.rs at 4137f4d, sha256 c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a (round 15 (e): hash pins only at main commits). The architect's gate-3 condition: the queue carries it before the merge."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: data-plane-crate-fmt
+    title: "spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a))"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: data-plane-crowded-start-detail-spaces
+    title: "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 20
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7)."
+    dates: {opened: 2026-09-26, done: null}
+
+  - id: verify-cites-test-temp-dirs
+    title: "verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c))"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 20
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "RULED 2026-09-26, question round 26, item 4 (c): a pre-existing test in scripts/plan/verify-cites.test.mjs leaves one verify-cites-git- temp directory per run; beside verify-mutation-test-temp-dirs. Found by the governance piece's reviewer gate (state/consults/2026-09-26-governance-weekly-proposals-gate1-reviewer.md, S4)."
     dates: {opened: 2026-09-26, done: null}
 
   - id: publish-refusal-codes-and-attempt-lifecycle
