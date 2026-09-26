@@ -160,7 +160,7 @@ queried again. The app cannot know whether those areas are empty.
     build that includes the viewer zoom-anchor fix (PR #53) or later.
     <!-- kernel/src/publish/viewer_assets.rs:4-19, :85 and frontends/shell/src-tauri/src/publish.rs:1109-1120 (publish copies the viewer's dist/ into the bundle — a frozen copy, not a version reference); docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md:527-530 (§14: a bundle's viewer cannot verify itself); renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md §5 (already-published bundles are not updated) and its Amendments 1-3; the fix: PR #53 (viewer/zoom-anchor, merged 2026-09-13); DECISIONS-PENDING.md entry 86 (the human's sighting of this line, 2026-09-13). Scope line, not a retirement: it stands for every bundle published before the fix. -->
 
-[[KL-N]]. **A bundle carries its author's viewer code: opening a bundle means running that author's
+29. **A bundle carries its author's viewer code: opening a bundle means running that author's
     code in your browser, sandboxed as any website is. Open bundles only from sources you trust.**
     The specific limit: every bundle published before the fix, including every v0.1.0 bundle, keeps
     a viewer that can stall on crafted partition offsets, and that reports a geometry column of the
