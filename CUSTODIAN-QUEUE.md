@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `86ce113fb932f04ad67dd732d35bd0672b63488f7335accb57a8ee3f4efcbfb1`) at `2026-09-26T10:46:49.482Z`.
+Generated from `PLAN.yaml` (sha256 `42d210ea151f8b14ce7559dd6fed37f41e77c7af77fe226867a03caa930f217b`) at `2026-09-26T10:47:27.082Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `86ce113fb932f04ad67dd732d35bd0672b63488f7335
 ## 2. Ready
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
-- **data-plane-origin-non-ascii** — The data plane refuses a stated Origin that is not visible ASCII, as any foreign origin (wave-1 A1-1) (lane `kernel-protocol`, order null, budget 120 min)
 - **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
@@ -33,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `86ce113fb932f04ad67dd732d35bd0672b63488f7335
 ## 5. In progress
 
 - **engine-source-change-watcher** — The advisory source-change watcher — evidence: PR #114
+- **data-plane-origin-non-ascii** — The data plane refuses a stated Origin that is not visible ASCII, as any foreign origin (wave-1 A1-1) — evidence: branch `cut/data-plane-origin-non-ascii`
 
 ## 6. Proposed / unscheduled
 
