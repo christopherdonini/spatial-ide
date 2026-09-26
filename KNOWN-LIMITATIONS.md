@@ -166,11 +166,11 @@ queried again. The app cannot know whether those areas are empty.
     a viewer that can stall on crafted partition offsets, and that reports a geometry column of the
     wrong shape as `unhandled-error` rather than `partition-decode-failed`. A published bundle's
     viewer is a frozen copy of whatever build produced it, so no already-published bundle can pick
-    up a later viewer fix. Fixed for every bundle published by a build that includes [[PR]] or later:
+    up a later viewer fix. Fixed for every bundle published by a build that includes PR #128 or later:
     its viewer checks the geometry column's shape, and each offset its geometry walk reads against
     the array that offset indexes, before drawing, and refuses a partition that fails either check
     as `partition-decode-failed`.
-    <!-- DRAFT until the human's sight at the PR: the general truth, then the specific limit, per RULED 2026-09-26, question round 25, item 4 (renderer/bundle-viewer/PARTITION-OFFSET-BOUNDS-PREREGISTRATION.md §2h, Amendment 1). Sources: state/cloud/wave1/A3.md, unproven observation 3 and its custodian triage update of 2026-09-25 (the Windows reproduction, cited as evidence); state/cloud/wave1-prompts.md §4 (S1); RULED 2026-09-26, question round 24, item 1; renderer/bundle-viewer/src/partition.ts decodePartition (the checks, from [[PR]]); docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md §14 (a bundle's viewer cannot verify itself); renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md §5 (a published viewer is a frozen copy). Scope line, not a retirement: it stands for every bundle published before the fix. -->
+    <!-- DRAFT until the human's sight at the PR: the general truth, then the specific limit, per RULED 2026-09-26, question round 25, item 4 (renderer/bundle-viewer/PARTITION-OFFSET-BOUNDS-PREREGISTRATION.md §2h, Amendment 1). Sources: state/cloud/wave1/A3.md, unproven observation 3 and its custodian triage update of 2026-09-25 (the Windows reproduction, cited as evidence); state/cloud/wave1-prompts.md §4 (S1); RULED 2026-09-26, question round 24, item 1; renderer/bundle-viewer/src/partition.ts decodePartition (the checks, from PR #128); docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md §14 (a bundle's viewer cannot verify itself); renderer/bundle-viewer/ZOOM-ANCHOR-PREREGISTRATION.md §5 (a published viewer is a frozen copy). Scope line, not a retirement: it stands for every bundle published before the fix. -->
 
 ## On main since v0.1.0 — not in any release yet
 
