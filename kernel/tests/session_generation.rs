@@ -43,7 +43,9 @@ use spatial_skp::v0::{DatasetHandle, SessionRef, StreamHandle, ViewportQueryRequ
 
 /// Mutation recorded in-source (`scripts/plan/verify-mutation.mjs`): CR1's, restoring a minting
 /// arm in `live_generation` (a `SessionRef::mint()` generation on the no-mark, not-closing arm,
-/// returning `Ok`), makes a never-opened name answer `Ok` and this test fail.
+/// returning `Ok`), makes a never-opened name answer `Ok` and this test fail. Applied at
+/// `12ccbeb`, run and reverted: `the_state_is_three_valued_never_minted_is_not_invalidated`
+/// FAILED on its first `NotOpen` assertion (`left: Ok(1)`).
 #[test]
 fn the_state_is_three_valued_never_minted_is_not_invalidated() {
     let g = GenerationRegistry::new();
@@ -77,7 +79,9 @@ fn the_state_is_three_valued_never_minted_is_not_invalidated() {
 }
 
 /// Mutation recorded in-source: removing `st.invalidated.remove(dataset)` from `mint_for_open`
-/// leaves a reopened dataset permanently refused and this test fails.
+/// leaves a reopened dataset permanently refused and this test fails. Applied at `12ccbeb`, run
+/// and reverted: `a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is`
+/// FAILED on `boundary 4's refusals say 'until reopen'; this is the reopen`.
 #[test]
 fn a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is() {
     let g = GenerationRegistry::new();
@@ -95,7 +99,9 @@ fn a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is
 
 /// Mutation recorded in-source: making `live_generation` mint over an invalidated entry (its early
 /// `return Err(NotLive::Ended(reason))` replaced by a fresh generation inserted and `Ok`)
-/// resurrects a dead session and this test fails.
+/// resurrects a dead session and this test fails. Applied at `12ccbeb`, run and reverted:
+/// `live_generation_never_resurrects_an_invalidated_generation` FAILED on
+/// `repeated asking must not eventually succeed`.
 #[test]
 fn live_generation_never_resurrects_an_invalidated_generation() {
     let g = GenerationRegistry::new();
@@ -159,8 +165,13 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     );
 }
 
-/// Mutation recorded in-source: dropping either `st.live.remove` or the `tickets.retain` line in
-/// `forget_dataset` fails one of these assertions.
+/// Mutation recorded in-source: dropping `st.live.remove` in `forget_dataset` fails this test.
+/// Applied at `12ccbeb`, run and reverted:
+/// `forget_dataset_removes_the_generation_the_invalidation_and_every_attribution` FAILED on
+/// `forgetting removes a live generation` (`left: Ok(3)`). Dropping the `tickets.retain` line
+/// instead, applied at `12ccbeb`, run and reverted, fails nothing here: this test PASSED, because
+/// `prune_locked` sweeps an attribution whose generation is no longer live on the next call, so
+/// that line is not observable through this registry's public methods.
 #[test]
 fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution() {
     let g = GenerationRegistry::new();

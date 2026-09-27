@@ -376,6 +376,9 @@ fn a_loss_after_admission_ends_the_generation_and_describe_still_says_watching()
 /// RECORDED MUTATION: in `GenerationRegistry::live_generation`, mint a fresh generation over an
 /// invalidated one instead of returning `Err(NotLive::Ended(reason))` (insert it and answer `Ok`).
 /// Expected failure: the retry `viewport_query` below succeeds — a "reload" that must never happen.
+/// Applied at `12ccbeb`, run and reverted:
+/// `no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads` FAILED on
+/// `no new ticket is ever minted against an ended generation`.
 #[test]
 fn no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
     let arm = injected_watch::InjectedArm::new();

@@ -2911,7 +2911,7 @@ mod ticket_drop_under_lock_regression {
     /// real `open_dataset` (so this test knows the exact reference the event must carry), and one
     /// `Pending` ticket for that same dataset wired through the **host's own** invalidator — so
     /// closing the dataset drops it via `cancel_all_for_dataset` (`SkpHost::close_dataset`, the
-    /// removal-then-cancel-then-forget order documented on that method), strictly before
+    /// removal, `begin_close`, cancel, forget order documented on that method), strictly before
     /// `forget_dataset` runs.
     ///
     /// RECORDED MUTATION (registered, §4's own text for E7: "look the reference up after the
@@ -2939,6 +2939,11 @@ mod ticket_drop_under_lock_regression {
     /// drop reaches `GenerationRegistry::invalidate`, `forget_dataset` has already removed the live
     /// entry, so `invalidate` returns `None`, `end_generation` returns `0`, and no event is ever
     /// enqueued — this test's `recv_timeout` timed out.
+    ///
+    /// RECORDED EXTRA (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §4): make `begin_close`
+    /// remove `live`. Applied at `12ccbeb`, run and reverted: this mutation FAILED this test by
+    /// timeout, `one event, carrying the open's own reference: Timeout` — the drop's end found no
+    /// live generation, so nothing emitted.
     #[test]
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
         let path = fixture("close-drop-path");
@@ -3187,11 +3192,17 @@ mod ticket_drop_under_lock_regression {
     /// `cancel_all_for_dataset` releases its guard and before `forget_dataset`: the drop point of a
     /// retired `Pending` ticket (§4 (ii)).
     ///
+    /// TEST-FIRST (P1): at `051c56f`, before the change, this test FAILED at its `expect_err`
+    /// (`a viewport_query inside close_dataset is refused: ViewportQueryResponse { .. }`).
+    ///
     /// REGISTERED MUTATION: delete `live_generation`'s `closing` check, so the query mints, fails
-    /// attribution and cancels itself, and the ticket map has two entries.
+    /// attribution and cancels itself, and the ticket map has two entries. Applied at `12ccbeb`,
+    /// run and reverted: `a_viewport_query_inside_close_is_refused_before_it_builds_or_mints`
+    /// FAILED on `only the drop-point ticket: the racing query minted none` (`left: 2`).
     ///
     /// RECORDED EXTRA: move `begin_close` after `cancel_all_for_dataset`. The query returns `Ok`,
-    /// and this test fails at `expect_err`.
+    /// and this test fails at `expect_err`. Applied at `12ccbeb`, run and reverted: this mutation
+    /// FAILED this test at its `expect_err` (`ViewportQueryResponse { .. }` returned).
     #[test]
     fn a_viewport_query_inside_close_is_refused_before_it_builds_or_mints() {
         let path = fixture("cr2-query-inside-close");
@@ -3271,7 +3282,12 @@ mod ticket_drop_under_lock_regression {
     /// CR4 (S4). `close_dataset(A)` completes, then an end reaches `invalidate` for A — a post-check
     /// finding delivered after the close, through the data plane's own `end_generation`.
     ///
-    /// REGISTERED MUTATION: restore marking before the live lookup in `invalidate`.
+    /// TEST-FIRST (P1): at `051c56f`, before the change, this test FAILED on
+    /// `a post-close end writes no invalidated mark`.
+    ///
+    /// REGISTERED MUTATION: restore marking before the live lookup in `invalidate`. Applied at
+    /// `12ccbeb`, run and reverted: `an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing`
+    /// FAILED on `a post-close end writes no invalidated mark`.
     #[test]
     fn an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing() {
         let path = fixture("cr4-end-after-close");
@@ -3318,7 +3334,9 @@ mod ticket_drop_under_lock_regression {
     ///
     /// REGISTERED MUTATION: restore a minting arm in `live_generation` (a `SessionRef::mint()`
     /// generation on the no-mark, not-closing arm, returning `Ok`), so the call returns `Ok` and
-    /// this test fails at its `expect_err`.
+    /// this test fails at its `expect_err`. Applied at `12ccbeb`, run and reverted:
+    /// `the_close_race_mints_no_generation_so_no_unheld_reference_exists` FAILED at its
+    /// `expect_err` (`the query continuing after the close is refused: ViewportQueryResponse { .. }`).
     #[test]
     fn the_close_race_mints_no_generation_so_no_unheld_reference_exists() {
         let path_a = fixture("cr1-closed");
@@ -3377,7 +3395,10 @@ mod ticket_drop_under_lock_regression {
     /// session-ended code no end was recorded for (watcher gate-1 advisory 7).
     ///
     /// REGISTERED MUTATION: restore `unwrap_or(SessionEndReason::ObservedChange)` on the
-    /// attribute step's `ended_reason`, so the code is `engine.source_changed`.
+    /// attribute step's `ended_reason`, so the code is `engine.source_changed`. Applied at
+    /// `12ccbeb`, run and reverted:
+    /// `a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset` FAILED on
+    /// its code assertion (`left: "engine.source_changed"`).
     #[test]
     fn a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset() {
         let path = fixture("cr3-mint-before-close");
@@ -3431,7 +3452,9 @@ mod ticket_drop_under_lock_regression {
     /// `forget_dataset` no closing mark remains.
     ///
     /// REGISTERED MUTATION: delete `attribute_ticket`'s `closing` check, so attribution returns
-    /// `true`.
+    /// `true`. Applied at `12ccbeb`, run and reverted:
+    /// `a_closing_dataset_refuses_new_attributions_but_still_records_an_end` FAILED on
+    /// `a closing dataset attributes nothing`.
     #[test]
     fn a_closing_dataset_refuses_new_attributions_but_still_records_an_end() {
         let g = GenerationRegistry::new();
