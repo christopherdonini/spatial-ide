@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9fc9c74d086728bc05e983317f6bc3376d6f3f5abd1e514a042a3df909b7d2ea`) at `2026-09-27T22:32:35.951Z`.
+Generated from `PLAN.yaml` (sha256 `eb47978d0bc51bc046bf341ffbbb21f8ec5c69f60895d75d82c245138b6a843a`) at `2026-09-27T23:25:31.738Z`.
 
 ## 1. Next
 
-- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -28,6 +28,7 @@ Generated from `PLAN.yaml` (sha256 `9fc9c74d086728bc05e983317f6bc3376d6f3f5abd1e
 ## 5. In progress
 
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — evidence: branch `cut/kernel-generation-close-races`
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) — evidence: branch `governance/test-claims-landedness-bound`
 
 ## 6. Proposed / unscheduled
 
