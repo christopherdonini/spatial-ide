@@ -93,6 +93,52 @@ const POSIX_ROOT = /(?<![A-Za-z0-9._~-])\/(?:users|home)\//gi;
 // itself outside [A-Za-z0-9._~-].
 const USERS_EIGHT_DOT_THREE_ROOT = /(?<![A-Za-z0-9._~-])users(?:\\{1,2}|\/)*/gi;
 
+// 7.1(a): C-unquotes a `+++ "..."` diff header name. Covers the escapes git writes: backslash,
+// double quote, the named control escapes, and three-digit octal byte escapes. The resulting bytes
+// are decoded as UTF-8. Returns null if the name cannot be decoded (an unrecognized escape, an
+// unterminated quote, or bytes that are not valid UTF-8) -- callers then print `#<n>` (4.1(e))
+// rather than an undecoded or partially-decoded name.
+const NAMED_ESCAPES = { a: 0x07, b: 0x08, f: 0x0c, n: 0x0a, r: 0x0d, t: 0x09, v: 0x0b };
+
+function cUnquoteGitName(raw) {
+  if (!raw.startsWith('"') || !raw.endsWith('"') || raw.length < 2) return null;
+  const inner = raw.slice(1, -1);
+  const bytes = [];
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i];
+    if (ch !== '\\') {
+      for (const b of Buffer.from(ch, 'utf8')) bytes.push(b);
+      continue;
+    }
+    const next = inner[i + 1];
+    if (next === '\\' || next === '"') {
+      bytes.push(next.charCodeAt(0));
+      i++;
+      continue;
+    }
+    if (next !== undefined && Object.prototype.hasOwnProperty.call(NAMED_ESCAPES, next)) {
+      bytes.push(NAMED_ESCAPES[next]);
+      i++;
+      continue;
+    }
+    const oct = inner.slice(i + 1, i + 4);
+    if (/^[0-7]{3}$/.test(oct)) {
+      bytes.push(parseInt(oct, 8));
+      i += 3;
+      continue;
+    }
+    return null;
+  }
+  const decoded = Buffer.from(bytes).toString('utf8');
+  if (decoded.includes('�')) return null;
+  return decoded;
+}
+
+// 7.1(a): sentinel `file` value for an added-line finding whose diff header name could not be
+// C-unquoted. Never a real path; a plain string (not a Symbol) so it stays usable as a template
+// literal key in cmdStaged's merge-parent intersection.
+const UNDECODABLE_FILE = '\u0000undecodable-file-name\u0000';
+
 function lineNumberAt(text, index) {
   let line = 1;
   for (let i = 0; i < index; i++) {
@@ -184,7 +230,17 @@ function findMatches(text, localName) {
     const dup = deduped.some((d) => d.segmentStart === m.segmentStart && d.segmentEnd === m.segmentEnd);
     if (!dup) deduped.push(m);
   }
-  return deduped;
+  // 7.1(b): a refused match's segment span can be a strict subset of another refused match's
+  // segment span (e.g. the dedicated local-name pattern matches just the name, while a root's own
+  // segment extraction captures the name plus trailing punctuation and more characters as one
+  // longer segment). Drop a refused match contained within another refused match's span, so each
+  // refused span is counted, printed and redacted once. A permitted match never removes a refused
+  // one, and this never removes the containing (outer) match itself.
+  const isContainedInAnotherRefused = (m) =>
+    deduped.some(
+      (other) => other !== m && other.refused && other.segmentStart <= m.segmentStart && other.segmentEnd >= m.segmentEnd,
+    );
+  return deduped.filter((m) => !(m.refused && isContainedInAnotherRefused(m)));
 }
 
 /**
@@ -313,7 +369,16 @@ function parseAddedLines(diffText) {
     if (inFileHeader && raw.startsWith('@@') === false) {
       if (raw.startsWith('+++ ')) {
         const p = raw.slice(4).trim();
-        currentFile = p === '/dev/null' ? null : p.replace(/^b\//, '');
+        if (p === '/dev/null') {
+          currentFile = null;
+        } else if (p.startsWith('"')) {
+          // 7.1(a): git C-quotes a header name that carries a non-ASCII byte (or other unusual
+          // byte); unquote before stripping the `b/` prefix, which the raw quoted form defeats.
+          const decoded = cUnquoteGitName(p);
+          currentFile = decoded === null ? UNDECODABLE_FILE : decoded.replace(/^b\//, '');
+        } else {
+          currentFile = p.replace(/^b\//, '');
+        }
         continue;
       }
       if (raw.startsWith('--- ')) {
@@ -467,13 +532,23 @@ function cmdRedactSegment(files, localName) {
 
 function printFindings(findings, localName) {
   findings.forEach((f, i) => {
-    console.error(`${safePrintablePath(f.file, localName, i + 1)}:${f.line} ${f.class}`);
+    // 7.1(a): a finding whose file name could not be C-unquoted is printed as `#<n>` directly,
+    // without routing the sentinel through safePrintablePath/redactSegments.
+    const displayFile = f.file === UNDECODABLE_FILE ? `#${i + 1}` : safePrintablePath(f.file, localName, i + 1);
+    console.error(`${displayFile}:${f.line} ${f.class}`);
   });
 }
 
 // 4.1(c): on a clean scan, --staged and --message print exactly one stdout line, this declared
 // value. The hooks fail closed on this exact line, not on exit status alone.
 const CLEAN_LINE = 'profile-path-scan: clean';
+
+// 7.1(c): on a refused --staged or --message scan, exactly this stdout line is printed (finding
+// detail goes to stderr via printFindings). §7 gains this declared value beside 4.1(c)'s clean
+// line. A hook names a profile-path finding only when the status is 1 and this is the whole of
+// stdout -- so node's own exit 1 (e.g. a load failure before main() reaches this line) is never
+// read as a finding.
+const REFUSED_LINE = 'profile-path-scan: refused';
 
 function main() {
   const args = process.argv.slice(2);
@@ -489,6 +564,7 @@ function main() {
       const findings = cmdStaged(localName);
       if (findings.length > 0) {
         printFindings(findings, localName);
+        console.log(REFUSED_LINE);
         process.exit(1);
       }
       console.log(CLEAN_LINE);
@@ -499,6 +575,7 @@ function main() {
       const findings = cmdMessage(file, localName);
       if (findings.length > 0) {
         printFindings(findings, localName);
+        console.log(REFUSED_LINE);
         process.exit(1);
       }
       console.log(CLEAN_LINE);
