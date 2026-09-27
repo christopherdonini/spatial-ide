@@ -410,3 +410,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Wave 2 authorised by the human** (verbatim, `state/directives/2026-09-27-wave2-authorisation.md`, 5f76a2f, with one profile segment redacted at filing).
     - The baseline by its rule is d4245fe: at d6ec85a the Rust workspace run was cancelled, and at 0ada14f only Pages ran, because the path filters skipped it.
     - Waiting on the human for the prompts file, the promotion's end date and the balance.
+- 2026-09-27T22:40Z - **The queue while the human's inputs are pending:** both PRs' CI are green, and #135 and #136 are MERGEABLE CLEAN, waiting on the human's clicks.
+  - **The post-merge pins** landed on main at ea2ebf8 (B1's Amendment 11; the exposure form's Amendment 15). Both nodes are done at e15b142.
+  - **`entry-79-b1-consult-items`** now waits on `b1-shell-half`: its item 2 is the shell half, which the session order holds.
+  - **`test-claims-landedness-bound` started** on `governance/test-claims-landedness-bound`. Its five-line form, design (c) plus the carried N2–N7, is at acd35aa, and a worker is implementing it (single reviewer gate).
