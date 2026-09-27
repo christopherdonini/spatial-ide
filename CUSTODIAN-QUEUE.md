@@ -1,14 +1,17 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf3231640959483c8012e6`) at `2026-09-27T18:38:58.481Z`.
+Generated from `PLAN.yaml` (sha256 `3f51df6616d9285155de8b9944d797c25e2800f4c4012bd99eb7e220ec4f60be`) at `2026-09-27T20:56:32.575Z`.
 
 ## 1. Next
 
-- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`)
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`)
 
 ## 2. Ready
 
-- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`, order 6, budget 480 min)
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
+- **b1-post-merge-pins** — B1's words-form references pinned at a main commit after its merge (lane `governance`, order null, budget 20 min)
+- **exposure-post-merge-pins** — The exposure piece's corrected test-comment rows pinned at a main commit (lane `governance`, order null, budget 20 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -17,18 +20,15 @@ Generated from `PLAN.yaml` (sha256 `3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf
 
 ## 4. Blocked on dependencies
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — blocked by: b1-engine-kernel-half
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-engine-kernel-half
-- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: b1-engine-kernel-half, geometry-types-beyond-polygons
+- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **b1-post-merge-pins** — B1's words-form references pinned at a main commit after its merge — blocked by: b1-engine-kernel-half
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — evidence: branch `cut/b1-engine-projection`
+- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — evidence: branch `cut/kernel-generation-close-races`
 
 ## 6. Proposed / unscheduled
 
@@ -59,6 +59,8 @@ Generated from `PLAN.yaml` (sha256 `3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (phase `prototype`) — never queued until placed
 - **verify-cites-test-temp-dirs** — verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c)) (phase `prototype`) — never queued until placed
 - **dco-hook-merge-skip** — The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1) (phase `prototype`) — never queued until placed
+- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) (phase `prototype`) — never queued until placed
+- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) (phase `prototype`) — never queued until placed
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (phase `prototype`) — never queued until placed
 - **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (phase `prototype`) — never queued until placed
 - **exposure-scan-followups** — The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment (phase `prototype`) — never queued until placed
