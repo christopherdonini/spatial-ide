@@ -414,3 +414,43 @@ The closing record names the merge by commit only.
   - the kernel suite at the head.
 - **Architect:** 1.5 checked against `viewport_query` on `main` at `d6ec85a` and against §2b; 1.1's rule.
 - **Suites.** §9's suites run at the head after the addition. The results at `4682866` do not speak for the merged tree.
+
+### Amendment 2 — 2026-09-27, post-result: the closing record
+
+References and hashes only (the record cap, `state/directives/2026-09-18-record-cap.md`). Each row names its template class. Each hash is `git show <rev>:<path> | sed -n '<a>,<b>p' | sha256sum` over LF bytes, at a commit on main. The merge-base is `0ada14f` and the head is `76f92ba`. Written by the custodian.
+
+1. **Class 1, the commits.**
+   - `051c56f`, `8c4724c`, `12ccbeb` and `4682866`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:9-13 @ d4245fe sha256:60b5b15157c1377f8fcebee630b4b63df022630c28f6c4dd5a7d9ba447b2c737`.
+   - `ecc4a37` is the merge of main (Amendment 1, 1.5). `e2528ea` is Amendment 1. `76f92ba` carries Amendment 1, 1.2's eight lines.
+2. **Class 1, H1–H3 and P3.**
+   - At `4682866`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:15-19 @ d4245fe sha256:ebffcf8440359bf0d30b3d17f02596d86880c9fdea6d743be0c629243a967a74`.
+   - P3 at the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:260-275 @ bfb436d sha256:8253eaa06cd958ad8c555e852e4cff65cfbc2e3fccc983059b5418fa2eba2678`.
+3. **Class 1, P1, and P2 at `4682866`:** `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:21-23 @ d4245fe sha256:abf455e0b7ab910aafdb868ee24371d004b64f95debd46f15225e5e23f5ffa9a`.
+4. **Class 1, §4's mutations.** Each test's doc comment at `4682866` is its observation of record: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:25-41 @ d4245fe sha256:8e3b5090ebfc615d08b466430d105cc15a59d6b39d22306ef4904257dec84e7f`.
+5. **Class 1, Amendment 1's eight (its 1.3).**
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:1 @ 188b1f8 sha256:97848af56b5c7921376a859af0318bc3cf90ee5cba11fce5145d676f75502aee`
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:90-97 @ 188b1f8 sha256:2012cd8d60616c0992401831b0b376911d745621ab37884911c6e88825896d84`
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:102-134 @ 188b1f8 sha256:2b4477e08cbb61c8e25f4270d1fdd37d7ddac4056f698e29b4c8868f90da7830`
+6. **Class 1, P2 and P6 at the head, and §9's suites.**
+   - The run: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:1 @ bfb436d sha256:5d98894b75f871c0b32ca81ab8efc9fe7a83a55ab764798e9ac6bd8f27abc3b5`.
+   - The workspace: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:5-172 @ bfb436d sha256:1e30813239911359f174454d91271a606dde64345b3ed38906d5139d487fe2c9`.
+   - Clippy: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:174-178 @ bfb436d sha256:6f2664378ed6f460bd45896deb425ca9d34bd15e634a15495b6ed13b61ea46c1`.
+   - The shell: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:180-192 @ bfb436d sha256:b4955ca9c0d8f84b0098b26ed6934af181469c01e5732f0ef3b27225c611e48b`.
+   - The scripts: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:194-200 @ bfb436d sha256:c4762a5724be202fb90d49bbc5ecbc44b98884f01b81030bbbf81a8d198d39d7`.
+   - The verify tools, with their commits (P5 included): `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:202-210 @ bfb436d sha256:fd21c9b5bc4b741a6db514c62558db770522571dc008aad5bc184b9d3b0ef019`.
+   - Branch CI at `76f92ba`: Product CI Rust workspace `36351798704`, Product CI shell `36351798972` and Governance CI `36351798729`, all success.
+7. **Class 1, P4.**
+   - At the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:277-283 @ bfb436d sha256:08bb710ae5defe7328d4a5ff34f166412d40b5987da73022a23e3be41ade5e31`.
+   - At `4682866`, with the suites there: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:44-51 @ d4245fe sha256:25204a88b43ed265da8406685465c6904f299f577594cda0e3620c4a09bad1dc`.
+8. **Class 8, budget overrun, §7 not edited** (round 25, item 2 (a)).
+   - Declared: ≤ 600 lines and ≤ 10 files. Final: 786 lines and 11 files, by §7's command at the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:212-228 @ bfb436d sha256:ca1297d5cf8e0cdc737ed39beec8b06ff98588698d58a5892a68cbd963ef24d3`.
+   - At `4682866` against `3b421d5`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:53 @ d4245fe sha256:a4c8b8a739865444dbb3dda527fc1e967eba23ca44bf930ec6fbc9186cba8175`.
+   - Reason: the in-crate tests of §4 (iv) exceed §7's estimate, and Amendment 1 adds two files.
+9. **Class 1, the deviations from §4's changed-test list and §2e:** `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:55-60 @ d4245fe sha256:c5eadf494c9c4004b1d549cc62ea735ed370b60eed985003b69f82010d300f89`.
+10. **Class 1, §9's `cargo fmt --check` on the changed files.**
+    - `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:46 @ d4245fe sha256:81d4c8ced6a86eba7c04ed5b46956a7cee134b41c4658917ca93cab937495ea9` is superseded by `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:230-258 @ bfb436d sha256:4be31d1b352af93077a5acfe817f0c786458e53f78dd4e2f5d513cc35846b073`.
+    - It is clean neither at `0ada14f` nor at the head. No file's hunk count rises.
+    - The branch lines that a hunk rewrites include the one-line form declared by §2e item 1 and Amendment 1, 1.2. No formatting pass is made in this piece.
+11. **Class 1, routed and not done.** Two items go to PLAN node `kernel-close-races-followups` (proposed):
+    - `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:62-64 @ d4245fe sha256:b3899e2d9fa44d7539e2614513d03c10932212e99116f2cf198461408d95ee97`;
+    - the shifted cites in B1's comments (Amendment 1, 1.4).
