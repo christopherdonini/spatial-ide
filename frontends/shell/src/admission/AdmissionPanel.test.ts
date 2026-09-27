@@ -132,7 +132,9 @@ function describeFixture(): DescribeResponse {
       class: "native",
       session_statement: null,
     },
-    schema: [{ name: "parcel_id", arrow_type: "UInt64", nullable: false }],
+    // `parcel_id` is this fixture's identity source column (identity.source: "declared:parcel_id"),
+    // which `admit_projection_column` always refuses (ColumnIsIdentity) -- never projectable.
+    schema: [{ name: "parcel_id", arrow_type: "UInt64", nullable: false, projectable: false }],
     covering_bbox: true,
     row_count: { basis: "identity-uniqueness-scan-full-file", value: "100000" },
     extent: { basis: "not-established-at-open", value: null },
