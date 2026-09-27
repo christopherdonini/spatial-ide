@@ -260,6 +260,13 @@ test("verifyNotDoneEvidenceNotMerged fails by name when an in-progress node's ev
   );
 });
 
+// RECORDED MUTATION (Amendment 1, TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md): in
+// `verifyNotDoneEvidenceNotMerged` (scripts/plan/verify.mjs), removing the `if (node.status ===
+// 'done') return [];` status condition, so a done node is checked too -- applied for real, run via
+// `node --test scripts/plan/verify.test.mjs`, then reverted. Observed: "AssertionError
+// [ERR_ASSERTION]" with actual `['node "n-inprogress": status is "done" but PR #42 is reported
+// merged (state=closed merged=true)']` vs expected `[]` on this test's own `assert.deepEqual`, at
+// 31cbb68 (Node v24.18.1).
 test('verifyNotDoneEvidenceNotMerged passes when the same node is recorded done', () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), status: 'done', evidence: { pr: 42 } };
@@ -273,6 +280,10 @@ test('verifyNotDoneEvidenceNotMerged passes when the same node is recorded done'
   assert.deepEqual(failures, []);
 });
 
+// Amendment 1's mutation for this test: in `verifyNotDoneEvidenceNotMerged` (verify.mjs), replace
+// `result.ok ? [...] : []` with `true ? [...] : []` (the merged flag ignored). Applied for real, run,
+// reverted -- RECORDED MUTATION observed: "AssertionError [ERR_ASSERTION]" (actual a failure array,
+// expected `[]`) on this test's own `assert.deepEqual`, at 31cbb68 (Node v24.18.1).
 test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence PR is open or closed-unmerged", () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
