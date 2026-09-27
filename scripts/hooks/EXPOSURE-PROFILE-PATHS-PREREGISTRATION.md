@@ -816,3 +816,29 @@ Superseded:
 - Amendment 8's first line and its Reason (Amendment 10).
 
 Not superseded: Amendment 8's figure bullet and file-count bullet (Amendment 10 restates them by reference only); Amendment 9's C′, M′, N, push/CI and mutations bullets (unaffected by gate 3's findings).
+
+**Amendment 12 — one more merge under 4.7's last bullet (class 1). Written after the round's results were seen; no code of this round.**
+
+Main moved after Amendment 11's closing record (a custodian commit filing a new gate report and PLAN nodes under `state/consults/gates/`), so 4.7's last bullet is owed: one more merge and this one row, by reference to the runs below, before the PR is marked ready.
+
+- **M‴** = `3c25302` (the signed-off merge of `origin/main` at `3b421d5` into `governance/exposure-profile-paths`; parents `7f422a9` and `3b421d5`). The base of `origin/main...M‴` is `3b421d5` itself.
+- **N = 6**, unchanged. Command: `git show origin/main:AI_DEVELOPMENT.md | grep -n "^## Amendment [0-9]* to the Custodian role"` — highest heading at `3b421d5` is still Amendment 5.
+- **File count: 19** at M‴. Command: `git diff --name-only origin/main...HEAD | wc -l` — 19.
+- **The merge.** Generated-file conflicts: `CUSTODIAN-QUEUE.json`, `CUSTODIAN-QUEUE.md`, `PLAN.yaml`, `site/data/plan.json`, `site/index.html` all auto-merged clean (no conflict markers; this branch has no changes of its own to any of them). Commands: `node scripts/plan/queue.mjs --check` — current; `node scripts/plan/site.mjs --check` — current.
+- **4.4's re-observation.** Not owed. Command: `git diff --stat 955e6c7 3c25302 -- scripts/hooks/profile-path-scan.mjs scripts/hooks/profile-path-scan.test.mjs .githooks/pre-commit .githooks/commit-msg` — empty (byte-identical to C′).
+- **2a′**, against `origin/main...HEAD`:
+  - Command: `git diff --numstat origin/main...HEAD -- DECISIONS-PENDING.md` — `1\t1\tDECISIONS-PENDING.md`.
+  - Command: `git diff -U0 origin/main...HEAD -- DECISIONS-PENDING.md` — one `@@` hunk.
+  - Check (script, this piece's own `redactRoots`): the removed line's bytes redact to the added line's bytes exactly.
+- **The five append targets' byte prefix.** Command per file: `git show origin/main:<file>` vs `git show HEAD:<file>`, `head.startsWith(main)`. All five true, same as Amendment 11: 11 + 10 + 4 + 2 + 12 = 39 appended lines.
+- **The re-derivation.** Commands: `git ls-tree -r --name-only <rev>`, then per file `git show <rev>:<path>` and the path name itself, both under a one-off import of this piece's own `scanText`, canary checked first.
+  - At the base `3b421d5` (origin/main): 1124 files, 30 with findings — the same 30 files, the same per-file form classes and the same per-file counts as Amendment 11's base listing (`9c9616a`), byte-for-byte (checked by script; not re-carried here).
+  - At M‴ `3c25302`: 1128 files, 22 with findings — the same 22 files, form classes and counts as Amendment 11's M″ listing, byte-for-byte (checked by script; not re-carried here).
+  - `state/consults/gates/2026-09-27-b1-engine-kernel-half-gate3-reviewer.md` (new since M″, named in the custodian's brief) carries 0 findings at either revision and is not among the 30 or the 22. No file outside those 22 rows is found at M‴; invalidator 1 does not fire.
+- **Prediction 4 (4.9), the reduced form.** Command: `git rev-list --first-parent --reverse ccdccfd~1..3c25302` — 19 commits (Amendment 11's 17, plus `7f422a9` and `3c25302`). Every non-merge commit's message and added lines scan clean; every merge's message scans clean. Result: PASS, all 19 commits.
+- **Suites at M‴** (identical code to C′):
+  - Command: `node --test scripts/plan/*.test.mjs scripts/hooks/*.test.mjs` — 349 pass, 0 fail.
+  - Command: `CARGO_TARGET_DIR=C:/dev/wt/exposure-profile-paths/target cargo test -p spatial-kernel --no-fail-fast` — 281 passed, 0 failed, 28 ignored, 35 test binaries plus doc-tests (no flake this run).
+  - Command: `node scripts/plan/verify-cites.mjs` — PASS (840 files; 68 loose references advised, pre-existing).
+  - Command: `node scripts/plan/verify-quotes.mjs` — PASS (110 checked, 79 verified, 30 baselined, 1 advisory, 0 errors; 2 pre-existing hash-baselined entries).
+  - Command: `node scripts/plan/verify-test-claims.mjs` — PASS (300 claimed across 88 files; 11 planned, 3 superseded, 15 withdrawn, all advisory).
