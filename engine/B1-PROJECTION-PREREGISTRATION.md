@@ -650,3 +650,21 @@ Class 1 (post-result). References and hashes only (the record cap).
 
 **Superseded index**
 - Amendment 5, row 5.6's K-5 case for X3: not run; see the STOP note above.
+
+### Amendment 7 — 2026-09-27, post-result: one correction to Amendment 6 — X4's mutation re-verified against a real test
+
+Class 1 (post-result). References and hashes only (the record cap).
+
+Amendment 6's X4 row cited `admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text` as X4's own mechanically-verified test; that test exercises `admit_bundle_format` directly, never `From<ProjectionError> for EngineError`, which is what X4's own mutation ("`From` renders the final-arm text for every `TypeNotAdmitted`") actually targets. Commit `7765b98` adds `engine/src/attributes.rs::tests::from_projection_error_renders_a_dictionary_sources_own_text_and_the_final_arm_otherwise`, a direct unit test on the `From` impl, and the mutation was re-verified against it: applied, observed failing by name, reverted, observed passing.
+
+The same commit's own diff is additive only (`+56` lines, `0` deletions against the state after commit `9150cc0`), so nothing Amendment 6 or the commits before it discharged is disturbed.
+
+Every mutation in Amendment 6's table for X1, X2, X3, X4 (corrected here), X5, X6, X7, X8, X9, X11 and X13 was independently re-applied, observed failing by name, reverted, and observed passing again in this same session, after Amendment 6 was filed — a stronger discharge than the reasoned RECORDED MUTATION comments alone. No row's own text, order or claim otherwise changes.
+
+**Suite counts, re-confirmed after commit `7765b98`:**
+- `cargo test -p spatial-engine --features fixture --lib --test live_projection --test filter_composition --test predicate_admission --test publish_stream --test row_group_seam`: 188 passed, 0 failed (the lib suite gained the one new test: 164, not 163).
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test skp_projection --test session_end_event --test session_reference`: 17 passed, 0 failed.
+- Every other suite count in Amendment 6 stands unchanged (this commit touches only `engine/src/attributes.rs`, additively).
+
+**Superseded index**
+- Amendment 6's suite-count line for `spatial-engine --lib` (163) is superseded by 164, above.
