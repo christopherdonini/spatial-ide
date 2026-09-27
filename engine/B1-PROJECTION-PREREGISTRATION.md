@@ -430,3 +430,55 @@ cut), never committed (scratch, removed after the run; no engine or kernel sourc
   than widening the column to `DOUBLE`.
 
 No class-2 result. No §5 invalidator fires from P0.
+
+### Amendment 3 — 2026-09-27, post-result: §2.3's retention rule, and §4's remaining tests
+
+Class 1 (post-result). Made after every test named below was seen green, on commits `eacdd0d`
+(engine) and `b7225db` (kernel) on this branch.
+
+- §2.3's retention rule (condition (3); §7; `MAX_ATTRIBUTE_RETENTION_FACTOR = 2`) lands in
+  `engine/src/stream.rs`, discharged by `every_emitted_attribute_column_retains_at_most_the_
+  declared_factor` (E-14) and `a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_
+  bytes` (E-15) — unit tests against the retention decision directly, not through an IPC round
+  trip (which always yields compact buffers and would make the property vacuous).
+- E-17's 16-cell re-pin and its projected twin
+  (`the_projected_select_prefix_places_declared_columns_after_geometry_and_leaves_where_verbatim`)
+  land in `engine/src/stream.rs`'s existing `filter_composition` unit-test module (§0's own read
+  list already names it), not in `engine/tests/live_projection.rs`.
+- A new `fixture::AttributeMode::MultiType` (F13) writes `zone, area, f32, i64, flag, d32, text`,
+  each a pure function of `(seed, id)` (`zone_for`'s own construction, restated).
+- `engine/tests/live_projection.rs` (new) discharges E-8
+  (`a_live_projected_stream_emits_id_geometry_then_the_declared_columns`), E-9
+  (`projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical`), the live half of E-18
+  (`a_file_with_a_float32_column_binds_every_predicate_without_panicking`) and E-20
+  (`how_a_float32_column_compares_with_a_numeric_literal_is_pinned`).
+- `engine/src/predicate.rs`'s new `filterable_column_type` (extracted from `namespace_admit`,
+  behaviour-preserving) discharges E-19
+  (`a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding`,
+  over a constructed `Field`, per O6/H2) and the namespace half of E-18
+  (`a_float32_column_is_filterable`).
+- `kernel/tests/skp_projection.rs` (new) discharges K-1
+  (`a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns`), K-2/K-3/K-4
+  (`every_projection_refusal_is_synchronous_typed_and_pre_mint`,
+  `columns_empty_list_is_refused_never_read_as_null` — K-4's seven-distinct-codes claim is the
+  first test's own closing assertion), K-5
+  (`describe_projectable_agrees_with_viewport_query_admission_for_every_column`), K-7
+  (`a_projection_composes_with_a_filter`) and K-9's live Float32 sub-case
+  (`publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_format_restriction_
+  with_todays_text`).
+- `kernel/tests/wire_bytes_invariant.rs` gains K-6
+  (`wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too`).
+- `kernel/src/publish/mod.rs` gains K-9's dictionary sub-case (unreachable live, O6) as
+  `admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text`, beside
+  a same-pattern Float32 unit test.
+- Suites this session: `cargo test -p spatial-engine --features fixture` (full, green);
+  `cargo test -p spatial-kernel` (full, including `--lib`'s 123, green);
+  `node --test scripts/plan/*.test.mjs scripts/hooks/*.test.mjs` (311 passed); `verify:cites` and
+  `verify:quotes` (both PASS); `git diff --stat origin/main...HEAD -- protocol/data-plane/`
+  (empty). `cargo fmt --check`, the shell's `vitest` and the licence audit remain blocked by this
+  worktree's pre-existing environment gaps (rustfmt-baseline drift on this machine; `renderer/
+  bundle-viewer` and three sibling JS packages missing `node_modules`) — unrelated to this piece's
+  diff, recorded rather than fixed, on the prior worker's same disclosure. `tsc --noEmit` fails on
+  four shell test files (`AdmissionPanel.test.ts`, `admitDataset.test.ts`,
+  `App.lateResult.test.tsx`, `App.test.ts`) missing `FieldInfo.projectable` on a hand-built
+  literal — pre-existing since `6cd1764`, in `b1-shell-half`'s own scope, not this piece's.
