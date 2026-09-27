@@ -11,3 +11,5 @@ Out-of-scope: no ADR, wire, security or guarantee text; verify-test-claims' plan
 ```
 
 Amendment 1 (class 1, post-result; written after the worker's `verify-mutation --base origin/main --head HEAD` run at `57c626f` was seen): the Tests+mutation line registered a mutation for the first of its three tests only. The gate default is one mutation per new test (`AUTONOMY.md` §21d's template line; Appendix A2, the human's item 14). Two mutations are therefore added. The second test (the same node recorded done passes) takes the new check's status condition removed, so a done node is checked too. The third (an open or closed-unmerged PR passes) takes the lookup's merged flag ignored, so every PR reads as merged. Each is applied, run, recorded by name with the commit it was observed at, and reverted.
+
+Correction to Amendment 1 (class 3): the human's item 14 is in `AUTONOMY.md` Appendix A, not Appendix A2.
