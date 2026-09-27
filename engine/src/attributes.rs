@@ -103,12 +103,18 @@ pub fn admit_attribute_type(column: &str, ty: &DataType) -> Result<DataType> {
                 ),
             }),
         },
+        // **X1 (Amendment 5, row 5.5; O2).** This is the filter path's own refusal text for a
+        // type the filter namespace still refuses (`predicate.rs::filterable_column_type` renders
+        // this `Display` verbatim as `FilterError::ColumnNotFilterable`'s `reason`), and F7 / round
+        // 17 item 3 keep every such text byte for byte. Byte-copied by script from main's rendering
+        // at `d6d9862` (`engine/src/attributes.rs`'s own former final arm there) — never the live
+        // admissible set's own list, which now differs from this text on purpose (O2: "each owner
+        // renders its own text").
         other => Err(EngineError::AttributeUnpublishable {
             column: column.to_string(),
             detail: format!(
-                "[B1 close placeholder] type is {other}, which is not in the admissible set for an \
-                 attribute (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a \
-                 dictionary over one of those)"
+                "type is {other}, which is not in the admissible set for a published attribute \
+                 (utf8, boolean, the 8/16/32/64-bit integers, float64)"
             ),
         }),
     }
@@ -176,7 +182,13 @@ pub enum ProjectionError {
     /// The column resolves and is not geometry, not identity, and not a duplicate, but its Arrow
     /// type is not in [`admit_attribute_type`]'s admissible set. `arrow_type` is
     /// `describe.schema[].arrow_type`'s string — the **source** type, not an emitted one.
-    TypeNotAdmitted { column: String, arrow_type: String, detail: String },
+    ///
+    /// `source_type` (X4; O1(c), O2) is the same source type as a typed fact rather than a
+    /// pre-rendered string, so [`From<ProjectionError> for EngineError`](#impl-From<ProjectionError>-for-EngineError)
+    /// (publish's own renderer) can tell a still-refused `Dictionary` and a still-refused `Float32`
+    /// apart from every other refused type and render each one's own byte-for-byte "today's text"
+    /// (O2), without a second, fallible lookup back into the file schema.
+    TypeNotAdmitted { column: String, arrow_type: String, source_type: DataType, detail: String },
 }
 
 impl std::fmt::Display for ProjectionError {
@@ -222,7 +234,7 @@ impl std::fmt::Display for ProjectionError {
             Self::ColumnDuplicated { column } => {
                 write!(f, "refused: `{column}` is named twice in the declared projection")
             }
-            Self::TypeNotAdmitted { column, arrow_type, detail } => {
+            Self::TypeNotAdmitted { column, arrow_type, detail, .. } => {
                 write!(f, "refused: `{column}` is {arrow_type} — {detail}")
             }
         }
@@ -273,14 +285,35 @@ impl From<ProjectionError> for EngineError {
                 column: column.clone(),
                 detail: "named twice in the projection".to_string(),
             },
-            ProjectionError::TypeNotAdmitted { column, arrow_type, .. } => {
-                EngineError::AttributeUnpublishable {
-                    column: column.clone(),
-                    detail: format!(
-                        "type is {arrow_type}, which is not in the admissible set for a published \
+            // **X4 (Amendment 5, row 5.5; O1(c), O2).** `source_type` is the typed fact
+            // [`ProjectionError::TypeNotAdmitted`] carries; this renders publish's own
+            // byte-for-byte "today's text" from it directly, never from a second lookup. A
+            // `Dictionary` gets the dictionary text and a `Float32` gets the float32 text —
+            // both byte-copied by script from main's rendering at `d6d9862` (`admit_attribute_
+            // type`'s **former** `Dictionary`/`Float32` arms there; `kernel/src/publish/mod.rs`'s
+            // `admit_bundle_format` renders the identical two texts for its own, later,
+            // bundle-format restriction) — anything else gets the final-arm text X1 restored.
+            // `Float32` is unreachable here today (the live gate always admits it), kept for
+            // exhaustiveness against the day the admitted set narrows again.
+            ProjectionError::TypeNotAdmitted { column, source_type, .. } => {
+                use DataType as D;
+                let detail = match &source_type {
+                    D::Dictionary(..) => format!(
+                        "type is {source_type}. A dictionary index is an ordinal, and decoding one \
+                         to publish it would be a conversion the caller did not ask for. The bundle \
+                         format carries no dictionary batches"
+                    ),
+                    D::Float32 => "type is Float32. The bundle carries doubles; widening f32 to f64 \
+                                   is exact but it is still a conversion this engine was not asked \
+                                   to perform, and a consumer reading `float64` would be told the \
+                                   source held one"
+                        .to_string(),
+                    other => format!(
+                        "type is {other}, which is not in the admissible set for a published \
                          attribute (utf8, boolean, the 8/16/32/64-bit integers, float64)"
                     ),
-                }
+                };
+                EngineError::AttributeUnpublishable { column: column.clone(), detail }
             }
         }
     }
@@ -317,6 +350,55 @@ impl AdmittedProjection {
     }
 }
 
+/// Geometry, then identity — the first two of the four per-column rules (X2's declared order:
+/// geometry, identity, duplicate, type). Shared by [`admit_projection_column`] (which has no
+/// duplicate concept of its own — a single column, alone) and [`admit_projection`]'s own per-column
+/// pass, which interleaves the duplicate check between this and the type check.
+///
+/// **The reserved wire identity name `id` refuses here too, whatever `identity_column` is** (X3):
+/// `admit_projection`'s own name-resolution pass already special-cases a *declared* `id` before this
+/// runs (O8), but `kernel::skp::describe_dataset`'s `projectable` fact calls [`admit_projection_column`]
+/// directly, one column at a time, and never goes through that pass — so without this, a file that
+/// carries an unrelated column literally named `id` (identity mapped elsewhere) could disagree with
+/// `viewport_query`'s own admission of the reserved name (K-5's mapped-to-`i64` case).
+fn check_geometry_and_identity(
+    name: &str,
+    geometry_column: &str,
+    identity_column: &str,
+) -> std::result::Result<(), ProjectionError> {
+    if name == geometry_column {
+        return Err(ProjectionError::ColumnIsGeometry { column: name.to_string() });
+    }
+    if name == crate::envelope::ID_COLUMN || name == identity_column {
+        return Err(ProjectionError::ColumnIsIdentity {
+            column: name.to_string(),
+            id_column: identity_column.to_string(),
+        });
+    }
+    Ok(())
+}
+
+/// The fourth per-column rule, type, applied after geometry/identity/duplicate have already passed.
+/// Returns the field as it would be **emitted**: nullable by construction (see the module doc), and
+/// carrying the emitted type (the dictionary's value type, where the source was a dictionary).
+fn type_check(field: &Field) -> std::result::Result<Field, ProjectionError> {
+    let name = field.name().as_str();
+    let emitted = admit_attribute_type(name, field.data_type()).map_err(|_| {
+        ProjectionError::TypeNotAdmitted {
+            column: name.to_string(),
+            arrow_type: field.data_type().to_string(),
+            source_type: field.data_type().clone(),
+            detail: format!(
+                "[B1 close placeholder] type is {}; not in the admissible set for a live \
+                 projection (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a \
+                 dictionary over one of those)",
+                field.data_type()
+            ),
+        }
+    })?;
+    Ok(Field::new(name, emitted, true))
+}
+
 /// Per-column admission: geometry, identity, then type — **not** duplicate, which needs state
 /// across the whole declared list and so lives in [`admit_projection`] alone.
 ///
@@ -333,42 +415,24 @@ pub fn admit_projection_column(
     geometry_column: &str,
     identity_column: &str,
 ) -> std::result::Result<Field, ProjectionError> {
-    let name = field.name().as_str();
-    if name == geometry_column {
-        return Err(ProjectionError::ColumnIsGeometry { column: name.to_string() });
-    }
-    if name == identity_column {
-        return Err(ProjectionError::ColumnIsIdentity {
-            column: name.to_string(),
-            id_column: identity_column.to_string(),
-        });
-    }
-    let emitted = admit_attribute_type(name, field.data_type()).map_err(|_| {
-        ProjectionError::TypeNotAdmitted {
-            column: name.to_string(),
-            arrow_type: field.data_type().to_string(),
-            detail: format!(
-                "[B1 close placeholder] type is {}; not in the admissible set for a live \
-                 projection (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a \
-                 dictionary over one of those)",
-                field.data_type()
-            ),
-        }
-    })?;
-    Ok(Field::new(name, emitted, true))
+    check_geometry_and_identity(field.name().as_str(), geometry_column, identity_column)?;
+    type_check(field)
 }
 
 /// Validate a caller's declared projection against the dataset's own columns, in the declared order
-/// (ADR-023 §3):
+/// (ADR-023 §3; X2's fix — two full passes, never interleaved):
 ///
 /// 1. `names.len()` over [`MAX_PROJECTED_ATTRIBUTES`] refuses before any name is resolved.
-/// 2. Each name is resolved in declared order. The reserved wire identity name `id` is recognised
-///    **before** the unknown-column check (round 17 item 4, stop item 8 / O8) — so a mapped
-///    identity's file, which carries no column literally named `id`, still refuses a request for
-///    `id` as an identity collision rather than as an unknown column.
-/// 3. Per-column rules run in declared order — geometry, identity (the mapped identity's own
-///    **source** column, e.g. `parcel_key`), duplicate, type — via [`admit_projection_column`] for
-///    geometry/identity/type, with the duplicate check run alongside it.
+/// 2. **Pass 1 — name resolution, every declared name, in declared order.** The reserved wire
+///    identity name `id` is recognised **before** the unknown-column check (round 17 item 4, stop
+///    item 8 / O8) — so a mapped identity's file, which carries no column literally named `id`,
+///    still refuses a request for `id` as an identity collision rather than as an unknown column.
+///    This pass resolves every name to its schema field before any per-column rule below runs, so a
+///    later name's resolution failure (e.g. unknown) is reported even when an earlier name would
+///    have failed a per-column rule instead (X2).
+/// 3. **Pass 2 — per-column rules, column by column, in declared order** — geometry, identity (the
+///    mapped identity's own **source** column, e.g. `parcel_key`), duplicate, type — via
+///    [`check_geometry_and_identity`] and [`type_check`], with the duplicate check run between them.
 /// 4. The first failure is reported.
 ///
 /// `file_schema` is the dataset's resident schema fields, in file order — never the caller's
@@ -385,8 +449,10 @@ pub fn admit_projection(
             saw: names.len() as u64,
         });
     }
-    let mut seen: Vec<&str> = Vec::with_capacity(names.len());
-    let mut out = Vec::with_capacity(names.len());
+
+    // Pass 1: every declared name is resolved against the dataset's own schema, in declared order,
+    // before any per-column rule runs (X2).
+    let mut resolved: Vec<&Field> = Vec::with_capacity(names.len());
     for name in names {
         let name = name.as_str();
         // The reserved wire identity name, recognised before the unknown-column check runs at all
@@ -404,12 +470,24 @@ pub fn admit_projection(
                 known_columns: file_schema.iter().map(|f| f.name().clone()).collect(),
             }
         })?;
+        resolved.push(field);
+    }
+
+    // Pass 2: per-column rules, column by column, in declared order — geometry, identity,
+    // duplicate, type (X2). Duplicate detection needs state across the whole declared list, so it
+    // runs here, interleaved between [`check_geometry_and_identity`] and [`type_check`], rather than
+    // inside [`admit_projection_column`], which is shared with `projectable`'s single-column
+    // question and knows nothing about a caller's whole list.
+    let mut seen: Vec<&str> = Vec::with_capacity(resolved.len());
+    let mut out = Vec::with_capacity(resolved.len());
+    for field in resolved {
+        let name = field.name().as_str();
+        check_geometry_and_identity(name, geometry_column, identity_column)?;
         if seen.contains(&name) {
             return Err(ProjectionError::ColumnDuplicated { column: name.to_string() });
         }
-        let admitted = admit_projection_column(field, geometry_column, identity_column)?;
         seen.push(name);
-        out.push(admitted);
+        out.push(type_check(field)?);
     }
     Ok(AdmittedProjection { fields: out })
 }
@@ -532,20 +610,58 @@ mod tests {
         }
     }
 
-    /// E-6: `names_resolve_before_per_column_rules_in_declared_order` — the first name in the list
-    /// is the one whose refusal is reported, never a later one.
+    /// E-6: `names_resolve_before_per_column_rules_in_declared_order` (X2, row 5.6 — the input is
+    /// now `["geometry", "nope"]`, not `["nope", "geometry"]`). `geometry` resolves fine in pass 1
+    /// (it exists in the schema) and would only fail pass 2's own per-column geometry check; `nope`
+    /// fails pass 1's own resolution. Because pass 1 runs to completion over every declared name
+    /// before pass 2 begins, `nope`'s resolution failure is reported even though `geometry` is
+    /// first in the declared order and would fail a per-column rule of its own.
+    // RECORDED MUTATION: interleave — replace `admit_projection`'s two passes with the single
+    // former loop (resolve, then immediately run `check_geometry_and_identity`/duplicate/type on
+    // that same name, before moving to the next). Observed: this test fails by name -- "expected
+    // nope's own resolution failure, got Err(ColumnIsGeometry { column: \"geometry\" })" at
+    // `engine/src/attributes.rs:625` (the interleaved loop fails on `geometry`'s own per-column
+    // rule before ever reaching `nope`). Reverted.
     #[test]
     fn names_resolve_before_per_column_rules_in_declared_order() {
         let schema = native_schema();
         match admit_projection(
-            &["nope".to_string(), "geometry".to_string()],
+            &["geometry".to_string(), "nope".to_string()],
             &schema,
             "geometry",
             "id",
         ) {
             Err(ProjectionError::ColumnUnknown { column, .. }) => assert_eq!(column, "nope"),
-            other => panic!("expected the first name's own refusal, got {other:?}"),
+            other => panic!("expected nope's own resolution failure, got {other:?}"),
         }
+    }
+
+    /// The multi-failure order table (X2, row 5.6): count, then names (pass 1, whole list), then
+    /// per-column rules (pass 2, column by column) — geometry, identity, duplicate, type.
+    /// Mutation: interleave (see `names_resolve_before_per_column_rules_in_declared_order`'s own
+    /// recorded mutation) — the `["geometry", "id"]` and `["d32", "geometry"]` cases below then
+    /// fail by name too, for the same reason.
+    #[test]
+    fn the_multi_failure_order_is_count_then_names_then_per_column_rules() {
+        let schema = native_schema();
+        // Both names resolve in pass 1 (`geometry` and `nope`... `nope` does not resolve): the
+        // unresolved name wins over `geometry`'s own per-column failure.
+        assert!(matches!(
+            admit_projection(&["geometry".to_string(), "nope".to_string()], &schema, "geometry", "id"),
+            Err(ProjectionError::ColumnUnknown { column, .. }) if column == "nope"
+        ));
+        // `id` is recognised as the reserved identity name during pass 1 itself (before the
+        // unknown check even runs), so it wins over `geometry`'s own per-column failure too.
+        assert!(matches!(
+            admit_projection(&["geometry".to_string(), "id".to_string()], &schema, "geometry", "id"),
+            Err(ProjectionError::ColumnIsIdentity { .. })
+        ));
+        // Both `d32` and `geometry` resolve in pass 1 (both are real columns); pass 2 then runs
+        // per-column rules in declared order, so `d32`'s own type failure fires first.
+        assert!(matches!(
+            admit_projection(&["d32".to_string(), "geometry".to_string()], &schema, "geometry", "id"),
+            Err(ProjectionError::TypeNotAdmitted { column, .. }) if column == "d32"
+        ));
     }
 
     /// E-7: `projectable_is_the_per_column_admission`.
@@ -561,6 +677,36 @@ mod tests {
         assert!(projectable("area"));
         assert!(projectable("zone"));
         assert!(!projectable("d32"));
+    }
+
+    /// X3 (row 5.6; K-5's mapped-to-`i64` case): `admit_projection_column` refuses the reserved wire
+    /// identity name `id` even when this dataset's own identity is declared mapped to a different
+    /// column — so `projectable` agrees with `admit_projection`'s own name-resolution pass, which
+    /// already refuses a declared `id` this way (O8) regardless of what the file's own identity
+    /// mapping is.
+    // RECORDED MUTATION: remove the `name == crate::envelope::ID_COLUMN` arm from
+    // `check_geometry_and_identity`, leaving only `name == identity_column`. Observed: this test
+    // fails by name -- "the reserved `id` name must refuse even under a mapped identity" panics at
+    // `engine/src/attributes.rs` (the call now returns `Ok`, since `id` != `i64`). Reverted.
+    #[test]
+    fn admit_projection_column_refuses_the_reserved_id_name_even_under_a_mapped_identity() {
+        // A file whose identity is mapped to `i64` but which separately carries its own, unrelated
+        // `id` column (the shape `predicate.rs::identity_alias_ambiguity` names, and K-5's own new
+        // case: `AttributeMode::MultiType` opened with the identity declared mapped to `i64`).
+        let schema = Fields::from(vec![
+            Field::new("id", DataType::UInt64, false),
+            Field::new("geometry", DataType::Binary, false),
+            Field::new("i64", DataType::Int64, false),
+        ]);
+        let id_field = schema.iter().find(|f| f.name() == "id").unwrap();
+        assert!(
+            admit_projection_column(id_field, "geometry", "i64").is_err(),
+            "the reserved `id` name must refuse even under a mapped identity"
+        );
+        assert!(matches!(
+            admit_projection_column(id_field, "geometry", "i64"),
+            Err(ProjectionError::ColumnIsIdentity { .. })
+        ));
     }
 
     /// O8: a mapped identity's file carries no column literally named `id` — the reserved name must

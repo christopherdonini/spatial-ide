@@ -984,12 +984,19 @@ fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
 /// `dataset`'s resident `file_schema()`, minus the geometry column, minus any dictionary-encoded
 /// column (excluded by name — round 17 item 3; ADR-021 Note 2026-09-24 — whatever its value type),
 /// minus any column whose type fails [`crate::attributes::admit_attribute_type`], plus the
-/// identity-alias rule above. Returns the admitted namespace (name → **emitted** type) for stage 3
-/// to build its surrogate relation from.
+/// identity-alias rule above. Returns the admitted namespace (name → **surrogate**, the DuckDB type
+/// name [`filter_surrogate`] computed) for stage 3 to build its surrogate relation from.
+///
+/// **X5 (Amendment 5, row 5.6; O4).** The surrogate is computed once, here, and carried — never
+/// recomputed by [`bind_admit`], which only reads what this function already decided. A column
+/// whose type has no surrogate is refused *here*, by name, as `filter_column_not_filterable` (O4's
+/// own recommendation), for every column the predicate actually referenced; a column nothing
+/// referenced simply does not enter the namespace (the same non-event the dictionary exclusion
+/// already was before this fix, and still is).
 fn namespace_admit(
     columns: &[String],
     dataset: &Dataset,
-) -> Result<BTreeMap<String, DataType>, FilterError> {
+) -> Result<BTreeMap<String, &'static str>, FilterError> {
     let geometry_column = dataset.geometry_column();
     let alias = identity_alias_ambiguity(dataset);
 
@@ -999,14 +1006,12 @@ fn namespace_admit(
         if name == geometry_column {
             continue;
         }
-        // Dictionary-encoded columns are excluded from the filter namespace by name, whatever their
-        // value type — never admitted here even though the live projection gate now admits them
-        // (round 17 item 3).
-        if matches!(field.data_type(), DataType::Dictionary(_, _)) {
-            continue;
-        }
-        if let Ok(emitted) = crate::attributes::admit_attribute_type(name, field.data_type()) {
-            namespace.insert(name.to_string(), emitted);
+        // **X5: no duplicate dictionary exclusion here.** [`filter_surrogate`] (via
+        // [`filterable_column_type`]) is the one place that checks it now — a column nothing
+        // referenced that lacks a surrogate for any reason, dictionary-encoded or otherwise, is
+        // simply not added, exactly as it was skipped before.
+        if let Ok(surrogate) = filter_surrogate(name, field) {
+            namespace.insert(name.to_string(), surrogate);
         }
     }
 
@@ -1029,7 +1034,11 @@ fn namespace_admit(
         }
         match dataset.file_schema().fields().iter().find(|f| f.name() == name) {
             None => return Err(FilterError::UnknownColumn { column: name.clone() }),
-            Some(field) => filterable_column_type(name, field).map(|_| ())?,
+            // The referenced column's own surrogate is required to exist (O4) — this is where a
+            // "no surrogate" refusal actually fires for a column that matters to this predicate.
+            Some(field) => {
+                filter_surrogate(name, field)?;
+            }
         }
     }
 
@@ -1058,6 +1067,25 @@ fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<Data
     }
     crate::attributes::admit_attribute_type(name, field.data_type())
         .map_err(|e| FilterError::ColumnNotFilterable { column: name.to_string(), reason: e.to_string() })
+}
+
+/// The DuckDB surrogate type name for `field`, if the filter namespace admits it — one function
+/// combining [`filterable_column_type`]'s gate (the dictionary exclusion, then
+/// [`crate::attributes::admit_attribute_type`]) with the DuckDB-side name ([`duckdb_type_name`]), so
+/// a column's surrogate is computed exactly once and [`namespace_admit`] can carry it (X5; O4) —
+/// [`bind_admit`] never recomputes it.
+fn filter_surrogate(
+    name: &str,
+    field: &Field,
+) -> std::result::Result<&'static str, FilterError> {
+    let emitted = filterable_column_type(name, field)?;
+    duckdb_type_name(&emitted).ok_or_else(|| FilterError::ColumnNotFilterable {
+        column: name.to_string(),
+        reason: format!(
+            "type is {emitted}, which this namespace admits but has no DuckDB surrogate type to \
+             bind against — [B1 close placeholder]"
+        ),
+    })
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1104,9 +1132,13 @@ fn duckdb_type_name(ty: &DataType) -> Option<&'static str> {
 /// nothing but column references, literals, and the small set of comparison/logical/arithmetic
 /// constructs the allowlist walk admits. This function must never run on text stage 1 has not
 /// approved.
+///
+/// **X5 (Amendment 5, row 5.6; O4).** `namespace` already carries each column's surrogate —
+/// [`namespace_admit`] computed and, for every referenced column, admitted it. This function reads
+/// that decision; it never calls [`duckdb_type_name`] or refuses a missing surrogate itself.
 fn bind_admit(
     predicate: &str,
-    namespace: &BTreeMap<String, DataType>,
+    namespace: &BTreeMap<String, &'static str>,
     conn: &Connection,
 ) -> Result<(), FilterError> {
     let quote = |s: &str| format!("\"{}\"", s.replace('"', "\"\""));
@@ -1117,19 +1149,7 @@ fn bind_admit(
         format!("1 AS {}", quote("__surrogate_anchor"))
     } else {
         let mut parts = Vec::with_capacity(namespace.len());
-        for (name, ty) in namespace {
-            // **F1: a typed refusal, never an `.expect()`.** Unreachable today — `namespace_admit`
-            // excludes dictionaries by name and refuses every other type `duckdb_type_name` does not
-            // cover before it ever reaches the namespace — but named rather than assumed, so a
-            // future admitted type with no surrogate fails this one predicate typed, not the
-            // process.
-            let type_name = duckdb_type_name(ty).ok_or_else(|| FilterError::ColumnNotFilterable {
-                column: name.clone(),
-                reason: format!(
-                    "type is {ty}, which this namespace admits but has no DuckDB surrogate type to \
-                     bind against — [B1 close placeholder]"
-                ),
-            })?;
+        for (name, type_name) in namespace {
             parts.push(format!("CAST(NULL AS {type_name}) AS {}", quote(name)));
         }
         parts.join(", ")
@@ -1221,6 +1241,48 @@ mod tests {
                 );
             }
             other => panic!("expected ColumnNotFilterable naming the encoding, got {other:?}"),
+        }
+    }
+
+    /// X5 (row 5.6; O4): every type the filter namespace admits carries a DuckDB surrogate —
+    /// `filter_surrogate` is the one function [`namespace_admit`] and [`bind_admit`] rely on for
+    /// that, and this proves it covers every type [`filterable_column_type`] itself admits.
+    // RECORDED MUTATION: in `duckdb_type_name`, remove the `D::Float32 => Some("REAL")` arm (falls
+    // through to `_ => None`). Observed: this test fails by name -- "f32 (Float32) must carry a
+    // surrogate: ColumnNotFilterable { column: \"f32\", reason: \"type is Float32, which this
+    // namespace admits but has no DuckDB surrogate type to bind against...\" }" at
+    // `engine/src/predicate.rs:1266`. Reverted.
+    #[test]
+    fn every_type_the_filter_namespace_admits_carries_a_surrogate() {
+        let cases = [
+            ("s", DataType::Utf8),
+            ("b", DataType::Boolean),
+            ("i8", DataType::Int8),
+            ("i16", DataType::Int16),
+            ("i32", DataType::Int32),
+            ("i64", DataType::Int64),
+            ("u8", DataType::UInt8),
+            ("u16", DataType::UInt16),
+            ("u32", DataType::UInt32),
+            ("u64", DataType::UInt64),
+            ("f64", DataType::Float64),
+            ("f32", DataType::Float32),
+        ];
+        for (name, ty) in cases {
+            let field = Field::new(name, ty.clone(), true);
+            // Every one of these types is admitted by `filterable_column_type` itself (it is not
+            // a dictionary and `admit_attribute_type` accepts it), so if it is admitted at all it
+            // must also carry a surrogate — `filter_surrogate` must not narrow the namespace by
+            // silently dropping one of `filterable_column_type`'s own admitted types.
+            assert!(
+                filterable_column_type(name, &field).is_ok(),
+                "{name} ({ty}) must itself be filterable, or this test proves nothing about it"
+            );
+            assert!(
+                filter_surrogate(name, &field).is_ok(),
+                "{name} ({ty}) must carry a surrogate: {:?}",
+                filter_surrogate(name, &field)
+            );
         }
     }
 
