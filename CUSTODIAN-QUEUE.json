@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-09-27T13:53:14.793Z",
-  "plan_hash": "9324ed856a5939f87f3a1a79713608234968b1953aebe482ff5f1035590d7e28",
+  "generated_at": "2026-09-27T14:12:22.694Z",
+  "plan_hash": "b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18fd9dd18e9634549a363f9",
   "priorities_approved": true,
   "next": {
-    "id": "data-plane-stream-registry-bound",
-    "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
+    "id": "kernel-generation-close-races",
+    "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
     "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
-    "order": null,
+    "order": 1,
     "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
@@ -16,31 +16,12 @@
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-26",
+      "opened": "2026-09-25",
       "done": null
     },
-    "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click."
+    "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md). Intake from the watcher's reviewer gate 2 (state/consults/2026-09-26-source-watcher-gate2-reviewer.md, suggestion S1): a grandparent-thread spawn failure after the parent's watch thread started can leave a recorded signal that the ChecksOnly arm ignores; the descriptor checks remain the backstop."
   },
   "ready": [
-    {
-      "id": "data-plane-stream-registry-bound",
-      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click."
-    },
     {
       "id": "kernel-generation-close-races",
       "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
@@ -309,6 +290,28 @@
       },
       "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher. RULED 2026-09-26, question round 25, item 3: B1's build starts after the watcher merges, so it builds on skp/0.5 directly.",
       "evidence_label": "branch `cut/b1-engine-projection`"
+    },
+    {
+      "id": "data-plane-stream-registry-bound",
+      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/data-plane-stream-registry-bound"
+      },
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click.",
+      "evidence_label": "branch `cut/data-plane-stream-registry-bound`"
     }
   ],
   "proposed": [
