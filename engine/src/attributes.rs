@@ -422,6 +422,9 @@ mod tests {
     /// over an admitted value type — moved here from a refusal, and the test renamed for the live
     /// admitted set (publish's own refusal of them is a separate, later check — `kernel/tests`'
     /// `publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_format_restriction_with_todays_text`).
+    // RECORDED MUTATION: in `admit_attribute_type`, remove `D::Float32` from the admitted-types
+    // arm (falls through to the refused `other` arm). Observed: this test fails by name -- "Float32
+    // should be admissible" panics at `engine/src/attributes.rs:438`. Reverted.
     #[test]
     fn the_live_admissible_set_admits_float32_and_a_dictionary_over_an_admitted_value_type() {
         for ty in [
@@ -577,6 +580,10 @@ mod tests {
         }
     }
 
+    // RECORDED MUTATION: in `admit_projection_column`, return `Field::new(name, emitted,
+    // field.is_nullable())` instead of forcing `true`. Observed: this test fails by name -- "an
+    // admitted projection must not be able to lose a NULL" panics at
+    // `engine/src/attributes.rs:594`. Reverted.
     #[test]
     fn every_admitted_projection_column_comes_back_nullable_whatever_the_source_said() {
         // A source NULL is a value; a schema that could not carry it would force a substitution.

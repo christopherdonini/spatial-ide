@@ -259,6 +259,11 @@ fn describe_fixtures_carry_projectable_on_every_schema_row() {
 
 /// One error fixture per new `skp.projection_*` code (seven in all, §2.1) — each deserializes as
 /// `SkpError` and round-trips byte-identically.
+// RECORDED MUTATION: in `protocol/skp/src/v0/error.rs::SkpError`, add
+// `#[serde(rename = "error_code")]` to `code`. Observed: this test fails by name --
+// "v0-error-projection_empty_list does not deserialize as SkpError: unknown field `code`,
+// expected one of `error_code`, `message`, `fields`" at `protocol/skp/tests/fixtures.rs:275`.
+// Reverted.
 #[test]
 fn every_new_projection_error_fixture_round_trips() {
     for name in [

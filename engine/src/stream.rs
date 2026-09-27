@@ -2411,6 +2411,10 @@ mod tests {
 
     /// A column that never arrived dictionary-encoded passes through unchanged (no copy, no
     /// panic) — the common case this function must not slow down or alter.
+    // RECORDED MUTATION: in `decode_dictionary_chunk_column`, replace the non-dictionary `else`
+    // arm's `Ok(col.clone())` with an unconditional `Err(..)`. Observed: this test fails by name --
+    // `unwrap()` panics on `Arrow("mutated: non-dictionary path refused")` at
+    // `engine/src/stream.rs:2419`. Reverted.
     #[test]
     fn a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged() {
         let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));

@@ -87,6 +87,10 @@ fn column_u64(batch: &RecordBatch, name: &str) -> UInt64Array {
 /// order (`zone` before `area`), so a sort-by-file-order bug is distinguishable from the declared
 /// (request) order this test actually pins. Values are checked row by row against an independent
 /// DuckDB read of the same file, keyed on `id`. Mutation: `resolve_projection` sorts by file order.
+// RECORDED MUTATION: in `engine/src/attributes.rs::admit_projection`, sort `out` by the field's
+// position in `file_schema` instead of declared order. Observed: this test fails by name --
+// `left: ["id", "geometry", "zone", "area"]` vs `right: ["id", "geometry", "area", "zone"]` at
+// `engine/tests/live_projection.rs:101`. Reverted.
 #[test]
 fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
     let ds = dataset();
@@ -147,6 +151,10 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
 /// pre-existing precedent (`BatchEnvelope::with_attributes` carries no `AdmissionRecord`). Mutation:
 /// `with_attributes` drops `axis_normalization` — the loop below then finds it present on one side
 /// and absent on the other, and the equality assertion fails by name.
+// RECORDED MUTATION: in `engine/src/envelope.rs::BatchEnvelope::with_attributes`, strip
+// `axis_normalization` from the built schema's metadata. Observed: this test fails by name --
+// "`axis_normalization` must be identical, projected or not / left: Some(\"none-performed\") /
+// right: None" at `engine/tests/live_projection.rs:169`. Reverted.
 #[test]
 fn projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical() {
     let ds = dataset();
@@ -175,6 +183,10 @@ fn projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical() {
 /// Mutation: remove the `REAL` arm from `duckdb_type_name` — `bind_admit`'s surrogate relation then
 /// has no DuckDB type to `CAST(NULL AS ...)` `f32` as (F1's typed refusal fires, or — before F1 —
 /// the `expect()` it replaced panics), and every predicate below fails to admit.
+// RECORDED MUTATION: in `engine/src/predicate.rs::duckdb_type_name`, comment out the
+// `D::Float32 => Some("REAL")` arm. Observed: this test fails by name -- `f32 > 0` refused as
+// `ColumnNotFilterable { column: "f32", reason: "... has no DuckDB surrogate type to bind
+// against ..." }` at `engine/tests/live_projection.rs:191`. Reverted.
 #[test]
 fn a_file_with_a_float32_column_binds_every_predicate_without_panicking() {
     let ds = dataset();
@@ -190,6 +202,11 @@ fn a_file_with_a_float32_column_binds_every_predicate_without_panicking() {
 /// against an assumption about float comparison. Mutation: the fixture writes `f32` as `Float64`
 /// with the same values — a `DOUBLE` column would not exercise `REAL`'s own cast behaviour (H5),
 /// and would in any case be admitted differently.
+// RECORDED MUTATION: in `engine/src/fixture.rs`, change the `f32` field's `DataType` to `Float64`,
+// its builder to `Float64Builder`, and its append call to `f32_for(spec.seed, id) as f64` (same
+// values, widened). Observed: this test fails by name -- "a fully-drained stream produced at least
+// one batch" panics at `engine/tests/live_projection.rs:77` (a DOUBLE column's exact-literal
+// comparison finds none of the rows the f32-computed expected sets predict). Reverted.
 #[test]
 fn how_a_float32_column_compares_with_a_numeric_literal_is_pinned() {
     let ds = dataset();
