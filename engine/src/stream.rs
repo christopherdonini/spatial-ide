@@ -2555,7 +2555,7 @@ mod tests {
     // `engine/src/stream.rs:2578`. Reverted.
     // RECORDED MUTATION (observed at `ca3d7ae`): remove the 64-bytes-per-buffer term from
     // `retain_or_compact_single_run`'s allowance. Observed: this test fails by name -- "a 1-row
-    // Int64 run must be kept uncopied" at `engine/src/stream.rs:2611`. Reverted.
+    // Int64 run must be kept uncopied" at `engine/src/stream.rs:2612`. Reverted.
     #[test]
     fn every_emitted_attribute_column_retains_at_most_the_declared_factor() {
         let allowance = |data: &arrow::array::ArrayData| -> usize {

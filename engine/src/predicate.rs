@@ -1249,7 +1249,7 @@ mod tests {
     /// that, and this proves it covers every type [`filterable_column_type`] itself admits.
     // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in `duckdb_type_name`,
     // remove the `D::Float32 => Some("REAL")` arm. Observed: this test fails by name -- "f32
-    // (Float32) must carry a surrogate" at `engine/src/predicate.rs:1282`. Reverted.
+    // (Float32) must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
     // RECORDED MUTATION (observed at `ca3d7ae`): in `duckdb_type_name`, drop `LargeUtf8` and
     // `Utf8View` from the `VARCHAR` arm. Observed: this test fails by name -- "large (LargeUtf8)
     // must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
