@@ -1,16 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9ce722aab705a4c6072180b4047cb2f2ed2ca63a80de6756b6c6aec768fc1feb`) at `2026-09-27T22:04:06.295Z`.
+Generated from `PLAN.yaml` (sha256 `9fc9c74d086728bc05e983317f6bc3376d6f3f5abd1e514a042a3df909b7d2ea`) at `2026-09-27T22:32:35.951Z`.
 
 ## 1. Next
 
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`)
+- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`)
 
 ## 2. Ready
 
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
-- **b1-post-merge-pins** — B1's words-form references pinned at a main commit after its merge (lane `governance`, order null, budget 20 min)
-- **exposure-post-merge-pins** — The exposure piece's corrected test-comment rows pinned at a main commit (lane `governance`, order null, budget 20 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -21,6 +18,7 @@ Generated from `PLAN.yaml` (sha256 `9ce722aab705a4c6072180b4047cb2f2ed2ca63a80de
 
 ## 4. Blocked on dependencies
 
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1

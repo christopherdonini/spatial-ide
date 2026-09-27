@@ -1208,9 +1208,9 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: blocked
     order: 3
-    depends_on: [b1-engine-kernel-half]
+    depends_on: [b1-engine-kernel-half, b1-shell-half]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -1218,7 +1218,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [79]
-    summary: "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half"
+    summary: "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27)."
     dates: {opened: null, done: null}
 
   - id: m13-bracketed-values
@@ -2727,18 +2727,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: done
     order: null
     depends_on: [exposure-profile-paths]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {commit: ea2ebf8}
     budget_minutes: 20
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Round 25, item 2 (d); the exposure form's Amendment 7, 7.4, and gate 3 architect D7: the ten corrected 'Observed:' clauses of scripts/hooks/profile-path-scan.test.mjs, named in the words form at da80db0 (lines 124-125, 147-151, 181-183, 201-202, 274-276, 405-408, 462-468, 542-545, 746-748, 802-804), pinned at a main commit with their hashes in one appended row."
-    dates: {opened: 2026-09-27, done: null}
+    dates: {opened: 2026-09-27, done: 2026-09-27}
   - id: kernel-ticket-liveness-redeem-wording
     title: "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)"
     kind: task
@@ -2795,18 +2795,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: done
     order: null
     depends_on: [b1-engine-kernel-half]
     needs_human: {kind: none, minutes: 0}
     gate: none
-    evidence: null
+    evidence: {commit: ea2ebf8}
     budget_minutes: 20
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Round 25, item 2 (d): Amendment 8's superseded index names lines 273-274 of engine/src/fixture.rs at 273a79d in the words form; after B1 merges, pin them at a main commit with their hash in one appended row."
-    dates: {opened: 2026-09-27, done: null}
+    dates: {opened: 2026-09-27, done: 2026-09-27}
   - id: timing-assertions-under-contention
     title: "Two latency assertions fail under concurrent build load and pass alone"
     kind: task
