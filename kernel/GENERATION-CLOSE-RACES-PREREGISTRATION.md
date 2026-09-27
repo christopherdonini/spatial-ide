@@ -469,3 +469,12 @@ Made after gate 1's reports were seen: `state/consults/gates/2026-09-27-kernel-g
    - The proof is the span itself.
 
 **Superseded:** Amendment 2, row 10, second bullet → row 10's first-bullet reference.
+
+### Amendment 4 — 2026-09-27, post-result: record correction after the record-round-1 read (record round 2 of 2)
+
+1. **Class 3, Amendment 3 row 1's second clause** (the architect's G2-1; round 15 (c)).
+   - The defect: that clause states `verify-test-claims`' behaviour without the tool's commit.
+   - The corrected reference: `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-reviewer.md:15 @ 68d261e sha256:4a539e0ce83c497dc979014413b50ea7441d7d40efb235e9e691e1e8714c8fab`.
+   - The proof is the span itself.
+
+**Superseded:** Amendment 3, row 1, second clause → that pin.
