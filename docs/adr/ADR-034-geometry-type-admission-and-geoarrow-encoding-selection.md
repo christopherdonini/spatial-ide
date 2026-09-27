@@ -1,8 +1,8 @@
 # ADR-034 — Geometry type admission and GeoArrow encoding selection
 
-**Status:** Proposed 2026-09-27 — filed on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 7; entry 126). It binds nothing and is not architect-blockable until the human accepts it; acceptance is the human's (a red line), and it is sought before MP-1's preregistration is written (the 2026-09-27 session order, `state/directives/2026-09-27-session-order.md`). The ruling's two riders bind MP-1's preregistration (PLAN node `geometry-types-beyond-polygons`) through the ruling itself, whatever this ADR's status.
-**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-multipolygon-assessment.md` §4) with that assessment's §5 decisions as ruled and the ruling's two riders. Every tree claim below was read at main `0ada14f`.
-**Related:** `docs/01` principles 7 and 8 · `docs/02` · `docs/08_Testing.md` · `docs/10` · ADR-004 · ADR-006 · ADR-010 rules 1, 2 and 6 · ADR-016 §5, §6 and §7 · ADR-017 §3 and §4 (Accepted; not amended here) · `protocol/skp/SKP-V0.md` §1 (`describe`), §4 item 13, §5, §8 · `engine/LOD-PREREGISTRATION.md` · `engine/ADMISSION-RESULTS.md` · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, items 3 and 7.
+**Status:** Proposed 2026-09-27 — filed on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 7; entry 126). It binds nothing and is not architect-blockable; acceptance is the human's (a red line), and whether acceptance makes it architect-blockable is the human's to say at acceptance. MP-1's preregistration is written only after the human accepts this ADR (the 2026-09-27 session order, its MultiPolygon paragraph, `state/directives/2026-09-27-session-order.md` — paraphrase); that order replaces decision 8's recommended timing, which was acceptance at MP-1's gate (paraphrase). The ruling's two riders bind MP-1's preregistration (PLAN node `geometry-types-beyond-polygons`) through the ruling itself, whatever this ADR's status.
+**Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-multipolygon-assessment.md` §4) with that assessment's §5 decisions as ruled and the ruling's two riders; redrafted after its first full gate (attempt 1) for PLAN node `geometry-types-beyond-polygons`. Every tree claim below was read at main `0ada14f`.
+**Related:** `docs/01` principles 7 and 8 · `docs/02` · `docs/08_Testing.md` · `docs/10` · ADR-004 · ADR-006 · ADR-010 rules 1, 2 and 6 · ADR-016 §5, §6 and §7 · ADR-017 §3 and §4 (Accepted; not amended here) · `protocol/skp/SKP-V0.md` §1 (`describe`), §4 item 13, §5, §8 · `engine/LOD-PREREGISTRATION.md` · `engine/ADMISSION-RESULTS.md` · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, items 3 and 7 · the 2026-09-27 session order, its MultiPolygon paragraph and its holds.
 
 ## Context
 
@@ -20,6 +20,7 @@ The engine admits Polygon only, and the assumption is spread across three wires:
   - The viewer refuses a mismatched encoding (`EXPECTED_ENCODING`, `renderer/bundle-viewer/src/partition.ts`).
   - `kernel/examples/verify-bundle.rs` accepts any `geoarrow.*` value.
   - The publish manifest's encoding is hard-coded (`format_declaration`, `kernel/src/publish/mod.rs`).
+- **The fixtures.** The engine's fixture writer (`engine/src/fixture.rs`) declares `geometry_types` as exactly `Polygon`.
 - **LOD.** `engine/src/lod.rs` refuses any feature that is not a Polygon, by name. `build_tiers` has no product caller: `kernel/src/skp.rs` records that nothing on the control plane calls it.
 - **The corpus.** The P4 run (`engine/ADMISSION-RESULTS.md`) records 5 of 12 files refused on geometry type.
   - #2, #4 and #5 are Point files.
@@ -32,7 +33,8 @@ The human ruled all eight of the assessment's §5 decisions as recommended, sigh
 
 *"All eight as recommended, and decision 4's wording sighted as proposed. Rider on decision 3: a column with an empty geometry_types admits under the MultiPolygon encoding, but any row of a type the engine does not read is refused by name or counted as unread and shown, never silently dropped. Decision 1's promotion of Polygon rows is declared as an encoding in describe (decision 6's declared_types), never presented as the file's own type."*
 
-Decision 4's wording, as sighted, byte-copied by script from the assessment's §5 item 4 and marked so:
+Decision 4's wording, as sighted, byte-copied by script from the assessment's §5 item 4 and marked so; the span is part of one line and carries that line's hash:
+`state/consults/2026-09-24-multipolygon-assessment.md:206 @ 6030dfd2814b sha256:ddae06db5d61fa8f420f73843d5e900805bbb9eb26341f5a53effa571cdc4be3`
 
 *"geometry_types [...] include types this engine does not read; it reads Polygon and MultiPolygon"*
 
@@ -48,15 +50,16 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
 2. **The encoding is fixed at open from the declared `geometry_types`** (decisions 2 and 3):
    - a declared set equal to {Polygon} gives `geoarrow.polygon`, byte-identical to today;
    - a non-empty declared set within the readable set that includes MultiPolygon gives `geoarrow.multipolygon` (`List<List<List<FixedSizeList<Float64>[2]>>>`);
-   - an empty `geometry_types` gives `geoarrow.multipolygon`;
+   - an empty `geometry_types` gives `geoarrow.multipolygon`, even when every row is a Polygon;
    - a declared set with any member outside the readable set is refused at open (point 7).
 
    The encoding is a fact of the open. The envelope, `describe` and every batch carry the same value, and it never varies per batch or per stream.
 
 3. **Promotion is declared as an encoding, never as the file's type** (decision 1 and its rider; decision 6).
    - Under the multipolygon encoding, a Polygon row becomes a one-part MultiPolygon. Its coordinate bit patterns are carried through with no arithmetic, as `engine/src/wkb.rs` does today.
-   - `describe` gains `declared_types`. It carries the file's `geometry_types` as declared and in declared order, with an empty list kept empty. It is a source fact beside `encoding`, which is the engine's fact (`docs/01` principle 8).
-   - By the rider (paraphrase), no surface presents the promotion as the file's own type. This covers `describe`, the envelope, the shell's display and operator text. Where both facts are shown, each is labelled as what it is. The labels' wording is the owner's (P6).
+   - `describe` gains `declared_types`. It carries the file's `geometry_types` as declared and in declared order, with an empty list kept empty. It is a source fact beside `encoding`, which is the engine's fact.
+   - For each open, those two `describe` facts are the promotion's inspectable record (`docs/01` principle 8). Whether the promotion also needs a logged entry is open item O7.
+   - By the rider (paraphrase), no surface presents the promotion as the file's own type. This covers `describe`, the envelope, the shell's display and operator text. Where both facts are shown, each is labelled as what it is. The labels' wording is the shell's, as the owner, and is fixed in MP-1's preregistration (O3).
 
 4. **A row of a type the engine does not read is never silently dropped** (decision 3's rider).
    - Under an empty `geometry_types`, such a row takes one of the two treatments the rider allows:
@@ -66,18 +69,20 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
    - Either treatment is bound by rules already in force:
      - Under (a), the refusal is a typed engine refusal stating the engine fact: the type met and the readable set.
      - Under (b), a count shown on `describe` has to be a fact open already established, because `describe` runs no new query (`SKP-V0.md` §1, `describe`). A whole-column count at open is an operation under `docs/01` principle 7, with no `docs/08` figure. Under (b), no row count or extent may imply that every row is drawn.
-   - Today's refusal text for a non-Polygon row (`PolygonBuilder::push_wkb`) states a readable set that becomes false under MP-1, and MP-1 restates it as an engine fact.
+   - Today's refusal text for a non-Polygon row (`PolygonBuilder::push_wkb`) states a readable set that becomes false under MP-1. Its new wording, and whether the human sights it, are open item O4.
 
 5. **One wire row per feature, always.**
    - Parts never become rows.
    - The rule rests on ADR-016 §5 (uniqueness verified over the emitted identity) and ADR-010 rule 2 (GPU ordinal → stable id → authoritative f64).
-   - The shell's `TileResidentSet.addBatch` (`frontends/shell/src/canvas/tileResidentSet.ts`) drops a repeated id. Rows split per part would therefore lose every part after the first, silently.
+   - Rows split per part would reach the shell as repeated ids. The shell's `TileResidentSet.addBatch` (`frontends/shell/src/canvas/tileResidentSet.ts`) drops a repeated id and counts it in `duplicatesDropped`. Every part after the first would therefore be lost, indistinguishable from an ordinary cross-tile duplicate.
 
 6. **Picking goes through a part-to-row map** (ADR-010 rules 2 and 6; followed, not amended).
    - A GPU ordinal resolves ordinal → part → row → id. `resolvePick` (`frontends/shell/src/canvas/pick.ts`) uses the ordinal as the row index today.
-   - The pick ceiling is counted in pick ordinals, which are parts. `checkPickCeiling(batch.ids.length)` in `buildLayers` counts features, which undercounts once features have several parts, and that is a defect by name if left.
+   - *Premise, pending open item O5:* one deck.gl datum is one polygon, so a pick ordinal names a part.
+     - Under that premise, the pick ceiling is counted in parts. Two product sites call `checkPickCeiling(batch.ids.length)`, which counts features: `buildLayers` (`frontends/shell/src/canvas/buildLayers.ts`) and `ResidentSet.addBatch` (`frontends/shell/src/canvas/residentSet.ts`). Both undercount once features have several parts, and either one left unchanged is a defect by name.
+     - If O5 finds the premise false, the map and the ceiling are keyed on whatever unit the installed version picks by.
    - A feature's extent is the union over its parts. A re-pick that lands on another part of the same feature confirms the same id, so one feature gives one hover.
-   - Every per-row lookup, attribute columns included, takes its row from the same map.
+   - Every per-row lookup, attribute columns included, takes its row from the same map (see O6 for the seam).
 
 7. **A declared type outside the readable set is refused at open, by name.**
    - It is the same variant, `engine.geo_metadata`, with decision 4's sighted wording.
@@ -86,7 +91,7 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
 
 8. **Wire and version.**
    - The second encoding value and `declared_types` go on one SKP literal. MP-1 takes the literal after B1's, by merge order (decision 6; RULED 2026-09-24 (night) item (2)). No literal number is written here.
-   - `GeometryInfo` is `deny_unknown_fields`. The new member lands with its §8 entry and with both-side fixtures in the same commit (`SKP-V0.md` §4 item 13).
+   - `GeometryInfo` is `deny_unknown_fields`. Under `SKP-V0.md` §4 item 13, any field change is a new version string. Where a version is assembled across several commits, condition (ii) records every addition in that version's own §8 entry before merge, and condition (iii) puts both-side fixtures in the same commit as each addition.
    - ADR-010 rule 1's tag is the envelope's `frame`, and it is unchanged. `geometry_encoding` is a sibling envelope key, so no reading of rule 1 is enlarged (compare ADR-016 §6's caution).
    - On the data plane, the multipolygon encoding adds one offsets buffer and no coordinate copy (ADR-004, copy-minimized). No cost is claimed.
    - The control plane carries no bulk data.
@@ -102,17 +107,22 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
 
 ## Consequences
 
-- **Polygon-only datasets.**
-  - Their stream IPC bytes and published partition hashes are unchanged. MP-1 preregisters the proof over the existing fixtures, which keeps every `docs/08` measurement and the shell E2E's encoding expectation valid.
+- **Datasets declaring exactly Polygon.**
+  - Their stream IPC bytes and published partition hashes are unchanged. The engine's fixtures declare exactly Polygon. MP-1 preregisters the proof over the existing fixtures, which keeps every `docs/08` measurement and the shell E2E's encoding expectation valid.
   - The `describe` response gains one member for every dataset.
+- **Undeclared Polygon-only datasets.**
+  - A dataset whose `geometry_types` is empty now gets `geoarrow.multipolygon` (point 2), even when every row is a Polygon. Its stream IPC bytes change.
+  - A projected dataset of that kind, which publishes today, is refused by point 10 until B3. That is a named loss, and a KNOWN-LIMITATIONS row names it.
+  - Whether any corpus file or fixture declares an empty list is for MP-1's P4 generator re-run to confirm.
 - **The shell must check `geometry_encoding` before any engine emits a second value.**
   - `decodeBatch` checks `frame` only. A multipolygon batch would be walked one nesting level short, misread, with no error raised.
-  - MP-1 adds the check, and the one internal shape of parts, then rings, per feature.
+  - MP-1 adds the check. The shell's internal shape is MP-1's to choose; the assessment recommends one shape, parts then rings, per feature.
 - **The viewer and the bundle verifier.** The viewer already refuses a foreign encoding. `verify-bundle.rs`'s `geoarrow.*` check is weaker than the viewer's and is MP-2's to align.
 - **Publishing (decision 5).**
   - The multipolygon partition schema is MP-2's. It rides Brief B stage B3's bundle version 2 (PLAN node `briefb-b3-publish-v2`), through whatever instrument B3's preregistration puts to the human.
   - This ADR does not amend ADR-017.
-  - Corpus #11 and #12 are degree datasets, which `GeographicCrsNotPublishable` already refuses, so nothing publishable today is lost.
+  - Corpus #11 and #12 are degree datasets, which `GeographicCrsNotPublishable` already refuses. Refusing them again under point 10 loses nothing.
+  - The loss that does occur is the undeclared projected Polygon-only case above.
   - A KNOWN-LIMITATIONS row names the refusal.
 - **LOD stays out (decision 7).**
   - The by-name refusal in `engine/src/lod.rs` stands. `build_tiers` has no product caller.
@@ -137,13 +147,22 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
 
 ## What this ADR does not decide
 
-- The choice between treatment (a) and treatment (b), and the surface where (b)'s count is shown (O1).
-- Whether a row that contradicts a non-empty declaration takes the same treatment. Examples are a MultiPolygon row under `[Polygon]`, or a Point row under `[Polygon, MultiPolygon]` (O2).
-- `declared_types`' exact placement and wire form within `describe`.
+Open items for MP-1's preregistration:
+- **O1.** The choice between treatment (a) and treatment (b), and the surface where (b)'s count is shown.
+- **O2.** Whether a row that contradicts a non-empty declaration takes the same treatment. Examples are a MultiPolygon row under `[Polygon]`, or a Point row under `[Polygon, MultiPolygon]`.
+- **O3.** `declared_types`' exact placement and wire form within `describe`, and the shell's labels for `encoding` and `declared_types`.
+- **O4.** The new WKB-level refusal wording (`PolygonBuilder::push_wkb`), and whether it goes to the human's sight. Round 17 item 7 sighted only the `engine.geo_metadata` wording.
+- **O5.** Verifying against the installed `@deck.gl/layers` that one datum is one polygon, which is Decision 6's premise for counting pick ordinals as parts.
+- **O6.** The attribute seam.
+  - No shell attribute lookup exists at `0ada14f`, and B1's shell half (PLAN node `b1-shell-half`) is held by the 2026-09-27 session order (its holds; paraphrase).
+  - Of MP-1 and B1's shell half, whichever lands second writes its seam against the other's merged interface, never an imagined one, and proves it end to end.
+- **O7.** Whether the promotion needs a logged entry beyond `describe`'s `encoding` and `declared_types` (`docs/01` principle 8).
+
+Not decided here, and not MP-1's alone:
 - Whether type matching stays case-insensitive.
 - Types with Z or M.
 - Mixed-kind columns.
-- The shell's rendering internals.
+- The shell's internal shape and rendering internals (MP-1's).
 - The multipolygon partition schema (MP-2 and B3).
 - LOD widening (`lod-tier-selection`).
 - The SKP literal's number.
@@ -152,4 +171,5 @@ Decision 4's wording, as sighted, byte-copied by script from the assessment's §
 
 - Decision 5 cites ADR-016 §5 for uniqueness. The skeleton cited ADR-016 §7, which states the identity's width.
 - The Decision reads decision 4's bracketed placeholder as the declared list, rendered as today's message renders it.
-- O1 and O2 are open for MP-1's preregistration and are not settled here.
+- Whether acceptance makes this ADR architect-blockable is the human's to say. ADR-016 and ADR-028 recorded it at acceptance.
+- O1 to O7 are open for MP-1's preregistration and are not settled here.
