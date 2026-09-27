@@ -719,3 +719,7 @@ patch-level bumps — is recorded as a precedent, not here: `PRECEDENTS.md` P-03
   semantically (both sides' node changes kept), regenerate (`queue.mjs`, `health.mjs`, `site.mjs`),
   `verify.mjs`, commit, push, CI. Applied first to PRs #90 and #91 on 2026-09-19 (`AUTONOMY.md` §2 carries
   the mechanic).
+
+## Amendment 4 to the Custodian role — the lease id is the session id (2026-09-26, appended on the human's ruling of question round 27, item 6; appended here so that no line a record cites above it moves)
+
+- **The lease id is `$CLAUDE_CODE_SESSION_ID`**, the value the hooks receive on stdin as `session_id` (RULED 2026-09-26 — question round 27, item 6). "The lease and handover" above asks for a unique session id; this is that id. The Stop hook allows the stop unless the lease's first line is `lease: <id> …` with `<id>` equal to its `session_id` (`AUTONOMY.md` §24, once PR #131 lands), so a lease written with any other id silently disables the hook's continuation.

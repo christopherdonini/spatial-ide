@@ -8,10 +8,14 @@ import { describe, expect, it } from "vitest";
 
 import { SkpCallError } from "../skp/client";
 import type { SkpError } from "../skp/types";
-import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 import {
-  isSourceChangedRefusal,
-  isSourceChangedTerminal,
+  REAL_SOURCE_CHANGED_TERMINAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL,
+} from "../testUtils/terminalShapes";
+import {
+  isSessionEndedRefusal,
+  isSessionEndedTerminal,
   LiveTicketSet,
   refusalDetailOf,
 } from "./liveTicketSet";
@@ -64,12 +68,12 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
     expect(live.isLive("sh_b")).toBe(true);
   });
 
-  // Mutation: change `isSourceChangedTerminal` to search the detail for the words "source" and
+  // Mutation: change `isSessionEndedTerminal` to search the detail for the words "source" and
   // "changed". Expected failure: "recognises the session-ending terminal by its typed code and
   // not by its wording" fails on its prose case.
   it("recognises the session-ending terminal by its typed code and not by its wording", () => {
     expect(
-      isSourceChangedTerminal({
+      isSessionEndedTerminal({
         kind: "ProducerFailed",
         // The literal, not a shared constant: the code is spelled independently here and in
         // `kernel/src/skp.rs`'s `error_of` table, so the two agreeing is evidence rather than
@@ -78,11 +82,25 @@ describe("the live-ticket mirror of the dataset-session generation", () => {
       })
     ).toBe(true);
     // An ordinary cancel is not a source change -- the whole point of §13 C rule (ii).
-    expect(isSourceChangedTerminal({ kind: "Cancelled", detail: "cancelled" })).toBe(false);
+    expect(isSessionEndedTerminal({ kind: "Cancelled", detail: "cancelled" })).toBe(false);
     // And prose that merely mentions a change is not the code.
     expect(
-      isSourceChangedTerminal({ kind: "ProducerFailed", detail: "engine.query: the source changed" })
+      isSessionEndedTerminal({ kind: "ProducerFailed", detail: "engine.query: the source changed" })
     ).toBe(false);
+  });
+
+  // `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d: the predicate's own rename adds a second
+  // session-ending code, the advisory watch's coverage loss -- never `engine.source_changed`
+  // (block-on-sight 3). Built from the kernel-pinned bytes (`testUtils/terminalShapes.ts`), the
+  // same discipline the source-changed case above already follows.
+  // Mutation: drop the `SOURCE_COVERAGE_LOST_CODE` disjunct from `isSessionEndedTerminal`. Expected
+  // failure: the first assertion below fails (`true` expected, function now returns `false`).
+  it("also recognises the coverage-lost terminal, by its own distinct code", () => {
+    expect(
+      isSessionEndedTerminal({ kind: "ProducerFailed", detail: REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL })
+    ).toBe(true);
+    // Never conflated with the source-changed code -- the two are typed separately end to end.
+    expect(REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL.startsWith("engine.source_changed")).toBe(false);
   });
 
   // Mutation: add a `dataset_session_generation` field to `LiveTicketSet`. Expected failure:
@@ -118,17 +136,17 @@ describe("the pre-check refusal, and the one shape both routes carry", () => {
   }
 
   // RECORDED MUTATION for "matches the real thrown refusal on its code, never on its prose": change
-  // `isSourceChangedRefusal` to test `err.message.includes("source file changed")`. Expected
+  // `isSessionEndedRefusal` to test `err.message.includes("source file changed")`. Expected
   // failure: that test fails on the neighbouring-code assertion -- a refusal whose prose happens to
   // quote the sentence would match, and the code-carrying one whose wording changes at P6 would
   // stop matching.
   // OBSERVED: FAILED -- `AssertionError: expected true to be false`.
   it("matches the real thrown refusal on its code, never on its prose", () => {
-    expect(isSourceChangedRefusal(new SkpCallError(realSourceChangedError()))).toBe(true);
+    expect(isSessionEndedRefusal(new SkpCallError(realSourceChangedError()))).toBe(true);
 
     // A neighbouring engine refusal, and a non-SKP throw, are both false.
     expect(
-      isSourceChangedRefusal(
+      isSessionEndedRefusal(
         new SkpCallError({
           code: "engine.connections_exhausted",
           message: "refused: the source file changed while it was open (quoted in prose)",
@@ -136,8 +154,17 @@ describe("the pre-check refusal, and the one shape both routes carry", () => {
         })
       )
     ).toBe(false);
-    expect(isSourceChangedRefusal(new Error("network died"))).toBe(false);
-    expect(isSourceChangedRefusal(null)).toBe(false);
+    expect(isSessionEndedRefusal(new Error("network died"))).toBe(false);
+    expect(isSessionEndedRefusal(null)).toBe(false);
+  });
+
+  // Mutation: drop the `SOURCE_COVERAGE_LOST_CODE` disjunct from `isSessionEndedRefusal`. Expected
+  // failure: the assertion below fails (`true` expected, function now returns `false`).
+  it("also matches the real thrown coverage-lost refusal, by its own distinct code", () => {
+    const [code, message] = REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL.split(/: (.*)/s);
+    expect(
+      isSessionEndedRefusal(new SkpCallError({ code, message, fields: {} }))
+    ).toBe(true);
   });
 
   // RECORDED MUTATION for "the pre-check refusal and the post-check terminal are the same string":
@@ -150,7 +177,7 @@ describe("the pre-check refusal, and the one shape both routes carry", () => {
     const thrown = new SkpCallError(realSourceChangedError());
     expect(refusalDetailOf(thrown)).toBe(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
     // Which means the terminal matcher recognises it too: one predicate, both routes.
-    expect(isSourceChangedTerminal({ kind: "ProducerFailed", detail: refusalDetailOf(thrown) })).toBe(
+    expect(isSessionEndedTerminal({ kind: "ProducerFailed", detail: refusalDetailOf(thrown) })).toBe(
       true
     );
   });

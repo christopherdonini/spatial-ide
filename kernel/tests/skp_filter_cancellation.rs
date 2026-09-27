@@ -21,11 +21,13 @@ use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::{wire, RunningDataPlane};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::trace::{self, TraceKey};
-use spatial_kernel::skp::{SkpHost, StreamRegistry};
+use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
 use spatial_skp::v0::{DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
+
+mod watch_support;
 
 const RECV_DEADLINE: Duration = Duration::from_secs(60);
 
@@ -125,7 +127,7 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     let catalog = Arc::new(Catalog::new());
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone());
+    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
 
     assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
     let guard = trace::start(TraceKey {

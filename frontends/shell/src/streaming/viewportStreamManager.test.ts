@@ -16,7 +16,12 @@ vi.mock("./adapterWs", () => ({ startStream: startStreamMock }));
 import { debounce } from "./debounce";
 import type { StreamSink } from "./transport";
 import { VIEWPORT_QUERY_MIN_INTERVAL_MS, ViewportStreamManager } from "./viewportStreamManager";
-import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
+import {
+  REAL_SOURCE_CHANGED_TERMINAL_DETAIL,
+  REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL,
+} from "../testUtils/terminalShapes";
+import { dispatchSessionEndedToOwner, endSessionForDataset, routeDatasetSessionEndedEvent } from "../App";
+import type { DatasetSessionEnded } from "../skp/types";
 
 function mockStream(handle: string) {
   viewportQueryMock.mockResolvedValueOnce({ stream: handle, expires_in_ms: 30_000 });
@@ -32,6 +37,10 @@ function deferred<T>() {
     resolve = r;
   });
   return { promise, resolve };
+}
+
+function flushMicrotasks(): Promise<void> {
+  return new Promise((r) => setTimeout(r, 0));
 }
 
 describe("ViewportStreamManager (supersede-on-pan, D3.7)", () => {
@@ -631,7 +640,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   }
 
   /** Mutation recorded in-source: dropping the `terminal_detail_of` prefix kernel-side (so the
-   * detail is `Display` text alone) makes `isSourceChangedTerminal` false and fails every
+   * detail is `Display` text alone) makes `isSessionEndedTerminal` false and fails every
    * assertion below -- which is exactly the defect attempt 1 shipped. */
   it("drops its tickets, refuses further requests, and returns session-ended", async () => {
     mockStream("sh_a");
@@ -684,7 +693,7 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
   /** An ordinary cancel is NOT a source change -- §13 C rule (ii), on the client side. A pan that
    * supersedes must not look like a file that changed.
    *
-   * Mutation recorded in-source: relaxing `isSourceChangedTerminal` to a substring search over the
+   * Mutation recorded in-source: relaxing `isSessionEndedTerminal` to a substring search over the
    * whole detail, or matching on the prose instead of the code, breaks this. */
   it("an ordinary cancelled terminal does not end the session", async () => {
     mockStream("sh_a");
@@ -749,6 +758,296 @@ describe("ViewportStreamManager on a source-changed terminal (boundary 4)", () =
     expect(onSuperseded).toHaveBeenCalledWith("sh_a");
     expect(onSessionEnded).toHaveBeenCalledTimes(1);
     expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH3: the same terminal-route ending, on the
+   * advisory watch's own code -- `isSessionEndedTerminal` (renamed §2d) matches it too.
+   *
+   * RECORDED MUTATION: narrow the terminal handler's guard back to matching only
+   * `engine.source_changed` (the pre-rename `isSourceChangedTerminal`). Expected failure: the
+   * `onSessionEnded` assertion below fails -- it is never called.
+   */
+  it("a coverage-lost terminal ends the session once, exactly as source-changed does", async () => {
+    mockStream("sh_a");
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded: vi.fn(),
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+
+    sinkFor(0).onTerminal({ kind: "ProducerFailed", detail: REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL });
+
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL);
+
+    // Refused until reopen, same as the source-changed route.
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2d, not SH7 (Amendment 4 item 1's own precedent on the
+   * tiled sibling, `tileViewportStreamManager.test.ts`'s "notifySessionEnded ends the session
+   * exactly as a tile terminal does"): the event route into THIS (baseline) manager, added by §2d
+   * -- it did not exist before this piece. Clears residency through `onSuperseded`, exactly as the
+   * terminal route does, and is idempotent with it (the single `sessionEnded` latch).
+   *
+   * RECORDED MUTATION: make `notifySessionEnded` a no-op (`notifySessionEnded(): void {}`).
+   * Expected failure: every assertion below fails -- `onSuperseded`/`onSessionEnded` are never
+   * called and a later `requestViewport` is not refused.
+   */
+  it("notifySessionEnded ends the session exactly as a terminal does", async () => {
+    mockStream("sh_a");
+    const onSuperseded = vi.fn();
+    const onSessionEnded = vi.fn();
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded,
+      onSessionEnded,
+    });
+    await manager.requestViewport(null, null, 1_000);
+    sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
+    onSuperseded.mockClear();
+
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+    expect(onSessionEnded).toHaveBeenCalledWith(
+      "engine.source_coverage_lost: [P6 placeholder] coverage lost"
+    );
+
+    // Idempotent with the terminal route, and refused until reopen.
+    sinkFor(0).onTerminal(sourceChangedTerminal());
+    expect(onSessionEnded).toHaveBeenCalledTimes(1);
+
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH7 (fix-list item 11, reviewer gate-1 B7): the
+   * FULL route -- a real `dataset_session_ended` event through `App.tsx`'s own
+   * `routeDatasetSessionEndedEvent` and `dispatchSessionEndedToOwner`, ending a real
+   * `ViewportStreamManager` with a resident batch, its `onSessionEnded` wired to the exported
+   * `endSessionForDataset`. Distinct from the test just above, which calls
+   * `manager.notifySessionEnded` directly rather than through the event route.
+   *
+   * RECORDED MUTATION (§4's own text for SH7, Amendment 5 item 3): delete this manager's
+   * `notifySessionEnded` call in `dispatchSessionEndedToOwner` (`App.tsx`), keeping the early
+   * `return`. Applied, run and reverted on this branch: `AssertionError: expected "vi.fn()" to be
+   * called 1 times, but got 0 times` on the `onSuperseded` assertion below -- 1 failed.
+   */
+  it("SH7: a matching dataset_session_ended event ends a real baseline manager's session through the full route", async () => {
+    mockStream("sh_a");
+    const onSuperseded = vi.fn();
+    const setSessionEnded = vi.fn();
+    const setHover = vi.fn();
+    let sessionEndedFlag = false;
+    const manager = new ViewportStreamManager({
+      dataset: "ds_x",
+      onBatch: vi.fn(),
+      onSuperseded,
+      onSessionEnded: (detail) =>
+        endSessionForDataset(detail, "ds_x", {
+          getCurrentDataset: () => "ds_x",
+          isAlreadyEnded: () => sessionEndedFlag,
+          setSessionEnded: (refusal) => {
+            sessionEndedFlag = true;
+            setSessionEnded(refusal);
+          },
+          setHover,
+        }),
+    });
+    await manager.requestViewport(null, null, 1_000);
+    sinkFor(0).onBatch(new Uint8Array([1, 2, 3]), true);
+    onSuperseded.mockClear();
+
+    const event: DatasetSessionEnded = { session: "sr_" + "a".repeat(32), reason: "coverage-lost" };
+    const endSessionDirectly = vi.fn();
+    routeDatasetSessionEndedEvent(event, {
+      admittedSession: event.session,
+      admittedDataset: "ds_x",
+      dispatch: (reason, forDataset) =>
+        dispatchSessionEndedToOwner(reason, forDataset, {
+          baseline: manager,
+          candidate: null,
+          endSessionDirectly,
+        }),
+      logUnknownSessionDrop: vi.fn(),
+    });
+
+    expect(onSuperseded).toHaveBeenCalledTimes(1);
+    expect(onSuperseded).toHaveBeenCalledWith("sh_a");
+    expect(setSessionEnded).toHaveBeenCalledTimes(1);
+    expect(setHover).toHaveBeenCalledWith({ kind: "session-ended" });
+    expect(endSessionDirectly).not.toHaveBeenCalled();
+
+    // Refused until reopen, same as the direct-call test above.
+    viewportQueryMock.mockClear();
+    const outcome = await manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(viewportQueryMock).not.toHaveBeenCalled();
+  });
+
+  /**
+   * `engine/SOURCE-WATCHER-PREREGISTRATION.md` §4, SH10: after an event-ended session, a batch on a
+   * retired ticket is dropped -- `notifySessionEnded` invalidates `liveTickets` exactly as the
+   * terminal route does.
+   *
+   * RECORDED MUTATION: skip `this.liveTickets.invalidate()` in `endSession` (called by both
+   * `notifySessionEnded` and the terminal route). Expected failure: the assertion below fails --
+   * the late batch reaches `onBatch` a second time.
+   */
+  it("after an event-ended session, a batch on a retired ticket is dropped (SH10)", async () => {
+    mockStream("sh_a");
+    const onBatch = vi.fn();
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch, onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    const sink = sinkFor(0);
+    sink.onBatch(new Uint8Array([1, 2, 3]), true);
+    expect(onBatch).toHaveBeenCalledTimes(1);
+
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+    onBatch.mockClear();
+    // The old socket delivering late, on the still-registered sink.
+    sink.onBatch(new Uint8Array([4, 5, 6]), true);
+    expect(onBatch).not.toHaveBeenCalled();
+  });
+
+  /**
+   * **Amendment 4 item 1 (the wave-1 fold-in of Finding A2-1), SH12.** A late-minted ticket,
+   * resolved AFTER another stream's own terminal already set the `sessionEnded` latch, must never
+   * be admitted -- the guard immediately after `viewportQuery` reads the latch before comparing
+   * generations.
+   *
+   * RECORDED MUTATION (SH12, registered): the guard after `viewportQuery` compares generations only
+   * (drop its `if (this.sessionEnded) { ...; return { kind: "session-ended" }; }` block). Observed
+   * failure (performed on this branch, then reverted): the `outcome` itself still reads
+   * `{kind: "session-ended"}` -- the SECOND guard (after `dataPlaneAttach`, untouched by this
+   * mutation) still catches it -- but the `dataPlaneAttachMock` assertion below fails: with the
+   * first guard gone, the mutated code proceeds past the (unaffected) generation check, admits the
+   * late ticket to `liveTickets`, and reaches `dataPlaneAttach` before the second guard turns it
+   * back. The two guards are therefore each independently load-bearing, which is exactly what SH12
+   * (this one) and SH14 (below, the second guard alone) each pin.
+   */
+  it("SH12: a viewportQuery pending when another stream's terminal ends the session resolves session-ended", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+    const firstSink = sinkFor(0);
+
+    // The second call's own `supersedeCurrent` cancels "sh_a" and clears `currentStreamHandle`
+    // before minting -- this is the same manager, so a second in-flight ticket can only exist this
+    // way. Its own `viewportQuery` is left pending (a deferred, never yet resolved).
+    const pending = deferred<{ stream: string; expires_in_ms: number }>();
+    viewportQueryMock.mockReset().mockReturnValueOnce(pending.promise);
+    dataPlaneAttachMock.mockClear();
+    startStreamMock.mockClear();
+    const outcomePromise = manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+    // SH12's case, another stream's terminal ending the session, while the mint above is still pending -- the
+    // first stream's own terminal, which reaches `endSession` regardless of self-cancel status
+    // (the self-cancel suppression only gates `opts.onTerminal`, never the session-ended check).
+    firstSink.onTerminal(sourceChangedTerminal());
+
+    // Only now does the late mint resolve.
+    pending.resolve({ stream: "sh_late", expires_in_ms: 30_000 });
+    const outcome = await outcomePromise;
+
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(cancelMock).toHaveBeenCalledWith("sh_late");
+    expect(dataPlaneAttachMock).not.toHaveBeenCalled();
+    expect(startStreamMock).not.toHaveBeenCalled();
+    expect(manager.activeStreamHandle).not.toBe("sh_late");
+    expect(manager.activeStreamHandle).toBeNull();
+  });
+
+  /**
+   * **Amendment 4 item 1, SH13.** The same window as SH12, with the end delivered by the event
+   * route (`notifySessionEnded`) instead of a terminal -- the same assertions, proving both routes
+   * into `endSession` are seen by the same guard.
+   *
+   * RECORDED MUTATION (SH13, registered): `notifySessionEnded` invalidates, clears and notifies
+   * without setting the latch (`this.sessionEnded = true` dropped from its body, the other four
+   * lines kept). Observed failure (performed on this branch, then reverted): the outcome assertion
+   * failed -- `{kind: "issued", streamHandle: "sh_late"}` instead of `{kind: "session-ended"}`: with
+   * the latch never set, the guard reads `false`, the generation check passes (nothing else bumped
+   * `this.generation`), and the late ticket is admitted and started exactly as an ordinary
+   * successful mint would be.
+   */
+  // Mutation: see RECORDED MUTATION (SH13, registered) above.
+  it("SH13: the same window, ended by the event route (notifySessionEnded)", async () => {
+    mockStream("sh_a");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+    await manager.requestViewport(null, null, 1_000);
+
+    const pending = deferred<{ stream: string; expires_in_ms: number }>();
+    viewportQueryMock.mockReset().mockReturnValueOnce(pending.promise);
+    dataPlaneAttachMock.mockClear();
+    startStreamMock.mockClear();
+    const outcomePromise = manager.requestViewport(null, null, 1_000 + VIEWPORT_QUERY_MIN_INTERVAL_MS + 1);
+
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+
+    pending.resolve({ stream: "sh_late", expires_in_ms: 30_000 });
+    const outcome = await outcomePromise;
+
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(cancelMock).toHaveBeenCalledWith("sh_late");
+    expect(dataPlaneAttachMock).not.toHaveBeenCalled();
+    expect(startStreamMock).not.toHaveBeenCalled();
+    expect(manager.activeStreamHandle).toBeNull();
+  });
+
+  /**
+   * **Amendment 4 item 1, SH14.** The end lands while `dataPlaneAttach` is pending, i.e. AFTER the
+   * ticket has already been admitted to `liveTickets` and assigned to `currentStreamHandle`/
+   * `residentStreamHandle` -- the second guard, which must undo both.
+   *
+   * RECORDED MUTATION (SH14, registered): the guard after `dataPlaneAttach` compares generations
+   * only (drop its own `if (this.sessionEnded) { ...; return { kind: "session-ended" }; }` block).
+   * Observed failure (performed on this branch, then reverted): the outcome assertion failed --
+   * `{kind: "issued", streamHandle: "sh_late"}` instead of `{kind: "session-ended"}`, since nothing
+   * else in this scenario bumps `this.generation` before `dataPlaneAttach` resolves, so the
+   * unaffected generation check alone lets the mint through to `startStream`.
+   */
+  // Mutation: see RECORDED MUTATION (SH14, registered) above.
+  it("SH14: the end lands while dataPlaneAttach is pending", async () => {
+    mockStream("sh_late");
+    const manager = new ViewportStreamManager({ dataset: "ds_x", onBatch: vi.fn(), onSuperseded: vi.fn() });
+
+    const pendingAttach = deferred<{ url: string; subprotocols: string[] }>();
+    dataPlaneAttachMock.mockReset().mockReturnValueOnce(pendingAttach.promise);
+    const outcomePromise = manager.requestViewport(null, null, 1_000);
+
+    // Let `requestViewport` actually reach the pending `dataPlaneAttach` await -- past the first
+    // guard, past admission -- before the end lands. Without this, `notifySessionEnded` (called
+    // synchronously right after invoking `requestViewport`, before its own first `await` yields
+    // back) would set the latch before EITHER guard has run, and the FIRST guard would catch it
+    // instead, never exercising the second guard's own code at all.
+    await flushMicrotasks();
+    expect(manager.activeStreamHandle).toBe("sh_late"); // admitted already, mid-attach
+    manager.notifySessionEnded("engine.source_coverage_lost: [P6 placeholder] coverage lost");
+
+    pendingAttach.resolve({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    const outcome = await outcomePromise;
+
+    expect(outcome).toEqual({ kind: "session-ended" });
+    expect(cancelMock).toHaveBeenCalledWith("sh_late");
+    expect(startStreamMock).not.toHaveBeenCalled();
+    expect(manager.activeStreamHandle).toBeNull();
   });
 
   /**
