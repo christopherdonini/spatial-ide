@@ -454,3 +454,18 @@ References and hashes only (the record cap, `state/directives/2026-09-18-record-
 11. **Class 1, routed and not done.** Two items go to PLAN node `kernel-close-races-followups` (proposed):
     - `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:62-64 @ d4245fe sha256:b3899e2d9fa44d7539e2614513d03c10932212e99116f2cf198461408d95ee97`;
     - the shifted cites in B1's comments (Amendment 1, 1.4).
+
+### Amendment 3 — 2026-09-27, post-result: record correction after gate 1 (record round 1 of 2)
+
+Made after gate 1's reports were seen: `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-architect.md` (F1) and `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-reviewer.md` (D1, D2). No code changes. Written by the custodian.
+
+1. **Class 1, a withdrawal row** (the reviewer's D1; round 15 (g)). §2e item 4 claims the test this piece deletes, and that claim binds once the node is done. The row below withdraws it:
+
+- withdrawn-test: `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md:173` @ d4245feaef1ed94a4947bd2b2d1df9cc91a1a610 sha256:031d3e86cedbb35e45658ea006e0e23160d1291eb40c403ab5b91b92d68c8242; ruling: round 23, item 2; carrier: round 23, item 2
+
+2. **Class 3, Amendment 2 row 10's second bullet** (the architect's F1, the reviewer's D2; the record cap, item (1)).
+   - The defect: that bullet restates the table that row 10's first bullet pins.
+   - The corrected reference is that pin: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:230-258 @ bfb436d sha256:4be31d1b352af93077a5acfe817f0c786458e53f78dd4e2f5d513cc35846b073`.
+   - The proof is the span itself.
+
+**Superseded:** Amendment 2, row 10, second bullet → row 10's first-bullet reference.
