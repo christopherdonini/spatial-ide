@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `efc8ec7d7b2676086a8fc3da73a8473a64632721044cf2b403f2f185e006a6d3`) at `2026-09-27T16:33:14.243Z`.
+Generated from `PLAN.yaml` (sha256 `3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf3231640959483c8012e6`) at `2026-09-27T18:37:25.264Z`.
 
 ## 1. Next
 
@@ -23,6 +23,7 @@ Generated from `PLAN.yaml` (sha256 `efc8ec7d7b2676086a8fc3da73a8473a64632721044c
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
+- **b1-post-merge-pins** — B1's words-form references pinned at a main commit after its merge — blocked by: b1-engine-kernel-half
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
@@ -58,6 +59,8 @@ Generated from `PLAN.yaml` (sha256 `efc8ec7d7b2676086a8fc3da73a8473a64632721044c
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (phase `prototype`) — never queued until placed
 - **verify-cites-test-temp-dirs** — verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c)) (phase `prototype`) — never queued until placed
 - **dco-hook-merge-skip** — The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1) (phase `prototype`) — never queued until placed
+- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (phase `prototype`) — never queued until placed
+- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (phase `prototype`) — never queued until placed
 - **exposure-scan-followups** — The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment (phase `prototype`) — never queued until placed
 - **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2) (phase `prototype`) — never queued until placed
 - **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
