@@ -89,10 +89,13 @@ pub const MAX_QUEUED_BATCHES: usize = 2;
 /// after the cut.
 ///
 /// **What "identical either way" now means, on the live projected stream.** H3's second clause is
-/// false for nullable columns at `arrow-ipc` 58.4.0 (Amendment 5, row 5.1 — R-E1's probe: a
-/// byte-aligned nullable `Utf8` slice carrying a NULL, at a length not a multiple of 8, writes
-/// different IPC bytes from its compacted copy, in the validity bitmap's padding bits). So this
-/// narrows to **decoded equality** — values, and validity within the array's length — never byte
+/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
+/// that is not a multiple of 8: the IPC bytes of the slice and of its compacted copy differ in the
+/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
+/// 5.1, R-E1's probe), and for a non-null `Boolean`'s values bitmap at offset/length 8/3, 0/10 and
+/// 40/20, with the bytes equal at the unaligned 3/5 (Amendment 8's class-2 row; pinned in the X6
+/// test `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`).
+/// So this narrows to **decoded equality** — values, and validity within the array's length — never byte
 /// identity, on this stream. **Every other plan (publish's included) never reaches this function's
 /// compacting branch at all**: it keeps main's own single-run arm, the slice with no copy, so its
 /// bytes equal main's by construction and no claim about IPC byte identity is made for it, needed,
@@ -568,6 +571,27 @@ pub(crate) struct StreamPlan {
     pub(crate) compact_attribute_retention: bool,
 }
 
+impl StreamPlan {
+    /// The **publish** stream's plan, [`Dataset::stream_for_publish`]'s own, over `envelope` (the
+    /// dataset's envelope widened by the admitted projection). One constructor, so the retention
+    /// this plan declares is the one the X6 test
+    /// (`publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`)
+    /// reads, never a literal of its own.
+    fn for_publish(envelope: BatchEnvelope) -> Self {
+        StreamPlan {
+            index_use: IndexUse::Off,
+            ordering: RowOrdering::ByIdentityAscending,
+            policy: BatchSizePolicy::publish(),
+            envelope,
+            report_bounds: true,
+            // **Route (a) (Amendment 5, row 5.2).** Publish keeps main's own single-run arm —
+            // the slice, no copy — so publish bytes equal main's by construction. See
+            // `StreamPlan::compact_attribute_retention`'s own doc.
+            compact_attribute_retention: false,
+        }
+    }
+}
+
 /// Facts about the DuckDB connection one stream is running on.
 ///
 /// **Instrument surface, on the engine's Rust API only.** These are never SKP fields, never on the
@@ -884,21 +908,7 @@ impl Dataset {
             self.identity().clone(),
             attributes.fields().to_vec(),
         );
-        self.stream_inner(
-            q,
-            cancel,
-            StreamPlan {
-                index_use: IndexUse::Off,
-                ordering: RowOrdering::ByIdentityAscending,
-                policy: BatchSizePolicy::publish(),
-                envelope,
-                report_bounds: true,
-                // **Route (a) (Amendment 5, row 5.2).** Publish keeps main's own single-run arm —
-                // the slice, no copy — so publish bytes equal main's by construction. See
-                // `StreamPlan::compact_attribute_retention`'s own doc.
-                compact_attribute_retention: false,
-            },
-        )
+        self.stream_inner(q, cancel, StreamPlan::for_publish(envelope))
     }
 
     /// Resolve a caller's projection to the fields the stream will actually emit.
@@ -2285,9 +2295,10 @@ fn retain_or_compact_single_run(array: &ArrayRef) -> Result<ArrayRef> {
 ///
 /// **Only ever called on the live projected stream** (route (a), Amendment 5 row 5.2 —
 /// [`retain_or_compact_single_run`]'s own `compact_attribute_retention` gate). H3's second clause is
-/// false for nullable columns at `arrow-ipc` 58.4.0 (Amendment 5, row 5.1): a byte-aligned nullable
-/// `Utf8` slice carrying a NULL, at a length not a multiple of 8, writes different IPC bytes from
-/// this compacted copy, in the validity bitmap's padding bits. The guarantee this function actually
+/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
+/// that is not a multiple of 8: the slice and this compacted copy write different IPC bytes, in the
+/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
+/// 5.1) and for a non-null `Boolean`'s values bitmap (Amendment 8's class-2 row). The guarantee this function actually
 /// gives is **decoded equality** — the same values, and the same validity within the array's own
 /// length — never byte identity, and nothing on this stream claims the latter.
 fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
@@ -2339,15 +2350,18 @@ fn flush(
     let attributes: Vec<ArrayRef> = p
         .attrs
         .iter()
-        // **A single run is kept as a slice rather than copied, unless its retained buffers grow
-        // past a declared factor of what a compacted copy would cost** — ADR-004 asks for copies to
-        // be minimized rather than assumed absent, and a plain slice is the common case. The
-        // consequence, stated because `est_bytes` does not see it: a slice retains its whole DuckDB
-        // chunk's buffers until the batch is dropped, so producer-resident memory can exceed the
-        // estimate by up to one chunk per attribute column. `MAX_ATTRIBUTE_RETENTION_FACTOR`
-        // (condition (3)) bounds that: past the factor the run is compacted by one copy here,
-        // decided after the cut, so the ceiling arithmetic in `MAX_QUEUED_BATCHES` holds instead of
-        // being silently exceeded by however large the source chunk happened to be.
+        // **A single run is kept as a slice rather than copied** — ADR-004 asks for copies to be
+        // minimized rather than assumed absent, and this is the common case. The consequence, stated
+        // because `est_bytes` does not see it: a slice retains its whole DuckDB chunk's buffers
+        // until the batch is dropped, so producer-resident memory can exceed the estimate by up to
+        // one chunk per attribute column. It is bounded by the chunk, so no declared ceiling is
+        // breached, but the ceiling arithmetic in `MAX_QUEUED_BATCHES` does not account for it.
+        //
+        // **On the live projected stream alone** (route (a), Amendment 5 row 5.2),
+        // `MAX_ATTRIBUTE_RETENTION_FACTOR` (condition (3)) bounds that retention: past the factor,
+        // plus 64 bytes per buffer (row 5.3), the run is compacted by one copy here, decided after
+        // the cut, so the live projected stream's producer-resident payload is the bound
+        // `MAX_QUEUED_BATCHES`'s doc states.
         //
         // **Route (a) (Amendment 5, row 5.2): this compaction runs only on the live projected
         // stream.** H3's second clause is false for a nullable, non-8-aligned run at `arrow-ipc`
@@ -2531,15 +2545,10 @@ mod tests {
     /// allocation rounding, `arrow-buffer` 58.4.0) even though nothing is actually over-retained,
     /// and both must be reported as within the declared bound once the 64-bytes-per-buffer
     /// allowance is included.
-    // RECORDED MUTATION: remove compaction (make `retain_or_compact_single_run` always return
-    // `Arc::clone`). Observed: the large-run case below fails by name -- "retained ... bytes ...
-    // over the declared bound" panics at `engine/src/stream.rs:2547` (10 rows out of 20 000 retains
-    // far more than the bound allows). Reverted.
-    // RECORDED MUTATION: remove the `64usize.saturating_mul(buffer_count(&data))` term from
-    // `retain_or_compact_single_run`'s allowance (bound reverts to the plain factor). Observed: the
-    // 1-row `Int64` small-run case fails by name -- "a 1-row Int64 run must not be reported as
-    // needing compaction" panics at `engine/src/stream.rs` (the plain factor alone reports it as
-    // breaching, though nothing is over-retained). Reverted.
+    ///
+    /// **The small runs assert the decision itself (gate 2, R2-B1):** each comes back as the same
+    /// array, uncopied (`Arc::ptr_eq`) — the property the 64-bytes-per-buffer term buys (ADR-004).
+    /// A bound check alone cannot tell: a compacted 1-row `Int64` still rounds to 64 bytes.
     #[test]
     fn every_emitted_attribute_column_retains_at_most_the_declared_factor() {
         let allowance = |data: &arrow::array::ArrayData| -> usize {
@@ -2600,6 +2609,7 @@ mod tests {
         assert_eq!(one_row_data.get_slice_memory_size().unwrap(), 8, "R-E2's own observed figure");
         let one_row: ArrayRef = make_array(one_row_data);
         let kept = retain_or_compact_single_run(&one_row).expect("retention decision");
+        assert!(Arc::ptr_eq(&kept, &one_row), "a 1-row Int64 run must be kept uncopied");
         assert!(
             kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
             "a 1-row Int64 run must not be reported as needing compaction"
@@ -2626,6 +2636,7 @@ mod tests {
         assert_eq!(hundred_rows_data.get_slice_memory_size().unwrap(), 13, "R-E2's own observed figure");
         let hundred_rows: ArrayRef = make_array(hundred_rows_data);
         let kept = retain_or_compact_single_run(&hundred_rows).expect("retention decision");
+        assert!(Arc::ptr_eq(&kept, &hundred_rows), "a 100-row Boolean run must be kept uncopied");
         assert!(
             kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
             "a 100-row Boolean run must not be reported as needing compaction"
@@ -2676,85 +2687,109 @@ mod tests {
         );
     }
 
-    /// X6 (Amendment 5, row 5.6): `publish_emits_a_nullable_byte_aligned_single_run_with_the_
-    /// uncompacted_slices_ipc_bytes` — driven through [`single_run_retention`], the exact decision
-    /// `flush`'s single-run arm makes, with the retention that `stream_for_publish`'s own plan
-    /// declares (`compact_attribute_retention: false`): its IPC bytes must equal the uncompacted
-    /// slice's, whatever the run's own null/alignment shape. Also a non-null `Boolean` probe case at
-    /// the same offset/length.
-    /// Mutation: call `single_run_retention(&run, true)` in place of `single_run_retention(&run,
-    /// false)` — i.e. `flush` ignoring `compact_attribute_retention` and always compacting.
-    // RECORDED MUTATION: in this test, replace `single_run_retention(&run, false)` with
-    // `single_run_retention(&run, true)`. Observed: this test fails by name -- "publish's flush
-    // must never compact: IPC bytes differ at offset 8 len 3" panics at `engine/src/stream.rs`
-    // (the nullable run's compacted copy pads the validity bitmap differently at this
-    // offset/length, per R-E1). Reverted.
+    /// An envelope carrying one declared attribute column `v` of type `ty`, over the file CRS and
+    /// a verified native identity — the shape `stream_for_publish` builds, for tests that assemble
+    /// a batch around one attribute run.
+    fn one_attribute_envelope(ty: DataType) -> BatchEnvelope {
+        BatchEnvelope::with_attributes(
+            crate::crs::DatasetCrs::from_file(
+                "EPSG:2056".into(),
+                Some(include_str!("../tests/data/epsg2056.projjson").to_string()),
+                crate::crs::AxisOrder::EastingNorthing,
+            ),
+            "geometry".into(),
+            crate::identity::DatasetIdentity::new(
+                crate::identity::IdSource::File,
+                crate::identity::IdUniqueness::VerifiedAtOpenFullFile,
+                Some(1),
+                Some(0),
+            ),
+            vec![arrow::datatypes::Field::new("v", ty, true)],
+        )
+    }
+
+    /// The IPC bytes of the batch `TaggedBatch::assemble` builds from `env`, `attribute.len()`
+    /// ids and polygons, and `attribute` as the one attribute column — `flush`'s own assembly.
+    fn assembled_ipc_bytes(env: &BatchEnvelope, attribute: ArrayRef) -> Vec<u8> {
+        let rows = attribute.len();
+        let ids: ArrayRef = Arc::new(UInt64Array::from((0..rows as u64).collect::<Vec<_>>()));
+        let mut b = PolygonBuilder::new();
+        for _ in 0..rows {
+            b.push_wkb(&crate::wkb::encode_polygon(&[vec![
+                [2_600_000.0, 1_200_000.0],
+                [2_600_010.0, 1_200_000.0],
+                [2_600_010.0, 1_200_010.0],
+                [2_600_000.0, 1_200_000.0],
+            ]]))
+            .expect("polygon");
+        }
+        let geometry = build_polygon_array(b).expect("polygon array");
+        let batch = TaggedBatch::assemble(env, ids, geometry, vec![attribute]).expect("assemble");
+        let mut out = Vec::new();
+        batch.write_ipc_into(&mut out).expect("ipc");
+        out
+    }
+
+    /// X6 (Amendment 5, row 5.6): `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`.
+    /// Reads the retention the publish plan declares from the plan's own constructor
+    /// (`StreamPlan::for_publish`, the one `stream_for_publish` calls) and drives
+    /// [`single_run_retention`], `flush`'s single-run decision, with it. The IPC bytes of the
+    /// batch `TaggedBatch::assemble` builds from the kept run must equal those of the batch
+    /// assembled over the uncompacted run.
+    ///
+    /// Each case is a run the live decision would compact (so the plan's flag decides the
+    /// outcome), taken from a 20 000-row source at a byte-aligned offset. The nullable `Utf8` runs
+    /// carry a NULL inside the window with set validity bits after it (R-E1's shape: NULLs at 5,
+    /// 9, 22 and 41). The non-null `Boolean` runs are the H3 probe (Amendment 8's class-2 row):
+    /// the `changes` column records, for each case, whether compaction changed the IPC bytes as
+    /// observed at `arrow-ipc` 58.4.0.
     #[test]
     fn publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes() {
-        let utf8_ipc_bytes = |a: &ArrayRef| -> Vec<u8> {
-            let schema = Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
-                "v",
-                DataType::Utf8,
-                true,
-            )]));
-            let batch = arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
-                .expect("record batch");
-            let mut buf = Vec::new();
-            {
-                let mut w = arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
-                w.write(&batch).expect("write");
-                w.finish().expect("finish");
-            }
-            buf
-        };
-
-        // A nullable `Utf8` run with a NULL inside and set validity bits after it (R-E1's own
-        // shape), tried at three offset/length pairs.
-        let source: ArrayRef = Arc::new(arrow::array::StringArray::from(
-            (0..64)
-                .map(|i| if i == 5 || i == 22 || i == 41 { None } else { Some(format!("v{i}")) })
+        let utf8_source: ArrayRef = Arc::new(arrow::array::StringArray::from(
+            (0..20_000)
+                .map(|i| if [5, 9, 22, 41].contains(&i) { None } else { Some(format!("v{i}")) })
                 .collect::<Vec<_>>(),
         ));
-        for (offset, len) in [(8usize, 3usize), (0, 10), (40, 20)] {
+        let bool_source: ArrayRef =
+            Arc::new(arrow::array::BooleanArray::from((0..20_000).map(|i| i % 2 == 0).collect::<Vec<_>>()));
+
+        // (label, source, offset, length, whether compaction changes the IPC bytes)
+        let cases: [(&str, &ArrayRef, usize, usize, bool); 7] = [
+            ("nullable Utf8", &utf8_source, 8, 3, true),
+            ("nullable Utf8", &utf8_source, 0, 10, true),
+            ("nullable Utf8", &utf8_source, 40, 20, true),
+            ("non-null Boolean", &bool_source, 8, 3, true),
+            ("non-null Boolean", &bool_source, 0, 10, true),
+            ("non-null Boolean", &bool_source, 40, 20, true),
+            ("non-null Boolean", &bool_source, 3, 5, false),
+        ];
+        for (label, source, offset, len, changes) in cases {
             let run = source.slice(offset, len);
-            let uncompacted_bytes = utf8_ipc_bytes(&run);
-            // What publish's own plan declares: `compact_attribute_retention: false`.
-            let kept = single_run_retention(&run, false).expect("retention decision");
+            if label.starts_with("nullable") {
+                assert!(run.null_count() > 0, "{label} {offset}/{len}: the window must carry a NULL");
+            }
+            let plan = StreamPlan::for_publish(one_attribute_envelope(source.data_type().clone()));
+            let uncompacted = assembled_ipc_bytes(&plan.envelope, Arc::clone(&run));
+
+            let live = retain_or_compact_single_run(&run).expect("live retention decision");
+            assert!(
+                !Arc::ptr_eq(&live, &run),
+                "{label} {offset}/{len}: the live decision must compact this run, or the plan's flag decides nothing"
+            );
+            let compacted = assembled_ipc_bytes(&plan.envelope, compact_attribute_slice(&run));
             assert_eq!(
-                utf8_ipc_bytes(&kept),
-                uncompacted_bytes,
-                "publish's flush must never compact: IPC bytes differ at offset {offset} len {len}"
+                compacted != uncompacted,
+                changes,
+                "{label} {offset}/{len}: whether compaction changes the IPC bytes"
+            );
+
+            let kept = single_run_retention(&run, plan.compact_attribute_retention).expect("retention decision");
+            assert_eq!(
+                assembled_ipc_bytes(&plan.envelope, kept),
+                uncompacted,
+                "publish's flush must never compact: {label} IPC bytes differ at offset {offset} len {len}"
             );
         }
-
-        // A non-null `Boolean` probe case at the same offset/length (the architect's own reading:
-        // a `Boolean` values bitmap takes the same writer path — row 5.1's own unprobed claim).
-        let bool_ipc_bytes = |a: &ArrayRef| -> Vec<u8> {
-            let schema = Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
-                "v",
-                DataType::Boolean,
-                false,
-            )]));
-            let batch = arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
-                .expect("record batch");
-            let mut buf = Vec::new();
-            {
-                let mut w = arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
-                w.write(&batch).expect("write");
-                w.finish().expect("finish");
-            }
-            buf
-        };
-        let flags: ArrayRef =
-            Arc::new(arrow::array::BooleanArray::from((0..64).map(|i| i % 2 == 0).collect::<Vec<_>>()));
-        let run = flags.slice(8, 3);
-        let uncompacted_bytes = bool_ipc_bytes(&run);
-        let kept = single_run_retention(&run, false).expect("retention decision");
-        assert_eq!(
-            bool_ipc_bytes(&kept),
-            uncompacted_bytes,
-            "publish's flush must never compact a Boolean run either"
-        );
     }
 
     /// X6 (Amendment 5, row 5.6): `a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_

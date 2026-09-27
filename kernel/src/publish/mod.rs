@@ -487,31 +487,10 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     // (`spatial_engine::attributes::admit_attribute_type`) now admits `Float32` and a
     // dictionary-over-an-admitted-value-type; ADR-017 §4 still refuses both in a *published*
     // bundle, unedited. Run after shared admission (O1), refusing by the column's own **source**
-    // type — `resolve_projection` above already proved every declared name resolves, so this looks
-    // the source type up again rather than carrying it through `AdmittedProjection`, which is
-    // deliberately emitted-type-only (§2.3).
-    //
-    // **X4 (Amendment 5, row 5.6; R's own suggestion): no `.expect()` in publish.** The lookup is
-    // unreachable in practice — `resolve_projection` above already proved every declared name
-    // resolves against this same `file_schema()` — but "unreachable" is a typed refusal here, not a
-    // panic waiting on the day the two ever disagree.
-    for name in &req.attributes {
-        let source_type = ds
-            .file_schema()
-            .fields()
-            .iter()
-            .find(|f| f.name() == name)
-            .map(|f| f.data_type().clone())
-            .ok_or_else(|| {
-                PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
-                    column: name.clone(),
-                    detail: "resolve_projection above already proved this column resolves against \
-                             this same file_schema(); this lookup disagreeing with that one is a \
-                             typed refusal rather than a panic"
-                        .to_string(),
-                })
-            })?;
-        admit_bundle_format(name, &source_type)?;
+    // type, which admission carries beside each emitted field (`AdmittedProjection::source_types`;
+    // C-b): no second lookup into the file schema, and so no refusal for a lookup that could miss.
+    for (field, source_type) in projection.fields().iter().zip(projection.source_types()) {
+        admit_bundle_format(field.name(), source_type)?;
     }
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
         .file_schema()

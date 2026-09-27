@@ -1256,6 +1256,8 @@ mod tests {
     fn every_type_the_filter_namespace_admits_carries_a_surrogate() {
         let cases = [
             ("s", DataType::Utf8),
+            ("large", DataType::LargeUtf8),
+            ("view", DataType::Utf8View),
             ("b", DataType::Boolean),
             ("i8", DataType::Int8),
             ("i16", DataType::Int16),

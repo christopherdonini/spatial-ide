@@ -1449,9 +1449,8 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
     match e {
         ViewportQueryBuildError::ProjectionEmptyList => SkpError::protocol(
             // X17 (Amendment 5, row 5.6): states a kernel fact, never an instruction — the
-            // operator-visible-text rule (§1: "Engine messages state engine facts; owners state
-            // consequences"). The former text told the caller what to send ("omit `columns`");
-            // this states what the wire already is.
+            // operator-visible-text rule (RULED 2026-09-16, round 7, item 1). The former text told
+            // the caller what to send; this states what the wire already is.
             "projection_empty_list",
             "refused: an empty projection (`columns: []`) is not admitted; the wire's own \
              no-projection value is `columns: null`",

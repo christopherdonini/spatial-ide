@@ -469,8 +469,8 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
 
 // ---- X1: the filter refusal text for a still-refused type ------------------------------------
 
-/// X1 (Amendment 5, row 5.6; O2): `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_
-/// byte_for_byte` — a predicate naming `d32` (`Date32`, still refused) through the real
+/// X1 (Amendment 5, row 5.6; O2): `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte`
+/// — a predicate naming `d32` (`Date32`, still refused) through the real
 /// `viewport_query` filter admission path. The expected string is byte-copied by script from main's
 /// rendering at `d6d9862` (`engine/src/attributes.rs`'s former final arm there, wrapped in
 /// `EngineError::AttributeUnpublishable`'s `Display` at that same commit): "refused: `d32` cannot
@@ -551,21 +551,14 @@ fn columns_empty_list_is_refused_never_read_as_null() {
 // `kernel/tests/skp_projection.rs:384`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn describe_projectable_agrees_with_viewport_query_admission_for_every_column() {
-    async fn check_one(handle: DatasetHandle, path: std::path::PathBuf, mapped_to: Option<&str>) {
+    async fn check_one(handle: DatasetHandle, path: std::path::PathBuf, declared: Option<IdentityDeclaration>) {
         let catalog = Arc::new(Catalog::new());
-        match mapped_to {
-            Some(source_column) => {
-                // Mapped: declare the identity explicitly (K-5's "mapped" case, and X3's own
-                // mapped-to-`i64` case over a *native* file that also carries its own, unrelated
-                // `id` column).
+        match declared {
+            Some(declaration) => {
+                // Mapped: declare the identity explicitly (K-5's "mapped" case, and X3's
+                // mapped-to-`i64` case below).
                 catalog
-                    .open_cancellable(
-                        handle.as_str(),
-                        &path,
-                        None,
-                        Some(IdentityDeclaration::new(source_column, "test", "2026-09-27T00:00:00Z")),
-                        &CancelToken::new(),
-                    )
+                    .open_cancellable(handle.as_str(), &path, None, Some(declaration), &CancelToken::new())
                     .expect("open with a declared identity mapping");
             }
             None => {
@@ -620,7 +613,7 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
     check_one(
         "ds_0000000000000000000000000000002d".parse().unwrap(),
         mapped_multitype_fixture("k5-mapped", 20),
-        Some("parcel_key"),
+        Some(IdentityDeclaration::new("parcel_key", "test", "2026-09-27T00:00:00Z")),
     )
     .await;
     // Session-ordinal: the same keyless (`ForeignKeyColumn`) fixture shape, opened with **no**
@@ -632,19 +625,23 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
         None,
     )
     .await;
-    // **X3's own K-5 case, as Amendment 5 row 5.6 names it ("MultiType opened through the product
-    // path with the identity mapped to `i64`"), is not run here — STOP, not improvised.**
-    // `engine/src/fixture.rs::i64_for`'s own doc: "a signed value that is neither `id` nor a simple
-    // affine function of it, so a projection test cannot mistake it for the identity column" — the
-    // generator is deliberately negative-capable. `Catalog::open_cancellable` with `Identity
-    // Declaration::new("i64", ..)` over this fixture throws `IdentityUnusable` at open time
-    // (observed: "holds a negative value ...; identity is carried as u64 and a negative source
-    // value cannot widen into it without changing the value"), so no dataset exists to compare
-    // `describe`'s `projectable` against `viewport_query`'s own admission on. The row cannot be
-    // executed as written against this fixture. The underlying fix it names (`admit_projection_
-    // column` refusing the reserved `id` name even under a mapped identity) is proved instead by
-    // `engine/src/attributes.rs::tests::admit_projection_column_refuses_the_reserved_id_name_even_
-    // under_a_mapped_identity`, over a constructed schema with no negative-value constraint.
+    // **X3 (Amendment 5, row 5.6; gate 2's X3 ruling): the reserved `id` under a mapped identity.**
+    // A native MultiType file, which carries its own `id` column, opened with the identity mapped
+    // to `i64`, so that `id` is a column of the file unrelated to the identity. Opened through the
+    // **engine-API route**, `Catalog::open_cancellable` with `skip_uniqueness_check = true`: the
+    // wire always verifies uniqueness (`kernel/src/skp.rs`'s `host_minted_identity_declaration`),
+    // and verification refuses this fixture, whose `i64` holds negative values
+    // (`engine/src/fixture.rs`'s `i64_for`). Admission does not read uniqueness: `describe`'s
+    // `projectable` and `Dataset::admit_projection` both read only the identity source column's
+    // name, so the skipped scan is not an input to the property this case proves.
+    let mut mapped_to_i64 = IdentityDeclaration::new("i64", "test", "2026-09-27T00:00:00Z");
+    mapped_to_i64.skip_uniqueness_check = true;
+    check_one(
+        "ds_00000000000000000000000000000031".parse().unwrap(),
+        multitype_fixture("k5-x3-mapped-to-i64", 20),
+        Some(mapped_to_i64),
+    )
+    .await;
 }
 
 // ---- K-7: a projection composes with a filter --------------------------------------------------
@@ -762,8 +759,8 @@ fn viewer_license() -> ViewerLicenseInput {
     }
 }
 
-/// K-9 (the Float32 sub-case, live): `publish_refuses_float32_and_dictionary_columns_at_preflight_
-/// as_a_bundle_format_restriction_with_todays_text`, over a real `AttributeMode::MultiType`
+/// K-9 (the Float32 sub-case, live): `publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_format_restriction_with_todays_text`,
+/// over a real `AttributeMode::MultiType`
 /// fixture's `f32` column — reached through the public `preflight_pinless` entry point, exactly as
 /// a real publish call would reach it. The dictionary sub-case is unreachable through
 /// `read_parquet` (H2) and is proven instead as a unit test in `kernel/src/publish/mod.rs`

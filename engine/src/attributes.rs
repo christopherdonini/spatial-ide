@@ -92,17 +92,13 @@ pub fn admit_attribute_type(column: &str, ty: &DataType) -> Result<DataType> {
         | D::UInt64
         | D::Float64
         | D::Float32 => Ok(ty.clone()),
-        D::Dictionary(_, value) => match admit_scalar_value_type(value) {
-            Some(emitted) => Ok(emitted),
-            None => Err(EngineError::AttributeUnpublishable {
-                column: column.to_string(),
-                detail: format!(
-                    "type is {ty}. Its value type, {value}, is not in the admissible set, so the \
-                     dictionary is refused rather than decoded into something a caller did not ask \
-                     for"
-                ),
-            }),
-        },
+        // A dictionary is admitted exactly when its value type is, and is emitted as the value
+        // type. A dictionary over a refused value type falls through to the final arm below and
+        // carries no refusal text of its own (C-a): no owner renders one. `type_check` discards
+        // this detail, `predicate.rs::filterable_column_type` refuses a dictionary by name before
+        // this gate runs, and publish renders its own dictionary text from the carried source type
+        // (`From<ProjectionError> for EngineError`).
+        D::Dictionary(_, value) if is_admitted_scalar(value) => Ok(value.as_ref().clone()),
         // **X1 (Amendment 5, row 5.5; O2).** This is the filter path's own refusal text for a
         // type the filter namespace still refuses (`predicate.rs::filterable_column_type` renders
         // this `Display` verbatim as `FilterError::ColumnNotFilterable`'s `reason`), and F7 / round
@@ -120,28 +116,27 @@ pub fn admit_attribute_type(column: &str, ty: &DataType) -> Result<DataType> {
     }
 }
 
-/// The scalar (non-dictionary) admitted types, checked without minting a refusal — used only to
-/// decide a dictionary's own value type inside [`admit_attribute_type`], which mints the refusal
-/// itself so the dictionary's own source type (not just its value type) appears in the message.
-fn admit_scalar_value_type(ty: &DataType) -> Option<DataType> {
+/// Whether `ty` is one of the scalar (non-dictionary) admitted types — used only to decide a
+/// dictionary's own value type inside [`admit_attribute_type`].
+fn is_admitted_scalar(ty: &DataType) -> bool {
     use DataType as D;
-    match ty {
+    matches!(
+        ty,
         D::Utf8
-        | D::LargeUtf8
-        | D::Utf8View
-        | D::Boolean
-        | D::Int8
-        | D::Int16
-        | D::Int32
-        | D::Int64
-        | D::UInt8
-        | D::UInt16
-        | D::UInt32
-        | D::UInt64
-        | D::Float64
-        | D::Float32 => Some(ty.clone()),
-        _ => None,
-    }
+            | D::LargeUtf8
+            | D::Utf8View
+            | D::Boolean
+            | D::Int8
+            | D::Int16
+            | D::Int32
+            | D::Int64
+            | D::UInt8
+            | D::UInt16
+            | D::UInt32
+            | D::UInt64
+            | D::Float64
+            | D::Float32
+    )
 }
 
 /// Every way a declared projection can be refused, shared by the live `viewport_query` path
@@ -225,11 +220,13 @@ impl std::fmt::Display for ProjectionError {
                 "refused: `{column}` is this dataset's identity column; it already travels as \
                  `id`, and a second identity-shaped column is two names for one fact"
             ),
+            // C-c: the reserved-name fact, true both when the file carries no column named `id`
+            // (O8) and when it carries an unrelated one under a mapped identity (X3). Publish never
+            // renders this arm: its text is `From<ProjectionError> for EngineError`'s, main's bytes.
             Self::ColumnIsIdentity { column, id_column } => write!(
                 f,
-                "refused: `{column}` is the reserved identity column name; this dataset's identity \
-                 is mapped from `{id_column}`, and requesting `{column}` directly would be a second \
-                 name for the same fact"
+                "refused: `{column}` is the name reserved for the identity column in every batch; \
+                 this dataset's identity is mapped from `{id_column}`"
             ),
             Self::ColumnDuplicated { column } => {
                 write!(f, "refused: `{column}` is named twice in the declared projection")
@@ -333,11 +330,21 @@ impl From<ProjectionError> for EngineError {
 #[derive(Clone, Debug, PartialEq)]
 pub struct AdmittedProjection {
     fields: Vec<Field>,
+    /// Each admitted column's **source** type, parallel to `fields` (C-b): what the file holds,
+    /// where `fields` holds what is emitted. The two differ only for a dictionary.
+    source_types: Vec<DataType>,
 }
 
 impl AdmittedProjection {
     pub fn fields(&self) -> &[Field] {
         &self.fields
+    }
+    /// Each admitted column's **source** type, in the same order as [`Self::fields`]. Carried from
+    /// admission so publish's bundle-format restriction (`kernel/src/publish`'s
+    /// `preflight_pinless_parts`, its product caller) refuses by the type the file holds, with no
+    /// second lookup into the file schema (C-b).
+    pub fn source_types(&self) -> &[DataType] {
+        &self.source_types
     }
     pub fn names(&self) -> Vec<String> {
         self.fields.iter().map(|f| f.name().clone()).collect()
@@ -480,6 +487,7 @@ pub fn admit_projection(
     // question and knows nothing about a caller's whole list.
     let mut seen: Vec<&str> = Vec::with_capacity(resolved.len());
     let mut out = Vec::with_capacity(resolved.len());
+    let mut source_types = Vec::with_capacity(resolved.len());
     for field in resolved {
         let name = field.name().as_str();
         check_geometry_and_identity(name, geometry_column, identity_column)?;
@@ -488,8 +496,9 @@ pub fn admit_projection(
         }
         seen.push(name);
         out.push(type_check(field)?);
+        source_types.push(field.data_type().clone());
     }
-    Ok(AdmittedProjection { fields: out })
+    Ok(AdmittedProjection { fields: out, source_types })
 }
 
 #[cfg(test)]
@@ -792,6 +801,77 @@ mod tests {
                     "type is Date32, which is not in the admissible set for a published attribute \
                      (utf8, boolean, the 8/16/32/64-bit integers, float64)",
                     "any other still-refused type must render the final-arm text"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable, got {other:?}"),
+        }
+    }
+
+    /// C-a (gate 2): a dictionary over a refused value type carries no refusal text of its own in
+    /// the gate, since no owner renders one. It takes the final arm's text, with its own source type.
+    #[test]
+    fn a_refused_dictionary_takes_the_final_arms_text_and_no_text_of_its_own() {
+        let ty = DataType::Dictionary(Box::new(DataType::Int8), Box::new(DataType::Date32));
+        match admit_attribute_type("cat", &ty) {
+            Err(EngineError::AttributeUnpublishable { column, detail }) => {
+                assert_eq!(column, "cat");
+                assert_eq!(
+                    detail,
+                    format!(
+                        "type is {ty}, which is not in the admissible set for a published attribute \
+                         (utf8, boolean, the 8/16/32/64-bit integers, float64)"
+                    ),
+                    "a refused dictionary must carry the final arm's text, not a text of its own"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable, got {other:?}"),
+        }
+    }
+
+    /// C-b (gate 2): admission carries each column's **source** type beside its emitted field, so
+    /// publish's bundle-format restriction reads the type the file holds without a second lookup.
+    /// A dictionary is the one type whose source and emitted types differ.
+    #[test]
+    fn an_admitted_projection_carries_each_columns_source_type_beside_its_emitted_field() {
+        let dict = DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8));
+        let schema = Fields::from(vec![
+            Field::new("id", DataType::UInt64, false),
+            Field::new("geometry", DataType::Binary, false),
+            Field::new("cat", dict.clone(), true),
+            Field::new("f32", DataType::Float32, true),
+        ]);
+        let admitted =
+            admit_projection(&["cat".to_string(), "f32".to_string()], &schema, "geometry", "id").unwrap();
+        let emitted: Vec<DataType> = admitted.fields().iter().map(|f| f.data_type().clone()).collect();
+        assert_eq!(emitted, vec![DataType::Utf8, DataType::Float32]);
+        assert_eq!(
+            admitted.source_types(),
+            &[dict, DataType::Float32],
+            "each admitted column must carry the type the file holds, not the emitted one"
+        );
+    }
+
+    /// C-c (gate 2): the reserved `id` under a mapped identity. The wire's text
+    /// (`ProjectionError`'s `Display`, which `kernel::skp::projection_error_of` renders for
+    /// `skp.projection_column_is_identity`) states the reserved-name fact. Publish's text
+    /// (`From<ProjectionError> for EngineError`) stays main's byte for byte (O2); the expected
+    /// detail below is byte-copied by script from main's rendering at `46ff585`
+    /// (`engine/src/attributes.rs`'s identity arm in `admit_projection` there).
+    #[test]
+    fn the_reserved_id_refusal_states_the_reserved_name_on_the_wire_and_keeps_publishs_text() {
+        let e = ProjectionError::ColumnIsIdentity { column: "id".to_string(), id_column: "i64".to_string() };
+        assert_eq!(
+            e.to_string(),
+            "refused: `id` is the name reserved for the identity column in every batch; this \
+             dataset's identity is mapped from `i64`"
+        );
+        match EngineError::from(e) {
+            EngineError::AttributeUnpublishable { column, detail } => {
+                assert_eq!(column, "id");
+                assert_eq!(
+                    detail,
+                    "this is the dataset's identity column; it already travels as `id`, and a second identity-shaped column is two names for one fact",
+                    "publish's identity text must stay main's byte for byte"
                 );
             }
             other => panic!("expected AttributeUnpublishable, got {other:?}"),
