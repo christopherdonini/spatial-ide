@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T10:52:17.733Z",
-  "plan_hash": "e7183ed471aeda92b30ba0834a83a8f6d49cdc449f49a096eb29887377d3cc44",
+  "generated_at": "2026-09-27T13:51:32.260Z",
+  "plan_hash": "a301bd40dab915387528b7473ac33121d3cde1ed0189c5ba09ac7f81930f3561",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4245,7 +4245,7 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/plan/GOVERNANCE-WEEKLY-PROPOSALS-2026-09-26-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 120,
       "generation": 1,
