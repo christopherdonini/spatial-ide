@@ -1,22 +1,23 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3f51df6616d9285155de8b9944d797c25e2800f4c4012bd99eb7e220ec4f60be`) at `2026-09-27T20:56:32.575Z`.
+Generated from `PLAN.yaml` (sha256 `9ce722aab705a4c6072180b4047cb2f2ed2ca63a80de6756b6c6aec768fc1feb`) at `2026-09-27T22:04:06.295Z`.
 
 ## 1. Next
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`)
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`, order 6, budget 480 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
 - **b1-post-merge-pins** — B1's words-form references pinned at a main commit after its merge (lane `governance`, order null, budget 20 min)
 - **exposure-post-merge-pins** — The exposure piece's corrected test-comment rows pinned at a main commit (lane `governance`, order null, budget 20 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 20 min)
 
-- (none)
+### ruling
+
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (20 min)
 
 ## 4. Blocked on dependencies
 
@@ -71,6 +72,9 @@ Generated from `PLAN.yaml` (sha256 `3f51df6616d9285155de8b9944d797c25e2800f4c401
 - **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (phase `prototype`) — never queued until placed
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (phase `prototype`) — never queued until placed
 - **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) (phase `prototype`) — never queued until placed
+- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (phase `prototype`) — never queued until placed
+- **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (phase `prototype`) — never queued until placed
+- **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
