@@ -178,3 +178,18 @@ Round 25, item 2 (the human, 2026-09-26; the rules are `docs/PREREGISTRATION-TEM
 ### Amendment 1 — 2026-09-26, written after the worker's results were seen: T6's fence (class 1)
 
 1. Appendix T's T6 block has no closing `~~~` fence; its text is the single line after its opening fence, the form's last line. Its first application (`c57a1cb`) appended one extra empty line after it, which `dd47574` removes, so `.claude/agents/worker.md` ends in one LF as §2.1 requires.
+
+### Amendment 2 — 2026-09-27, written after both gates' results were seen (`state/gate-log.json`, node governance-weekly-proposals-2026-09-26, attempt 1): §5's first invalidator fired at the merge with main; T2 and T3 take the next free numbers (class 1)
+
+1. Main carries `AUTONOMY.md` §24 (PR #131, merged at 3718a39) and `AI_DEVELOPMENT.md`'s Amendment 4 to the Custodian role (ae92f10, on round 27, item 6), both cited by landed files. Merging main into this branch conflicts on both files' appended ends, so §5's first invalidator holds at the base that merge creates; the merge was aborted with the branch at 4c4ec06. Main's two sections are not renumbered.
+2. Resolution by merge order, as each file already numbers its appended sections: T2 lands as §25 and T3 as Amendment 5 to the Custodian role, each appended under §2.1 after main's section. For those two files the pre-piece state is the main commit the merge brings in (the merge commit's second parent). No rule changes; only the two numbers and the cites to them change.
+3. T1–T6 are still extracted by script from this form at 340f516. Before any comparison or append, the script applies these substitutions in this order and asserts each count; tokens between backticks are tokens, not quotations.
+   - T2: `§24` becomes `§25` (1); then `§23` becomes `§24` (1). Both are in its first line.
+   - T3: `Amendment 4` becomes `Amendment 5` (1); `§24` becomes `§25` (1).
+   - T4 and T5: `§24` becomes `§25` (1 each).
+   - T1 and T6: none. T1's `Amendment 4` names the source-change watcher's form and is not a target.
+4. Files that change beyond Amendment 1's head: `AUTONOMY.md` and `AI_DEVELOPMENT.md` (the merge resolution, item 2); the last line of `.claude/agents/architect.md` and of `.claude/agents/reviewer.md` (the landed T4 and T5, one token each, item 3); this form. No other file of this piece carries a §24 or an Amendment 4 to the Custodian role.
+5. P1–P3 are unaffected. P4 is not edited: its merge base becomes the merged main commit, main's sections are kept byte for byte and this piece's follow them, so 0 deletions still holds; if either file lacks its final LF at that commit, the worker STOPs before resolving, since §2.1's added LF would count as a deletion. §8 items 1 and 2 and §9's byte check read the pre-piece state per item 2 and each T block through item 3. §7's figures are unchanged. The filed gate-1 reports read §24 at f205478 and are not edited (§8 item 6).
+6. If main gains a §25 or an Amendment 5 to the Custodian role before this piece merges, §5's first invalidator fires again and is routed as before.
+
+Superseded index: §2.1's T2 and T3 numbers and Appendix T's T2 and T3 placement headings, by item 2; the T-block comparison of §8 item 2 and §9 for T2–T5, read through item 3.
