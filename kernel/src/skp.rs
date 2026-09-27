@@ -3149,7 +3149,11 @@ mod ticket_drop_under_lock_regression {
     }
 
     /// A real `open_dataset` through `host`, so the test holds the reference `open_dataset` returned.
-    fn open_through(host: &SkpHost, path: &std::path::Path, cancel_key: &str) -> OpenDatasetResponse {
+    fn open_through(
+        host: &SkpHost,
+        path: &std::path::Path,
+        cancel_key: &str,
+    ) -> OpenDatasetResponse {
         host.open_dataset(OpenDatasetRequest {
             skp: SKP_VERSION.to_string(),
             path: path.display().to_string(),
@@ -3172,8 +3176,11 @@ mod ticket_drop_under_lock_regression {
     }
 
     fn close(host: &SkpHost, dataset: DatasetHandle) {
-        host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset })
-            .expect("close");
+        host.close_dataset(CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+        })
+        .expect("close");
     }
 
     /// CR2 (S2). A whole `viewport_query(A)` runs inside `close_dataset(A)`, after
@@ -3189,8 +3196,12 @@ mod ticket_drop_under_lock_regression {
     fn a_viewport_query_inside_close_is_refused_before_it_builds_or_mints() {
         let path = fixture("cr2-query-inside-close");
         let (tx, rx) = super::session_end_channel();
-        let host =
-            Arc::new(SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx));
+        let host = Arc::new(SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        ));
         let open = open_through(&host, &path, "cr2");
         let name = open.dataset.as_str().to_string();
 
@@ -3220,16 +3231,36 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
 
         {
-            let map = host.tickets.tickets.lock().unwrap_or_else(|e| e.into_inner());
-            assert_eq!(map.len(), 1, "only the drop-point ticket: the racing query minted none");
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert_eq!(
+                map.len(),
+                1,
+                "only the drop-point ticket: the racing query minted none"
+            );
         }
         {
             let generations = host.generations();
             let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
-            assert!(!st.live.contains_key(&name), "no live generation for the closed name");
-            assert!(!st.invalidated.contains_key(&name), "no invalidated mark for the closed name");
-            assert!(st.tickets.values().all(|(d, _, _)| d != &name), "no attribution for it");
-            assert!(st.dead_tickets.values().all(|(d, _, _)| d != &name), "no dead ticket for it");
+            assert!(
+                !st.live.contains_key(&name),
+                "no live generation for the closed name"
+            );
+            assert!(
+                !st.invalidated.contains_key(&name),
+                "no invalidated mark for the closed name"
+            );
+            assert!(
+                st.tickets.values().all(|(d, _, _)| d != &name),
+                "no attribution for it"
+            );
+            assert!(
+                st.dead_tickets.values().all(|(d, _, _)| d != &name),
+                "no dead ticket for it"
+            );
         }
         assert!(
             matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
@@ -3245,25 +3276,189 @@ mod ticket_drop_under_lock_regression {
     fn an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing() {
         let path = fixture("cr4-end-after-close");
         let (tx, rx) = super::session_end_channel();
-        let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
         let open = open_through(&host, &path, "cr4");
         let name = open.dataset.as_str().to_string();
 
         close(&host, open.dataset);
 
-        let cancelled = host.invalidator.end_generation(&name, SessionEndReason::ObservedChange);
+        let cancelled = host
+            .invalidator
+            .end_generation(&name, SessionEndReason::ObservedChange);
         assert_eq!(cancelled, 0, "an end after close cancels nothing");
         {
             let generations = host.generations();
             let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
-            assert!(st.invalidated.is_empty(), "a post-close end writes no invalidated mark");
+            assert!(
+                st.invalidated.is_empty(),
+                "a post-close end writes no invalidated mark"
+            );
             assert!(st.live.is_empty(), "a post-close end mints no generation");
-            assert!(st.dead_tickets.is_empty(), "a post-close end records no dead ticket");
+            assert!(
+                st.dead_tickets.is_empty(),
+                "a post-close end records no dead ticket"
+            );
         }
         assert_eq!(host.generations().ended_reason(&name), None);
         assert!(
             matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
             "a post-close end emits nothing"
+        );
+    }
+
+    /// CR1 (S1) — **round 23, item 2's test**: the unheld-reference path does not exist. A query on
+    /// A resolves; `close_dataset(A)` completes; the query continues through its own mint and
+    /// attribute steps (§4 (i): `viewport_query`'s product steps with a real close between them).
+    /// B is a second open that stays open.
+    ///
+    /// REGISTERED MUTATION: restore a minting arm in `live_generation` (a `SessionRef::mint()`
+    /// generation on the no-mark, not-closing arm, returning `Ok`), so the call returns `Ok` and
+    /// this test fails at its `expect_err`.
+    #[test]
+    fn the_close_race_mints_no_generation_so_no_unheld_reference_exists() {
+        let path_a = fixture("cr1-closed");
+        let path_b = fixture("cr1-stays-open");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open_a = open_through(&host, &path_a, "cr1-a");
+        let open_b = open_through(&host, &path_b, "cr1-b");
+
+        let req = unrestricted_query(open_a.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("A resolves while it is open");
+
+        close(&host, open_a.dataset);
+
+        let refused = host
+            .viewport_query_mint(&name, &ds, &req)
+            .and_then(|handle| host.viewport_query_attribute(handle, &name))
+            .expect_err("the query continuing after the close is refused");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert_eq!(st.live.len(), 1, "the only live generation is B's");
+            assert_eq!(
+                st.live
+                    .get(open_b.dataset.as_str())
+                    .map(|(_, session)| session),
+                Some(&open_b.session),
+                "B's generation carries the reference open_dataset returned for B"
+            );
+        }
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert!(map.is_empty(), "the refused query minted no ticket");
+        }
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "the close race emits nothing"
+        );
+    }
+
+    /// CR3 (S3). A ticket minted before `close_dataset(A)` and attributed after it: the close
+    /// cancelled it, and the query's attribution refuses with the close's answer, not a
+    /// session-ended code no end was recorded for (watcher gate-1 advisory 7).
+    ///
+    /// REGISTERED MUTATION: restore `unwrap_or(SessionEndReason::ObservedChange)` on the
+    /// attribute step's `ended_reason`, so the code is `engine.source_changed`.
+    #[test]
+    fn a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset() {
+        let path = fixture("cr3-mint-before-close");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "cr3");
+
+        let req = unrestricted_query(open.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("A resolves while it is open");
+        let handle = host
+            .viewport_query_mint(&name, &ds, &req)
+            .expect("A mints while it is open");
+        let ticket = handle.as_str().to_string();
+
+        close(&host, open.dataset);
+
+        let refused = host
+            .viewport_query_attribute(handle, &name)
+            .expect_err("an attribution after the close refuses");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert!(
+                matches!(
+                    map.get(&ticket),
+                    Some(TicketState::CancelledBeforeRedeem { .. })
+                ),
+                "the close cancelled the ticket before any redemption"
+            );
+        }
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "no end was recorded, so nothing emits"
+        );
+    }
+
+    /// R2 (S5). The registry alone: while a dataset is closing, a new attribution refuses and the
+    /// live check answers `NotOpen`, but an end recorded during the close still finds the live
+    /// generation and carries its reference (ADR-035 Decision 3's close-time routes); after
+    /// `forget_dataset` no closing mark remains.
+    ///
+    /// REGISTERED MUTATION: delete `attribute_ticket`'s `closing` check, so attribution returns
+    /// `true`.
+    #[test]
+    fn a_closing_dataset_refuses_new_attributions_but_still_records_an_end() {
+        let g = GenerationRegistry::new();
+        let session = SessionRef::mint();
+        g.mint_for_open("ds_a", session.clone());
+
+        g.begin_close("ds_a");
+
+        assert!(
+            !g.attribute_ticket("sh_a1", "ds_a"),
+            "a closing dataset attributes nothing"
+        );
+        assert_eq!(g.live_generation("ds_a"), Err(NotLive::NotOpen));
+        let report = g
+            .invalidate("ds_a", SessionEndReason::ObservedChange)
+            .expect("an end during the close still finds the live generation");
+        assert_eq!(report.session, session);
+        assert_eq!(
+            g.live_generation("ds_a"),
+            Err(NotLive::Ended(SessionEndReason::ObservedChange))
+        );
+
+        g.forget_dataset("ds_a");
+        let st = g.inner.lock().unwrap_or_else(|e| e.into_inner());
+        assert!(
+            st.closing.is_empty(),
+            "forget_dataset clears the closing mark"
         );
     }
 }
