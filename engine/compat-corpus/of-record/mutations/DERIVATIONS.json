@@ -1,0 +1,148 @@
+{
+  "generated_by": "scripts/gen_mutations.py",
+  "mutations": [
+    {
+      "path": "mutations/gp-epsg2056-intkey-truncated.parquet",
+      "derived_from": "geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "copy of the base with the last 1024 bytes not written: open(base, 'rb').read()[:-1024] written to mutations/gp-epsg2056-intkey-truncated.parquet. The trailing <uint32 footer length><'PAR1'> is inside the removed range.",
+      "parameters": {
+        "bytes_removed_from_end": 1024
+      },
+      "observed_difference": {
+        "base_bytes": 27132,
+        "mutation_bytes": 26108,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": null,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": false,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": null,
+        "mutation_parquet_open_error": "ArrowInvalid: Parquet magic bytes not found in footer. Either the file is corrupted or this is not a parquet file.",
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "b9c8525fe06800dc6d490366aa67b63a36c86b2b599ae2724e70be816456010c"
+      }
+    },
+    {
+      "path": "mutations/gp-epsg2056-intkey-geojson-invalid.parquet",
+      "derived_from": "geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "pyarrow: pq.read_table(base); the schema key-value metadata key b'geo' replaced with the byte string {\"version\": \"1.1.0\", \"primary_column\": \"geometry\", \"columns\": { (a JSON object that is never closed); pq.write_table(...). All other schema metadata keys are carried over unchanged.",
+      "observed_difference": {
+        "base_bytes": 27132,
+        "mutation_bytes": 21639,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 6313,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": false,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "d197817244ad1f3ca5d3a9d3db6ca1a8f75c575ab2a774fc800069a435cf554c"
+      }
+    },
+    {
+      "path": "mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet",
+      "derived_from": "gdal/ogr2ogr-epsg2056-default.parquet",
+      "derivation": "pyarrow: the base's geo metadata was parsed, its geometry column's covering.bbox members were repointed from the real struct column \"geometry_bbox\" to \"no_such_bbox_column\" (a name that is not in the file's schema), and the file was rewritten with pq.write_table. Nothing else in the geo metadata was changed.",
+      "parameters": {
+        "covering_bbox_column_name_written": "no_such_bbox_column",
+        "covering_in_base": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        }
+      },
+      "observed_difference": {
+        "base_bytes": 27775,
+        "mutation_bytes": 28131,
+        "bytes_changed": true,
+        "base_footer_length_field": 7459,
+        "mutation_footer_length_field": 7673,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "4e8e21d423dcfce1ec98d2cd31bb1c20d839be47669445efaea566f938a35c1a",
+        "mutation_sha256": "17396fe232433efb45f713ababe1c8b96caf0c48d8d3bd14d9d8372c690acc0e"
+      }
+    },
+    {
+      "path": "mutations/gp-epsg2056-intkey-changed-same-size.parquet",
+      "derived_from": "geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "shutil.copy2 of the base, then one byte at absolute offset 9764 XORed with 0x01 in place (0xA2 -> 0xA3), then os.utime to put the base's mtime back. The offset is column chunk 3 (\"geometry\") of row group 0, at its first page offset 4211 plus half its compressed size 11107, i.e. inside the compressed page data and not in the footer.",
+      "parameters": {
+        "byte_offset": 9764,
+        "byte_before": "0xA2",
+        "byte_after": "0xA3",
+        "column_chunk_index": 3,
+        "column_chunk_name": "geometry",
+        "row_group": 0,
+        "first_page_offset": 4211,
+        "total_compressed_size": 11107,
+        "size_equals_base": true,
+        "mtime_ns": 1789016607514504000,
+        "base_mtime_ns": 1789016607514504000,
+        "mtime_ns_restored_to_base": true
+      },
+      "observed_difference": {
+        "base_bytes": 27132,
+        "mutation_bytes": 27132,
+        "bytes_changed": false,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 11806,
+        "footer_length_changed": false,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "65bac6ea0ee1d1c4a31b329175900f6b4c401c90922a7a7cf758331dd857d030"
+      }
+    },
+    {
+      "path": "mutations/gp-epsg2056-intkey-appended.parquet",
+      "derived_from": "geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "pyarrow: t = pq.read_table(base); pq.ParquetWriter(dst, t.schema) with w.write_table(t) called twice, so the file carries the base's rows as row group 1 and the same rows again as row group 2. The schema key-value metadata, including geo, is the base's, carried through pq.read_table unchanged. This is a rewrite, not a byte append: a Parquet footer cannot be appended to in place.",
+      "parameters": {
+        "row_groups_written": 2
+      },
+      "observed_difference": {
+        "base_bytes": 27132,
+        "mutation_bytes": 43046,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 12406,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "b1c63221ec9213c6f18ad083b05e5d441b7a6f246595d52ac10e40361f29f13a"
+      }
+    }
+  ]
+}

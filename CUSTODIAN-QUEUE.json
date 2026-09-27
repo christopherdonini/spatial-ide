@@ -1,65 +1,27 @@
 {
-  "generated_at": "2026-09-27T13:50:18.036Z",
-  "plan_hash": "595e46d5ddeb218ce84ceb1344fe0982e7020014ce5e032b11fb0739aba5b518",
+  "generated_at": "2026-09-27T17:02:52.992Z",
+  "plan_hash": "efc8ec7d7b2676086a8fc3da73a8473a64632721044cf2b403f2f185e006a6d3",
   "priorities_approved": true,
   "next": {
-    "id": "corpus-reproducibility-record",
-    "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
-    "lane": "engine",
+    "id": "kernel-generation-close-races",
+    "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
-    "order": null,
-    "budget_minutes": 180,
+    "order": 1,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-26",
+      "opened": "2026-09-25",
       "done": null
     },
-    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
+    "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md). Intake from the watcher's reviewer gate 2 (state/consults/2026-09-26-source-watcher-gate2-reviewer.md, suggestion S1): a grandparent-thread spawn failure after the parent's watch thread started can leave a recorded signal that the ChecksOnly arm ignores; the descriptor checks remain the backstop."
   },
   "ready": [
-    {
-      "id": "corpus-reproducibility-record",
-      "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
-    },
-    {
-      "id": "data-plane-stream-registry-bound",
-      "title": "The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click."
-    },
     {
       "id": "kernel-generation-close-races",
       "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
@@ -78,25 +40,6 @@
         "done": null
       },
       "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md). Intake from the watcher's reviewer gate 2 (state/consults/2026-09-26-source-watcher-gate2-reviewer.md, suggestion S1): a grandparent-thread spawn failure after the parent's watch thread started can leave a recorded signal that the ChecksOnly arm ignores; the descriptor checks remain the backstop."
-    },
-    {
-      "id": "governance-weekly-proposals-2026-09-26",
-      "title": "The week's five process proposals adopted as one governance docs piece (round 25, item 2)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click."
     },
     {
       "id": "test-claims-landedness-bound",
@@ -764,6 +707,44 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 26, item 4 (c): a pre-existing test in scripts/plan/verify-cites.test.mjs leaves one verify-cites-git- temp directory per run; beside verify-mutation-test-temp-dirs. Found by the governance piece's reviewer gate (state/consults/2026-09-26-governance-weekly-proposals-gate1-reviewer.md, S4)."
+    },
+    {
+      "id": "dco-hook-merge-skip",
+      "title": "The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/)."
+    },
+    {
+      "id": "exposure-scan-followups",
+      "title": "The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window."
     },
     {
       "id": "publish-refusal-codes-and-attempt-lifecycle",

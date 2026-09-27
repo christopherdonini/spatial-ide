@@ -79,6 +79,8 @@ export const KNOWN_EXTS = new Set([
 // scanned whole (markdown/config/text).
 export const CODE_EXTS = new Set(['rs', 'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']);
 
+const ARCHIVED_PREFIXES = ['state/drafts/', 'state/consults/gates/'];
+
 // path:line[-line]. The path token starts with an identifier char (never `/` or `:`) so a match can
 // never begin inside a `://` scheme; it may contain `/ . _ + -` thereafter. The `:` is immediately
 // followed by the first digit.
@@ -287,8 +289,10 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
     const cites = extractCitations(text, { commentsOnly: CODE_EXTS.has(ext) });
     // `state/drafts/` holds drafts and consults tracked as record, not policy (the human,
     // 2026-09-17, round 14, item 4): their cites were written against earlier trees and are
-    // historical, so a broken one is reported as advisory, never gated.
-    const archived = relPath.startsWith('state/drafts/');
+    // historical, so a broken one is reported as advisory, never gated. Files under
+    // `state/consults/gates/` are filed gate reports (round 25, item 2 (b)), each naming the
+    // commit it reviewed, so a broken cite there is advisory too.
+    const archived = ARCHIVED_PREFIXES.some((prefix) => relPath.startsWith(prefix));
     const sink = archived ? advisory : gated;
     for (const cite of cites) {
       cite.relPath = relPath;

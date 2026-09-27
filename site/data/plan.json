@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T13:50:22.580Z",
-  "plan_hash": "595e46d5ddeb218ce84ceb1344fe0982e7020014ce5e032b11fb0739aba5b518",
+  "generated_at": "2026-09-27T17:02:56.795Z",
+  "plan_hash": "efc8ec7d7b2676086a8fc3da73a8473a64632721044cf2b403f2f185e006a6d3",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3995,7 +3995,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": null,
       "depends_on": [
         "data-plane-origin-non-ascii"
@@ -4004,16 +4004,18 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "protocol/data-plane/STREAM-REGISTRY-BOUND-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 130
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click.",
+      "summary": "DONE 2026-09-27 at PR #130 (merged 0c0b680; gate attempt 2, PASS both at a4aa7f3). RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -4049,23 +4051,25 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 132
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared.",
+      "summary": "DONE 2026-09-27 at PR #132 (merged 0d80c70; the scoped read, reviewer PASS at 43e6d04; C8 re-run at each pushed head). RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -4236,23 +4240,25 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "scripts/plan/GOVERNANCE-WEEKLY-PROPOSALS-2026-09-26-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 129
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click.",
+      "summary": "DONE 2026-09-27 at PR #129 (merged 16df0d7; gate attempt 3, reviewer PASS). RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -4381,6 +4387,56 @@
       "summary": "RULED 2026-09-26, question round 26, item 4 (c): a pre-existing test in scripts/plan/verify-cites.test.mjs leaves one verify-cites-git- temp directory per run; beside verify-mutation-test-temp-dirs. Found by the governance piece's reviewer gate (state/consults/2026-09-26-governance-weekly-proposals-gate1-reviewer.md, S4).",
       "dates": {
         "opened": "2026-09-26",
+        "done": null
+      }
+    },
+    {
+      "id": "dco-hook-merge-skip",
+      "title": "The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "exposure-scan-followups",
+      "title": "The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window.",
+      "dates": {
+        "opened": "2026-09-27",
         "done": null
       }
     },
