@@ -1,0 +1,19 @@
+#!/bin/sh
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+#
+# Refuses a commit whose staged added lines or staged path names carry a profile path (this
+# machine's or any other real account's). See
+# scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md 2e. Enable with:
+#   git config core.hooksPath .githooks
+set -eu
+
+hook_dir="$(dirname "$0")"
+if ! command -v node >/dev/null 2>&1; then
+  echo "error: node not found -- the profile-path scan could not run." >&2
+  exit 1
+fi
+if ! node "$hook_dir/../scripts/hooks/profile-path-scan.mjs" --staged; then
+  echo "error: commit refused -- staged content or a staged path name carries a profile path (see the output above)." >&2
+  exit 1
+fi

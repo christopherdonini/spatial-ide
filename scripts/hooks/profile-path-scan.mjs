@@ -61,7 +61,7 @@ function classifySegment(segment, localName) {
   if (
     segment === '' ||
     segment === '...' ||
-    segment === '\u2026' ||
+    segment === '…' ||
     /^public$/i.test(segment) ||
     segment.startsWith('$') ||
     segment.startsWith('%') ||
@@ -152,7 +152,7 @@ function findMatches(text, localName) {
   }
   matches.sort((a, b) => a.rootStart - b.rootStart);
   // Dedupe overlapping matches (the Windows and POSIX patterns can both fire on the same span,
-  // e.g. "C:/Users/alice" is both a drive form and a boundary-valid "/Users/" form).
+  // e.g. "C:/Users/someone" is both a drive form and a boundary-valid "/Users/" form).
   const deduped = [];
   for (const m of matches) {
     const dup = deduped.some((d) => d.segmentStart === m.segmentStart && d.segmentEnd === m.segmentEnd);
@@ -319,10 +319,13 @@ function getMergeParents(cwd) {
 }
 
 function stagedAddedLinesAgainst(parent, cwd) {
-  const diff = runGit(
-    ['diff', '--cached', '--no-color', '--no-ext-diff', '--text', '-U0', '--diff-filter=ACMR', parent],
-    cwd,
-  );
+  // Omit the explicit parent for plain HEAD: on the repository's very first commit HEAD does not
+  // resolve yet, and `git diff --cached` alone already compares the index to the empty tree in
+  // that case. An explicit MERGE_HEAD is always passed (it only exists mid-merge, when HEAD
+  // itself always resolves).
+  const args = ['diff', '--cached', '--no-color', '--no-ext-diff', '--text', '-U0', '--diff-filter=ACMR'];
+  if (parent !== 'HEAD') args.push(parent);
+  const diff = runGit(args, cwd);
   if (diff === null) return null;
   return parseAddedLines(diff);
 }
