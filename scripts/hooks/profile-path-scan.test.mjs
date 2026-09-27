@@ -2,11 +2,11 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
 // Tests for scripts/hooks/profile-path-scan.mjs, per
-// scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md §4. Every profile-shaped string here is
-// built at run time from invented parts, or uses a name from the scanner's own listed sets
-// (INVENTED_NAMES / MACHINE_ACCOUNTS) -- never a literal full path -- per §1 and the piece's
-// output discipline. Each test's `// RECORDED MUTATION:` comment names the mutation applied to
-// prove the test actually exercises the behaviour it claims, per §4's table.
+// scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md §4 and Amendment 4 §4.3. Every
+// profile-shaped string here is built at run time from invented parts, or uses a name from the
+// scanner's own listed sets (INVENTED_NAMES / MACHINE_ACCOUNTS) -- never a literal full path --
+// per §1 and the piece's output discipline. Each test's `// RECORDED MUTATION:` comment names the
+// mutation applied to prove the test actually exercises the behaviour it claims, per §4.3's table.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 import { scanText, checkCanary, redactRoots, redactSegments } from './profile-path-scan.mjs';
 
@@ -55,6 +55,34 @@ function commit(dir, args, env = {}) {
   });
 }
 
+// Builds a hooks directory where `hookName` ('pre-commit' or 'commit-msg') is a byte copy of the
+// shipped hook, the *other* hook is a trivial pass-through, and the scanner at the shipped hook's
+// own relative location (`$(dirname "$0")/../scripts/hooks/profile-path-scan.mjs`) is the given
+// stub source. Used to test each hook's own fail-closed behaviour in isolation from the other
+// hook and from the real scanner.
+function makeIsolatedHookDir(hookName, stubScannerSource) {
+  const root = makeTempDir('profile-scan-isolatedhook-');
+  const hooksSub = path.join(root, '.githooks');
+  const scannerSub = path.join(root, 'scripts', 'hooks');
+  fs.mkdirSync(hooksSub, { recursive: true });
+  fs.mkdirSync(scannerSub, { recursive: true });
+  const other = hookName === 'pre-commit' ? 'commit-msg' : 'pre-commit';
+  fs.copyFileSync(path.join(hooksDir, hookName), path.join(hooksSub, hookName));
+  fs.writeFileSync(path.join(hooksSub, other), '#!/bin/sh\nexit 0\n');
+  try {
+    fs.chmodSync(path.join(hooksSub, hookName), 0o755);
+  } catch {
+    // best-effort on filesystems without POSIX mode bits
+  }
+  try {
+    fs.chmodSync(path.join(hooksSub, other), 0o755);
+  } catch {
+    // best-effort
+  }
+  fs.writeFileSync(path.join(scannerSub, 'profile-path-scan.mjs'), stubScannerSource);
+  return { root, hooksSub };
+}
+
 // ---------------------------------------------------------------------------
 // Core matcher (i), (ii), (iv)
 // ---------------------------------------------------------------------------
@@ -82,9 +110,9 @@ test('refuses_an_8_3_short_form_profile_path', () => {
   assert.equal(r.length, 1);
   assert.equal(r[0].class, '8.3');
   // RECORDED MUTATION: removed the EIGHT_DOT_THREE check from classifySegment (rule (ii)).
-  // Observed: this test failed (0 findings, since a bare 6-letter+digit segment is not on any
-  // permit list either -- wait, it still refuses as unlisted-segment, so the class assertion
-  // failed: 'unlisted-segment' !== '8.3'). Reverted.
+  // Observed: this test failed -- the class assertion failed ('unlisted-segment' !== '8.3'), since
+  // WINDOWS_ROOT's own match (now misclassified) is the one dedup keeps (it is pushed before the
+  // drive-less 8.3 pattern's independent match at the same span). Reverted.
 });
 
 test('refuses_a_posix_home_path_under_users_and_home', () => {
@@ -103,6 +131,23 @@ test('a_posix_root_inside_a_word_is_not_a_path_start', () => {
   assert.equal(scanText(embedded, { localName: 'zz' }).length, 0);
   // RECORDED MUTATION: dropped the `(?<![A-Za-z0-9._~-])` boundary lookbehind from POSIX_ROOT.
   // Observed: this test failed (1 finding instead of 0, the embedded "/home/" now matching).
+  // Reverted.
+});
+
+test('refuses_an_8_3_segment_under_users_without_a_drive', () => {
+  const short = mk('A', 'L', 'I', 'C', 'E') + '~1';
+  const backslash = `${mk('U', 's', 'e', 'r', 's')}\\${short}\\file.txt`;
+  const forward = `${mk('U', 's', 'e', 'r', 's')}/${short}/file.txt`;
+  const r1 = scanText(backslash, { localName: 'zz' });
+  const r2 = scanText(forward, { localName: 'zz' });
+  assert.equal(r1.length, 1);
+  assert.equal(r1[0].class, '8.3');
+  assert.equal(r2.length, 1);
+  assert.equal(r2[0].class, '8.3');
+  // RECORDED MUTATION: confined (ii) to the drive root and the POSIX roots -- required
+  // USERS_EIGHT_DOT_THREE_ROOT's lookbehind to also demand an immediately preceding drive
+  // (`[A-Za-z]:` or `/c`) or POSIX slash, instead of (iv)'s bare boundary. Observed: both
+  // assertions failed (0 findings instead of 1, since neither case has a drive or leading "/").
   // Reverted.
 });
 
@@ -162,56 +207,73 @@ test('permits_the_generic_machine_accounts', () => {
 // ---------------------------------------------------------------------------
 
 test('the_local_profile_is_refused_even_when_listed', () => {
+  // 4.3: now observed against the shipped CLI (--message), not a hand-rolled runner script.
   const dir = makeTempDir('profile-scan-local-');
   try {
-    const script = `import { scanText } from ${JSON.stringify(pathToFileURL(scannerPath).href)};\n` +
-      `const os = await import('node:os'); const path = await import('node:path');\n` +
-      `const localName = path.basename(os.homedir());\n` +
-      `console.log(JSON.stringify(scanText(process.argv[2], { localName })));\n`;
-    const runnerFile = path.join(dir, 'runner.mjs');
-    fs.writeFileSync(runnerFile, script);
     const listedName = 'someone'; // on INVENTED_NAMES, but here it is *also* the spawned HOME/USERPROFILE basename
-    const p = windowsPath('\\', listedName);
-    const result = spawnSync('node', [runnerFile, p], {
+    const msgFile = path.join(dir, 'msg.txt');
+    fs.writeFileSync(msgFile, `bad ${windowsPath('\\', listedName)}\n`);
+    const result = spawnSync('node', [scannerPath, '--message', msgFile], {
       encoding: 'utf8',
       env: { ...process.env, HOME: `C:\\Users\\${listedName}`, USERPROFILE: `C:\\Users\\${listedName}` },
     });
-    const findings = JSON.parse(result.stdout);
-    assert.equal(findings.length, 1);
-    assert.equal(findings[0].class, 'local-profile');
+    assert.equal(result.status, 1);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: removed the localName-equality branch (rule (iii)) from classifySegment,
-  // leaving only the invented/machine-account permit checks. Observed: this test failed (0
-  // findings instead of 1, since 'someone' is on the invented-name list). Reverted.
+  // RECORDED MUTATION: removed the localName-equality branch (rule (iii)) from classifySegment
+  // and from the dedicated (iii) regex in findMatches, leaving only the invented/machine-account
+  // permit checks. Observed: this test failed (exit 0 instead of 1, since 'someone' is on the
+  // invented-name list). Reverted.
 });
 
 test('the_local_profile_override_spares_machine_accounts', () => {
+  // 4.3: now observed against the shipped CLI (--message), not a hand-rolled runner script.
   const dir = makeTempDir('profile-scan-spare-');
   try {
-    const script = `import { scanText } from ${JSON.stringify(pathToFileURL(scannerPath).href)};\n` +
-      `const os = await import('node:os'); const path = await import('node:path');\n` +
-      `const localName = path.basename(os.homedir());\n` +
-      `console.log(JSON.stringify(scanText(process.argv[2], { localName })));\n`;
-    const runnerFile = path.join(dir, 'runner.mjs');
-    fs.writeFileSync(runnerFile, script);
-    const p = `/${mk('h', 'o', 'm', 'e')}/runner/f`;
-    const result = spawnSync('node', [runnerFile, p], {
+    const msgFile = path.join(dir, 'msg.txt');
+    fs.writeFileSync(msgFile, `fine /${mk('h', 'o', 'm', 'e')}/runner/f\n`);
+    const result = spawnSync('node', [scannerPath, '--message', msgFile], {
       encoding: 'utf8',
       env: { ...process.env, HOME: '/home/runner', USERPROFILE: '/home/runner' },
     });
-    const findings = JSON.parse(result.stdout);
-    assert.equal(findings.length, 0);
+    assert.equal(result.status, 0);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: removed the `isListed(MACHINE_ACCOUNTS, segment)` guard from both places
-  // rule (iii) is implemented -- the LOCAL_NAME_ROOT branch of findMatches, and classifySegment's
-  // localName branch (this test's `/home/runner/...` is a POSIX_ROOT match, so classifySegment's
-  // own guard has to be removed too, or it alone rescues the result) -- so (iii) applied to
-  // machine accounts too, per S7's forbidden reading. Observed: this test failed (1 finding
-  // instead of 0, class 'local-profile'). Reverted.
+  // RECORDED MUTATION: removed the `isListed(MACHINE_ACCOUNTS, segment)` guard from every place
+  // rule (iii) is implemented (classifySegment's localName branch and the dedicated (iii) regex
+  // block in findMatches), so (iii) applied to machine accounts too, per S7's forbidden reading.
+  // Observed: this test failed (exit 1 instead of 0). Reverted.
+});
+
+test('the_local_profile_flattened_form_is_refused', () => {
+  // 4.1(f): "Users" or "home", a run of zero or more of \, / and -, then localName, then the end
+  // of the text or a non-alphanumeric character.
+  const localName = mk('f', 'l', 'a', 't', 't', 'e', 'n', 'e', 'd', 'Q');
+  const env = { ...process.env, HOME: `/home/${localName}`, USERPROFILE: `C:\\Users\\${localName}` };
+  const cases = [
+    `${mk('U', 's', 'e', 'r', 's')}-${localName}`,
+    `${mk('U', 's', 'e', 'r', 's')}${localName}`,
+    `${mk('h', 'o', 'm', 'e')}-${localName}-x`,
+  ];
+  for (const text of cases) {
+    const msgFile = path.join(makeTempDir('profile-scan-flat-'), 'msg.txt');
+    fs.mkdirSync(path.dirname(msgFile), { recursive: true });
+    fs.writeFileSync(msgFile, `bad ${text}\n`);
+    try {
+      const result = spawnSync('node', [scannerPath, '--message', msgFile], { encoding: 'utf8', env });
+      assert.equal(result.status, 1, text);
+    } finally {
+      fs.rmSync(path.dirname(msgFile), { recursive: true, force: true });
+    }
+  }
+  // A segment merely extending the local name by a letter or digit is not refused by (iii).
+  const extended = scanText(`${mk('U', 's', 'e', 'r', 's')}-${localName}2`, { localName });
+  assert.equal(extended.length, 0);
+  // RECORDED MUTATION: dropped `-` from (iii)'s separator run (the dedicated regex's
+  // `(?:[\\/-])*` narrowed to `(?:\\{1,2}|\/)*`). Observed: the hyphen-separated cases above
+  // failed (exit 0 instead of 1). Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -242,7 +304,9 @@ test('a_scan_whose_git_read_fails_aborts_loudly', () => {
       encoding: 'utf8',
       env: { ...process.env, GIT_INDEX_FILE: corruptIndex },
     });
-    assert.equal(result.status, 1); // the hook itself exits 1 on any non-zero scanner exit
+    // 4.1(c): the hook now exits with the scanner's own status when it is non-zero -- here 2
+    // (aborted), not the hook's own former fixed 1.
+    assert.equal(result.status, 2);
     assert.match(result.stderr, /aborted/);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -281,6 +345,234 @@ test('redact_segment_keeps_every_byte_but_the_segment', () => {
   // RECORDED MUTATION: in redactSegments, changed the slice bounds to replace from `m.rootStart`
   // instead of `m.segmentStart` (replacing the root, not just the segment). Observed: this
   // test's output-equality assertion failed (the "C:\Users\" prefix was gone too). Reverted.
+});
+
+test('no_printed_path_carries_a_refused_segment', () => {
+  // 4.1(e): every path the CLI prints goes through redactSegments. Exercises a refused staged
+  // path name, a --message argument path, and a --redact-segment argument path, each with the
+  // (invented) local name embedded in the path on disk, and asserts the segment never appears in
+  // stdout or stderr.
+  const localName = mk('n', 'o', 'l', 'e', 'a', 'k', 'Q');
+  const usersWord = mk('U', 's', 'e', 'r', 's');
+  const env = { ...process.env, HOME: `/home/${localName}`, USERPROFILE: `C:\\Users\\${localName}` };
+
+  // (1) a refused staged path name.
+  const dir1 = makeTempDir('profile-scan-noleak-staged-');
+  try {
+    initRepo(dir1);
+    fs.writeFileSync(path.join(dir1, 'init.txt'), 'x\n');
+    git(dir1, ['add', 'init.txt']);
+    let r = commit(dir1, ['-q', '-s', '-m', 'init']);
+    assert.equal(r.status, 0, r.stderr);
+    fs.mkdirSync(path.join(dir1, usersWord, localName), { recursive: true });
+    fs.writeFileSync(path.join(dir1, usersWord, localName, 'note.txt'), 'harmless\n');
+    git(dir1, ['add', '.']);
+    r = commit(dir1, ['-q', '-s', '-m', 'bad name'], env);
+    assert.equal(r.status, 1);
+    assert.doesNotMatch(`${r.stdout}\n${r.stderr}`, new RegExp(localName));
+  } finally {
+    fs.rmSync(dir1, { recursive: true, force: true });
+  }
+
+  // (2) the --message argument's own on-disk path.
+  const dir2 = makeTempDir('profile-scan-noleak-msg-');
+  try {
+    const msgDir = path.join(dir2, usersWord, localName);
+    fs.mkdirSync(msgDir, { recursive: true });
+    const msgFile = path.join(msgDir, 'msg.txt');
+    const otherSeg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'Z');
+    fs.writeFileSync(msgFile, `bad ${windowsPath('\\', otherSeg)}\n`);
+    const result = spawnSync('node', [scannerPath, '--message', msgFile], { encoding: 'utf8', env });
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, new RegExp(localName));
+  } finally {
+    fs.rmSync(dir2, { recursive: true, force: true });
+  }
+
+  // (3) a --redact-segment argument's own on-disk path.
+  const dir3 = makeTempDir('profile-scan-noleak-redact-');
+  try {
+    const targetDir = path.join(dir3, usersWord, localName);
+    fs.mkdirSync(targetDir, { recursive: true });
+    const targetFile = path.join(targetDir, 'note.txt');
+    fs.writeFileSync(targetFile, 'harmless\n');
+    const result = spawnSync('node', [scannerPath, '--redact-segment', targetFile], { encoding: 'utf8', env });
+    assert.equal(result.status, 0);
+    assert.doesNotMatch(`${result.stdout}\n${result.stderr}`, new RegExp(localName));
+  } finally {
+    fs.rmSync(dir3, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: in printFindings, cmdRedact and cmdRedactSegment, printed the raw path
+  // argument/finding file instead of routing it through safePrintablePath/redactSegments.
+  // Observed: all three sub-cases failed (the invented local name appeared in the captured
+  // stdout/stderr). Reverted.
+});
+
+// ---------------------------------------------------------------------------
+// The CLI entry guard (4.1(b))
+// ---------------------------------------------------------------------------
+
+test('the_cli_scans_from_a_path_with_a_space_or_through_a_link', () => {
+  const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
+
+  // A directory whose name has a space.
+  const spaceDir = makeTempDir('profile scan space ');
+  try {
+    const scannerCopy = path.join(spaceDir, 'profile-path-scan.mjs');
+    fs.copyFileSync(scannerPath, scannerCopy);
+    const msgFile = path.join(spaceDir, 'msg.txt');
+    fs.writeFileSync(msgFile, `bad ${windowsPath('\\', seg)}\n`);
+    const result = spawnSync('node', [scannerCopy, '--message', msgFile], { encoding: 'utf8' });
+    assert.equal(result.status, 1, result.stderr);
+  } finally {
+    fs.rmSync(spaceDir, { recursive: true, force: true });
+  }
+
+  // Reached through a directory link (a junction on win32).
+  const realDir = makeTempDir('profile-scan-linktarget-');
+  const linkParent = makeTempDir('profile-scan-linkparent-');
+  try {
+    const scannerCopy = path.join(realDir, 'profile-path-scan.mjs');
+    fs.copyFileSync(scannerPath, scannerCopy);
+    const linkPath = path.join(linkParent, 'via-link');
+    fs.symlinkSync(realDir, linkPath, process.platform === 'win32' ? 'junction' : 'dir');
+    const linkedScanner = path.join(linkPath, 'profile-path-scan.mjs');
+    const msgFile = path.join(realDir, 'msg.txt');
+    fs.writeFileSync(msgFile, `bad ${windowsPath('\\', seg)}\n`);
+    const result = spawnSync('node', [linkedScanner, '--message', msgFile], { encoding: 'utf8' });
+    assert.equal(result.status, 1, result.stderr);
+  } finally {
+    fs.rmSync(linkParent, { recursive: true, force: true });
+    fs.rmSync(realDir, { recursive: true, force: true });
+  }
+
+  // Regression only (win32): a lower-cased drive letter. R saw this correct at 980b10c already.
+  if (process.platform === 'win32' && /^[A-Za-z]:/.test(scannerPath)) {
+    const dir = makeTempDir('profile-scan-lowerdrive-');
+    try {
+      const msgFile = path.join(dir, 'msg.txt');
+      fs.writeFileSync(msgFile, `bad ${windowsPath('\\', seg)}\n`);
+      const lowered = scannerPath[0].toLowerCase() + scannerPath.slice(1);
+      const result = spawnSync('node', [lowered, '--message', msgFile], { encoding: 'utf8' });
+      assert.equal(result.status, 1, result.stderr);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  // RECORDED MUTATION: restored the old `isMain` check (`path.resolve(process.argv[1]) ===
+  // path.resolve(fileURLToPathSafe(import.meta.url))`, with the previous regex-based
+  // fileURLToPathSafe helper that read `new URL(url).pathname` without decoding percent-escapes
+  // and without dereferencing links). Observed: the space-path case failed (status 0 instead of
+  // 1 -- the space was left percent-encoded in the old helper's output, so isMain was false and
+  // main() never ran) and the link case failed the same way (path.resolve does not dereference a
+  // junction). Reverted.
+});
+
+// ---------------------------------------------------------------------------
+// Fail-closed on the declared clean line (4.1(c))
+// ---------------------------------------------------------------------------
+
+test('pre_commit_fails_closed_without_a_clean_line', () => {
+  const { root, hooksSub } = makeIsolatedHookDir('pre-commit', '#!/usr/bin/env node\nprocess.exit(0);\n');
+  const dir = makeTempDir('profile-scan-noclean-pre-');
+  try {
+    git(dir, ['init', '-q']);
+    git(dir, ['config', 'user.email', 'test@example.com']);
+    git(dir, ['config', 'user.name', 'Test']);
+    git(dir, ['config', 'core.hooksPath', hooksSub]);
+    fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+    git(dir, ['add', 'a.txt']);
+    const r = commit(dir, ['-q', '-s', '-m', 'x']);
+    assert.notEqual(r.status, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: in .githooks/pre-commit, reverted to accepting on exit status 0 alone
+  // (dropped the scan_output/CLEAN_LINE comparison, keeping only `if [ "$scan_status" -eq 0 ];
+  // then exit 0; fi`). Observed: this test's commit succeeded (status 0) against a stub scanner
+  // that exits 0 and prints nothing. Reverted.
+});
+
+test('commit_msg_fails_closed_without_a_clean_line', () => {
+  const { root, hooksSub } = makeIsolatedHookDir('commit-msg', '#!/usr/bin/env node\nprocess.exit(0);\n');
+  const dir = makeTempDir('profile-scan-noclean-msg-');
+  try {
+    git(dir, ['init', '-q']);
+    git(dir, ['config', 'user.email', 'test@example.com']);
+    git(dir, ['config', 'user.name', 'Test']);
+    git(dir, ['config', 'core.hooksPath', hooksSub]);
+    fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+    git(dir, ['add', 'a.txt']);
+    const r = commit(dir, ['-q', '-s', '-m', 'x']);
+    assert.notEqual(r.status, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: in .githooks/commit-msg, reverted to accepting on exit status 0 alone
+  // after the DCO block (dropped the scan_output/CLEAN_LINE comparison). Observed: this test's
+  // commit succeeded (status 0) against a stub scanner that exits 0 and prints nothing. Reverted.
+});
+
+test('the_hooks_name_the_scanners_status', () => {
+  const cases = [
+    { exitCode: 2, expected: /aborted/i },
+    { exitCode: 3, expected: /canary/i },
+  ];
+  for (const { exitCode, expected } of cases) {
+    const { root, hooksSub } = makeIsolatedHookDir('pre-commit', `#!/usr/bin/env node\nprocess.exit(${exitCode});\n`);
+    const dir = makeTempDir('profile-scan-status-');
+    try {
+      git(dir, ['init', '-q']);
+      git(dir, ['config', 'user.email', 'test@example.com']);
+      git(dir, ['config', 'user.name', 'Test']);
+      git(dir, ['config', 'core.hooksPath', hooksSub]);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+      git(dir, ['add', 'a.txt']);
+      const r = commit(dir, ['-q', '-s', '-m', 'x']);
+      assert.notEqual(r.status, 0);
+      assert.match(r.stderr, expected);
+      assert.doesNotMatch(r.stderr, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+  // RECORDED MUTATION: in .githooks/pre-commit, collapsed the per-status case statement to a
+  // single generic message ("commit refused -- the profile-path scan did not pass") for every
+  // non-zero status. Observed: both sub-cases failed (the exit-2 case's stderr no longer matched
+  // /aborted/i; the exit-3 case's stderr no longer matched /canary/i). Reverted.
+});
+
+// ---------------------------------------------------------------------------
+// parseAddedLines statefulness (4.1(d))
+// ---------------------------------------------------------------------------
+
+test('an_added_line_beginning_with_plus_plus_is_scanned', () => {
+  const dir = makeTempDir('profile-scan-plusplus-');
+  try {
+    initRepo(dir);
+    fs.writeFileSync(path.join(dir, 'f.txt'), 'base\n');
+    git(dir, ['add', 'f.txt']);
+    let r = commit(dir, ['-q', '-s', '-m', 'base']);
+    assert.equal(r.status, 0, r.stderr);
+
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'Z');
+    // The content itself begins "++ ", so once diffed as an addition the raw diff line begins
+    // "+++ " -- indistinguishable, under the old unconditional check, from a file header line.
+    const badLine = `++ ${windowsPath('\\', seg)}`;
+    fs.appendFileSync(path.join(dir, 'f.txt'), `${badLine}\n`);
+    git(dir, ['add', 'f.txt']);
+    r = commit(dir, ['-q', '-s', '-m', 'adds a line beginning ++']);
+    assert.notEqual(r.status, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: in parseAddedLines, removed the `inFileHeader` state (and its `diff --git`
+  // / first-`@@` bounding), restoring the old unconditional `if (raw.startsWith('+++') ||
+  // raw.startsWith('---')) continue;`. Observed: this test's commit succeeded (status 0 instead
+  // of non-zero) -- the "+++ ..." added line was skipped as if it were a file header. Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -323,9 +615,9 @@ test('pre_commit_scans_added_lines_only', () => {
     const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
     fs.writeFileSync(path.join(dir, 'f.txt'), windowsPath('\\', seg) + '\nkeep\n');
     git(dir, ['add', 'f.txt']);
-    // First commit is unarmed on purpose (nothing staged carries a real risk here yet -- wait,
-    // it does; use a throwaway scanner-free path by committing straight via git without the
-    // hook, to seed history with an already-refused-shaped line that must NOT be rescanned).
+    // The first commit is made unarmed (hooksPath unset), so the profile-shaped seed line lands
+    // in history without being scanned; the point of the test is that the second, armed commit
+    // must not rescan it.
     git(dir, ['config', '--unset', 'core.hooksPath']);
     let r = commit(dir, ['-q', '-s', '-m', 'seed']);
     assert.equal(r.status, 0, r.stderr);
@@ -424,22 +716,16 @@ test('pre_commit_in_a_merge_refuses_only_lines_new_to_every_parent', () => {
 // commit-msg
 // ---------------------------------------------------------------------------
 
-test('commit_msg_refuses_a_profile_path_in_full_and_8_3_form', () => {
-  const dir = makeTempDir('profile-scan-msg-');
+test('a_message_line_below_a_scissors_line_is_scanned', () => {
+  // 4.1(a): `--message` now scans the whole message file. The scissors case moves here, inverted
+  // (980b10c's version expected the line below the cut to be ignored; that was the bug).
+  const dir = makeTempDir('profile-scan-scissors-');
   try {
     initRepo(dir);
     fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
     git(dir, ['add', 'a.txt']);
 
     const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
-    let r = commit(dir, ['-q', '-s', '-m', `bad ${windowsPath('\\', seg)}`]);
-    assert.notEqual(r.status, 0);
-
-    const short = mk('A', 'L', 'I', 'C', 'E') + '~1';
-    r = commit(dir, ['-q', '-s', '-m', `bad ${windowsPath('\\', short)}`]);
-    assert.notEqual(r.status, 0);
-
-    // -F form, and text below the scissors line is ignored.
     const msgFile = path.join(dir, 'msg.txt');
     fs.writeFileSync(
       msgFile,
@@ -447,14 +733,75 @@ test('commit_msg_refuses_a_profile_path_in_full_and_8_3_form', () => {
         `# ------------------------ >8 ------------------------\n` +
         `${windowsPath('\\', seg)}\n`,
     );
-    r = commit(dir, ['-q', '-F', msgFile]);
+    let r = commit(dir, ['-q', '-F', msgFile]);
+    assert.notEqual(r.status, 0);
+
+    // `-m` never triggers git's own scissors cleanup, so a literal scissors-looking line inside a
+    // `-m` message is ordinary text, and any profile path in the message is scanned regardless.
+    r = commit(dir, ['-q', '-s', '-m', `fine\n# ------------------------ >8 ------------------------\n${windowsPath('\\', seg)}`]);
+    assert.notEqual(r.status, 0);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: restored the scissors cut in cmdMessage (findScissorsIndex and
+  // lines.slice(0, cut) before scanning). Observed: both assertions failed (status 0 instead of
+  // non-zero -- the path below the scissors line was no longer scanned in either form). Reverted.
+});
+
+test('commit_msg_refuses_a_profile_path_in_full_and_8_3_form', () => {
+  const dir = makeTempDir('profile-scan-msg-');
+  try {
+    initRepo(dir);
+    fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+    git(dir, ['add', 'a.txt']);
+    let r = commit(dir, ['-q', '-s', '-m', 'init']);
     assert.equal(r.status, 0, r.stderr);
+
+    const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
+    r = commit(dir, ['-q', '-s', '-m', `bad ${windowsPath('\\', seg)}`, '--allow-empty']);
+    assert.notEqual(r.status, 0);
+
+    const short = mk('A', 'L', 'I', 'C', 'E') + '~1';
+    r = commit(dir, ['-q', '-s', '-m', `bad ${windowsPath('\\', short)}`, '--allow-empty']);
+    assert.notEqual(r.status, 0);
+
+    // Two merge cases (4.2): the message of a merge git concludes itself is scanned the same way
+    // a regular commit's message is.
+    git(dir, ['checkout', '-q', '-b', 'other']);
+    fs.writeFileSync(path.join(dir, 'b.txt'), 'x\n');
+    git(dir, ['add', 'b.txt']);
+    r = commit(dir, ['-q', '-s', '-m', 'other adds b']);
+    assert.equal(r.status, 0, r.stderr);
+    git(dir, ['checkout', '-q', 'master']);
+
+    const mergeEnv = {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Test',
+      GIT_AUTHOR_EMAIL: 't@e.com',
+      GIT_COMMITTER_NAME: 'Test',
+      GIT_COMMITTER_EMAIL: 't@e.com',
+    };
+
+    // (a) `git merge --no-ff -m` carrying the path directly.
+    r = spawnSync(
+      'git',
+      ['merge', '--no-ff', '--signoff', '-m', `merge bad ${windowsPath('\\', seg)}`, 'other'],
+      { cwd: dir, encoding: 'utf8', env: mergeEnv },
+    );
+    assert.notEqual(r.status, 0);
+    spawnSync('git', ['merge', '--abort'], { cwd: dir, encoding: 'utf8' });
+
+    // (b) a `--no-commit` merge concluded by `git commit -m` carrying the path.
+    r = spawnSync('git', ['merge', '--no-ff', '--no-commit', 'other'], { cwd: dir, encoding: 'utf8', env: mergeEnv });
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    r = commit(dir, ['-q', '-s', '-m', `merge bad ${windowsPath('\\', seg)}`]);
+    assert.notEqual(r.status, 0);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: removed the scanner invocation block from `.githooks/commit-msg`
-  // (leaving only the DCO check). Observed: this test's first two assertions failed (status 0
-  // instead of non-zero for both profile-shaped messages). Reverted.
+  // (leaving only the DCO check). Observed: all four assertions failed (status 0 instead of
+  // non-zero, for both profile-shaped messages and for both merge cases). Reverted.
 });
 
 test('commit_msg_dco_refusal_is_unchanged', () => {

@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 // ---------------------------------------------------------------------------
 // §2c core matcher
@@ -84,13 +85,13 @@ const WINDOWS_ROOT = /(?<![A-Za-z0-9])(?:[A-Za-z]:|\/c)(?:\\{1,2}|\/)+users(?:\\
 // start: start of text, or after a character outside [A-Za-z0-9._~-].
 const POSIX_ROOT = /(?<![A-Za-z0-9._~-])\/(?:users|home)\//gi;
 
-// 2c (iii): "localName after Users or home, with or without separators." This rule is
-// independent of (i)/(iv)'s path-start boundary -- it exists to catch the local profile's own
-// name landing next to "Users" or "home" in any form (e.g. a quoted 'Users/<name>' with no drive
-// letter and no leading slash), not to detect generic path forms. It only ever fires when the
-// extracted segment equals localName; a non-matching segment produces no finding from this
-// pattern (that's (i)/(iv)'s job, which do carry a path-start boundary).
-const LOCAL_NAME_ROOT = /(?:users|home)(?:\\{1,2}|\/)*/gi;
+// 2c (ii), read to its letter (4.1(g)): an 8.3 segment after "Users" is refused with or without a
+// drive -- either at a path start ((iv)'s boundary) or after a separator, then zero or more
+// separators, then the 8.3 grammar. WINDOWS_ROOT (drive-anchored) and POSIX_ROOT (leading "/")
+// already cover the drive/POSIX-anchored cases; this is the drive-less remainder. The lookbehind
+// is (iv)'s own boundary, which already covers "after a separator" since a separator character is
+// itself outside [A-Za-z0-9._~-].
+const USERS_EIGHT_DOT_THREE_ROOT = /(?<![A-Za-z0-9._~-])users(?:\\{1,2}|\/)*/gi;
 
 function lineNumberAt(text, index) {
   let line = 1;
@@ -127,22 +128,47 @@ function findMatches(text, localName) {
       });
     }
   }
-  // 2c (iii): a cross-cutting rule, independent of the path-start boundary, that only ever fires
-  // when the segment equals localName (see LOCAL_NAME_ROOT above).
-  if (localName) {
-    LOCAL_NAME_ROOT.lastIndex = 0;
+  // 2c (ii)'s drive-less remainder (4.1(g)): an 8.3 segment right after "Users", with no drive.
+  {
+    USERS_EIGHT_DOT_THREE_ROOT.lastIndex = 0;
     let m;
-    while ((m = LOCAL_NAME_ROOT.exec(text)) !== null) {
+    while ((m = USERS_EIGHT_DOT_THREE_ROOT.exec(text)) !== null) {
       const rootStart = m.index;
       const rootEnd = m.index + m[0].length;
       const { segment, end } = extractSegment(text, rootEnd);
-      if (segment.toLowerCase() !== localName.toLowerCase()) continue;
-      if (isListed(MACHINE_ACCOUNTS, segment)) continue; // S7: spared even under the local name
+      if (!EIGHT_DOT_THREE.test(segment)) continue;
       matches.push({
         rootStart,
         rootEnd,
         segmentStart: rootEnd,
         segmentEnd: end,
+        segment,
+        refused: true,
+        formClass: '8.3',
+        line: lineNumberAt(text, rootStart),
+      });
+    }
+  }
+  // 2c (iii), including the flattened form of 4.1(f): "Users" or "home", then a run of zero or
+  // more of \, / and -, then localName (case-insensitive), then the end of the text or a
+  // character that is not a letter or digit. A cross-cutting rule, independent of the path-start
+  // boundary (i)/(iv) carry -- it exists to catch the local profile's own name landing next to
+  // "Users" or "home" in any form, flattened included.
+  if (localName) {
+    const escapedLocalName = localName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const localNameRoot = new RegExp(`(?:users|home)(?:[\\\\/-])*(${escapedLocalName})(?![A-Za-z0-9])`, 'gi');
+    let m;
+    while ((m = localNameRoot.exec(text)) !== null) {
+      const rootStart = m.index;
+      const segment = m[1];
+      const segmentEnd = m.index + m[0].length;
+      const segmentStart = segmentEnd - segment.length;
+      if (isListed(MACHINE_ACCOUNTS, segment)) continue; // S7: spared even under the local name
+      matches.push({
+        rootStart,
+        rootEnd: segmentStart,
+        segmentStart,
+        segmentEnd,
         segment,
         refused: true,
         formClass: 'local-profile',
@@ -266,22 +292,43 @@ function runGit(args, cwd) {
 
 function parseAddedLines(diffText) {
   // Parses unified diff (-U0) output into { file, line, text }[] for added lines only.
+  //
+  // 4.1(d): stateful. A `+++ ` or `--- ` line counts as a header only between a `diff --git` line
+  // and that file's first `@@`; once a hunk has started, every `+`-prefixed line is added content,
+  // even one that (after stripping its leading diff `+`) itself begins with `++` or `--` and so
+  // renders as a line starting `+++ ` or `--- ` in the raw diff text (F1: an added line beginning
+  // `++` was never scanned under the old, unconditional check).
   const out = [];
   let currentFile = null;
   let newLine = null;
+  let inFileHeader = false;
   const lines = diffText.split('\n');
   for (const raw of lines) {
-    if (raw.startsWith('+++ ')) {
-      const p = raw.slice(4).trim();
-      currentFile = p === '/dev/null' ? null : p.replace(/^b\//, '');
+    if (raw.startsWith('diff --git ')) {
+      inFileHeader = true;
+      currentFile = null;
+      newLine = null;
+      continue;
+    }
+    if (inFileHeader && raw.startsWith('@@') === false) {
+      if (raw.startsWith('+++ ')) {
+        const p = raw.slice(4).trim();
+        currentFile = p === '/dev/null' ? null : p.replace(/^b\//, '');
+        continue;
+      }
+      if (raw.startsWith('--- ')) {
+        continue;
+      }
+      // Other header lines (index, mode changes, rename/copy, "Binary files ... differ") carry no
+      // added content and are simply skipped while still inside the file header.
       continue;
     }
     if (raw.startsWith('@@')) {
       const m = /@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(raw);
       newLine = m ? parseInt(m[1], 10) : null;
+      inFileHeader = false;
       continue;
     }
-    if (raw.startsWith('+++') || raw.startsWith('---')) continue;
     if (raw.startsWith('+')) {
       if (currentFile && newLine != null) {
         out.push({ file: currentFile, line: newLine, text: raw.slice(1) });
@@ -370,15 +417,11 @@ function cmdStaged(localName) {
   return findings;
 }
 
-function findScissorsIndex(lines) {
-  const marker = '# ------------------------ >8 ------------------------';
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith('# ------------------------ >8')) return i;
-  }
-  return lines.length;
-}
-
 function cmdMessage(file, localName) {
+  // 4.1(a): scans the whole message file. The hook receives only the message-file path, so it
+  // cannot know whether git will cut the message at a scissors line under `-F` -- at git 2.49.0,
+  // `-F` keeps the lines below it. Declared limit: a verbose diff below a scissors line that
+  // carries a profile path still refuses the commit.
   let content;
   try {
     content = fs.readFileSync(file, 'utf8');
@@ -386,39 +429,51 @@ function cmdMessage(file, localName) {
     console.error('aborted');
     process.exit(2);
   }
-  const lines = content.split('\n');
-  const cut = findScissorsIndex(lines);
-  const above = lines.slice(0, cut).join('\n');
-  const r = scanText(above, { localName });
+  const r = scanText(content, { localName });
   return r.map((f) => ({ file, line: f.line, class: f.class }));
 }
 
+// 4.1(e): nothing the CLI prints carries a refused segment. Every path it prints goes through
+// redactSegments(path, localName). Where a finding in the path itself cannot be reduced to a
+// segment (ok === false, a declared guard case per redactSegments' own doc comment), the path is
+// printed as `#<n>`, its argument index -- a declared value; for --redact/--redact-segment that is
+// the file's 1-based position among the CLI's file arguments, and for a finding it is the finding's
+// 1-based position in the list being printed.
+function safePrintablePath(rawPath, localName, argIndex) {
+  const { output, ok } = redactSegments(rawPath, localName);
+  return ok ? output : `#${argIndex}`;
+}
+
 function cmdRedact(files, localName) {
-  for (const file of files) {
+  files.forEach((file, i) => {
     const text = fs.readFileSync(file, 'utf8');
     const { output, count } = redactRoots(text, localName);
     fs.writeFileSync(file, output);
-    console.log(`${file}: ${count}`);
-  }
+    console.log(`${safePrintablePath(file, localName, i + 1)}: ${count}`);
+  });
 }
 
 function cmdRedactSegment(files, localName) {
   let anyFail = false;
-  for (const file of files) {
+  files.forEach((file, i) => {
     const text = fs.readFileSync(file, 'utf8');
     const { output, count, ok } = redactSegments(text, localName);
     fs.writeFileSync(file, output);
-    console.log(`${file}: ${count}`);
+    console.log(`${safePrintablePath(file, localName, i + 1)}: ${count}`);
     if (!ok) anyFail = true;
-  }
+  });
   if (anyFail) process.exit(1);
 }
 
-function printFindings(findings) {
-  for (const f of findings) {
-    console.error(`${f.file}:${f.line} ${f.class}`);
-  }
+function printFindings(findings, localName) {
+  findings.forEach((f, i) => {
+    console.error(`${safePrintablePath(f.file, localName, i + 1)}:${f.line} ${f.class}`);
+  });
 }
+
+// 4.1(c): on a clean scan, --staged and --message print exactly one stdout line, this declared
+// value. The hooks fail closed on this exact line, not on exit status alone.
+const CLEAN_LINE = 'profile-path-scan: clean';
 
 function main() {
   const args = process.argv.slice(2);
@@ -433,18 +488,20 @@ function main() {
     if (args[0] === '--staged') {
       const findings = cmdStaged(localName);
       if (findings.length > 0) {
-        printFindings(findings);
+        printFindings(findings, localName);
         process.exit(1);
       }
+      console.log(CLEAN_LINE);
       process.exit(0);
     }
     if (args[0] === '--message') {
       const file = args[1];
       const findings = cmdMessage(file, localName);
       if (findings.length > 0) {
-        printFindings(findings);
+        printFindings(findings, localName);
         process.exit(1);
       }
+      console.log(CLEAN_LINE);
       process.exit(0);
     }
     if (args[0] === '--redact') {
@@ -463,15 +520,28 @@ function main() {
   }
 }
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPathSafe(import.meta.url));
-
-function fileURLToPathSafe(url) {
+// 4.1(b): compares realpaths (through any symlink/junction), case-folded on win32, so the CLI
+// entry does not fail open when invoked through a link or a path containing a space.
+function resolveRealpathNative(p) {
   try {
-    return new URL(url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+    return fs.realpathSync.native(p);
   } catch {
-    return '';
+    return null;
   }
 }
+
+function computeIsMain() {
+  if (!process.argv[1]) return false;
+  const argvReal = resolveRealpathNative(process.argv[1]);
+  const moduleReal = resolveRealpathNative(fileURLToPath(import.meta.url));
+  if (argvReal === null || moduleReal === null) return false;
+  if (process.platform === 'win32') {
+    return argvReal.toLowerCase() === moduleReal.toLowerCase();
+  }
+  return argvReal === moduleReal;
+}
+
+const isMain = computeIsMain();
 
 if (isMain) {
   main();

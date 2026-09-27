@@ -436,6 +436,10 @@ and it gates nothing here.
 
 ## Dated correction (2026-09-27, exposure-profile-paths piece)
 
-Per round 28, item 1 and the re-run consult (`state/consults/2026-09-26-exposure-checks-rerun.md`
-and its custodian's addendum), and per
-`scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2f. No path is reproduced here.
+Corrected result (round 28, item 1): this checklist's earlier no-flags reading also rested in part
+on a check that had not run; prevention is now the commit-msg hook's refusal of a message carrying
+a user-profile path, full or 8.3 form, using the fixed scan with its canary.
+
+References: round 28, item 1; the re-run consult (`state/consults/2026-09-26-exposure-checks-rerun.md`
+and its custodian's addendum); `scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2f. No
+path is reproduced here.

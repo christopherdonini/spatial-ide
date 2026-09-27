@@ -4,7 +4,8 @@
 #
 # Refuses a commit whose staged added lines or staged path names carry a profile path (this
 # machine's or any other real account's). See
-# scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md 2e. Enable with:
+# scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md 2e and 4.1(c) (fails closed on the
+# scanner's declared clean line, not on exit status alone). Enable with:
 #   git config core.hooksPath .githooks
 set -eu
 
@@ -13,7 +14,35 @@ if ! command -v node >/dev/null 2>&1; then
   echo "error: node not found -- the profile-path scan could not run." >&2
   exit 1
 fi
-if ! node "$hook_dir/../scripts/hooks/profile-path-scan.mjs" --staged; then
-  echo "error: commit refused -- staged content or a staged path name carries a profile path (see the output above)." >&2
-  exit 1
+
+set +e
+scan_output="$(node "$hook_dir/../scripts/hooks/profile-path-scan.mjs" --staged)"
+scan_status=$?
+set -e
+
+if [ "$scan_status" -eq 0 ] && [ "$scan_output" = "profile-path-scan: clean" ]; then
+  exit 0
 fi
+
+case "$scan_status" in
+  1)
+    echo "error: commit refused -- staged content or a staged path name carries a profile path (see the output above)." >&2
+    exit 1
+    ;;
+  2)
+    echo "error: commit refused -- the profile-path scan aborted." >&2
+    exit 2
+    ;;
+  3)
+    echo "error: commit refused -- the profile-path scan's canary was not found." >&2
+    exit 3
+    ;;
+  0)
+    echo "error: commit refused -- the profile-path scan reported no result." >&2
+    exit 2
+    ;;
+  *)
+    echo "error: commit refused -- the profile-path scan exited $scan_status." >&2
+    exit "$scan_status"
+    ;;
+esac
