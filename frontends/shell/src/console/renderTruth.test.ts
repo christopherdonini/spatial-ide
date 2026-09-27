@@ -50,7 +50,7 @@ function loadFixture(name: string): unknown {
 const REQUEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
   open_dataset: ["skp", "path", "cancel_key", "crs_assertion", "identity"],
   describe: ["skp", "dataset"],
-  viewport_query: ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter"],
+  viewport_query: ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
   cancel: ["skp", "handle"],
   close_dataset: ["skp", "dataset"],
 };
