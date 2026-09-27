@@ -187,6 +187,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    no `style`, no `publish` (ADR-017's acceptance condition keeps publish unreachable regardless).
    **v0.1 (§7 below) does not add a sixth command** — `viewport_query` gains an optional row-filter
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
+   **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
+   projection parameter, on the same shape row-filter's own addition took.
 2. **Transport bindings** — one: Tauri invoke, for the five commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
@@ -199,9 +201,10 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    min/max, no handshake; a v0-only client and a v0.1 host fail on the first call exactly as any two
    disagreeing literals always have here. **`skp/0.2` (§8) bumps the compared literal again, `==`
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
-   `skp/0.2` host fail on the first call. **`skp/0.3` through `skp/0.5` each bumped the compared
-   literal again**, and `==` is unchanged. **`skp/0.6` (§9) bumps the literal once more, `==`
-   unchanged.**
+   `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
+   literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
+   again in turn, `==` still unchanged** (X20; Amendment 5 row 5.6 — restoring this item's own
+   sentence to main's bytes rather than rewriting it in place, and appending this one instead).
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -285,11 +288,17 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     therefore not an instance of this rule. Its whole field set is §8's `skp/0.5` entry, and it
     freezes at merge as `skp/0.2` through `skp/0.4` did.
 
-    **`skp/0.6` (§9) mints the literal once, on its own branch, and both sides' fixtures change in
-    the same commit as the literal bump** (§2.7 of `engine/B1-PROJECTION-PREREGISTRATION.md`) —
-    condition (iii) holds for the literal itself; the field additions it carries (`columns`,
-    `projectable`) were developed on the same branch ahead of that commit, under this same
-    not-yet-merged standing.
+    **`skp/0.6` mints the literal once, in `6cd1764`, which carries the literal bump and both
+    sides' fixtures together** (`git show --stat 6cd1764`: `protocol/skp/src/v0/mod.rs`,
+    `frontends/shell/src/skp/__tests__/fixtures.test.ts` and every `protocol/skp/tests/data/*.json`
+    fixture the bump touches, all in that one commit) — condition (iii) holds for the literal
+    itself. The field additions it carries (`columns`, `projectable`) were developed on this branch
+    ahead of the bump, in `2963021`, under the still-frozen `skp/0.5` literal (`git show --stat
+    2963021`: that commit's own message states the literal "stays `skp/0.5` here" and that the
+    engine/kernel-side compile fixups "land in the next commit" — the workspace does not compile at
+    `2963021` alone). This is assembly of one unreleased version (condition (i): the literal had not
+    yet merged to `main`), and it freezes at merge as `skp/0.2` through `skp/0.5` did (X14; Amendment
+    5 row 5.6, D1 — the paragraph states the commit facts, as the `skp/0.5` paragraph above does).
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance

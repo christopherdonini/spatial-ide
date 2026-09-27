@@ -490,6 +490,11 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     // type — `resolve_projection` above already proved every declared name resolves, so this looks
     // the source type up again rather than carrying it through `AdmittedProjection`, which is
     // deliberately emitted-type-only (§2.3).
+    //
+    // **X4 (Amendment 5, row 5.6; R's own suggestion): no `.expect()` in publish.** The lookup is
+    // unreachable in practice — `resolve_projection` above already proved every declared name
+    // resolves against this same `file_schema()` — but "unreachable" is a typed refusal here, not a
+    // panic waiting on the day the two ever disagree.
     for name in &req.attributes {
         let source_type = ds
             .file_schema()
@@ -497,7 +502,15 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
             .iter()
             .find(|f| f.name() == name)
             .map(|f| f.data_type().clone())
-            .expect("resolve_projection above already proved this column resolves");
+            .ok_or_else(|| {
+                PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                    column: name.clone(),
+                    detail: "resolve_projection above already proved this column resolves against \
+                             this same file_schema(); this lookup disagreeing with that one is a \
+                             typed refusal rather than a panic"
+                        .to_string(),
+                })
+            })?;
         admit_bundle_format(name, &source_type)?;
     }
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
@@ -1675,6 +1688,12 @@ mod tests {
     /// through `read_parquet` in the pinned DuckDB (H2, confirmed by P0), so no real `Dataset` or
     /// `PublishRequest` can exercise `admit_bundle_format`'s dictionary arm end to end. Proven
     /// directly against a constructed `DataType`, on the accepted pattern E-12/E-19 already use.
+    ///
+    /// **X4 (Amendment 5, row 5.6): extended to `Dict(Int8, Date32)`** — a dictionary whose value
+    /// type is itself refused by the live gate — so this test also proves `admit_bundle_format`
+    /// refuses *every* dictionary at preflight, by its own source type alone, whatever its value
+    /// type: the bundle-format restriction never asks whether the live gate would have admitted the
+    /// dictionary.
     /// Mutation: remove the restriction (`admit_bundle_format` admitting every `Dictionary`).
     // RECORDED MUTATION: in `admit_bundle_format`, remove the `D::Dictionary(_, _)` refusal arm
     // (falls through to `_ => Ok(())`). Observed: this test fails by name -- "expected
@@ -1682,26 +1701,35 @@ mod tests {
     // `kernel/src/publish/mod.rs:1694`. Reverted.
     #[test]
     fn admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text() {
-        let ty = arrow::datatypes::DataType::Dictionary(
-            Box::new(arrow::datatypes::DataType::Int32),
-            Box::new(arrow::datatypes::DataType::Utf8),
-        );
-        match admit_bundle_format("cat", &ty) {
-            Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
-                column,
-                detail,
-            })) => {
-                assert_eq!(column, "cat");
-                assert_eq!(
+        for ty in [
+            arrow::datatypes::DataType::Dictionary(
+                Box::new(arrow::datatypes::DataType::Int32),
+                Box::new(arrow::datatypes::DataType::Utf8),
+            ),
+            // X4: a dictionary whose *value* type the live gate would itself refuse — still
+            // refused here by source type alone, never by asking the live gate first.
+            arrow::datatypes::DataType::Dictionary(
+                Box::new(arrow::datatypes::DataType::Int8),
+                Box::new(arrow::datatypes::DataType::Date32),
+            ),
+        ] {
+            match admit_bundle_format("cat", &ty) {
+                Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                    column,
                     detail,
-                    format!(
-                        "type is {ty}. A dictionary index is an ordinal, and decoding one to \
-                         publish it would be a conversion the caller did not ask for. The bundle \
-                         format carries no dictionary batches"
-                    )
-                );
+                })) => {
+                    assert_eq!(column, "cat");
+                    assert_eq!(
+                        detail,
+                        format!(
+                            "type is {ty}. A dictionary index is an ordinal, and decoding one to \
+                             publish it would be a conversion the caller did not ask for. The bundle \
+                             format carries no dictionary batches"
+                        )
+                    );
+                }
+                other => panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}"),
             }
-            other => panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}"),
         }
     }
 

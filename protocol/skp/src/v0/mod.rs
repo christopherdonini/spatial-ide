@@ -54,4 +54,14 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// server-to-client push. No generation value crosses the wire (rider (a)). Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
 /// updated in this commit (`SKP-V0.md` §8's `skp/0.5` entry lists the full field set).
+///
+/// `skp/0.6` (attribute projection on `viewport_query`, Brief B stage B1,
+/// `engine/B1-PROJECTION-PREREGISTRATION.md`): `ViewportQueryRequest` gains `columns: Option<Vec
+/// <String>>`, an ordered, caller-declared attribute projection; `FieldInfo` gains `projectable:
+/// bool` on every `describe` schema row; and six new `skp.projection_*` refusal codes appear,
+/// admitted synchronously and pre-lease, pre-mint (SKP-V0.md §9). No new command; no wire list-size
+/// ceiling beyond the declared column-count ceiling; `protocol/data-plane/` has an empty diff — the
+/// widening rides the existing Arrow IPC schema, never the control plane. Same discipline again:
+/// `deny_unknown_fields` both directions, `==` unchanged, every fixture on both sides of the wire
+/// updated in this commit (`SKP-V0.md` §8's `skp/0.6` entry lists the full field set).
 pub const SKP_VERSION: &str = "skp/0.6";

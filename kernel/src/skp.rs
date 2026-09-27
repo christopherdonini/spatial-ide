@@ -1448,9 +1448,13 @@ enum ViewportQueryBuildError {
 fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
     match e {
         ViewportQueryBuildError::ProjectionEmptyList => SkpError::protocol(
+            // X17 (Amendment 5, row 5.6): states a kernel fact, never an instruction — the
+            // operator-visible-text rule (§1: "Engine messages state engine facts; owners state
+            // consequences"). The former text told the caller what to send ("omit `columns`");
+            // this states what the wire already is.
             "projection_empty_list",
-            "refused: an empty projection (`columns: []`) is not admitted; omit `columns` (or \
-             send `null`) for no projection",
+            "refused: an empty projection (`columns: []`) is not admitted; the wire's own \
+             no-projection value is `columns: null`",
         ),
         ViewportQueryBuildError::Projection(pe) => projection_error_of(&pe),
         ViewportQueryBuildError::Predicate(pae) => predicate_admit_error_of(pae),
@@ -1509,7 +1513,7 @@ fn projection_error_of(e: &ProjectionError) -> SkpError {
             message,
             [("column", column.clone())],
         ),
-        ProjectionError::TypeNotAdmitted { column, arrow_type, detail } => SkpError::protocol_with_fields(
+        ProjectionError::TypeNotAdmitted { column, arrow_type, detail, .. } => SkpError::protocol_with_fields(
             "projection_type_not_admitted",
             message,
             [
