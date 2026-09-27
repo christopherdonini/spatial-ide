@@ -95,4 +95,4 @@ By regeneration means the procedure `RECORD.md` records for each entry, as its p
 - `retired/test_geoparquet_1_1.parquet`
 - `retired/test_with_fid_and_geometry_bbox.parquet`
 
-Sighted by the human:
+Sighted by the human: RULED 2026-09-26 — question round 27, items 1, 2 and 3.
