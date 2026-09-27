@@ -384,8 +384,8 @@ test('a_pin_whose_span_lacks_the_claimed_name_does_not_exempt', () => {
 // `revResolvesToCommit` (added by TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md, after this test was
 // written) independently refuses both a HEAD default and a branch name via its own resolved-id prefix
 // check, so this guard is no longer the sole line of defense this test can prove by itself. Recorded
-// in Amendment 4 item 3 (state/consults/2026-09-26-test-claims-followups-gate2-architect.md), not
-// silently recorded as a failure that did not occur.
+// in Amendment 4 item 3 (scripts/plan/TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md §10), not silently
+// recorded as a failure that did not occur.
 test('a_pin_with_no_rev_does_not_exempt', () => {
   const { dir: dirNoRev } = supersededFixture({ omitRev: true });
   const noRev = runVerifyTestClaims({ repoRoot: dirNoRev });

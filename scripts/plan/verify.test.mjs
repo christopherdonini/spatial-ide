@@ -234,65 +234,74 @@ test('runVerify: --offline note is present and PR/release evidence does not fail
   assert.ok(!result.failures.some((f) => f.includes('pr')));
 });
 
-// TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md's Change: the reverse of the done-node PR-merged check
-// -- a node not recorded done whose evidence already names a PR GitHub reports merged fails by name.
-// The PR lookup is stubbed (no real `gh` call) via the same injection point `verifyEvidence` already
-// takes for the done-node check (`ghApiPrMergedFn`).
+// TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md's Change (Amendment 2, B1): proof that the check is
+// actually wired into `verify:plan` -- through `verifyStatusAgreement`, the function `runVerify`
+// calls, not `verifyNotDoneEvidenceNotMerged` directly. The PR-merged result is data (`prResults`,
+// keyed by node id, the same `{ ok, detail }` shape `ghApiPrMerged` returns), the way `runVerify`
+// itself supplies it (Amendment 2, B2) -- no `gh` call, no lookup function, in this test.
 //
-// RECORDED MUTATION: in `verifyNotDoneEvidenceNotMerged` (scripts/plan/verify.mjs), replacing
-// `return result.ok ? [...] : []` with an unconditional `return [];` (the new check's condition
+// RECORDED MUTATION: in `verifyStatusAgreement` (scripts/plan/verify.mjs), removing the
+// `failures.push(...verifyNotDoneEvidenceNotMerged(node, { prResults }));` line (the check's call
 // removed) -- applied for real, run via `node --test scripts/plan/verify.test.mjs`, then reverted.
-// Observed: "AssertionError [ERR_ASSERTION]: expected a named merged-PR failure, got: []" on this
-// test's own `assert.ok(failures.some(...))`, 18 of 19 pass, at c0fa9c0 (Node v24.18.1).
+// Observed: "AssertionError [ERR_ASSERTION]: expected a named merged-PR failure with the reported
+// state, got: []" on this test's own `assert.ok(failures.some(...))`, at 31cbb68 (Node v24.18.1).
+test("verifyStatusAgreement fails by name when an in-progress node's evidence PR is reported merged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const mutated = { ...plan, nodes: plan.nodes.map((n) => (n.id === 'n-inprogress' ? { ...n, evidence: { pr: 42 } } : n)) };
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null, prResults });
+  assert.ok(
+    // S2: the PR's reported state, not just the word "merged" (which the fixed message text always
+    // contains regardless of what GitHub actually reported).
+    failures.some((f) => f.includes('n-inprogress') && f.includes('#42') && f.includes('state=closed')),
+    `expected a named merged-PR failure with the reported state, got: ${JSON.stringify(failures)}`,
+  );
+});
+
+// RECORDED MUTATION (re-observed on the data shape, Amendment 2): in `verifyNotDoneEvidenceNotMerged`
+// (scripts/plan/verify.mjs), replacing the final `return [...]` with an unconditional `return [];`
+// (the check's own condition removed) -- applied for real, run via `node --test
+// scripts/plan/verify.test.mjs`, then reverted. Observed: "AssertionError [ERR_ASSERTION]: expected a
+// named merged-PR failure, got: []" on this test's own `assert.ok(failures.some(...))`, at 31cbb68
+// (Node v24.18.1).
 test("verifyNotDoneEvidenceNotMerged fails by name when an in-progress node's evidence PR is reported merged", () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
-  const stub = () => ({ ok: true, detail: 'state=closed merged=true' });
-  const failures = verifyNotDoneEvidenceNotMerged(node, {
-    repoRoot,
-    offline: false,
-    slug: 'acme/repo',
-    ghApiPrMergedFn: stub,
-  });
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
   assert.ok(
     failures.some((f) => f.includes('n-inprogress') && f.includes('#42') && f.includes('merged')),
     `expected a named merged-PR failure, got: ${JSON.stringify(failures)}`,
   );
 });
 
-// RECORDED MUTATION (Amendment 1, TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md): in
-// `verifyNotDoneEvidenceNotMerged` (scripts/plan/verify.mjs), removing the `if (node.status ===
-// 'done') return [];` status condition, so a done node is checked too -- applied for real, run via
-// `node --test scripts/plan/verify.test.mjs`, then reverted. Observed: "AssertionError
-// [ERR_ASSERTION]" with actual `['node "n-inprogress": status is "done" but PR #42 is reported
-// merged (state=closed merged=true)']` vs expected `[]` on this test's own `assert.deepEqual`, at
-// 31cbb68 (Node v24.18.1).
+// RECORDED MUTATION (re-observed on the data shape, Amendment 2): in `verifyNotDoneEvidenceNotMerged`
+// (scripts/plan/verify.mjs), removing the `if (node.status === 'done') return [];` status condition,
+// so a done node is checked too -- applied for real, run via `node --test
+// scripts/plan/verify.test.mjs`, then reverted. Observed: "AssertionError [ERR_ASSERTION]" with
+// actual `['node "n-inprogress": status is "done" but PR #42 is reported merged (state=closed
+// merged=true)']` vs expected `[]` on this test's own `assert.deepEqual`, at 31cbb68 (Node v24.18.1).
 test('verifyNotDoneEvidenceNotMerged passes when the same node is recorded done', () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), status: 'done', evidence: { pr: 42 } };
-  const stub = () => ({ ok: true, detail: 'state=closed merged=true' });
-  const failures = verifyNotDoneEvidenceNotMerged(node, {
-    repoRoot,
-    offline: false,
-    slug: 'acme/repo',
-    ghApiPrMergedFn: stub,
-  });
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
   assert.deepEqual(failures, []);
 });
 
-// Amendment 1's mutation for this test: in `verifyNotDoneEvidenceNotMerged` (verify.mjs), replace
-// `result.ok ? [...] : []` with `true ? [...] : []` (the merged flag ignored). Applied for real, run,
-// reverted -- RECORDED MUTATION observed: "AssertionError [ERR_ASSERTION]" (actual a failure array,
-// expected `[]`) on this test's own `assert.deepEqual`, at 31cbb68 (Node v24.18.1).
+// RECORDED MUTATION (re-observed on the data shape, Amendment 2; S3: now covers both open and
+// closed-unmerged): in `verifyNotDoneEvidenceNotMerged` (verify.mjs), narrowing the guard from
+// `if (!result || !result.ok) return [];` to `if (!result) return [];` (the lookup's merged flag
+// ignored, so every PR reads as merged) -- applied for real, run via `node --test
+// scripts/plan/verify.test.mjs`, then reverted. Observed: "AssertionError [ERR_ASSERTION]" (actual a
+// failure array naming n-inprogress, expected `[]`) on this test's own `assert.ok`, for the
+// `state=open` case (the loop's first iteration), at 31cbb68 (Node v24.18.1).
 test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence PR is open or closed-unmerged", () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
-  const stub = () => ({ ok: false, detail: 'state=open merged=false' });
-  const failures = verifyNotDoneEvidenceNotMerged(node, {
-    repoRoot,
-    offline: false,
-    slug: 'acme/repo',
-    ghApiPrMergedFn: stub,
-  });
-  assert.deepEqual(failures, []);
+  for (const detail of ['state=open merged=false', 'state=closed merged=false']) {
+    const prResults = { 'n-inprogress': { ok: false, detail } };
+    const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
+    assert.deepEqual(failures, [], `expected no failure for ${detail}, got: ${JSON.stringify(failures)}`);
+  }
 });

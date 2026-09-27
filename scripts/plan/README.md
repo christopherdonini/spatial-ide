@@ -93,8 +93,8 @@ check above -- any node whose recorded `status` is not `done` but whose `evidenc
 PR that `gh api` reports merged fails by name (node id, PR number, and the PR's reported state).
 Reuses the same lookup and is skipped, not failed, under `--offline`.
 
-`--offline` skips the two GitHub-only checks (PR-merged, release-published) and says so on stderr;
-every other check still runs. Exits 1 with every failure listed, one per line.
+`--offline` skips the GitHub-only checks (PR-merged, landedness, release-published) and says so on
+stderr; every other check still runs. Exits 1 with every failure listed, one per line.
 
 ## `site.mjs` — the landing page (§5)
 
