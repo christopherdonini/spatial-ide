@@ -54,7 +54,7 @@ lexical-util v1.0.7 MIT/Apache-2.0
 lexical-write-float v1.0.6 MIT/Apache-2.0
 lexical-write-integer v1.0.6 MIT/Apache-2.0
 libm v0.2.16 MIT
-lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check) 
+lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check) 
 log v0.4.34 MIT OR Apache-2.0
 memchr v2.8.3 Unlicense OR MIT
 num-bigint v0.4.8 MIT OR Apache-2.0

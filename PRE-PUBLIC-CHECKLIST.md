@@ -433,3 +433,9 @@ search pre-1.0.
 publish — a scoped grant, explicit approval, and a redacted audit record — are now implemented
 (`kernel/PERMISSION-BOUNDARY.md`). That is ADR-017's acceptance condition, not ADR-009's checklist,
 and it gates nothing here.
+
+## Dated correction (2026-09-27, exposure-profile-paths piece)
+
+Per round 28, item 1 and the re-run consult (`state/consults/2026-09-26-exposure-checks-rerun.md`
+and its custodian's addendum), and per
+`scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2f. No path is reproduced here.

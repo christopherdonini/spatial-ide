@@ -271,3 +271,11 @@ models itself on: `PRE-PUBLIC-CHECKLIST.md` §6 (2026-08-07, 632 blobs / 92 comm
   verbatim and recorded in `DEPENDENCY-LICENSES.md`, "Third-party data terms"; the two open
   obligations and one owed verification it found are queued as entry 51 — nothing remediated
   unqueued).
+
+## Dated correction (2026-09-27, exposure-profile-paths piece)
+
+Per round 28, item 1 and the re-run consult (`state/consults/2026-09-26-exposure-checks-rerun.md`
+and its custodian's addendum), and per
+`scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2f: the commit-message-body class named
+above (the consult's seven commits) is unchanged by this piece — history stays, per round 28, item
+1. No path is reproduced here.

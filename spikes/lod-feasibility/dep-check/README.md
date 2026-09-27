@@ -39,3 +39,7 @@ ADR-009); this file records the facts. Two notes for ADR-030's notice set when t
 
 The tier-builder piece re-runs this check at `cargo add` time against the real workspace and
 records the result in its PR; this directory is the gate step's evidence, not the PR's.
+
+2026-09-27: the profile roots in this directory's evidence files were substituted with
+`%USERPROFILE%` per `scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2a; the recorded
+facts are unchanged.

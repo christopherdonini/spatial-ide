@@ -23,7 +23,7 @@
     "extension_name": "spatial",
     "loaded": true,
     "installed": true,
-    "install_path": "C:\\Users\\Christopher\\.duckdb\\extensions\\v1.5.5\\windows_amd64\\spatial.duckdb_extension",
+    "install_path": "%USERPROFILE%\\.duckdb\\extensions\\v1.5.5\\windows_amd64\\spatial.duckdb_extension",
     "extension_version": "eb1e57c",
     "install_mode": "REPOSITORY",
     "duckdb_python_version": "1.5.5",
