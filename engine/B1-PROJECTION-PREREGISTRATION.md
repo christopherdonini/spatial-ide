@@ -773,3 +773,7 @@ Class 1 (post-result). References only.
 - Amendment 9, 9.6's attribution of A-E6 to gate 2 (gate 3 reviewer D1): A-E6 is gate 1's (Amendment 5, its X10 row).
 
 P6 sight list (round 12 (e)): read the last amendment first.
+
+### Amendment 11 — 2026-09-27, post-merge: Amendment 8's words-form span pinned at a main commit
+
+Class 3 (round 25, item 2 (d); PLAN node `b1-post-merge-pins`). `273a79d` is reachable from main through the merge commit `d6ec85a`. The span Amendment 8 names in words: `engine/src/fixture.rs:273-274 @ 273a79d sha256:6e5c4af3a4160e8360a8e72baa1ce1c3b6b275858ce07b8c80c3c3edb0c29e0a`.

@@ -889,3 +889,17 @@ Class 1 (post-result). References only. Record-only: no code, and it opens no ga
 - Amendment 13, its "Also indexed" paragraph and the parenthetical of each of its two index entries (D2): both entries stay superseded, by Amendment 13's own act. What carries them is Amendment 10's Minutes bullet (for Amendment 8's Minutes bullet) and 7.10's last bullet (for Amendment 8's last bullet).
 
 P6 sight list (round 12 (e)): read the last amendment first.
+
+**Amendment 15 — 2026-09-27, post-merge: 7.4's words-form spans pinned at a main commit (class 3).**
+
+Round 25, item 2 (d); gate 3 architect D7 (`state/consults/gates/2026-09-27-exposure-profile-paths-gate3-architect.md`); PLAN node `exposure-post-merge-pins`. `da80db0` is reachable from main through the merge commit `1b92e96`. The ten spans 7.4 names in words:
+- `scripts/hooks/profile-path-scan.test.mjs:124-125 @ da80db0 sha256:27d17d1751a74b94055a7fd8a7b24e33f21e5e26e72ed37edb05cab659ab97b6`
+- `scripts/hooks/profile-path-scan.test.mjs:147-151 @ da80db0 sha256:2b37ea50c33b3ee5036d2b7946408f2163420e2d1b86eda2f8b0b8debb31736e`
+- `scripts/hooks/profile-path-scan.test.mjs:181-183 @ da80db0 sha256:6a337e1ba5ac64aab5155c76c5e4b1b4cd85ef9166f08e28a66a88796d33add0`
+- `scripts/hooks/profile-path-scan.test.mjs:201-202 @ da80db0 sha256:9b76168ee184438d2a0d30c913b50501dbf62ad62511fde6a73f67324792c6f3`
+- `scripts/hooks/profile-path-scan.test.mjs:274-276 @ da80db0 sha256:aea9cdb027664352ed6c68056cb6ff60bdb3004202299dd7003036e3b297d502`
+- `scripts/hooks/profile-path-scan.test.mjs:405-408 @ da80db0 sha256:6678287de16b2838f62e6e1f90a63194a5df85001a9bc954e4c9ece6130affd3`
+- `scripts/hooks/profile-path-scan.test.mjs:462-468 @ da80db0 sha256:beb43eef55a86857445d4fbe9bf1b79ad5e43d8b4f1bb8453568ad409205a01b`
+- `scripts/hooks/profile-path-scan.test.mjs:542-545 @ da80db0 sha256:3bea2ef4aa2d7b5c6c61c3abc0da46a438794530034a48056e306dde26a850af`
+- `scripts/hooks/profile-path-scan.test.mjs:746-748 @ da80db0 sha256:8487cc485b60ae51fec6d5b6bbb53a927385bce34c192acf9c951b7915db5155`
+- `scripts/hooks/profile-path-scan.test.mjs:802-804 @ da80db0 sha256:35c5906183140ec33c8c24e4ccd1f41e10a4365f8df1c639705d983e4d0d0e33`
