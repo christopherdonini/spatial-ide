@@ -741,4 +741,60 @@ mod tests {
         let out = admit_projection(&["zone".to_string()], &schema, "geometry", "id").unwrap();
         assert!(out.fields()[0].is_nullable(), "an admitted projection must not be able to lose a NULL");
     }
+
+    /// X4 (row 5.6; O1(c), O2): `From<ProjectionError> for EngineError`'s `TypeNotAdmitted` arm
+    /// renders a `Dictionary` source type's own byte-copied dictionary text, and any other
+    /// still-refused type's byte-copied final-arm text — proven directly against the `From` impl
+    /// (`resolve_projection`'s own conversion), since no live `Dataset` can ever construct a
+    /// `TypeNotAdmitted` over a `Dictionary` source (H2: unreachable through `read_parquet`).
+    // RECORDED MUTATION: in the `From<ProjectionError> for EngineError` impl's `TypeNotAdmitted`
+    // arm, replace the `match &source_type { ... }` with the single final-arm branch unconditionally
+    // (`From` renders the final-arm text for every `TypeNotAdmitted`). Observed: this test fails by
+    // name -- "a Dictionary source_type must render today's dictionary text" panics at
+    // `engine/src/attributes.rs` (the detail reads "type is Dictionary(...), which is not in the
+    // admissible set for a published attribute ..." instead of the dictionary text). Reverted.
+    #[test]
+    fn from_projection_error_renders_a_dictionary_sources_own_text_and_the_final_arm_otherwise() {
+        let dict_ty = DataType::Dictionary(Box::new(DataType::Int8), Box::new(DataType::Date32));
+        let dict_err = ProjectionError::TypeNotAdmitted {
+            column: "cat".to_string(),
+            arrow_type: dict_ty.to_string(),
+            source_type: dict_ty.clone(),
+            detail: "[B1 close placeholder]".to_string(),
+        };
+        match EngineError::from(dict_err) {
+            EngineError::AttributeUnpublishable { column, detail } => {
+                assert_eq!(column, "cat");
+                assert_eq!(
+                    detail,
+                    format!(
+                        "type is {dict_ty}. A dictionary index is an ordinal, and decoding one to \
+                         publish it would be a conversion the caller did not ask for. The bundle \
+                         format carries no dictionary batches"
+                    ),
+                    "a Dictionary source_type must render today's dictionary text"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable, got {other:?}"),
+        }
+
+        let other_err = ProjectionError::TypeNotAdmitted {
+            column: "d32".to_string(),
+            arrow_type: "Date32".to_string(),
+            source_type: DataType::Date32,
+            detail: "[B1 close placeholder]".to_string(),
+        };
+        match EngineError::from(other_err) {
+            EngineError::AttributeUnpublishable { column, detail } => {
+                assert_eq!(column, "d32");
+                assert_eq!(
+                    detail,
+                    "type is Date32, which is not in the admissible set for a published attribute \
+                     (utf8, boolean, the 8/16/32/64-bit integers, float64)",
+                    "any other still-refused type must render the final-arm text"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable, got {other:?}"),
+        }
+    }
 }
