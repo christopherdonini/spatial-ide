@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T11:00:36.446Z",
-  "plan_hash": "ae0bb541285226e3997808e242b37eb36b9a716c68ee850633664a490acabbd7",
+  "generated_at": "2026-09-27T13:51:32.260Z",
+  "plan_hash": "a301bd40dab915387528b7473ac33121d3cde1ed0189c5ba09ac7f81930f3561",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3995,7 +3995,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [
         "data-plane-origin-non-ascii"
@@ -4004,8 +4004,10 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "protocol/data-plane/STREAM-REGISTRY-BOUND-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/data-plane-stream-registry-bound"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
