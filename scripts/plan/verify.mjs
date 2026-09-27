@@ -163,7 +163,7 @@ export function verdictCiteExists(repoRoot, cite) {
 }
 
 /** Verifies one node's evidence pointer. Returns an array of failure strings (empty = verified). */
-export function verifyEvidence(node, { repoRoot, offline, slug }) {
+export function verifyEvidence(node, { repoRoot, offline, slug, ghApiPrMergedFn = ghApiPrMerged }) {
   const evidence = node.evidence;
   const tag = `node "${node.id}"`;
   if (evidence === null || evidence === undefined) {
@@ -173,7 +173,7 @@ export function verifyEvidence(node, { repoRoot, offline, slug }) {
   if (evidence.pr !== undefined) {
     if (offline) return []; // skipped, not failed -- the top-level --offline note covers this
     if (!slug) return [`${tag}: evidence {pr: ${evidence.pr}} could not be checked (no repo slug found)`];
-    const result = ghApiPrMerged(repoRoot, slug, evidence.pr);
+    const result = ghApiPrMergedFn(repoRoot, slug, evidence.pr);
     return result.ok ? [] : [`${tag}: PR #${evidence.pr} is not merged (${result.detail})`];
   }
   if (evidence.adr !== undefined) {
@@ -209,8 +209,27 @@ export function verifyEvidence(node, { repoRoot, offline, slug }) {
   return [`${tag}: evidence has no recognized pointer shape (${JSON.stringify(evidence)})`];
 }
 
+/**
+ * The reverse of `verifyEvidence`'s done-node PR check, beside it (TEST-CLAIMS-LANDEDNESS-
+ * PREREGISTRATION.md's Change): a node recorded as anything other than `done` whose evidence
+ * already names a PR that GitHub reports merged is stale and fails by name (node id, PR number,
+ * and the PR's reported state) -- the same `gh api` lookup as the done-node check, skipped under
+ * `--offline` for the same reason. Returns an array of failure strings (empty = no drift).
+ */
+export function verifyNotDoneEvidenceNotMerged(node, { repoRoot, offline, slug, ghApiPrMergedFn = ghApiPrMerged }) {
+  if (node.status === 'done') return [];
+  const pr = node.evidence?.pr;
+  if (pr === undefined) return [];
+  if (offline) return []; // skipped, not failed -- same as the done-node PR check
+  if (!slug) return []; // cannot be checked without a repo slug; not this check's failure to report
+  const result = ghApiPrMergedFn(repoRoot, slug, pr);
+  return result.ok
+    ? [`node "${node.id}": status is "${node.status}" but PR #${pr} is reported merged (${result.detail})`]
+    : [];
+}
+
 /** Runs every §6 check against an already-loaded plan. Returns an array of failure strings. */
-export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
+export function verifyStatusAgreement(plan, { repoRoot, offline, slug, ghApiPrMergedFn = ghApiPrMerged }) {
   const failures = [];
   const derived = deriveStatusMap(plan);
 
@@ -232,8 +251,10 @@ export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
       }
     }
 
+    failures.push(...verifyNotDoneEvidenceNotMerged(node, { repoRoot, offline, slug, ghApiPrMergedFn }));
+
     if (node.status === 'done') {
-      failures.push(...verifyEvidence(node, { repoRoot, offline, slug }));
+      failures.push(...verifyEvidence(node, { repoRoot, offline, slug, ghApiPrMergedFn }));
       if (node.felt_verdict === true) {
         const verdict = node.verdict;
         if (!verdict || verdict.by !== 'human' || !verdict.cite) {

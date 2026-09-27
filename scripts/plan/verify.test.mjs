@@ -7,7 +7,14 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { buildQueue, renderMarkdown } from './queue.mjs';
-import { runVerify, verifyStatusAgreement, adrStatusAccepted, verdictCiteExists, commitOnMain } from './verify.mjs';
+import {
+  runVerify,
+  verifyStatusAgreement,
+  verifyNotDoneEvidenceNotMerged,
+  adrStatusAccepted,
+  verdictCiteExists,
+  commitOnMain,
+} from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -225,4 +232,50 @@ test('runVerify: --offline note is present and PR/release evidence does not fail
   const result = runVerify({ planPath, repoRoot, siteDir: path.join(dir, 'site'), offline: true });
   assert.ok(result.notes.some((n) => n.includes('--offline')));
   assert.ok(!result.failures.some((f) => f.includes('pr')));
+});
+
+// TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md's Change: the reverse of the done-node PR-merged check
+// -- a node not recorded done whose evidence already names a PR GitHub reports merged fails by name.
+// The PR lookup is stubbed (no real `gh` call) via the same injection point `verifyEvidence` already
+// takes for the done-node check (`ghApiPrMergedFn`).
+test("verifyNotDoneEvidenceNotMerged fails by name when an in-progress node's evidence PR is reported merged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
+  const stub = () => ({ ok: true, detail: 'state=closed merged=true' });
+  const failures = verifyNotDoneEvidenceNotMerged(node, {
+    repoRoot,
+    offline: false,
+    slug: 'acme/repo',
+    ghApiPrMergedFn: stub,
+  });
+  assert.ok(
+    failures.some((f) => f.includes('n-inprogress') && f.includes('#42') && f.includes('merged')),
+    `expected a named merged-PR failure, got: ${JSON.stringify(failures)}`,
+  );
+});
+
+test('verifyNotDoneEvidenceNotMerged passes when the same node is recorded done', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), status: 'done', evidence: { pr: 42 } };
+  const stub = () => ({ ok: true, detail: 'state=closed merged=true' });
+  const failures = verifyNotDoneEvidenceNotMerged(node, {
+    repoRoot,
+    offline: false,
+    slug: 'acme/repo',
+    ghApiPrMergedFn: stub,
+  });
+  assert.deepEqual(failures, []);
+});
+
+test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence PR is open or closed-unmerged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
+  const stub = () => ({ ok: false, detail: 'state=open merged=false' });
+  const failures = verifyNotDoneEvidenceNotMerged(node, {
+    repoRoot,
+    offline: false,
+    slug: 'acme/repo',
+    ghApiPrMergedFn: stub,
+  });
+  assert.deepEqual(failures, []);
 });
