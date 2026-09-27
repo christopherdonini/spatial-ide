@@ -22,7 +22,7 @@ fn dir(name: &str) -> std::path::PathBuf {
 }
 
 /// The empty projection, built through the admission path like any other.
-fn empty_projection(ds: &Dataset) -> spatial_engine::PublishedProjection {
+fn empty_projection(ds: &Dataset) -> spatial_engine::AdmittedProjection {
     ds.resolve_projection(&[]).unwrap()
 }
 

@@ -1,0 +1,8 @@
+{
+  "code": "skp.projection_column_unknown",
+  "message": "refused: `nope` is not a column this dataset carries (it has: id, geometry, area, zone)",
+  "fields": {
+    "column": "nope",
+    "known_columns": "id,geometry,area,zone"
+  }
+}

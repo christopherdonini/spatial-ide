@@ -1,0 +1,5 @@
+{
+  "code": "skp.projection_empty_list",
+  "message": "refused: an empty projection (`columns: []`) is not admitted; the wire's own no-projection value is `columns: null`",
+  "fields": {}
+}

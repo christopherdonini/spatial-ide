@@ -216,6 +216,12 @@ pub struct FieldInfo {
     pub name: String,
     pub arrow_type: String,
     pub nullable: bool,
+    /// **`skp/0.6`, attribute projection on `viewport_query`.** Whether this column could be named
+    /// in a `viewport_query.columns` projection **today, live** — computed from
+    /// `spatial_engine::attributes::admit_projection_column`, never a claim about publishing: a
+    /// projectable `Float32` or dictionary-encoded column is still refused at publish preflight by
+    /// the bundle-format restriction (`kernel/src/publish`), which this fact knows nothing about.
+    pub projectable: bool,
 }
 
 /// **C2** (SKP-V0.md §2): never a bare integer. `basis` names what was actually established.
@@ -419,6 +425,13 @@ pub struct ViewportQueryRequest {
     /// `Option<T>` field still serializes to JSON `null`, never an absent key, because nothing here
     /// opts into `skip_serializing_if`). `describe` is untouched by this field (design note item 1).
     pub filter: Option<Filter>,
+    /// **`skp/0.6`, attribute projection on `viewport_query`.** An ordered, caller-declared list of
+    /// attribute column names to stream alongside `id` and geometry. Same discipline as `bbox_crs`
+    /// and `filter`: no `#[serde(default)]`, no `skip_serializing_if`, and `None` serializes to JSON
+    /// `null` — always present, never omitted. `null` means the frame carries no attribute columns,
+    /// unchanged from every version before this one; `Some(&[])` is refused (`skp.projection_empty_list`),
+    /// never read as `null`.
+    pub columns: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -584,10 +597,30 @@ mod tests {
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         };
         let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
         assert!(v.as_object().unwrap().contains_key("filter"), "filter key must be present");
         assert_eq!(v["filter"], serde_json::Value::Null, "absent filter is `null`, never omitted");
+    }
+
+    /// **P-1.** `columns` follows the exact `bbox_crs`/`filter` discipline: `null` on the wire is a
+    /// present, explicit "no projection", never an omitted key. Mutation: `skip_serializing_if` on
+    /// `columns`. Expected failure: this test fails by name — the key disappears from the JSON.
+    #[test]
+    fn viewport_query_request_carries_columns_as_explicit_null_when_absent() {
+        let req = ViewportQueryRequest {
+            skp: SKP_VERSION.into(),
+            dataset: "ds_00112233445566778899aabbccddeeff".parse().unwrap(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+            columns: None,
+        };
+        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        assert!(v.as_object().unwrap().contains_key("columns"), "columns key must be present");
+        assert_eq!(v["columns"], serde_json::Value::Null, "absent columns is `null`, never omitted");
     }
 
     #[test]
@@ -599,6 +632,7 @@ mod tests {
             bbox_crs: None,
             limit: None,
             filter: Some(Filter::new("zone = 3 AND area > 100", FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            columns: None,
         };
         let json = serde_json::to_string(&req).unwrap();
         let back: ViewportQueryRequest = serde_json::from_str(&json).unwrap();

@@ -175,6 +175,12 @@ pub enum AttributeMode {
     /// whose acceptance run never produces a NULL would leave a mandatory declaration with no
     /// evidence behind it — the standing this repository refuses everywhere else.
     CategoricalZone,
+    /// B1 §3: seven columns, in file order — `zone` (text, with NULLs, [`zone_for`]), `area`
+    /// (`Float64`, [`area_for`]), `f32` (`Float32`, [`f32_for`]), `i64` (`Int64`, [`i64_for`]),
+    /// `flag` (`Boolean`, [`flag_for`]), `d32` (`Date32`, [`date32_for`]), `text` (text, ~1 KiB,
+    /// [`text_for`]). `CategoricalZone` carries only `zone` (F13); every other admitted-or-refused
+    /// type B1's tests need comes from this variant instead of a second `zone`-only mode.
+    MultiType,
 }
 
 /// Whether the fixture's parquet footer declares license metadata.
@@ -228,6 +234,71 @@ pub fn zone_for(seed: u64, id: u64) -> Option<&'static str> {
         4 => None,
         k => Some(ZONE_VALUES[k]),
     }
+}
+
+/// One SplitMix64 step over `(seed, salt, id)`, shared by every `AttributeMode::MultiType` column
+/// below — same reason `zone_for` gives: a pure function of `(seed, id)` that never touches the
+/// shared generator `rng`, so a fixture carrying these columns has bit-identical geometry to one
+/// without them.
+fn attr_hash(seed: u64, salt: u64, id: u64) -> u64 {
+    let mut z = (seed ^ salt).wrapping_add(id.wrapping_mul(0x9E37_79B9_7F4A_7C15));
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+const AREA_SALT: u64 = 0x2056_4152_4541_0001;
+const F32_SALT: u64 = 0x2056_4633_3200_0001;
+const I64_SALT: u64 = 0x2056_4936_3400_0001;
+const FLAG_SALT: u64 = 0x2056_464C_4147_0001;
+const DATE32_SALT: u64 = 0x2056_4433_3200_0001;
+const TEXT_SALT: u64 = 0x2056_5445_5854_0001;
+
+/// `AttributeMode::MultiType`'s `area` column: a plot area in square metres, in `[10.0, 10_000.0)`.
+pub fn area_for(seed: u64, id: u64) -> f64 {
+    let h = attr_hash(seed, AREA_SALT, id);
+    10.0 + (h as f64 / u64::MAX as f64) * (10_000.0 - 10.0)
+}
+
+/// `AttributeMode::MultiType`'s `f32` column's three declared stored values (E-20: `f32 = 0.1` and
+/// `f32 > 0.1` are pinned against these, not against an arbitrary spread) — one below, one equal to,
+/// and one above the literal `0.1` an admitted predicate compares it with.
+pub const F32_VALUES: [f32; 3] = [0.05, 0.1, 0.2];
+
+/// `AttributeMode::MultiType`'s `f32` column, drawn from [`F32_VALUES`].
+pub fn f32_for(seed: u64, id: u64) -> f32 {
+    F32_VALUES[(attr_hash(seed, F32_SALT, id) % F32_VALUES.len() as u64) as usize]
+}
+
+/// `AttributeMode::MultiType`'s `i64` column: a signed value that is neither `id` nor a simple
+/// affine function of it, so a projection test cannot mistake it for the identity column.
+pub fn i64_for(seed: u64, id: u64) -> i64 {
+    (attr_hash(seed, I64_SALT, id) as i64).wrapping_sub(1i64 << 40)
+}
+
+/// `AttributeMode::MultiType`'s `flag` column.
+pub fn flag_for(seed: u64, id: u64) -> bool {
+    attr_hash(seed, FLAG_SALT, id).is_multiple_of(2)
+}
+
+/// `AttributeMode::MultiType`'s `d32` column: days since the Unix epoch, in a plausible calendar
+/// range. Exists to be **refused**: `Date32` is not in the live-admitted set (§3's `[d32]` row), so
+/// this column's own values are never asserted against — only its refusal is.
+pub fn date32_for(seed: u64, id: u64) -> i32 {
+    (18_000 + (attr_hash(seed, DATE32_SALT, id) % 3650)) as i32
+}
+
+/// `AttributeMode::MultiType`'s `text` column: about 1 KiB per row, deterministic, never touching
+/// `rng` — see [`zone_for`]'s doc for why that property matters here as much as it does there.
+pub fn text_for(seed: u64, id: u64) -> String {
+    let mut s = format!("row-{id:020}-");
+    let mut h = attr_hash(seed, TEXT_SALT, id);
+    while s.len() < 1024 {
+        h = attr_hash(seed, TEXT_SALT, h);
+        s.push_str(&format!("{h:016x}"));
+    }
+    s.truncate(1024);
+    s
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -394,6 +465,16 @@ fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) ->
     // decision rather than an accident of where the code was edited.
     if attributes == AttributeMode::CategoricalZone {
         fields.push(Arc::new(Field::new("zone", DataType::Utf8, true)));
+    }
+    if attributes == AttributeMode::MultiType {
+        // §3's declared file order.
+        fields.push(Arc::new(Field::new("zone", DataType::Utf8, true)));
+        fields.push(Arc::new(Field::new("area", DataType::Float64, false)));
+        fields.push(Arc::new(Field::new("f32", DataType::Float32, false)));
+        fields.push(Arc::new(Field::new("i64", DataType::Int64, false)));
+        fields.push(Arc::new(Field::new("flag", DataType::Boolean, false)));
+        fields.push(Arc::new(Field::new("d32", DataType::Date32, false)));
+        fields.push(Arc::new(Field::new("text", DataType::Utf8, false)));
     }
     fields.push(Arc::new(Field::new("geometry", DataType::Binary, false)));
     Arc::new(Schema::new(fields))
@@ -704,6 +785,12 @@ fn generate(
         let mut string_ids = arrow::array::StringBuilder::new();
         let mut geoms = BinaryBuilder::new();
         let mut zones = arrow::array::StringBuilder::new();
+        let mut areas = Float64Builder::with_capacity(n);
+        let mut f32s = arrow::array::Float32Builder::with_capacity(n);
+        let mut i64s = arrow::array::Int64Builder::with_capacity(n);
+        let mut flags = arrow::array::BooleanBuilder::with_capacity(n);
+        let mut d32s = arrow::array::Date32Builder::with_capacity(n);
+        let mut texts = arrow::array::StringBuilder::new();
         let (mut xmin_b, mut ymin_b, mut xmax_b, mut ymax_b) = (
             Float64Builder::with_capacity(n),
             Float64Builder::with_capacity(n),
@@ -753,7 +840,7 @@ fn generate(
                 IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
                 _ => ids.append_value(id),
             }
-            if spec.attributes == AttributeMode::CategoricalZone {
+            if spec.attributes == AttributeMode::CategoricalZone || spec.attributes == AttributeMode::MultiType {
                 // Derived from `(seed, id)` and **not** from `rng`, so the geometry above is
                 // untouched by this column's existence.
                 match zone_for(spec.seed, id) {
@@ -767,6 +854,17 @@ fn generate(
                         facts.zone_nulls += 1;
                     }
                 }
+            }
+            if spec.attributes == AttributeMode::MultiType {
+                // Every column here is a pure function of `(seed, id)`, on the same construction
+                // `zone_for` uses and for the same reason: none of them touch `rng`, so this
+                // variant's geometry is bit-identical to `AttributeMode::None`'s.
+                areas.append_value(area_for(spec.seed, id));
+                f32s.append_value(f32_for(spec.seed, id));
+                i64s.append_value(i64_for(spec.seed, id));
+                flags.append_value(flag_for(spec.seed, id));
+                d32s.append_value(date32_for(spec.seed, id));
+                texts.append_value(text_for(spec.seed, id));
             }
             geoms.append_value(encode_polygon(&rings));
             xmin_b.append_value(xmin);
@@ -793,8 +891,16 @@ fn generate(
             );
             cols.push(Arc::new(bbox));
         }
-        if spec.attributes == AttributeMode::CategoricalZone {
+        if spec.attributes == AttributeMode::CategoricalZone || spec.attributes == AttributeMode::MultiType {
             cols.push(Arc::new(zones.finish()) as ArrayRef);
+        }
+        if spec.attributes == AttributeMode::MultiType {
+            cols.push(Arc::new(areas.finish()) as ArrayRef);
+            cols.push(Arc::new(f32s.finish()) as ArrayRef);
+            cols.push(Arc::new(i64s.finish()) as ArrayRef);
+            cols.push(Arc::new(flags.finish()) as ArrayRef);
+            cols.push(Arc::new(d32s.finish()) as ArrayRef);
+            cols.push(Arc::new(texts.finish()) as ArrayRef);
         }
         cols.push(Arc::new(geoms.finish()));
 

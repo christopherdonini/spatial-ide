@@ -100,7 +100,7 @@ pub(crate) const VIEWPORT_BBOX_ALTERNATIVE: &str =
      what a bundle carries, not to what the source dataset holds)";
 
 /// What preflight can predict against the reader's ceilings, checked against real values rather
-/// than against a fixture-sized proxy (kept free of `Dataset`/`PublishedProjection` so it can be
+/// than against a fixture-sized proxy (kept free of `Dataset`/`AdmittedProjection` so it can be
 /// unit-tested at realistic ceiling values without writing a multi-million-row fixture to disk —
 /// `kernel/tests/publish.rs` still exercises the real, wired-up `preflight()` end to end at every
 /// existing (small, within-ceiling) fixture, which is what proves this function is actually
@@ -125,9 +125,9 @@ pub(crate) const VIEWPORT_BBOX_ALTERNATIVE: &str =
 /// pinned-value unit tests below prove the branch itself is correct in isolation): `preflight`
 /// calls `ds.resolve_projection(&req.attributes)` — which admits via
 /// `engine::attributes::admit_projection` — BEFORE this function ever runs, and
-/// `engine/src/attributes.rs:52`'s own `MAX_PUBLISHED_ATTRIBUTES = 32` (the SAME number as
+/// `engine/src/attributes.rs:70`'s own `MAX_PROJECTED_ATTRIBUTES = 32` (the SAME number as
 /// `MAX_ATTRIBUTE_COLUMNS`) refuses an over-count request there first, as
-/// `PublishError::CeilingExceeded { ceiling: "MAX_PUBLISHED_ATTRIBUTES", .. }` — a different typed
+/// `PublishError::CeilingExceeded { ceiling: "MAX_PROJECTED_ATTRIBUTES", .. }` — a different typed
 /// variant than [`crate::publish::PublishError::ReaderCeilingExceeded`], and one whose `Display`
 /// does not name the viewport-bbox alternative the human's ADR-025 ruling requires. Reconciling the
 /// two ceilings (same number, two refusals, one alternative-naming and one not) is left as a named

@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.5";
+export const SKP_VERSION = "skp/0.6";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -151,6 +151,11 @@ export interface FieldInfo {
   name: string;
   arrow_type: string;
   nullable: boolean;
+  /** `skp/0.6`, attribute projection on `viewport_query`. Whether this column could be named in a
+   * `viewport_query.columns` projection today, live -- never a claim about publishing: a
+   * projectable `Float32` or dictionary column is still refused at publish preflight by the
+   * bundle-format restriction. */
+  projectable: boolean;
 }
 
 export interface RowCount {
@@ -244,6 +249,11 @@ export interface ViewportQueryRequest {
   bbox_crs: string | null;
   limit: DecU64 | null;
   filter: Filter | null; // always present, `null` means no filter (matches `bbox_crs`'s discipline)
+  /** `skp/0.6`, attribute projection on `viewport_query`. An ordered, caller-declared attribute
+   * projection. Always present; `null` means no attribute columns (unchanged from every version
+   * before this one). This shell's own client sends `columns: null` and gains no parameter --
+   * the consumer is this half's shell counterpart (hover, `match`, the panel). */
+  columns: string[] | null;
 }
 export interface ViewportQueryResponse {
   stream: string;

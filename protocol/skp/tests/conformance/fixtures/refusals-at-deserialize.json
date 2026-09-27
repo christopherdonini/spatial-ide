@@ -6,7 +6,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
@@ -21,7 +21,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": {
@@ -39,7 +39,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
@@ -69,7 +69,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "path": "/data/zurich.parquet",
    "crs_assertion": null,
    "identity": null
@@ -82,7 +82,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "verbose": true
   }
@@ -94,7 +94,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -110,7 +110,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": {
     "xmin": "4142f58400000000",
@@ -131,7 +131,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -150,7 +150,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -168,7 +168,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -186,7 +186,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -204,7 +204,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -221,7 +221,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "handle": "sh_fedcba9876543210fedcba9876543210",
    "reason": "user"
   }
@@ -233,7 +233,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "force": true
   }
@@ -245,7 +245,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.5",
+   "skp": "skp/0.6",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "traceparent": "00-0-0-00"
   }

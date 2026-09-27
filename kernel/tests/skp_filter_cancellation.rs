@@ -148,6 +148,7 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
             bbox_crs: None,
             limit: None,
             filter: Some(duckdb_filter(&format!("id > {}", FEATURES - 100))),
+            columns: None,
         })
         .expect("viewport_query with a late-matching predicate");
     let stream_handle = ticket.stream.clone();

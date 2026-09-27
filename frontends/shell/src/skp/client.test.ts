@@ -25,8 +25,27 @@ describe("viewportQuery request shape", () => {
     await viewportQuery("ds_x", null, null, null);
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
-      request: { skp: "skp/0.5", dataset: "ds_x", bbox: null, bbox_crs: null, limit: null, filter: null },
+      request: {
+        skp: "skp/0.6",
+        dataset: "ds_x",
+        bbox: null,
+        bbox_crs: null,
+        limit: null,
+        filter: null,
+        columns: null,
+      },
     });
+  });
+
+  /** S-2: `columns` is sent as an explicit `null`, never omitted -- the `skp/0.6` discipline
+   * `bbox_crs`/`filter` already follow. Mutation: omit the key from `client.ts::viewportQuery`.
+   * Expected failure: this test fails by name -- the object equality check no longer matches. */
+  it("sends columns: null, never omitted -- this shell requests no projection", async () => {
+    await viewportQuery("ds_x", null, null, null);
+
+    const call = invokeMock.mock.calls[0][1] as { request: Record<string, unknown> };
+    expect(call.request).toHaveProperty("columns");
+    expect(call.request.columns).toBeNull();
   });
 
   it("sends the caller's filter verbatim -- predicate text untouched, dialect carried through", async () => {
@@ -37,12 +56,13 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.5",
+        skp: "skp/0.6",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
         limit: null,
         filter: { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" },
+        columns: null,
       },
     });
   });

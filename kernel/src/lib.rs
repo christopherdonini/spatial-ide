@@ -217,12 +217,21 @@ impl Catalog {
 /// immediately because `SourceFactory::create` has no other option, but a typed refusal degrading
 /// to a string one call frame earlier than it has to is exactly what `skp::error_of`'s exhaustive
 /// match exists to never let happen at the SKP boundary.
+///
+/// **`projection`, optional (Brief B stage B1).** `Some` calls the engine's live projected entry
+/// point (`Dataset::stream_projected_with_cancel`); `None` calls `stream_with_cancel`, unchanged.
+/// The raw `StreamParams` path (`create_from_raw_params`, below) always passes `None` — B1 gives it
+/// no projection (F5; the caller rule).
 pub(crate) fn open_engine_stream(
     ds: &Dataset,
     query: &ViewportQuery,
+    projection: Option<&spatial_engine::AdmittedProjection>,
 ) -> spatial_engine::Result<(BatchStream, CancelToken)> {
     let cancel = CancelToken::new();
-    let stream = ds.stream_with_cancel(query, cancel.clone())?;
+    let stream = match projection {
+        Some(p) => ds.stream_projected_with_cancel(query, p, cancel.clone())?,
+        None => ds.stream_with_cancel(query, cancel.clone())?,
+    };
     Ok((stream, cancel))
 }
 
@@ -363,7 +372,10 @@ impl EngineSourceFactory {
         // Every refusal the engine can make — an unadmitted CRS, a viewport in the wrong CRS, a
         // missing covering column — arrives here as a typed error and leaves as a terminal frame
         // carrying its own words. Nothing is flattened into "failed".
-        let (stream, cancel) = open_engine_stream(&ds, &query).map_err(|e| e.to_string())?;
+        //
+        // `None`: the raw `StreamParams` path predates `viewport_query.columns` and gets no
+        // projection (F5; the caller rule) — `StreamParams` itself has no such field.
+        let (stream, cancel) = open_engine_stream(&ds, &query, None).map_err(|e| e.to_string())?;
         Ok(wrap_for_data_plane(
             stream,
             cancel,

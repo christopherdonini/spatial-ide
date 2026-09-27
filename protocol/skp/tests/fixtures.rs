@@ -214,6 +214,76 @@ fn viewport_query_request_with_a_filter_round_trips() {
     assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
 }
 
+/// **P-2.** `columns`'s declared order survives the round trip byte for byte — this fixture's own
+/// declared order (`["area", "zone"]`, X8: Amendment 5 row 5.6) differs from the file order any
+/// fixture writes them in (`zone` then `area` — `engine/src/fixture.rs`'s own declared file order),
+/// so a test that silently sorted or re-derived the list from the schema would not catch a
+/// regression here. Mutation: `#[serde(rename = "projection")]` on the field. Expected failure: this
+/// test fails to deserialize the fixture (the key `columns` disappears).
+#[test]
+fn viewport_query_request_with_columns_fixture_reads_in_declared_order() {
+    let v = fixture("v0-viewport_query-request-with-columns");
+    let parsed: ViewportQueryRequest = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("fixture does not deserialize as ViewportQueryRequest: {e}"));
+    assert_eq!(parsed.columns.as_deref(), Some(&["area".to_string(), "zone".to_string()][..]));
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+}
+
+/// **P-3.** Every schema row of every `describe` response fixture carries `projectable`.
+/// Mutation: `skip_serializing_if` on a `false` `projectable`. Expected failure: this test fails by
+/// name — a refused column's row would silently lose the key.
+#[test]
+fn describe_fixtures_carry_projectable_on_every_schema_row() {
+    for name in [
+        "v0-describe-response",
+        "v0-describe-response-caller-asserted",
+        "v0-describe-response-session-ordinal",
+    ] {
+        let v = fixture(name);
+        let parsed: DescribeResponse = serde_json::from_value(v.clone())
+            .unwrap_or_else(|e| panic!("{name} does not deserialize as DescribeResponse: {e}"));
+        assert!(!parsed.schema.is_empty(), "{name}: fixture carries no schema rows to check");
+        for row in &parsed.schema {
+            assert!(
+                v["schema"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|r| r["name"] == row.name && r.as_object().unwrap().contains_key("projectable")),
+                "{name}: schema row `{}` is missing `projectable`",
+                row.name
+            );
+        }
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
+    }
+}
+
+/// One error fixture per new `skp.projection_*` code (seven in all, §2.1) — each deserializes as
+/// `SkpError` and round-trips byte-identically.
+// RECORDED MUTATION: in `protocol/skp/src/v0/error.rs::SkpError`, add
+// `#[serde(rename = "error_code")]` to `code`. Observed: this test fails by name --
+// "v0-error-projection_empty_list does not deserialize as SkpError: unknown field `code`,
+// expected one of `error_code`, `message`, `fields`" at `protocol/skp/tests/fixtures.rs:275`.
+// Reverted.
+#[test]
+fn every_new_projection_error_fixture_round_trips() {
+    for name in [
+        "v0-error-projection_empty_list",
+        "v0-error-projection_column_unknown",
+        "v0-error-projection_type_not_admitted",
+        "v0-error-projection_column_is_geometry",
+        "v0-error-projection_column_is_identity",
+        "v0-error-projection_column_duplicated",
+        "v0-error-projection_too_many_columns",
+    ] {
+        let v = fixture(name);
+        let parsed: SkpError = serde_json::from_value(v.clone())
+            .unwrap_or_else(|e| panic!("{name} does not deserialize as SkpError: {e}"));
+        assert!(parsed.code.starts_with("skp.projection"), "{name}: {}", parsed.code);
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
+    }
+}
+
 #[test]
 fn cancel_fixtures_round_trip() {
     round_trip::<CancelRequest>("v0-cancel-request");
@@ -257,6 +327,7 @@ fn every_request_fixture_carries_the_current_skp_version() {
         "v0-describe-request",
         "v0-viewport_query-request",
         "v0-viewport_query-request-with-filter",
+        "v0-viewport_query-request-with-columns",
         "v0-cancel-request",
         "v0-close_dataset-request",
     ] {
@@ -301,11 +372,11 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.5`, the advisory source-change watcher. Mutation: the literal back to `"skp/0.4"`.
-/// Expected failure: this test fails by name.
+/// `skp/0.6`, attribute projection on `viewport_query` (Brief B stage B1). Mutation: the literal
+/// back to `"skp/0.5"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_5() {
-    assert_eq!(SKP_VERSION, "skp/0.5");
+fn skp_version_is_skp_0_6() {
+    assert_eq!(SKP_VERSION, "skp/0.6");
 }
 
 /// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.

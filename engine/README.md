@@ -404,12 +404,22 @@ and its silence are DuckDB's own — outside `MAX_QUEUED_BATCHES` and outside ev
 declares, exactly as the streaming buffer already is. The caller reports progress across it.
 
 **Declared publish ceilings (ADR-010 rule 6):** `PUBLISH_PARTITION_TARGET_BYTES` 1 MiB ·
-`PUBLISH_PARTITION_ROWS` 8 192 · `MAX_PUBLISH_PARTITIONS` 100 000 · `MAX_PUBLISHED_ATTRIBUTES` 32,
+`PUBLISH_PARTITION_ROWS` 8 192 · `MAX_PUBLISH_PARTITIONS` 100 000 · `MAX_PROJECTED_ATTRIBUTES` 32,
 with compile-time assertions tying them to `MAX_BATCH_BYTES` and to the five-digit partition naming
 width. A **partition is exactly one `TaggedBatch`** — re-batching in a publisher would produce bytes
 that never passed through the single constructor, and the rule 1 envelope would then be on each
 partition by care rather than by construction. The size ceiling is also what bounds cancellation:
 **the uninterruptible window is one partition's encode and write.**
+
+**`MAX_ATTRIBUTE_RETENTION_FACTOR` 2 — the live projected stream's own retention rule** (condition
+(3); B1 §2.3, §7; X18/Amendment 5 row 5.3), narrowed to that one plan alone (route (a), Amendment 5
+row 5.2 — every other plan, publish's included, keeps main's own slice unconditionally). Each
+attribute column of a live-projected batch retains at most `MAX_ATTRIBUTE_RETENTION_FACTOR` × its
+own slice memory, **plus 64 bytes × the number of buffers it holds, its validity buffer included**
+(`arrow-buffer` 58.4.0's own `MutableBuffer` allocation-rounding multiple — without it a small run's
+rounding-up alone can breach the plain factor even when nothing is over-retained). Producer-resident
+payload for the live projected stream is then `(MAX_QUEUED_BATCHES + 1)` batches under that bound,
+plus DuckDB's current chunk, uncounted, as today. A declared bound, not a measurement.
 
 **Pinning.** `Dataset::pin_content` is an explicit, cancellable whole-file SHA-256. It is deliberately
 not part of `open`: `kernel/RESULTS.md` measures the hash at ~603–610 ms on the 100 000-feature

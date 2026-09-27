@@ -23,7 +23,11 @@ use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
+use arrow::array::{
+    make_array, Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, MutableArrayData,
+    UInt64Array,
+};
+use arrow::datatypes::DataType;
 use duckdb::ToSql;
 
 use crate::cancel::CancelToken;
@@ -63,7 +67,40 @@ pub const MAX_ROWS_PER_BATCH: usize = 65_536;
 /// Batches the producer may hold ahead of the consumer. Producer-resident payload is bounded by
 /// `(MAX_QUEUED_BATCHES + 1) * MAX_BATCH_BYTES`, plus DuckDB's own streaming buffer, which this
 /// counter does not see and does not claim to.
+///
+/// **On the live projected stream alone** (route (a), Amendment 5 row 5.2 — every other plan,
+/// publish's included, keeps main's own slice unconditionally and pays none of this), a batch's
+/// attribute-carrying buffers are separately bounded by [`MAX_ATTRIBUTE_RETENTION_FACTOR`] (`flush`'s
+/// retention rule, condition (3)): each attribute column retains at most `MAX_ATTRIBUTE_RETENTION_
+/// FACTOR` × its own slice memory, **plus 64 bytes × the number of buffers it holds, its validity
+/// buffer included** (Amendment 5 row 5.3 — `arrow-buffer` 58.4.0's own allocation multiple; a small
+/// run's rounding-up can otherwise breach the plain factor on its own). Producer-resident payload for
+/// the live projected stream is then `(MAX_QUEUED_BATCHES + 1)` batches under that bound, plus
+/// DuckDB's current chunk, uncounted, as today.
 pub const MAX_QUEUED_BATCHES: usize = 2;
+
+/// **`flush`'s retention rule** (condition (3); B1 §2.3, §7), **narrowed to the live projected
+/// stream alone** (route (a), Amendment 5 row 5.2). A single-run attribute slice is kept as a slice
+/// — no copy — unless the buffers it retains (`ArrayData::get_buffer_memory_size`) exceed this
+/// factor times its own memory (`ArrayData::get_slice_memory_size`, what a compacted copy would
+/// occupy) plus 64 bytes per buffer it holds (Amendment 5 row 5.3: `arrow-buffer` 58.4.0's own
+/// allocation multiple — without it a small run's rounding-up can breach the plain factor on its
+/// own even when nothing is actually over-retained). Past that it is compacted by one copy, decided
+/// after the cut.
+///
+/// **What "identical either way" now means, on the live projected stream.** H3's second clause is
+/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
+/// that is not a multiple of 8: the IPC bytes of the slice and of its compacted copy differ in the
+/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
+/// 5.1, R-E1's probe), and for a non-null `Boolean`'s values bitmap at offset/length 8/3, 0/10 and
+/// 40/20, with the bytes equal at the unaligned 3/5 (Amendment 8's class-2 row; pinned in the X6
+/// test `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`).
+/// So this narrows to **decoded equality** — values, and validity within the array's length — never byte
+/// identity, on this stream. **Every other plan (publish's included) never reaches this function's
+/// compacting branch at all**: it keeps main's own single-run arm, the slice with no copy, so its
+/// bytes equal main's by construction and no claim about IPC byte identity is made for it, needed,
+/// or at risk.
+pub const MAX_ATTRIBUTE_RETENTION_FACTOR: usize = 2;
 
 /// **Publish partition ceilings — declared, not discovered (ADR-010 rule 6).**
 ///
@@ -525,6 +562,34 @@ pub(crate) struct StreamPlan {
     pub(crate) envelope: BatchEnvelope,
     /// Whether each batch reports its own extent. See [`BatchInfo::xy_bounds`].
     pub(crate) report_bounds: bool,
+    /// **`flush`'s retention rule (condition (3); §7), narrowed to the live projected stream alone
+    /// (Amendment 5, row 5.2 — route (a)).** H3's second clause is false for a nullable, non-8-
+    /// aligned run at `arrow-ipc` 58.4.0 (R-E1); a publish partition's bytes are declared unchanged
+    /// (§5) and must equal main's by construction, so `stream_for_publish`'s plan — and every other
+    /// plan — keeps main's own single-run arm (the slice, no copy) regardless of this flag. Only
+    /// [`Dataset::stream_projected_with_cancel`]'s plan sets this `true`.
+    pub(crate) compact_attribute_retention: bool,
+}
+
+impl StreamPlan {
+    /// The **publish** stream's plan, [`Dataset::stream_for_publish`]'s own, over `envelope` (the
+    /// dataset's envelope widened by the admitted projection). One constructor, so the retention
+    /// this plan declares is the one the X6 test
+    /// (`publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`)
+    /// reads, never a literal of its own.
+    fn for_publish(envelope: BatchEnvelope) -> Self {
+        StreamPlan {
+            index_use: IndexUse::Off,
+            ordering: RowOrdering::ByIdentityAscending,
+            policy: BatchSizePolicy::publish(),
+            envelope,
+            report_bounds: true,
+            // **Route (a) (Amendment 5, row 5.2).** Publish keeps main's own single-run arm —
+            // the slice, no copy — so publish bytes equal main's by construction. See
+            // `StreamPlan::compact_attribute_retention`'s own doc.
+            compact_attribute_retention: false,
+        }
+    }
 }
 
 /// Facts about the DuckDB connection one stream is running on.
@@ -814,6 +879,7 @@ impl Dataset {
                 policy: BatchSizePolicy::default(),
                 envelope: self.envelope().clone(),
                 report_bounds: false,
+                compact_attribute_retention: false,
             },
         )
     }
@@ -833,7 +899,7 @@ impl Dataset {
     pub fn stream_for_publish(
         &self,
         q: &ViewportQuery,
-        attributes: &crate::attributes::PublishedProjection,
+        attributes: &crate::attributes::AdmittedProjection,
         cancel: CancelToken,
     ) -> Result<BatchStream> {
         let envelope = BatchEnvelope::with_attributes(
@@ -842,17 +908,7 @@ impl Dataset {
             self.identity().clone(),
             attributes.fields().to_vec(),
         );
-        self.stream_inner(
-            q,
-            cancel,
-            StreamPlan {
-                index_use: IndexUse::Off,
-                ordering: RowOrdering::ByIdentityAscending,
-                policy: BatchSizePolicy::publish(),
-                envelope,
-                report_bounds: true,
-            },
-        )
+        self.stream_inner(q, cancel, StreamPlan::for_publish(envelope))
     }
 
     /// Resolve a caller's projection to the fields the stream will actually emit.
@@ -860,35 +916,70 @@ impl Dataset {
     /// Types come from the dataset's own schema, which is DuckDB's arrow schema for this file, so
     /// the declared fields cannot disagree with the arrays the producer hands over. Nullability is
     /// **not** taken from the source — see `attributes::admit_projection`.
+    ///
+    /// **Publish's own entry point.** Every refusal [`crate::attributes::admit_projection`] can
+    /// produce is a [`crate::attributes::ProjectionError`]; this wraps it into the crate's ordinary
+    /// [`EngineError`] via `impl From<ProjectionError> for EngineError`, which is publish's own
+    /// texts, kept byte for byte (O1, O2). The live `viewport_query` path does not call this — it
+    /// calls [`Self::admit_projection`] directly, so the kernel keeps the typed
+    /// [`crate::attributes::ProjectionError`] apart for its own six-code wire mapping.
     pub fn resolve_projection(
         &self,
         names: &[String],
-    ) -> Result<crate::attributes::PublishedProjection> {
-        let mut resolved = Vec::with_capacity(names.len());
-        for name in names {
-            let f = self
-                .file_schema()
-                .fields()
-                .iter()
-                .find(|f| f.name() == name)
-                .ok_or_else(|| EngineError::AttributeUnpublishable {
-                    column: name.clone(),
-                    detail: format!(
-                        "the file has no such column (it has: {})",
-                        self.file_schema()
-                            .fields()
-                            .iter()
-                            .map(|f| f.name().as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ),
-                })?;
-            resolved.push(f.as_ref().clone());
-        }
+    ) -> Result<crate::attributes::AdmittedProjection> {
+        self.admit_projection(names).map_err(EngineError::from)
+    }
+
+    /// As [`Self::resolve_projection`], returning the typed [`crate::attributes::ProjectionError`]
+    /// rather than folding it into [`EngineError`] — the live `viewport_query` path's own entry
+    /// point (`kernel::skp::build_viewport_query`), which needs the variant apart to pick one of six
+    /// typed SKP codes (`kernel::skp::projection_error_of`).
+    pub fn admit_projection(
+        &self,
+        names: &[String],
+    ) -> std::result::Result<crate::attributes::AdmittedProjection, crate::attributes::ProjectionError>
+    {
         crate::attributes::admit_projection(
-            &resolved,
+            names,
+            self.file_schema().fields(),
             self.geometry_column(),
             self.identity().source().source_column(),
+        )
+    }
+
+    /// The **live projected** stream (Brief B stage B1): a declared attribute projection over the
+    /// ordinary viewport plan — `IndexUse::Off`, unordered, the default batch-size policy, and no
+    /// per-batch bounds report. Everything else is [`Self::stream_with_cancel`]'s.
+    ///
+    /// Deliberately its own entry point, on [`Self::stream_for_publish`]'s own precedent: a reader
+    /// of a call site sees which discipline is in force without a flag to interpret, and the
+    /// unprojected path (`columns: null`) cannot acquire a widened schema by accident. Its product
+    /// caller is `kernel::open_engine_stream`, with a non-empty admitted projection.
+    pub fn stream_projected_with_cancel(
+        &self,
+        q: &ViewportQuery,
+        projection: &crate::attributes::AdmittedProjection,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
+        let envelope = BatchEnvelope::with_attributes(
+            self.crs().clone(),
+            self.geometry_column().to_string(),
+            self.identity().clone(),
+            projection.fields().to_vec(),
+        );
+        self.stream_inner(
+            q,
+            cancel,
+            StreamPlan {
+                index_use: IndexUse::Off,
+                ordering: RowOrdering::Unordered,
+                policy: BatchSizePolicy::default(),
+                envelope,
+                report_bounds: false,
+                // **The only plan this is `true` for (Amendment 5, row 5.2).** Route (a) narrows
+                // §2.3's retention rule to the live projected stream alone.
+                compact_attribute_retention: true,
+            },
         )
     }
 
@@ -916,6 +1007,7 @@ impl Dataset {
                 policy: BatchSizePolicy::default(),
                 envelope: self.envelope().clone(),
                 report_bounds: false,
+                compact_attribute_retention: false,
             },
         )
     }
@@ -944,6 +1036,7 @@ impl Dataset {
                 policy: BatchSizePolicy::time_budgeted(),
                 envelope: self.envelope().clone(),
                 report_bounds: false,
+                compact_attribute_retention: false,
             },
         )
     }
@@ -972,6 +1065,7 @@ impl Dataset {
                 policy: BatchSizePolicy::default(),
                 envelope: self.envelope().clone(),
                 report_bounds: false,
+                compact_attribute_retention: false,
             },
         )
     }
@@ -996,6 +1090,7 @@ impl Dataset {
                 policy: BatchSizePolicy::time_budgeted(),
                 envelope: self.envelope().clone(),
                 report_bounds: false,
+                compact_attribute_retention: false,
             },
         )
     }
@@ -1006,7 +1101,8 @@ impl Dataset {
         cancel: CancelToken,
         plan: StreamPlan,
     ) -> Result<BatchStream> {
-        let StreamPlan { index_use, ordering, policy, envelope, report_bounds } = plan;
+        let StreamPlan { index_use, ordering, policy, envelope, report_bounds, compact_attribute_retention } =
+            plan;
 
         // **The ADR-017 §12 protection, and it is structural rather than conventional.**
         //
@@ -1120,6 +1216,7 @@ impl Dataset {
                     &tx,
                     policy,
                     report_bounds,
+                    compact_attribute_retention,
                 );
                 // **Detach before the lease is decided**, so a `cancel()` arriving after this
                 // stream is over cannot reach a connection that has been handed back — the reason
@@ -1617,6 +1714,7 @@ fn produce(
     tx: &std::sync::mpsc::SyncSender<std::result::Result<Item, EngineError>>,
     policy: BatchSizePolicy,
     report_bounds: bool,
+    compact_attribute_retention: bool,
 ) -> Result<()> {
     // First statement in the producer thread's body — separates thread-spawn/handoff cost
     // (`SPAN_PRODUCER_HANDOFF`, `lease_acquired → producer_started`) from `conn.prepare()` plus the
@@ -1787,13 +1885,14 @@ fn produce(
                 let col = chunk.column_by_name(f.name()).ok_or_else(|| {
                     EngineError::Query(format!("result has no `{}` column", f.name()))
                 })?;
+                let col = decode_dictionary_chunk_column(col, f.data_type())?;
                 if col.data_type() != f.data_type() {
                     return Err(EngineError::EncodingMismatch {
                         claimed: format!("attribute `{}` is {}", f.name(), f.data_type()),
                         found: col.data_type().to_string(),
                     });
                 }
-                Ok(col.clone())
+                Ok(col)
             })
             .collect::<Result<_>>()?;
 
@@ -1854,6 +1953,7 @@ fn produce(
                     emitted,
                     target,
                     report_bounds,
+                    compact_attribute_retention,
                     BatchCut::SizeTarget,
                 )?;
                 emitted += 1;
@@ -1897,6 +1997,7 @@ fn produce(
                     emitted,
                     target,
                     report_bounds,
+                    compact_attribute_retention,
                     cut_by,
                 )?;
                 emitted += 1;
@@ -1932,6 +2033,7 @@ fn produce(
                     emitted,
                     target,
                     report_bounds,
+                    compact_attribute_retention,
                     BatchCut::TimeBudget,
                 )?;
                 emitted += 1;
@@ -1951,6 +2053,7 @@ fn produce(
             emitted,
             target,
             report_bounds,
+            compact_attribute_retention,
             BatchCut::StreamEnd,
         )?;
     }
@@ -2052,10 +2155,28 @@ fn estimate_bytes(rows: usize, vertices: usize) -> usize {
 /// boundary derived from how much capacity a buffer happens to have reserved would move between two
 /// runs over identical data, and every partition hash in a bundle depends on where the boundaries
 /// fall.
+/// Decode a chunk column to `declared` when it arrived dictionary-encoded, before any check runs
+/// against it — round 17 item 3; the chunk-loop half of E-12. **A named copy** (ADR-004): a
+/// dictionary index is an ordinal, and this is the one place in the live path that turns one into
+/// the value type the envelope actually declares.
+///
+/// **Unreachable through `read_parquet` today** (H2, confirmed by P0): DuckDB's parquet reader never
+/// reports an Arrow `Dictionary` in this pinned version. The decode runs on `col`'s own actual type,
+/// not on that finding, so a source that does carry one is still handled correctly rather than
+/// merely refused as an `EncodingMismatch` a few lines below this function's own caller.
+fn decode_dictionary_chunk_column(col: &ArrayRef, declared: &DataType) -> Result<ArrayRef> {
+    if matches!(col.data_type(), DataType::Dictionary(_, _)) {
+        arrow::compute::cast(col, declared)
+            .map_err(|e| EngineError::Arrow(format!("dictionary decode: {e}")))
+    } else {
+        Ok(col.clone())
+    }
+}
+
 fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     use arrow::array::{
-        BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array, LargeStringArray,
-        StringArray, StringViewArray, UInt16Array, UInt32Array, UInt8Array,
+        BooleanArray, Float32Array, Float64Array, Int16Array, Int32Array, Int64Array, Int8Array,
+        LargeStringArray, StringArray, StringViewArray, UInt16Array, UInt32Array, UInt8Array,
     };
     let mut total = 0usize;
     for col in chunk_attrs {
@@ -2089,6 +2210,10 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
             || col.as_any().downcast_ref::<UInt32Array>().is_some()
         {
             4
+        } else if col.as_any().downcast_ref::<Float32Array>().is_some() {
+            // E-11: Float32 is admitted and emitted as its own type (round 17 item 3), never
+            // widened — its own 4-byte arm, not folded into the 8-byte Int64/Float64 one.
+            4
         } else if col.as_any().downcast_ref::<Int64Array>().is_some()
             || col.as_any().downcast_ref::<UInt64Array>().is_some()
             || col.as_any().downcast_ref::<Float64Array>().is_some()
@@ -2104,6 +2229,85 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     total
 }
 
+/// The number of buffers `data`'s own array holds, its validity buffer included, recursing into any
+/// child data. Used only by [`retain_or_compact_single_run`]'s own allowance (X7; Amendment 5, row
+/// 5.3) — none of this crate's admitted attribute types carry child data today (they are all
+/// primitive, `Utf8`, or `Boolean`), so this recurses defensively rather than because it is
+/// exercised, on the same discipline `attr_row_bytes`'s own unreachable arm states.
+fn buffer_count(data: &arrow::array::ArrayData) -> usize {
+    let mut n = data.buffers().len();
+    if data.nulls().is_some() {
+        n += 1;
+    }
+    for child in data.child_data() {
+        n += buffer_count(child);
+    }
+    n
+}
+
+/// `flush`'s retention rule (condition (3); §7; narrowed to the live projected stream alone, route
+/// (a), Amendment 5 row 5.2): a single-run attribute slice is kept as a slice — no copy — unless the
+/// buffers it retains exceed an allowance of `MAX_ATTRIBUTE_RETENTION_FACTOR` times its own memory,
+/// **plus 64 bytes per buffer it holds** (Amendment 5, row 5.3 — `arrow-buffer` 58.4.0's own
+/// `MutableBuffer` allocation-rounding multiple, confirmed by R-E2: a 1-row `Int64` run retains 64
+/// bytes against 8, and a 100-row `Boolean` run 64 against 13, neither of which the plain factor
+/// alone would call within bounds even though nothing is actually over-retained). Past the allowance
+/// it is compacted by one copy.
+///
+/// **Decided after the cut**, on the run this batch actually retained, not on the source chunk as a
+/// whole: a run near the end of a large chunk retains little of it (offset near the chunk's end),
+/// while a run near the start of the same chunk retains almost all of it, so the ratio is a property
+/// of *this* run and cannot be precomputed before `run_start..row` is known.
+/// `flush`'s own single-run decision, extracted so a test can drive it directly with either plan's
+/// own declared `compact_attribute_retention` (X6; Amendment 5, row 5.2/5.6) without wiring a whole
+/// `Pending`/channel/envelope through `flush` itself. `compact` is the calling plan's own declared
+/// choice (`StreamPlan::compact_attribute_retention`'s own doc) — `false` for every plan but the
+/// live projected stream's, which never enters [`retain_or_compact_single_run`]'s compacting branch
+/// at all and so never risks the byte difference H3's second clause found (row 5.1).
+fn single_run_retention(array: &ArrayRef, compact: bool) -> Result<ArrayRef> {
+    if compact {
+        retain_or_compact_single_run(array)
+    } else {
+        Ok(Arc::clone(array))
+    }
+}
+
+fn retain_or_compact_single_run(array: &ArrayRef) -> Result<ArrayRef> {
+    let data = array.to_data();
+    let buffer_mem = data.get_buffer_memory_size();
+    let slice_mem = data
+        .get_slice_memory_size()
+        .map_err(|e| EngineError::Arrow(format!("attribute slice memory: {e}")))?;
+    let allowance = MAX_ATTRIBUTE_RETENTION_FACTOR
+        .saturating_mul(slice_mem)
+        .saturating_add(64usize.saturating_mul(buffer_count(&data)));
+    if buffer_mem > allowance {
+        Ok(compact_attribute_slice(array))
+    } else {
+        Ok(Arc::clone(array))
+    }
+}
+
+/// One copy: rebuilds `array`'s own `offset..offset+len` range into freshly sized buffers, so the
+/// source chunk's buffers are no longer retained. `arrow::compute::concat` cannot do this for a
+/// single array — its single-array case (`arrays.len() == 1`) returns `array.slice(0, array.len())`
+/// unchanged, which retains exactly what it started with.
+///
+/// **Only ever called on the live projected stream** (route (a), Amendment 5 row 5.2 —
+/// [`retain_or_compact_single_run`]'s own `compact_attribute_retention` gate). H3's second clause is
+/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
+/// that is not a multiple of 8: the slice and this compacted copy write different IPC bytes, in the
+/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
+/// 5.1) and for a non-null `Boolean`'s values bitmap (Amendment 8's class-2 row). The guarantee this function actually
+/// gives is **decoded equality** — the same values, and the same validity within the array's own
+/// length — never byte identity, and nothing on this stream claims the latter.
+fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
+    let data = array.to_data();
+    let mut mutable = MutableArrayData::new(vec![&data], false, array.len());
+    mutable.extend(0, 0, array.len());
+    make_array(mutable.freeze())
+}
+
 fn flush(
     pending: &mut Pending,
     envelope: &BatchEnvelope,
@@ -2113,6 +2317,7 @@ fn flush(
     batch_index: u64,
     target_bytes: usize,
     report_bounds: bool,
+    compact_attribute_retention: bool,
     cut_by: BatchCut,
 ) -> Result<()> {
     let mut p = std::mem::replace(pending, Pending::new(pending.attrs.len()));
@@ -2151,8 +2356,20 @@ fn flush(
         // until the batch is dropped, so producer-resident memory can exceed the estimate by up to
         // one chunk per attribute column. It is bounded by the chunk, so no declared ceiling is
         // breached, but the ceiling arithmetic in `MAX_QUEUED_BATCHES` does not account for it.
+        //
+        // **On the live projected stream alone** (route (a), Amendment 5 row 5.2),
+        // `MAX_ATTRIBUTE_RETENTION_FACTOR` (condition (3)) bounds that retention: past the factor,
+        // plus 64 bytes per buffer (row 5.3), the run is compacted by one copy here, decided after
+        // the cut, so the live projected stream's producer-resident payload is the bound
+        // `MAX_QUEUED_BATCHES`'s doc states.
+        //
+        // **Route (a) (Amendment 5, row 5.2): this compaction runs only on the live projected
+        // stream.** H3's second clause is false for a nullable, non-8-aligned run at `arrow-ipc`
+        // 58.4.0 (R-E1), so every other plan — publish's included — keeps main's own single-run
+        // arm (the slice, no copy) regardless of the factor: `compact_attribute_retention` is that
+        // plan's own declared choice (`StreamPlan`'s own doc), not a fact this function decides.
         .map(|runs| match runs.len() {
-            1 => Ok(Arc::clone(&runs[0])),
+            1 => single_run_retention(&runs[0], compact_attribute_retention),
             _ => {
                 ATTRIBUTE_CONCATENATIONS.fetch_add(1, Ordering::SeqCst);
                 let refs: Vec<&dyn Array> = runs.iter().map(|a| a.as_ref()).collect();
@@ -2267,9 +2484,459 @@ mod tests {
         assert!(estimate_bytes(MAX_ROWS_PER_BATCH, 0) * 4 < MAX_BATCH_BYTES);
     }
 
+    /// E-11: `float32_costs_four_bytes_in_the_estimate`. Mutation: remove the arm (falls through to
+    /// the 8-byte catch-all).
+    #[test]
+    fn float32_costs_four_bytes_in_the_estimate() {
+        let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));
+        // 1 validity bit (rounded to a byte) + 4 bytes for the value.
+        assert_eq!(attr_row_bytes(&[col], 0), 1 + 4);
+    }
+
+    /// E-12: `a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_
+    /// the_envelope` — proven over a real arrow-rs `DictionaryArray`, directly against the
+    /// chunk-loop's own decode function, per round 17 item 4 stop item 6's accepted pattern (H2
+    /// makes this unreachable through `read_parquet` itself). Mutation: skip the decode (return
+    /// `col.clone()` unconditionally) — the test then observes the still-dictionary-typed array
+    /// rather than the value-typed one, and the assertion on `data_type()` fails by name.
+    #[test]
+    fn a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope()
+    {
+        use arrow::array::{DictionaryArray, StringArray};
+        use arrow::datatypes::Int32Type;
+
+        let keys = arrow::array::Int32Array::from(vec![1, 0, 1]);
+        let values = StringArray::from(vec!["industrial", "residential"]);
+        let dict: ArrayRef =
+            std::sync::Arc::new(DictionaryArray::<Int32Type>::try_new(keys, Arc::new(values)).unwrap());
+        assert!(matches!(dict.data_type(), DataType::Dictionary(_, _)));
+
+        let decoded = decode_dictionary_chunk_column(&dict, &DataType::Utf8).unwrap();
+        // No index reaches the caller: the returned array is the value type, not a dictionary.
+        assert_eq!(decoded.data_type(), &DataType::Utf8);
+        let strings = decoded.as_any().downcast_ref::<StringArray>().unwrap();
+        assert_eq!(strings.value(0), "residential");
+        assert_eq!(strings.value(1), "industrial");
+        assert_eq!(strings.value(2), "residential");
+    }
+
+    /// A column that never arrived dictionary-encoded passes through unchanged (no copy, no
+    /// panic) — the common case this function must not slow down or alter.
+    // RECORDED MUTATION: in `decode_dictionary_chunk_column`, replace the non-dictionary `else`
+    // arm's `Ok(col.clone())` with an unconditional `Err(..)`. Observed: this test fails by name --
+    // `unwrap()` panics on `Arrow("mutated: non-dictionary path refused")` at
+    // `engine/src/stream.rs:2419`. Reverted.
+    #[test]
+    fn a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged() {
+        let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));
+        let out = decode_dictionary_chunk_column(&col, &DataType::Float32).unwrap();
+        assert_eq!(out.data_type(), &DataType::Float32);
+    }
+
+    /// E-14: `every_emitted_attribute_column_retains_at_most_the_declared_factor`. Directly against
+    /// `flush`'s own retention decision, on a constructed array rather than a live DuckDB chunk —
+    /// what actually matters here is the *ratio*, not where the array came from, and a run near the
+    /// tail of a large chunk (`retain_or_compact_single_run`'s own doc) is exactly this shape:
+    /// most of a large source array's buffer retained by a small slice of it.
+    ///
+    /// **X7 (Amendment 5, row 5.6) adds R-E2's two small runs**, over the widened allowance (row
+    /// 5.3): a 1-row `Int64` run (retains 64 bytes against 8) and a 100-row `Boolean` run (64
+    /// against 13) — both breach the *plain* factor on their own (`MutableBuffer`'s 64-byte
+    /// allocation rounding, `arrow-buffer` 58.4.0) even though nothing is actually over-retained,
+    /// and both must be reported as within the declared bound once the 64-bytes-per-buffer
+    /// allowance is included.
+    ///
+    /// **The small runs assert the decision itself (gate 2, R2-B1):** each comes back as the same
+    /// array, uncopied (`Arc::ptr_eq`) — the property the 64-bytes-per-buffer term buys (ADR-004).
+    /// A bound check alone cannot tell: a compacted 1-row `Int64` still rounds to 64 bytes.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): remove compaction
+    // (`retain_or_compact_single_run`'s compacting branch never taken). Observed: this test fails
+    // by name -- "retained 342208 bytes for a run whose own allowance is 408 bytes" at
+    // `engine/src/stream.rs:2578`. Reverted.
+    // RECORDED MUTATION (observed at `ca3d7ae`): remove the 64-bytes-per-buffer term from
+    // `retain_or_compact_single_run`'s allowance. Observed: this test fails by name -- "a 1-row
+    // Int64 run must be kept uncopied" at `engine/src/stream.rs:2612`. Reverted.
+    #[test]
+    fn every_emitted_attribute_column_retains_at_most_the_declared_factor() {
+        let allowance = |data: &arrow::array::ArrayData| -> usize {
+            MAX_ATTRIBUTE_RETENTION_FACTOR
+                .saturating_mul(data.get_slice_memory_size().unwrap())
+                .saturating_add(64 * buffer_count(data))
+        };
+
+        // The large-run case (unchanged from before X7): 10 rows out of 20 000 retains far more
+        // than even the widened allowance.
+        let big = arrow::array::StringArray::from(
+            (0..20_000).map(|i| format!("row-{i:06}")).collect::<Vec<_>>(),
+        );
+        let source: ArrayRef = Arc::new(big);
+        let tail: ArrayRef = source.slice(19_990, 10);
+
+        // The un-decided input itself breaches the allowance — otherwise this test would pass
+        // whether or not the retention rule ran at all.
+        let before = tail.to_data();
+        assert!(
+            before.get_buffer_memory_size() > allowance(&before),
+            "test fixture does not actually exercise the retention rule"
+        );
+
+        let kept = retain_or_compact_single_run(&tail).expect("retention decision");
+        let after = kept.to_data();
+        assert!(
+            after.get_buffer_memory_size() <= allowance(&after),
+            "retained {} bytes for a run whose own allowance is {} bytes",
+            after.get_buffer_memory_size(),
+            allowance(&after)
+        );
+        let kept = kept.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        for i in 0..10 {
+            assert_eq!(kept.value(i), format!("row-{:06}", 19_990 + i));
+        }
+
+        // R-E2's small runs (X7, row 5.3): the plain factor alone would call both of these a
+        // breach, though nothing is actually over-retained — the 64-bytes-per-buffer allowance is
+        // what makes the declared bound hold for them. Built directly from a `MutableBuffer`, never
+        // an ordinary `Builder`: `PrimitiveBuilder`'s own values buffer is a plain `Vec<T::Native>`
+        // (this crate's own read of `arrow-array` 58.4.0's `primitive_builder.rs`), which carries no
+        // 64-byte rounding at all — only `arrow_buffer::MutableBuffer::with_capacity` does that
+        // (`bit_util::round_upto_multiple_of_64`, `arrow-buffer` 58.4.0's own source), which is the
+        // path DuckDB's own FFI-to-Arrow import actually allocates through. Constructing the
+        // `MutableBuffer` directly reproduces the real allocator's rounding deterministically,
+        // rather than depending on which of arrow-rs's several construction paths a future version
+        // might route a small array through.
+        use arrow::buffer::{Buffer, MutableBuffer};
+        let mut one_row_buf = MutableBuffer::new(8); // rounds to 64 (R-E2's own observed figure)
+        one_row_buf.extend_from_slice(&0i64.to_le_bytes());
+        let one_row_data = arrow::array::ArrayData::builder(DataType::Int64)
+            .len(1)
+            .add_buffer(Buffer::from(one_row_buf))
+            .build()
+            .expect("1-row Int64 ArrayData");
+        assert_eq!(one_row_data.get_buffer_memory_size(), 64, "R-E2's own observed figure");
+        assert_eq!(one_row_data.get_slice_memory_size().unwrap(), 8, "R-E2's own observed figure");
+        let one_row: ArrayRef = make_array(one_row_data);
+        let kept = retain_or_compact_single_run(&one_row).expect("retention decision");
+        assert!(Arc::ptr_eq(&kept, &one_row), "a 1-row Int64 run must be kept uncopied");
+        assert!(
+            kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
+            "a 1-row Int64 run must not be reported as needing compaction"
+        );
+
+        // A 100-row `Boolean` run: bit-packed, 100 bits = 13 bytes (ceil(100/8)), needing 13 bytes
+        // rounded to 64 (R-E2's own observed figure). Packed by hand, byte by byte, rather than
+        // through a `BooleanBuffer`/`Builder` helper — the same reason the `Int64` case above is
+        // built from a raw `MutableBuffer`.
+        let mut packed_bits = [0u8; 13];
+        for i in 0..100usize {
+            if i % 3 == 0 {
+                packed_bits[i / 8] |= 1 << (i % 8);
+            }
+        }
+        let mut hundred_rows_buf = MutableBuffer::new(13);
+        hundred_rows_buf.extend_from_slice(&packed_bits);
+        let hundred_rows_data = arrow::array::ArrayData::builder(DataType::Boolean)
+            .len(100)
+            .add_buffer(Buffer::from(hundred_rows_buf))
+            .build()
+            .expect("100-row Boolean ArrayData");
+        assert_eq!(hundred_rows_data.get_buffer_memory_size(), 64, "R-E2's own observed figure");
+        assert_eq!(hundred_rows_data.get_slice_memory_size().unwrap(), 13, "R-E2's own observed figure");
+        let hundred_rows: ArrayRef = make_array(hundred_rows_data);
+        let kept = retain_or_compact_single_run(&hundred_rows).expect("retention decision");
+        assert!(Arc::ptr_eq(&kept, &hundred_rows), "a 100-row Boolean run must be kept uncopied");
+        assert!(
+            kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
+            "a 100-row Boolean run must not be reported as needing compaction"
+        );
+    }
+
+    /// E-15: `a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes`. **Narrowed to a
+    /// non-null run** (Amendment 5, row 5.1 — H3's second clause is false for nullable columns at
+    /// `arrow-ipc` 58.4.0; this test's own `Int64` array carries no nulls, so byte identity is a
+    /// true claim for it specifically, never a claim about every attribute column). X6's own new
+    /// tests (`publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_
+    /// bytes`, `a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included`) cover
+    /// the nullable shape this one does not.
+    /// Mutation: compact the whole chunk — if `compact_attribute_slice` copied the *source* array's
+    /// full length rather than the retained run's own `offset..offset+len`, the compacted array's
+    /// row count (and therefore its IPC bytes) would no longer match the 20-row run it replaces.
+    #[test]
+    fn a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes() {
+        let source: ArrayRef = Arc::new(arrow::array::Int64Array::from((0..5_000i64).collect::<Vec<_>>()));
+        let run: ArrayRef = source.slice(4_980, 20);
+
+        let compacted = compact_attribute_slice(&run);
+        assert_eq!(compacted.len(), 20, "the whole chunk was compacted, not just the retained run");
+
+        let ipc_bytes = |a: &ArrayRef| -> Vec<u8> {
+            let schema =
+                Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
+                    "v",
+                    DataType::Int64,
+                    false,
+                )]));
+            let batch = arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
+                .expect("record batch");
+            let mut buf = Vec::new();
+            {
+                let mut w = arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
+                w.write(&batch).expect("write");
+                w.finish().expect("finish");
+            }
+            buf
+        };
+
+        assert_eq!(
+            ipc_bytes(&compacted),
+            ipc_bytes(&run),
+            "a compacted copy must serialize byte-for-byte identically to the uncompacted slice it \
+             replaces, for this non-null run"
+        );
+    }
+
+    /// An envelope carrying one declared attribute column `v` of type `ty`, over the file CRS and
+    /// a verified native identity — the shape `stream_for_publish` builds, for tests that assemble
+    /// a batch around one attribute run.
+    fn one_attribute_envelope(ty: DataType) -> BatchEnvelope {
+        BatchEnvelope::with_attributes(
+            crate::crs::DatasetCrs::from_file(
+                "EPSG:2056".into(),
+                Some(include_str!("../tests/data/epsg2056.projjson").to_string()),
+                crate::crs::AxisOrder::EastingNorthing,
+            ),
+            "geometry".into(),
+            crate::identity::DatasetIdentity::new(
+                crate::identity::IdSource::File,
+                crate::identity::IdUniqueness::VerifiedAtOpenFullFile,
+                Some(1),
+                Some(0),
+            ),
+            vec![arrow::datatypes::Field::new("v", ty, true)],
+        )
+    }
+
+    /// The IPC bytes of the batch `TaggedBatch::assemble` builds from `env`, `attribute.len()`
+    /// ids and polygons, and `attribute` as the one attribute column — `flush`'s own assembly.
+    fn assembled_ipc_bytes(env: &BatchEnvelope, attribute: ArrayRef) -> Vec<u8> {
+        let rows = attribute.len();
+        let ids: ArrayRef = Arc::new(UInt64Array::from((0..rows as u64).collect::<Vec<_>>()));
+        let mut b = PolygonBuilder::new();
+        for _ in 0..rows {
+            b.push_wkb(&crate::wkb::encode_polygon(&[vec![
+                [2_600_000.0, 1_200_000.0],
+                [2_600_010.0, 1_200_000.0],
+                [2_600_010.0, 1_200_010.0],
+                [2_600_000.0, 1_200_000.0],
+            ]]))
+            .expect("polygon");
+        }
+        let geometry = build_polygon_array(b).expect("polygon array");
+        let batch = TaggedBatch::assemble(env, ids, geometry, vec![attribute]).expect("assemble");
+        let mut out = Vec::new();
+        batch.write_ipc_into(&mut out).expect("ipc");
+        out
+    }
+
+    /// X6 (Amendment 5, row 5.6): `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`.
+    /// Reads the retention the publish plan declares from the plan's own constructor
+    /// (`StreamPlan::for_publish`, the one `stream_for_publish` calls) and drives
+    /// [`single_run_retention`], `flush`'s single-run decision, with it. The IPC bytes of the
+    /// batch `TaggedBatch::assemble` builds from the kept run must equal those of the batch
+    /// assembled over the uncompacted run.
+    ///
+    /// Each case is a run the live decision would compact (so the plan's flag decides the
+    /// outcome), taken from a 20 000-row source at a byte-aligned offset. The nullable `Utf8` runs
+    /// carry a NULL inside the window with set validity bits after it (R-E1's shape: NULLs at 5,
+    /// 9, 22 and 41). The non-null `Boolean` runs are the H3 probe (Amendment 8's class-2 row):
+    /// the `changes` column records, for each case, whether compaction changed the IPC bytes as
+    /// observed at `arrow-ipc` 58.4.0.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): `StreamPlan::for_publish`
+    // declares `compact_attribute_retention: true`. Observed: this test fails by name --
+    // "publish's flush must never compact: nullable Utf8 IPC bytes differ at offset 8 len 3" at
+    // `engine/src/stream.rs:2787`. Reverted.
+    #[test]
+    fn publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes() {
+        let utf8_source: ArrayRef = Arc::new(arrow::array::StringArray::from(
+            (0..20_000)
+                .map(|i| if [5, 9, 22, 41].contains(&i) { None } else { Some(format!("v{i}")) })
+                .collect::<Vec<_>>(),
+        ));
+        let bool_source: ArrayRef =
+            Arc::new(arrow::array::BooleanArray::from((0..20_000).map(|i| i % 2 == 0).collect::<Vec<_>>()));
+
+        // (label, source, offset, length, whether compaction changes the IPC bytes)
+        let cases: [(&str, &ArrayRef, usize, usize, bool); 7] = [
+            ("nullable Utf8", &utf8_source, 8, 3, true),
+            ("nullable Utf8", &utf8_source, 0, 10, true),
+            ("nullable Utf8", &utf8_source, 40, 20, true),
+            ("non-null Boolean", &bool_source, 8, 3, true),
+            ("non-null Boolean", &bool_source, 0, 10, true),
+            ("non-null Boolean", &bool_source, 40, 20, true),
+            ("non-null Boolean", &bool_source, 3, 5, false),
+        ];
+        for (label, source, offset, len, changes) in cases {
+            let run = source.slice(offset, len);
+            if label.starts_with("nullable") {
+                assert!(run.null_count() > 0, "{label} {offset}/{len}: the window must carry a NULL");
+            }
+            let plan = StreamPlan::for_publish(one_attribute_envelope(source.data_type().clone()));
+            let uncompacted = assembled_ipc_bytes(&plan.envelope, Arc::clone(&run));
+
+            let live = retain_or_compact_single_run(&run).expect("live retention decision");
+            assert!(
+                !Arc::ptr_eq(&live, &run),
+                "{label} {offset}/{len}: the live decision must compact this run, or the plan's flag decides nothing"
+            );
+            let compacted = assembled_ipc_bytes(&plan.envelope, compact_attribute_slice(&run));
+            assert_eq!(
+                compacted != uncompacted,
+                changes,
+                "{label} {offset}/{len}: whether compaction changes the IPC bytes"
+            );
+
+            let kept = single_run_retention(&run, plan.compact_attribute_retention).expect("retention decision");
+            assert_eq!(
+                assembled_ipc_bytes(&plan.envelope, kept),
+                uncompacted,
+                "publish's flush must never compact: {label} IPC bytes differ at offset {offset} len {len}"
+            );
+        }
+    }
+
+    /// X6 (Amendment 5, row 5.6): `a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_
+    /// nulls_included` — the live projected stream's own guarantee (§2.3's narrowed byte-identity
+    /// sentence, row 5.2): a compacted run decodes to the **same values and the same validity**
+    /// (within the array's own length) as the slice it replaced, nulls included, even though the
+    /// two are no longer byte-identical at the IPC level for a nullable run (H3's second clause,
+    /// row 5.1).
+    /// Mutation: `compact_attribute_slice` drops the null buffer (`MutableArrayData::new(vec![&data],
+    /// false, ...)` — `false` becomes the default `use_nulls` already; the mutation instead directly
+    /// clears the compacted array's own validity, e.g. by rebuilding it with
+    /// `.with_nulls(None)`-equivalent bit-twiddling) so a null in the source no longer decodes as
+    /// NULL in the compacted copy.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in
+    // `compact_attribute_slice`, build the frozen data again with `.nulls(None)` (the compacted
+    // copy drops its null buffer). Observed: this test fails by name -- "index 5 (source index 5):
+    // NULL-ness must match" at `engine/src/stream.rs:2824`. Reverted.
+    #[test]
+    fn a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included() {
+        let source: ArrayRef = Arc::new(arrow::array::StringArray::from(
+            (0..64)
+                .map(|i| if i == 5 || i == 22 || i == 41 { None } else { Some(format!("v{i}")) })
+                .collect::<Vec<_>>(),
+        ));
+        let run = source.slice(0, 10); // covers source index 5, a NULL.
+        let compacted = compact_attribute_slice(&run);
+
+        assert_eq!(compacted.len(), run.len());
+        let run_strings = run.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        let compacted_strings = compacted.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        for i in 0..run.len() {
+            assert_eq!(
+                run_strings.is_null(i),
+                compacted_strings.is_null(i),
+                "index {i} (source index {}): NULL-ness must match",
+                i
+            );
+            if !run_strings.is_null(i) {
+                assert_eq!(run_strings.value(i), compacted_strings.value(i), "index {i}: value must match");
+            }
+        }
+    }
+
     #[test]
     fn identifiers_are_quoted_not_interpolated() {
         assert_eq!(quote_ident("geom\"; DROP TABLE t; --"), "\"geom\"\"; DROP TABLE t; --\"");
+    }
+
+    /// X7 (Amendment 5, row 5.6): `a_live_projected_text_stream_emits_every_attribute_column_
+    /// within_the_declared_retention_bound`, over a real `AttributeMode::MultiType` fixture's
+    /// `[text]` projection (§3's `[text]` row) — the live projected stream, which is the one plan
+    /// `compact_attribute_retention` is `true` for. Reads the producer's own queued `Item`s directly
+    /// (this module's own private channel, in-module), before `write_ipc_into` ever runs: a
+    /// serialized-then-reconstructed array's buffer memory always equals its slice memory (this
+    /// file's own module doc), which would make the retention decision untestable from decoded IPC
+    /// output.
+    /// Mutation: remove compaction (`flush`'s single-run arm always `Arc::clone`s), the same as
+    /// E-14's own recorded mutation — the assertion below then fails on whichever queued item
+    /// retains a `text` run near the tail of a large DuckDB chunk.
+    // RECORDED MUTATION: in `single_run_retention`, ignore `compact` and always
+    // `Ok(Arc::clone(array))`. Observed: this test fails by name -- "text run retained N bytes over
+    // its M-byte allowance" panics at `engine/src/stream.rs` (a `text` run near the tail of a large
+    // chunk retains far more than the declared bound once compaction never runs). Reverted.
+    #[cfg(feature = "fixture")]
+    #[test]
+    fn a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound()
+    {
+        use crate::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec};
+
+        let dir = std::env::temp_dir().join("spatial-engine-x7-retention-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("multitype-text.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 4_000,
+                attributes: AttributeMode::MultiType,
+                crs_mode: CrsMode::DeclaredLv95,
+                ..Default::default()
+            },
+        )
+        .expect("fixture");
+
+        // X12 (Amendment 5, row 5.6): hashed before and after this run.
+        let fixture_sha_before = {
+            use sha2::{Digest, Sha256};
+            let bytes = std::fs::read(&path).expect("read fixture for hashing");
+            let mut h = Sha256::new();
+            h.update(&bytes);
+            format!("{:x}", h.finalize())
+        };
+
+        let ds = Dataset::open(&path).expect("open");
+
+        let projection = ds.resolve_projection(&["text".to_string()]).expect("admitted projection");
+        let stream = ds
+            .stream_projected_with_cancel(&ViewportQuery::all(), &projection, CancelToken::new())
+            .expect("stream");
+
+        let mut rows_seen = 0usize;
+        let mut checked_any = false;
+        loop {
+            match stream.rx.recv() {
+                Ok(Ok(item)) => {
+                    rows_seen += item.batch.record_batch().num_rows();
+                    for col in item.batch.record_batch().columns().iter().skip(2) {
+                        // Skip `id` (0) and `geometry` (1) — only attribute columns carry this
+                        // retention rule (condition (3); §7).
+                        let data = col.to_data();
+                        let buffer_mem = data.get_buffer_memory_size();
+                        let allowance = MAX_ATTRIBUTE_RETENTION_FACTOR
+                            .saturating_mul(data.get_slice_memory_size().unwrap())
+                            .saturating_add(64usize.saturating_mul(buffer_count(&data)));
+                        assert!(
+                            buffer_mem <= allowance,
+                            "text run retained {buffer_mem} bytes over its {allowance}-byte allowance"
+                        );
+                        checked_any = true;
+                    }
+                }
+                Ok(Err(e)) => panic!("stream failed: {e:?}"),
+                Err(_) => break,
+            }
+        }
+        assert_eq!(rows_seen, 4_000, "every row must be seen exactly once");
+        assert!(checked_any, "must have checked at least one attribute column");
+
+        drop(stream);
+        let fixture_sha_after = {
+            use sha2::{Digest, Sha256};
+            let bytes = std::fs::read(&path).expect("read fixture for hashing");
+            let mut h = Sha256::new();
+            h.update(&bytes);
+            format!("{:x}", h.finalize())
+        };
+        assert_eq!(fixture_sha_after, fixture_sha_before, "the fixture file must be unchanged by this run");
     }
 
     // ---- lever A ------------------------------------------------------------------------------
@@ -2344,70 +3011,89 @@ mod tests {
     #[cfg(feature = "fixture")]
     mod filter_composition {
         use super::*;
-        use crate::fixture::{write_geoparquet, FixtureSpec};
+        use crate::fixture::{write_geoparquet, AttributeMode, FixtureSpec};
 
+        // Carries a `zone` column so E-17's projected cases have a real admitted column to name —
+        // `build_sql` never reads the file, so the unprojected cases below are unaffected by it.
         fn test_dataset(name: &str) -> Dataset {
             let dir = std::env::temp_dir().join("spatial-engine-build-sql-tests").join(name);
             std::fs::create_dir_all(&dir).unwrap();
             let path = dir.join("fixture.parquet");
-            write_geoparquet(&path, &FixtureSpec { features: 8, ..Default::default() })
-                .expect("fixture");
+            write_geoparquet(
+                &path,
+                &FixtureSpec { features: 8, attributes: AttributeMode::CategoricalZone, ..Default::default() },
+            )
+            .expect("fixture");
             Dataset::open(&path).expect("open")
         }
 
-        /// The composition-as-string matrix (`NEXT-CUT.md` P2): `{predicate present/absent} ×
-        /// {bbox present/absent} × {limit present/absent}`, all eight cells, each checked against
-        /// the emitted SQL **text** — so the composition rule (`WHERE ( <predicate verbatim> ) AND
-        /// <bbox>`, exactly one added paren pair, predicate leftmost) is verified against code, not
-        /// prose.
+        /// The composition-as-string matrix (`NEXT-CUT.md` P2; condition (4)): `{predicate
+        /// present/absent} × {bbox present/absent} × {limit present/absent} × {projection none or
+        /// `[zone]`}`, all 16 cells, each checked against the emitted SQL **text** — so the
+        /// composition rule (`WHERE ( <predicate verbatim> ) AND <bbox>`, exactly one added paren
+        /// pair, predicate leftmost) is verified against code, not prose, and the projection axis
+        /// (B1 §4 E-17) proves the `WHERE`/`LIMIT` suffix does not move when a projection is added:
+        /// only the `SELECT` prefix differs between a cell's two runs.
         #[test]
         fn the_where_composition_matrix_matches_the_declared_rule_exactly() {
             let ds = test_dataset("composition_matrix");
             let bbox = Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 };
             let predicate =
                 || AdmittedPredicate::unchecked_for_composition_test("zone = 'residential'".into());
+            let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
 
             const BBOX_COND: &str = "\"bbox\".\"xmin\" <= ? AND \"bbox\".\"xmax\" >= ? AND \
                                       \"bbox\".\"ymin\" <= ? AND \"bbox\".\"ymax\" >= ?";
             const PREFIX: &str = "SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?)";
+            const PROJECTED_PREFIX: &str =
+                "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?)";
 
+            // Eight `(filter, bbox, limit)` cells, carried as the WHERE/LIMIT *suffix* alone — the
+            // prefix is supplied separately below, once per projection state, so the same suffix
+            // string is asserted against both prefixes without being written out twice.
             let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
-                (None, None, None, PREFIX.to_string()),
-                (None, None, Some(7), format!("{PREFIX} LIMIT 7")),
-                (None, Some(bbox), None, format!("{PREFIX} WHERE {BBOX_COND}")),
-                (None, Some(bbox), Some(7), format!("{PREFIX} WHERE {BBOX_COND} LIMIT 7")),
-                (Some(predicate()), None, None, format!("{PREFIX} WHERE (zone = 'residential')")),
+                (None, None, None, String::new()),
+                (None, None, Some(7), " LIMIT 7".to_string()),
+                (None, Some(bbox), None, format!(" WHERE {BBOX_COND}")),
+                (None, Some(bbox), Some(7), format!(" WHERE {BBOX_COND} LIMIT 7")),
+                (Some(predicate()), None, None, " WHERE (zone = 'residential')".to_string()),
                 (
                     Some(predicate()),
                     None,
                     Some(7),
-                    format!("{PREFIX} WHERE (zone = 'residential') LIMIT 7"),
+                    " WHERE (zone = 'residential') LIMIT 7".to_string(),
                 ),
                 (
                     Some(predicate()),
                     Some(bbox),
                     None,
-                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND}"),
+                    format!(" WHERE (zone = 'residential') AND {BBOX_COND}"),
                 ),
                 (
                     Some(predicate()),
                     Some(bbox),
                     Some(7),
-                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND} LIMIT 7"),
+                    format!(" WHERE (zone = 'residential') AND {BBOX_COND} LIMIT 7"),
                 ),
             ];
 
-            for (filter, bbox, limit, expected) in cases {
+            for (filter, bbox, limit, suffix) in cases {
                 let had_filter = filter.is_some();
-                let q = ViewportQuery { bbox, bbox_crs: None, limit, filter };
-                let (sql, _plan) = ds
-                    .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
-                    .expect("build_sql");
-                assert_eq!(
-                    sql, expected,
-                    "cell: filter={had_filter} bbox={} limit={limit:?}",
-                    bbox.is_some()
-                );
+                let projections: [(&[arrow::datatypes::Field], &str); 2] =
+                    [(&[], PREFIX), (std::slice::from_ref(&zone_field), PROJECTED_PREFIX)];
+                for (attributes, prefix) in projections {
+                    let q = ViewportQuery { bbox, bbox_crs: None, limit, filter: filter.clone() };
+                    let (sql, _plan) = ds
+                        .build_sql(&q, IndexUse::Off, attributes, RowOrdering::Unordered)
+                        .expect("build_sql");
+                    assert_eq!(
+                        sql,
+                        format!("{prefix}{suffix}"),
+                        "cell: filter={had_filter} bbox={} limit={limit:?} projected={}",
+                        bbox.is_some(),
+                        !attributes.is_empty()
+                    );
+                }
             }
         }
 
@@ -2425,6 +3111,28 @@ mod tests {
             assert_eq!(
                 sql,
                 format!("SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE ({odd})")
+            );
+        }
+
+        /// E-17's projected twin of the test above: a declared `[zone]` projection places the
+        /// column after `geometry` in the `SELECT` list, and the `WHERE` clause is exactly as
+        /// verbatim as the unprojected case — the predicate text is untouched by the projection.
+        #[test]
+        fn the_projected_select_prefix_places_declared_columns_after_geometry_and_leaves_where_verbatim(
+        ) {
+            let ds = test_dataset("projected_verbatim");
+            let odd = "  Zone = 'Residential'  ";
+            let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
+            let q = ViewportQuery::all()
+                .with_filter(AdmittedPredicate::unchecked_for_composition_test(odd.to_string()));
+            let (sql, _) = ds
+                .build_sql(&q, IndexUse::Off, std::slice::from_ref(&zone_field), RowOrdering::Unordered)
+                .expect("build_sql");
+            assert_eq!(
+                sql,
+                format!(
+                    "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?) WHERE ({odd})"
+                )
             );
         }
     }
