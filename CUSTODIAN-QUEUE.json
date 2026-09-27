@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T14:48:30.153Z",
-  "plan_hash": "ec754d2e7a1682aab8b41f38b45ebfcf311a51a8b3487eb4472c9558984b58f6",
+  "generated_at": "2026-09-27T15:06:16.627Z",
+  "plan_hash": "2eb4e039f712930fff6dcfc488d532131e62e71cccd9275e2622ebb2445c0229",
   "priorities_approved": true,
   "next": {
     "id": "kernel-generation-close-races",
@@ -707,6 +707,25 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 26, item 4 (c): a pre-existing test in scripts/plan/verify-cites.test.mjs leaves one verify-cites-git- temp directory per run; beside verify-mutation-test-temp-dirs. Found by the governance piece's reviewer gate (state/consults/2026-09-26-governance-weekly-proposals-gate1-reviewer.md, S4)."
+    },
+    {
+      "id": "dco-hook-merge-skip",
+      "title": "The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/)."
     },
     {
       "id": "publish-refusal-codes-and-attempt-lifecycle",
