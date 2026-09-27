@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T16:33:14.367Z",
-  "plan_hash": "efc8ec7d7b2676086a8fc3da73a8473a64632721044cf2b403f2f185e006a6d3",
+  "generated_at": "2026-09-27T18:37:25.378Z",
+  "plan_hash": "3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf3231640959483c8012e6",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4410,6 +4410,83 @@
       "felt_verdict": false,
       "entries": [],
       "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "b1-engine-kernel-half-followups",
+      "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "b1-post-merge-pins",
+      "title": "B1's words-form references pinned at a main commit after its merge",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [
+        "b1-engine-kernel-half"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 20,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Round 25, item 2 (d): Amendment 8's superseded index names lines 273-274 of engine/src/fixture.rs at 273a79d in the words form; after B1 merges, pin them at a main commit with their hash in one appended row.",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "timing-assertions-under-contention",
+      "title": "Two latency assertions fail under concurrent build load and pass alone",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are.",
       "dates": {
         "opened": "2026-09-27",
         "done": null
