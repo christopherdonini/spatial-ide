@@ -1648,6 +1648,59 @@ mod tests {
         ));
     }
 
+    /// K-9 (the Float32 sub-case): `admit_bundle_format` refuses a `Float32` source column at
+    /// preflight with today's text — byte-copied from `admit_attribute_type`'s **former** Float32
+    /// refusal at c16f41d (this function's own doc comment). Mutation: remove the restriction
+    /// (`admit_bundle_format` admitting `Float32`).
+    #[test]
+    fn admit_bundle_format_refuses_a_float32_column_with_todays_text() {
+        match admit_bundle_format("f32", &arrow::datatypes::DataType::Float32) {
+            Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                column,
+                detail,
+            })) => {
+                assert_eq!(column, "f32");
+                assert_eq!(
+                    detail,
+                    "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
+                     it is still a conversion this engine was not asked to perform, and a consumer \
+                     reading `float64` would be told the source held one"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable naming Float32, got {other:?}"),
+        }
+    }
+
+    /// K-9 (the dictionary sub-case; O6): a real dictionary-encoded parquet column is unreachable
+    /// through `read_parquet` in the pinned DuckDB (H2, confirmed by P0), so no real `Dataset` or
+    /// `PublishRequest` can exercise `admit_bundle_format`'s dictionary arm end to end. Proven
+    /// directly against a constructed `DataType`, on the accepted pattern E-12/E-19 already use.
+    /// Mutation: remove the restriction (`admit_bundle_format` admitting every `Dictionary`).
+    #[test]
+    fn admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text() {
+        let ty = arrow::datatypes::DataType::Dictionary(
+            Box::new(arrow::datatypes::DataType::Int32),
+            Box::new(arrow::datatypes::DataType::Utf8),
+        );
+        match admit_bundle_format("cat", &ty) {
+            Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                column,
+                detail,
+            })) => {
+                assert_eq!(column, "cat");
+                assert_eq!(
+                    detail,
+                    format!(
+                        "type is {ty}. A dictionary index is an ordinal, and decoding one to \
+                         publish it would be a conversion the caller did not ask for. The bundle \
+                         format carries no dictionary batches"
+                    )
+                );
+            }
+            other => panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}"),
+        }
+    }
+
     #[test]
     fn a_forbidden_redistribution_term_refuses_the_publish_from_either_side() {
         let source = spatial_engine::dataset::SourceLicense {
