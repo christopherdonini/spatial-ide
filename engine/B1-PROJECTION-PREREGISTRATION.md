@@ -761,3 +761,15 @@ The literal half has no mutation, because every version fixture is deferred to t
 - If both survive, stop: the retention proof has a gap, and a test is declared by amendment before it is written.
 
 **Record.** Gate 3's reviewer report is the observation of record for 9.3 and 9.6. No closing amendment follows (the record cap).
+
+### Amendment 10 — 2026-09-27, post-result: the architect's reduction under the record cap (`state/directives/2026-09-18-record-cap.md`)
+
+Class 1 (post-result). References only.
+
+**Superseded as of this amendment**
+- Amendment 6, its X1, X4, X5, X8, X9, X11 and X13 rows: Amendment 8's rows of the same names; X4's pairing: Amendment 8's X4 and Class 4 (X4) rows.
+- Amendment 7, its first paragraph: Amendment 8's X4 and Class 4 (X4) rows.
+- Amendment 8, its X10 row (gate 3 reviewer E1): Amendment 9, 9.6, whose observation of record is gate 3's reviewer report (Amendment 9, Record).
+- Amendment 9, 9.6's attribution of A-E6 to gate 2 (gate 3 reviewer D1): A-E6 is gate 1's (Amendment 5, its X10 row).
+
+P6 sight list (round 12 (e)): read the last amendment first.
