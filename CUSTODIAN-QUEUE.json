@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T20:56:32.575Z",
-  "plan_hash": "3f51df6616d9285155de8b9944d797c25e2800f4c4012bd99eb7e220ec4f60be",
+  "generated_at": "2026-09-27T21:50:31.506Z",
+  "plan_hash": "8d2918a696bd28125406b7a750ae31562893efcbc749d41eb563ef21e8ac43cf",
   "priorities_approved": true,
   "next": {
     "id": "geometry-types-beyond-polygons",
@@ -966,6 +966,25 @@
         "done": null
       },
       "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation."
+    },
+    {
+      "id": "kernel-close-races-followups",
+      "title": "kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule."
     }
   ],
   "unscheduled": [

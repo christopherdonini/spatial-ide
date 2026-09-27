@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3f51df6616d9285155de8b9944d797c25e2800f4c4012bd99eb7e220ec4f60be`) at `2026-09-27T20:56:32.575Z`.
+Generated from `PLAN.yaml` (sha256 `8d2918a696bd28125406b7a750ae31562893efcbc749d41eb563ef21e8ac43cf`) at `2026-09-27T21:50:31.506Z`.
 
 ## 1. Next
 
@@ -71,6 +71,7 @@ Generated from `PLAN.yaml` (sha256 `3f51df6616d9285155de8b9944d797c25e2800f4c401
 - **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (phase `prototype`) — never queued until placed
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (phase `prototype`) — never queued until placed
 - **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) (phase `prototype`) — never queued until placed
+- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
