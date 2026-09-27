@@ -122,7 +122,8 @@ test('refuses_a_posix_home_path_under_users_and_home', () => {
   assert.equal(scanText(underUsers, { localName: 'zz' }).length, 1);
   assert.equal(scanText(underHome, { localName: 'zz' }).length, 1);
   // RECORDED MUTATION: removed the POSIX_ROOT pattern from findMatches' scan loop (rule (iv)).
-  // Observed: this test failed (both assertions: 0 findings instead of 1). Reverted.
+  // Observed: this test's first assertion failed (0 findings instead of 1, the underUsers case);
+  // the underHome case was not reached because assert stopped at the first failure. Reverted.
 });
 
 test('a_posix_root_inside_a_word_is_not_a_path_start', () => {
@@ -146,9 +147,9 @@ test('refuses_an_8_3_segment_under_users_without_a_drive', () => {
   assert.equal(r2[0].class, '8.3');
   // RECORDED MUTATION: confined (ii) to the drive root and the POSIX roots -- required
   // USERS_EIGHT_DOT_THREE_ROOT's lookbehind to also demand an immediately preceding drive
-  // (`[A-Za-z]:` or `/c`) or POSIX slash, instead of (iv)'s bare boundary. Observed: both
-  // assertions failed (0 findings instead of 1, since neither case has a drive or leading "/").
-  // Reverted.
+  // (`[A-Za-z]:` or `/c`) or POSIX slash, instead of (iv)'s bare boundary. Observed: this test's
+  // first assertion (r1, the backslash form) failed (0 findings instead of 1); the forward-slash
+  // case (r2) was not reached because assert stopped at the first failure. Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -179,8 +180,10 @@ test('permits_placeholder_segments', () => {
   // An empty segment: the root at the very end of the text, nothing after it.
   assert.equal(scanText(`C:\\${mk('U', 's', 'e', 'r', 's')}\\`, { localName: 'zz' }).length, 0);
   // RECORDED MUTATION: removed the placeholder branch (empty / `...` / ellipsis / `$`- or
-  // `%`-prefixed / wholly `<...>`) from classifySegment. Observed: every case above produced 1
-  // finding instead of 0. Reverted.
+  // `%`-prefixed / wholly `<...>`) from classifySegment. Observed: the loop's first case
+  // ('<redacted:profile>', 36 chars) produced 1 finding instead of 0; the remaining four cases and
+  // the trailing empty-segment assertion were not reached because assert stopped at the first
+  // failure. Reverted.
 });
 
 test('admits_only_listed_invented_names', () => {
@@ -199,7 +202,9 @@ test('permits_the_generic_machine_accounts', () => {
     assert.equal(scanText(`/${mk('h', 'o', 'm', 'e')}/${name}/f`, { localName: 'zz' }).length, 0, name);
   }
   // RECORDED MUTATION: removed 'runner', 'user', 'root' from MACHINE_ACCOUNTS (emptied the
-  // list). Observed: all six assertions failed (1 finding instead of 0). Reverted.
+  // list). Observed: the loop's first case ('runner', windowsPath form) failed (1 finding instead
+  // of 0); the remaining five checks were not reached because assert stopped at the first failure.
+  // Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -208,6 +213,9 @@ test('permits_the_generic_machine_accounts', () => {
 
 test('the_local_profile_is_refused_even_when_listed', () => {
   // 4.3: now observed against the shipped CLI (--message), not a hand-rolled runner script.
+  // 7.3 (G2): HOME takes the POSIX form of the listed name, and USERPROFILE keeps the Windows
+  // form, as in its three sibling tests -- a Windows-form HOME fails on a POSIX runner, since
+  // path.basename(posix) cannot split on backslash.
   const dir = makeTempDir('profile-scan-local-');
   try {
     const listedName = 'someone'; // on INVENTED_NAMES, but here it is *also* the spawned HOME/USERPROFILE basename
@@ -215,7 +223,7 @@ test('the_local_profile_is_refused_even_when_listed', () => {
     fs.writeFileSync(msgFile, `bad ${windowsPath('\\', listedName)}\n`);
     const result = spawnSync('node', [scannerPath, '--message', msgFile], {
       encoding: 'utf8',
-      env: { ...process.env, HOME: `C:\\Users\\${listedName}`, USERPROFILE: `C:\\Users\\${listedName}` },
+      env: { ...process.env, HOME: `/home/${listedName}`, USERPROFILE: `C:\\Users\\${listedName}` },
     });
     assert.equal(result.status, 1);
   } finally {
@@ -249,8 +257,10 @@ test('the_local_profile_override_spares_machine_accounts', () => {
 
 test('the_local_profile_flattened_form_is_refused', () => {
   // 4.1(f): "Users" or "home", a run of zero or more of \, / and -, then localName, then the end
-  // of the text or a non-alphanumeric character.
-  const localName = mk('f', 'l', 'a', 't', 't', 'e', 'n', 'e', 'd', 'Q');
+  // of the text or a non-alphanumeric character. 7.3 (G5): localName is the listed invented name
+  // `someuser`, so this proves (iii) overrides the invented-name list for the flattened form too
+  // (4.3's row names a listed name, not an unlisted one).
+  const localName = 'someuser';
   const env = { ...process.env, HOME: `/home/${localName}`, USERPROFILE: `C:\\Users\\${localName}` };
   const cases = [
     `${mk('U', 's', 'e', 'r', 's')}-${localName}`,
@@ -272,8 +282,57 @@ test('the_local_profile_flattened_form_is_refused', () => {
   const extended = scanText(`${mk('U', 's', 'e', 'r', 's')}-${localName}2`, { localName });
   assert.equal(extended.length, 0);
   // RECORDED MUTATION: dropped `-` from (iii)'s separator run (the dedicated regex's
-  // `(?:[\\/-])*` narrowed to `(?:\\{1,2}|\/)*`). Observed: the hyphen-separated cases above
-  // failed (exit 0 instead of 1). Reverted.
+  // `(?:[\\/-])*` narrowed to `(?:\\{1,2}|\/)*`). Observed: the loop's first case
+  // ('Users-someuser') failed (exit 0 instead of 1); the second hyphen-separated case
+  // ('home-someuser-x') and the no-separator case were not reached because assert stopped at the
+  // first failure. Reverted.
+});
+
+// ---------------------------------------------------------------------------
+// A diff header's C-quoted name (7.1(a))
+// ---------------------------------------------------------------------------
+
+test('a_content_finding_under_a_non_ascii_local_name_prints_no_segment', () => {
+  // 7.1(a): the local name is `josé` -- listed on INVENTED_NAMES, but still refused when it equals
+  // the local profile name (rule (iii), as `the_local_profile_is_refused_even_when_listed` proves
+  // for another listed name). The staged file sits under a "Users/josé" directory, so git
+  // C-quotes the added file's diff header name (it carries a non-ASCII byte); the file's content
+  // carries an unrelated, unlisted, invented full form, which is the commit's actual refusal
+  // reason. Neither the name nor its octal-escaped form may appear in the printed output.
+  const localName = 'josé';
+  const usersWord = mk('U', 's', 'e', 'r', 's');
+  const unlistedSeg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'Z');
+  const env = { ...process.env, HOME: `/home/${localName}`, USERPROFILE: `C:\\Users\\${localName}` };
+  const dir = makeTempDir('profile-scan-nonascii-');
+  try {
+    initRepo(dir);
+    fs.writeFileSync(path.join(dir, 'init.txt'), 'x\n');
+    git(dir, ['add', 'init.txt']);
+    let r = commit(dir, ['-q', '-s', '-m', 'init']);
+    assert.equal(r.status, 0, r.stderr);
+
+    const targetDir = path.join(dir, usersWord, localName);
+    fs.mkdirSync(targetDir, { recursive: true });
+    fs.writeFileSync(path.join(targetDir, 'bad.txt'), windowsPath('\\', unlistedSeg) + '\n');
+    git(dir, ['add', '.']);
+    r = commit(dir, ['-q', '-s', '-m', 'bad'], env);
+    assert.equal(r.status, 1);
+    const combined = `${r.stdout}\n${r.stderr}`;
+    assert.equal(combined.includes(localName), false, combined);
+    // The octal-escaped form git's own C-quoting would use for the name's non-ASCII byte, built
+    // at run time from the name's own UTF-8 bytes -- never hardcoded.
+    const octalEscaped = Array.from(Buffer.from(localName, 'utf8'))
+      .map((b) => (b >= 0x80 ? `\\${b.toString(8).padStart(3, '0')}` : String.fromCharCode(b)))
+      .join('');
+    assert.equal(combined.includes(octalEscaped), false, combined);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: restored the bare `b/` strip with no unquoting (in parseAddedLines, dropped
+  // the `p.startsWith('"')` branch and cUnquoteGitName, back to `currentFile = p === '/dev/null'
+  // ? null : p.replace(/^b\//, '')`). Observed: this test's `octalEscaped` assertion failed (the
+  // combined output contained "jos\303\251", the raw C-quoted, un-decoded header name, since the
+  // unstripped leading `"` defeated the `b/` replace). Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -347,6 +406,45 @@ test('redact_segment_keeps_every_byte_but_the_segment', () => {
   // test's output-equality assertion failed (the "C:\Users\" prefix was gone too). Reverted.
 });
 
+test('a_redaction_counts_the_local_name_inside_a_longer_segment_once', () => {
+  // 7.1(b): the local name is invented and unlisted, and a segment carries it followed by "." and
+  // more characters, under a Users root and under a POSIX root. This fires two overlapping refused
+  // matches on the same text: the dedicated rule (iii) local-name pattern matches the name alone,
+  // and the root's own segment extraction matches the name plus ".ext" as one longer segment. The
+  // shorter, contained match must be dropped so each occurrence is counted, printed and redacted
+  // once.
+  const localName = mk('o', 'v', 'e', 'r', 'l', 'a', 'p', 'Q');
+  const seg = `${localName}.ext`;
+  const winPath = windowsPath('\\', seg);
+  const posixPath = `/${mk('h', 'o', 'm', 'e')}/${seg}/f`;
+
+  {
+    const { output, count } = redactSegments(winPath, localName);
+    assert.equal(count, 1);
+    assert.equal(output, `C:\\${mk('U', 's', 'e', 'r', 's')}\\<redacted:profile>\\${mk('f', 'i', 'l', 'e', '.', 't', 'x', 't')}`);
+  }
+  {
+    const { output, count } = redactRoots(winPath, localName);
+    assert.equal(count, 1);
+    assert.equal(output, `%USERPROFILE%\\${mk('f', 'i', 'l', 'e', '.', 't', 'x', 't')}`);
+  }
+  {
+    const { output, count } = redactSegments(posixPath, localName);
+    assert.equal(count, 1);
+    assert.equal(output, `/${mk('h', 'o', 'm', 'e')}/<redacted:profile>/f`);
+  }
+  {
+    const { output, count } = redactRoots(posixPath, localName);
+    assert.equal(count, 1);
+    assert.equal(output, '$HOME/f');
+  }
+  // RECORDED MUTATION: exact-span dedup only (dropped the containment filter added in 7.1(b),
+  // leaving findMatches' original exact-span-only dedup). Observed: this test's first count
+  // assertion failed (redactSegments(winPath, ...): actual 2, expected 1); the remaining three
+  // sub-blocks (redactRoots(winPath), redactSegments(posixPath), redactRoots(posixPath)) were not
+  // reached. Reverted.
+});
+
 test('no_printed_path_carries_a_refused_segment', () => {
   // 4.1(e): every path the CLI prints goes through redactSegments. Exercises a refused staged
   // path name, a --message argument path, and a --redact-segment argument path, each with the
@@ -404,8 +502,10 @@ test('no_printed_path_carries_a_refused_segment', () => {
   }
   // RECORDED MUTATION: in printFindings, cmdRedact and cmdRedactSegment, printed the raw path
   // argument/finding file instead of routing it through safePrintablePath/redactSegments.
-  // Observed: all three sub-cases failed (the invented local name appeared in the captured
-  // stdout/stderr). Reverted.
+  // Observed: sub-case (1)'s doesNotMatch assertion failed (the invented local name appeared in
+  // the staged-path-name finding's printed line); sub-cases (2) --message argument and (3)
+  // --redact-segment argument were not reached because assert stopped at the first failure.
+  // Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -464,8 +564,8 @@ test('the_cli_scans_from_a_path_with_a_space_or_through_a_link', () => {
   // fileURLToPathSafe helper that read `new URL(url).pathname` without decoding percent-escapes
   // and without dereferencing links). Observed: the space-path case failed (status 0 instead of
   // 1 -- the space was left percent-encoded in the old helper's output, so isMain was false and
-  // main() never ran) and the link case failed the same way (path.resolve does not dereference a
-  // junction). Reverted.
+  // main() never ran); the link case and the win32-only lower-cased-drive regression case were not
+  // reached because assert stopped at the first failure. Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -541,8 +641,123 @@ test('the_hooks_name_the_scanners_status', () => {
   }
   // RECORDED MUTATION: in .githooks/pre-commit, collapsed the per-status case statement to a
   // single generic message ("commit refused -- the profile-path scan did not pass") for every
-  // non-zero status. Observed: both sub-cases failed (the exit-2 case's stderr no longer matched
-  // /aborted/i; the exit-3 case's stderr no longer matched /canary/i). Reverted.
+  // non-zero status. Observed: the loop's first case failed (exitCode 2, stderr no longer matched
+  // /aborted/i); the exitCode-3 case was not reached because assert stopped at the first failure.
+  // Reverted.
+});
+
+test('the_commit_msg_hook_names_the_scanners_status', () => {
+  // 4.3's status test (`the_hooks_name_the_scanners_status`), against the shipped `commit-msg`,
+  // with stub scanners exiting 2 and 3.
+  const cases = [
+    { exitCode: 2, expected: /aborted/i },
+    { exitCode: 3, expected: /canary/i },
+  ];
+  for (const { exitCode, expected } of cases) {
+    const { root, hooksSub } = makeIsolatedHookDir('commit-msg', `#!/usr/bin/env node\nprocess.exit(${exitCode});\n`);
+    const dir = makeTempDir('profile-scan-msgstatus-');
+    try {
+      git(dir, ['init', '-q']);
+      git(dir, ['config', 'user.email', 'test@example.com']);
+      git(dir, ['config', 'user.name', 'Test']);
+      git(dir, ['config', 'core.hooksPath', hooksSub]);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+      git(dir, ['add', 'a.txt']);
+      const r = commit(dir, ['-q', '-s', '-m', 'x']);
+      assert.notEqual(r.status, 0);
+      assert.match(r.stderr, expected);
+      assert.doesNotMatch(r.stderr, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+  // RECORDED MUTATION: in .githooks/commit-msg, collapsed the per-status case statement to a
+  // single generic message for every non-zero status. Observed: the loop's first case failed
+  // (exitCode 2, stderr no longer matched /aborted/i); the exitCode-3 case was not reached.
+  // Reverted.
+});
+
+test('a_scanner_load_failure_is_not_named_a_finding', () => {
+  // 7.1(c): a finding is named only when the scanner's status is 1 and its stdout is exactly the
+  // declared refused line. A stub scanner that throws at load exits 1 (node's own uncaught
+  // exception) and prints nothing to stdout, so neither shipped hook may read it as a finding.
+  // Hooks are invoked directly (as `a_scan_whose_git_read_fails_aborts_loudly` does), since `git
+  // commit` does not pass a hook's own exit code through unchanged.
+  {
+    const { root, hooksSub } = makeIsolatedHookDir('pre-commit', '#!/usr/bin/env node\nthrow new Error("stub load failure");\n');
+    const dir = makeTempDir('profile-scan-loadfail-pre-');
+    try {
+      git(dir, ['init', '-q']);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+      git(dir, ['add', 'a.txt']);
+      const r = spawnSync('sh', [path.join(hooksSub, 'pre-commit')], { cwd: dir, encoding: 'utf8' });
+      assert.equal(r.status, 2, r.stderr);
+      assert.match(r.stderr, /reported no result/i);
+      assert.doesNotMatch(`${r.stdout}${r.stderr}`, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+  {
+    const { root, hooksSub } = makeIsolatedHookDir('commit-msg', '#!/usr/bin/env node\nthrow new Error("stub load failure");\n');
+    const dir = makeTempDir('profile-scan-loadfail-msg-');
+    try {
+      const msgFile = path.join(dir, 'msg.txt');
+      fs.writeFileSync(msgFile, 'x\n\nSigned-off-by: Test <test@example.com>\n');
+      const r = spawnSync('sh', [path.join(hooksSub, 'commit-msg'), msgFile], { cwd: dir, encoding: 'utf8' });
+      assert.equal(r.status, 2, r.stderr);
+      assert.match(r.stderr, /reported no result/i);
+      assert.doesNotMatch(`${r.stdout}${r.stderr}`, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+
+  // With the shipped scanner on an invented finding, both hooks name a profile-path finding and
+  // exit 1.
+  {
+    const dir = makeTempDir('profile-scan-loadfail-real-staged-');
+    try {
+      initRepo(dir);
+      fs.writeFileSync(path.join(dir, 'init.txt'), 'x\n');
+      git(dir, ['add', 'init.txt']);
+      let r = commit(dir, ['-q', '-s', '-m', 'init']);
+      assert.equal(r.status, 0, r.stderr);
+      const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
+      fs.writeFileSync(path.join(dir, 'bad.txt'), windowsPath('\\', seg) + '\n');
+      git(dir, ['add', 'bad.txt']);
+      r = commit(dir, ['-q', '-s', '-m', 'bad']);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  {
+    const dir = makeTempDir('profile-scan-loadfail-real-msg-');
+    try {
+      initRepo(dir);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n');
+      git(dir, ['add', 'a.txt']);
+      let r = commit(dir, ['-q', '-s', '-m', 'init']);
+      assert.equal(r.status, 0, r.stderr);
+      const seg = mk('a', 'l', 'i', 'c', 'e', 'Z');
+      r = commit(dir, ['-q', '-s', '-m', `bad ${windowsPath('\\', seg)}`, '--allow-empty']);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /profile path/i);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  // RECORDED MUTATION: status 1 alone selects the finding message, in both hooks (reverted the
+  // `[ "$scan_status" -eq 1 ] && [ "$scan_output" = "profile-path-scan: refused" ]` guard to just
+  // `[ "$scan_status" -eq 1 ]`, in both .githooks/pre-commit and .githooks/commit-msg).
+  // Observed: this test's first sub-block failed (the pre-commit stub-load-failure case: actual
+  // status 1, expected 2); the commit-msg stub-load-failure case and the two shipped-scanner cases
+  // were not reached. Reverted.
 });
 
 // ---------------------------------------------------------------------------
@@ -744,8 +959,9 @@ test('a_message_line_below_a_scissors_line_is_scanned', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: restored the scissors cut in cmdMessage (findScissorsIndex and
-  // lines.slice(0, cut) before scanning). Observed: both assertions failed (status 0 instead of
-  // non-zero -- the path below the scissors line was no longer scanned in either form). Reverted.
+  // lines.slice(0, cut) before scanning). Observed: the first assertion (the `-F` case) failed
+  // (status 0 instead of non-zero -- the path below the scissors line was no longer scanned); the
+  // `-m` case was not reached because assert stopped at the first failure. Reverted.
 });
 
 test('commit_msg_refuses_a_profile_path_in_full_and_8_3_form', () => {
@@ -800,8 +1016,9 @@ test('commit_msg_refuses_a_profile_path_in_full_and_8_3_form', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: removed the scanner invocation block from `.githooks/commit-msg`
-  // (leaving only the DCO check). Observed: all four assertions failed (status 0 instead of
-  // non-zero, for both profile-shaped messages and for both merge cases). Reverted.
+  // (leaving only the DCO check). Observed: the first assertion (the full-form message) failed
+  // (status 0 instead of non-zero); the 8.3-form case and both merge cases were not reached
+  // because assert stopped at the first failure. Reverted.
 });
 
 test('commit_msg_dco_refusal_is_unchanged', () => {
