@@ -863,3 +863,5 @@ FROM duckdb_extensions() WHERE extension_name='spatial'
 (`scripts/duckdb_explain_invalid.py`) deliberately issues `LOAD spatial` only and never `INSTALL`,
 and it ran successfully offline against that cached copy; that demonstrates only that an
 already-installed extension loads without a fetch, not that it could be acquired without one.
+
+2026-09-27: this spike's results are untouched here; see `scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2a and round 29, item 3 for the profile-path disposition of this results section.

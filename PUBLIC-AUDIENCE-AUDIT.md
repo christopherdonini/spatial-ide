@@ -271,3 +271,14 @@ models itself on: `PRE-PUBLIC-CHECKLIST.md` §6 (2026-08-07, 632 blobs / 92 comm
   verbatim and recorded in `DEPENDENCY-LICENSES.md`, "Third-party data terms"; the two open
   obligations and one owed verification it found are queued as entry 51 — nothing remediated
   unqueued).
+
+## Dated correction (2026-09-27, exposure-profile-paths piece)
+
+Corrected result (round 28, item 1): this audit's earlier no-flags reading of the
+commit-message-body class rested in part on a check that had not run, and is now recorded as
+flagged for the consult's seven commits, with history not rewritten.
+
+References: round 28, item 1; the re-run consult (`state/consults/2026-09-26-exposure-checks-rerun.md`
+and its custodian's addendum); `scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md` 2f (in
+the audit only: the commit-message-body class, with the consult's seven commits, and the note that
+history stays). No path is reproduced here.
