@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18fd9dd18e9634549a363f9`) at `2026-09-27T14:12:22.694Z`.
+Generated from `PLAN.yaml` (sha256 `ec754d2e7a1682aab8b41f38b45ebfcf311a51a8b3487eb4472c9558984b58f6`) at `2026-09-27T14:48:30.153Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18f
 ## 2. Ready
 
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
-- **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
 ## 3. Waiting on the human (total: 0 min)
@@ -28,9 +27,7 @@ Generated from `PLAN.yaml` (sha256 `b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18f
 
 ## 5. In progress
 
-- **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) — evidence: branch `cut/corpus-reproducibility-record`
 - **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — evidence: branch `cut/b1-engine-projection`
-- **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) — evidence: branch `cut/data-plane-stream-registry-bound`
 
 ## 6. Proposed / unscheduled
 

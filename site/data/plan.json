@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T14:12:25.614Z",
-  "plan_hash": "b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18fd9dd18e9634549a363f9",
+  "generated_at": "2026-09-27T14:48:30.281Z",
+  "plan_hash": "ec754d2e7a1682aab8b41f38b45ebfcf311a51a8b3487eb4472c9558984b58f6",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3995,7 +3995,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [
         "data-plane-origin-non-ascii"
@@ -4006,16 +4006,16 @@
       },
       "gate": "protocol/data-plane/STREAM-REGISTRY-BOUND-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/data-plane-stream-registry-bound"
+        "pr": 130
       },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click.",
+      "summary": "DONE 2026-09-27 at PR #130 (merged 0c0b680; gate attempt 2, PASS both at a4aa7f3). RULED 2026-09-26, question round 24, item 1: an S1 cut; follows data-plane-origin-non-ascii; fixed with a time bound plus a declared count ceiling, mirroring the kernel's registry; an entry is not dropped at its terminal, since that would break answering a late cancel. Evidence: state/cloud/wave1/A5.md, Finding A5-1, reproduced on Windows. 2026-09-26: preregistration 8dbaec5; attempt 2 (record round) PASS, both gates at a4aa7f3; PR #130 open for the human's click.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -4051,7 +4051,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -4060,16 +4060,16 @@
       },
       "gate": "engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/corpus-reproducibility-record"
+        "pr": 132
       },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared.",
+      "summary": "DONE 2026-09-27 at PR #132 (merged 0d80c70; the scoped read, reviewer PASS at 43e6d04; C8 re-run at each pushed head). RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -4240,7 +4240,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -4248,15 +4248,17 @@
         "minutes": 0
       },
       "gate": "scripts/plan/GOVERNANCE-WEEKLY-PROPOSALS-2026-09-26-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "pr": 129
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click.",
+      "summary": "DONE 2026-09-27 at PR #129 (merged 16df0d7; gate attempt 3, reviewer PASS). RULED 2026-09-26, question round 25, item 2: all five proposals of state/questions/round-25.md item 2, (a) to (e), adopted as one governance docs piece, gated as usual. (b)'s gate reports each name the commit they reviewed, so their advisory cites still resolve against something fixed. This batch is this week's allowance under the record cap (state/directives/2026-09-18-record-cap.md); the next falls due 2026-10-02. 2026-09-26: preregistration at 340f516; attempt 1 PASS, both gates at f205478; PR #129 open for the human's click.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
