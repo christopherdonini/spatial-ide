@@ -814,6 +814,45 @@ fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_forma
     assert!(!destination.exists(), "nothing may be written before the refusal");
 }
 
+/// X2 (Amendment 5, row 5.6; O1): `publish_refuses_a_multi_failure_list_by_shared_admission_before_the_bundle_format_restriction`.
+/// `[f32, nope]` through the public `preflight_pinless` entry point: `f32` is admitted by shared
+/// admission and refused only by the bundle-format restriction, while `nope` fails shared
+/// admission's name pass. Shared admission runs first, so the refusal names `nope` as unknown and
+/// never renders `f32`'s `Float32` text. Nothing is written before the refusal.
+#[test]
+fn publish_refuses_a_multi_failure_list_by_shared_admission_before_the_bundle_format_restriction() {
+    let path = multitype_fixture("x2-publish-order", 20);
+    let ds = spatial_engine::Dataset::open(&path).expect("open");
+    ds.pin_content(&CancelToken::new()).expect("pin");
+    let viewer = viewer();
+    let destination = fixture_dir().join("x2-publish-order-bundle-not-written");
+    let _ = std::fs::remove_dir_all(&destination);
+
+    let req = PublishRequest {
+        dataset: &ds,
+        dataset_name: "x2",
+        query: spatial_engine::ViewportQuery::all(),
+        attributes: vec!["f32".to_string(), "nope".to_string()],
+        style_source: "{}",
+        viewer: &viewer,
+        viewer_license: viewer_license(),
+        license: None,
+        destination: destination.clone(),
+        started_at: "2026-09-27T00:00:00Z".into(),
+        finished_at: &|| "2026-09-27T00:00:01Z".to_string(),
+    };
+
+    let known: Vec<String> = ds.file_schema().fields().iter().map(|f| f.name().clone()).collect();
+    match preflight_pinless(&req) {
+        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable { column, detail })) => {
+            assert_eq!(column, "nope", "shared admission's unknown name must be refused before the bundle-format restriction reaches `f32`");
+            assert_eq!(detail, format!("the file has no such column (it has: {})", known.join(", ")));
+        }
+        other => panic!("expected AttributeUnpublishable naming `nope` as unknown, got {other:?}"),
+    }
+    assert!(!destination.exists(), "nothing may be written before the refusal");
+}
+
 /// Cross-checks `f32_for`'s own bucket claim used by `live_projection.rs`'s E-20, so this file's
 /// `k7` composed-filter test above (`f32 > 0.1`) is known in advance to select a real, non-vacuous
 /// subset over its own 300-feature fixture.
