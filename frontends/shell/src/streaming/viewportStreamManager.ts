@@ -13,7 +13,7 @@ import {
 import { cancel as skpCancel, viewportQuery } from "../skp/client";
 import type { Bbox, Filter } from "../skp/types";
 import { startStream } from "./adapterWs";
-import { isSourceChangedTerminal, LiveTicketSet } from "./liveTicketSet";
+import { isSessionEndedTerminal, LiveTicketSet } from "./liveTicketSet";
 import { dataPlaneAttach } from "./dataPlaneClient";
 import type { StreamSink, Terminal } from "./transport";
 
@@ -190,6 +190,17 @@ export class ViewportStreamManager {
     }
 
     const { stream } = await viewportQuery(this.opts.dataset, bbox, bboxCrs, null, filter);
+    // Amendment 4 item 1 (the wave-1 fold-in of Finding A2-1): the latch is read BEFORE the
+    // generation comparison, because a session end is the more specific fact -- the same ordering
+    // `requestViewport`'s own top-of-function `sessionEnded` check already uses. A late-minted
+    // ticket, resolved after another stream's own terminal (or an event-route end) already set this
+    // latch, is cancelled through the existing `skpCancel` and is NEVER admitted to the live set:
+    // this check runs strictly before `this.liveTickets.admit` below, so "never admitted" holds by
+    // placement, not by a second removal.
+    if (this.sessionEnded) {
+      await skpCancel(stream).catch(() => {});
+      return { kind: "session-ended" };
+    }
     if (myGeneration !== this.generation) {
       // A newer call (or stop()) won the race while this ticket was minting. This call is the only
       // thing that knows this handle exists, so it is the only thing that will ever cancel it.
@@ -200,10 +211,26 @@ export class ViewportStreamManager {
     this.residentStreamHandle = stream;
     this.nextBatchSeq = 0;
     // The ticket was minted under the dataset's live generation (the kernel refuses to mint one
-    // otherwise), so it is admitted to the client's mirror here, at the mint site.
+    // otherwise), so it is admitted to the client's mirror here, at the mint site -- guarded above:
+    // the session-ended check returns before this line runs if the session ended while this ticket
+    // was minting (Amendment 4 item 1's corrected premise).
     this.liveTickets.admit(stream);
 
     const attach = await dataPlaneAttach();
+    // Amendment 4 item 1's second guard, same ordering: the latch before the generation check. By
+    // this point the ticket WAS admitted to `liveTickets` above; `retire` undoes that so the net
+    // effect is "never admitted" here too, and every handle field naming this ticket is cleared.
+    if (this.sessionEnded) {
+      await skpCancel(stream).catch(() => {});
+      this.liveTickets.retire(stream);
+      if (this.currentStreamHandle === stream) {
+        this.currentStreamHandle = null;
+      }
+      if (this.residentStreamHandle === stream) {
+        this.residentStreamHandle = null;
+      }
+      return { kind: "session-ended" };
+    }
     if (myGeneration !== this.generation) {
       await skpCancel(stream).catch(() => {});
       if (this.currentStreamHandle === stream) {
@@ -297,22 +324,19 @@ export class ViewportStreamManager {
         // lives with the owner (`App.tsx`'s `latchedHoverReadout` call site), reached through
         // `onSessionEnded` below.
         //
-        // `!this.sessionEnded` makes "exactly once" structural rather than argued. P3a's version
-        // set the latch without guarding re-entry, which was harmless while the branch only logged;
-        // with an owner callback on the other side of it, "at most one stream is in flight so a
-        // second terminal cannot arrive" would be a claim resting on another method's invariant.
-        // The tiled sibling already guards this way (`tileViewportStreamManager.ts:732`).
-        if (isSourceChangedTerminal(terminal) && !this.sessionEnded) {
-          this.sessionEnded = true;
-          this.liveTickets.invalidate();
-          this.clearResidency();
-          this.residentStreamHandle = null;
-          this.currentStreamHandle = null;
+        // `endSession`'s own `if (this.sessionEnded) return` makes exactly-once structural rather
+        // than argued (Amendment 4 item 1: the terminal route and §2d's event route now share one
+        // private end method). P3a's version set the latch without guarding re-entry, which was
+        // harmless while the branch only logged; with an owner callback on the other side of it, "at
+        // most one stream is in flight so a second terminal cannot arrive" would be a claim resting
+        // on another method's invariant. The tiled sibling already guards this way
+        // (`tileViewportStreamManager.ts:732`).
+        if (isSessionEndedTerminal(terminal)) {
           logSessionEvent(
             "warn",
-            `session-ended-source-changed: ${streamHandleAtStart}: ${terminal.detail}`
+            `session-ended: ${streamHandleAtStart}: ${terminal.detail}`
           );
-          this.opts.onSessionEnded?.(terminal.detail);
+          this.endSession(terminal.detail);
         }
         // Viewport-residency cut P1b, M6: the ONE call site covering every terminal transition this
         // stream can reach (Completed, Cancelled, ProducerFailed alike), placed BEFORE the
@@ -390,6 +414,37 @@ export class ViewportStreamManager {
     }
     this.residentStreamHandle = null;
     this.opts.onSuperseded(resident);
+  }
+
+  /**
+   * **The single, latched way this manager ends its session** (Amendment 4 item 1, the wave-1
+   * fold-in of Finding A2-1) -- the shape `TileViewportStreamManager.endSession`/
+   * `notifySourceChanged` already establishes. Both routes that can learn this dataset's session
+   * ended -- the terminal route above, and `notifySessionEnded` below (the event route, `engine/
+   * SOURCE-WATCHER-PREREGISTRATION.md` §2d) -- call this one method, so exactly-once is this
+   * guard, not two.
+   */
+  private endSession(detail: string): void {
+    if (this.sessionEnded) {
+      return;
+    }
+    this.sessionEnded = true;
+    this.liveTickets.invalidate();
+    this.clearResidency();
+    this.residentStreamHandle = null;
+    this.currentStreamHandle = null;
+    this.opts.onSessionEnded?.(detail);
+  }
+
+  /**
+   * **§2d's event route into this manager.** `App.tsx`'s `dataset_session_ended` listener calls
+   * this when the event names this manager's own open, with an owner-built
+   * `"<code>: <owner placeholder>"` detail. The draft assumed this route already existed; on this
+   * (baseline) manager it did not, unlike the tiled/candidate manager's pre-existing
+   * `notifySourceChanged`, renamed `notifySessionEnded` alongside this addition.
+   */
+  notifySessionEnded(detail: string): void {
+    this.endSession(detail);
   }
 
   /**

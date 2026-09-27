@@ -26,16 +26,23 @@ use std::sync::Arc;
 
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
-use spatial_engine::EngineError;
+use spatial_engine::{EngineError, WatchSignal};
 use spatial_kernel::publish::error::PublishError;
-use spatial_kernel::skp::{error_of, terminal_detail_of, SkpHost, StreamRegistry};
+use spatial_kernel::skp::{error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
-use spatial_skp::v0::{DatasetHandle, ViewportQueryRequest, SKP_VERSION};
+use spatial_skp::v0::{DatasetHandle, OpenDatasetRequest, ViewportQueryRequest, SKP_VERSION};
+
+mod injected_watch;
+mod watch_support;
 
 /// The code the shell's `liveTicketSet.ts` matches as a prefix. Spelled as a literal on both sides
 /// deliberately — a shared constant would let the two agree while both being wrong, and the whole
 /// point of this file is that the two ends are pinned independently against the same bytes.
 const SOURCE_CHANGED_CODE: &str = "engine.source_changed";
+
+/// The coverage-lost sibling of [`SOURCE_CHANGED_CODE`] — spelled as its own literal for the same
+/// reason.
+const SOURCE_COVERAGE_LOST_CODE: &str = "engine.source_coverage_lost";
 
 fn fixture(name: &str) -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/typed-terminals");
@@ -85,7 +92,7 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
     let catalog = Arc::new(Catalog::new());
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone());
+    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -181,6 +188,111 @@ finished reading"
 
     // One source of codes: this is `error_of`'s table, not a second spelling beside it.
     assert_eq!(error_of(&e).code, SOURCE_CHANGED_CODE);
+}
+
+/// Architect gate-1 B1 (fix-list item 5): `frontends/shell/src/testUtils/terminalShapes.ts`'s
+/// `REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL` claimed a pin here that did not exist — this file had
+/// no match for `coverage` at all. Same shape as
+/// `a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code` above, for
+/// `EngineError::SourceCoverageLost`.
+///
+/// **The exact bytes the shell's own tests are written against**:
+/// `REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL` in `frontends/shell/src/testUtils/terminalShapes.ts`.
+///
+/// Mutation: drop the `[P6 placeholder]` mark from `EngineError::SourceCoverageLost`'s `Display`
+/// (`engine/src/error.rs`). Applied, run and reverted on this branch: `assertion `left == right`
+/// failed`, `left: "engine.source_coverage_lost: refused: the advisory watch on this source lost
+/// coverage (overflow). ..."`, `right: "engine.source_coverage_lost: [P6 placeholder] refused: ..."`
+/// — 1 failed.
+#[test]
+fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
+    let e = EngineError::SourceCoverageLost { detail: "overflow".to_string() };
+    let detail = terminal_detail_of(&e);
+
+    assert!(
+        detail.starts_with(&format!("{SOURCE_COVERAGE_LOST_CODE}: ")),
+        "the terminal detail must open with the typed code: {detail}"
+    );
+    assert!(detail.ends_with(&e.to_string()), "the refusal's own text is carried verbatim");
+
+    assert_eq!(
+        detail,
+        "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source \
+         lost coverage (overflow). This is not a statement that the file changed — the OS \
+         notification stream this session was relying on stopped reporting, and this check cannot \
+         see whether the file changed while it was not"
+    );
+
+    // Never a claim the file changed: the operator-visible-text rule (round 7), same discipline as
+    // the source-changed pin above.
+    for forbidden in ["discard", "no longer refer", "reopen the file"] {
+        assert!(!detail.contains(forbidden), "{forbidden}: {detail}");
+    }
+
+    // One source of codes: this is `error_of`'s table, not a second spelling beside it.
+    assert_eq!(error_of(&e).code, SOURCE_COVERAGE_LOST_CODE);
+}
+
+/// Architect gate-1 B1, the pre-check half: `liveTicketSet.ts::refusalDetailOf` builds
+/// `"<code>: <message>"` for a coverage-lost pre-check refusal, and
+/// `REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL` (`terminalShapes.ts`) claimed a pin for that
+/// exact shape that did not exist either. Driven through a real `SkpHost`, an injected watch
+/// (`injected_watch::InjectedArm`, per `engine/SOURCE-WATCHER-PREREGISTRATION.md` §2a's "no
+/// constructor exists for tests only") and a signal fired **after** admission — `SkpHost::
+/// open_dataset`'s sink's own `Admitted` arm — never a signal recorded before admission, which
+/// takes a different path (`SOURCE_CHANGED_CODE` above's sibling refusal).
+///
+/// **The exact bytes the shell's own tests are written against**:
+/// `REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL` in
+/// `frontends/shell/src/testUtils/terminalShapes.ts`.
+///
+/// Mutation: in `SkpHost::viewport_query`'s `live_or_mint` error arm, map every reason
+/// (`SessionEndReason::CoverageLost` included) to `EngineError::SourceChanged` (block-on-sight 3's
+/// own violation). Applied, run and reverted on this branch: `assertion `left == right` failed:
+/// refused: the source file changed while it was open (...)`, `left: "engine.source_changed"`,
+/// `right: "engine.source_coverage_lost"` — 1 failed.
+#[test]
+fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
+    let path = fixture("coverage-lost-pre-check");
+    let arm = injected_watch::InjectedArm::new();
+    let host =
+        SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), session_end_channel().0);
+
+    let open = host
+        .open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: "coverage-lost-pre-check".to_string(),
+            crs_assertion: None,
+            identity: None,
+        })
+        .expect("open");
+
+    // A coverage loss AFTER admission: the sink's own `Admitted` arm ends the generation with
+    // `SessionEndReason::CoverageLost` (`SOURCE-WATCHER-PREREGISTRATION.md` §2b).
+    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
+
+    let refused = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: open.dataset,
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        })
+        .expect_err("a coverage-lost generation refuses the pre-check");
+    assert_eq!(refused.code, SOURCE_COVERAGE_LOST_CODE, "{}", refused.message);
+
+    let detail = format!("{}: {}", refused.code, refused.message);
+    assert_eq!(
+        detail,
+        "engine.source_coverage_lost: [P6 placeholder] refused: the advisory watch on this source \
+         lost coverage ({[P6 placeholder] this dataset's session ended when the advisory watch on \
+         its source lost coverage}). This is not a statement that the file changed — the OS \
+         notification stream this session was relying on stopped reporting, and this check cannot \
+         see whether the file changed while it was not"
+    );
 }
 
 /// Every engine refusal gets the same treatment, not just the one the client acts on — so a future

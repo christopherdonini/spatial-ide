@@ -1,23 +1,23 @@
 {
-  "generated_at": "2026-09-26T13:34:33.885Z",
+  "generated_at": "2026-09-27T10:49:25.571Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "site drift: C:\\dev\\wt\\governance-weekly\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
-      "site drift: C:\\dev\\wt\\governance-weekly\\site\\data\\plan.json differs from a fresh generation"
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
     ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 17151205376,
+        "bytes": 60536356864,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 378542071808,
+        "bytes": 368815259648,
         "total": 500090007552
       }
     ]
@@ -33,13 +33,13 @@
   "waiting_on_human": [],
   "median_opened_to_done": {
     "days": 1,
-    "n": 77
+    "n": 81
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 53,
+    "nodes": 56,
     "first_pass": 20,
-    "rate": 0.37735849056603776
+    "rate": 0.35714285714285715
   },
   "record_rounds": {
     "present": true,
@@ -69,8 +69,10 @@
       "governance-test-claims-superseded-followups": 1,
       "data-plane-origin-non-ascii": 1,
       "engine-source-change-watcher": 1,
-      "bundle-viewer-partition-offset-bounds": 1
+      "bundle-viewer-partition-offset-bounds": 1,
+      "data-plane-stream-registry-bound": 1,
+      "governance-stop-hook-lease": 2
     },
-    "total": 41
+    "total": 44
   }
 }
