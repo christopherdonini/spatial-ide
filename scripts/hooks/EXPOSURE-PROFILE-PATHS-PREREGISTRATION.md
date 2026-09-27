@@ -842,3 +842,38 @@ Main moved after Amendment 11's closing record (a custodian commit filing a new 
   - Command: `node scripts/plan/verify-cites.mjs` — PASS (840 files; 68 loose references advised, pre-existing).
   - Command: `node scripts/plan/verify-quotes.mjs` — PASS (110 checked, 79 verified, 30 baselined, 1 advisory, 0 errors; 2 pre-existing hash-baselined entries).
   - Command: `node scripts/plan/verify-test-claims.mjs` — PASS (300 claimed across 88 files; 11 planned, 3 superseded, 15 withdrawn, all advisory).
+
+**Amendment 13 — record round 2, the last under the record cap (class 1). Written after the scoped read of `4155fcf..2511028` was seen; no code of this round.**
+
+*Source.* The scoped read's findings R1 and R2, and nits N1-N4, relayed by the custodian. Correctness and Evidence pass; Documentation fails low, on R1 and R2 only. N1, N3 and N4 take no action (record cap).
+
+**13.1 (class 3; round 12(d)).** R1: 11.6 recorded the re-derivation's two `git` commands but described its scan step in prose rather than recording it as a command. The scan step is now the single verbatim line at 13.3, and its result at both `3b421d5` and `3c25302` reproduces 11.6's file/class/count listing exactly (checked by script; not re-carried here). The proof is 13.3's command and counts.
+
+**13.2 (class 3; round 12(d)).** R2: 11.6 and Amendment 12 asserted verify-cites' "pre-existing" with no proof. The proof is the single verbatim command at 13.4: the branch's loose-reference set is a subset of main's at `3b421d5` (checked out at `C:/dev/spatial-ide`, confirmed at that commit), with 0 branch-only.
+
+**13.3 The re-derivation's scan step, verbatim (R1).**
+
+```
+node --input-type=module -e 'import { scanText } from "file:///C:/dev/wt/exposure-profile-paths/scripts/hooks/profile-path-scan.mjs"; import { execFileSync, spawnSync } from "node:child_process"; import fs from "node:fs"; import os from "node:os"; import path from "node:path"; const REV = process.argv[1], OUT = process.argv[2], REPO = "C:/dev/wt/exposure-profile-paths", localName = path.basename(os.homedir()); const entries = execFileSync("git", ["-C", REPO, "ls-tree", "-r", "-z", REV], { maxBuffer: 1 << 28 }).toString("utf8").split("\0").filter(Boolean).map(l => { const t = l.indexOf("\t"), m = l.slice(0, t).split(" "); return { type: m[1], hash: m[2], path: l.slice(t + 1) }; }).filter(e => e.type === "blob"); const batchOut = spawnSync("git", ["-C", REPO, "cat-file", "--batch"], { input: entries.map(e => e.hash).join("\n") + "\n", maxBuffer: 1 << 30 }).stdout; let off = 0; const contents = new Map(); for (const e of entries) { const nl = batchOut.indexOf(10, off); const size = parseInt(batchOut.slice(off, nl).toString("utf8").split(" ")[2], 10); const cs = nl + 1; contents.set(e.hash, batchOut.slice(cs, cs + size).toString("utf8")); off = cs + size + 1; } let n = 0; const lines = []; for (const e of entries) { const content = contents.get(e.hash) || ""; const nf = scanText(e.path, { localName }), cf = scanText(content, { localName }), total = nf.length + cf.length; if (total > 0) { n++; const cc = {}; for (const f of [...nf, ...cf]) cc[f.class] = (cc[f.class] || 0) + 1; lines.push(`${e.path} | count:${total} | ${Object.entries(cc).sort().map(([c, v]) => `${c}=${v}`).join(",")}`); } } lines.sort(); fs.writeFileSync(OUT, lines.join("\n") + "\n"); console.log(`rev=${REV} file_count=${entries.length} files_with_findings=${n}`);' -- <rev> <out>
+```
+
+- At `<rev>` = `3b421d5`, `<out>` a scratch file: `rev=3b421d5... file_count=1124 files_with_findings=30`. The written listing is byte-for-byte 11.6's base (`9c9616a`) listing (both are the same 30 files, form classes and counts; checked by script).
+- At `<rev>` = `3c25302`: `rev=3c25302... file_count=1128 files_with_findings=22`. The written listing is byte-for-byte 11.6's M″ (`2b8813f`) listing (checked by script).
+
+**13.4 verify-cites' subset proof, verbatim (R2).**
+
+```
+node --input-type=module -e 'import { runVerifyCites } from "file:///C:/dev/wt/exposure-profile-paths/scripts/plan/verify-cites.mjs"; const branch = runVerifyCites({ repoRoot: "C:/dev/wt/exposure-profile-paths" }); const main = runVerifyCites({ repoRoot: "C:/dev/spatial-ide" }); const key = f => `${f.relPath}:${f.citeLine}->${f.target}`; const mainSet = new Set(main.advisory.map(key)); const branchOnly = branch.advisory.filter(f => !mainSet.has(key(f))); console.log(`branch_loose=${branch.advisory.length} main_loose=${main.advisory.length} branch_only=${branchOnly.length}`);'
+```
+
+- Result: `branch_loose=68 main_loose=75 branch_only=0`. The branch's 68 loose references are all found in main's 75; 0 are branch-only.
+
+**Also indexed (the reviewer's N2).** Amendment 8's Minutes bullet, and its last bullet ("Amendment 8 supersedes Amendment 5. The Budget line is never edited."), are superseded by Amendment 10 (its own Minutes bullet; its own supersession of Amendment 8, carrying Amendment 8's role forward). Neither was in Amendment 11's index. This amendment's own index, below, adds them.
+
+**Superseded index. Read the last amendment first.**
+
+Superseded:
+- Amendment 8's Minutes bullet (superseded by Amendment 10's Minutes bullet; not indexed until now, the reviewer's N2);
+- Amendment 8's last bullet, "Amendment 8 supersedes Amendment 5. The Budget line is never edited." (superseded by Amendment 10; not indexed until now, the reviewer's N2).
+
+Not superseded: 11.6's and Amendment 12's re-derivation and verify-cites bullets, now supplemented (not replaced) by 13.3 and 13.4.
