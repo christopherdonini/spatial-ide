@@ -36,7 +36,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use arrow::datatypes::DataType;
+use arrow::datatypes::{DataType, Field};
 use duckdb::Connection;
 use serde_json::Value;
 
@@ -1029,31 +1029,35 @@ fn namespace_admit(
         }
         match dataset.file_schema().fields().iter().find(|f| f.name() == name) {
             None => return Err(FilterError::UnknownColumn { column: name.clone() }),
-            Some(field) => {
-                // **ADR-021 Note 2026-09-24; round 17 item 3.** Refused by name, before the type
-                // gate ever runs — the gate now *admits* a dictionary (emitted as its value type),
-                // and the filter namespace deliberately does not follow it there.
-                if matches!(field.data_type(), DataType::Dictionary(_, _)) {
-                    return Err(FilterError::ColumnNotFilterable {
-                        column: name.clone(),
-                        reason: format!(
-                            "type is {}. This column is dictionary-encoded, and dictionary-encoded \
-                             columns are excluded from the filter namespace",
-                            field.data_type()
-                        ),
-                    });
-                }
-                if let Err(e) = crate::attributes::admit_attribute_type(name, field.data_type()) {
-                    return Err(FilterError::ColumnNotFilterable {
-                        column: name.clone(),
-                        reason: e.to_string(),
-                    });
-                }
-            }
+            Some(field) => filterable_column_type(name, field).map(|_| ())?,
         }
     }
 
     Ok(namespace)
+}
+
+/// Whether `name` (with file-schema field `field`) may be filtered on — the per-column check
+/// `namespace_admit` runs for every declared name, extracted so it is provable over a
+/// **constructed** `Field` without a `Dataset` (E-19; O6). A dictionary-encoded parquet column is
+/// unreachable through `read_parquet` in the pinned DuckDB (H2, confirmed), so a real `Dataset`
+/// carrying one cannot exist to test this against; this function is what a test calls instead,
+/// exactly as `stream::decode_dictionary_chunk_column` is (E-12's same accepted pattern).
+fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<DataType, FilterError> {
+    // **ADR-021 Note 2026-09-24; round 17 item 3.** Refused by name, before the type gate ever
+    // runs — the gate now *admits* a dictionary (emitted as its value type), and the filter
+    // namespace deliberately does not follow it there.
+    if matches!(field.data_type(), DataType::Dictionary(_, _)) {
+        return Err(FilterError::ColumnNotFilterable {
+            column: name.to_string(),
+            reason: format!(
+                "type is {}. This column is dictionary-encoded, and dictionary-encoded columns are \
+                 excluded from the filter namespace",
+                field.data_type()
+            ),
+        });
+    }
+    crate::attributes::admit_attribute_type(name, field.data_type())
+        .map_err(|e| FilterError::ColumnNotFilterable { column: name.to_string(), reason: e.to_string() })
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1182,6 +1186,42 @@ mod tests {
     /// writer.
     fn conn() -> Connection {
         Connection::open_in_memory().expect("in-memory duckdb connection")
+    }
+
+    /// E-18 (the namespace half): `Float32` is filterable — `duckdb_type_name` maps it to `REAL`
+    /// (F1; round 17 item 3), and [`filterable_column_type`] admits a `Float32`-typed field.
+    /// Mutation: leave `Float32` out of the namespace (drop the `REAL` arm).
+    #[test]
+    fn a_float32_column_is_filterable() {
+        assert_eq!(duckdb_type_name(&DataType::Float32), Some("REAL"));
+        let field = Field::new("f32", DataType::Float32, true);
+        assert_eq!(filterable_column_type("f32", &field), Ok(DataType::Float32));
+    }
+
+    /// E-19: `a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_
+    /// encoding` — proven over a **constructed** `Field`, per O6: H2 (confirmed by P0) makes a real
+    /// dictionary-encoded parquet column unreachable through `read_parquet` in the pinned DuckDB, so
+    /// no real `Dataset` can carry one to test `namespace_admit` against end to end. This is the
+    /// same accepted pattern E-12 uses for `stream::decode_dictionary_chunk_column`. Mutation:
+    /// remove the exclusion (fall through to `admit_attribute_type`, which now admits the
+    /// dictionary's value type).
+    #[test]
+    fn a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding() {
+        let field = Field::new(
+            "cat",
+            DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8)),
+            true,
+        );
+        match filterable_column_type("cat", &field) {
+            Err(FilterError::ColumnNotFilterable { column, reason }) => {
+                assert_eq!(column, "cat");
+                assert!(
+                    reason.contains("dictionary-encoded"),
+                    "reason must name the encoding: {reason}"
+                );
+            }
+            other => panic!("expected ColumnNotFilterable naming the encoding, got {other:?}"),
+        }
     }
 
     #[test]

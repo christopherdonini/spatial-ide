@@ -23,7 +23,10 @@ use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use arrow::array::{Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, UInt64Array};
+use arrow::array::{
+    make_array, Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, MutableArrayData,
+    UInt64Array,
+};
 use arrow::datatypes::DataType;
 use duckdb::ToSql;
 
@@ -63,8 +66,19 @@ pub const BATCH_GROWTH_FACTOR: usize = 4;
 pub const MAX_ROWS_PER_BATCH: usize = 65_536;
 /// Batches the producer may hold ahead of the consumer. Producer-resident payload is bounded by
 /// `(MAX_QUEUED_BATCHES + 1) * MAX_BATCH_BYTES`, plus DuckDB's own streaming buffer, which this
-/// counter does not see and does not claim to.
+/// counter does not see and does not claim to. An attribute-carrying batch's retained buffers are
+/// separately bounded by [`MAX_ATTRIBUTE_RETENTION_FACTOR`] (`flush`'s retention rule, condition
+/// (3)): producer-resident payload is then `(MAX_QUEUED_BATCHES + 1)` batches under that factor,
+/// plus DuckDB's current chunk, uncounted, as today.
 pub const MAX_QUEUED_BATCHES: usize = 2;
+
+/// **`flush`'s retention rule** (condition (3); B1 §2.3, §7). A single-run attribute slice is kept
+/// as a slice — no copy — unless the buffers it retains (`ArrayData::get_buffer_memory_size`)
+/// exceed this factor times its own memory (`ArrayData::get_slice_memory_size`, what a compacted
+/// copy would occupy). Past that it is compacted by one copy, decided after the cut. Emitted IPC
+/// bytes are identical either way (H3, confirmed: a slice and its compacted copy serialize
+/// byte-for-byte identically).
+pub const MAX_ATTRIBUTE_RETENTION_FACTOR: usize = 2;
 
 /// **Publish partition ceilings — declared, not discovered (ADR-010 rule 6).**
 ///
@@ -2160,6 +2174,39 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
     total
 }
 
+/// `flush`'s retention rule (condition (3); §7): a single-run attribute slice is kept as a slice —
+/// no copy — unless the buffers it retains exceed `MAX_ATTRIBUTE_RETENTION_FACTOR` times its own
+/// memory. Past that it is compacted by one copy.
+///
+/// **Decided after the cut**, on the run this batch actually retained, not on the source chunk as a
+/// whole: a run near the end of a large chunk retains little of it (offset near the chunk's end),
+/// while a run near the start of the same chunk retains almost all of it, so the ratio is a property
+/// of *this* run and cannot be precomputed before `run_start..row` is known.
+fn retain_or_compact_single_run(array: &ArrayRef) -> Result<ArrayRef> {
+    let data = array.to_data();
+    let buffer_mem = data.get_buffer_memory_size();
+    let slice_mem = data
+        .get_slice_memory_size()
+        .map_err(|e| EngineError::Arrow(format!("attribute slice memory: {e}")))?;
+    if buffer_mem > MAX_ATTRIBUTE_RETENTION_FACTOR.saturating_mul(slice_mem) {
+        Ok(compact_attribute_slice(array))
+    } else {
+        Ok(Arc::clone(array))
+    }
+}
+
+/// One copy: rebuilds `array`'s own `offset..offset+len` range into freshly sized buffers, so the
+/// source chunk's buffers are no longer retained. `arrow::compute::concat` cannot do this for a
+/// single array — its single-array case (`arrays.len() == 1`) returns `array.slice(0, array.len())`
+/// unchanged, which retains exactly what it started with. H3 (confirmed): the IPC writer emits
+/// identical bytes for a slice and this compacted copy.
+fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
+    let data = array.to_data();
+    let mut mutable = MutableArrayData::new(vec![&data], false, array.len());
+    mutable.extend(0, 0, array.len());
+    make_array(mutable.freeze())
+}
+
 fn flush(
     pending: &mut Pending,
     envelope: &BatchEnvelope,
@@ -2201,14 +2248,17 @@ fn flush(
     let attributes: Vec<ArrayRef> = p
         .attrs
         .iter()
-        // **A single run is kept as a slice rather than copied** — ADR-004 asks for copies to be
-        // minimized rather than assumed absent, and this is the common case. The consequence, stated
-        // because `est_bytes` does not see it: a slice retains its whole DuckDB chunk's buffers
-        // until the batch is dropped, so producer-resident memory can exceed the estimate by up to
-        // one chunk per attribute column. It is bounded by the chunk, so no declared ceiling is
-        // breached, but the ceiling arithmetic in `MAX_QUEUED_BATCHES` does not account for it.
+        // **A single run is kept as a slice rather than copied, unless its retained buffers grow
+        // past a declared factor of what a compacted copy would cost** — ADR-004 asks for copies to
+        // be minimized rather than assumed absent, and a plain slice is the common case. The
+        // consequence, stated because `est_bytes` does not see it: a slice retains its whole DuckDB
+        // chunk's buffers until the batch is dropped, so producer-resident memory can exceed the
+        // estimate by up to one chunk per attribute column. `MAX_ATTRIBUTE_RETENTION_FACTOR`
+        // (condition (3)) bounds that: past the factor the run is compacted by one copy here,
+        // decided after the cut, so the ceiling arithmetic in `MAX_QUEUED_BATCHES` holds instead of
+        // being silently exceeded by however large the source chunk happened to be.
         .map(|runs| match runs.len() {
-            1 => Ok(Arc::clone(&runs[0])),
+            1 => retain_or_compact_single_run(&runs[0]),
             _ => {
                 ATTRIBUTE_CONCATENATIONS.fetch_add(1, Ordering::SeqCst);
                 let refs: Vec<&dyn Array> = runs.iter().map(|a| a.as_ref()).collect();
@@ -2368,6 +2418,84 @@ mod tests {
         assert_eq!(out.data_type(), &DataType::Float32);
     }
 
+    /// E-14: `every_emitted_attribute_column_retains_at_most_the_declared_factor`. Directly against
+    /// `flush`'s own retention decision, on a constructed array rather than a live DuckDB chunk —
+    /// what actually matters here is the *ratio*, not where the array came from, and a run near the
+    /// tail of a large chunk (`retain_or_compact_single_run`'s own doc) is exactly this shape:
+    /// most of a large source array's buffer retained by a small slice of it. Mutation: remove
+    /// compaction (make `retain_or_compact_single_run` always return `Arc::clone`) — the assertion
+    /// below then fails on this array, because 10 rows out of 20 000 retains far more than
+    /// `MAX_ATTRIBUTE_RETENTION_FACTOR` times their own 10-row memory.
+    #[test]
+    fn every_emitted_attribute_column_retains_at_most_the_declared_factor() {
+        let big = arrow::array::StringArray::from(
+            (0..20_000).map(|i| format!("row-{i:06}")).collect::<Vec<_>>(),
+        );
+        let source: ArrayRef = Arc::new(big);
+        let tail: ArrayRef = source.slice(19_990, 10);
+
+        // The un-decided input itself breaches the factor — otherwise this test would pass whether
+        // or not the retention rule ran at all.
+        let before = tail.to_data();
+        assert!(
+            before.get_buffer_memory_size()
+                > MAX_ATTRIBUTE_RETENTION_FACTOR * before.get_slice_memory_size().unwrap(),
+            "test fixture does not actually exercise the retention rule"
+        );
+
+        let kept = retain_or_compact_single_run(&tail).expect("retention decision");
+        let after = kept.to_data();
+        let buffer_mem = after.get_buffer_memory_size();
+        let slice_mem = after.get_slice_memory_size().expect("slice memory");
+        assert!(
+            buffer_mem <= MAX_ATTRIBUTE_RETENTION_FACTOR * slice_mem,
+            "retained {buffer_mem} bytes for a run whose own data is {slice_mem} bytes, over the \
+             declared {MAX_ATTRIBUTE_RETENTION_FACTOR}x factor"
+        );
+        let kept = kept.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        for i in 0..10 {
+            assert_eq!(kept.value(i), format!("row-{:06}", 19_990 + i));
+        }
+    }
+
+    /// E-15: `a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes` (H3, confirmed).
+    /// Mutation: compact the whole chunk — if `compact_attribute_slice` copied the *source* array's
+    /// full length rather than the retained run's own `offset..offset+len`, the compacted array's
+    /// row count (and therefore its IPC bytes) would no longer match the 20-row run it replaces.
+    #[test]
+    fn a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes() {
+        let source: ArrayRef = Arc::new(arrow::array::Int64Array::from((0..5_000i64).collect::<Vec<_>>()));
+        let run: ArrayRef = source.slice(4_980, 20);
+
+        let compacted = compact_attribute_slice(&run);
+        assert_eq!(compacted.len(), 20, "the whole chunk was compacted, not just the retained run");
+
+        let ipc_bytes = |a: &ArrayRef| -> Vec<u8> {
+            let schema =
+                Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
+                    "v",
+                    DataType::Int64,
+                    false,
+                )]));
+            let batch = arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
+                .expect("record batch");
+            let mut buf = Vec::new();
+            {
+                let mut w = arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
+                w.write(&batch).expect("write");
+                w.finish().expect("finish");
+            }
+            buf
+        };
+
+        assert_eq!(
+            ipc_bytes(&compacted),
+            ipc_bytes(&run),
+            "a compacted copy must serialize byte-for-byte identically to the uncompacted slice it \
+             replaces (H3)"
+        );
+    }
+
     #[test]
     fn identifiers_are_quoted_not_interpolated() {
         assert_eq!(quote_ident("geom\"; DROP TABLE t; --"), "\"geom\"\"; DROP TABLE t; --\"");
@@ -2445,70 +2573,89 @@ mod tests {
     #[cfg(feature = "fixture")]
     mod filter_composition {
         use super::*;
-        use crate::fixture::{write_geoparquet, FixtureSpec};
+        use crate::fixture::{write_geoparquet, AttributeMode, FixtureSpec};
 
+        // Carries a `zone` column so E-17's projected cases have a real admitted column to name —
+        // `build_sql` never reads the file, so the unprojected cases below are unaffected by it.
         fn test_dataset(name: &str) -> Dataset {
             let dir = std::env::temp_dir().join("spatial-engine-build-sql-tests").join(name);
             std::fs::create_dir_all(&dir).unwrap();
             let path = dir.join("fixture.parquet");
-            write_geoparquet(&path, &FixtureSpec { features: 8, ..Default::default() })
-                .expect("fixture");
+            write_geoparquet(
+                &path,
+                &FixtureSpec { features: 8, attributes: AttributeMode::CategoricalZone, ..Default::default() },
+            )
+            .expect("fixture");
             Dataset::open(&path).expect("open")
         }
 
-        /// The composition-as-string matrix (`NEXT-CUT.md` P2): `{predicate present/absent} ×
-        /// {bbox present/absent} × {limit present/absent}`, all eight cells, each checked against
-        /// the emitted SQL **text** — so the composition rule (`WHERE ( <predicate verbatim> ) AND
-        /// <bbox>`, exactly one added paren pair, predicate leftmost) is verified against code, not
-        /// prose.
+        /// The composition-as-string matrix (`NEXT-CUT.md` P2; condition (4)): `{predicate
+        /// present/absent} × {bbox present/absent} × {limit present/absent} × {projection none or
+        /// `[zone]`}`, all 16 cells, each checked against the emitted SQL **text** — so the
+        /// composition rule (`WHERE ( <predicate verbatim> ) AND <bbox>`, exactly one added paren
+        /// pair, predicate leftmost) is verified against code, not prose, and the projection axis
+        /// (B1 §4 E-17) proves the `WHERE`/`LIMIT` suffix does not move when a projection is added:
+        /// only the `SELECT` prefix differs between a cell's two runs.
         #[test]
         fn the_where_composition_matrix_matches_the_declared_rule_exactly() {
             let ds = test_dataset("composition_matrix");
             let bbox = Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 };
             let predicate =
                 || AdmittedPredicate::unchecked_for_composition_test("zone = 'residential'".into());
+            let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
 
             const BBOX_COND: &str = "\"bbox\".\"xmin\" <= ? AND \"bbox\".\"xmax\" >= ? AND \
                                       \"bbox\".\"ymin\" <= ? AND \"bbox\".\"ymax\" >= ?";
             const PREFIX: &str = "SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?)";
+            const PROJECTED_PREFIX: &str =
+                "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?)";
 
+            // Eight `(filter, bbox, limit)` cells, carried as the WHERE/LIMIT *suffix* alone — the
+            // prefix is supplied separately below, once per projection state, so the same suffix
+            // string is asserted against both prefixes without being written out twice.
             let cases: [(Option<AdmittedPredicate>, Option<Bbox>, Option<u64>, String); 8] = [
-                (None, None, None, PREFIX.to_string()),
-                (None, None, Some(7), format!("{PREFIX} LIMIT 7")),
-                (None, Some(bbox), None, format!("{PREFIX} WHERE {BBOX_COND}")),
-                (None, Some(bbox), Some(7), format!("{PREFIX} WHERE {BBOX_COND} LIMIT 7")),
-                (Some(predicate()), None, None, format!("{PREFIX} WHERE (zone = 'residential')")),
+                (None, None, None, String::new()),
+                (None, None, Some(7), " LIMIT 7".to_string()),
+                (None, Some(bbox), None, format!(" WHERE {BBOX_COND}")),
+                (None, Some(bbox), Some(7), format!(" WHERE {BBOX_COND} LIMIT 7")),
+                (Some(predicate()), None, None, " WHERE (zone = 'residential')".to_string()),
                 (
                     Some(predicate()),
                     None,
                     Some(7),
-                    format!("{PREFIX} WHERE (zone = 'residential') LIMIT 7"),
+                    " WHERE (zone = 'residential') LIMIT 7".to_string(),
                 ),
                 (
                     Some(predicate()),
                     Some(bbox),
                     None,
-                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND}"),
+                    format!(" WHERE (zone = 'residential') AND {BBOX_COND}"),
                 ),
                 (
                     Some(predicate()),
                     Some(bbox),
                     Some(7),
-                    format!("{PREFIX} WHERE (zone = 'residential') AND {BBOX_COND} LIMIT 7"),
+                    format!(" WHERE (zone = 'residential') AND {BBOX_COND} LIMIT 7"),
                 ),
             ];
 
-            for (filter, bbox, limit, expected) in cases {
+            for (filter, bbox, limit, suffix) in cases {
                 let had_filter = filter.is_some();
-                let q = ViewportQuery { bbox, bbox_crs: None, limit, filter };
-                let (sql, _plan) = ds
-                    .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
-                    .expect("build_sql");
-                assert_eq!(
-                    sql, expected,
-                    "cell: filter={had_filter} bbox={} limit={limit:?}",
-                    bbox.is_some()
-                );
+                let projections: [(&[arrow::datatypes::Field], &str); 2] =
+                    [(&[], PREFIX), (std::slice::from_ref(&zone_field), PROJECTED_PREFIX)];
+                for (attributes, prefix) in projections {
+                    let q = ViewportQuery { bbox, bbox_crs: None, limit, filter: filter.clone() };
+                    let (sql, _plan) = ds
+                        .build_sql(&q, IndexUse::Off, attributes, RowOrdering::Unordered)
+                        .expect("build_sql");
+                    assert_eq!(
+                        sql,
+                        format!("{prefix}{suffix}"),
+                        "cell: filter={had_filter} bbox={} limit={limit:?} projected={}",
+                        bbox.is_some(),
+                        !attributes.is_empty()
+                    );
+                }
             }
         }
 
@@ -2526,6 +2673,28 @@ mod tests {
             assert_eq!(
                 sql,
                 format!("SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE ({odd})")
+            );
+        }
+
+        /// E-17's projected twin of the test above: a declared `[zone]` projection places the
+        /// column after `geometry` in the `SELECT` list, and the `WHERE` clause is exactly as
+        /// verbatim as the unprojected case — the predicate text is untouched by the projection.
+        #[test]
+        fn the_projected_select_prefix_places_declared_columns_after_geometry_and_leaves_where_verbatim(
+        ) {
+            let ds = test_dataset("projected_verbatim");
+            let odd = "  Zone = 'Residential'  ";
+            let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
+            let q = ViewportQuery::all()
+                .with_filter(AdmittedPredicate::unchecked_for_composition_test(odd.to_string()));
+            let (sql, _) = ds
+                .build_sql(&q, IndexUse::Off, std::slice::from_ref(&zone_field), RowOrdering::Unordered)
+                .expect("build_sql");
+            assert_eq!(
+                sql,
+                format!(
+                    "SELECT \"id\" AS \"id\", \"geometry\", \"zone\" FROM read_parquet(?) WHERE ({odd})"
+                )
             );
         }
     }
