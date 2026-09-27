@@ -712,3 +712,52 @@ Class 1 (post-result), with class rows where marked. Gate 2's reports, on `main`
 - Amendment 7, its re-verification paragraph and its suite counts: this amendment's table, and the reviewer's suite line cited above.
 
 P6 sight list (round 12 (e)): read the last amendment first.
+
+### Amendment 9 — 2026-09-27, post-result: scope addition on RULED 2026-09-24 (night), item (2): `protocol/skp/tests/conformance/` at the merge of `main`; E-15's mutation
+
+Class 9 (scope addition), with one class-4 row (9.6). Written after a trial merge of `main` at `e606af7` was seen failing `spec_derived_fixtures_against_wire_types`, and after Amendment 8's X10 row. This is not a record correction. The merge of `main` precedes this amendment and changes no conformance file; no code of the addition precedes it.
+
+**9.1 Rule and cause.** RULED 2026-09-24 (night), item (2), and §2.8's resolution rule now cover #123's conformance suite (`protocol/skp/tests/conformance/`), which postdates this form. At the merge, `req-viewport-all-null`, `req-viewport-populated`, `req-viewport-hex-zero-and-negzero` and `req-viewport-decu64-max` newly diverge, because they re-serialize with `columns` (§2.1; SKP-V0 §8's `skp/0.6` entry). Round 24, item 4 is not the authority.
+
+**9.2 §2 shape.** One commit after the merge, touching only `protocol/skp/tests/conformance/`:
+- `fixtures/*.json`:
+  - Every `"skp": "skp/0.5"` becomes `"skp/0.6"`.
+  - In `refusals-any-layer.json`, `any-version-skp_0_6` becomes `any-version-skp_0_7` on `skp/0.7`. `any-version-SKP_0_5` becomes `any-version-SKP_0_6` on `SKP/0.6`, and `any-version-skp_0_5SP` becomes `any-version-skp_0_6SP` on `skp/0.6` with its trailing space.
+  - The nine version fixtures' `spec` names the `skp/0.6` literal. A `spec` naming the version that introduced a field is unchanged.
+- The four fixtures of 9.1 gain `"columns": null`, and their `spec` gains §8's `skp/0.6` entry. No other document gains `columns`.
+- `DIVERGENCES.md`: the header's re-run sentence and count line are updated to this run, naming the merge commit and the platform. Its five `path:line` cites are re-pointed to the merged tree (class 3).
+- `AMBIGUITIES.md` A9: one clause appended for `skp/0.6`.
+- `README.md`: one sentence appended naming this amendment. The commit changes no implementation file.
+
+**9.3 §4.** The test is `spec_derived_fixtures_against_wire_types`, with `main.rs` unchanged. Each mutation is applied, the test is run, its failure is recorded by name with the commit, and the mutation is reverted (round 25, item 2 (c)):
+- M-1: `"columns": null` removed from `req-viewport-all-null`. The observed set gains that id.
+- M-2: `skip_serializing_if` on `ViewportQueryRequest::columns`. The four ids of 9.1 join the observed set.
+
+The literal half has no mutation, because every version fixture is deferred to the host (`AMBIGUITIES.md` A3). Its proof is the diff and a count of `"skp": "skp/0.5"` under `fixtures/` equal to 0.
+
+**9.4 §5.**
+- Declared unchanged:
+  - `main.rs`;
+  - every fixture's `expect`, `roundtrip` and `expected_refusal_code`, and the number of fixtures;
+  - D1's substance;
+  - the observed divergence set, which stays `rej-resp-cancel-bad-state` alone;
+  - the pass and deferred counts, which equal main's harness at `e606af7`.
+- Invalidators (stop and return to the architect):
+  - any of the above moves;
+  - an implementation file must change for the harness to pass;
+  - a divergence other than 9.1's four appears at the merge.
+
+**9.5 §8 and §9.**
+- Block-on-sight 24: the fixture commit touches a path outside `protocol/skp/tests/conformance/`; a fixture refuses `skp/0.6` or carries `skp/0.5` as its literal; or `columns` is non-null or appears outside 9.1's four fixtures.
+- The reviewer reads:
+  - the commit's diff;
+  - M-1's and M-2's observations;
+  - the harness's `--nocapture` count line at a named commit, beside main's count at `e606af7`.
+- The architect checks 9.2 against `main.rs`'s `check` (round-trip value equality).
+
+**9.6 E-15 (class 4, on gate 2's A-E6 and Amendment 8's X10).** X10's survival stands.
+- The full-length copy that E-15's doc names is observed against E-15.
+- X10's realization (an unchanged window over a whole-chunk buffer) is observed against `every_emitted_attribute_column_retains_at_most_the_declared_factor` and `a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound`, as 9.3 prescribes. At least one must fail by name.
+- If both survive, stop: the retention proof has a gap, and a test is declared by amendment before it is written.
+
+**Record.** Gate 3's reviewer report is the observation of record for 9.3 and 9.6. No closing amendment follows (the record cap).
