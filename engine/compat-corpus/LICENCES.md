@@ -39,7 +39,7 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 
 ## Open-licence lists
 
-- **O1. OSI approved-licence list.**
+- **O1. OSI approved-licence list.** No row's pin; superseded by O4.
   - Source: https://opensource.org/licenses, retrieved 2026-09-26T14:21:56Z, sha256 48e5a2b6582d229410e10b35d12266e53852ee122bfefc778fb95e7a36805e76.
   - **Not byte-stable:** a second fetch hashed c44c540291a94e545baaa6a8d3fd91b5f88a8f85a2762c73293ce482cb728140.
   - Its licence table names Apache License, Version 2.0 (Apache-2.0).
@@ -50,7 +50,7 @@ Current-state summary (`AUTONOMY.md` §22), written under `engine/CORPUS-REPRODU
 - **O3. Open Definition conformant-licence list.**
   - Source: https://opendefinition.org/licenses/, retrieved 2026-09-26T14:21:57Z, sha256 2e437e107c33501fc3d906697b02182d6974cdbbca50c387d084df4406bfed3e (byte-stable).
   - Its table names ODbL-1.0 and CC-BY-4.0.
-- **O4. SPDX licence list, release v3.29.0 (#11's OSI pin; RULED 2026-09-26, the corpus positions, item (3)).** Source: https://raw.githubusercontent.com/spdx/license-list-data/31ba1a50e5397e00a304dbadc76531740e89ee48/json/licenses.json, retrieved 2026-09-26T19:47:35Z, sha256 47d1cc681abe31166b342b6cc4aab13a6ba8ea5c48794697fe3bf8b1dbaf509a (byte-stable). Its `licenses[]` entry with `licenseId` `Apache-2.0` has `isOsiApproved` `true`; `licenseListVersion` 3.29.0.
+- **O4. SPDX licence list, release v3.29.0 (#11's OSI pin; RULED 2026-09-26, the corpus positions, item (3)).** Source: https://raw.githubusercontent.com/spdx/license-list-data/31ba1a50e5397e00a304dbadc76531740e89ee48/json/licenses.json, retrieved 2026-09-26T19:47:24Z, sha256 47d1cc681abe31166b342b6cc4aab13a6ba8ea5c48794697fe3bf8b1dbaf509a (byte-stable). Its `licenses[]` entry with `licenseId` `Apache-2.0` has `isOsiApproved` `true`; `licenseListVersion` 3.29.0.
 
 ## Other sources consulted
 
@@ -86,7 +86,7 @@ Each was fetched from the rights holder at the same pin as its row.
 - `mutations/gp-epsg2056-intkey-appended.parquet` — by regeneration
 - `retired/gp-epsg3857-strkey.parquet` — by regeneration
 
-By regeneration means the procedure `RECORD.md` records. Its section "Regeneration run" gives one run's outcome for #1–#6 and R-1. An entry that carries the human's phrase (RULED 2026-09-26, the corpus positions, item (2)) is one whose regeneration is not established, or is built from one.
+By regeneration means the procedure `RECORD.md` records for each entry, as its procedure-recorded column states.
 
 ## Local-only set (4)
 
