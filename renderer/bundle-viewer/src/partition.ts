@@ -7,9 +7,10 @@
  * ## Verification order, which is the part that matters
  *
  * A partition is verified **before it is drawn**, never after: byte count, then content hash, then
- * decode, then the ADR-010 rule 1 envelope, then the row count and the declared projection. Drawing
- * first and checking afterwards would put unverified pixels on the canvas for however long the check
- * takes, and "we removed them again" is not the same as never having shown them.
+ * decode, then the ADR-010 rule 1 envelope, then the geometry shape, then the row count, then the
+ * offsets bounded, then the declared projection. Drawing first and checking afterwards would put
+ * unverified pixels on the canvas for however long the check takes, and "we removed them again" is
+ * not the same as never having shown them.
  *
  * ## The envelope is checked on **every** partition
  *
@@ -145,10 +146,35 @@ export function decodePartition(
 
   // Walk the GeoArrow nesting directly: the coordinates are already one contiguous run of doubles,
   // and materializing per-feature objects would throw that away.
+  //
+  // G1-G3 (below) are shape preconditions, checked at each lookup site before the next level is
+  // read: the walk never indexes into something that turned out not to be what it assumed.
   const polys = geomVector.data[0] as unknown as ArrowListData;
+  if (!(polys.valueOffsets instanceof Int32Array) || polys.children[0] === undefined) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      'geometry column: the polygon level is not a list',
+    );
+  }
   const rings = polys.children[0] as ArrowListData;
+  if (!(rings.valueOffsets instanceof Int32Array) || rings.children[0] === undefined) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      'geometry column: the ring level is not a list',
+    );
+  }
   const coordsFsl = rings.children[0] as ArrowFixedSizeListData;
-  const coordValues = coordsFsl.children[0] as ArrowPrimitiveData;
+  const coordValuesCandidate = coordsFsl.children[0] as ArrowPrimitiveData | undefined;
+  if (!(coordValuesCandidate?.values instanceof Float64Array)) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      'geometry column: the coordinate values are not float64',
+    );
+  }
+  const coordValues = coordValuesCandidate;
 
   const coords = coordValues.values as Float64Array;
   const ringOffsets = rings.valueOffsets;
@@ -161,6 +187,61 @@ export function decodePartition(
       'partition-row-count-mismatch',
       asset.path,
       `the manifest lists ${asset.rows} rows and the partition decodes to ${features}`,
+    );
+  }
+
+  // B1-B4 (below) bound every offset the geometry walk below reads against the array it indexes,
+  // before that walk runs (§2c: each check's own reads are bounded by the ones before it). Every
+  // comparison is written fail-closed (`!(a <= b)`, `!(a >= 0)`), never as the inverted `a > b`.
+  const ringCount = ringOffsets.length - 1;
+  const pairCount = Math.floor(coords.length / 2);
+
+  if (!(polygonOffsets[0] >= 0)) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      `polygon offsets start at ${polygonOffsets[0]}, below 0`,
+    );
+  }
+  for (let f = 0; f < features; f++) {
+    if (!(polygonOffsets[f] <= polygonOffsets[f + 1])) {
+      throw new BundleFailure(
+        'partition-decode-failed',
+        asset.path,
+        `polygon offsets decrease at feature ${f}: ${polygonOffsets[f]} then ${polygonOffsets[f + 1]}`,
+      );
+    }
+  }
+  if (!(polygonOffsets[features] <= ringCount)) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      `polygon offsets end at ${polygonOffsets[features]}, past the ring count ${ringCount}`,
+    );
+  }
+  const r0 = polygonOffsets[0];
+  const r1 = polygonOffsets[features];
+  if (!(ringOffsets[r0] >= 0)) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      `ring offsets start at ${ringOffsets[r0]}, below 0`,
+    );
+  }
+  for (let r = r0; r < r1; r++) {
+    if (!(ringOffsets[r] <= ringOffsets[r + 1])) {
+      throw new BundleFailure(
+        'partition-decode-failed',
+        asset.path,
+        `ring offsets decrease at ring ${r}: ${ringOffsets[r]} then ${ringOffsets[r + 1]}`,
+      );
+    }
+  }
+  if (!(ringOffsets[r1] <= pairCount)) {
+    throw new BundleFailure(
+      'partition-decode-failed',
+      asset.path,
+      `ring offsets end at ${ringOffsets[r1]}, past the coordinate-pair count ${pairCount}`,
     );
   }
 

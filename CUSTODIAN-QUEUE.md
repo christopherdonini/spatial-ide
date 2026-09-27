@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d672f75e5591433fb274d6af00cd57b23c160d238976368a28ef1a4094421474`) at `2026-09-26T20:04:39.844Z`.
+Generated from `PLAN.yaml` (sha256 `2194b34da4ade23e7d6adab0a423ee0d721512ec1ef1afd6c1633919f530147d`) at `2026-09-27T13:06:31.761Z`.
 
 ## 1. Next
 
@@ -9,10 +9,7 @@ Generated from `PLAN.yaml` (sha256 `d672f75e5591433fb274d6af00cd57b23c160d238976
 ## 2. Ready
 
 - **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
-- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) (lane `kernel-protocol`, order null, budget 15 min)
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) (lane `kernel-protocol`, order 2, budget 240 min)
-- **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
@@ -33,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `d672f75e5591433fb274d6af00cd57b23c160d238976
 ## 5. In progress
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) — evidence: branch `cut/corpus-reproducibility-record`
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — evidence: branch `cut/b1-engine-projection`
 
 ## 6. Proposed / unscheduled
 
