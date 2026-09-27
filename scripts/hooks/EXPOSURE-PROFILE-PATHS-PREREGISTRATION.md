@@ -494,3 +494,40 @@ Superseded:
 Recorded as deviations, not superseded:
 - the merge clause of §4's DCO row, and 2d's merge-skip premise (4.5);
 - the header Budget (4.6).
+
+**Amendment 5 — the budget (class 8; round 25, item 2; 4.6). Written after the round's results were seen. The header Budget line is not edited.**
+
+- Header figures: ≤ 720 changed lines of non-generated code and tests (scanner ≤ 240, two hooks ≤ 50, tests ≤ 430, the normaliser's one line); docs and evidence ≤ 60 appended lines across 5 files (plus the 27-occurrence/8-file substitution, unchanged since `209a9c3`); ≤ 19 files; 300 minutes.
+- Final, by §21c's rule (insertions plus deletions over non-generated code and tests, three-dot from the merge base, excluding this piece's own preregistration), at C (`8f7698e`), merge base `16df0d7`:
+  - `scripts/hooks/profile-path-scan.mjs`: 548 (548 insertions, 0 deletions);
+  - `.githooks/pre-commit` + `.githooks/commit-msg`: 105 (98 insertions, 7 deletions);
+  - `scripts/hooks/profile-path-scan.test.mjs`: 877 (877 insertions, 0 deletions);
+  - `kernel/src/permission/audit/normalize.rs`: 2 (1 insertion, 1 deletion);
+  - total: 1532, against the 720 declared bound (R-E3's own reading of the same rule gives 1056 at `980b10c`; the round's own code, tests and re-observations grew the total by 476).
+  - The five append targets (§3): 39 lines at C, against the ≤ 60 bound (within budget).
+- File count: 19 at C and at M (`git diff --name-only origin/main...HEAD`, excluding `PLAN.yaml` and the generated set), unchanged from the header.
+- Minutes: the custodian's own check (`AUTONOMY.md` §10), not this amendment's to state.
+- **Reason for the overrun.** Three of 4.1's eleven sub-items (b, c, e) each needed a real subprocess or filesystem fixture (a directory link, an isolated hooks directory with a stub scanner, a spawned CLI) rather than a single in-process assertion, and 4.3 adds nine such tests plus three changed ones; the scanner itself grew by a dedicated 8.3-without-a-drive pattern (4.1(g)), a dedicated flattened-local-name pattern (4.1(f)), and a print-path redaction helper threaded through every CLI output path (4.1(e)) — all named in the round's own findings (F1–F23), not scope volunteered beyond them.
+
+**Amendment 6 — the closing record (references and hashes only; the record cap). Written after the round's results were seen.**
+
+- **C** = `8f7698e` (the code, tests, comments and the three doc fixes of 4.13 step 2).
+- **M** = `251fd80` (the signed-off merge of `origin/main` at `00cf306`, merge base `16df0d7`, into `governance/exposure-profile-paths`).
+- **N** = 6, unchanged (`git show origin/main:AI_DEVELOPMENT.md` at `00cf306` and, re-checked, at `cec34b8`, both show no heading past Amendment 5).
+- **Commits, `ccdccfd` to M** (this piece's own first-parent lineage): `ccdccfd`, `209a9c3`, `c48a8dc` (merge), `1190057`, `980b10c`, `34f62c5` (Amendment 4's append), `8f7698e` (C), `251fd80` (M, merge).
+- **Mutations (4.4).** All 30 tests of `scripts/hooks/profile-path-scan.test.mjs` (21 pre-existing, 9 new per 4.3) carry their own `// RECORDED MUTATION:` comment. Every one of the 30 was observed failing under its named mutation, against the code at C, by the worker this round, then reverted; `git status --porcelain` was empty before and after each. No test of 4.3 passed under its mutation (4.13's first added invalidator did not fire).
+- **Suites at M:**
+  - `node --test scripts/hooks/profile-path-scan.test.mjs` — 30 pass, 0 fail.
+  - `node --test scripts/plan/*.test.mjs scripts/hooks/*.test.mjs` — 345 pass, 0 fail.
+  - `cargo test -p spatial-kernel` (`CARGO_TARGET_DIR=C:/dev/wt/exposure-profile-paths/target`, unfiltered) — every binary green, 0 failed.
+  - `node scripts/plan/verify-cites.mjs` — PASS (825 files, 32 loose references advised, pre-existing).
+  - `node scripts/plan/verify-quotes.mjs` — PASS (110 checked, 79 verified, 30 baselined, 1 advisory, 0 errors; the pre-existing baseline/advisory entries are unrelated to and unmoved by this round).
+  - `node scripts/plan/verify-test-claims.mjs` — PASS (284 claimed across 88 files; 11 planned, 3 superseded, 15 withdrawn, all advisory).
+- **2a′ at M**, against `origin/main...HEAD`: `git diff --numstat` gives 1/1 on `DECISIONS-PENDING.md`; `git diff -U0` shows one hunk; a script's `redactRoots` over the removed line's bytes reproduces the added line's bytes exactly (boolean equality checked by script, never printed). Entry 110's line is untouched.
+- **The re-derivation.** One-line command (path, form class and count only, run as a one-off `git ls-tree -r --name-only <rev>` / `git show <rev>:<path>` import of this piece's own `scanText`, every rule of 2c including (iv), with `localName` the CLI's own `path.basename(os.homedir())`):
+  - at the merge base (`00cf306`): 30 files with findings (the pre-fix state; not itself evidence);
+  - at M (`251fd80`): 22 files with findings — the 20 of §2a as revised by Amendment 2, plus 2 files main added after `16df0d7`: `engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md` (form class `unlisted-segment`) and `state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md` (form class `8.3`, matching 4.7's own prediction). Both are listed and left untouched by this piece; both are routed to one follow-up node, which the custodian files. No file outside §2a's 20 rows and this pair is found; invalidator 1 does not fire.
+- **Prediction 4 (4.9), the reduced form.** Checked by script over this piece's own first-parent commit lineage, `ccdccfd~1..HEAD` (8 commits): every non-merge commit's message and every `+`-prefixed line of its `git show -U0 --format=` output scan clean under `scanText`; both merge commits' messages (`c48a8dc`, `251fd80`) scan clean under the same. Result: PASS, all 8 commits, with and without the CLI's own local name passed to `scanText`.
+- **Disclosure.** `origin/main` advanced to `cec34b8` after M was made and while this record was being written; N is unaffected (checked above), and this piece does not re-merge for it (2g's "last... before the PR is marked ready" does not apply — this piece is local-only and files no PR). Any further main movement is for a later merge to carry, per 4.7's own "if main moves after the closing record" clause.
+- **4.8(b), 4.8(c).** Unaffected by this round; the worker's E4 statement stays filed at `state/consults/2026-09-27-exposure-profile-paths-worker-e4-answer.md` (on main since `0ffe80c`), and 41d0341/3a85540's disposition of the one unlisted-segment comment finding is unchanged.
+- **Discharged in this round:** 4.1(a)–(k) (`scripts/hooks/profile-path-scan.mjs`, `.githooks/pre-commit`, `.githooks/commit-msg`, C); 4.2 (declarative, no code; this Amendment 4's own text); 4.3 (the 30 tests of `scripts/hooks/profile-path-scan.test.mjs`, C); 4.4 (this amendment's mutations bullet); 4.5, 4.9, 4.10, 4.12 (declarative, Amendment 4's own text); 4.6 (Amendment 5); 4.7 (M, N and the re-derivation bullets above); 4.8 (pre-existing, unaffected).
