@@ -178,10 +178,10 @@ Not decided here:
 ## For the human, at acceptance
 
 - **Decision 5's basis.**
-  - The assessment's §5 recommended decision 5 on the ground that nothing publishable is lost today, and decision 3 on the ground that no corpus or fixture file declares an empty list (paraphrase of its items 3 and 5).
+  - The assessment's §5 recommended decision 5 on grounds including that nothing publishable is lost today, and decision 3 on the ground that no corpus or fixture file declares an empty list (paraphrase of its items 3 and 5).
   - At `0ada14f` the second ground holds for the corpus and the engine's writers (Context, "Declared lists in the tree").
   - Under the rider and point 10, a user's projected, Polygon-only file with an empty `geometry_types` publishes today and is refused until B3 (Consequences, "Undeclared Polygon-only datasets").
-- **Timing.** The Status line reads the 2026-09-27 session order as setting acceptance earlier than decision 8's recommended timing. If "acceptance at MP-1's gate" (paraphrase) means the gate on MP-1's preregistration, the two are compatible and nothing is replaced.
+- **Timing.** The Status line reads the 2026-09-27 session order as setting acceptance earlier than decision 8's recommended timing. The human confirms or corrects that reading.
 - **ADR-016 cite.** Decision 5 cites ADR-016 §5 for uniqueness. The skeleton cited ADR-016 §7, which states the identity's width.
 - **Placeholder.** The Decision reads decision 4's bracketed placeholder as the declared list, rendered as today's message renders it.
 - **Blockability.** Whether acceptance makes this ADR architect-blockable is the human's to say. ADR-016 recorded the answer at acceptance; ADR-028 recorded that it was not raised.
