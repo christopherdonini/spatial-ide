@@ -203,8 +203,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged** (X20; Amendment 5 row 5.6 — restoring this item's own
-   sentence to main's bytes rather than rewriting it in place, and appending this one instead).
+   again in turn, `==` still unchanged**.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's five
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
@@ -288,17 +287,15 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
     therefore not an instance of this rule. Its whole field set is §8's `skp/0.5` entry, and it
     freezes at merge as `skp/0.2` through `skp/0.4` did.
 
-    **`skp/0.6` mints the literal once, in `6cd1764`, which carries the literal bump and both
-    sides' fixtures together** (`git show --stat 6cd1764`: `protocol/skp/src/v0/mod.rs`,
-    `frontends/shell/src/skp/__tests__/fixtures.test.ts` and every `protocol/skp/tests/data/*.json`
-    fixture the bump touches, all in that one commit) — condition (iii) holds for the literal
-    itself. The field additions it carries (`columns`, `projectable`) were developed on this branch
-    ahead of the bump, in `2963021`, under the still-frozen `skp/0.5` literal (`git show --stat
-    2963021`: that commit's own message states the literal "stays `skp/0.5` here" and that the
-    engine/kernel-side compile fixups "land in the next commit" — the workspace does not compile at
-    `2963021` alone). This is assembly of one unreleased version (condition (i): the literal had not
-    yet merged to `main`), and it freezes at merge as `skp/0.2` through `skp/0.5` did (X14; Amendment
-    5 row 5.6, D1 — the paragraph states the commit facts, as the `skp/0.5` paragraph above does).
+    **`skp/0.6` was assembled across several commits, and condition (iii) did not hold for one of
+    them**: `2963021` added `columns`, `projectable` and the new error fixtures, with the Rust
+    fixture test, under the unchanged `skp/0.5` literal (its commit message states, in paraphrase,
+    that the literal stays `skp/0.5` there and that the bump follows with both sides' fixtures), and
+    the TypeScript fixture test followed in `6cd1764`, the commit that bumps the literal with both
+    sides' fixtures. Fixtures changed again after the bump, in `9348a40` (the populated `columns`
+    request fixture, with both sides' fixture tests) and `5358ff6` (the `skp.projection_empty_list`
+    error fixture's message). It is therefore not an instance of this rule. Its whole field set is
+    §8's `skp/0.6` entry, and it freezes at merge as `skp/0.2` through `skp/0.5` did.
 
 **Also named absent:** a conformance suite. `protocol/data-plane/tests/candidate_a.rs` and
 `kernel/tests/end_to_end.rs`'s H1–H7 assertions are the seed material a future docs/08 conformance
@@ -881,12 +878,11 @@ count check that already runs first. `protocol/data-plane/` has an empty diff �
 inside the Arrow IPC payload; `attribute_columns` rides the schema metadata, and no attribute value
 crosses the control plane.
 
-Mechanics, the `skp/0.2`–`skp/0.5` precedent followed exactly: one literal bumped once, `"skp/0.5"`
-→ `"skp/0.6"`; plain `==` comparison retained; `deny_unknown_fields` kept both directions; every
-fixture on both the Rust (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`) and
-TypeScript (`frontends/shell/src/skp/__tests__/fixtures.test.ts`) sides of the wire updated in the
-same commit as the literal bump (§2.7 of `engine/B1-PROJECTION-PREREGISTRATION.md`). `skp/1` stays
-RESERVED.
+Mechanics: one literal bumped once, `"skp/0.5"` → `"skp/0.6"`, in `6cd1764`, which carries both
+sides' fixtures for the literal (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`
+and `frontends/shell/src/skp/__tests__/fixtures.test.ts`); plain `==` comparison retained;
+`deny_unknown_fields` kept both directions. The version's fixtures changed in `2963021`, `6cd1764`,
+`9348a40` and `5358ff6` (§4 item 13 states which side each carried). `skp/1` stays RESERVED.
 
 ## 9. Attribute projection on `viewport_query`
 
@@ -897,9 +893,9 @@ wire shape, contract, refusal table, pre-lease admission, data plane.
 ### 9.1 Version
 
 `skp` is now compared against `"skp/0.6"`, still `==` (§4 item 3). `deny_unknown_fields` stays on
-every derived struct in both directions; every fixture on both sides of the wire changed in the same
-commit as the literal bump (§2.7 of the preregistration; the mechanics list under §8's `skp/0.6`
-entry).
+every derived struct in both directions. The literal bump and both sides' fixtures for it landed
+together in `6cd1764`; the version's fixtures also changed in `2963021`, `9348a40` and `5358ff6`
+(§4 item 13; the mechanics under §8's `skp/0.6` entry).
 
 ### 9.2 The wire shape
 
@@ -938,7 +934,9 @@ runs (ADR-023 §3; ADR-019):
    the unknown-column check (O8) — a mapped identity's file, carrying no column literally named
    `id`, still refuses a request for `id` as an identity collision rather than as unknown.
 4. Per-column rules run in declared order: geometry, identity (the mapped identity's own source
-   column), duplicate, type.
+   column), duplicate, type. Every declared name is resolved (step 3) before any per-column rule
+   runs, so a later name's resolution failure is reported ahead of an earlier name's per-column
+   failure.
 5. The first failure is reported.
 
 ### 9.5 Refusal taxonomy — seven codes
