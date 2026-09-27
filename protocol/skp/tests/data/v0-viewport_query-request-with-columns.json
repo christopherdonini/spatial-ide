@@ -5,5 +5,5 @@
   "bbox_crs": null,
   "limit": null,
   "filter": null,
-  "columns": ["zone", "area"]
+  "columns": ["area", "zone"]
 }

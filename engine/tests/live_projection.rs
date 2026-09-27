@@ -17,7 +17,7 @@
 
 use std::collections::BTreeMap;
 
-use arrow::array::{Array, Float64Array, StringArray, UInt64Array};
+use arrow::array::{Array, Float32Array, Float64Array, StringArray, UInt64Array};
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
 
@@ -81,20 +81,42 @@ fn column_u64(batch: &RecordBatch, name: &str) -> UInt64Array {
     batch.column_by_name(name).unwrap().as_any().downcast_ref::<UInt64Array>().unwrap().clone()
 }
 
+/// X12 (Amendment 5, row 5.6): SHA-256 of a file, on `kernel/tests/scale_pass.rs`'s own
+/// `sha256_file` precedent — this fixture is small enough to read whole.
+fn sha256_file(path: &std::path::Path) -> String {
+    use sha2::{Digest, Sha256};
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    let mut h = Sha256::new();
+    h.update(&bytes);
+    format!("{:x}", h.finalize())
+}
+
 /// E-8: `a_live_projected_stream_emits_id_geometry_then_the_declared_columns` (§3's first fixture
 /// row: native `id`, request `[area, zone]` → schema `[id, geometry, area, zone]`; projected
 /// fields nullable; NULLs travel as NULL). The request deliberately reverses the fixture's own file
 /// order (`zone` before `area`), so a sort-by-file-order bug is distinguishable from the declared
 /// (request) order this test actually pins. Values are checked row by row against an independent
 /// DuckDB read of the same file, keyed on `id`. Mutation: `resolve_projection` sorts by file order.
+///
+/// **X13 (Amendment 5, row 5.6): gains `[f32]`.** The projection also declares `f32`; its emitted
+/// `Float32` values are checked `to_bits`-equal against the same DuckDB oracle (bit-for-bit, not
+/// `==`, so a silent NaN-payload or signed-zero difference could not slip past a numeric
+/// comparison). Mutation: emit `Float64` at the live entry (`Dataset::stream_projected_with_cancel`).
 // RECORDED MUTATION: in `engine/src/attributes.rs::admit_projection`, sort `out` by the field's
 // position in `file_schema` instead of declared order. Observed: this test fails by name --
-// `left: ["id", "geometry", "zone", "area"]` vs `right: ["id", "geometry", "area", "zone"]` at
-// `engine/tests/live_projection.rs:101`. Reverted.
+// `left: ["id", "geometry", "zone", "area", "f32"]` vs `right: ["id", "geometry", "area", "zone",
+// "f32"]` at `engine/tests/live_projection.rs`. Reverted.
+// RECORDED MUTATION (X13): in `engine/src/attributes.rs::admit_attribute_type`, change the
+// `D::Float32 => Ok(ty.clone())` arm to `D::Float32 => Ok(DataType::Float64)`. Observed: this test
+// fails by name -- "f32 to_bits mismatch at id ..." (the emitted array is no longer `Float32`, so
+// the `downcast_ref::<Float32Array>()` call itself panics first). Reverted.
 #[test]
 fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
+    // X12 (Amendment 5, row 5.6): hashed before and after this run.
+    let fixture_sha_before = sha256_file(&fixture_path());
+
     let ds = dataset();
-    let names = vec!["area".to_string(), "zone".to_string()];
+    let names = vec!["area".to_string(), "zone".to_string(), "f32".to_string()];
     let projection = ds.resolve_projection(&names).expect("admitted projection");
     let stream = ds
         .stream_projected_with_cancel(&ViewportQuery::all(), &projection, CancelToken::new())
@@ -102,24 +124,26 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
     let (batches, schema) = drain(stream);
 
     let field_names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
-    assert_eq!(field_names, vec!["id", "geometry", "area", "zone"]);
+    assert_eq!(field_names, vec!["id", "geometry", "area", "zone", "f32"]);
     assert!(!schema.field(0).is_nullable(), "id must stay non-nullable");
     for f in schema.fields().iter().skip(2) {
         assert!(f.is_nullable(), "`{}` must come back nullable regardless of the source", f.name());
     }
+    assert_eq!(schema.field(4).data_type(), &arrow::datatypes::DataType::Float32, "f32 must not widen");
 
     // Oracle: an independent DuckDB read of the same file, never the fixture's own `area_for`.
     let conn = spatial_engine::fixture::configured_connection().expect("conn");
     let path_str = fixture_path().to_string_lossy().to_string();
-    let mut stmt = conn.prepare("SELECT id, area, zone FROM read_parquet(?)").expect("prepare");
-    let mut oracle: BTreeMap<u64, (f64, Option<String>)> = BTreeMap::new();
+    let mut stmt = conn.prepare("SELECT id, area, zone, f32 FROM read_parquet(?)").expect("prepare");
+    let mut oracle: BTreeMap<u64, (f64, Option<String>, f32)> = BTreeMap::new();
     for batch in stmt.query_arrow([path_str.as_str()]).expect("query") {
         let ids = column_u64(&batch, "id");
         let areas = batch.column_by_name("area").unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
         let zones = batch.column_by_name("zone").unwrap().as_any().downcast_ref::<StringArray>().unwrap();
+        let f32s = batch.column_by_name("f32").unwrap().as_any().downcast_ref::<Float32Array>().unwrap();
         for r in 0..batch.num_rows() {
             let zone = (!zones.is_null(r)).then(|| zones.value(r).to_string());
-            oracle.insert(ids.value(r), (areas.value(r), zone));
+            oracle.insert(ids.value(r), (areas.value(r), zone, f32s.value(r)));
         }
     }
     assert_eq!(oracle.len(), FEATURES);
@@ -130,18 +154,31 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
         let ids = column_u64(batch, ID_COLUMN);
         let areas = batch.column_by_name("area").unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
         let zones = batch.column_by_name("zone").unwrap().as_any().downcast_ref::<StringArray>().unwrap();
+        let f32s = batch.column_by_name("f32").unwrap().as_any().downcast_ref::<Float32Array>().unwrap();
         for r in 0..batch.num_rows() {
             let id = ids.value(r);
-            let (expected_area, expected_zone) = oracle.get(&id).unwrap_or_else(|| panic!("id {id} in oracle"));
+            let (expected_area, expected_zone, expected_f32) =
+                oracle.get(&id).unwrap_or_else(|| panic!("id {id} in oracle"));
             assert_eq!(areas.value(r), *expected_area, "area mismatch at id {id}");
             let zone = (!zones.is_null(r)).then(|| zones.value(r).to_string());
             assert_eq!(&zone, expected_zone, "zone mismatch at id {id}");
+            assert_eq!(
+                f32s.value(r).to_bits(),
+                expected_f32.to_bits(),
+                "f32 to_bits mismatch at id {id}"
+            );
             saw_null_zone |= zone.is_none();
             seen += 1;
         }
     }
     assert_eq!(seen, FEATURES, "every row must be seen exactly once");
     assert!(saw_null_zone, "the fixture must exercise a NULL zone, or the NULL claim above is vacuous");
+
+    assert_eq!(
+        sha256_file(&fixture_path()),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// E-9: `projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical`. The declared-

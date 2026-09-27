@@ -380,7 +380,7 @@ describe("SKP v0 shared fixtures", () => {
       ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
       "viewport_query request (with columns)"
     );
-    expect(req.columns).toEqual(["zone", "area"]);
+    expect(req.columns).toEqual(["area", "zone"]);
   });
 
   it("cancel request/response", () => {

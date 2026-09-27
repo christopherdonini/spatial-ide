@@ -6,15 +6,16 @@
 //! order, `projection_error_of`'s exhaustive mapping, `describe`'s `projectable`, and the real
 //! `sk_admission.rs` ticket-redemption harness (F12).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 use std::time::Duration;
 
+use arrow::array::Array;
 use futures_util::{SinkExt, StreamExt};
 use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::session::SUBPROTOCOL;
 use spatial_data_plane::{wire, RunningDataPlane};
-use spatial_engine::fixture::{area_for, f32_for, write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{f32_for, write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
 use spatial_engine::{CancelToken, IdentityDeclaration};
 use spatial_kernel::publish::{
     preflight_pinless, CorrespondingSource, CorrespondingSourceKind, PublishError, PublishRequest,
@@ -85,6 +86,14 @@ async fn connect(dp: &RunningDataPlane) -> Client {
     tokio_tungstenite::connect_async(req).await.expect("connect").0
 }
 
+/// X12 (Amendment 5, row 5.6): SHA-256 of a file, on `kernel/tests/scale_pass.rs`'s own
+/// `sha256_file` precedent — a fixture this small (hundreds of features, not 5 GB) is read whole
+/// rather than streamed in blocks.
+fn sha256_file(path: &std::path::Path) -> String {
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    spatial_renderer::canonical::sha256_hex(&bytes)
+}
+
 fn base_request(dataset: DatasetHandle, columns: Option<Vec<String>>) -> ViewportQueryRequest {
     ViewportQueryRequest {
         skp: SKP_VERSION.to_string(),
@@ -102,15 +111,22 @@ fn base_request(dataset: DatasetHandle, columns: Option<Vec<String>>) -> Viewpor
 /// K-1: `a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns`. The
 /// committed wire fixture (`v0-viewport_query-request-with-columns.json`) is deserialized as-is —
 /// never hand-built — and its `dataset` handle is what a real file is opened under (F12): the
-/// fixture's own `columns: ["zone", "area"]` is what is actually sent, over a real data-plane
-/// WebSocket, and the decoded frame is checked against an independent DuckDB read.
+/// fixture's own `columns: ["area", "zone"]` (X8: Amendment 5 row 5.6 — deliberately the reverse of
+/// `engine/src/fixture.rs`'s own file order, `zone` then `area`, so the field-order assertion below
+/// cannot pass by accident if admission silently returned file order instead of declared order) is
+/// what is actually sent, over a real data-plane WebSocket, and the decoded frame is checked against
+/// an independent DuckDB read (X11: keyed on `id`, covering both columns, NULLs included).
 ///
 /// Mutation: `build_viewport_query` ignores `req.columns` — the schema would then carry no
-/// `zone`/`area` fields at all, and the field-order assertion below fails by name.
+/// `area`/`zone` fields at all, and the field-order assertion below fails by name.
 // RECORDED MUTATION: in `kernel/src/skp.rs::build_viewport_query`, replace the `projection` match
 // with `let projection = None;`, ignoring `req.columns`. Observed: this test fails by name --
 // "declared (request) order, id and geometry first / left: [\"id\", \"geometry\"] / right: [\"id\",
-// \"geometry\", \"zone\", \"area\"]" at `kernel/tests/skp_projection.rs:166`. Reverted.
+// \"geometry\", \"area\", \"zone\"]" at `kernel/tests/skp_projection.rs`. Reverted.
+// RECORDED MUTATION (X11): in `stream.rs`'s chunk loop, slice each attribute run one row late
+// (`run_start + 1` instead of `run_start` at the cut, and `row + 2` instead of `row + 1` at the
+// final push). Observed: this test fails by name -- "area mismatch at id ..." (the DuckDB oracle
+// below), the emitted values shifted by one row against the independent read. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns() {
     let fixture_json = std::fs::read_to_string(
@@ -120,9 +136,46 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     .expect("read the committed wire fixture");
     let req: ViewportQueryRequest =
         serde_json::from_str(&fixture_json).expect("the committed fixture must deserialize");
-    assert_eq!(req.columns, Some(vec!["zone".to_string(), "area".to_string()]));
+    assert_eq!(req.columns, Some(vec!["area".to_string(), "zone".to_string()]));
 
     let path = multitype_fixture("k1-seam", 300);
+    // X12 (Amendment 5, row 5.6): hashed before and after this run.
+    let fixture_sha_before = sha256_file(&path);
+
+    // X11: the oracle is an independent DuckDB read of the same file, keyed on `id`, covering both
+    // projected columns, NULLs included — `live_projection.rs`'s E-8 own precedent.
+    let mut oracle: BTreeMap<u64, (f64, Option<String>)> = BTreeMap::new();
+    {
+        let conn = spatial_engine::fixture::configured_connection().expect("conn");
+        let path_str = path.to_string_lossy().to_string();
+        let mut stmt = conn.prepare("SELECT id, area, zone FROM read_parquet(?)").expect("prepare");
+        for batch in stmt.query_arrow([path_str.as_str()]).expect("query") {
+            let ids = batch
+                .column_by_name("id")
+                .unwrap()
+                .as_any()
+                .downcast_ref::<arrow::array::UInt64Array>()
+                .unwrap();
+            let areas = batch
+                .column_by_name("area")
+                .unwrap()
+                .as_any()
+                .downcast_ref::<arrow::array::Float64Array>()
+                .unwrap();
+            let zones = batch
+                .column_by_name("zone")
+                .unwrap()
+                .as_any()
+                .downcast_ref::<arrow::array::StringArray>()
+                .unwrap();
+            for r in 0..batch.num_rows() {
+                let zone = (!zones.is_null(r)).then(|| zones.value(r).to_string());
+                oracle.insert(ids.value(r), (areas.value(r), zone));
+            }
+        }
+    }
+    assert_eq!(oracle.len(), 300);
+
     let catalog = Arc::new(Catalog::new());
     catalog.open(req.dataset.as_str(), &path, None).expect("open dataset under the fixture's own handle");
     let tickets = StreamRegistry::new();
@@ -169,7 +222,7 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
                     let names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
                     assert_eq!(
                         names,
-                        vec!["id", "geometry", "zone", "area"],
+                        vec!["id", "geometry", "area", "zone"],
                         "declared (request) order, id and geometry first"
                     );
                     checked_schema = true;
@@ -188,18 +241,26 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
                         .as_any()
                         .downcast_ref::<arrow::array::Float64Array>()
                         .unwrap();
+                    let zone_col = batch
+                        .column_by_name("zone")
+                        .unwrap()
+                        .as_any()
+                        .downcast_ref::<arrow::array::StringArray>()
+                        .unwrap();
                     for r in 0..batch.num_rows() {
                         let id = id_col.value(r);
                         ids.insert(id);
-                        // Oracle: the fixture's own pure `area_for(seed, id)` — the seam under test
-                        // is the wire round trip (order, framing, ticket redemption), not the
-                        // generator, which `live_projection.rs`'s E-8 already checks against an
-                        // independent DuckDB read.
-                        assert_eq!(
-                            area_col.value(r),
-                            area_for(spatial_engine::fixture::FixtureSpec::default().seed, id),
-                            "area mismatch at id {id}"
-                        );
+                        // X11 (Amendment 5, row 5.6): the oracle is now an independent DuckDB read
+                        // of the same file, keyed on `id`, covering both projected columns, NULLs
+                        // included — the seam under test is the wire round trip (order, framing,
+                        // ticket redemption) proven end to end against a source the generator did
+                        // not compute, on `live_projection.rs`'s E-8 own precedent, rather than
+                        // against the fixture's own pure generator function.
+                        let (expected_area, expected_zone) =
+                            oracle.get(&id).unwrap_or_else(|| panic!("id {id} in oracle"));
+                        assert_eq!(area_col.value(r), *expected_area, "area mismatch at id {id}");
+                        let zone = (!zone_col.is_null(r)).then(|| zone_col.value(r).to_string());
+                        assert_eq!(&zone, expected_zone, "zone mismatch at id {id}");
                     }
                 }
             }
@@ -211,6 +272,13 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     assert_eq!(ids.len(), 300, "every row must arrive exactly once");
     c.close(None).await.ok();
     dp.shutdown().await;
+
+    // X12: hashed again, after the run — the fixture on disk must be exactly what it was before.
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 // ---- K-2, K-3, K-4: the seven typed refusals -------------------------------------------------
@@ -232,6 +300,14 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
 // \"skp.projection_column_is_identity\" / right: \"skp.projection_column_is_geometry\"" at
 // `kernel/tests/skp_projection.rs:275` (the same test whose closing `codes.len() == 7` assertion
 // is K-4's own claim). Reverted.
+/// One case in K-2's own table: a label, the declared `columns`, the expected wire code, and the
+/// expected exact field key set (a value where the value itself is a stable fact, `None` where
+/// only presence is checked — `detail` in particular, sighted at B1's close). A named alias, not
+/// the nested tuple type inline, on X20's own fix (R nit 3: clippy's `type_complexity` lint fired
+/// on the un-aliased form at this file's own line 247, pre-Amendment-5).
+type ProjectionRefusalCase =
+    (&'static str, Vec<String>, &'static str, Vec<(&'static str, Option<&'static str>)>);
+
 #[test]
 fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     let path = multitype_fixture("k2-refusals", 40);
@@ -243,29 +319,48 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
     let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
 
+    // X9 (Amendment 5, row 5.6): each case's expected fields is now the **exact** key set (with
+    // values checked wherever a value is a stable fact — `detail` is checked only for presence,
+    // since its text is sighted at B1's close and named a placeholder until then), not a subset a
+    // renamed or added key could silently slip past.
     let too_many: Vec<String> = (0..33).map(|i| format!("bogus_{i}")).collect();
-    let cases: Vec<(&str, Vec<String>, &str, Vec<(&str, &str)>)> = vec![
+    let cases: Vec<ProjectionRefusalCase> = vec![
         ("empty list", vec![], "skp.projection_empty_list", vec![]),
         (
             "too many columns",
             too_many,
             "skp.projection_too_many_columns",
-            vec![("limit", "32"), ("saw", "33")],
+            vec![("limit", Some("32")), ("saw", Some("33"))],
         ),
-        ("unknown column", vec!["nope".to_string()], "skp.projection_column_unknown", vec![("column", "nope")]),
-        ("geometry", vec!["geometry".to_string()], "skp.projection_column_is_geometry", vec![("column", "geometry")]),
-        ("identity", vec!["id".to_string()], "skp.projection_column_is_identity", vec![("column", "id")]),
+        (
+            "unknown column",
+            vec!["nope".to_string()],
+            "skp.projection_column_unknown",
+            vec![("column", Some("nope")), ("known_columns", None)],
+        ),
+        (
+            "geometry",
+            vec!["geometry".to_string()],
+            "skp.projection_column_is_geometry",
+            vec![("column", Some("geometry"))],
+        ),
+        (
+            "identity",
+            vec!["id".to_string()],
+            "skp.projection_column_is_identity",
+            vec![("column", Some("id")), ("id_column", Some("id"))],
+        ),
         (
             "duplicated",
             vec!["zone".to_string(), "zone".to_string()],
             "skp.projection_column_duplicated",
-            vec![("column", "zone")],
+            vec![("column", Some("zone"))],
         ),
         (
             "type not admitted",
             vec!["d32".to_string()],
             "skp.projection_type_not_admitted",
-            vec![("column", "d32"), ("arrow_type", "Date32")],
+            vec![("column", Some("d32")), ("arrow_type", Some("Date32")), ("detail", None)],
         ),
     ];
 
@@ -279,12 +374,19 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
             .viewport_query(base_request(handle.clone(), Some(columns)))
             .expect_err(&format!("{label}: must be refused"));
         assert_eq!(err.code, expected_code, "{label}: wrong code");
-        for (key, value) in expected_fields {
-            assert_eq!(
-                err.fields.get(key).map(String::as_str),
-                Some(value),
-                "{label}: field `{key}`"
-            );
+        let actual_keys: BTreeSet<&str> = err.fields.keys().map(String::as_str).collect();
+        let expected_keys: BTreeSet<&str> = expected_fields.iter().map(|(k, _)| *k).collect();
+        assert_eq!(actual_keys, expected_keys, "{label}: exact field key set");
+        for (key, expected_value) in expected_fields {
+            if let Some(value) = expected_value {
+                assert_eq!(
+                    err.fields.get(key).map(String::as_str),
+                    Some(value),
+                    "{label}: field `{key}`"
+                );
+            } else {
+                assert!(err.fields.contains_key(key), "{label}: field `{key}` must be present");
+            }
         }
         codes.insert(err.code.clone());
 
@@ -301,6 +403,112 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     }
 
     assert_eq!(codes.len(), 7, "each of the seven refusals must map to its own code: {codes:?}");
+}
+
+/// X9 (Amendment 5, row 5.6): `every_projection_refusal_matches_its_committed_error_fixture_shape`
+/// — for each of the seven committed `v0-error-projection_*.json` fixtures, the kernel's own live
+/// refusal for an equivalent case carries **exactly** the fixture's own field key set. Proves the
+/// committed fixtures and the kernel's real output cannot drift apart silently (the same property
+/// K-2's own key-set assertion proves against the declared table, this proves against the tracked
+/// fixture files themselves).
+/// Mutation: rename `known_columns` to (say) `candidate_columns` in `projection_error_of`'s
+/// `ColumnUnknown` arm — the live refusal's key set then disagrees with the committed fixture's.
+// RECORDED MUTATION: in `kernel/src/skp.rs::projection_error_of`, rename the `ColumnUnknown` arm's
+// `"known_columns"` field key to `"candidate_columns"`. Observed: this test fails by name --
+// "skp.projection_column_unknown: live field key set must match the committed fixture's / left:
+// {\"candidate_columns\", \"column\"} / right: {\"column\", \"known_columns\"}" at
+// `kernel/tests/skp_projection.rs`. Reverted.
+#[test]
+fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
+    let path = multitype_fixture("k-x9-fixture-shape", 40);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000015".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+    let host =
+        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+
+    let too_many: Vec<String> = (0..33).map(|i| format!("bogus_{i}")).collect();
+    // (fixture file stem, columns that reproduce an equivalent live refusal)
+    let cases: Vec<(&str, Vec<String>)> = vec![
+        ("v0-error-projection_empty_list", vec![]),
+        ("v0-error-projection_too_many_columns", too_many),
+        ("v0-error-projection_column_unknown", vec!["nope".to_string()]),
+        ("v0-error-projection_column_is_geometry", vec!["geometry".to_string()]),
+        ("v0-error-projection_column_is_identity", vec!["id".to_string()]),
+        ("v0-error-projection_column_duplicated", vec!["zone".to_string(), "zone".to_string()]),
+        ("v0-error-projection_type_not_admitted", vec!["d32".to_string()]),
+    ];
+
+    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../protocol/skp/tests/data");
+    for (fixture_stem, columns) in cases {
+        let fixture_json = std::fs::read_to_string(fixtures_dir.join(format!("{fixture_stem}.json")))
+            .unwrap_or_else(|e| panic!("read {fixture_stem}.json: {e}"));
+        let fixture_value: serde_json::Value =
+            serde_json::from_str(&fixture_json).expect("fixture must be JSON");
+        let fixture_code = fixture_value["code"].as_str().expect("fixture must carry `code`").to_string();
+        let fixture_keys: BTreeSet<String> = fixture_value["fields"]
+            .as_object()
+            .unwrap_or_else(|| panic!("{fixture_stem}: `fields` must be an object"))
+            .keys()
+            .cloned()
+            .collect();
+
+        let err = host
+            .viewport_query(base_request(handle.clone(), Some(columns)))
+            .expect_err(&format!("{fixture_stem}: must be refused"));
+        assert_eq!(err.code, fixture_code, "{fixture_stem}: code must match the committed fixture");
+        let live_keys: BTreeSet<String> = err.fields.keys().cloned().collect();
+        assert_eq!(
+            live_keys, fixture_keys,
+            "{}: live field key set must match the committed fixture's",
+            err.code
+        );
+    }
+}
+
+// ---- X1: the filter refusal text for a still-refused type ------------------------------------
+
+/// X1 (Amendment 5, row 5.6; O2): `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_
+/// byte_for_byte` — a predicate naming `d32` (`Date32`, still refused) through the real
+/// `viewport_query` filter admission path. The expected string is byte-copied by script from main's
+/// rendering at `d6d9862` (`engine/src/attributes.rs`'s former final arm there, wrapped in
+/// `EngineError::AttributeUnpublishable`'s `Display` at that same commit): "refused: `d32` cannot
+/// be published as an attribute — type is Date32, which is not in the admissible set for a
+/// published attribute (utf8, boolean, the 8/16/32/64-bit integers, float64). Nothing is cast,
+/// widened or stringified to make a column fit; a conversion the caller did not ask for is the
+/// silent conversion docs/01 principle 8 forbids".
+/// Mutation: the branch's placeholder final arm (`admit_attribute_type`'s `other` arm, before X1).
+// RECORDED MUTATION: in `engine/src/attributes.rs::admit_attribute_type`, restore the placeholder
+// text `"[B1 close placeholder] type is {other}, which is not in the admissible set for an
+// attribute (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a dictionary over one
+// of those)"` in the `other` arm. Observed: this test fails by name -- the `reason` field no longer
+// matches the byte-copied expected string (it carries the placeholder prefix and the live
+// admissible-set's own list instead) at `kernel/tests/skp_projection.rs`. Reverted.
+#[test]
+fn a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte() {
+    let path = multitype_fixture("x1-filter-refusal-text", 20);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000060".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    let tickets = StreamRegistry::new();
+    let host =
+        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+
+    let mut req = base_request(handle, None);
+    req.filter = Some(
+        spatial_skp::v0::Filter::new("d32 > 0", spatial_skp::v0::FILTER_DIALECT_DUCKDB_EXPR_0)
+            .expect("the one admitted wire dialect must construct"),
+    );
+    let err = host.viewport_query(req).expect_err("a Date32 predicate must be refused");
+    assert_eq!(err.code, "skp.filter_column_not_filterable");
+    // Byte-copied by script from main's rendering at `d6d9862` (see this test's own doc comment).
+    let expected_reason = "refused: `d32` cannot be published as an attribute — type is Date32, \
+                            which is not in the admissible set for a published attribute (utf8, \
+                            boolean, the 8/16/32/64-bit integers, float64). Nothing is cast, \
+                            widened or stringified to make a column fit; a conversion the caller \
+                            did not ask for is the silent conversion docs/01 principle 8 forbids";
+    assert_eq!(err.fields.get("reason").map(String::as_str), Some(expected_reason));
 }
 
 /// K-3's own claim, isolated from the table above: `columns: []` and `columns: null` are two
@@ -343,21 +551,26 @@ fn columns_empty_list_is_refused_never_read_as_null() {
 // `kernel/tests/skp_projection.rs:384`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn describe_projectable_agrees_with_viewport_query_admission_for_every_column() {
-    async fn check_one(handle: DatasetHandle, path: std::path::PathBuf) {
+    async fn check_one(handle: DatasetHandle, path: std::path::PathBuf, mapped_to: Option<&str>) {
         let catalog = Arc::new(Catalog::new());
-        if handle.as_str().ends_with("d") {
-            // Mapped: declare the identity explicitly (K-5's "mapped" case).
-            catalog
-                .open_cancellable(
-                    handle.as_str(),
-                    &path,
-                    None,
-                    Some(IdentityDeclaration::new("parcel_key", "test", "2026-09-27T00:00:00Z")),
-                    &CancelToken::new(),
-                )
-                .expect("open with a declared identity mapping");
-        } else {
-            catalog.open(handle.as_str(), &path, None).expect("open dataset");
+        match mapped_to {
+            Some(source_column) => {
+                // Mapped: declare the identity explicitly (K-5's "mapped" case, and X3's own
+                // mapped-to-`i64` case over a *native* file that also carries its own, unrelated
+                // `id` column).
+                catalog
+                    .open_cancellable(
+                        handle.as_str(),
+                        &path,
+                        None,
+                        Some(IdentityDeclaration::new(source_column, "test", "2026-09-27T00:00:00Z")),
+                        &CancelToken::new(),
+                    )
+                    .expect("open with a declared identity mapping");
+            }
+            None => {
+                catalog.open(handle.as_str(), &path, None).expect("open dataset");
+            }
         }
         let tickets = StreamRegistry::new();
         let host = SkpHost::new(
@@ -401,11 +614,13 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
     check_one(
         "ds_00000000000000000000000000000020".parse().unwrap(),
         multitype_fixture("k5-native", 20),
+        None,
     )
     .await;
     check_one(
         "ds_0000000000000000000000000000002d".parse().unwrap(),
         mapped_multitype_fixture("k5-mapped", 20),
+        Some("parcel_key"),
     )
     .await;
     // Session-ordinal: the same keyless (`ForeignKeyColumn`) fixture shape, opened with **no**
@@ -414,8 +629,22 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
     check_one(
         "ds_00000000000000000000000000000030".parse().unwrap(),
         mapped_multitype_fixture("k5-session-ordinal", 20),
+        None,
     )
     .await;
+    // **X3's own K-5 case, as Amendment 5 row 5.6 names it ("MultiType opened through the product
+    // path with the identity mapped to `i64`"), is not run here — STOP, not improvised.**
+    // `engine/src/fixture.rs::i64_for`'s own doc: "a signed value that is neither `id` nor a simple
+    // affine function of it, so a projection test cannot mistake it for the identity column" — the
+    // generator is deliberately negative-capable. `Catalog::open_cancellable` with `Identity
+    // Declaration::new("i64", ..)` over this fixture throws `IdentityUnusable` at open time
+    // (observed: "holds a negative value ...; identity is carried as u64 and a negative source
+    // value cannot widen into it without changing the value"), so no dataset exists to compare
+    // `describe`'s `projectable` against `viewport_query`'s own admission on. The row cannot be
+    // executed as written against this fixture. The underlying fix it names (`admit_projection_
+    // column` refusing the reserved `id` name even under a mapped identity) is proved instead by
+    // `engine/src/attributes.rs::tests::admit_projection_column_refuses_the_reserved_id_name_even_
+    // under_a_mapped_identity`, over a constructed schema with no negative-value constraint.
 }
 
 // ---- K-7: a projection composes with a filter --------------------------------------------------

@@ -215,16 +215,17 @@ fn viewport_query_request_with_a_filter_round_trips() {
 }
 
 /// **P-2.** `columns`'s declared order survives the round trip byte for byte — this fixture's own
-/// declared order (`["zone", "area"]`) differs from the file order any fixture writes them in, so a
-/// test that silently sorted or re-derived the list from the schema would not catch a regression
-/// here. Mutation: `#[serde(rename = "projection")]` on the field. Expected failure: this test fails
-/// to deserialize the fixture (the key `columns` disappears).
+/// declared order (`["area", "zone"]`, X8: Amendment 5 row 5.6) differs from the file order any
+/// fixture writes them in (`zone` then `area` — `engine/src/fixture.rs`'s own declared file order),
+/// so a test that silently sorted or re-derived the list from the schema would not catch a
+/// regression here. Mutation: `#[serde(rename = "projection")]` on the field. Expected failure: this
+/// test fails to deserialize the fixture (the key `columns` disappears).
 #[test]
 fn viewport_query_request_with_columns_fixture_reads_in_declared_order() {
     let v = fixture("v0-viewport_query-request-with-columns");
     let parsed: ViewportQueryRequest = serde_json::from_value(v.clone())
         .unwrap_or_else(|e| panic!("fixture does not deserialize as ViewportQueryRequest: {e}"));
-    assert_eq!(parsed.columns.as_deref(), Some(&["zone".to_string(), "area".to_string()][..]));
+    assert_eq!(parsed.columns.as_deref(), Some(&["area".to_string(), "zone".to_string()][..]));
     assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
 }
 
