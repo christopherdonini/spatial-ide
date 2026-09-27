@@ -24,11 +24,14 @@ if [ "$scan_status" -eq 0 ] && [ "$scan_output" = "profile-path-scan: clean" ]; 
   exit 0
 fi
 
+# 7.1(c): a finding is named only on a declared line -- node's own exit 1 (e.g. a load failure
+# before the scanner reaches its own finding logic) prints no such line and is not named a finding.
+if [ "$scan_status" -eq 1 ] && [ "$scan_output" = "profile-path-scan: refused" ]; then
+  echo "error: commit refused -- staged content or a staged path name carries a profile path (see the output above)." >&2
+  exit 1
+fi
+
 case "$scan_status" in
-  1)
-    echo "error: commit refused -- staged content or a staged path name carries a profile path (see the output above)." >&2
-    exit 1
-    ;;
   2)
     echo "error: commit refused -- the profile-path scan aborted." >&2
     exit 2
@@ -37,7 +40,7 @@ case "$scan_status" in
     echo "error: commit refused -- the profile-path scan's canary was not found." >&2
     exit 3
     ;;
-  0)
+  0|1)
     echo "error: commit refused -- the profile-path scan reported no result." >&2
     exit 2
     ;;
