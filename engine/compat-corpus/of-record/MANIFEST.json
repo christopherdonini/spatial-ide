@@ -1,0 +1,3303 @@
+{
+  "corpus": "GeoParquet compatibility corpus (collection only)",
+  "collected": "2026-09-10",
+  "collected_for": "RELEASE-DRAFTS-0.1.0/post-tag/DRAFT-2-BRIEF-A-admission-and-session-lifecycle.md, phase P0",
+  "expected_outcomes_recorded_here": false,
+  "expected_outcomes_note": "Expected admission outcomes are NOT recorded in this manifest, by design, for the main set and for the mutations alike. They are pre-declared in engine/ADMISSION-PREREGISTRATION.md. Every field under \"observed\" was read from the file's own bytes with pyarrow, or, for the tail facts, from the raw last eight bytes; nothing under \"observed\" is inferred, and no file here is called correct, incorrect, admissible or refusable.",
+  "sets": {
+    "main": "files from independent producer pipelines; the corpus is capped at 12 of these",
+    "mutations": "files derived here from a named main-set file, each changing one thing; not counted in the main set's cap"
+  },
+  "malformed_or_mutation_fixtures_included": true,
+  "file_count_main": 12,
+  "file_count_mutations": 5,
+  "file_count": 17,
+  "pipelines_represented": [
+    "DuckDB spatial",
+    "GDAL OGR Parquet driver, run as ogr2ogr from the GDAL that ships inside QGIS 3.44.2 (see PROBE.json / probed_producers)",
+    "GeoPandas / pyarrow",
+    "GeoParquet specification example file",
+    "Overture Maps extract via the overturemaps CLI",
+    "QGIS processing, run headless as qgis_process from QGIS 3.44.2 (see PROBE.json / probed_producers)"
+  ],
+  "read_with": {
+    "python": "3.11.9",
+    "pyarrow": "25.0.1",
+    "venv": "target/corpus-venv (untracked)"
+  },
+  "probed_producers": {
+    "probed_install": "C:\\Program Files\\QGIS 3.44.2",
+    "ogr2ogr_exe": "C:\\Program Files\\QGIS 3.44.2\\bin\\ogr2ogr.exe",
+    "ogrinfo_exe": "C:\\Program Files\\QGIS 3.44.2\\bin\\ogrinfo.exe",
+    "qgis_process_exe": "C:\\Program Files\\QGIS 3.44.2\\apps\\qgis\\bin\\qgis_process.exe",
+    "ogrinfo_version": "GDAL 3.11.3 \"Eganville\", released 2025/07/12",
+    "ogrinfo_formats_parquet_lines": [
+      "  Parquet -vector- (rw+v): (Geo)Parquet (*.parquet)"
+    ],
+    "ogrinfo_formats_driver_line_count": 80,
+    "ogrinfo_format_parquet": "Format Details:\n  Short Name: Parquet\n  Long Name: (Geo)Parquet\n  Supports: Vector\n  Extension: parquet\n  Help Topic: drivers/vector/parquet.html\n  Supports: Open() - Open existing dataset.\n  Supports: Create() - Create writable dataset.\n  Supports: Virtual IO - eg. /vsimem/\n  Creation Field Datatypes: Integer Integer64 Real String Date Time DateTime Binary IntegerList Integer64List RealList StringList\n  Creation Field Data Sub-types: Boolean Int16 Float32 JSON UUID\n  Supported SQL dialects: OGRSQL SQLITE\n\n<LayerCreationOptionList>\n  <Option name=\"COMPRESSION\" type=\"string-select\" description=\"Compression method\" default=\"SNAPPY\">\n    <Value alias=\"UNCOMPRESSED\">NONE</Value>\n    <Value>SNAPPY</Value>\n    <Value>GZIP</Value>\n    <Value>BROTLI</Value>\n    <Value>ZSTD</Value>\n    <Value>LZ4_RAW</Value>\n    <Value>LZ4_HADOOP</Value>\n  </Option>\n  <Option name=\"GEOMETRY_ENCODING\" type=\"string-select\" description=\"Encoding of geometry columns\" default=\"WKB\">\n    <Value>WKB</Value>\n    <Value>WKT</Value>\n    <Value alias=\"GEOARROW_STRUCT\">GEOARROW</Value>\n    <Value>GEOARROW_INTERLEAVED</Value>\n  </Option>\n  <Option name=\"ROW_GROUP_SIZE\" type=\"integer\" description=\"Maximum number of rows per group\" default=\"65536\" />\n  <Option name=\"GEOMETRY_NAME\" type=\"string\" description=\"Name of geometry column\" default=\"geometry\" />\n  <Option name=\"COORDINATE_PRECISION\" type=\"float\" description=\"Number of decimals for coordinates (only for GEOMETRY_ENCODING=WKT)\" />\n  <Option name=\"FID\" type=\"string\" description=\"Name of the FID column to create\" />\n  <Option name=\"POLYGON_ORIENTATION\" type=\"string-select\" description=\"Which ring orientation to use for polygons\" default=\"COUNTERCLOCKWISE\">\n    <Value>COUNTERCLOCKWISE</Value>\n    <Value>UNMODIFIED</Value>\n  </Option>\n  <Option name=\"EDGES\" type=\"string-select\" description=\"Name of the coordinate system for the edges\" default=\"PLANAR\">\n    <Value>PLANAR</Value>\n    <Value>SPHERICAL</Value>\n  </Option>\n  <Option name=\"CREATOR\" type=\"string\" description=\"Name of creating application\" />\n  <Option name=\"WRITE_COVERING_BBOX\" type=\"boolean\" default=\"YES\" description=\"Whether to write xmin/ymin/xmax/ymax columns with the bounding box of geometries\" />\n  <Option name=\"SORT_BY_BBOX\" type=\"boolean\" default=\"NO\" description=\"Whether features should be sorted based on the bounding box of their geometries\" />\n</LayerCreationOptionList>\n\n<OpenOptionList>\n  <Option name=\"GEOM_POSSIBLE_NAMES\" type=\"string\" description=\"Comma separated list of possible names for geometry column(s).\" default=\"geometry,wkb_geometry,wkt_geometry\" />\n  <Option name=\"CRS\" type=\"string\" description=\"Set/override CRS, typically defined as AUTH:CODE (e.g EPSG:4326), of geometry column(s)\" />\n</OpenOptionList>\n\n  Other metadata items:\n    ARROW_VERSION=19.0.1\n    ARROW_DATASET=YES\n",
+    "qgis_process_version": "QGIS 3.44.2-Solothurn 'Solothurn' (f30453dede3)\nQGIS code revision f30453dede3\nQt version 5.15.13\nPython version 3.12.11\nGDAL/OGR version 3.11.3\nPROJ version 9.6.2\nEPSG Registry database version v12.013 (2025-05-26)\nGEOS version 3.13.1-CAPI-1.19.2\nSQLite version 3.50.4\nOS Windows 10 Version 2009",
+    "qgis_process_stderr": "",
+    "qgis_process_returncode": 0
+  },
+  "observed_field_meanings": {
+    "crs_shape": "absent-key = the geometry column metadata carries no \"crs\" member; null = the member is present and is JSON null; projjson:<authority>:<code> or projjson:<name> = a PROJJSON object is present",
+    "crs_axis_names": "the PROJJSON crs's coordinate_system.axis[*].name list, in the order the file states it; null where crs is absent or null, or where the PROJJSON carries no top-level coordinate_system. For a ProjectedCRS this is the projected system's axis list; the base_crs axis list is deliberately not substituted",
+    "crs_axis_directions": "the same axis objects' \"direction\" values, same order, same null rule",
+    "geo_creator": "the geo metadata's own \"creator\" member, verbatim; null where the writer emitted none",
+    "parquet_footer_created_by": "the Parquet footer's created_by string, verbatim",
+    "parquet_open_error": "null when pyarrow opened the file; otherwise the exception text, verbatim. Only mutations are expected to be unopenable",
+    "geo_metadata_parses_as_json": "whether the raw value of the \"geo\" key-value metadata key parsed as JSON",
+    "integer_typed_columns, string_typed_columns": "columns whose Arrow type is an integer or a string type. Listed by name and type only. No column is called a key here; nothing was read from the column values.",
+    "bbox_present_in_column_metadata": "whether the geo metadata's geometry column object carries a \"bbox\" member; this is not a statement about Parquet column statistics",
+    "observed_difference_from_base": "mutations only: byte size, the uint32 footer-length field in the last eight bytes, the trailing PAR1 magic, and whether the geo metadata parses, for the base and for the mutation side by side"
+  },
+  "retirement_policy": "The corpus is capped at 12 files in the main set. Four GDAL-written and QGIS-written files were added on 2026-09-10 from the QGIS 3.44.2 install on this machine, so four files were moved out of the main set into retired/. They were moved, not deleted: their bytes are still on disk and any of them can be moved back. Retired files are NOT part of the main set and are not counted in file_count_main.",
+  "retired": [
+    {
+      "path": "target/fixtures/compat-corpus/retired/gp-epsg3857-strkey.parquet",
+      "was": "target/fixtures/compat-corpus/geopandas/gp-epsg3857-strkey.parquet",
+      "retired_on": "2026-09-10",
+      "reason": "Near-duplicate of geopandas/gp-epsg2056-intkey.parquet on every observed axis -- same writer, same geo version 1.0.0, same crs shape class (PROJJSON with a projected EPSG id), covering absent in both, bbox member present in both, one integer-typed and one string-typed column in both. Only the EPSG code differs, and EPSG:2056 is the code this slice names.",
+      "sha256": "fc8a150a551995e9d214eb0ae8019bbe1409666b7aa4be1d10ac2d7977a218dc",
+      "bytes": 17927,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:3857",
+        "crs_projjson_name": "WGS 84 / Pseudo-Mercator",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 3857
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          808136.9199489101,
+          5913000.182285893,
+          847529.7343607654,
+          5952700.474830813
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "site_code",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "count",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "count",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "site_code",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/retired/poly.parquet",
+      "was": "target/fixtures/compat-corpus/gdal/poly.parquet",
+      "retired_on": "2026-09-10",
+      "reason": "Downloaded from https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/ogr/data/parquet/poly.parquet on 2026-09-10. Held the GDAL-written case 'geo 1.1.0 + PROJJSON with a projected EPSG id + covering present'; that case is now held by gdal/ogr2ogr-epsg2056-default.parquet, which was written by GDAL on this machine with a recorded command instead of fetched. Note for the P0 architect: this was the corpus's only EPSG:27700 file. Its observed block is kept below under retired_observed so an axis-order prediction made against it is not lost.",
+      "sha256": "002f42489f96d43c1292fd1842c923221de0d64ceea1ce5134b8d9cd9f6eaac8",
+      "bytes": 10227,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.11.0dev-779871e561-dirty, using parquet-cpp-arrow version 18.0.0",
+        "row_count": 10,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:27700",
+        "crs_projjson_name": "OSGB36 / British National Grid",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 27700
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          478315.53125,
+          4762880.5,
+          481645.3125,
+          4765610.5
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "crs",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "AREA",
+            "arrow_type": "decimal128(11, 3)",
+            "nullable": true
+          },
+          {
+            "name": "EAS_ID",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "PRFEDEA",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "EAS_ID",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "PRFEDEA",
+            "arrow_type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/retired/test_geoparquet_1_1.parquet",
+      "was": "target/fixtures/compat-corpus/gdal/test_geoparquet_1_1.parquet",
+      "retired_on": "2026-09-10",
+      "reason": "Downloaded from https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/ogr/data/parquet/test_geoparquet_1_1.parquet on 2026-09-10. Held 'GDAL-written, geo 1.1.0, crs key absent, covering present'; gdal/ogr2ogr-epsg4326-default.parquet has the same observed shape and was written here, and overture/... holds it too.",
+      "sha256": "f7703e1f2a43e533bec38cb6f41f5d97d807291579db7dcdcd7c24634a9b29ac",
+      "bytes": 63942,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.13.0dev-19348d2770-dirty, using parquet-cpp-arrow version 22.0.0",
+        "row_count": 5,
+        "row_group_count": 2,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          0.0,
+          2.0,
+          4.0,
+          2.0
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "boolean",
+            "arrow_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "uint8",
+            "arrow_type": "uint8",
+            "nullable": true
+          },
+          {
+            "name": "int8",
+            "arrow_type": "int8",
+            "nullable": true
+          },
+          {
+            "name": "uint16",
+            "arrow_type": "uint16",
+            "nullable": true
+          },
+          {
+            "name": "int16",
+            "arrow_type": "int16",
+            "nullable": true
+          },
+          {
+            "name": "uint32",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "int32",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "uint64",
+            "arrow_type": "uint64",
+            "nullable": true
+          },
+          {
+            "name": "int64",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "float32",
+            "arrow_type": "float",
+            "nullable": true
+          },
+          {
+            "name": "float64",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "string",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "large_string",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt",
+            "arrow_type": "timestamp[ms, tz=UTC]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt_plus_2",
+            "arrow_type": "timestamp[ms, tz=+02:00]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt_minus_0215",
+            "arrow_type": "timestamp[ms, tz=-02:15]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_s_no_tz",
+            "arrow_type": "timestamp[ms]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_us_no_tz",
+            "arrow_type": "timestamp[us]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ns_no_tz",
+            "arrow_type": "timestamp[us]",
+            "nullable": true
+          },
+          {
+            "name": "time32_s",
+            "arrow_type": "time32[ms]",
+            "nullable": true
+          },
+          {
+            "name": "time32_ms",
+            "arrow_type": "time32[ms]",
+            "nullable": true
+          },
+          {
+            "name": "time64_us",
+            "arrow_type": "time64[us]",
+            "nullable": true
+          },
+          {
+            "name": "time64_ns",
+            "arrow_type": "time64[ns]",
+            "nullable": true
+          },
+          {
+            "name": "date32",
+            "arrow_type": "date32[day]",
+            "nullable": true
+          },
+          {
+            "name": "date64",
+            "arrow_type": "date32[day]",
+            "nullable": true
+          },
+          {
+            "name": "binary",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "large_binary",
+            "arrow_type": "large_binary",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_binary",
+            "arrow_type": "fixed_size_binary[2]",
+            "nullable": true
+          },
+          {
+            "name": "decimal128",
+            "arrow_type": "decimal128(7, 3)",
+            "nullable": true
+          },
+          {
+            "name": "decimal256",
+            "arrow_type": "decimal256(7, 3)",
+            "nullable": true
+          },
+          {
+            "name": "list_boolean",
+            "arrow_type": "list<element: bool>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint8",
+            "arrow_type": "list<element: uint8>",
+            "nullable": true
+          },
+          {
+            "name": "list_int8",
+            "arrow_type": "list<element: int8>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint16",
+            "arrow_type": "list<element: uint16>",
+            "nullable": true
+          },
+          {
+            "name": "list_int16",
+            "arrow_type": "list<element: int16>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint32",
+            "arrow_type": "list<element: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_int32",
+            "arrow_type": "list<element: int32>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint64",
+            "arrow_type": "list<element: uint64>",
+            "nullable": true
+          },
+          {
+            "name": "list_int64",
+            "arrow_type": "list<element: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_float32",
+            "arrow_type": "list<element: float>",
+            "nullable": true
+          },
+          {
+            "name": "list_float64",
+            "arrow_type": "list<element: double>",
+            "nullable": true
+          },
+          {
+            "name": "list_decimal128",
+            "arrow_type": "list<element: decimal128(7, 3)>",
+            "nullable": true
+          },
+          {
+            "name": "list_decimal256",
+            "arrow_type": "list<element: decimal256(7, 3)>",
+            "nullable": true
+          },
+          {
+            "name": "list_string",
+            "arrow_type": "list<element: string>",
+            "nullable": true
+          },
+          {
+            "name": "list_large_string",
+            "arrow_type": "list<element: large_string>",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_boolean",
+            "arrow_type": "fixed_size_list<element: bool>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint8",
+            "arrow_type": "fixed_size_list<element: uint8>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int8",
+            "arrow_type": "fixed_size_list<element: int8>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint16",
+            "arrow_type": "fixed_size_list<element: uint16>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int16",
+            "arrow_type": "fixed_size_list<element: int16>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint32",
+            "arrow_type": "fixed_size_list<element: int64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int32",
+            "arrow_type": "fixed_size_list<element: int32>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint64",
+            "arrow_type": "fixed_size_list<element: uint64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int64",
+            "arrow_type": "fixed_size_list<element: int64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_float32",
+            "arrow_type": "fixed_size_list<element: float>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_float64",
+            "arrow_type": "fixed_size_list<element: double>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_string",
+            "arrow_type": "fixed_size_list<element: string>[2]",
+            "nullable": true
+          },
+          {
+            "name": "struct_field",
+            "arrow_type": "struct<a: int64, b: double, c: struct<d: string, f: string>, h: list<element: int64>, i: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_struct",
+            "arrow_type": "list<element: struct<a: int64, b: double, c: double>>",
+            "nullable": true
+          },
+          {
+            "name": "map_boolean",
+            "arrow_type": "map<string, bool ('map_boolean')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint8",
+            "arrow_type": "map<string, uint8 ('map_uint8')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int8",
+            "arrow_type": "map<string, int8 ('map_int8')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint16",
+            "arrow_type": "map<string, uint16 ('map_uint16')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int16",
+            "arrow_type": "map<string, int16 ('map_int16')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint32",
+            "arrow_type": "map<string, int64 ('map_uint32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int32",
+            "arrow_type": "map<string, int32 ('map_int32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint64",
+            "arrow_type": "map<string, uint64 ('map_uint64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int64",
+            "arrow_type": "map<string, int64 ('map_int64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_float32",
+            "arrow_type": "map<string, float ('map_float32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_float64",
+            "arrow_type": "map<string, double ('map_float64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_decimal128",
+            "arrow_type": "map<string, decimal128(7, 3) ('map_decimal128')>",
+            "nullable": true
+          },
+          {
+            "name": "map_decimal256",
+            "arrow_type": "map<string, decimal128(7, 3) ('map_decimal256')>",
+            "nullable": true
+          },
+          {
+            "name": "map_string",
+            "arrow_type": "map<string, string ('map_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_large_string",
+            "arrow_type": "map<string, string ('map_large_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_list_string",
+            "arrow_type": "map<string, list<element: string> ('map_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_large_list_string",
+            "arrow_type": "map<string, list<element: string> ('map_large_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_fixed_size_list_string",
+            "arrow_type": "map<string, list<element: string> ('map_fixed_size_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "dict",
+            "arrow_type": "dictionary<values=string, indices=int32, ordered=0>",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "uint8",
+            "arrow_type": "uint8"
+          },
+          {
+            "name": "int8",
+            "arrow_type": "int8"
+          },
+          {
+            "name": "uint16",
+            "arrow_type": "uint16"
+          },
+          {
+            "name": "int16",
+            "arrow_type": "int16"
+          },
+          {
+            "name": "uint32",
+            "arrow_type": "int64"
+          },
+          {
+            "name": "int32",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "uint64",
+            "arrow_type": "uint64"
+          },
+          {
+            "name": "int64",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "string",
+            "arrow_type": "string"
+          },
+          {
+            "name": "large_string",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/retired/test_with_fid_and_geometry_bbox.parquet",
+      "was": "target/fixtures/compat-corpus/gdal/test_with_fid_and_geometry_bbox.parquet",
+      "retired_on": "2026-09-10",
+      "reason": "Downloaded from https://raw.githubusercontent.com/OSGeo/gdal/03fc216e1fc4af769c651a58176cae602417cca3/autotest/ogr/data/parquet/test_with_fid_and_geometry_bbox.parquet on 2026-09-10. Overlapped retired/test_geoparquet_1_1.parquet: same producer family, crs key absent in both, covering present in both, integer-heavy schema in both.",
+      "sha256": "a29df781c644bc6368a61a439cbd2578681105c9662fd613a6e34eb399a7645e",
+      "bytes": 75109,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.10.0dev-d58ce296bf-dirty, using parquet-cpp-arrow version 12.0.0",
+        "row_count": 5,
+        "row_group_count": 2,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          0.0,
+          2.0,
+          4.0,
+          2.0
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64",
+            "nullable": false
+          },
+          {
+            "name": "boolean",
+            "arrow_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "uint8",
+            "arrow_type": "uint8",
+            "nullable": true
+          },
+          {
+            "name": "int8",
+            "arrow_type": "int8",
+            "nullable": true
+          },
+          {
+            "name": "uint16",
+            "arrow_type": "uint16",
+            "nullable": true
+          },
+          {
+            "name": "int16",
+            "arrow_type": "int16",
+            "nullable": true
+          },
+          {
+            "name": "uint32",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "int32",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "uint64",
+            "arrow_type": "uint64",
+            "nullable": true
+          },
+          {
+            "name": "int64",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "float32",
+            "arrow_type": "float",
+            "nullable": true
+          },
+          {
+            "name": "float64",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "string",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "large_string",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt",
+            "arrow_type": "timestamp[ms, tz=UTC]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt_plus_2",
+            "arrow_type": "timestamp[ms, tz=+02:00]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ms_gmt_minus_0215",
+            "arrow_type": "timestamp[ms, tz=-02:15]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_s_no_tz",
+            "arrow_type": "timestamp[ms]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_us_no_tz",
+            "arrow_type": "timestamp[us]",
+            "nullable": true
+          },
+          {
+            "name": "timestamp_ns_no_tz",
+            "arrow_type": "timestamp[us]",
+            "nullable": true
+          },
+          {
+            "name": "time32_s",
+            "arrow_type": "time32[ms]",
+            "nullable": true
+          },
+          {
+            "name": "time32_ms",
+            "arrow_type": "time32[ms]",
+            "nullable": true
+          },
+          {
+            "name": "time64_us",
+            "arrow_type": "time64[us]",
+            "nullable": true
+          },
+          {
+            "name": "time64_ns",
+            "arrow_type": "time64[ns]",
+            "nullable": true
+          },
+          {
+            "name": "date32",
+            "arrow_type": "date32[day]",
+            "nullable": true
+          },
+          {
+            "name": "date64",
+            "arrow_type": "date32[day]",
+            "nullable": true
+          },
+          {
+            "name": "binary",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "large_binary",
+            "arrow_type": "large_binary",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_binary",
+            "arrow_type": "fixed_size_binary[2]",
+            "nullable": true
+          },
+          {
+            "name": "decimal128",
+            "arrow_type": "decimal128(7, 3)",
+            "nullable": true
+          },
+          {
+            "name": "decimal256",
+            "arrow_type": "decimal256(7, 3)",
+            "nullable": true
+          },
+          {
+            "name": "list_boolean",
+            "arrow_type": "list<item: bool>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint8",
+            "arrow_type": "list<item: uint8>",
+            "nullable": true
+          },
+          {
+            "name": "list_int8",
+            "arrow_type": "list<item: int8>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint16",
+            "arrow_type": "list<item: uint16>",
+            "nullable": true
+          },
+          {
+            "name": "list_int16",
+            "arrow_type": "list<item: int16>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint32",
+            "arrow_type": "list<item: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_int32",
+            "arrow_type": "list<item: int32>",
+            "nullable": true
+          },
+          {
+            "name": "list_uint64",
+            "arrow_type": "list<item: uint64>",
+            "nullable": true
+          },
+          {
+            "name": "list_int64",
+            "arrow_type": "list<item: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_float32",
+            "arrow_type": "list<item: float>",
+            "nullable": true
+          },
+          {
+            "name": "list_float64",
+            "arrow_type": "list<item: double>",
+            "nullable": true
+          },
+          {
+            "name": "list_decimal128",
+            "arrow_type": "list<item: decimal128(7, 3)>",
+            "nullable": true
+          },
+          {
+            "name": "list_decimal256",
+            "arrow_type": "list<item: decimal256(7, 3)>",
+            "nullable": true
+          },
+          {
+            "name": "list_string",
+            "arrow_type": "list<item: string>",
+            "nullable": true
+          },
+          {
+            "name": "list_large_string",
+            "arrow_type": "list<item: large_string>",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_boolean",
+            "arrow_type": "fixed_size_list<item: bool>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint8",
+            "arrow_type": "fixed_size_list<item: uint8>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int8",
+            "arrow_type": "fixed_size_list<item: int8>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint16",
+            "arrow_type": "fixed_size_list<item: uint16>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int16",
+            "arrow_type": "fixed_size_list<item: int16>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint32",
+            "arrow_type": "fixed_size_list<item: int64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int32",
+            "arrow_type": "fixed_size_list<item: int32>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_uint64",
+            "arrow_type": "fixed_size_list<item: uint64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_int64",
+            "arrow_type": "fixed_size_list<item: int64>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_float32",
+            "arrow_type": "fixed_size_list<item: float>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_float64",
+            "arrow_type": "fixed_size_list<item: double>[2]",
+            "nullable": true
+          },
+          {
+            "name": "fixed_size_list_string",
+            "arrow_type": "fixed_size_list<item: string>[2]",
+            "nullable": true
+          },
+          {
+            "name": "struct_field",
+            "arrow_type": "struct<a: int64, b: double, c: struct<d: string, f: string>, h: list<item: int64>, i: int64>",
+            "nullable": true
+          },
+          {
+            "name": "list_struct",
+            "arrow_type": "list<item: struct<a: int64, b: double, c: double>>",
+            "nullable": true
+          },
+          {
+            "name": "map_boolean",
+            "arrow_type": "map<string, bool ('map_boolean')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint8",
+            "arrow_type": "map<string, uint8 ('map_uint8')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int8",
+            "arrow_type": "map<string, int8 ('map_int8')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint16",
+            "arrow_type": "map<string, uint16 ('map_uint16')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int16",
+            "arrow_type": "map<string, int16 ('map_int16')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint32",
+            "arrow_type": "map<string, int64 ('map_uint32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int32",
+            "arrow_type": "map<string, int32 ('map_int32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_uint64",
+            "arrow_type": "map<string, uint64 ('map_uint64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_int64",
+            "arrow_type": "map<string, int64 ('map_int64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_float32",
+            "arrow_type": "map<string, float ('map_float32')>",
+            "nullable": true
+          },
+          {
+            "name": "map_float64",
+            "arrow_type": "map<string, double ('map_float64')>",
+            "nullable": true
+          },
+          {
+            "name": "map_decimal128",
+            "arrow_type": "map<string, decimal128(7, 3) ('map_decimal128')>",
+            "nullable": true
+          },
+          {
+            "name": "map_decimal256",
+            "arrow_type": "map<string, decimal128(7, 3) ('map_decimal256')>",
+            "nullable": true
+          },
+          {
+            "name": "map_string",
+            "arrow_type": "map<string, string ('map_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_large_string",
+            "arrow_type": "map<string, string ('map_large_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_list_string",
+            "arrow_type": "map<string, list<item: string> ('map_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_large_list_string",
+            "arrow_type": "map<string, list<item: string> ('map_large_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "map_fixed_size_list_string",
+            "arrow_type": "map<string, list<item: string> ('map_fixed_size_list_string')>",
+            "nullable": true
+          },
+          {
+            "name": "dict",
+            "arrow_type": "dictionary<values=string, indices=int32, ordered=0>",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64"
+          },
+          {
+            "name": "uint8",
+            "arrow_type": "uint8"
+          },
+          {
+            "name": "int8",
+            "arrow_type": "int8"
+          },
+          {
+            "name": "uint16",
+            "arrow_type": "uint16"
+          },
+          {
+            "name": "int16",
+            "arrow_type": "int16"
+          },
+          {
+            "name": "uint32",
+            "arrow_type": "int64"
+          },
+          {
+            "name": "int32",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "uint64",
+            "arrow_type": "uint64"
+          },
+          {
+            "name": "int64",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "string",
+            "arrow_type": "string"
+          },
+          {
+            "name": "large_string",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "target/fixtures/compat-corpus/geopandas/gp-epsg2056-intkey.parquet",
+      "set": "main",
+      "producer_pipeline": "GeoPandas / pyarrow",
+      "library_or_tool": "geopandas 1.1.4, pyarrow 25.0.1",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "GeoPandas 1.1.4 GeoDataFrame.to_parquet (writing through pyarrow 25.0.1); generator script gen_geopandas.py run in C:\\dev\\spatial-ide\\target\\corpus-venv",
+        "date": "2026-09-10"
+      },
+      "collection_note": "declared projected CRS EPSG:2056; integer key column; default writer options",
+      "sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+      "bytes": 27132,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/geopandas/gp-nocrs-nokey.parquet",
+      "set": "main",
+      "producer_pipeline": "GeoPandas / pyarrow",
+      "library_or_tool": "geopandas 1.1.4, pyarrow 25.0.1",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "GeoPandas 1.1.4 GeoDataFrame.to_parquet (writing through pyarrow 25.0.1); generator script gen_geopandas.py run in C:\\dev\\spatial-ide\\target\\corpus-venv",
+        "date": "2026-09-10"
+      },
+      "collection_note": "GeoDataFrame written with crs=None; no integer-typed and no string-typed column",
+      "sha256": "a55e41bbfd4c3e43d0771484ee99f2543a9089523e9ba90066499a2c136a46a6",
+      "bytes": 10214,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "null",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          -4.9922482634862995,
+          -4.970495302782888,
+          4.906453628511542,
+          4.99475646992728
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "measure",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "flag",
+            "arrow_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [],
+        "string_typed_columns": []
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/geopandas/gp-epsg4326-covering.parquet",
+      "set": "main",
+      "producer_pipeline": "GeoPandas / pyarrow",
+      "library_or_tool": "geopandas 1.1.4, pyarrow 25.0.1",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "GeoPandas 1.1.4 GeoDataFrame.to_parquet (writing through pyarrow 25.0.1); generator script gen_geopandas.py run in C:\\dev\\spatial-ide\\target\\corpus-venv, called with write_covering_bbox=True",
+        "date": "2026-09-10"
+      },
+      "collection_note": "declared EPSG:4326; integer and string columns; covering requested from the writer",
+      "sha256": "bbb8d0bcb0c3ef76687cf81cebcdabbe67c12bfa6e03b3a97a2c9cb6d25de265",
+      "bytes": 32380,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:4326",
+        "crs_projjson_name": "WGS 84",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 4326
+        },
+        "crs_axis_names": [
+          "Geodetic latitude",
+          "Geodetic longitude"
+        ],
+        "crs_axis_directions": [
+          "north",
+          "east"
+        ],
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          7.240571429126995,
+          46.75066015564145,
+          7.640829137765396,
+          47.14887620788085
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "name",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "bbox",
+            "arrow_type": "struct<xmin: double, ymin: double, xmax: double, ymax: double>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "name",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/duckdb-spatial/duckdb-lv95range-intkey.parquet",
+      "set": "main",
+      "producer_pipeline": "DuckDB spatial",
+      "library_or_tool": "duckdb 1.5.5 (build d8cdaa33fd) + spatial extension",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "DuckDB 1.5.5 with the spatial extension loaded: COPY (SELECT ...) TO '<file>' (FORMAT PARQUET); generator script gen_duckdb.py run in C:\\dev\\spatial-ide\\target\\corpus-venv",
+        "date": "2026-09-10"
+      },
+      "collection_note": "DuckDB GEOMETRY; coordinates in the LV95 numeric range; integer key column",
+      "sha256": "7a9da027167681ee04d7f4d25c85bbfff6795bed9829c5c3ab71addfc9a7e403",
+      "bytes": 6305,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "DuckDB version v1.5.5 (build d8cdaa33fd)",
+        "row_count": 300,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geom",
+        "geometry_columns_listed": [
+          "geom"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2600000.0,
+          1199000.0,
+          2607992.0,
+          1206950.0
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "zone",
+            "arrow_type": "int16",
+            "nullable": true
+          },
+          {
+            "name": "geom",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "zone",
+            "arrow_type": "int16"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/duckdb-spatial/duckdb-degreesrange-nokey.parquet",
+      "set": "main",
+      "producer_pipeline": "DuckDB spatial",
+      "library_or_tool": "duckdb 1.5.5 (build d8cdaa33fd) + spatial extension",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "DuckDB 1.5.5 with the spatial extension loaded: COPY (SELECT ...) TO '<file>' (FORMAT PARQUET); generator script gen_duckdb.py run in C:\\dev\\spatial-ide\\target\\corpus-venv",
+        "date": "2026-09-10"
+      },
+      "collection_note": "DuckDB GEOMETRY; coordinates inside the +/-180 / +/-90 range; no integer-typed and no string-typed column",
+      "sha256": "b471a90f2e87e91e83c2de6c5fd73bc9ea7ab83fbea1c733988eeaef725357af",
+      "bytes": 6065,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "DuckDB version v1.5.5 (build d8cdaa33fd)",
+        "row_count": 300,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geom",
+        "geometry_columns_listed": [
+          "geom"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Point"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          -3.0,
+          47.0,
+          -0.01,
+          49.093
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "category",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "measure",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geom",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [],
+        "string_typed_columns": []
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/duckdb-spatial/duckdb-mercatorrange-strkey.parquet",
+      "set": "main",
+      "producer_pipeline": "DuckDB spatial",
+      "library_or_tool": "duckdb 1.5.5 (build d8cdaa33fd) + spatial extension",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "DuckDB 1.5.5 with the spatial extension loaded: COPY (SELECT ...) TO '<file>' (FORMAT PARQUET); generator script gen_duckdb.py run in C:\\dev\\spatial-ide\\target\\corpus-venv",
+        "date": "2026-09-10"
+      },
+      "collection_note": "DuckDB GEOMETRY polygons; coordinates in the Web Mercator numeric range; string key column",
+      "sha256": "94c737ebb4e7f74812cf386b3e70d9318700dc972c7521502d5be2f50440705a",
+      "bytes": 54864,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "DuckDB version v1.5.5 (build d8cdaa33fd)",
+        "row_count": 200,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geom",
+        "geometry_columns_listed": [
+          "geom"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          827975.0,
+          5932975.0,
+          834194.0,
+          5947154.0
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "site_code",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "geom",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [],
+        "string_typed_columns": [
+          {
+            "name": "site_code",
+            "arrow_type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/gdal/ogr2ogr-epsg2056-default.parquet",
+      "set": "main",
+      "producer_pipeline": "GDAL OGR Parquet driver, run as ogr2ogr from the GDAL that ships inside QGIS 3.44.2 (see PROBE.json / probed_producers)",
+      "library_or_tool": "GDAL 3.11.3 OGR Parquet driver (ogr2ogr)",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "\"C:\\Program Files\\QGIS 3.44.2\\bin\\ogr2ogr.exe\" -f Parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\gdal\\ogr2ogr-epsg2056-default.parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\geopandas\\gp-epsg2056-intkey.parquet   (run 2026-09-10 by scripts/gen_gdal.py, in the environment scripts/qgis_env.py builds)",
+        "date": "2026-09-10"
+      },
+      "collection_note": "GDAL rewrite of the GeoPandas EPSG:2056 file with no -lco at all, i.e. the Parquet driver's own defaults (WRITE_COVERING_BBOX defaults to YES, GEOMETRY_ENCODING to WKB, COMPRESSION to SNAPPY, and no CREATOR is set)",
+      "sha256": "4e8e21d423dcfce1ec98d2cd31bb1c20d839be47669445efaea566f938a35c1a",
+      "bytes": 27775,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.11.3, using parquet-cpp-arrow version 19.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "crs",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/gdal/ogr2ogr-epsg4326-default.parquet",
+      "set": "main",
+      "producer_pipeline": "GDAL OGR Parquet driver, run as ogr2ogr from the GDAL that ships inside QGIS 3.44.2 (see PROBE.json / probed_producers)",
+      "library_or_tool": "GDAL 3.11.3 OGR Parquet driver (ogr2ogr)",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "\"C:\\Program Files\\QGIS 3.44.2\\bin\\ogr2ogr.exe\" -f Parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\gdal\\ogr2ogr-epsg4326-default.parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\geopandas\\gp-epsg4326-covering.parquet   (run 2026-09-10 by scripts/gen_gdal.py, in the environment scripts/qgis_env.py builds)",
+        "date": "2026-09-10"
+      },
+      "collection_note": "GDAL rewrite, driver defaults, of a source whose geo metadata declares EPSG:4326 as PROJJSON. Recorded here to show what GDAL then writes for crs; read the observed block rather than assuming",
+      "sha256": "79dabf9db66acad5c3adf6c001d1be2a68ecb4ea08afd73690dfaa1519a96bb7",
+      "bytes": 21483,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.11.3, using parquet-cpp-arrow version 19.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          7.240571429126995,
+          46.75066015564145,
+          7.640829137765396,
+          47.14887620788085
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "name",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "fid",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "name",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/gdal/ogr2ogr-epsg2056-no-covering.parquet",
+      "set": "main",
+      "producer_pipeline": "GDAL OGR Parquet driver, run as ogr2ogr from the GDAL that ships inside QGIS 3.44.2 (see PROBE.json / probed_producers)",
+      "library_or_tool": "GDAL 3.11.3 OGR Parquet driver (ogr2ogr)",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "\"C:\\Program Files\\QGIS 3.44.2\\bin\\ogr2ogr.exe\" -f Parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\gdal\\ogr2ogr-epsg2056-no-covering.parquet C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\geopandas\\gp-epsg2056-intkey.parquet -lco WRITE_COVERING_BBOX=NO   (run 2026-09-10 by scripts/gen_gdal.py, in the environment scripts/qgis_env.py builds)",
+        "date": "2026-09-10"
+      },
+      "collection_note": "same source and same driver as gdal/ogr2ogr-epsg2056-default.parquet, differing only in -lco WRITE_COVERING_BBOX=NO. That is the driver's own option name, taken verbatim from ogrinfo --format Parquet (LayerCreationOptionList, default YES); it was not invented here",
+      "sha256": "9d6f0125627439cd7504a547e230550ceb114939c07c810ec328ee1b61ca2df8",
+      "bytes": 21405,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.11.3, using parquet-cpp-arrow version 19.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/qgis/qgis-savefeatures-epsg2056.parquet",
+      "set": "main",
+      "producer_pipeline": "QGIS processing, run headless as qgis_process from QGIS 3.44.2 (see PROBE.json / probed_producers)",
+      "library_or_tool": "QGIS 3.44.2 (qgis_process, native:savefeatures)",
+      "how_obtained": {
+        "kind": "generated",
+        "command_or_url": "\"C:\\Program Files\\QGIS 3.44.2\\apps\\qgis\\bin\\qgis_process.exe\" run native:savefeatures -- INPUT=C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\geopandas\\gp-epsg2056-intkey.parquet OUTPUT=C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\qgis\\qgis-savefeatures-epsg2056.parquet   (run 2026-09-10 by scripts/gen_qgis.py, in the environment scripts/qgis_env.py builds; no GUI is started)",
+        "date": "2026-09-10"
+      },
+      "collection_note": "written by QGIS's own vector writer, which uses the GDAL QGIS ships; kept as a separate pipeline because the option choices are QGIS's, not ogr2ogr's. qgis_process prints a GRASS-not-installed warning on stderr on every run; the algorithm returned 0",
+      "sha256": "a36914b3f075be7a0f718e15d33acae1543e3a536c9391c9ceccb82c557084cd",
+      "bytes": 27762,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "GDAL 3.11.3, using parquet-cpp-arrow version 19.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "crs",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/geoparquet-spec/example.parquet",
+      "set": "main",
+      "producer_pipeline": "GeoParquet specification example file",
+      "library_or_tool": "see observed.parquet_footer_created_by",
+      "how_obtained": {
+        "kind": "downloaded",
+        "command_or_url": "curl https://raw.githubusercontent.com/opengeospatial/geoparquet/4c9f87e5226e36f2022d6bd7d3c1980debdf7431/examples/example.parquet on 2026-09-10",
+        "date": "2026-09-10"
+      },
+      "collection_note": "the specification repository's own examples/example.parquet, at the pinned commit",
+      "sha256": "ff90b4800d71b94c6f0e2bb813835f6d85828a82d991a1fe71c80cc756f38767",
+      "bytes": 28438,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 23.0.1",
+        "row_count": 5,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "2.0.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon",
+          "MultiPolygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:OGC:CRS84",
+        "crs_projjson_name": "WGS 84 (CRS84)",
+        "crs_projjson_id": {
+          "authority": "OGC",
+          "code": "CRS84"
+        },
+        "crs_axis_names": [
+          "Geodetic longitude",
+          "Geodetic latitude"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          -180.0,
+          -18.28799,
+          180.0,
+          83.23324000000001
+        ],
+        "edges": "planar",
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "edges",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "pop_est",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "continent",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "name",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "iso_a3",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "gdp_md_est",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "gdp_md_est",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "continent",
+            "arrow_type": "large_string"
+          },
+          {
+            "name": "name",
+            "arrow_type": "large_string"
+          },
+          {
+            "name": "iso_a3",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/overture/overture-2026-08-19.0-building-bern.parquet",
+      "set": "main",
+      "producer_pipeline": "Overture Maps extract via the overturemaps CLI",
+      "library_or_tool": "overturemaps 1.0.2 CLI; Overture release 2026-08-19.0",
+      "how_obtained": {
+        "kind": "extracted",
+        "command_or_url": "overturemaps download --bbox=7.440,46.945,7.455,46.955 -f geoparquet -t building -r 2026-08-19.0 -o <file>   (run 2026-09-10; the CLI's <file>.state sidecar was deleted afterwards)",
+        "date": "2026-09-10"
+      },
+      "collection_note": "Overture buildings over a small bbox in Bern",
+      "sha256": "6cd47a3e6e31c842a969db18279deae92e8696488ad94e773850e59a15bd85c5",
+      "bytes": 379072,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 1375,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "MultiPolygon",
+          "Polygon"
+        ],
+        "crs_key_present": false,
+        "crs_shape": "absent-key",
+        "crs_projjson_name": null,
+        "crs_projjson_id": null,
+        "crs_axis_names": null,
+        "crs_axis_directions": null,
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "bbox",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": false,
+        "bbox": null,
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "covering",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "id",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "names",
+            "arrow_type": "struct<primary: string, common: map<string, string ('common')>, rules: list<element: struct<variant: string, language: string, perspectives: struct<mode: string, countries: list<element: string>>, value: string, between: list<element: double>, side: string>>>",
+            "nullable": true
+          },
+          {
+            "name": "sources",
+            "arrow_type": "list<element: struct<property: string, dataset: string, license: string, record_id: string, update_time: string, confidence: double, between: list<element: double>, provider: string, resource: string, version: string>>",
+            "nullable": true
+          },
+          {
+            "name": "level",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "height",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "min_height",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "is_underground",
+            "arrow_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "num_floors",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "num_floors_underground",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "min_floor",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "subtype",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "class",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "facade_color",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "facade_material",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "roof_material",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "roof_shape",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "roof_direction",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "roof_orientation",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "roof_color",
+            "arrow_type": "string",
+            "nullable": true
+          },
+          {
+            "name": "roof_height",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "has_parts",
+            "arrow_type": "bool",
+            "nullable": true
+          },
+          {
+            "name": "version",
+            "arrow_type": "int32",
+            "nullable": true
+          },
+          {
+            "name": "bbox",
+            "arrow_type": "struct<xmin: double, xmax: double, ymin: double, ymax: double>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "level",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "num_floors",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "num_floors_underground",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "min_floor",
+            "arrow_type": "int32"
+          },
+          {
+            "name": "version",
+            "arrow_type": "int32"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "id",
+            "arrow_type": "string"
+          },
+          {
+            "name": "subtype",
+            "arrow_type": "string"
+          },
+          {
+            "name": "class",
+            "arrow_type": "string"
+          },
+          {
+            "name": "facade_color",
+            "arrow_type": "string"
+          },
+          {
+            "name": "facade_material",
+            "arrow_type": "string"
+          },
+          {
+            "name": "roof_material",
+            "arrow_type": "string"
+          },
+          {
+            "name": "roof_shape",
+            "arrow_type": "string"
+          },
+          {
+            "name": "roof_orientation",
+            "arrow_type": "string"
+          },
+          {
+            "name": "roof_color",
+            "arrow_type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/mutations/gp-epsg2056-intkey-truncated.parquet",
+      "set": "mutations",
+      "producer_pipeline": "derived on this machine from a main-set file by scripts/gen_mutations.py",
+      "library_or_tool": "python 3.11.9, pyarrow 25.0.1 (in C:\\dev\\spatial-ide\\target\\corpus-venv)",
+      "how_obtained": {
+        "kind": "derived",
+        "command_or_url": "copy of the base with the last 1024 bytes not written: open(base, 'rb').read()[:-1024] written to mutations/gp-epsg2056-intkey-truncated.parquet. The trailing <uint32 footer length><'PAR1'> is inside the removed range.",
+        "date": "2026-09-10"
+      },
+      "collection_note": "mutation fixture. What a reader should do with it is not stated here; the expected outcome is pre-declared in engine/ADMISSION-PREREGISTRATION.md.",
+      "derived_from": "target/fixtures/compat-corpus/geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "copy of the base with the last 1024 bytes not written: open(base, 'rb').read()[:-1024] written to mutations/gp-epsg2056-intkey-truncated.parquet. The trailing <uint32 footer length><'PAR1'> is inside the removed range.",
+      "derivation_parameters": {
+        "bytes_removed_from_end": 1024
+      },
+      "observed_difference_from_base": {
+        "base_bytes": 27132,
+        "mutation_bytes": 26108,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": null,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": false,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": null,
+        "mutation_parquet_open_error": "ArrowInvalid: Parquet magic bytes not found in footer. Either the file is corrupted or this is not a parquet file.",
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "b9c8525fe06800dc6d490366aa67b63a36c86b2b599ae2724e70be816456010c"
+      },
+      "sha256": "b9c8525fe06800dc6d490366aa67b63a36c86b2b599ae2724e70be816456010c",
+      "bytes": 26108,
+      "observed": {
+        "parquet_open_error": "ArrowInvalid: Parquet magic bytes not found in footer. Either the file is corrupted or this is not a parquet file.",
+        "geo_metadata_key_present": null,
+        "parquet_footer_created_by": null,
+        "row_count": null,
+        "row_group_count": null
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/mutations/gp-epsg2056-intkey-geojson-invalid.parquet",
+      "set": "mutations",
+      "producer_pipeline": "derived on this machine from a main-set file by scripts/gen_mutations.py",
+      "library_or_tool": "python 3.11.9, pyarrow 25.0.1 (in C:\\dev\\spatial-ide\\target\\corpus-venv)",
+      "how_obtained": {
+        "kind": "derived",
+        "command_or_url": "pyarrow: pq.read_table(base); the schema key-value metadata key b'geo' replaced with the byte string {\"version\": \"1.1.0\", \"primary_column\": \"geometry\", \"columns\": { (a JSON object that is never closed); pq.write_table(...). All other schema metadata keys are carried over unchanged.",
+        "date": "2026-09-10"
+      },
+      "collection_note": "mutation fixture. What a reader should do with it is not stated here; the expected outcome is pre-declared in engine/ADMISSION-PREREGISTRATION.md.",
+      "derived_from": "target/fixtures/compat-corpus/geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "pyarrow: pq.read_table(base); the schema key-value metadata key b'geo' replaced with the byte string {\"version\": \"1.1.0\", \"primary_column\": \"geometry\", \"columns\": { (a JSON object that is never closed); pq.write_table(...). All other schema metadata keys are carried over unchanged.",
+      "derivation_parameters": null,
+      "observed_difference_from_base": {
+        "base_bytes": 27132,
+        "mutation_bytes": 21639,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 6313,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": false,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "d197817244ad1f3ca5d3a9d3db6ca1a8f75c575ab2a774fc800069a435cf554c"
+      },
+      "sha256": "d197817244ad1f3ca5d3a9d3db6ca1a8f75c575ab2a774fc800069a435cf554c",
+      "bytes": 21639,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": false,
+        "geo_metadata_json_error": "JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 64 (char 63)",
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/mutations/ogr2ogr-epsg2056-default-covering-absent-columns.parquet",
+      "set": "mutations",
+      "producer_pipeline": "derived on this machine from a main-set file by scripts/gen_mutations.py",
+      "library_or_tool": "python 3.11.9, pyarrow 25.0.1 (in C:\\dev\\spatial-ide\\target\\corpus-venv)",
+      "how_obtained": {
+        "kind": "derived",
+        "command_or_url": "pyarrow: the base's geo metadata was parsed, its geometry column's covering.bbox members were repointed from the real struct column \"geometry_bbox\" to \"no_such_bbox_column\" (a name that is not in the file's schema), and the file was rewritten with pq.write_table. Nothing else in the geo metadata was changed.",
+        "date": "2026-09-10"
+      },
+      "collection_note": "mutation fixture. What a reader should do with it is not stated here; the expected outcome is pre-declared in engine/ADMISSION-PREREGISTRATION.md.",
+      "derived_from": "target/fixtures/compat-corpus/gdal/ogr2ogr-epsg2056-default.parquet",
+      "derivation": "pyarrow: the base's geo metadata was parsed, its geometry column's covering.bbox members were repointed from the real struct column \"geometry_bbox\" to \"no_such_bbox_column\" (a name that is not in the file's schema), and the file was rewritten with pq.write_table. Nothing else in the geo metadata was changed.",
+      "derivation_parameters": {
+        "covering_bbox_column_name_written": "no_such_bbox_column",
+        "covering_in_base": {
+          "bbox": {
+            "xmin": [
+              "geometry_bbox",
+              "xmin"
+            ],
+            "ymin": [
+              "geometry_bbox",
+              "ymin"
+            ],
+            "xmax": [
+              "geometry_bbox",
+              "xmax"
+            ],
+            "ymax": [
+              "geometry_bbox",
+              "ymax"
+            ]
+          }
+        }
+      },
+      "observed_difference_from_base": {
+        "base_bytes": 27775,
+        "mutation_bytes": 28131,
+        "bytes_changed": true,
+        "base_footer_length_field": 7459,
+        "mutation_footer_length_field": 7673,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "4e8e21d423dcfce1ec98d2cd31bb1c20d839be47669445efaea566f938a35c1a",
+        "mutation_sha256": "17396fe232433efb45f713ababe1c8b96caf0c48d8d3bd14d9d8372c690acc0e"
+      },
+      "sha256": "17396fe232433efb45f713ababe1c8b96caf0c48d8d3bd14d9d8372c690acc0e",
+      "bytes": 28131,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.1.0",
+        "geo_creator_key_present": false,
+        "geo_creator": null,
+        "geo_top_level_keys": [
+          "columns",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": true,
+        "covering": {
+          "bbox": {
+            "xmin": [
+              "no_such_bbox_column",
+              "xmin"
+            ],
+            "ymin": [
+              "no_such_bbox_column",
+              "ymin"
+            ],
+            "xmax": [
+              "no_such_bbox_column",
+              "xmax"
+            ],
+            "ymax": [
+              "no_such_bbox_column",
+              "ymax"
+            ]
+          }
+        },
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "covering",
+          "crs",
+          "encoding",
+          "geometry_types",
+          "orientation"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          },
+          {
+            "name": "geometry_bbox",
+            "arrow_type": "struct<xmin: float not null, ymin: float not null, xmax: float not null, ymax: float not null>",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/mutations/gp-epsg2056-intkey-changed-same-size.parquet",
+      "set": "mutations",
+      "producer_pipeline": "derived on this machine from a main-set file by scripts/gen_mutations.py",
+      "library_or_tool": "python 3.11.9, pyarrow 25.0.1 (in C:\\dev\\spatial-ide\\target\\corpus-venv)",
+      "how_obtained": {
+        "kind": "derived",
+        "command_or_url": "shutil.copy2 of the base, then one byte at absolute offset 9764 XORed with 0x01 in place (0xA2 -> 0xA3), then os.utime to put the base's mtime back. The offset is column chunk 3 (\"geometry\") of row group 0, at its first page offset 4211 plus half its compressed size 11107, i.e. inside the compressed page data and not in the footer.",
+        "date": "2026-09-10"
+      },
+      "collection_note": "mutation fixture. What a reader should do with it is not stated here; the expected outcome is pre-declared in engine/ADMISSION-PREREGISTRATION.md.",
+      "derived_from": "target/fixtures/compat-corpus/geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "shutil.copy2 of the base, then one byte at absolute offset 9764 XORed with 0x01 in place (0xA2 -> 0xA3), then os.utime to put the base's mtime back. The offset is column chunk 3 (\"geometry\") of row group 0, at its first page offset 4211 plus half its compressed size 11107, i.e. inside the compressed page data and not in the footer.",
+      "derivation_parameters": {
+        "byte_offset": 9764,
+        "byte_before": "0xA2",
+        "byte_after": "0xA3",
+        "column_chunk_index": 3,
+        "column_chunk_name": "geometry",
+        "row_group": 0,
+        "first_page_offset": 4211,
+        "total_compressed_size": 11107,
+        "size_equals_base": true,
+        "mtime_ns": 1789016607514504000,
+        "base_mtime_ns": 1789016607514504000,
+        "mtime_ns_restored_to_base": true
+      },
+      "observed_difference_from_base": {
+        "base_bytes": 27132,
+        "mutation_bytes": 27132,
+        "bytes_changed": false,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 11806,
+        "footer_length_changed": false,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "65bac6ea0ee1d1c4a31b329175900f6b4c401c90922a7a7cf758331dd857d030"
+      },
+      "sha256": "65bac6ea0ee1d1c4a31b329175900f6b4c401c90922a7a7cf758331dd857d030",
+      "bytes": 27132,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 240,
+        "row_group_count": 1,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "target/fixtures/compat-corpus/mutations/gp-epsg2056-intkey-appended.parquet",
+      "set": "mutations",
+      "producer_pipeline": "derived on this machine from a main-set file by scripts/gen_mutations.py",
+      "library_or_tool": "python 3.11.9, pyarrow 25.0.1 (in C:\\dev\\spatial-ide\\target\\corpus-venv)",
+      "how_obtained": {
+        "kind": "derived",
+        "command_or_url": "pyarrow: t = pq.read_table(base); pq.ParquetWriter(dst, t.schema) with w.write_table(t) called twice, so the file carries the base's rows as row group 1 and the same rows again as row group 2. The schema key-value metadata, including geo, is the base's, carried through pq.read_table unchanged. This is a rewrite, not a byte append: a Parquet footer cannot be appended to in place.",
+        "date": "2026-09-10"
+      },
+      "collection_note": "mutation fixture. What a reader should do with it is not stated here; the expected outcome is pre-declared in engine/ADMISSION-PREREGISTRATION.md.",
+      "derived_from": "target/fixtures/compat-corpus/geopandas/gp-epsg2056-intkey.parquet",
+      "derivation": "pyarrow: t = pq.read_table(base); pq.ParquetWriter(dst, t.schema) with w.write_table(t) called twice, so the file carries the base's rows as row group 1 and the same rows again as row group 2. The schema key-value metadata, including geo, is the base's, carried through pq.read_table unchanged. This is a rewrite, not a byte append: a Parquet footer cannot be appended to in place.",
+      "derivation_parameters": {
+        "row_groups_written": 2
+      },
+      "observed_difference_from_base": {
+        "base_bytes": 27132,
+        "mutation_bytes": 43046,
+        "bytes_changed": true,
+        "base_footer_length_field": 11806,
+        "mutation_footer_length_field": 12406,
+        "footer_length_changed": true,
+        "base_tail_magic_present": true,
+        "mutation_tail_magic_present": true,
+        "base_geo_metadata_parses_as_json": true,
+        "mutation_geo_metadata_parses_as_json": true,
+        "mutation_parquet_open_error": null,
+        "base_sha256": "66afc49203cb97ba72fd347cd27964832965bd8bffbf8db498aa18b5f6ab38f9",
+        "mutation_sha256": "b1c63221ec9213c6f18ad083b05e5d441b7a6f246595d52ac10e40361f29f13a"
+      },
+      "sha256": "b1c63221ec9213c6f18ad083b05e5d441b7a6f246595d52ac10e40361f29f13a",
+      "bytes": 43046,
+      "observed": {
+        "parquet_open_error": null,
+        "geo_metadata_key_present": true,
+        "parquet_footer_created_by": "parquet-cpp-arrow version 25.0.1",
+        "row_count": 480,
+        "row_group_count": 2,
+        "geo_metadata_parses_as_json": true,
+        "geo_version": "1.0.0",
+        "geo_creator_key_present": true,
+        "geo_creator": {
+          "library": "geopandas",
+          "version": "1.1.4"
+        },
+        "geo_top_level_keys": [
+          "columns",
+          "creator",
+          "primary_column",
+          "version"
+        ],
+        "primary_geometry_column": "geometry",
+        "geometry_columns_listed": [
+          "geometry"
+        ],
+        "geometry_encoding": "WKB",
+        "geometry_types": [
+          "Polygon"
+        ],
+        "crs_key_present": true,
+        "crs_shape": "projjson:EPSG:2056",
+        "crs_projjson_name": "CH1903+ / LV95",
+        "crs_projjson_id": {
+          "authority": "EPSG",
+          "code": 2056
+        },
+        "crs_axis_names": [
+          "Easting",
+          "Northing"
+        ],
+        "crs_axis_directions": [
+          "east",
+          "north"
+        ],
+        "covering_present": false,
+        "covering": null,
+        "bbox_present_in_column_metadata": true,
+        "bbox": [
+          2592102.625464503,
+          1191032.0942168457,
+          2607883.853878507,
+          1206993.1644488622
+        ],
+        "edges": null,
+        "geometry_column_metadata_keys": [
+          "bbox",
+          "crs",
+          "encoding",
+          "geometry_types"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64",
+            "nullable": true
+          },
+          {
+            "name": "label",
+            "arrow_type": "large_string",
+            "nullable": true
+          },
+          {
+            "name": "area_m2",
+            "arrow_type": "double",
+            "nullable": true
+          },
+          {
+            "name": "geometry",
+            "arrow_type": "binary",
+            "nullable": true
+          }
+        ],
+        "integer_typed_columns": [
+          {
+            "name": "parcel_id",
+            "arrow_type": "int64"
+          }
+        ],
+        "string_typed_columns": [
+          {
+            "name": "label",
+            "arrow_type": "large_string"
+          }
+        ]
+      }
+    }
+  ]
+}

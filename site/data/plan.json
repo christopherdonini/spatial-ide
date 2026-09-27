@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T13:51:32.260Z",
-  "plan_hash": "a301bd40dab915387528b7473ac33121d3cde1ed0189c5ba09ac7f81930f3561",
+  "generated_at": "2026-09-27T14:12:25.614Z",
+  "plan_hash": "b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18fd9dd18e9634549a363f9",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4051,15 +4051,17 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/corpus-reproducibility-record"
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,

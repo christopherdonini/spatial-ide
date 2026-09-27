@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-09-27T13:51:32.151Z",
-  "plan_hash": "a301bd40dab915387528b7473ac33121d3cde1ed0189c5ba09ac7f81930f3561",
+  "generated_at": "2026-09-27T14:12:22.694Z",
+  "plan_hash": "b864e7ddb1a68c4952b80ea57b1654c9579cb0f4d18fd9dd18e9634549a363f9",
   "priorities_approved": true,
   "next": {
-    "id": "corpus-reproducibility-record",
-    "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
-    "lane": "engine",
+    "id": "kernel-generation-close-races",
+    "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
-    "order": null,
-    "budget_minutes": 180,
+    "order": 1,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-26",
+      "opened": "2026-09-25",
       "done": null
     },
-    "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
+    "summary": "RULED 2026-09-25, question round 22, item 1: placed immediately after the watcher; it takes in whatever wave-1 A2 reports about the close race. A generation minted for a closing dataset is the defect; the unheld session reference only makes it harmless meanwhile. Its own preregistration. RULED 2026-09-25, question round 23, item 2: the unheld session reference is containment for the close race, not a protocol feature; once this piece lands the unheld path must be unreachable, and this piece adds a test proving it. Wave-1 intake (round 22, item 1): A2 observation 1, the close_dataset/viewport_query mint race, and A2 observation 2, ticket_liveness and redeem under two locks turning an engine.source_changed refusal into a cancelled-before-redeemed wording, recorded S2 (state/cloud/wave1/A2.md); and the watcher architect gate-1 advisory 7, the mint-race fallback reporting engine.source_changed on a close race (state/consults/2026-09-26-source-watcher-gate1-architect.md). Intake from the watcher's reviewer gate 2 (state/consults/2026-09-26-source-watcher-gate2-reviewer.md, suggestion S1): a grandparent-thread spawn failure after the parent's watch thread started can leave a recorded signal that the ChecksOnly arm ignores; the descriptor checks remain the backstop."
   },
   "ready": [
-    {
-      "id": "corpus-reproducibility-record",
-      "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared."
-    },
     {
       "id": "kernel-generation-close-races",
       "title": "The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes)",
@@ -266,6 +247,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "corpus-reproducibility-record",
+      "title": "The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/corpus-reproducibility-record"
+      },
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 24, item 3: PR #124 is held. This piece tracks the corpus's generator scripts, exact commands and full hashes from the local corpus of record, with no data, whatever the licence outcome. Licences are researched at primary sources; the table goes to the human before any merge; a file without an identifiable open licence stays local-only, listed by name, and never enters the reproducible set. Evidence: state/cloud/wave1/B.md. RULED 2026-09-26, question round 26, items 1 and 2: the draft's readings adopted with riders (d), an explicit-path SPDX exemption for the script copies, and (e), a grep in the PR that no path under the Windows Users folder appears in a public copy; the project-generated files enter the reproducible set by regeneration, no licence declared.",
+      "evidence_label": "branch `cut/corpus-reproducibility-record`"
+    },
     {
       "id": "b1-engine-kernel-half",
       "title": "Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query)",
