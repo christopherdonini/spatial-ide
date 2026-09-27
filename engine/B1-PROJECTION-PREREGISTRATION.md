@@ -482,3 +482,40 @@ Class 1 (post-result). Made after every test named below was seen green, on comm
   four shell test files (`AdmissionPanel.test.ts`, `admitDataset.test.ts`,
   `App.lateResult.test.tsx`, `App.test.ts`) missing `FieldInfo.projectable` on a hand-built
   literal — pre-existing since `6cd1764`, in `b1-shell-half`'s own scope, not this piece's.
+
+### Amendment 4 — 2026-09-27, post-result: §4's remaining tests mutation-verified; the shell
+typecheck fix
+
+Class 1 (post-result). Made after every mutation below was observed and reverted, on commits
+`26c9c87` (shell), `e49f133` (engine/protocol) and `ac08761` (kernel) on this branch.
+
+- The shell typecheck gap Amendment 3 disclosed is discharged at `26c9c87`: `projectable: false` on
+  the four hand-built `FieldInfo` literals `tsc --noEmit` named, each fixture naming the dataset's
+  identity column, which `admit_projection_column` (§2.3) always refuses. `npx tsc --noEmit`: 0
+  errors.
+- Each test below now carries its own `// RECORDED MUTATION:` comment beside it, naming the
+  mutation applied to the code under test, the observed by-name failure, and the revert — engine
+  and protocol tests at `e49f133`, kernel tests at `ac08761`: E-8, E-9, E-18 (the live half), E-20,
+  the F14-renamed admissible-set test, the nullable-projection test
+  (`every_admitted_projection_column_comes_back_nullable_whatever_the_source_said`), the
+  non-dictionary pass-through test
+  (`a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged`), the seven-fixture
+  round-trip test (`every_new_projection_error_fixture_round_trips`); K-1, K-4 (the closing
+  `codes.len() == 7` assertion inside `every_projection_refusal_is_synchronous_typed_and_pre_mint`),
+  K-5, K-6, K-7, K-9's live sub-case, K-9's dictionary unit test. No test cited a mutation it could
+  not be made to fail by.
+- Suites this session: `cargo test --workspace --features spatial-engine/fixture` (755 passed, 0
+  failed, 40 ignored, full workspace including `engine`/`kernel`); shell `npx tsc --noEmit` (0
+  errors); shell `npx vitest run` (1087 passed, 3 failed, 71/72 files); `node --test
+  scripts/plan/*.test.mjs scripts/hooks/*.test.mjs` (311 passed); `verify:cites` and
+  `verify:quotes` (both PASS); `git diff --stat origin/main...HEAD -- protocol/data-plane/`
+  (empty).
+- The `renderer/bundle-viewer` `node_modules` gap Amendment 3 disclosed is closed this session by
+  `npm ci` there (and its own `npm run build`, both un-committed): the 20 `src/notices/*` tests
+  Amendment 3 counted as environmentally failing are now 37 tests, all passing. No `node_modules`
+  or lockfile change is committed.
+- **New finding, disclosed rather than fixed (out of this piece's named scope):** the shell's
+  `src/console/renderTruth.test.ts` fails 3 of its fixture-round-trip cases (the three
+  `v0-viewport_query-request*.json` fixtures) — its own hand-maintained `REQUEST_KEY_SETS.viewport_query`
+  list was not updated for `columns` (§2.1). Unrelated to the `node_modules` gap: this test reads
+  `protocol/skp/tests/data/` directly and would fail the same way with or without it.
