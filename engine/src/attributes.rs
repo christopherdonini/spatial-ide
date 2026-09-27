@@ -809,6 +809,10 @@ mod tests {
 
     /// C-a (gate 2): a dictionary over a refused value type carries no refusal text of its own in
     /// the gate, since no owner renders one. It takes the final arm's text, with its own source type.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): restore the
+    // `Dictionary` arm's own refusal text (its text at `273a79d`). Observed: this test fails by
+    // name -- "a refused dictionary must carry the final arm's text, not a text of its own" at
+    // `engine/src/attributes.rs:828`. Reverted.
     #[test]
     fn a_refused_dictionary_takes_the_final_arms_text_and_no_text_of_its_own() {
         let ty = DataType::Dictionary(Box::new(DataType::Int8), Box::new(DataType::Date32));
@@ -831,6 +835,10 @@ mod tests {
     /// C-b (gate 2): admission carries each column's **source** type beside its emitted field, so
     /// publish's bundle-format restriction reads the type the file holds without a second lookup.
     /// A dictionary is the one type whose source and emitted types differ.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): `admit_projection`
+    // pushes the emitted type into `source_types`. Observed: this test fails by name -- "each
+    // admitted column must carry the type the file holds, not the emitted one" at
+    // `engine/src/attributes.rs:847`. Reverted.
     #[test]
     fn an_admitted_projection_carries_each_columns_source_type_beside_its_emitted_field() {
         let dict = DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8));
@@ -857,6 +865,10 @@ mod tests {
     /// (`From<ProjectionError> for EngineError`) stays main's byte for byte (O2); the expected
     /// detail below is byte-copied by script from main's rendering at `46ff585`
     /// (`engine/src/attributes.rs`'s identity arm in `admit_projection` there).
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): publish's `From` arm
+    // for `ColumnIsIdentity` renders the wire's reworded text. Observed: this test fails by name --
+    // "publish's identity text must stay main's byte for byte" at `engine/src/attributes.rs:870`.
+    // Reverted.
     #[test]
     fn the_reserved_id_refusal_states_the_reserved_name_on_the_wire_and_keeps_publishs_text() {
         let e = ProjectionError::ColumnIsIdentity { column: "id".to_string(), id_column: "i64".to_string() };

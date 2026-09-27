@@ -634,6 +634,11 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
     // (`engine/src/fixture.rs`'s `i64_for`). Admission does not read uniqueness: `describe`'s
     // `projectable` and `Dataset::admit_projection` both read only the identity source column's
     // name, so the skipped scan is not an input to the property this case proves.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): remove the
+    // `ID_COLUMN` arm from `engine/src/attributes.rs`'s `check_geometry_and_identity`. Observed:
+    // this test fails by name -- "column `id` marked projectable, but viewport_query refused it:
+    // ... skp.projection_column_is_identity ..." at `kernel/tests/skp_projection.rs:595`, on this
+    // case. Reverted.
     let mut mapped_to_i64 = IdentityDeclaration::new("i64", "test", "2026-09-27T00:00:00Z");
     mapped_to_i64.skip_uniqueness_check = true;
     check_one(
@@ -816,6 +821,12 @@ fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_forma
 /// admission and refused only by the bundle-format restriction, while `nope` fails shared
 /// admission's name pass. Shared admission runs first, so the refusal names `nope` as unknown and
 /// never renders `f32`'s `Float32` text. Nothing is written before the refusal.
+// RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in
+// `kernel/src/publish/mod.rs`'s `preflight_pinless_parts`, run the bundle-format restriction before
+// `resolve_projection`, each declared name's type read from `file_schema()`. Observed: this test
+// fails by name -- left "f32", right "nope" at `kernel/tests/skp_projection.rs:845`. Reverted. At
+// `a472add` (before C-b made the loop read the admitted projection) R2-B3's own form, moving
+// `resolve_projection` after the `admit_bundle_format` loop, failed the same way at `:848`.
 #[test]
 fn publish_refuses_a_multi_failure_list_by_shared_admission_before_the_bundle_format_restriction() {
     let path = multitype_fixture("x2-publish-order", 20);

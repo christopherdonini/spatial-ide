@@ -1247,11 +1247,12 @@ mod tests {
     /// X5 (row 5.6; O4): every type the filter namespace admits carries a DuckDB surrogate —
     /// `filter_surrogate` is the one function [`namespace_admit`] and [`bind_admit`] rely on for
     /// that, and this proves it covers every type [`filterable_column_type`] itself admits.
-    // RECORDED MUTATION: in `duckdb_type_name`, remove the `D::Float32 => Some("REAL")` arm (falls
-    // through to `_ => None`). Observed: this test fails by name -- "f32 (Float32) must carry a
-    // surrogate: ColumnNotFilterable { column: \"f32\", reason: \"type is Float32, which this
-    // namespace admits but has no DuckDB surrogate type to bind against...\" }" at
-    // `engine/src/predicate.rs:1266`. Reverted.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in `duckdb_type_name`,
+    // remove the `D::Float32 => Some("REAL")` arm. Observed: this test fails by name -- "f32
+    // (Float32) must carry a surrogate" at `engine/src/predicate.rs:1282`. Reverted.
+    // RECORDED MUTATION (observed at `ca3d7ae`): in `duckdb_type_name`, drop `LargeUtf8` and
+    // `Utf8View` from the `VARCHAR` arm. Observed: this test fails by name -- "large (LargeUtf8)
+    // must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
     #[test]
     fn every_type_the_filter_namespace_admits_carries_a_surrogate() {
         let cases = [

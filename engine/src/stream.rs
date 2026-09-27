@@ -2549,6 +2549,13 @@ mod tests {
     /// **The small runs assert the decision itself (gate 2, R2-B1):** each comes back as the same
     /// array, uncopied (`Arc::ptr_eq`) — the property the 64-bytes-per-buffer term buys (ADR-004).
     /// A bound check alone cannot tell: a compacted 1-row `Int64` still rounds to 64 bytes.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): remove compaction
+    // (`retain_or_compact_single_run`'s compacting branch never taken). Observed: this test fails
+    // by name -- "retained 342208 bytes for a run whose own allowance is 408 bytes" at
+    // `engine/src/stream.rs:2578`. Reverted.
+    // RECORDED MUTATION (observed at `ca3d7ae`): remove the 64-bytes-per-buffer term from
+    // `retain_or_compact_single_run`'s allowance. Observed: this test fails by name -- "a 1-row
+    // Int64 run must be kept uncopied" at `engine/src/stream.rs:2611`. Reverted.
     #[test]
     fn every_emitted_attribute_column_retains_at_most_the_declared_factor() {
         let allowance = |data: &arrow::array::ArrayData| -> usize {
@@ -2743,6 +2750,10 @@ mod tests {
     /// 9, 22 and 41). The non-null `Boolean` runs are the H3 probe (Amendment 8's class-2 row):
     /// the `changes` column records, for each case, whether compaction changed the IPC bytes as
     /// observed at `arrow-ipc` 58.4.0.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): `StreamPlan::for_publish`
+    // declares `compact_attribute_retention: true`. Observed: this test fails by name --
+    // "publish's flush must never compact: nullable Utf8 IPC bytes differ at offset 8 len 3" at
+    // `engine/src/stream.rs:2787`. Reverted.
     #[test]
     fn publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes() {
         let utf8_source: ArrayRef = Arc::new(arrow::array::StringArray::from(
@@ -2803,10 +2814,10 @@ mod tests {
     /// clears the compacted array's own validity, e.g. by rebuilding it with
     /// `.with_nulls(None)`-equivalent bit-twiddling) so a null in the source no longer decodes as
     /// NULL in the compacted copy.
-    // RECORDED MUTATION: after building `mutable` in `compact_attribute_slice`, before `.freeze()`,
-    // clear every validity bit the extend call set (simulating a dropped null buffer). Observed:
-    // this test fails by name -- "index 1 (source index 6): NULL-ness must match" panics at
-    // `engine/src/stream.rs` (the compacted copy no longer reports the source's own NULL). Reverted.
+    // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in
+    // `compact_attribute_slice`, build the frozen data again with `.nulls(None)` (the compacted
+    // copy drops its null buffer). Observed: this test fails by name -- "index 5 (source index 5):
+    // NULL-ness must match" at `engine/src/stream.rs:2824`. Reverted.
     #[test]
     fn a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included() {
         let source: ArrayRef = Arc::new(arrow::array::StringArray::from(
