@@ -238,6 +238,12 @@ test('runVerify: --offline note is present and PR/release evidence does not fail
 // -- a node not recorded done whose evidence already names a PR GitHub reports merged fails by name.
 // The PR lookup is stubbed (no real `gh` call) via the same injection point `verifyEvidence` already
 // takes for the done-node check (`ghApiPrMergedFn`).
+//
+// RECORDED MUTATION: in `verifyNotDoneEvidenceNotMerged` (scripts/plan/verify.mjs), replacing
+// `return result.ok ? [...] : []` with an unconditional `return [];` (the new check's condition
+// removed) -- applied for real, run via `node --test scripts/plan/verify.test.mjs`, then reverted.
+// Observed: "AssertionError [ERR_ASSERTION]: expected a named merged-PR failure, got: []" on this
+// test's own `assert.ok(failures.some(...))`, 18 of 19 pass, at c0fa9c0 (Node v24.18.1).
 test("verifyNotDoneEvidenceNotMerged fails by name when an in-progress node's evidence PR is reported merged", () => {
   const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
   const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };

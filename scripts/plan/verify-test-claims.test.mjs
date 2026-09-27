@@ -383,9 +383,9 @@ test('a_pin_whose_span_lacks_the_claimed_name_does_not_exempt', () => {
 // then reverted: 55 of 55 pass, 0 fail. This declared mutation no longer isolates this test: §2.4's
 // `revResolvesToCommit` (added by TEST-CLAIMS-FOLLOWUPS-PREREGISTRATION.md, after this test was
 // written) independently refuses both a HEAD default and a branch name via its own resolved-id prefix
-// check, so this guard is no longer the sole line of defense this test can prove by itself. Flagged in
-// the piece's hand-back as a "could not do as written" item, not silently recorded as a failure that
-// did not occur.
+// check, so this guard is no longer the sole line of defense this test can prove by itself. Recorded
+// in Amendment 4 item 3 (state/consults/2026-09-26-test-claims-followups-gate2-architect.md), not
+// silently recorded as a failure that did not occur.
 test('a_pin_with_no_rev_does_not_exempt', () => {
   const { dir: dirNoRev } = supersededFixture({ omitRev: true });
   const noRev = runVerifyTestClaims({ repoRoot: dirNoRev });
@@ -1286,8 +1286,9 @@ function withdrawnFixtureWithRemote({ ancestorOfMain }) {
 // pinned rev is shown NOT to be its ancestor.
 // RECORDED MUTATION: in withdrawnRowPinCondition, drop only the `if (anc.checked && !anc.ok) return {
 // ok: false, reason: 'refused: rev not on main' };` refusal (keeping `const anc =
-// isAncestorOfMain(root, ref.rev);` and `mainUnchecked: !anc.checked` intact, so the new item-1 test's
-// own SKIPPED-branch proof is unaffected) -- applied for real, run via `node --test
+// isAncestorOfMain(root, ref.rev);` and `mainUnchecked: !anc.checked` intact, so
+// `a_valid_row_with_condition_e_skipped_sets_withdrawn_main_unchecked`'s own SKIPPED-branch proof is
+// unaffected) -- applied for real, run via `node --test
 // scripts/plan/verify-test-claims.test.mjs`, then reverted; the row wrongly becomes valid, and the
 // underlying claim already exists in the tree (`testExists` short-circuits it), so every finding
 // vanishes: "AssertionError [ERR_ASSERTION]: []" then "0 !== 1" (54 of 55 pass, isolated to this test;
