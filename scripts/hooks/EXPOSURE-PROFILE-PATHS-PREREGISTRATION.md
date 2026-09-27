@@ -877,3 +877,15 @@ Superseded:
 - Amendment 8's last bullet, "Amendment 8 supersedes Amendment 5. The Budget line is never edited." (superseded by Amendment 10; not indexed until now, the reviewer's N2).
 
 Not superseded: 11.6's and Amendment 12's re-derivation and verify-cites bullets, now supplemented (not replaced) by 13.3 and 13.4.
+
+**Amendment 14 — 2026-09-27, post-result: the architect's reduction under the record cap (`state/directives/2026-09-18-record-cap.md`).**
+
+Class 1 (post-result). References only. Record-only: no code, and it opens no gate round. Source: the record-round-2 scoped read's D1, D2 and nits (range `2511028..42ea38a`). Record-round count: 2, spent; no further correction round opens.
+
+**Superseded as of this amendment**
+- 13.1, its second sentence (D1): 13.1's third sentence and 13.3's command.
+- 13.3, its two result bullets (D1; both nits): 13.3's command prints `rev=3b421d5 file_count=1124 files_with_findings=30` and `rev=3c25302 file_count=1128 files_with_findings=22`. The per-file listing of record stays 11.6's.
+- Amendment 12, "byte-for-byte" in its two re-derivation result bullets (the same nit, read across): read as the same files, form classes and counts.
+- Amendment 13, its "Also indexed" paragraph and the parenthetical of each of its two index entries (D2): both entries stay superseded, by Amendment 13's own act. What carries them is Amendment 10's Minutes bullet (for Amendment 8's Minutes bullet) and 7.10's last bullet (for Amendment 8's last bullet).
+
+P6 sight list (round 12 (e)): read the last amendment first.
