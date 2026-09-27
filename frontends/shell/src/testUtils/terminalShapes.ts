@@ -45,7 +45,7 @@ export const REAL_SOURCE_COVERAGE_LOST_TERMINAL_DETAIL =
 
 /**
  * **SH4's pre-check half** -- the `SkpCallError` a coverage-lost pre-check refusal throws
- * (`kernel/src/skp.rs::viewport_query`'s `live_or_mint` error arm, through `error_of`), in the same
+ * (`kernel/src/skp.rs::viewport_query`'s `live_generation` error arm, through `error_of`), in the same
  * `"<code>: <message>"` shape `liveTicketSet.ts::refusalDetailOf` builds. Captured the same way,
  * from a real `spatial_kernel::skp::error_of(&EngineError::SourceCoverageLost { .. })` call over
  * the exact detail text `viewport_query`'s own arm uses -- pinned as an exact-equality assertion on

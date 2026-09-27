@@ -339,7 +339,7 @@ fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_ref
 
     // The end itself still took effect, event or no event: the next call refuses by name.
     assert!(
-        generations.live_or_mint(overflow_name).is_err(),
+        generations.live_generation(overflow_name).is_err(),
         "the generation still ended even though its event was dropped"
     );
 

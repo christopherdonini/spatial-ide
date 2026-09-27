@@ -113,6 +113,7 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -304,6 +305,7 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog, tickets, watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let bbox = spatial_skp::v0::Bbox {
         xmin: spatial_skp::v0::HexF64(0.0),
@@ -353,6 +355,7 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -428,6 +431,7 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog, tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let err = host
         .viewport_query(ViewportQueryRequest {
@@ -584,6 +588,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
     let guard = trace::start(TraceKey {

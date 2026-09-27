@@ -128,6 +128,7 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
     let guard = trace::start(TraceKey {
