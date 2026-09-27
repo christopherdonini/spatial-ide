@@ -65,6 +65,8 @@ test('the_stop_hook_is_silent_in_the_cloud_and_unchanged_locally', (t) => {
   const input = { session_id: 'cloud-stop', cwd: dir, hook_event_name: 'Stop', stop_hook_active: false, background_tasks: [], session_crons: [] };
   const env = { CLAUDE_PROJECT_DIR: dir, CUSTODIAN_PLAN_PATH: twoNodesPlan };
   assertSilent(runHook('stop-queue.mjs', input, cloudEnv(env)));
+  // §24: the local half continues past the lease check only when this session holds the lease.
+  fs.writeFileSync(path.join(dir, 'CUSTODIAN-LEASE'), `lease: ${input.session_id} refreshed: ${new Date().toISOString()}\n`);
   const local = runHook('stop-queue.mjs', input, localEnv(env));
   assert.equal(local.status, 0);
   assert.equal(JSON.parse(local.stdout).decision, 'block');

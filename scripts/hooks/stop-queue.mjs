@@ -8,20 +8,26 @@
 // `{"decision":"block","reason":"…"}` on stdout (exit 0); Claude Code itself ends the turn after
 // 8 consecutive blocks (CLAUDE_CODE_STOP_HOOK_BLOCK_CAP raises it — never changed here).
 //
-// Decision, in order (§3, with §18's HALT switch inserted as step 2):
+// Decision, in order (§3, with §18's HALT switch inserted as step 2, and §24's lease check
+// inserted as step 3):
 //   1. background_tasks non-empty -> allow (paused for background work, not done).
 //   2. Override: CUSTODIAN_STOP_HOOK=off in the environment, OR state/CUSTODIAN-HALT exists
 //      locally or on origin/main -> allow, reason on stderr ("HALT: " + the file's first line
 //      for the halt case). This replaces the old .claude/state/stop-hook.pause file override;
 //      the environment-variable override is kept.
-//   3. Derive the ready set live from PLAN.yaml (never trust the committed queue file).
-//   4. Ready set empty, or only human-blocked nodes remain -> allow; stderr names the
+//   3. Lease check (§24): read CUSTODIAN-LEASE at projectRoot. Unless its first line is an active
+//      `lease: <id> ...` line whose <id> equals the stdin session_id, allow -- reason on stderr
+//      names which case applied (absent, relinquished, another session's lease, or no
+//      session_id). A read error is treated as absent. This session's own held lease continues
+//      to the steps below, unchanged.
+//   4. Derive the ready set live from PLAN.yaml (never trust the committed queue file).
+//   5. Ready set empty, or only human-blocked nodes remain -> allow; stderr names the
 //      waiting-on-human count; (item 16b) sends one Telegram message listing the waiting items,
 //      deduped on a hash of the waiting set.
-//   5. Continuation accounting: consecutive resets to 0 when progress is observed (HEAD or the
+//   6. Continuation accounting: consecutive resets to 0 when progress is observed (HEAD or the
 //      plan hash changed since the last block); session cap 6 consecutive (under Claude Code's
 //      own 8); daily cap 40 across sessions. At either cap -> allow, reason on stderr.
-//   6. Otherwise -> block, with the reason text below. Past 75% of the daily cap, the ready set
+//   7. Otherwise -> block, with the reason text below. Past 75% of the daily cap, the ready set
 //      is reordered smallFirst and spikes/measurement-lane nodes are deferred (§10).
 //
 // Never throws to the shell: any unexpected error is caught and treated as "allow", with a note
@@ -129,6 +135,25 @@ export function checkHalt(projectRoot, { now = Date.now() } = {}) {
   return result;
 }
 
+/**
+ * §24: this session holds the custodian lease only when CUSTODIAN-LEASE's first line is an
+ * active `lease: <id> ...` line whose <id> equals input.session_id. A missing session_id never
+ * matches. A read error (including a missing file) is treated as absent.
+ */
+function leaseHeldBy(projectRoot, sessionId) {
+  if (!sessionId) return { held: false, reason: 'no session_id on the stdin input' };
+  let first;
+  try {
+    first = firstLineOf(fs.readFileSync(path.join(projectRoot, 'CUSTODIAN-LEASE'), 'utf8'));
+  } catch {
+    return { held: false, reason: 'CUSTODIAN-LEASE absent (or unreadable)' };
+  }
+  const match = /^lease:\s*(\S+)/.exec(first);
+  if (!match) return { held: false, reason: 'CUSTODIAN-LEASE holds no active lease line (relinquished, malformed or empty)' };
+  if (match[1] !== sessionId) return { held: false, reason: "CUSTODIAN-LEASE holds another session's lease" };
+  return { held: true };
+}
+
 function waitingSummary(waitingOnHuman) {
   const total = waitingOnHuman.reduce((sum, n) => sum + (n.needs_human.minutes ?? 0), 0);
   const lines = waitingOnHuman.map(
@@ -219,7 +244,13 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
     return allow();
   }
 
-  // 3. Derive the ready set live from PLAN.yaml.
+  // 3. Lease check (§24): a session without this session's own held lease allows.
+  const lease = leaseHeldBy(projectRoot, input.session_id);
+  if (!lease.held) {
+    return allow(`allow: ${lease.reason} -- not this session's turn to hold the queue.`);
+  }
+
+  // 4. Derive the ready set live from PLAN.yaml.
   let plan;
   try {
     plan = loadPlan(resolvePlanPath(projectRoot));
@@ -231,7 +262,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
   }
   const { ready, waitingOnHuman } = deriveStates(plan);
 
-  // 4. Ready set empty, or only human-blocked nodes remain -> allow.
+  // 5. Ready set empty, or only human-blocked nodes remain -> allow.
   if (ready.length === 0) {
     stderrLines.push(`allow: no unblocked node is ready; ${waitingOnHuman.length} waiting on human.`);
     await notify(projectRoot, waitingOnHuman, 'Only human-blocked nodes remain.');
@@ -239,7 +270,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
     return allow();
   }
 
-  // 5. Continuation accounting.
+  // 6. Continuation accounting.
   const sessionId = input.session_id ?? 'unknown-session';
   const sessionPath = sessionStatePath(projectRoot, sessionId);
   const sessionState = readJson(sessionPath, { consecutive: 0, lastHead: null, lastPlanHash: null });
@@ -266,7 +297,7 @@ export async function decide(input, { projectRoot, now = new Date(), notify = no
     return allow(`allow: daily continuation cap (${DAILY_CONTINUATION_CAP}) reached.`);
   }
 
-  // 6. Block.
+  // 7. Block.
   const newConsecutive = consecutive + 1;
   const newDailyCount = dailyCount + 1;
   writeJson(sessionPath, { consecutive: newConsecutive, lastHead: currentHead, lastPlanHash: currentPlanHash });

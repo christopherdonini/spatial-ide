@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1a572cbf83a6d9a9596080027e42df0a260ac02cf61fbb67144e8eebc1c6cc24`) at `2026-09-26T19:10:35.189Z`.
+Generated from `PLAN.yaml` (sha256 `595e46d5ddeb218ce84ceb1344fe0982e7020014ce5e032b11fb0739aba5b518`) at `2026-09-27T10:49:25.487Z`.
 
 ## 1. Next
 
@@ -10,10 +10,7 @@ Generated from `PLAN.yaml` (sha256 `1a572cbf83a6d9a9596080027e42df0a260ac02cf61f
 
 - **corpus-reproducibility-record** — The compatibility corpus made reproducible from the tracked tree -- its generator scripts, exact commands and full hashes, no data (wave-1 B) (lane `engine`, order null, budget 180 min)
 - **data-plane-stream-registry-bound** — The data plane's StreamRegistry bounded by time plus a declared count ceiling, mirroring the kernel's registry (wave-1 A5-1) (lane `kernel-protocol`, order null, budget 120 min)
-- **watcher-e5-pin-on-main** — The watcher's E5 pin appended on main once 4137f4d is reachable there (its Amendment 6, row 13) (lane `kernel-protocol`, order null, budget 15 min)
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) (lane `kernel-protocol`, order 1, budget 120 min)
-- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) (lane `kernel-protocol`, order 2, budget 240 min)
-- **bundle-viewer-partition-offset-bounds** — The bundle viewer bounds every partition offset by its coordinate array and refuses as partition-decode-failed (wave-1 A3 3(b)) (lane `publish-viewer`, order null, budget 120 min)
 - **governance-weekly-proposals-2026-09-26** — The week's five process proposals adopted as one governance docs piece (round 25, item 2) (lane `governance`, order null, budget 120 min)
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) (lane `governance`, order 2, budget 90 min)
 
@@ -33,7 +30,7 @@ Generated from `PLAN.yaml` (sha256 `1a572cbf83a6d9a9596080027e42df0a260ac02cf61f
 
 ## 5. In progress
 
-- (none)
+- **b1-engine-kernel-half** — Brief B, stage B1 — the engine/kernel half (attribute projection on viewport_query) — evidence: branch `cut/b1-engine-projection`
 
 ## 6. Proposed / unscheduled
 
