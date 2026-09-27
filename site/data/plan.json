@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T15:06:16.844Z",
-  "plan_hash": "2eb4e039f712930fff6dcfc488d532131e62e71cccd9275e2622ebb2445c0229",
+  "generated_at": "2026-09-27T16:33:14.367Z",
+  "plan_hash": "efc8ec7d7b2676086a8fc3da73a8473a64632721044cf2b403f2f185e006a6d3",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4410,6 +4410,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "exposure-scan-followups",
+      "title": "The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window.",
       "dates": {
         "opened": "2026-09-27",
         "done": null

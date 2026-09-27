@@ -2705,6 +2705,23 @@ nodes:
     entries: []
     summary: ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/)."
     dates: {opened: 2026-09-27, done: null}
+  - id: exposure-scan-followups
+    title: "The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window."
+    dates: {opened: 2026-09-27, done: null}
   - id: publish-refusal-codes-and-attempt-lifecycle
     title: "Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2)"
     kind: task
