@@ -193,3 +193,9 @@ Round 25, item 2 (the human, 2026-09-26; the rules are `docs/PREREGISTRATION-TEM
 6. If main gains a §25 or an Amendment 5 to the Custodian role before this piece merges, §5's first invalidator fires again and is routed as before.
 
 Superseded index: §2.1's T2 and T3 numbers and Appendix T's T2 and T3 placement headings, by item 2; the T-block comparison of §8 item 2 and §9 for T2–T5, read through item 3.
+
+### Amendment 3 — 2026-09-27, written after gate 2's results were seen (`state/consults/2026-09-27-governance-weekly-proposals-gate2-reviewer.md`, finding E1): P2's advisory comparison at the head (class 2)
+
+P2's second clause does not hold as worded at `c85fc55`: verify-cites reports 47 advisories at the merge base `5fbb1cf` and 41 at `c85fc55`. The six that resolve are loose cites in `state/consults/2026-09-26-governance-weekly-proposals-gate1-architect.md` that exceed their files at the base and resolve at the head because this piece's appended lines exist there; the tool is unchanged since `f205478`, and the other 41 advisories are identical (the report, E1). P2 is not edited. Two of the six, into `AUTONOMY.md` and `AI_DEVELOPMENT.md`, point at different content at the head than at `f205478`; they are read at `f205478`, not as current (round 14, the historical-pin addition; the report, S1).
+
+Superseded index: Amendment 2 item 5's clause that P1–P3 are unaffected, for P2, by this row.
