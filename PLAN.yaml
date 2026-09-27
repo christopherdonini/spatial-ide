@@ -2423,12 +2423,12 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: renderer/bundle-viewer/PARTITION-OFFSET-BOUNDS-PREREGISTRATION.md
+    evidence: {branch: viewer/partition-offset-bounds}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
