@@ -8,18 +8,31 @@
 # them; the fix at the time was a retroactive DCO certification (see DECISIONS-PENDING.md's
 # resolved entry 26), not a rewrite -- this hook is the "catch it at commit one, not at PR
 # sixteen" half of that resolution. Enable with: git config core.hooksPath .githooks
+#
+# Also refuses a commit message carrying a profile path (scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md
+# 2d): the scanner runs for every commit, merges included, since the DCO check's merge skip
+# applies only to the DCO check.
 set -eu
+
+msg_file="$1"
 
 # Matches dco.yml's own scope: merge commits carry no author affirmation to check.
 commit_source="${2:-}"
-if [ "$commit_source" = "merge" ]; then
-  exit 0
+if [ "$commit_source" != "merge" ]; then
+  if ! grep -qE '^Signed-off-by: .+ <.+>$' "$msg_file"; then
+    echo "error: commit has no Signed-off-by trailer (DCO 1.1 -- see CONTRIBUTING.md)." >&2
+    echo "  fix:   git commit -s" >&2
+    echo "  amend: git commit --amend -s" >&2
+    exit 1
+  fi
 fi
 
-msg_file="$1"
-if ! grep -qE '^Signed-off-by: .+ <.+>$' "$msg_file"; then
-  echo "error: commit has no Signed-off-by trailer (DCO 1.1 -- see CONTRIBUTING.md)." >&2
-  echo "  fix:   git commit -s" >&2
-  echo "  amend: git commit --amend -s" >&2
+hook_dir="$(dirname "$0")"
+if ! command -v node >/dev/null 2>&1; then
+  echo "error: node not found -- the profile-path scan could not run." >&2
+  exit 1
+fi
+if ! node "$hook_dir/../scripts/hooks/profile-path-scan.mjs" --message "$msg_file"; then
+  echo "error: commit message refused -- it carries a profile path (see the output above)." >&2
   exit 1
 fi
