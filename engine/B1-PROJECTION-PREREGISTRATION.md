@@ -587,3 +587,66 @@ The closing amendment after this round is references and hashes only (the record
 - Amendment 4, the `renderTruth.test.ts` bullet: fixed at `924dd3f`, which is inside §2.4's scope (A-D2); X15.
 - §2.3's `flush` bullet and §7's retention bullets: their text stands; 5.2 and 5.3 govern.
 - A-E2's squash remedy: withdrawn by 5.4.
+
+### Amendment 6 — 2026-09-27, post-result: the closing record for record-correction round 1 (X1-X20)
+
+Class 1 (post-result). References and hashes only (the record cap).
+
+**Commits** (branch `cut/b1-engine-projection`, on top of Amendment 5 at `e3430d2`):
+- `cf1c3c5` — X1-X5 (engine/src/attributes.rs, engine/src/predicate.rs).
+- `5b0e1de` — X6-X7 (engine/src/stream.rs, engine/README.md).
+- `5358ff6` — X4/X9/X14/X17/X18/X20 (kernel/src/skp.rs, kernel/src/publish/mod.rs, protocol/skp/SKP-V0.md, protocol/skp/src/v0/mod.rs, protocol/skp/tests/data/v0-error-projection_empty_list.json).
+- `9348a40` — X1/X3/X8/X9/X11/X12/X13/X20 (protocol/skp/tests/data/v0-viewport_query-request-with-columns.json, protocol/skp/tests/fixtures.rs, frontends/shell/src/skp/__tests__/fixtures.test.ts, kernel/tests/skp_projection.rs, engine/tests/live_projection.rs).
+- `9150cc0` — X20 (kernel/tests/session_end_event.rs, kernel/tests/session_reference.rs).
+
+**Per-row test and mutation observed:**
+
+| # | Test | Mutation observed failing, then reverted and passing |
+|---|---|---|
+| X1 | `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte` (`kernel/tests/skp_projection.rs`) | restore the branch's placeholder final arm in `admit_attribute_type` |
+| X2 | `names_resolve_before_per_column_rules_in_declared_order`; `the_multi_failure_order_is_count_then_names_then_per_column_rules` (`engine/src/attributes.rs`) | interleave (single-pass) `admit_projection` |
+| X3 | `admit_projection_column_refuses_the_reserved_id_name_even_under_a_mapped_identity` (`engine/src/attributes.rs`) | remove the `ID_COLUMN` arm from `check_geometry_and_identity` — see note below on the row's own named K-5 case |
+| X4 | `admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text` (`Dict(Int8, Date32)` case, `kernel/src/publish/mod.rs`) | `From` renders the final-arm text for every `TypeNotAdmitted` |
+| X5 | `every_type_the_filter_namespace_admits_carries_a_surrogate` (`engine/src/predicate.rs`) | remove the `REAL` arm from `duckdb_type_name` |
+| X6 | `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes` (`engine/src/stream.rs`) | `single_run_retention` ignores `compact` and always compacts |
+| X7 | `every_emitted_attribute_column_retains_at_most_the_declared_factor` (R-E2's two small runs, `engine/src/stream.rs`) | remove the `64 * buffer_count` term from the allowance |
+| X8 | `a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns` (`kernel/tests/skp_projection.rs`) | admission returns file order |
+| X9 | `every_projection_refusal_matches_its_committed_error_fixture_shape` (`kernel/tests/skp_projection.rs`) | rename `known_columns` to `candidate_columns` in `projection_error_of` |
+| X10 | (record only) | — cites `state/consults/2026-09-27-b1-engine-kernel-half-gate1-reviewer.md`'s "Mutations re-observed" section (E-6, E-15 and every X1-X20 new/changed test recorded above are the record this row asks for) |
+| X11 | `a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns` (oracle half) | the chunk loop slices each attribute run one row late |
+| X12 | (fixture hashing, folded into X7/E-8/K-1's own tests) | — no separate mutation; a hash-check failure is its own proof |
+| X13 | `a_live_projected_stream_emits_id_geometry_then_the_declared_columns` (`[f32]` case, `engine/tests/live_projection.rs`) | emit `Float64` at the live entry |
+| X14 | (record only, `protocol/skp/SKP-V0.md` §4 item 13) | — resolved by `git show --stat 6cd1764` / `2963021`, cited in commit `5358ff6` |
+| X15 | (record only) | — references `924dd3f` and the green `vitest run` (72 files, 1090 tests, `npx vitest run` under `frontends/shell`) |
+| X16 | (record only) | — this table names every test on one line |
+| X17 | (record only, wording) | — the reviewer/architect gates read the text at commit `5358ff6` |
+| X18 | (record only, docs) | — `engine/README.md`, `protocol/skp/src/v0/mod.rs` at commit `5b0e1de` / `5358ff6` |
+| X19 | (record only) | — this amendment's own superseded index, below |
+| X20 | (record only, formatting) | — commit `9150cc0`; the `ProjectionRefusalCase` type alias in commit `9348a40` |
+
+**Class 4 (a mutation added or corrected against Amendment 5's own table):**
+- X1's test did not exist before this round; it is added, not corrected.
+- X3's own K-5 case, as Amendment 5 row 5.6 names it, is not run — STOP, not improvised (see note below). The row's underlying fix is proved instead by X3's own new unit test.
+- X7's two small-run cases are built from a raw `MutableBuffer`/`ArrayData`, not a `Builder` (`PrimitiveBuilder`'s own values buffer is a plain `Vec`, which carries no 64-byte rounding) — a corrected construction, not the row's own text.
+
+**X3's STOP, stated once:** `engine/src/fixture.rs::i64_for`'s own doc: "a signed value that is neither `id` nor a simple affine function of it, so a projection test cannot mistake it for the identity column." `Catalog::open_cancellable` with `IdentityDeclaration::new("i64", ..)` over `AttributeMode::MultiType` throws `IdentityUnusable` at open time (observed, `kernel/tests/skp_projection.rs`, commit `9348a40`'s own diff comment). No dataset exists on which to compare `describe`'s `projectable` against `viewport_query`'s own admission. This is disclosed, not silently substituted.
+
+**Suite counts** (this branch, at `9150cc0`, `CARGO_TARGET_DIR` local to this worktree). `cargo test --workspace --features spatial-engine/fixture` in one invocation did not complete in this session on this machine (no compile or test-binary activity was observed across repeated attempts, on a machine also running other resource-heavy processes); every crate and test binary was instead run individually, decomposed below, all green. Total across every row: **597 passed, 0 failed, 29 ignored** (every ignored case a named measurement/manual-fixture-generation harness):
+- `cargo test -p spatial-engine --features fixture --lib`: 163 passed, 0 failed.
+- `cargo test -p spatial-engine --features fixture --test live_projection --test filter_composition --test predicate_admission --test publish_stream --test row_group_seam`: 24 passed, 0 failed.
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --lib`: 123 passed, 0 failed.
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test skp_projection`: 9 passed, 0 failed.
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test session_end_event --test session_reference`: 8 passed, 0 failed.
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test wire_bytes_invariant --test skp_admission --test skp_filter_cancellation --test typed_terminal_codes --test publish --test publish_cancellation --test session_generation --test skp_admission_remediation`: 70 passed, 2 ignored, 0 failed.
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test cancel_rescore --test concurrency_in_situ --test describe_crs_unit --test first_batch_factorial --test import_layout_factorial --test import_layout_publish_determinism --test indexed_budgets --test manual_walkthrough_fixtures --test no_generation_in_persisted_artifacts --test permission_boundary --test post_check_cost_report --test publish_cli --test query_window_attribution --test regenerate_fixture --test slice_budgets --test source_watch_ordering --test source_watch_windows --test trace_spans --test verify_bundle`: 69 passed, 24 ignored, 0 failed (every ignored case is a measurement/manual-fixture-generation harness, named as such at each line, e.g. "release-only", "not part of the default suite").
+- `cargo test -p spatial-kernel --features spatial-engine/fixture --test end_to_end --test scale_pass --test scale_pass_a6`: 10 passed, 3 ignored, 0 failed.
+- `cargo test -p spatial-skp`: 47 passed, 0 failed.
+- `cargo test -p spatial-data-plane -p spatial-renderer` (untouched by this piece; run for completeness): 74 passed, 0 failed.
+- `npx tsc --noEmit` (`frontends/shell`): 0 errors.
+- `npx vitest run` (`frontends/shell`): 72 files, 1090 tests, 0 failed.
+- `node --test scripts/plan/*.test.mjs scripts/hooks/*.test.mjs`: 314 passed, 0 failed.
+- `node scripts/plan/verify.mjs`, `queue.mjs --check`, `site.mjs --check`, `verify-cites.mjs`, `verify-quotes.mjs`, `verify-test-claims.mjs`: all PASS (advisories only, pre-existing, none in files this piece touches).
+- `cargo fmt --check`: not discharged (Amendment 5's own disclosed baseline drift stands).
+
+**Superseded index**
+- Amendment 5, row 5.6's K-5 case for X3: not run; see the STOP note above.
