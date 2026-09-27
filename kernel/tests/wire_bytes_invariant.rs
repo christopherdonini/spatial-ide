@@ -307,6 +307,11 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
 /// projection. Mutation: `attribute_columns` written only while tracing (i.e. the projected schema
 /// metadata, and so the batch bytes carrying it, differ between the traced and untraced runs) — the
 /// byte-for-byte comparison below then fails at the first `TAG_BATCH` frame.
+// RECORDED MUTATION: in `engine/src/envelope.rs::BatchEnvelope::build`, gate the
+// `attribute_columns` metadata insert behind `if crate::trace::is_enabled() { .. }`. Observed:
+// this test fails by name -- "frame 1 (tag 16) differs between the traced and untraced projected
+// runs — the projected schema metadata (`attribute_columns`) must ride the wire identically either
+// way" at `kernel/tests/wire_bytes_invariant.rs:350`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     let path = projected_fixture();

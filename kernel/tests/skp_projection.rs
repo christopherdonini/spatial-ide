@@ -107,6 +107,10 @@ fn base_request(dataset: DatasetHandle, columns: Option<Vec<String>>) -> Viewpor
 ///
 /// Mutation: `build_viewport_query` ignores `req.columns` — the schema would then carry no
 /// `zone`/`area` fields at all, and the field-order assertion below fails by name.
+// RECORDED MUTATION: in `kernel/src/skp.rs::build_viewport_query`, replace the `projection` match
+// with `let projection = None;`, ignoring `req.columns`. Observed: this test fails by name --
+// "declared (request) order, id and geometry first / left: [\"id\", \"geometry\"] / right: [\"id\",
+// \"geometry\", \"zone\", \"area\"]" at `kernel/tests/skp_projection.rs:166`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns() {
     let fixture_json = std::fs::read_to_string(
@@ -222,6 +226,12 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
 /// a moved lease count). K-3 — map `Some([])` to `None` (then that one case admits instead of
 /// refusing). K-4 — two variants sharing a code (then the `BTreeSet` below has fewer than 7
 /// members).
+// RECORDED MUTATION (K-4): in `kernel/src/skp.rs::projection_error_of`, make the
+// `ColumnIsGeometry` arm return `"projection_column_is_identity"` (sharing `ColumnIsIdentity`'s
+// code). Observed: this test fails by name -- "geometry: wrong code / left:
+// \"skp.projection_column_is_identity\" / right: \"skp.projection_column_is_geometry\"" at
+// `kernel/tests/skp_projection.rs:275` (the same test whose closing `codes.len() == 7` assertion
+// is K-4's own claim). Reverted.
 #[test]
 fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     let path = multitype_fixture("k2-refusals", 40);
@@ -326,6 +336,11 @@ fn columns_empty_list_is_refused_never_read_as_null() {
 /// as E-7 (`projectable` computed from `admit_attribute_type` alone, dropping the geometry/identity
 /// checks `admit_projection_column` also runs) — then a geometry or identity column would show
 /// `projectable: true` while `viewport_query` still refuses it, and the loop's assertion fails.
+// RECORDED MUTATION: in `kernel/src/skp.rs::describe_dataset`, compute `projectable` from
+// `spatial_engine::attributes::admit_attribute_type(f.name(), f.data_type()).is_ok()` instead of
+// `admit_projection_column`. Observed: this test fails by name -- "column `id` marked
+// projectable, but viewport_query refused it: ... projection_column_is_identity ..." at
+// `kernel/tests/skp_projection.rs:384`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn describe_projectable_agrees_with_viewport_query_admission_for_every_column() {
     async fn check_one(handle: DatasetHandle, path: std::path::PathBuf) {
@@ -408,6 +423,10 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
 /// K-7: `a_projection_composes_with_a_filter`. A request carrying both a valid `[f32]` projection
 /// and a valid `f32 > 0.1` filter admits and streams the projected column, over exactly the
 /// filtered row set. Mutation: the projection is dropped when a filter is present.
+// RECORDED MUTATION: in `kernel/src/skp.rs::build_viewport_query`, after computing `projection`,
+// add `let projection = if req.filter.is_some() { None } else { projection };`. Observed: this
+// test fails by name -- `left: ["id", "geometry"]` vs `right: ["id", "geometry", "f32"]` at
+// `kernel/tests/skp_projection.rs:479`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_projection_composes_with_a_filter() {
     let path = multitype_fixture("k7-compose", 300);
@@ -522,6 +541,11 @@ fn viewer_license() -> ViewerLicenseInput {
 /// (`admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text`, O6).
 /// Nothing is written before the refusal (`preflight_pinless` never opens `req.destination`).
 /// Mutation: remove the restriction (`admit_bundle_format` admitting `Float32`).
+// RECORDED MUTATION: in `kernel/src/publish/mod.rs::admit_bundle_format`, remove the `D::Float32`
+// refusal arm (falls through to `_ => Ok(())`). Observed: this test fails by name -- "expected
+// AttributeUnpublishable naming Float32 at preflight, got Err(Style(MissingKey { at: \"$\", key:
+// \"style_version\" }))" at `kernel/tests/skp_projection.rs:578` (Float32 now admits, and
+// preflight proceeds to its next, unrelated refusal). Reverted.
 #[test]
 fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_format_restriction_with_todays_text(
 ) {

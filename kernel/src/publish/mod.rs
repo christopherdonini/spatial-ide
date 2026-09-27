@@ -1676,6 +1676,10 @@ mod tests {
     /// `PublishRequest` can exercise `admit_bundle_format`'s dictionary arm end to end. Proven
     /// directly against a constructed `DataType`, on the accepted pattern E-12/E-19 already use.
     /// Mutation: remove the restriction (`admit_bundle_format` admitting every `Dictionary`).
+    // RECORDED MUTATION: in `admit_bundle_format`, remove the `D::Dictionary(_, _)` refusal arm
+    // (falls through to `_ => Ok(())`). Observed: this test fails by name -- "expected
+    // AttributeUnpublishable naming the dictionary, got Ok(())" at
+    // `kernel/src/publish/mod.rs:1694`. Reverted.
     #[test]
     fn admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text() {
         let ty = arrow::datatypes::DataType::Dictionary(
