@@ -103,6 +103,7 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         })
         .expect("viewport_query mints a ticket");
 
@@ -281,6 +282,7 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         })
         .expect_err("a coverage-lost generation refuses the pre-check");
     assert_eq!(refused.code, SOURCE_COVERAGE_LOST_CODE, "{}", refused.message);

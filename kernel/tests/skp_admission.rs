@@ -123,6 +123,7 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         })
         .expect("viewport_query");
 
@@ -321,6 +322,7 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
             bbox_crs: Some("EPSG:4326".to_string()),
             limit: None,
             filter: None,
+            columns: None,
         })
         .expect_err("a viewport in the wrong CRS must be refused");
 
@@ -365,6 +367,7 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
             bbox_crs: None,
             limit: None,
             filter: Some(duckdb_filter(&format!("zone = '{}'", ZONE_VALUES[0]))),
+            columns: None,
         })
         .expect("a real, admitted predicate must not be refused");
 
@@ -441,6 +444,7 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
             bbox_crs: None,
             limit: None,
             filter: Some(duckdb_filter("nonexistent_column_xyz = 1")),
+            columns: None,
         })
         .expect_err("a predicate naming a column this dataset does not carry must be refused");
 
@@ -607,6 +611,7 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
             bbox_crs: None,
             limit: None,
             filter: None,
+            columns: None,
         })
         .expect("viewport_query");
     let stream_handle = ticket.stream.clone();

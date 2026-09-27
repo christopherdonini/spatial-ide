@@ -360,7 +360,7 @@ pub struct PublishPreflight {
     pub logical_uri: String,
     pub pin: spatial_engine::ContentPin,
     pub style: CompiledStyle,
-    projection: spatial_engine::attributes::PublishedProjection,
+    projection: spatial_engine::attributes::AdmittedProjection,
     license: License,
     viewer_license: ViewerLicense,
 }
@@ -384,7 +384,7 @@ impl PublishPreflight {
 struct PreflightPinless {
     logical_uri: String,
     style: CompiledStyle,
-    projection: spatial_engine::attributes::PublishedProjection,
+    projection: spatial_engine::attributes::AdmittedProjection,
     license: License,
     viewer_license: ViewerLicense,
 }
@@ -409,6 +409,38 @@ struct PreflightPinless {
 /// this is the one case where it structurally cannot.
 pub fn preflight_pinless(req: &PublishRequest<'_>) -> Result<(), PublishError> {
     preflight_pinless_parts(req).map(|_| ())
+}
+
+/// **The bundle format's own restriction — never the gate** (round 17 item 3; ADR-017 §4, byte
+/// identical, unedited by this piece).
+///
+/// The live projection gate (`spatial_engine::attributes::admit_attribute_type`) now admits
+/// `Float32` and a dictionary over an admitted value type; a `bundle_version` 1 partition still
+/// cannot carry either. Refuses by the column's own **source** type — `ty` here is never an emitted
+/// type — rendering `admit_attribute_type`'s **former** `Float32`/`Dictionary` refusal text at
+/// c16f41d, byte for byte, until B3's `bundle_version`-2 ADR decides otherwise (O1, O2). Admits
+/// (returns `Ok`) for every other type: this function refuses and admits nothing else — admission
+/// stays the one function, `resolve_projection` above.
+fn admit_bundle_format(column: &str, ty: &arrow::datatypes::DataType) -> Result<(), PublishError> {
+    use arrow::datatypes::DataType as D;
+    match ty {
+        D::Dictionary(_, _) => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column: column.to_string(),
+            detail: format!(
+                "type is {ty}. A dictionary index is an ordinal, and decoding one to publish it \
+                 would be a conversion the caller did not ask for. The bundle format carries no \
+                 dictionary batches"
+            ),
+        })),
+        D::Float32 => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column: column.to_string(),
+            detail: "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
+                     it is still a conversion this engine was not asked to perform, and a consumer \
+                     reading `float64` would be told the source held one"
+                .to_string(),
+        })),
+        _ => Ok(()),
+    }
 }
 
 fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless, PublishError> {
@@ -451,6 +483,15 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
     let viewer_license = admit_viewer_license(&req.viewer_license, req.viewer)?;
 
     let projection = ds.resolve_projection(&req.attributes)?;
+    // **The bundle-format restriction (round 17 item 3; ADR-017 §4).** The live gate
+    // (`spatial_engine::attributes::admit_attribute_type`) now admits `Float32` and a
+    // dictionary-over-an-admitted-value-type; ADR-017 §4 still refuses both in a *published*
+    // bundle, unedited. Run after shared admission (O1), refusing by the column's own **source**
+    // type, which admission carries beside each emitted field (`AdmittedProjection::source_types`;
+    // C-b): no second lookup into the file schema, and so no refusal for a lookup that could miss.
+    for (field, source_type) in projection.fields().iter().zip(projection.source_types()) {
+        admit_bundle_format(field.name(), source_type)?;
+    }
     let schema_for_style: Vec<(String, arrow::datatypes::DataType)> = ds
         .file_schema()
         .fields()
@@ -1597,6 +1638,78 @@ mod tests {
             admit_license(&source, Some(&op)),
             Err(PublishError::LicenseDeclaredTwice { .. })
         ));
+    }
+
+    /// K-9 (the Float32 sub-case): `admit_bundle_format` refuses a `Float32` source column at
+    /// preflight with today's text — byte-copied from `admit_attribute_type`'s **former** Float32
+    /// refusal at c16f41d (this function's own doc comment). Mutation: remove the restriction
+    /// (`admit_bundle_format` admitting `Float32`).
+    #[test]
+    fn admit_bundle_format_refuses_a_float32_column_with_todays_text() {
+        match admit_bundle_format("f32", &arrow::datatypes::DataType::Float32) {
+            Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                column,
+                detail,
+            })) => {
+                assert_eq!(column, "f32");
+                assert_eq!(
+                    detail,
+                    "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
+                     it is still a conversion this engine was not asked to perform, and a consumer \
+                     reading `float64` would be told the source held one"
+                );
+            }
+            other => panic!("expected AttributeUnpublishable naming Float32, got {other:?}"),
+        }
+    }
+
+    /// K-9 (the dictionary sub-case; O6): a real dictionary-encoded parquet column is unreachable
+    /// through `read_parquet` in the pinned DuckDB (H2, confirmed by P0), so no real `Dataset` or
+    /// `PublishRequest` can exercise `admit_bundle_format`'s dictionary arm end to end. Proven
+    /// directly against a constructed `DataType`, on the accepted pattern E-12/E-19 already use.
+    ///
+    /// **X4 (Amendment 5, row 5.6): extended to `Dict(Int8, Date32)`** — a dictionary whose value
+    /// type is itself refused by the live gate — so this test also proves `admit_bundle_format`
+    /// refuses *every* dictionary at preflight, by its own source type alone, whatever its value
+    /// type: the bundle-format restriction never asks whether the live gate would have admitted the
+    /// dictionary.
+    /// Mutation: remove the restriction (`admit_bundle_format` admitting every `Dictionary`).
+    // RECORDED MUTATION: in `admit_bundle_format`, remove the `D::Dictionary(_, _)` refusal arm
+    // (falls through to `_ => Ok(())`). Observed: this test fails by name -- "expected
+    // AttributeUnpublishable naming the dictionary, got Ok(())" at
+    // `kernel/src/publish/mod.rs:1694`. Reverted.
+    #[test]
+    fn admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text() {
+        for ty in [
+            arrow::datatypes::DataType::Dictionary(
+                Box::new(arrow::datatypes::DataType::Int32),
+                Box::new(arrow::datatypes::DataType::Utf8),
+            ),
+            // X4: a dictionary whose *value* type the live gate would itself refuse — still
+            // refused here by source type alone, never by asking the live gate first.
+            arrow::datatypes::DataType::Dictionary(
+                Box::new(arrow::datatypes::DataType::Int8),
+                Box::new(arrow::datatypes::DataType::Date32),
+            ),
+        ] {
+            match admit_bundle_format("cat", &ty) {
+                Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+                    column,
+                    detail,
+                })) => {
+                    assert_eq!(column, "cat");
+                    assert_eq!(
+                        detail,
+                        format!(
+                            "type is {ty}. A dictionary index is an ordinal, and decoding one to \
+                             publish it would be a conversion the caller did not ask for. The bundle \
+                             format carries no dictionary batches"
+                        )
+                    );
+                }
+                other => panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}"),
+            }
+        }
     }
 
     #[test]

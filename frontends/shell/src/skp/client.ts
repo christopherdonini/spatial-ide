@@ -117,6 +117,9 @@ export function viewportQuery(
     bbox_crs: bboxCrs,
     limit,
     filter,
+    // `skp/0.6`: this shell requests no projection (condition (1); the wire can carry one, this
+    // half of B1 does not send one -- the consumer is the shell half, per the caller rule).
+    columns: null,
   });
 }
 

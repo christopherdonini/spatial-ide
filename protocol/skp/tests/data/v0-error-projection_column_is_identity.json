@@ -1,0 +1,8 @@
+{
+  "code": "skp.projection_column_is_identity",
+  "message": "refused: `id` is this dataset's identity column; it already travels as `id`, and a second identity-shaped column is two names for one fact",
+  "fields": {
+    "column": "id",
+    "id_column": "id"
+  }
+}

@@ -59,6 +59,7 @@ fn viewport_req(dataset: DatasetHandle) -> ViewportQueryRequest {
         bbox_crs: None,
         limit: None,
         filter: None,
+        columns: None,
     }
 }
 

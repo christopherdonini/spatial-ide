@@ -1837,7 +1837,7 @@ is written until you answer; items 2/3/3e proceed either way.
     `DECISIONS-PENDING.md` entry-24(g)/-38 region) and the "metered connection"/"from a phone"
     operator notes? **Fix-forward on your word, no rewrite (red line):** **F-1/F-2** — the
     custodian's own `spikes/residency-debt-fix-live-probe/probe-thrash.mjs:5,9` carries
-    `C:\Users\Christopher\.claude\jobs\…` and a `.claude/worktrees` import path — the first-ever hit
+    `%USERPROFILE%\.claude\jobs\…` and a `.claude/worktrees` import path — the first-ever hit
     in the username-path class both prior sweeps defined, committed 2026-09-06 by the custodian (a
     slip, named); relative paths + a PRE-PUBLIC-CHECKLIST §6 note for the history copy. **F-7/F-8** —
     neutral fixture/comment names in `kernel/src/permission/audit/reader.rs:331,334` and

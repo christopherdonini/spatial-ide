@@ -45,11 +45,11 @@ This is a current-state notebook: edit summaries in place, preserve meaningful d
 | B2 / B3 | Save/reopen, verified Prepare and publish-v2 are proposed, sequenced pieces | Designs must respect their distinctions without bringing forward backend scope. |
 | Watcher | In-progress work with separately declared coverage/check-quality facts | A watcher adds advisory detection, not snapshot consistency. Recheck its merged state before implementation. |
 
-The current prototype is [map-studio-v7-codex.html](<C:/Users/Christopher/Development/Claude/Spatial IDE/prototype/map-studio-v7-codex.html>). The previous pass reported 40 checks and resolution of all 45 prototype command completions without script errors. Those are prototype checks, not kernel conformance or production acceptance, and were not re-run for this notebook-only pass.
+The current prototype is [map-studio-v7-codex.html](<%USERPROFILE%/Development/Claude/Spatial IDE/prototype/map-studio-v7-codex.html>). The previous pass reported 40 checks and resolution of all 45 prototype command completions without script errors. Those are prototype checks, not kernel conformance or production acceptance, and were not re-run for this notebook-only pass.
 
 ### Existing broader notebook
 
-[Product and Field Workflows v0.2](<C:/Users/Christopher/Desktop/SPATIAL-IDE-PRODUCT-AND-FIELD-WORKFLOWS.md>) remains the detailed catalogue of domain workflows, team/field products, automation and sector opportunities. This notebook carries their architectural implications forward rather than silently replacing that record. When recommendations conflict, identify the revised proposal and seek a ruling; neither notebook overrides accepted project decisions.
+[Product and Field Workflows v0.2](<%USERPROFILE%/Desktop/SPATIAL-IDE-PRODUCT-AND-FIELD-WORKFLOWS.md>) remains the detailed catalogue of domain workflows, team/field products, automation and sector opportunities. This notebook carries their architectural implications forward rather than silently replacing that record. When recommendations conflict, identify the revised proposal and seek a ruling; neither notebook overrides accepted project decisions.
 
 ## 2. How we arrived here
 

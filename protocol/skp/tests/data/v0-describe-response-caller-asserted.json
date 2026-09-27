@@ -30,8 +30,8 @@
     "session_statement": null
   },
   "schema": [
-    { "name": "id", "arrow_type": "UInt64", "nullable": false },
-    { "name": "geometry", "arrow_type": "Binary", "nullable": false }
+    { "name": "id", "arrow_type": "UInt64", "nullable": false, "projectable": false },
+    { "name": "geometry", "arrow_type": "Binary", "nullable": false, "projectable": false }
   ],
   "covering_bbox": true,
   "row_count": { "basis": "identity-uniqueness-scan-full-file", "value": "100000" },

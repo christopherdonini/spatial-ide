@@ -731,3 +731,15 @@ patch-level bumps — is recorded as a precedent, not here: `PRECEDENTS.md` P-03
 - **Dispatch.** Before writing a five-line form, draft its `Out-of-scope` line; if it names a §21a category as touched, write the full form instead and dispatch the piece for full gating.
 - **A commit-named test-text span.** When a piece carries a class-3 test-text row named by a branch commit, its PR body names the row and asks for a merge that keeps that commit reachable, never a squash; the custodian adds a PLAN node, blocked on the piece, that appends the hash pin on main after the merge (the precedent is the source-change watcher's E5 pin).
 - **Briefs and mutations.** A brief never asks for a `verify-mutation` run as a mutation's observation; it asks for the mutation applied, the test run, the failure recorded by name with its commit, and the mutation reverted.
+
+## Amendment 6 to the Custodian role — a filed report's profile paths are redacted at filing (2026-09-27, appended on the human's rulings of question round 28, item 2 and question round 29, items 1, 2 and 4; appended here so that no line a record cites above it moves)
+
+- **Agent reports.** Before an agent report is staged under `state/`, the custodian runs `node scripts/hooks/profile-path-scan.mjs --redact <file>`. The filing note says "profile paths redacted at filing (n)".
+- **The human's words** (round 29, item 2).
+  - Before words carrying a profile path are filed, the custodian writes the words as received to a scratch file and runs `--redact-segment` on it. The output is filed unedited: the segment becomes `<redacted:profile>` and every other byte is kept.
+  - A marked note goes one space after the quotation's closing mark (after any closing emphasis). In a file whose body is the words, it goes on the filing-note line instead. Its exact form is `[profile segments redacted at filing: <n>; round 29, item 2]`, where `<n>` is the count the tool printed.
+  - The gate checks that the number of `<redacted:profile>` markers inside the quoted span equals `<n>`.
+  - **How a later quotation is verified.** A later quotation of those words copies the marker byte for byte. verify-quotes (at d6d9862, `normalizeText`) leaves `<`, `>` and `:` unfolded, so the quotation matches the filed copy as a substring. The note sits outside the quoted span. A quotation that drops the marker, or restores the segment, is not found by verify-quotes; a quotation that restores the segment is also refused by the hook (`scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md`, Amendment 4, 4.1(k)).
+  - **Scope.** Words filed before this rule (entry 110; the 2026-09-25 cloud-hooks directive) stay as filed.
+- **The backstop.** The pre-commit check is the backstop, never the method.
+- **Refusals.** A refusal is never bypassed with `--no-verify`. A false refusal of an invented or machine name is resolved by adding the name to its list in a reviewed diff. A real account is never listed.

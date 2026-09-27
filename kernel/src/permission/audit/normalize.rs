@@ -139,7 +139,7 @@ fn usernames_from_environment() -> Vec<String> {
 
 /// `s` with `root` removed, but only when `root` ends at a component boundary.
 ///
-/// The boundary condition is what stops `C:/Users/Christopher2` becoming `<user-home>2`: a prefix
+/// The boundary condition is what stops `C:/Users/someone2` becoming `<user-home>2`: a prefix
 /// match alone is not a path-prefix match.
 ///
 /// **`is_char_boundary` before `split_at`, and it is a correctness guard rather than a nicety.**

@@ -163,7 +163,9 @@ function describeFixture(): import("./skp/types").DescribeResponse {
       source: "file:id", uniqueness: "verified-at-open-full-file", verified_rows: "100000",
       max_value: "99999", js_exact: true, class: "native", session_statement: null,
     },
-    schema: [{ name: "id", arrow_type: "UInt64", nullable: false }],
+    // `id` is this fixture's native identity column (identity.source: "file:id"), which
+    // `admit_projection_column` always refuses (ColumnIsIdentity) -- never projectable.
+    schema: [{ name: "id", arrow_type: "UInt64", nullable: false, projectable: false }],
     covering_bbox: true, row_count: { basis: "identity-uniqueness-scan-full-file", value: "100000" },
     extent: { basis: "not-established-at-open", value: null },
     license: { license: null, attribution: null, redistribution: null, declares_anything: false },

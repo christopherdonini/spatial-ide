@@ -357,6 +357,7 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
         bbox_crs: None,
         limit: None,
         filter: None,
+        columns: None,
     };
 
     // 1. A real ticket, minted under a live generation and never redeemed.

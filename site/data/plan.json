@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-27T18:37:25.378Z",
-  "plan_hash": "3ac208c7691e9735ff92fb6bcb91778e4725aaf46adf3231640959483c8012e6",
+  "generated_at": "2026-09-27T20:56:32.706Z",
+  "plan_hash": "3f51df6616d9285155de8b9944d797c25e2800f4c4012bd99eb7e220ec4f60be",
   "priorities_approved": true,
   "lanes": [
     {
@@ -1012,7 +1012,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 2,
       "depends_on": [
         "briefa-p6-part-n-acceptances",
@@ -1031,16 +1031,16 @@
       },
       "gate": "engine/B1-PROJECTION-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/b1-engine-projection"
+        "pr": 134
       },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher. RULED 2026-09-26, question round 25, item 3: B1's build starts after the watcher merges, so it builds on skp/0.5 directly.",
+      "summary": "DONE 2026-09-27 at PR #134 (merged d6ec85a; gate 3 PASS both at c9ec02e; the architect's reduction Amendment 10). Its code waits on the human's sight of b1-engine-prereg-draft (Night program 2026-09-24 (state/directives/2026-09-24-night-program.md), item 7). Shell direction item (b), RULED 2026-09-23 (late): this engine/kernel half proceeds as sequenced; B1's shell half (hover attributes, categorical style UI) waits for the new shell structure (shell-redesign-map-studio). FIRST after Brief A closes (the human, 2026-09-22): useful projected attributes and the existing categorical styling. Blocked on Brief A's close (P6), not on P3 -- the human, 2026-09-18 (entry 110). ADR-023 Decision text RULED 2026-09-14 (question set D, D2) with two s2 amendments and four B1 conditions; entry 79 items RULED 2026-09-11 apply at B1 close; Status Proposed until then. RULED 2026-09-24, question round 17, items 3 and 4 (entry 123): ADR-017's section 4 byte-identical, enforced as a named bundle-format restriction at the publish site until B3's bundle_version-2 ADR; Float32 filterable; dictionary columns excluded from the filter namespace by name (filter_column_not_filterable); the draft sighted with items 3-8 as recommended, revised to these rulings and committed as this node's preregistration; the literal after the watcher's. For its preregistration, from PR #113's architect gate: pin with a test how a Float32 column compares with a numeric literal; state that a later widening of ADR-023's section 2 widens the filter namespace by reference (whether each needs its own ADR-021 note is on the weekly-window list). 2026-09-24 (after PR #112 merged): the human sighted the draft in question round 17 (items 3 and 4); every other dependency is done. It now depends on engine-source-change-watcher because RULED 2026-09-24 (night), item (2) gives B1 the SKP literal after the watcher's, so B1 lands after the watcher. RULED 2026-09-26, question round 25, item 3: B1's build starts after the watcher merges, so it builds on skp/0.5 directly.",
       "dates": {
         "opened": "2026-09-13",
-        "done": null
+        "done": "2026-09-27"
       }
     },
     {
@@ -2074,7 +2074,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 3,
       "depends_on": [
         "b1-engine-kernel-half"
@@ -2348,7 +2348,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "alpha",
-      "status": "blocked",
+      "status": "ready",
       "order": 6,
       "depends_on": [
         "briefa-p6-part-n-acceptances",
@@ -3832,7 +3832,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 1,
       "depends_on": [
         "engine-source-change-watcher"
@@ -3841,8 +3841,10 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/kernel-generation-close-races"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
@@ -4416,6 +4418,110 @@
       }
     },
     {
+      "id": "exposure-profile-paths",
+      "title": "User-profile paths reworded in the tracked tree, and a profile-path scanner in the commit hooks (round 28)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "done",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md",
+      "evidence": {
+        "pr": 133
+      },
+      "budget_minutes": 300,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "DONE 2026-09-27 at PR #133 (merged 1b92e96). RULED 2026-09-26, question round 28, items 1-2; rounds 29 and 30 on the matcher. Gates 1-3 and two scoped reads under state/consults/gates/; record rounds 2 of 2 spent, the architect's reduction Amendment 14. Filed at merge: verify.mjs refuses an in-progress node whose gate is not tracked on main, and the form's 19-file set kept PLAN.yaml off the branch. Minutes: about 540 of 600 at close by the widest measure (from round 28's ruling).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": "2026-09-27"
+      }
+    },
+    {
+      "id": "exposure-post-merge-pins",
+      "title": "The exposure piece's corrected test-comment rows pinned at a main commit",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [
+        "exposure-profile-paths"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 20,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Round 25, item 2 (d); the exposure form's Amendment 7, 7.4, and gate 3 architect D7: the ten corrected 'Observed:' clauses of scripts/hooks/profile-path-scan.test.mjs, named in the words form at da80db0 (lines 124-125, 147-151, 181-183, 201-202, 274-276, 405-408, 462-468, 542-545, 746-748, 802-804), pinned at a main commit with their hashes in one appended row.",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "kernel-ticket-liveness-redeem-wording",
+      "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md).",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
+      "id": "watch-grandparent-spawn-signal",
+      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 45,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1.",
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      }
+    },
+    {
       "id": "b1-engine-kernel-half-followups",
       "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
       "kind": "task",
@@ -4446,7 +4552,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [
         "b1-engine-kernel-half"

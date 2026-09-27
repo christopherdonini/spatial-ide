@@ -1,0 +1,9 @@
+{
+  "code": "skp.projection_type_not_admitted",
+  "message": "refused: `d32` is Date32 — [B1 close placeholder] type is Date32; not in the admissible set for a live projection (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a dictionary over one of those)",
+  "fields": {
+    "column": "d32",
+    "arrow_type": "Date32",
+    "detail": "[B1 close placeholder] type is Date32; not in the admissible set for a live projection (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a dictionary over one of those)"
+  }
+}

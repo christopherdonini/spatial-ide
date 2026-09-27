@@ -59,6 +59,7 @@ fn viewport_req(dataset: spatial_skp::v0::DatasetHandle) -> ViewportQueryRequest
         bbox_crs: None,
         limit: None,
         filter: None,
+        columns: None,
     }
 }
 

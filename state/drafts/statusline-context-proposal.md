@@ -67,7 +67,7 @@ process.stdin.on('end', () => {
 ```json
 "statusLine": {
   "type": "command",
-  "command": "node C:/Users/Christopher/.claude/statusline-context.mjs"
+  "command": "node %USERPROFILE%/.claude/statusline-context.mjs"
 }
 ```
 

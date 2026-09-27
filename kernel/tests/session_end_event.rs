@@ -76,7 +76,15 @@ fn open_req(path: &std::path::Path, cancel_key: &str) -> OpenDatasetRequest {
 }
 
 fn viewport_req(dataset: DatasetHandle) -> ViewportQueryRequest {
-    ViewportQueryRequest { skp: SKP_VERSION.to_string(), dataset, bbox: None, bbox_crs: None, limit: None, filter: None }
+    ViewportQueryRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset,
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+        filter: None,
+        columns: None,
+    }
 }
 
 // -------------------------------------------------------------------------------------------

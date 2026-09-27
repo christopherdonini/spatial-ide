@@ -32,3 +32,7 @@ so does a reported one that stops diverging; neither is absorbed silently. Phase
 `bb98f71`) changed no existing fixture or implementation file. This directory's fixtures were since
 updated in place, to the `skp/0.5` literal current on `main` (RULED 2026-09-26, question round 24,
 item 4); no implementation file changed for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.6` literal at the merge of
+`main` into `cut/b1-engine-projection`, engine/B1-PROJECTION-PREREGISTRATION.md's Amendment 9;
+no implementation file changed for that update either.

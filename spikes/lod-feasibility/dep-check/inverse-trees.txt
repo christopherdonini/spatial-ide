@@ -1,14 +1,14 @@
 ===== cargo tree -e normal -i arrow =====
 arrow v58.4.0
-└── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+└── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i arrow-arith =====
 arrow-arith v58.4.0
 └── arrow v58.4.0
-    └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+    └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i arrow-array =====
 arrow-array v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-arith v58.4.0
 │   └── arrow v58.4.0 (*)
 ├── arrow-cast v58.4.0
@@ -16,7 +16,7 @@ arrow-array v58.4.0
 ├── arrow-ipc v58.4.0
 │   ├── arrow v58.4.0 (*)
 │   └── parquet v58.4.0
-│       └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│       └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-ord v58.4.0
 │   ├── arrow v58.4.0 (*)
 │   └── arrow-cast v58.4.0 (*)
@@ -35,7 +35,7 @@ arrow-array v58.4.0
 ===== cargo tree -e normal -i arrow-buffer =====
 arrow-buffer v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-arith v58.4.0
 │   └── arrow v58.4.0 (*)
 ├── arrow-array v58.4.0
@@ -46,7 +46,7 @@ arrow-buffer v58.4.0
 │   ├── arrow-ipc v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── parquet v58.4.0
-│   │       └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   │       └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 │   ├── arrow-ord v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── arrow-cast v58.4.0 (*)
@@ -83,11 +83,11 @@ arrow-buffer v58.4.0
 ===== cargo tree -e normal -i arrow-cast =====
 arrow-cast v58.4.0
 └── arrow v58.4.0
-    └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+    └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i arrow-data =====
 arrow-data v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-arith v58.4.0
 │   └── arrow v58.4.0 (*)
 ├── arrow-array v58.4.0
@@ -98,7 +98,7 @@ arrow-data v58.4.0
 │   ├── arrow-ipc v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── parquet v58.4.0
-│   │       └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   │       └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 │   ├── arrow-ord v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── arrow-cast v58.4.0 (*)
@@ -124,23 +124,23 @@ arrow-data v58.4.0
 ===== cargo tree -e normal -i arrow-ipc =====
 arrow-ipc v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 └── parquet v58.4.0
-    └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+    └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i arrow-ord =====
 arrow-ord v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 └── arrow-cast v58.4.0
     └── arrow v58.4.0 (*)
 ===== cargo tree -e normal -i arrow-row =====
 arrow-row v58.4.0
 └── arrow v58.4.0
-    └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+    └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i arrow-schema =====
 arrow-schema v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-arith v58.4.0
 │   └── arrow v58.4.0 (*)
 ├── arrow-array v58.4.0
@@ -151,7 +151,7 @@ arrow-schema v58.4.0
 │   ├── arrow-ipc v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── parquet v58.4.0
-│   │       └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   │       └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 │   ├── arrow-ord v58.4.0
 │   │   ├── arrow v58.4.0 (*)
 │   │   └── arrow-cast v58.4.0 (*)
@@ -188,13 +188,13 @@ arrow-schema v58.4.0
 ===== cargo tree -e normal -i arrow-select =====
 arrow-select v58.4.0
 ├── arrow v58.4.0
-│   └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│   └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-cast v58.4.0
 │   └── arrow v58.4.0 (*)
 ├── arrow-ipc v58.4.0
 │   ├── arrow v58.4.0 (*)
 │   └── parquet v58.4.0
-│       └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+│       └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ├── arrow-ord v58.4.0
 │   ├── arrow v58.4.0 (*)
 │   └── arrow-cast v58.4.0 (*)
@@ -204,7 +204,7 @@ arrow-select v58.4.0
 ===== cargo tree -e normal -i arrow-string =====
 arrow-string v58.4.0
 └── arrow v58.4.0
-    └── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+    └── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
 ===== cargo tree -e normal -i parquet =====
 parquet v58.4.0
-└── lod-dep-check v0.0.0 (C:\Users\Christopher\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
+└── lod-dep-check v0.0.0 (%USERPROFILE%\AppData\Local\Temp\claude\C--dev-spatial-ide\53e23d1b-1352-4b47-835e-df51d2888f3a\scratchpad\lod-dep-check)
