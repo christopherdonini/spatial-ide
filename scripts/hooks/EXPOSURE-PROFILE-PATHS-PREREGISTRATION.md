@@ -264,3 +264,12 @@ Assertions only: byte equality, exit codes, parse results, diff numstat. No meas
 - **Operator:** none.
 
 ## §10. Amendments — opens empty, append-only
+
+**Amendment 1 — re-derivation STOP (invalidator 1).** Filed after an outcome was seen. The
+worker's re-derivation at branch base 7037d7a (this piece's own `scanText`, every rule of 2c
+including (iv), run as a one-off `git ls-tree` / `git show` import over every path `git ls-tree -r
+--name-only 7037d7a` lists) found one file §2a does not list: `state/drafts/exposure-profile-paths-prereg.draft.md`,
+form class `unlisted-segment`, one finding. Per §0 item 1 and §5 invalidator 1 the piece STOPS
+here; no further step of the brief's Order was executed. The finding is reported to the custodian
+by file and form class only, per the brief's output discipline; the matched segment is not
+reproduced here.
