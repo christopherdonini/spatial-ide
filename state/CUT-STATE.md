@@ -414,3 +414,8 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The post-merge pins** landed on main at ea2ebf8 (B1's Amendment 11; the exposure form's Amendment 15). Both nodes are done at e15b142.
   - **`entry-79-b1-consult-items`** now waits on `b1-shell-half`: its item 2 is the shell half, which the session order holds.
   - **`test-claims-landedness-bound` started** on `governance/test-claims-landedness-bound`. Its five-line form, design (c) plus the carried N2–N7, is at acd35aa, and a worker is implementing it (single reviewer gate).
+- 2026-09-27T23:30Z - **test-claims-landedness-bound to PR #137** (head d047dda, merge commit only).
+  - The five-line form is acd35aa. Amendment 1 is 6cc77fa, with its correction at 31cbb68. Amendment 2 (c94115e) declares the fix round.
+  - Gate 1, the single reviewer, FAILED on B1–B3. The caller-rule fix makes the PR state data that `runVerify` supplies. Gate 2 PASSED, 148 lines across 6 files, and the branch CI is green.
+  - After #137 merges, a node's evidence names its PR only in the commit that marks it done (memory: evidence-pr-only-with-done).
+  - The ready set is now empty. The queue waits on the human: #135 (ADR-034 acceptance), #136 and #137 (clicks, merge commits), the ADR-035 note, and wave 2's three inputs (the prompts file, the baseline, and the promotion end date with the balance).
