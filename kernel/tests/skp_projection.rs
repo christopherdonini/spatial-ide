@@ -181,6 +181,7 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(req.dataset.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host.viewport_query(req).expect("the fixture's own request must admit");
 
@@ -317,6 +318,7 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
     let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
 
     // X9 (Amendment 5, row 5.6): each case's expected fields is now the **exact** key set (with
@@ -427,6 +429,7 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let too_many: Vec<String> = (0..33).map(|i| format!("bogus_{i}")).collect();
     // (fixture file stem, columns that reproduce an equivalent live refusal)
@@ -494,6 +497,7 @@ fn a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte()
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let mut req = base_request(handle, None);
     req.filter = Some(
@@ -523,6 +527,7 @@ fn columns_empty_list_is_refused_never_read_as_null() {
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let null_ticket = host
         .viewport_query(base_request(handle.clone(), None))
@@ -572,6 +577,7 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
             watch_support::no_watch_arm(),
             session_end_channel().0,
         );
+        host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
         let describe = host
             .describe(spatial_skp::v0::DescribeRequest { skp: SKP_VERSION.to_string(), dataset: handle.clone() })
@@ -667,6 +673,7 @@ async fn a_projection_composes_with_a_filter() {
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let mut req = base_request(handle, Some(vec!["f32".to_string()]));
     req.filter = Some(
