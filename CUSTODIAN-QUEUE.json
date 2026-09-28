@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-28T17:32:41.293Z",
-  "plan_hash": "181575a243f3b997603b61496c3492930243b42ea2fbd4ccfc84bf656216bc40",
+  "generated_at": "2026-09-28T17:50:06.308Z",
+  "plan_hash": "7701295a3b0ebcc21dd4e52622ba9e1308c5a2c5780ec8626c88f75cddb52eb2",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -51,7 +51,7 @@
         "opened": "2026-09-28",
         "done": null
       },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md.",
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic.",
       "blocked_by": [
         "watcher-first-read-on-watch-thread"
       ]

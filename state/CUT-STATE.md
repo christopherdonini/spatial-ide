@@ -487,3 +487,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The wave:** $218 to $201 is $17, from batch deltas of $8, $8 and $1. The ledger's totals line is in `state/cloud/wave2.md`.
   - **C-1** (`cut/watcher-first-read`): a high-effort worker implements the form at 0d2576c, building on the shared target.
   - **#139:** the custodian's ignore-reason commit is ebd7962 on cloud/wave2-B. The tests-only reviewer pass is running, with its local builds kept to the worktree's own target.
+- 2026-09-28T18:10Z - **#139's tests-only reviewer pass: PASS at ebd7962.** The report is filed byte-identical at `state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md`, and gate-log holds 266 records.
+  - **The findings:**
+    - the test is deterministic: seeds are constants, and three local runs produced hash-identical output;
+    - there is no new dependency;
+    - the CI runtime is 13.35 s on windows-latest (run 36459294374), and 25–27 s locally;
+    - the ignore reason names B-1 and the fix node.
+  - **Intake:** the reviewer's non-blocking notes 2 and 3 are added to B-1's node as input for its preregistration. They are an unasserted stream-error leak in the campaign, and INT64 overflow leaking file-derived values.
+  - **Next:** #139 is marked ready for review. It waits on the human's click, which must come before B-1's fix code starts.
