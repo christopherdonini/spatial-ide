@@ -526,3 +526,14 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - S5 and N2, the PR body stating that §2a's Arming items 4–6 are superseded, with the immutable preregistration left unedited;
     - N5, the form's phrase to be labelled a paraphrase in the PR body.
   - **Minutes:** the piece started at 17:31:53Z, so this entry is at about 133 of the 240-minute stop (21:31Z).
+- 2026-09-28T20:40Z - **C-1 correction round 1 is done (ad2e692), and gate 2 is running at c7f1afb.**
+  - **The round** (the worker's report is at `state/consults/2026-09-28-watcher-first-read-worker-report-2.md`, where four branch-only line cites were reworded at filing):
+    - B1: test (2) drives the real `spawn_watch_thread`.
+    - S1: a receive error maps to a refusal. It uses one new ChecksOnly reason text, on a path unreachable today.
+    - S2: test (1) asserts the session is Watching.
+    - S3: `PendingRead`'s Send impl is removed, and its docs and SAFETY notes are rewritten.
+    - Architect N2, and reviewer N1 and N3.
+  - **Mutations:** all four were observed failing by name at ad2e692: the declared thread-side mutation, the arm-side mutation, the vacuity mutation, and the pre-fix code. The suites pass.
+  - **Amendment 2** (c7f1afb): a class-4 line for the added mutations, and a class-6 line for the figure after the round, 486 lines across 2 files.
+  - **Gate 2 is scoped to the round.** The architect also rules the reviewer's S4 (whether the Scope's parenthetical covers the helpers extracted from arm) and the new reason text.
+  - **Minutes:** about 188 of the 240-minute stop (21:31Z). If gate 2 has not reported PASS by then, AUTONOMY §10 stops the piece: the node is set blocked with a ruling for the human.
