@@ -537,3 +537,25 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Amendment 2** (c7f1afb): a class-4 line for the added mutations, and a class-6 line for the figure after the round, 486 lines across 2 files.
   - **Gate 2 is scoped to the round.** The architect also rules the reviewer's S4 (whether the Scope's parenthetical covers the helpers extracted from arm) and the new reason text.
   - **Minutes:** about 188 of the 240-minute stop (21:31Z). If gate 2 has not reported PASS by then, AUTONOMY §10 stops the piece: the node is set blocked with a ruling for the human.
+- 2026-09-28T21:05Z - **C-1 gate 2 PASSED in both gates. PR #141 is open at fc3e51f. #140's post-merge checks are running. The branch and worktree cleanup is done.** The filings are the finish-and-handoff directive (verbatim, `state/directives/2026-09-28-finish-and-handoff.md`), both gate-2 reports under `state/consults/gates/`, and gate-log at 270 records.
+  - **C-1:**
+    - Fable's ruling 1 (the helper scope) was relayed to the reviewer; the architect had already ruled the same way.
+    - Ruling 2 is Amendment 3 (class 1, fc3e51f): the tracked record that this piece supersedes the watcher preregistration's §2a Arming steps 4–6, with that preregistration untouched. PR #141's description quotes it byte for byte.
+    - Disclosed against Fable's should-fix wording: the test asserts Watching after the opener thread joins, not before it exits. It still fails under the never-armed mutation. Moving it would take a second round, which was not started under the time limit.
+    - PR #141 asks for a merge commit only.
+  - **#140, merged before its gate:** a post-merge reviewer (read-only) is running, and so is the custodian's Windows `--list` identity check on worktrees at bb23bb3 and ab8ec3d.
+  - **Branches (the directive's item b):**
+    - 136 remote branches fully merged into origin/main are deleted, in one push, with no force-push. `release/0.1.0` is kept as the release line.
+    - Kept, unmerged:
+      - `cloud/wave1-A1` to `-A5`, and `cloud/wave2-A1`, `-A2` and `-C`: evidence cited by filings, kept until their fixes land;
+      - `cut/watcher-first-read`: PR #141;
+      - `governance/verify-mutation-header-token`: an unscheduled node;
+      - `fix/adr-index-drift-adr029` and `governance/adr-index-guard`: PRs #73 and #74 merged, but the tips are not ancestors of main;
+      - `record/residency-125-note-2`: no PR, a re-draft superseded by note-3.
+  - **Worktrees (item c):**
+    - Removed, all clean with every cited commit on origin: `C:/dev/wt/adr-034`, `kernel-close-races`, `test-claims-landedness`, `wave2-b`, `wave2-D`, `wave2-a1` and `wave2-a2`. Their five merged local branches were deleted too.
+    - Kept:
+      - `C:/dev/wt/watcher-first-read`: C-1;
+      - `C:/dev/wt/wave2-c`: the untracked C-1 scratch test that W2-C's filing cites;
+      - `C:/dev/wt/triage-a3-obs3`: untracked wave-1 reproductions;
+      - `C:/dev/wt/list-pre` and `list-post`: #140's checks, removed after them.
