@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7701295a3b0ebcc21dd4e52622ba9e1308c5a2c5780ec8626c88f75cddb52eb2`) at `2026-09-28T17:50:06.308Z`.
+Generated from `PLAN.yaml` (sha256 `0363558683f76b3ab40c7950139a359fa7affdcd25229bcfa48e0acf35b9782b`) at `2026-09-28T18:38:26.425Z`.
 
 ## 1. Next
 
@@ -30,9 +30,6 @@ Generated from `PLAN.yaml` (sha256 `7701295a3b0ebcc21dd4e52622ba9e1308c5a2c5780e
 ## 5. In progress
 
 - **watcher-first-read-on-watch-thread** — The watcher's first read on the watch thread -- a healthy session no longer ends as coverage-lost when the thread that armed its watch exits (wave-2 C-1, S1) — evidence: branch `cut/watcher-first-read`
-- **wave2-b-admission-campaign-merge** — PR #139 -- wave 2 B's filter-admission property campaign merged as B-1's regression net (a tests-only reviewer pass and the ignore reason, then the human's click) — evidence: branch `cloud/wave2-B`
-- **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — evidence: branch `cut/kernel-generation-close-races`
-- **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) — evidence: branch `governance/test-claims-landedness-bound`
 - **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) — evidence: branch `cloud/wave2-D`
 
 ## 6. Proposed / unscheduled

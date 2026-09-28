@@ -495,3 +495,19 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - the ignore reason names B-1 and the fix node.
   - **Intake:** the reviewer's non-blocking notes 2 and 3 are added to B-1's node as input for its preregistration. They are an unasserted stream-error leak in the campaign, and INT64 overflow leaking file-derived values.
   - **Next:** #139 is marked ready for review. It waits on the human's click, which must come before B-1's fix code starts.
+- 2026-09-28T18:45Z - **C-1's worker stopped on the size bound, the class-6 amendment was recorded, and the piece is under full gating.** The worker's report is filed at `state/consults/2026-09-28-watcher-first-read-worker-report-1.md`.
+  - **The fix works.**
+    - Each watch thread issues its own first read, behind a one-shot handshake.
+    - The regression test failed with `CoverageLost` on the pre-fix code, and passes with the fix.
+    - The handshake test's mutation failed by name.
+    - The workspace suite passes.
+  - **The size:** 416 lines across 2 files, against a declared ≤ 150. Most of it is step 6's spawn logic moving ahead of steps 4 and 5, which the line diff counts as deletions plus insertions. Every diff algorithm gives the same 416.
+  - **Line endings:** the worker's edit had rewritten `engine/src/watch.rs` as CRLF throughout. The custodian normalised it to LF, re-ran the two new tests and `source_watch_windows` (all passed), and committed at 0f68413.
+  - **The amendment:** 0c7be38 appends class 6 (Scope not edited). Under §21b's mid-piece clause the single-gate route closes, the short form stays, and the architect and reviewer gates run in parallel at 0c7be38.
+  - **Minutes (AUTONOMY §10):** the piece started at 17:39Z, against a budget of 120 minutes and a stop at 240.
+- 2026-09-28T18:50Z - **The human merged #136, #137, #139 and #140** (merge commits 74a9b24, 81be9b6, bb23bb3, ab8ec3d).
+  - **Marked done, each with `{pr: N}` in this commit:** `kernel-generation-close-races` (#136), `test-claims-landedness-bound` (#137) and `wave2-b-admission-campaign-merge` (#139). #137's rule is now live: a non-done node whose evidence names a merged PR fails verify:plan.
+  - **`suites-and-toolchain-beyond-windows` stays in progress.** #140 merged before its after-PR steps had run: the Windows `--list` identity check (default and ignored lists, bb23bb3 against ab8ec3d) and the reviewer gate over the whole PR. Both run now, after the merge, once C-1's gates free the machine. The node is marked done only if both pass.
+  - **CI:** 74a9b24 is green on all four workflows, and 81be9b6's Governance run is green. bb23bb3's product runs were cancelled, superseded by ab8ec3d. At ab8ec3d, shell and Pages are green, and the Rust workspace run was still going.
+  - **Now open to the human:** `adr-035-close-races-note`, ADR-035's appended note on what close-races made historical. It is the human's ruling, a red line.
+  - **Unblocked for the custodian:** `kernel-close-races-followups`. B-1's fix code may start once its P0 and proposal have been to Fable, because #139, its regression net, is merged.
