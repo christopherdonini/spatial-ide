@@ -478,3 +478,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **#139's merge:** `wave2-b-admission-campaign-merge`, at order 8, is in progress now, in parallel. It gets a tests-only reviewer pass and the ignore-reason commit on cloud/wave2-B, then waits for the human's click.
   - **A2-1:** `b1-close-nul-column-names`, at order 10, part of B1's close. Its dependency on C-1 records the ruling's sequence.
   - **S2 proposed nodes, written now that the audit batches are complete:** `b1-session-ordinal-refusal-wording` (A1-1), `shell-admit-describe-failure-closes-open` and `kernel-close-dataset-unknown-keeps-openrecord` (W2-C's two observations).
+- 2026-09-28T17:45Z - **Wave 2 closed: W2-D reported, the balance is $201, and the wave cost $17 in total. C-1's worker and #139's reviewer are dispatched.**
+  - **W2-D** (filed at `state/cloud/wave2/W2-D.md`): 0 findings, as an implementation item.
+    - Linux went from 742 passed, 14 failed and 40 ignored at b3bf4f6 to 742 passed, 0 failed and 54 ignored at 7128874, with no backslash-named file.
+    - It opened PR #140, which carries the form, the custodian's D-2 and D-3, and the worker's D-1 and D-4. By §21c's rule that is 26 lines across 8 files, against ≤ 60 and 8.
+    - $202 to $201, so a delta of $1.
+    - The after-PR steps (Windows CI, the Windows `--list` identity check, one reviewer gate, the human's click) queue behind C-1.
+  - **The wave:** $218 to $201 is $17, from batch deltas of $8, $8 and $1. The ledger's totals line is in `state/cloud/wave2.md`.
+  - **C-1** (`cut/watcher-first-read`): a high-effort worker implements the form at 0d2576c, building on the shared target.
+  - **#139:** the custodian's ignore-reason commit is ebd7962 on cloud/wave2-B. The tests-only reviewer pass is running, with its local builds kept to the worktree's own target.
