@@ -511,3 +511,18 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **CI:** 74a9b24 is green on all four workflows, and 81be9b6's Governance run is green. bb23bb3's product runs were cancelled, superseded by ab8ec3d. At ab8ec3d, shell and Pages are green, and the Rust workspace run was still going.
   - **Now open to the human:** `adr-035-close-races-note`, ADR-035's appended note on what close-races made historical. It is the human's ruling, a red line.
   - **Unblocked for the custodian:** `kernel-close-races-followups`. B-1's fix code may start once its P0 and proposal have been to Fable, because #139, its regression net, is merged.
+- 2026-09-28T19:45Z - **C-1 gate 1: the architect FAILED it on B1 and the reviewer PASSED it with should-fixes. Correction round 1 is dispatched.** Both reports are filed under `state/consults/gates/2026-09-28-watcher-first-read-gate1-*`, and gate-log holds 268 records.
+  - **B1:** test (2) never reaches `spawn_watch_thread`, where arm turns a handshake error into its refusal. Two arm-side mutations survive every test.
+  - **The round, one batch to a high-effort worker:**
+    - B1 (the test drives `spawn_watch_thread` with a null handle);
+    - S1 (the receive error becomes a refusal, not a panic);
+    - S2 (test (1) asserts the session is Watching);
+    - S3 (`PendingRead`'s now-unneeded Send impl removed, its docs corrected);
+    - architect N2 (step comments);
+    - reviewer N1 and N3.
+  - **Before the round:** main is merged into the branch at 0466858. The form's add/add conflict resolved to the branch's copy, whose first 11 lines are byte-identical to main's.
+  - **Left for gate 2, the PR body and the custodian:**
+    - S4, whether helpers extracted from arm count as arm (the architect's to rule; its N1 reads the Scope as the file);
+    - S5 and N2, the PR body stating that §2a's Arming items 4–6 are superseded, with the immutable preregistration left unedited;
+    - N5, the form's phrase to be labelled a paraphrase in the PR body.
+  - **Minutes:** the piece started at 17:31:53Z, so this entry is at about 133 of the 240-minute stop (21:31Z).
