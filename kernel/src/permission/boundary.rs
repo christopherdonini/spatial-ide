@@ -527,6 +527,7 @@ mod tests {
     #[test]
     fn the_confirmation_phrase_is_the_final_component() {
         assert_eq!(confirmation_phrase(std::path::Path::new("/a/b/parcels-2026")), "parcels-2026");
+        #[cfg(windows)]
         assert_eq!(confirmation_phrase(std::path::Path::new(r"D:\maps\out")), "out");
     }
 

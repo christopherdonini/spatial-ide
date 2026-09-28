@@ -16,8 +16,15 @@ use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 ///
 /// The shared target directory is not inside a worktree, so this is read where it actually lives
 /// rather than resolved against `CARGO_MANIFEST_DIR`.
+#[cfg(windows)]
 pub const POLYGONS_100K: &str =
     r"C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet";
+
+/// Off Windows, the same fixture under this workspace's own target directory, never a file whose
+/// name is the Windows path above.
+#[cfg(not(windows))]
+pub const POLYGONS_100K: &str =
+    concat!(env!("CARGO_MANIFEST_DIR"), "/../target/fixtures/slice-budgets/polygons-100k.parquet");
 
 /// The spec `polygons-100k` was written from (`kernel/tests/slice_budgets.rs:472-486`), restated so
 /// an absent fixture is regenerated as the same bytes rather than as a different dataset.
