@@ -454,3 +454,18 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - **Fix:** the custodian field now names line 110 of that branch-only file without the `path:line` form. The worker's verbatim section is untouched.
     - **Rule going forward:** run the verify tools after staging, never before.
   - **#135 was merged by the human** at d04bb80 (16:57Z). ADR-034 is on main with its Status still Proposed. The merge does not accept it, so `geometry-types-beyond-polygons` still waits on the acceptance ruling.
+- 2026-09-28T17:15Z - **Wave 2 batch 2 ended and was triaged ($210 -> $202, delta $8); W2-D launched; ec2b1c3's Governance CI is green.**
+  - **Batch 2:** both sessions had posted their reports by about 07:54Z. They were copied at 17:05Z, after the pause, and are filed verbatim with custodian fields at `state/cloud/wave2/W2-B.md` and `W2-C.md`. Main's product source is unchanged since d4245fe, apart from #135's one test line.
+    - **W2-B's B-1: S1 candidate.** Bind admission admits implicit coercions (`zone = 1`, a DECIMAL-overflowing `i64` comparison, `flag = 'x'`). These fail in the scan as `engine.query` terminals, and their text carries file values.
+      - The worker's two quotations from `protocol/skp/SKP-V0.md` §7.6 were checked against the file.
+      - It reproduces on Windows at 576f76b, with the same values.
+      - The worker's reading caveat is recorded.
+      - W2-B opened its one permitted PR, #139, a draft with every CI check green. Whether it merges goes to Fable.
+    - **W2-C's C-1: S1 candidate, reproduced by the custodian on Windows.**
+      - On Windows the watch's first directory read is issued on the thread that calls `open_dataset`. When that thread exits, the session ends as `CoverageLost` (event within 136 µs; `viewport_query` refuses `engine.source_coverage_lost`). With the thread kept alive, no event arrives.
+      - The shell calls `open_dataset` on `spawn_blocking` (`frontends/shell/src-tauri/src/commands.rs:60`), with tokio's default keep-alive. So this is reachable in ordinary use of the Windows app, and it is on main now.
+      - Per the wave's rule, it goes to Fable with the other S1 candidates after the wave, and the human is told now.
+    - **Two S2 records from W2-C's observations**, each a defect on a path unreachable today: `admitDataset.ts` never closes an open whose `describe` fails; `close_dataset` returns `unknown_dataset` before removing its `OpenRecord`. Their proposed nodes are written at the wave's end, together with A1-1.
+  - **W2-D:** session_01DTkTGu46c5SUiZ8LkL6yp4, launched at 17:04Z after batch 2's reading, with $202 before. It works on cloud/wave2-D from b3bf4f6. The prompt was assembled by script from the sighted brief and hash-checked on the clipboard and in the composer (cdb4363c…); it is filed at `state/cloud/wave2/W2-D-prompt.md`.
+  - **CI:** ec2b1c3's Governance CI is green, which repairs d04bb80's red.
+  - **Worktrees:** the scratch worktrees `C:/dev/wt/wave2-b` and `wave2-c` hold the reproductions. `wave2-c` carries the custodian's untracked C-1 scratch test.
