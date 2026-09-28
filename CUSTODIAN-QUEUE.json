@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-28T18:38:26.425Z",
-  "plan_hash": "0363558683f76b3ab40c7950139a359fa7affdcd25229bcfa48e0acf35b9782b",
+  "generated_at": "2026-09-28T21:16:26.141Z",
+  "plan_hash": "70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c61d5b518bcf83d599f5c0",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -233,28 +233,6 @@
       },
       "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line places C-1 next, immediately after close-races' current step; Fable's C-1 paragraph gives the direction (every ReadDirectoryChangesW issued by the watch thread that owns the handle, arm keeping its synchronous outcome through a one-shot handshake; no completion port, no keep-alive change), the two regression tests and the short form. Finding and the custodian's Windows reproduction: state/cloud/wave2/W2-C.md. Order 7 in the engine lane records the ruling's placement: the lane's highest open order was geometry-types-beyond-polygons' 6, which waits on the human.",
       "evidence_label": "branch `cut/watcher-first-read`"
-    },
-    {
-      "id": "suites-and-toolchain-beyond-windows",
-      "title": "The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4)",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 1,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cloud/wave2-D"
-      },
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation. Placed by the human on 2026-09-28 (state/directives/2026-09-28-wave2-D-sighting.md, the ruling line: \"to run next after the node now in progress\"), recorded as order 1 in the platform lane, whose only other node is unscheduled; the lane's priority (10) keeps it behind kernel-generation-close-races (kernel-protocol, priority 2), and its post-PR steps queue behind close-races' current step. Run as wave 2's W2-D on cloud/wave2-D: the form, then the custodian's D-2/D-3 commit (Fable's sighting, points 1-2), then the cloud worker's D-1/D-4; one PR, one reviewer gate over the whole PR.",
-      "evidence_label": "branch `cloud/wave2-D`"
     }
   ],
   "proposed": [

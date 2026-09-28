@@ -559,3 +559,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
       - `C:/dev/wt/wave2-c`: the untracked C-1 scratch test that W2-C's filing cites;
       - `C:/dev/wt/triage-a3-obs3`: untracked wave-1 reproductions;
       - `C:/dev/wt/list-pre` and `list-post`: #140's checks, removed after them.
+- 2026-09-28T21:20Z - **#140's post-merge checks passed, and `suites-and-toolchain-beyond-windows` is done with `{pr: 140}`.**
+  - **The reviewer gate** over the whole PR was run after the merge and PASSED at ab8ec3d. The report is `state/consults/gates/2026-09-28-suites-beyond-windows-gate1-reviewer.md`.
+    - The five lines hold: 26 lines across 8 files.
+    - On Windows nothing that runs changes: the CI per-test lists are identical.
+    - The docs lines are as sighted.
+  - **The custodian's Windows `--list` identity check** ran on worktrees at bb23bb3 (#140's first parent) and ab8ec3d. The default list (820 entries) and the ignored list (41) are byte-identical.
+  - gate-log holds 271 records. Worktrees `C:/dev/wt/list-pre` and `list-post` are removed.

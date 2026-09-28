@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0363558683f76b3ab40c7950139a359fa7affdcd25229bcfa48e0acf35b9782b`) at `2026-09-28T18:38:26.425Z`.
+Generated from `PLAN.yaml` (sha256 `70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c61d5b518bcf83d599f5c0`) at `2026-09-28T21:16:26.141Z`.
 
 ## 1. Next
 
@@ -30,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `0363558683f76b3ab40c7950139a359fa7affdcd2522
 ## 5. In progress
 
 - **watcher-first-read-on-watch-thread** — The watcher's first read on the watch thread -- a healthy session no longer ends as coverage-lost when the thread that armed its watch exits (wave-2 C-1, S1) — evidence: branch `cut/watcher-first-read`
-- **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) — evidence: branch `cloud/wave2-D`
 
 ## 6. Proposed / unscheduled
 

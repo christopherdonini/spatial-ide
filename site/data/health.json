@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-28T18:38:26.601Z",
+  "generated_at": "2026-09-28T21:16:26.233Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,20 +12,20 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 52339982336,
+        "bytes": 71248629760,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 368046432256,
+        "bytes": 366487318528,
         "total": 500090007552
       }
     ]
   },
   "stray_processes": {
-    "total": 5,
+    "total": 3,
     "by_name": {
-      "cargo": 2,
+      "cargo": 0,
       "node": 3,
       "spatial-ide-shell": 0
     }
@@ -41,13 +41,13 @@
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 91
+    "n": 92
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 62,
-    "first_pass": 21,
-    "rate": 0.3387096774193548
+    "nodes": 64,
+    "first_pass": 22,
+    "rate": 0.34375
   },
   "record_rounds": {
     "present": true,
