@@ -574,14 +574,14 @@ function withdrawnRowPinCondition(root, relPath, ref) {
  * A row whose grammar and pin conditions both hold but whose riders fail yields the rider-failure text
  * alone, unchanged from round 21 item 2's own shape. A row that fully holds (grammar, pin conditions
  * AND riders) is never a finding and becomes a candidate for per-claim exemption
- * (`findWithdrawnTestSpan`). Returns `{ findings, validSpans, invalidRowLines }` -- `invalidRowLines`
- * is the Set of PINNED target lines (`ref.startLine`) for a row that passed grammar (own path, single
+ * (`findWithdrawnTestSpan`). Returns `{ findings, validSpans, invalidRowLines, mainUnchecked }` --
+ * `invalidRowLines` is the Set of PINNED target lines (`ref.startLine`) for a row that passed grammar (own path, single
  * line, commit-id-shaped rev) but then failed its pin conditions or its riders, so the per-claim loop
  * does not also report that row's own defect as an ordinary "not found" claim (round 21 item 2); a row
  * refused at the grammar level never joins it -- a reference naming another file's path, or a range,
  * was never capable of exempting anything in the first place, so nothing needs suppressing for it
- * (§5's invalidator: P2(b) differs recorded, not stopped -- a mention is not an attempt, and the same
- * reasoning keeps a grammar-refused row from swallowing an unrelated claim's own finding).
+ * (§2.1(c): a mention is not an attempt, and the same reasoning keeps a grammar-refused row from
+ * swallowing an unrelated claim's own finding).
  */
 function computeWithdrawnRows(root, relPath, text) {
   const findings = [];
@@ -742,8 +742,8 @@ export function plannedGateFiles(plan) {
  * §1) rather than being reported once per claim: a name on an invalid, but grammar-accepted, row's own
  * pinned line is therefore never ALSO reported as an ordinary "not found" finding by the per-claim loop
  * below (it would be the same defect reported twice) — a row refused at the grammar level carries no
- * such suppression, since it was never capable of exempting anything to begin with (§2.1(b): a mention,
- * or a reference to another path or a range, is not a withdrawal attempt).
+ * such suppression, since it was never capable of exempting anything to begin with (§2.1(c): a mention
+ * is not a withdrawal attempt).
  */
 export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
@@ -835,7 +835,7 @@ function main() {
     }
   }
   if (withdrawnMainUnchecked && !quiet) {
-    console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim or accepted row above.');
+    console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one withdrawn claim or accepted row.');
   }
   if (findings.length === 0) {
     console.log(`verify:test-claims PASS — all ${claims} claimed test(s) across ${scanned} file(s) exist or are planned, superseded or withdrawn (${planned.length} planned, ${superseded.length} superseded, ${withdrawn.length} withdrawn, advisory).`);
