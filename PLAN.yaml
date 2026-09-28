@@ -2954,17 +2954,17 @@ nodes:
     kind: task
     lane: platform
     phase: prototype
-    status: proposed
-    order: null
+    status: in-progress
+    order: 1
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md
+    evidence: {branch: cloud/wave2-D}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation."
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. On Linux: 14 default tests need LOCALAPPDATA (D-1); a Windows path literal in boundary.rs's confirmation-phrase test (D-2); a Windows absolute fixture path writes a 151 MB file named with the literal path into engine/ (D-4); npm ci refuses under npm 10 and succeeds under npm 11 (D-3; the minimum npm version is undocumented, CI pins Node 24) (state/cloud/wave1/D.md). For the paused macOS/Linux validation. Placed by the human on 2026-09-28 (state/directives/2026-09-28-wave2-D-sighting.md, the ruling line: \"to run next after the node now in progress\"), recorded as order 1 in the platform lane, whose only other node is unscheduled; the lane's priority (10) keeps it behind kernel-generation-close-races (kernel-protocol, priority 2), and its post-PR steps queue behind close-races' current step. Run as wave 2's W2-D on cloud/wave2-D: the form, then the custodian's D-2/D-3 commit (Fable's sighting, points 1-2), then the cloud worker's D-1/D-4; one PR, one reviewer gate over the whole PR."
     dates: {opened: 2026-09-26, done: null}
 
   - id: kernel-close-races-followups

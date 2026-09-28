@@ -1,4 +1,4 @@
-*Custodian's filing note (2026-09-27): the wave-2 prompts file, copied from the human's untracked copy on the human's word (the 2026-09-27 wave-2 authorisation, `state/directives/2026-09-27-wave2-authorisation.md`, item 1, and the 2026-09-27 wave-2 confirmation, `state/directives/2026-09-27-wave2-confirmation.md`, item 1, which confirms the content as Fable's wave-2 file). Before copying, the source file itself hashed sha256 d9b3dabfda305ed165b494d3aa7d1e8dd2c3f14a278af53395a29aae864fc16a, 175 lines and 12,434 bytes, as the human stated. Everything below the rule is that file, byte for byte; the same hash is recomputed over those bytes. The assembled prompts, with the baseline written in, are filed beside their session IDs under `state/cloud/wave2/`.*
+*Custodian's filing note (2026-09-27): the wave-2 prompts file, copied from the human's untracked copy on the human's word (the 2026-09-27 wave-2 authorisation, `state/directives/2026-09-27-wave2-authorisation.md`, item 1, and the 2026-09-27 wave-2 confirmation, `state/directives/2026-09-27-wave2-confirmation.md`, item 1, which confirms the content as Fable's wave-2 file). Before copying, the source file itself hashed sha256 d9b3dabfda305ed165b494d3aa7d1e8dd2c3f14a278af53395a29aae864fc16a, 175 lines and 12,434 bytes, as the human stated. Everything below the rule is that file, byte for byte; the same hash is recomputed over those bytes. The assembled prompts, with the baseline written in, are filed beside their session IDs under `state/cloud/wave2/`. 2026-09-28: each deviation note that the custodian adds later sits under its own dated `#### Deviation` heading, the first one under W2-B. Removing each such section, from its heading line up to the next heading, restores the hash above.*
 
 ---
 
@@ -145,6 +145,14 @@ OUTPUT: branch cloud/wave2-B, at most ONE pull request, titled "Wave 2 B: filter
 campaign (proposal)", containing only the new test file. Do not merge it. Your final message is the
 WAVE2 REPORT (the schema's worker fields); "Findings" are counterexamples, with seeds.
 ```
+
+#### Deviation 1, 2026-09-28 — W2-B's "Open no PR" line
+
+The custodian inserted this after W2-B's launch, and nothing else in this file is edited. It is recorded under the 2026-09-28 W2-D sighting, the paragraph "Fable on W2-B's conflict" (`state/directives/2026-09-28-wave2-D-sighting.md`).
+
+W2-B was assembled as §4 directs, swapping only the item id, the branch, the TASK block and the OUTPUT line. Its launched text therefore carries W2-A1's REPRODUCERS paragraph with only the branch swapped. That text is `state/cloud/wave2/W2-B-prompt.md`, 75 lines, sha256 24ce5c134fbe0afe8984d0b219154ff2ceb5f35365e7f47027a14f4826f100b9. The paragraph's third sentence, byte-copied from the launched text, is "Open no PR.". It sits beside the OUTPUT block's "at most ONE pull request".
+
+Fable's reading, byte-copied from the directive with its line breaks joined by spaces: "a drafting error in the wave file (the "Open no PR" rule should have been listed among W2-B's replaced lines). Either outcome is conforming: keep one PR if the worker opens it; if it opens none, the branch stands, and we decide at triage whether to open a draft PR from cloud/wave2-B." The launched text does not change.
 
 ### W2-C — the watcher and ADR-035's event path
 

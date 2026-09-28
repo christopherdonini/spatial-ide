@@ -433,3 +433,24 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - W2-B's assembled text carries the shared "Open no PR" beside its own "at most ONE pull request". Wave 2 §4 swaps only the id, branch, TASK and OUTPUT, so it was carried as written, and the tension is noted in its prompt filing.
   - **W2-D:** the brief is drafted at `state/drafts/wave2-D-brief.md`, with a five-line form and five sighting points. It is not launched: Fable sights it first.
   - **Cleanup:** the merged `docs/wave2-prompts` worktree was swept. The scratch worktrees `C:/dev/wt/wave2-a1` and `wave2-a2` hold the reproducer commits for the Windows runs.
+- 2026-09-28T17:00Z - **The human's ruling and Fable's sighting of the W2-D brief applied** (verbatim, `state/directives/2026-09-28-wave2-D-sighting.md`). Between the ruling's arrival, after the 07:40Z entry, and 16:54Z, every shell and browser command was blocked, because the safety check returned no verdict. The custodian paused rather than work around it, and Fable confirmed the pause. It resumed from its own "Next" list, in order.
+  - **Placement.** The ruling's words, verbatim: "suites-and-toolchain-beyond-windows is placed, to run next after the node now in progress".
+    - **How the mapping was made:** the ruling is recorded as `order: 1` in the platform lane, whose only other node, `platform-hardware-validation`, is unscheduled.
+    - The platform lane's priority is 10, and kernel-protocol's is 2. The queue orders by lane priority first, so the placement does not pre-empt `kernel-generation-close-races`.
+    - W2-D's post-PR steps (the Windows `--list` identity check and the reviewer gate) queue behind close-races' current step, as Fable asked.
+    - The node is in progress with `{branch: cloud/wave2-D}`. Its gate is `engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md`, which main carries byte-identical to the branch's first commit.
+  - **The W2-D branch** (`cloud/wave2-D`, pushed, no PR yet):
+    - **0dd9ffb, the five-line form.** Scope is 8 files split by who changes which; the line budget is 60.
+    - **b3bf4f6, the custodian's D-2 and D-3.** `#[cfg(windows)]` goes on the `D:\maps\out` assertion statement only. CONTRIBUTING.md gains one toolchain-floor line, and CLAUDE.md's "Node LTS" becomes "Node 24 LTS (npm 11+)".
+    - **Fable's condition for D-3 is met:** `npm --version` printed 11.16.0 and `node --version` printed v24.18.1 (16:54Z).
+    - **Windows:** the boundary test passes. rustfmt reports the same four pre-existing hunks in boundary.rs as on main, and none new.
+    - The worker's prompt is in the revised `state/drafts/wave2-D-brief.md`. W2-D launches after batch 2's balance reading.
+  - **W2-B's "Open no PR"** is recorded as Deviation 1 in `state/cloud/wave2-prompts.md`, under W2-B, with a dated line added to the filing note.
+    - **Hash check before committing:** the file is LF throughout, with no CR bytes. With the deviation section removed (from its heading up to `### W2-C`), the text below the rule hashes to d9b3dab…c16a again (175 lines, 12,434 bytes). No normalisation was needed.
+  - **Fable on batch 1:** A2-1's S1 grading stands, to be ruled with the other S1 candidates after the wave. A1-1 joins the refusal-wording review at B1's close.
+  - **Main's Governance CI went red, and this commit fixes it.**
+    - **Cause:** my W2-A1 filing at 5cbea24 cited line 110 of `kernel/tests/wave2_a1_projection_audit.rs` in the rooted `path:line` form, and that file exists only on cloud/wave2-A1. The custodian's pre-commit run of verify-cites passed only because that filing was still untracked, and the checker scans tracked files only.
+    - **Why it surfaced late:** Governance CI skipped 5cbea24, because its path filters leave out a commit that touches only `state/`. It first ran on #135's merge (d04bb80, run 36454735785) and failed on verify:cites.
+    - **Fix:** the custodian field now names line 110 of that branch-only file without the `path:line` form. The worker's verbatim section is untouched.
+    - **Rule going forward:** run the verify tools after staging, never before.
+  - **#135 was merged by the human** at d04bb80 (16:57Z). ADR-034 is on main with its Status still Proposed. The merge does not accept it, so `geometry-types-beyond-polygons` still waits on the acceptance ruling.

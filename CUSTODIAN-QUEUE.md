@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `eb47978d0bc51bc046bf341ffbbb21f8ec5c69f60895d75d82c245138b6a843a`) at `2026-09-27T23:25:31.738Z`.
+Generated from `PLAN.yaml` (sha256 `ef236de56bb2c9ff8951e17ff4f929956b5ed1f5108126e9165f8c8df270125e`) at `2026-09-28T16:57:45.923Z`.
 
 ## 1. Next
 
@@ -29,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `eb47978d0bc51bc046bf341ffbbb21f8ec5c69f60895
 
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — evidence: branch `cut/kernel-generation-close-races`
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) — evidence: branch `governance/test-claims-landedness-bound`
+- **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) — evidence: branch `cloud/wave2-D`
 
 ## 6. Proposed / unscheduled
 
@@ -70,7 +71,6 @@ Generated from `PLAN.yaml` (sha256 `eb47978d0bc51bc046bf341ffbbb21f8ec5c69f60895
 - **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
 - **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (phase `prototype`) — never queued until placed
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (phase `prototype`) — never queued until placed
-- **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) (phase `prototype`) — never queued until placed
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (phase `prototype`) — never queued until placed
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (phase `prototype`) — never queued until placed
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
