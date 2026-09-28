@@ -137,6 +137,7 @@ fn write_source(path: &Path) {
 // returns `EngineError::Source` from `create the tier file`, which is the wrong refusal at the wrong
 // moment — after the builder has already decided to write.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn the_preflight_refuses_before_the_first_tier_is_written() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()

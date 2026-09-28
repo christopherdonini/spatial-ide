@@ -7,7 +7,14 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { loadPlan } from './plan.mjs';
 import { buildQueue, renderMarkdown } from './queue.mjs';
-import { runVerify, verifyStatusAgreement, adrStatusAccepted, verdictCiteExists, commitOnMain } from './verify.mjs';
+import {
+  runVerify,
+  verifyStatusAgreement,
+  verifyNotDoneEvidenceNotMerged,
+  adrStatusAccepted,
+  verdictCiteExists,
+  commitOnMain,
+} from './verify.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, 'fixtures');
@@ -225,4 +232,64 @@ test('runVerify: --offline note is present and PR/release evidence does not fail
   const result = runVerify({ planPath, repoRoot, siteDir: path.join(dir, 'site'), offline: true });
   assert.ok(result.notes.some((n) => n.includes('--offline')));
   assert.ok(!result.failures.some((f) => f.includes('pr')));
+});
+
+// Amendment 2 (B1): proof the check is wired into verify:plan, through verifyStatusAgreement (which
+// runVerify calls), not verifyNotDoneEvidenceNotMerged directly; prResults is plain data, no lookup
+// function. Its mutation drops the check's call site in verifyStatusAgreement -- applied, run,
+// reverted. RECORDED MUTATION observed: "expected a named merged-PR failure..., got: []", isolated
+// (19 of 20 pass), at 2607202 (Node v24.18.1).
+test("verifyStatusAgreement fails by name when an in-progress node's evidence PR is reported merged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const mutated = { ...plan, nodes: plan.nodes.map((n) => (n.id === 'n-inprogress' ? { ...n, evidence: { pr: 42 } } : n)) };
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyStatusAgreement(mutated, { repoRoot, offline: true, slug: null, prResults });
+  assert.ok(
+    // S2: the PR's reported state, not just the word "merged" (which the fixed message text always
+    // contains regardless of what GitHub actually reported).
+    failures.some((f) => f.includes('n-inprogress') && f.includes('#42') && f.includes('state=closed')),
+    `expected a named merged-PR failure with the reported state, got: ${JSON.stringify(failures)}`,
+  );
+});
+
+// Amendment 2, re-observed on the data shape: mutation drops the final `return [...]` for an
+// unconditional `return [];` -- applied, run, reverted. RECORDED MUTATION observed: "expected a named
+// merged-PR failure, got: []"; not isolated (also fails the wiring test above), 18 of 20 pass, at
+// 2607202 (Node v24.18.1).
+test("verifyNotDoneEvidenceNotMerged fails by name when an in-progress node's evidence PR is reported merged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
+  assert.ok(
+    failures.some((f) => f.includes('n-inprogress') && f.includes('#42') && f.includes('merged')),
+    `expected a named merged-PR failure, got: ${JSON.stringify(failures)}`,
+  );
+});
+
+// Amendment 2, re-observed on the data shape: mutation drops the `if (node.status === 'done')
+// return [];` status condition -- applied, run, reverted. RECORDED MUTATION observed: actual a
+// failure array naming n-inprogress, expected `[]`, isolated (19 of 20 pass), at 2607202 (Node
+// v24.18.1).
+test('verifyNotDoneEvidenceNotMerged passes when the same node is recorded done', () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), status: 'done', evidence: { pr: 42 } };
+  const prResults = { 'n-inprogress': { ok: true, detail: 'state=closed merged=true' } };
+  const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
+  assert.deepEqual(failures, []);
+});
+
+// Amendment 2, re-observed on the data shape (S3: now covers open and closed-unmerged both):
+// mutation narrows the guard `if (!result || !result.ok) return [];` to `if (!result) return [];`
+// (the merged flag ignored) -- applied, run, reverted. RECORDED MUTATION observed: a failure array
+// naming n-inprogress, expected `[]`, for the state=open case, isolated (19 of 20 pass), at 2607202
+// (Node v24.18.1).
+test("verifyNotDoneEvidenceNotMerged passes when an in-progress node's evidence PR is open or closed-unmerged", () => {
+  const plan = loadPlan(path.join(fixturesDir, 'valid-plan.yaml'));
+  const node = { ...plan.nodes.find((n) => n.id === 'n-inprogress'), evidence: { pr: 42 } };
+  for (const detail of ['state=open merged=false', 'state=closed merged=false']) {
+    const prResults = { 'n-inprogress': { ok: false, detail } };
+    const failures = verifyNotDoneEvidenceNotMerged(node, { prResults });
+    assert.deepEqual(failures, [], `expected no failure for ${detail}, got: ${JSON.stringify(failures)}`);
+  }
 });

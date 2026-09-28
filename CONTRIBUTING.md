@@ -120,6 +120,8 @@ an AI agent, say so in the commit body.
 
 ## Before you open a pull request
 
+Toolchain floor: npm 11 or later; CI runs Node 24, whose npm is 11, and npm 10 fails `npm ci` in `frontends/shell` (wave 1's finding D-3, `state/cloud/wave1/D.md`).
+
 ```sh
 cargo test --workspace                              # the Rust modules
 npm --prefix renderer/bundle-viewer run verify      # typecheck, build, test

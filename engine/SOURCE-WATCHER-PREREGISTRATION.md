@@ -602,3 +602,4 @@ References and hashes only (`state/directives/2026-09-18-record-cap.md`). The ro
 ### Amendment 7 — 2026-09-26, written after the merge (PR #127, merge commit 9a42af2): the E5 pin on main
 
 Class 1, discharging Amendment 6 row 13. `4137f4d` is reachable from main through the merge commit `9a42af2` (a merge commit, not a squash). The E5 pin: `kernel/src/skp.rs:2626-2644 @ 4137f4d sha256:c0483b8ed3ec3e47424345548e458b484d44a2aba310a3470f6b7a9d7ffac31a`.
+- withdrawn-test: `engine/SOURCE-WATCHER-PREREGISTRATION.md:482` @ 3b421d58d87c1017a41bbc3e03e889a3ee62555e sha256:0bfcf2dc1b06eb71dc00d6c639d3380a4ba560b97839e820ab6296a81a1372fb; ruling: round 23, item 2; carrier: round 23, item 2

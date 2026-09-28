@@ -7,7 +7,8 @@
 // 2. Status agreement: recorded ready/blocked equal the derivation; done has verifying evidence
 //    (PR merged via `gh api`, ADR file Accepted, tag present, release present, commit on main,
 //    tracked path present); felt_verdict done carries verdict.by "human" and a DECISIONS-PENDING
-//    RULED cite that exists.
+//    RULED cite that exists; the reverse also fails -- a node recorded as anything other than done
+//    whose evidence already names a PR `gh api` reports merged (verifyNotDoneEvidenceNotMerged).
 // 3. Generated files are current: regenerating CUSTODIAN-QUEUE.md/.json and site/ produces no
 //    diff (the drift check queue.mjs/site.mjs already implement).
 //
@@ -209,8 +210,30 @@ export function verifyEvidence(node, { repoRoot, offline, slug }) {
   return [`${tag}: evidence has no recognized pointer shape (${JSON.stringify(evidence)})`];
 }
 
+/**
+ * The reverse of `verifyEvidence`'s done-node PR check, beside it (TEST-CLAIMS-LANDEDNESS-
+ * PREREGISTRATION.md's Change): a node recorded as anything other than `done` whose evidence
+ * already names a PR that GitHub reports merged is stale and fails by name (node id, PR number,
+ * and the PR's reported state). Takes the lookup's result as data (`prResults`, keyed by node id,
+ * each entry the same `{ ok, detail }` shape `ghApiPrMerged` returns) rather than performing or
+ * taking a lookup itself -- `runVerify`, the product caller, is the only place that calls `gh api`
+ * (Amendment 2, B2). A missing entry (offline, no repo slug, or simply no such node looked up) is
+ * read as "not checked", not as a failure: a `gh` error reads the same way (`result.ok === false`)
+ * and is not this check's to report either, because the done-node check (`verifyEvidence`, above)
+ * already fails loudly on the identical fault for every done node with PR evidence (S1). Returns an
+ * array of failure strings (empty = no drift).
+ */
+export function verifyNotDoneEvidenceNotMerged(node, { prResults = {} }) {
+  if (node.status === 'done') return [];
+  const pr = node.evidence?.pr;
+  if (pr === undefined) return [];
+  const result = prResults[node.id];
+  if (!result || !result.ok) return [];
+  return [`node "${node.id}": status is "${node.status}" but PR #${pr} is reported merged (${result.detail})`];
+}
+
 /** Runs every §6 check against an already-loaded plan. Returns an array of failure strings. */
-export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
+export function verifyStatusAgreement(plan, { repoRoot, offline, slug, prResults = {} }) {
   const failures = [];
   const derived = deriveStatusMap(plan);
 
@@ -231,6 +254,8 @@ export function verifyStatusAgreement(plan, { repoRoot, offline, slug }) {
         failures.push(`node "${node.id}": gate "${node.gate}" is not a tracked file`);
       }
     }
+
+    failures.push(...verifyNotDoneEvidenceNotMerged(node, { prResults }));
 
     if (node.status === 'done') {
       failures.push(...verifyEvidence(node, { repoRoot, offline, slug }));
@@ -274,7 +299,19 @@ export function runVerify({ planPath, repoRoot, siteDir, offline }) {
   }
 
   const slug = ghRepoSlug(repoRoot);
-  failures.push(...verifyStatusAgreement(plan, { repoRoot, offline, slug }));
+
+  // The reverse-PR-merged check (verifyNotDoneEvidenceNotMerged) takes its gh api result as data,
+  // not a lookup of its own (Amendment 2, B2) -- looked up here, the one product caller of `gh api`,
+  // for every non-done node naming a PR, and passed in by node id.
+  const prResults = {};
+  if (!offline && slug) {
+    for (const node of plan.nodes) {
+      if (node.status !== 'done' && node.evidence?.pr !== undefined) {
+        prResults[node.id] = ghApiPrMerged(repoRoot, slug, node.evidence.pr);
+      }
+    }
+  }
+  failures.push(...verifyStatusAgreement(plan, { repoRoot, offline, slug, prResults }));
 
   const queueDrift = checkQueueDrift({ planPath, outDir: path.dirname(planPath) });
   if (!queueDrift.ok) failures.push(...queueDrift.problems.map((p) => `queue drift: ${p}`));

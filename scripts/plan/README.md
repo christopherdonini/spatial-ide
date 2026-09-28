@@ -88,8 +88,13 @@ only real content drift fails; re-running the exact same plan a moment later nev
 3. **Drift**: regenerating `CUSTODIAN-QUEUE.md/.json` (`queue.mjs`'s own `checkQueueDrift`) and
    `site/` (`site.mjs`'s own `checkSiteDrift`) must produce no diff.
 
-`--offline` skips the two GitHub-only checks (PR-merged, release-published) and says so on stderr;
-every other check still runs. Exits 1 with every failure listed, one per line.
+**Landedness (§21d, `TEST-CLAIMS-LANDEDNESS-PREREGISTRATION.md`):** the reverse of the `{pr: N}`
+check above -- any node whose recorded `status` is not `done` but whose `evidence` already names a
+PR that `gh api` reports merged fails by name (node id, PR number, and the PR's reported state).
+Reuses the same lookup and is skipped, not failed, under `--offline`.
+
+`--offline` skips the GitHub-only checks (PR-merged, landedness, release-published) and says so on
+stderr; every other check still runs. Exits 1 with every failure listed, one per line.
 
 ## `site.mjs` — the landing page (§5)
 

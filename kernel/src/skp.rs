@@ -13,7 +13,7 @@
 //! `docs/adr/ADR-019-control-plane-admission-tickets.md` for the ticket mechanism `StreamRegistry`
 //! implements.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -360,8 +360,8 @@ impl StreamRegistry {
 /// **What §13 G's naming rule actually required, stated as the code spells it.** The fact this
 /// module owns is the *dataset-session* generation, and no symbol here is the bare word
 /// `generation`: the type is `GenerationRegistry`, the field on [`SkpHost`] is `generations`, and
-/// the methods are `mint_for_open`, `live_or_mint`, `attribute_ticket`, `invalidate`,
-/// `forget_dataset` and `attributed_ticket_count`. `dataset_session_generation` is the **term of art** this
+/// the methods are `mint_for_open`, `live_generation`, `attribute_ticket`, `begin_close`,
+/// `invalidate`, `forget_dataset` and `attributed_ticket_count`. `dataset_session_generation` is the **term of art** this
 /// doc comment and the preregistration use for it; it is deliberately not a symbol, because the
 /// value it names never leaves this process and there is nothing for it to label.
 ///
@@ -378,6 +378,11 @@ impl StreamRegistry {
 /// counter in this process's memory: it is not a ResourceRef field — neither logical URI, content
 /// hash, source revision, locator, cache status nor portability policy (ADR-005; `docs/11`) — and
 /// no ADR-005 amendment is needed or implied, because nothing is stored and no grade is claimed.
+///
+/// **Only `mint_for_open` mints one** (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2a;
+/// round 23, item 2), carrying the reference its caller, `SkpHost::open_dataset`, returned to a
+/// client. Nothing else inserts a live generation, so no generation carries a reference no client
+/// holds.
 #[derive(Default)]
 pub struct GenerationRegistry {
     inner: Mutex<GenerationState>,
@@ -386,10 +391,10 @@ pub struct GenerationRegistry {
 #[derive(Default)]
 struct GenerationState {
     /// The generation currently live for each open dataset, paired with its kernel-minted
-    /// [`SessionRef`] (Amendment 1: every generation carries one, never `Option` — a generation
-    /// minted by [`GenerationRegistry::live_or_mint`] rather than `mint_for_open` gets one no
-    /// client holds). A dataset absent from this map has no live generation — either it never
-    /// opened, or its generation was invalidated.
+    /// [`SessionRef`] (Amendment 1: every generation carries one, never `Option`). Inserted only by
+    /// [`GenerationRegistry::mint_for_open`], with the reference `open_dataset` returned to its
+    /// client. A dataset absent from this map has no live generation — it never opened through
+    /// `open_dataset`, its generation was invalidated, or it was closed.
     live: HashMap<String, (u64, SessionRef)>,
     /// Which generation each minted ticket belongs to. Boundary 4's "every batch is attributed to
     /// a generation via its ticket", held here rather than on the wire.
@@ -400,17 +405,18 @@ struct GenerationState {
     /// Datasets whose generation was **ended by a detected change**.
     ///
     /// **Three states, not two, and the third is why this set exists.** A dataset absent from
-    /// `live` is either one whose source was observed to have changed *or* one that never had a
-    /// generation minted at all — a `Catalog` this host shares can be opened through other entry
-    /// points (`kernel::Catalog::open_*`, which every in-process caller and several test harnesses
-    /// use). Collapsing the two would refuse `viewport_query` on a perfectly good dataset with a
-    /// message saying its file changed, which is a false statement about the file
-    /// (`docs/01` principle 8). Only membership here refuses.
+    /// `live` is either one whose source was observed to have changed *or* one that is not open
+    /// through `open_dataset` — never opened there, or closed. Collapsing the two would refuse
+    /// `viewport_query` on a dataset that is merely not open with a message saying its file
+    /// changed, which is a false statement about the file (`docs/01` principle 8). Only membership
+    /// here refuses by the reason; the other answers `skp.unknown_dataset`.
+    /// A mark is written only by an [`GenerationRegistry::invalidate`] that removed a live
+    /// generation, so a closed or never-opened name is never marked.
     /// **This set is NOT pruned by age, and the reason is a correctness one rather than an
     /// oversight.** An entry leaves only on `mint_for_open` (the dataset was reopened) or
-    /// `forget_dataset` (it was closed). Dropping one on a timer would let `live_or_mint` mint a
-    /// fresh generation for a dataset whose source was observed to have changed — silently
-    /// resurrecting exactly what the never-resurrect rule exists to prevent — so the safe fix is
+    /// `forget_dataset` (it was closed). Dropping one on a timer would let `live_generation`
+    /// answer a dataset whose source was observed to have changed as merely not open — losing the
+    /// reason its session ended, which is what the refusal exists to state — so the safe fix is
     /// not the small one and is not taken here.
     ///
     /// What it costs: one entry per dataset that was invalidated and then neither reopened nor
@@ -450,7 +456,32 @@ struct GenerationState {
     /// [`GenerationRegistry::ticket_liveness`] can answer [`TicketLiveness::EndedByCoverageLoss`]
     /// as well as [`TicketLiveness::EndedBySourceChange`] (`SOURCE-WATCHER-PREREGISTRATION.md` §2b).
     dead_tickets: HashMap<String, (String, SessionEndReason, Instant)>,
+    /// Names in the middle of a `close_dataset` (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md`
+    /// §2a). Set by [`GenerationRegistry::begin_close`] and cleared by
+    /// [`GenerationRegistry::forget_dataset`]. While a name is here, `live_generation` answers
+    /// [`NotLive::NotOpen`] and `attribute_ticket` refuses, so no ticket minted after the close
+    /// began stays redeemable.
+    ///
+    /// **Never pruned by time**: a timer could let a closing name answer as live again. Bounded
+    /// structurally (§7): at most one entry per `close_dataset` call in progress, plus the residual
+    /// of a close that unwinds between `begin_close` and `forget_dataset`, which leaves that name
+    /// refused as not open — what its caller asked for.
+    closing: HashSet<String>,
     next: u64,
+}
+
+/// Why [`GenerationRegistry::live_generation`] has no live generation to answer with.
+///
+/// Its product caller is `SkpHost::viewport_query`'s mint step, which refuses on either value:
+/// `Ended` by the reason the first mark recorded, `NotOpen` as `skp.unknown_dataset`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NotLive {
+    /// The dataset's generation was ended by a detected change or a coverage loss, and it has not
+    /// been reopened.
+    Ended(SessionEndReason),
+    /// The dataset has no live generation and no end mark: it is not open through `open_dataset`,
+    /// or its close has begun.
+    NotOpen,
 }
 
 /// What the **dataset-session generation registry** knows about one ticket handle — three-valued,
@@ -511,41 +542,39 @@ impl GenerationRegistry {
         g
     }
 
-    /// The dataset's live generation, minting one if it has never had a generation and has not been
-    /// invalidated. `Err(reason)` when the dataset's generation was invalidated — the reason the
-    /// first mark recorded (`SOURCE-WATCHER-PREREGISTRATION.md` §2b's Reason section).
+    /// The dataset's live generation. **It never mints one** (round 23, item 2): the only live
+    /// generation is one `mint_for_open` inserted.
     ///
-    /// Exists because this host shares its `Catalog` with entry points that do not run
-    /// `open_dataset` — a dataset that arrived by one of those still gets a session rather than no
-    /// session. It never resurrects an invalidated generation.
-    ///
-    /// **Amendment 1 (round 22 item 1): a generation minted here still carries a kernel-minted
-    /// `SessionRef` — one no client ever holds**, because this path never returns one to a caller.
-    /// The reference is unheld, not absent, so this generation's end still emits (`EndReport.session`
-    /// is never `Option`).
-    pub fn live_or_mint(&self, dataset: &str) -> Result<u64, SessionEndReason> {
+    /// Answers, in order: an end mark, `Err(NotLive::Ended(reason))` with the reason the first mark
+    /// recorded (`SOURCE-WATCHER-PREREGISTRATION.md` §2b's Reason section); a close in progress,
+    /// `Err(NotLive::NotOpen)`; a live generation, `Ok`; otherwise `Err(NotLive::NotOpen)`. It
+    /// never resurrects an invalidated generation.
+    pub fn live_generation(&self, dataset: &str) -> Result<u64, NotLive> {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
         if let Some(reason) = st.invalidated.get(dataset).copied() {
-            return Err(reason);
+            return Err(NotLive::Ended(reason));
         }
-        if let Some((g, _)) = st.live.get(dataset) {
-            return Ok(*g);
+        if st.closing.contains(dataset) {
+            return Err(NotLive::NotOpen);
         }
-        st.next += 1;
-        let g = st.next;
-        st.live.insert(dataset.to_string(), (g, SessionRef::mint()));
-        Ok(g)
+        match st.live.get(dataset) {
+            Some((g, _)) => Ok(*g),
+            None => Err(NotLive::NotOpen),
+        }
     }
 
     /// Attribute a freshly minted ticket to the dataset's live generation.
     ///
-    /// Returns `false` when the dataset has **no** live generation — the ticket is then not
-    /// attributable and its caller must refuse rather than record it under a generation that does
-    /// not exist.
+    /// Returns `false` when the dataset has **no** live generation, or its close has begun — the
+    /// ticket is then not attributable and its caller must refuse rather than record it under a
+    /// generation that does not exist or is being closed.
     pub fn attribute_ticket(&self, handle: &str, dataset: &str) -> bool {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
+        if st.closing.contains(dataset) {
+            return false;
+        }
         let Some((g, _)) = st.live.get(dataset) else { return false };
         let g = *g;
         st.tickets.insert(handle.to_string(), (dataset.to_string(), g, Instant::now()));
@@ -673,26 +702,40 @@ impl GenerationRegistry {
         st.invalidated.get(dataset).copied()
     }
 
+    /// Mark `dataset` as closing — the first registry step of `SkpHost::close_dataset`
+    /// (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2c). From here until `forget_dataset`,
+    /// `live_generation` answers [`NotLive::NotOpen`] and `attribute_ticket` refuses.
+    ///
+    /// **It does not remove the live generation**: an end recorded during the close still finds it
+    /// and emits (ADR-035 Decision 3's close-time routes). Product caller: `close_dataset`.
+    pub(crate) fn begin_close(&self, dataset: &str) {
+        let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        st.closing.insert(dataset.to_string());
+    }
+
     /// End a dataset's generation. `Some` exactly when this call removed the dataset's live
     /// generation (ADR-035 D3's transition report) — idempotent, so the pre-check and a post-check
     /// (or the watcher's sink) observing the same change do not double-report, and a source whose
     /// post-check fires on several concurrent tile streams ends one session rather than N.
     ///
     /// **The reference is taken under this guard, in the same step as the removal** — the report's
-    /// `session` is `EndReport.session`, never absent (Amendment 1: `live_or_mint`'s own generation
-    /// carries one too).
+    /// `session` is `EndReport.session`, never absent (Amendment 1).
+    ///
+    /// **A mark is written only when a live generation is removed**
+    /// (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2a): with no live generation — a closed
+    /// or never-opened name, or one already ended — this call writes nothing and returns `None`.
     ///
     /// **The first mark stands** (§2b's Reason section): if this dataset was already invalidated,
     /// `st.invalidated`'s existing entry is never overwritten by a later call's `reason` — the
     /// reason returned in the report (when one is returned) is always the first one recorded.
     pub fn invalidate(&self, dataset: &str, reason: SessionEndReason) -> Option<EndReport> {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
-        st.invalidated.entry(dataset.to_string()).or_insert(reason);
-        let recorded_reason = st.invalidated[dataset];
         let Some((g, session)) = st.live.remove(dataset) else {
             Self::prune_locked(&mut st);
             return None;
         };
+        st.invalidated.entry(dataset.to_string()).or_insert(reason);
+        let recorded_reason = st.invalidated[dataset];
         let ended: Vec<String> = st
             .tickets
             .iter()
@@ -717,12 +760,14 @@ impl GenerationRegistry {
         Some(EndReport { session, reason: recorded_reason, tickets: ended })
     }
 
-    /// Forget a dataset entirely — its live generation and every ticket attributed to it. Called
-    /// from `close_dataset`, so the map does not grow for the life of the process.
+    /// Forget a dataset entirely — its live generation, its closing mark and every ticket
+    /// attributed to it. Called from `close_dataset`, so the map does not grow for the life of the
+    /// process.
     pub fn forget_dataset(&self, dataset: &str) {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         st.live.remove(dataset);
         st.invalidated.remove(dataset);
+        st.closing.remove(dataset);
         st.tickets.retain(|_, (d, _, _)| d != dataset);
         // P3b §2c: "entirely" includes the dead-ticket record — a closed dataset's handles are
         // gone from `StreamRegistry` too, so the record could only answer about tickets nothing
@@ -733,9 +778,9 @@ impl GenerationRegistry {
 
 /// The transition report [`GenerationRegistry::invalidate`] returns — ADR-035 D3.
 ///
-/// `session` is never absent (Amendment 1): every generation, including one
-/// [`GenerationRegistry::live_or_mint`] minted for a caller that never held it, carries a
-/// kernel-minted [`SessionRef`].
+/// `session` is never absent (Amendment 1): every generation carries a kernel-minted
+/// [`SessionRef`], the one `open_dataset` returned to its client (only
+/// [`GenerationRegistry::mint_for_open`] inserts a live generation).
 pub struct EndReport {
     pub session: SessionRef,
     pub reason: SessionEndReason,
@@ -1196,10 +1241,24 @@ impl SkpHost {
         Ok(resp)
     }
 
+    /// Three steps, composed in order and by nothing else
+    /// (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2b): resolve, mint, attribute. The split
+    /// mirrors `SessionInvalidator`'s `record`/`enqueue`; each step's only product caller is this
+    /// method.
     pub fn viewport_query(
         &self,
         req: ViewportQueryRequest,
     ) -> Result<ViewportQueryResponse, SkpError> {
+        let (dataset_name, ds) = self.viewport_query_resolve(&req)?;
+        let handle = self.viewport_query_mint(&dataset_name, &ds, &req)?;
+        self.viewport_query_attribute(handle, &dataset_name)
+    }
+
+    /// `viewport_query`'s resolve step: the version, the sweep, and the catalog entry.
+    fn viewport_query_resolve(
+        &self,
+        req: &ViewportQueryRequest,
+    ) -> Result<(String, Arc<Dataset>), SkpError> {
         check_version(&req.skp)?;
         // B5 (reviewer, this cut): reclaim stale pending tickets' leased connections *before*
         // attempting to lease another. `open_engine_stream` below leases from a pool bounded by
@@ -1213,6 +1272,17 @@ impl SkpHost {
             .catalog
             .get(&dataset_name)
             .ok_or_else(|| SkpError::unknown_dataset(&dataset_name))?;
+        Ok((dataset_name, ds))
+    }
+
+    /// `viewport_query`'s mint step: the live check, the query, the engine stream with its
+    /// pre-check end, the data-plane wrap, and the ticket.
+    fn viewport_query_mint(
+        &self,
+        dataset_name: &str,
+        ds: &Dataset,
+        req: &ViewportQueryRequest,
+    ) -> Result<StreamHandle, SkpError> {
         // Filter admission (`NEXT-CUT.md` P4; `AdmittedPredicate::admit`, `engine/src/predicate.rs`
         // P3) runs *inside* `build_viewport_query`, right here — after `ds` is resolved (admission
         // needs the dataset's own resident schema, an ADR-016-style structural precondition: no
@@ -1231,11 +1301,18 @@ impl SkpHost {
         //
         // An **invalidated** dataset is one whose source was observed to have changed. It stays in
         // the catalog deliberately — `describe` still answers, and the operator is told to reopen
-        // rather than finding the name gone. A dataset that simply never had a generation minted is
-        // not that, and `live_or_mint` below gives it one rather than accusing its file.
+        // rather than finding the name gone. A dataset with no live generation and no end mark is
+        // not that — it is not open through `open_dataset`, or its close has begun — and
+        // `live_generation` below answers `NotOpen`, refused as `skp.unknown_dataset`: the answer a
+        // query issued after the close gets, and nothing is built or minted
+        // (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2b).
         // **Refusals take their code from the reason, never `SourceChanged` for a coverage loss**
         // (`SOURCE-WATCHER-PREREGISTRATION.md` §2b; block-on-sight 3).
-        if let Err(reason) = self.generations.live_or_mint(&dataset_name) {
+        if let Err(not_live) = self.generations.live_generation(dataset_name) {
+            let reason = match not_live {
+                NotLive::Ended(reason) => reason,
+                NotLive::NotOpen => return Err(SkpError::unknown_dataset(dataset_name)),
+            };
             return Err(error_of(&match reason {
                 SessionEndReason::ObservedChange => EngineError::SourceChanged {
                     detail: "{this dataset's session ended when its source was observed to have \
@@ -1250,7 +1327,7 @@ impl SkpHost {
             }));
         }
         let (query, projection) =
-            build_viewport_query(&ds, &req).map_err(viewport_query_build_error_of)?;
+            build_viewport_query(ds, req).map_err(viewport_query_build_error_of)?;
         // Validated **before** any handle is minted (SKP-V0.md §1): `ViewportCrsMismatch`,
         // `ViewportCrsUnidentifiable` and `NoCoveringBbox` return here, synchronously, with their
         // full typed text — never as a data-plane terminal frame arriving after a round trip.
@@ -1261,9 +1338,9 @@ impl SkpHost {
         // opened. Every ticket that belonged to it is cancelled through the existing cancel. This
         // is the engine's own descriptor pre-check, never the watcher, so it always passes
         // `ObservedChange`, as §2b's single emission point assigns to the pre-check.
-        let (stream, cancel) = open_engine_stream(&ds, &query, projection.as_ref()).map_err(|e| {
+        let (stream, cancel) = open_engine_stream(ds, &query, projection.as_ref()).map_err(|e| {
             if matches!(e, EngineError::SourceChanged { .. }) {
-                self.end_generation(&dataset_name);
+                self.end_generation(dataset_name);
             }
             error_of(&e)
         })?;
@@ -1274,7 +1351,7 @@ impl SkpHost {
         let (source, source_cancel) = wrap_for_data_plane(
             stream,
             cancel,
-            dataset_name.clone(),
+            dataset_name.to_string(),
             ds.connections().config().reuses_connections(),
             None,
             // §13 C rule (ii)'s reader: the producer records what its post-check found before it
@@ -1283,21 +1360,29 @@ impl SkpHost {
             // terminal while the change still ends the session.
             Some(self.invalidator.clone()),
         );
-        let handle = self.tickets.mint(&dataset_name, source, source_cancel)?;
+        self.tickets.mint(dataset_name, source, source_cancel)
+    }
+
+    /// `viewport_query`'s attribute step: the ticket attributed to the live generation, or, on
+    /// `false`, cancelled and refused.
+    fn viewport_query_attribute(
+        &self,
+        handle: StreamHandle,
+        dataset_name: &str,
+    ) -> Result<ViewportQueryResponse, SkpError> {
         // Boundary 4's "every batch is attributed to a generation via its ticket", held entirely
-        // kernel-side. `attribute_ticket` returning false means the generation ended between the
-        // check above and this line — a real race, and the honest answer is to cancel the ticket
-        // just minted rather than hand out one that is already dead.
-        if !self.generations.attribute_ticket(handle.as_str(), &dataset_name) {
+        // kernel-side. `attribute_ticket` returning false means the generation ended, or the close
+        // began, between the check above and this line — a real race, and the honest answer is to
+        // cancel the ticket just minted rather than hand out one that is already dead.
+        if !self.generations.attribute_ticket(handle.as_str(), dataset_name) {
             self.tickets.cancel(handle.as_str());
             // The actual reason this generation ended, never hardcoded to `SourceChanged`
-            // (block-on-sight 3) — falls back to `ObservedChange` only in the practically
-            // unreachable case that `attribute_ticket` failed for a reason `ended_reason` cannot
-            // yet see (the two reads are not one atomic step).
-            let reason = self
-                .generations
-                .ended_reason(&dataset_name)
-                .unwrap_or(SessionEndReason::ObservedChange);
+            // (block-on-sight 3). No recorded end means the close had begun, or had already
+            // forgotten the name: the answer is `skp.unknown_dataset`, what the same query issued
+            // after the close gets (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2b, §2d).
+            let Some(reason) = self.generations.ended_reason(dataset_name) else {
+                return Err(SkpError::unknown_dataset(dataset_name));
+            };
             // Phase-2 delta 9: one detail string per reason, so the coverage-lost one carries its
             // own `[P6 placeholder]` mark (§7; §8 item 9) — the observed-change one is the existing,
             // already-unmarked sentence this arm has always used for that reason.
@@ -1363,13 +1448,23 @@ impl SkpHost {
         // `forget_dataset`.
         let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
         drop(removed_watch);
-        // Invalidate/cancel every ticket first, then remove the name — never the other order,
-        // which would let a `viewport_query` racing this call mint a ticket against a name already
-        // gone from the catalog.
+        // The order is `begin_close`, `cancel_all_for_dataset`, `forget_dataset`, `catalog.remove`
+        // (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2c), and this call linearizes at
+        // `begin_close` (§2d): a racing `viewport_query` answers what it would answer wholly before
+        // or wholly after this call.
+        // 1. `begin_close` first: from here a racing query's live check answers `NotOpen` and its
+        //    attribution refuses, so no ticket minted after this point stays redeemable. The live
+        //    generation stays until `forget_dataset`, so an end recorded during the close (a
+        //    `Pending` ticket's drop below) still finds it and emits (ADR-035 Decision 3).
+        self.generations.begin_close(name);
+        // 2. Then cancel every ticket minted before it.
         let cancelled_streams = self.tickets.cancel_all_for_dataset(name);
-        // The generation dies with the open it was minted for; its ticket attributions go with it,
-        // so the mapping does not grow for the life of the process.
+        // 3. The generation dies with the open it was minted for; its end mark, its closing mark
+        //    and its ticket attributions go with it, so the mapping does not grow for the life of
+        //    the process. An end reaching `invalidate` after this finds no live generation and
+        //    writes nothing.
         self.generations.forget_dataset(name);
+        // 4. The name goes last, so a query resolving it before this line still meets steps 1-3.
         self.catalog.remove(name);
         Ok(CloseDatasetResponse { cancelled_streams })
     }
@@ -2921,7 +3016,7 @@ mod ticket_drop_under_lock_regression {
     /// real `open_dataset` (so this test knows the exact reference the event must carry), and one
     /// `Pending` ticket for that same dataset wired through the **host's own** invalidator — so
     /// closing the dataset drops it via `cancel_all_for_dataset` (`SkpHost::close_dataset`, the
-    /// removal-then-cancel-then-forget order documented on that method), strictly before
+    /// removal, `begin_close`, cancel, forget order documented on that method), strictly before
     /// `forget_dataset` runs.
     ///
     /// RECORDED MUTATION (registered, §4's own text for E7: "look the reference up after the
@@ -2949,6 +3044,11 @@ mod ticket_drop_under_lock_regression {
     /// drop reaches `GenerationRegistry::invalidate`, `forget_dataset` has already removed the live
     /// entry, so `invalidate` returns `None`, `end_generation` returns `0`, and no event is ever
     /// enqueued — this test's `recv_timeout` timed out.
+    ///
+    /// RECORDED EXTRA (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §4): make `begin_close`
+    /// remove `live`. Applied at `12ccbeb`, run and reverted: this mutation FAILED this test by
+    /// timeout, `one event, carrying the open's own reference: Timeout` — the drop's end found no
+    /// live generation, so nothing emitted.
     #[test]
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
         let path = fixture("close-drop-path");
@@ -3119,6 +3219,375 @@ mod ticket_drop_under_lock_regression {
         assert!(
             rx.recv_timeout(Duration::from_millis(200)).is_err(),
             "an open refused before admission must never emit"
+        );
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §4 — the close races, in-crate beside E5,
+    // E7, E8 and K15 (§4 (iv)). Every interleaving runs on the test's own thread: no sleep, no
+    // spawned thread and no timeout (§4's determinism rule; §8 item 1).
+
+    /// The racing call a [`RunOnDrop`] runs from its own `Drop`.
+    type RacingCall = Box<dyn FnOnce() + Send>;
+
+    /// §4 (ii): a test-owned `BatchSource`, minted through the real `StreamRegistry::mint`, whose
+    /// `Drop` runs one racing call synchronously. A retired `Pending` ticket is dropped only after
+    /// the registry's guard is released (entry 132), so the call runs with no lock held — the point
+    /// E7 uses, taken as a deterministic instant, not as a claim that product code runs a query
+    /// there.
+    struct RunOnDrop(Option<RacingCall>);
+    impl BatchSource for RunOnDrop {
+        fn next_into(
+            &mut self,
+            _out: &mut Vec<u8>,
+        ) -> Option<Result<spatial_data_plane::transport::BatchMeta, String>> {
+            None
+        }
+    }
+    impl Drop for RunOnDrop {
+        fn drop(&mut self) {
+            if let Some(call) = self.0.take() {
+                call();
+            }
+        }
+    }
+
+    /// The drop-point ticket's no-op `SourceCancel` (§4 (ii)).
+    struct NoopCancel;
+    impl SourceCancel for NoopCancel {
+        fn cancel(&self) {}
+    }
+
+    /// A real `open_dataset` through `host`, so the test holds the reference `open_dataset` returned.
+    fn open_through(
+        host: &SkpHost,
+        path: &std::path::Path,
+        cancel_key: &str,
+    ) -> OpenDatasetResponse {
+        host.open_dataset(OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: path.display().to_string(),
+            cancel_key: cancel_key.to_string(),
+            crs_assertion: None,
+            identity: None,
+        })
+        .expect("open")
+    }
+
+    fn unrestricted_query(dataset: DatasetHandle) -> ViewportQueryRequest {
+        ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+            columns: None,
+        }
+    }
+
+    fn close(host: &SkpHost, dataset: DatasetHandle) {
+        host.close_dataset(CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+        })
+        .expect("close");
+    }
+
+    /// CR2 (S2). A whole `viewport_query(A)` runs inside `close_dataset(A)`, after
+    /// `cancel_all_for_dataset` releases its guard and before `forget_dataset`: the drop point of a
+    /// retired `Pending` ticket (§4 (ii)).
+    ///
+    /// TEST-FIRST (P1): at `051c56f`, before the change, this test FAILED at its `expect_err`
+    /// (`a viewport_query inside close_dataset is refused: ViewportQueryResponse { .. }`).
+    ///
+    /// REGISTERED MUTATION: delete `live_generation`'s `closing` check, so the query mints, fails
+    /// attribution and cancels itself, and the ticket map has two entries. Applied at `12ccbeb`,
+    /// run and reverted: `a_viewport_query_inside_close_is_refused_before_it_builds_or_mints`
+    /// FAILED on `only the drop-point ticket: the racing query minted none` (`left: 2`).
+    ///
+    /// RECORDED EXTRA: move `begin_close` after `cancel_all_for_dataset`. The query returns `Ok`,
+    /// and this test fails at `expect_err`. Applied at `12ccbeb`, run and reverted: this mutation
+    /// FAILED this test at its `expect_err` (`ViewportQueryResponse { .. }` returned).
+    #[test]
+    fn a_viewport_query_inside_close_is_refused_before_it_builds_or_mints() {
+        let path = fixture("cr2-query-inside-close");
+        let (tx, rx) = super::session_end_channel();
+        let host = Arc::new(SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        ));
+        let open = open_through(&host, &path, "cr2");
+        let name = open.dataset.as_str().to_string();
+
+        let answer: Arc<Mutex<Option<Result<ViewportQueryResponse, SkpError>>>> =
+            Arc::new(Mutex::new(None));
+        let racing = RunOnDrop(Some(Box::new({
+            let host = host.clone();
+            let answer = answer.clone();
+            let dataset = open.dataset.clone();
+            move || {
+                let result = host.viewport_query(unrestricted_query(dataset));
+                *answer.lock().unwrap_or_else(|e| e.into_inner()) = Some(result);
+            }
+        })));
+        host.tickets()
+            .mint(&name, Box::new(racing), Arc::new(NoopCancel))
+            .expect("mint the drop-point ticket");
+
+        close(&host, open.dataset);
+
+        let answer = answer
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
+            .expect("the drop point ran the racing query inside close_dataset");
+        let refused = answer.expect_err("a viewport_query inside close_dataset is refused");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert_eq!(
+                map.len(),
+                1,
+                "only the drop-point ticket: the racing query minted none"
+            );
+        }
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert!(
+                !st.live.contains_key(&name),
+                "no live generation for the closed name"
+            );
+            assert!(
+                !st.invalidated.contains_key(&name),
+                "no invalidated mark for the closed name"
+            );
+            assert!(
+                st.tickets.values().all(|(d, _, _)| d != &name),
+                "no attribution for it"
+            );
+            assert!(
+                st.dead_tickets.values().all(|(d, _, _)| d != &name),
+                "no dead ticket for it"
+            );
+        }
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "a query refused inside close emits nothing"
+        );
+    }
+
+    /// CR4 (S4). `close_dataset(A)` completes, then an end reaches `invalidate` for A — a post-check
+    /// finding delivered after the close, through the data plane's own `end_generation`.
+    ///
+    /// TEST-FIRST (P1): at `051c56f`, before the change, this test FAILED on
+    /// `a post-close end writes no invalidated mark`.
+    ///
+    /// REGISTERED MUTATION: restore marking before the live lookup in `invalidate`. Applied at
+    /// `12ccbeb`, run and reverted: `an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing`
+    /// FAILED on `a post-close end writes no invalidated mark`.
+    #[test]
+    fn an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing() {
+        let path = fixture("cr4-end-after-close");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "cr4");
+        let name = open.dataset.as_str().to_string();
+
+        close(&host, open.dataset);
+
+        let cancelled = host
+            .invalidator
+            .end_generation(&name, SessionEndReason::ObservedChange);
+        assert_eq!(cancelled, 0, "an end after close cancels nothing");
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert!(
+                st.invalidated.is_empty(),
+                "a post-close end writes no invalidated mark"
+            );
+            assert!(st.live.is_empty(), "a post-close end mints no generation");
+            assert!(
+                st.dead_tickets.is_empty(),
+                "a post-close end records no dead ticket"
+            );
+        }
+        assert_eq!(host.generations().ended_reason(&name), None);
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "a post-close end emits nothing"
+        );
+    }
+
+    /// CR1 (S1) — **round 23, item 2's test**: the unheld-reference path does not exist. A query on
+    /// A resolves; `close_dataset(A)` completes; the query continues through its own mint and
+    /// attribute steps (§4 (i): `viewport_query`'s product steps with a real close between them).
+    /// B is a second open that stays open.
+    ///
+    /// REGISTERED MUTATION: restore a minting arm in `live_generation` (a `SessionRef::mint()`
+    /// generation on the no-mark, not-closing arm, returning `Ok`), so the call returns `Ok` and
+    /// this test fails at its `expect_err`. Applied at `12ccbeb`, run and reverted:
+    /// `the_close_race_mints_no_generation_so_no_unheld_reference_exists` FAILED at its
+    /// `expect_err` (`the query continuing after the close is refused: ViewportQueryResponse { .. }`).
+    #[test]
+    fn the_close_race_mints_no_generation_so_no_unheld_reference_exists() {
+        let path_a = fixture("cr1-closed");
+        let path_b = fixture("cr1-stays-open");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open_a = open_through(&host, &path_a, "cr1-a");
+        let open_b = open_through(&host, &path_b, "cr1-b");
+
+        let req = unrestricted_query(open_a.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("A resolves while it is open");
+
+        close(&host, open_a.dataset);
+
+        let refused = host
+            .viewport_query_mint(&name, &ds, &req)
+            .and_then(|handle| host.viewport_query_attribute(handle, &name))
+            .expect_err("the query continuing after the close is refused");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+
+        {
+            let generations = host.generations();
+            let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
+            assert_eq!(st.live.len(), 1, "the only live generation is B's");
+            assert_eq!(
+                st.live
+                    .get(open_b.dataset.as_str())
+                    .map(|(_, session)| session),
+                Some(&open_b.session),
+                "B's generation carries the reference open_dataset returned for B"
+            );
+        }
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert!(map.is_empty(), "the refused query minted no ticket");
+        }
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "the close race emits nothing"
+        );
+    }
+
+    /// CR3 (S3). A ticket minted before `close_dataset(A)` and attributed after it: the close
+    /// cancelled it, and the query's attribution refuses with the close's answer, not a
+    /// session-ended code no end was recorded for (watcher gate-1 advisory 7).
+    ///
+    /// REGISTERED MUTATION: restore `unwrap_or(SessionEndReason::ObservedChange)` on the
+    /// attribute step's `ended_reason`, so the code is `engine.source_changed`. Applied at
+    /// `12ccbeb`, run and reverted:
+    /// `a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset` FAILED on
+    /// its code assertion (`left: "engine.source_changed"`).
+    #[test]
+    fn a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset() {
+        let path = fixture("cr3-mint-before-close");
+        let (tx, rx) = super::session_end_channel();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
+        let open = open_through(&host, &path, "cr3");
+
+        let req = unrestricted_query(open.dataset.clone());
+        let (name, ds) = host
+            .viewport_query_resolve(&req)
+            .expect("A resolves while it is open");
+        let handle = host
+            .viewport_query_mint(&name, &ds, &req)
+            .expect("A mints while it is open");
+        let ticket = handle.as_str().to_string();
+
+        close(&host, open.dataset);
+
+        let refused = host
+            .viewport_query_attribute(handle, &name)
+            .expect_err("an attribution after the close refuses");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+        {
+            let map = host
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            assert!(
+                matches!(
+                    map.get(&ticket),
+                    Some(TicketState::CancelledBeforeRedeem { .. })
+                ),
+                "the close cancelled the ticket before any redemption"
+            );
+        }
+        assert!(
+            matches!(rx.try_recv(), Err(mpsc::TryRecvError::Empty)),
+            "no end was recorded, so nothing emits"
+        );
+    }
+
+    /// R2 (S5). The registry alone: while a dataset is closing, a new attribution refuses and the
+    /// live check answers `NotOpen`, but an end recorded during the close still finds the live
+    /// generation and carries its reference (ADR-035 Decision 3's close-time routes); after
+    /// `forget_dataset` no closing mark remains.
+    ///
+    /// REGISTERED MUTATION: delete `attribute_ticket`'s `closing` check, so attribution returns
+    /// `true`. Applied at `12ccbeb`, run and reverted:
+    /// `a_closing_dataset_refuses_new_attributions_but_still_records_an_end` FAILED on
+    /// `a closing dataset attributes nothing`.
+    #[test]
+    fn a_closing_dataset_refuses_new_attributions_but_still_records_an_end() {
+        let g = GenerationRegistry::new();
+        let session = SessionRef::mint();
+        g.mint_for_open("ds_a", session.clone());
+
+        g.begin_close("ds_a");
+
+        assert!(
+            !g.attribute_ticket("sh_a1", "ds_a"),
+            "a closing dataset attributes nothing"
+        );
+        assert_eq!(g.live_generation("ds_a"), Err(NotLive::NotOpen));
+        let report = g
+            .invalidate("ds_a", SessionEndReason::ObservedChange)
+            .expect("an end during the close still finds the live generation");
+        assert_eq!(report.session, session);
+        assert_eq!(
+            g.live_generation("ds_a"),
+            Err(NotLive::Ended(SessionEndReason::ObservedChange))
+        );
+
+        g.forget_dataset("ds_a");
+        let st = g.inner.lock().unwrap_or_else(|e| e.into_inner());
+        assert!(
+            st.closing.is_empty(),
+            "forget_dataset clears the closing mark"
         );
     }
 }

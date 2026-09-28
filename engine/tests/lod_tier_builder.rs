@@ -457,6 +457,7 @@ fn drop_tiers(set: &TierSet) {
 // `the_rejected_simplifier_is_the_one_that_emits_invalid_polygons` below, which runs both
 // simplifiers over the same five features and asserts the divergence directly.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn tier_build_emits_zero_invalid_polygons() {
     let l = ladder();
     assert_eq!(l.set.tiers().len(), LOD_TIER_COUNT, "the ladder is the declared three tiers");
@@ -526,6 +527,7 @@ fn the_rejected_simplifier_is_the_one_that_emits_invalid_polygons() {
 // row group and the assertion names the first missing id ("tier 1 is missing 13 source id(s), first
 // 8191").
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn tier_preserves_identity_for_every_row() {
     let l = ladder();
     let source: std::collections::BTreeSet<u64> = l.source_ids.iter().copied().collect();
@@ -564,6 +566,7 @@ fn tier_preserves_identity_for_every_row() {
 // engine_opens_its_own_tier fails: `Dataset::open` returns `EngineError::GeoMetadata` at R-P2
 // (`dataset.rs:684-686`) and the test fails by name on "open the tier this engine wrote".
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn engine_opens_its_own_tier() {
     let l = ladder();
     let source = Dataset::open(polygons_100k()).expect("open the source");
@@ -597,6 +600,7 @@ fn engine_opens_its_own_tier() {
 // altered tier is admitted, `was_rebuilt()` is false, and the disclosed set size is the record's
 // stale byte count rather than the bytes on disk.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size() {
     let dir = scratch_dir("reuse-restat");
     let path = dir.join("source.parquet");
@@ -659,6 +663,7 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
 // features measures the residual": `max_single_feature_simplify()` is `None`, because the builder
 // reports a maximum only when one was actually taken.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn a_build_measures_the_largest_single_feature_simplify() {
     let dir = scratch_dir("residual-instrument");
     let path = dir.join("source.parquet");
@@ -696,6 +701,7 @@ fn a_build_measures_the_largest_single_feature_simplify() {
 }
 
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn tier_is_not_served_when_source_content_hash_changes() {
     let dir = scratch_dir("t4");
     let path = dir.join("source.parquet");
@@ -755,6 +761,7 @@ fn tier_is_not_served_when_source_content_hash_changes() {
 // constructors where the type's contract allows two and reports "a constructor of TierBatch that
 // does not derive its label from a witness".
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     let dir = scratch_dir("t5");
     let path = dir.join("source.parquet");
@@ -832,6 +839,7 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 // tier_writer_does_not_reorder_rows fails naming the first differing row ("tier 1 row 0: source id
 // 0, tier id 8191").
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn tier_writer_does_not_reorder_rows() {
     let l = ladder();
     for outcome in l.set.tiers() {
@@ -926,6 +934,7 @@ fn crs_without_a_declared_linear_unit_is_refused() {
 // source's byte size is written and returned `Ok` instead of `engine.lod_tier_larger_than_source`,
 // and the assertion fails by name.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn tier_larger_than_its_source_is_refused() {
     let dir = scratch_dir("t10");
     let path = dir.join("nothing-to-simplify.parquet");
@@ -982,6 +991,7 @@ fn tier_larger_than_its_source_is_refused() {
 // the file still decodes, which is the point: a byte-order defect is silent until something
 // compares coordinates.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn wkb_writer_round_trips_the_first_tier_written() {
     let l = ladder();
     let first = l.set.tiers().first().expect("the ladder has a first tier").record();
@@ -1036,6 +1046,7 @@ fn wkb_writer_round_trips_the_first_tier_written() {
 // name on "tiers.json discloses the set's own size": `manifest["set"]` is `null`, so the assertion
 // that `set.bytes` equals the sum of the tier files' bytes cannot be made at all.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn the_built_sets_size_is_disclosed_with_the_tiers() {
     let l = ladder();
     let manifest: serde_json::Value =

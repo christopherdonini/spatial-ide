@@ -347,3 +347,134 @@ Notation: v = the query's steps (resolve, live check, mint, attribute); c = the 
 ## §10. Amendments
 
 *Opens empty and is append-only. The classes are `docs/PREREGISTRATION-TEMPLATE.md` §10's classes 1–7 and its Round 25 additions, classes 8–9.*
+
+### Amendment 1 — 2026-09-27, post-result: scope addition on round 23, item 2: the H3 sites B1 added to `main`, at the merge of `main`
+
+Class 9 (scope addition). This amendment was written after the branch's merge of `main` (`ecc4a37`, main at `0ada14f`) was seen failing eight kernel tests. That run fired invalidator I2 as written. This is not a record correction. It touches §2e item 1's site list, H3's reach and §9's suites. It invalidates no §0–§6 result, but those results stand for `4682866` only. No code of the addition comes before this amendment: at `ecc4a37`, neither file named in 1.2 carries a `mint_for_open` line.
+
+**1.1 Rule and cause.**
+- Round 23, item 2 carries the addition: once this piece lands, the unheld path is unreachable.
+- The eight tests in 1.2 call `viewport_query` on a name that is only in the catalog, with no `open_dataset` and no `mint_for_open`. That is H3's shape.
+- On `main` they pass only because `live_or_mint` mints on demand, which is the path §2a item 2 deletes.
+- B1 added them (#134, merged at `d6ec85a`), after this form's §0 grep at `3b421d5`.
+- Round 22, item 1 is this node's authority, but it is not the rule that removes the path. Round 26, item 3 governs the merge, not this work.
+
+**1.2 §2 shape.** One commit after this amendment's commit, touching only `kernel/tests/skp_projection.rs` and `kernel/tests/wire_bytes_invariant.rs`.
+- Each site gets one line, placed directly after its `SkpHost::new(..)` statement.
+- The line takes the form §2e item 1's sites already use in `kernel/tests/skp_admission.rs` at `ecc4a37`: `host.generations().mint_for_open(<handle>.as_str(), spatial_skp::v0::SessionRef::mint());`. This is a declared form, not a quote. The full path means no `use` line changes.
+- `<handle>` is the name the site passed to `catalog.open`.
+
+| Site | Test served | `<handle>` |
+|---|---|---|
+| `skp_projection.rs`, the test body | `a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns` | `req.dataset` |
+| the same | `every_projection_refusal_is_synchronous_typed_and_pre_mint` | `handle` |
+| the same | `every_projection_refusal_matches_its_committed_error_fixture_shape` | `handle` |
+| the same | `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte` | `handle` |
+| the same | `columns_empty_list_is_refused_never_read_as_null` | `handle` |
+| the same | `a_projection_composes_with_a_filter` | `handle` |
+| `skp_projection.rs`, the nested `check_one` | `describe_projectable_agrees_with_viewport_query_admission_for_every_column` (all four `check_one` calls) | `handle` |
+| `wire_bytes_invariant.rs`, the helper `collect_frames_via_ticket` | `wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too` (both calls) | `handle` |
+
+That makes eight lines, and each line serves exactly one test.
+
+**1.3 §4.**
+- No new test is added. The eight are changed tests whose assertions do not change. Each one's mutation is its line removed.
+- The run at `ecc4a37` observes that mutation, test-first. That tree is the addition commit's tree minus exactly these eight lines, and each line serves one test, so that run is each site's mutation applied. No separate per-site mutation is owed after the lines land.
+- The custodian ran `cargo test -p spatial-kernel --no-fail-fast` there. It failed these eight tests, each with `skp.unknown_dataset`, and no other test.
+- The observation of record is that run, filed by the custodian under `state/consults/` with the command, `ecc4a37`, the eight names and each failure's message. The reviewer re-makes it at the gate (round 25, item 2 (c)).
+- The observation is not written into the tests' doc comments, which 1.4 keeps unchanged. A `verify-mutation` run is not its observation.
+
+**1.4 §5.**
+- **P6.** At the addition commit, every kernel target passes. The only change in outcome from `ecc4a37` is these eight tests.
+- **Declared unchanged (added to §5's list).** In both files, every line except the eight:
+  - every assertion and every `expect`/`expect_err` message;
+  - every fixture, handle, `use` line, test name and comment.
+- **B1's recorded-mutation comments.** Their rooted `kernel/tests/...` line cites shift under the insertions. This is disclosed and not corrected here: it is B1's test text, so the correction goes to the custodian as a proposed node.
+- **Invalidators (stop and return to the architect):**
+  - a site needs more than its one line;
+  - any assertion or message must change;
+  - the `ecc4a37` failing set, re-made, is not exactly these eight;
+  - any kernel test fails at the addition commit.
+
+**1.5 Disclosed, not part of the addition.** The merge `ecc4a37` carries `main`'s code into §2b's split, and adds no behaviour:
+- In `kernel/src/skp.rs`, the mint step takes `build_viewport_query`'s `(query, projection)` as `main` does at `d6ec85a`, maps its refusals with `viewport_query_build_error_of`, and passes `projection.as_ref()` to `open_engine_stream`.
+- `ticket_drop_under_lock_regression`'s `unrestricted_query` gains `columns: None`.
+- The mint step's order stays §2b's and `main`'s: the live check, then `build_viewport_query`'s refusals, then the stream.
+
+The closing record names the merge by commit only.
+
+**1.6 §7.** §7 is not edited. Its command runs against the merge-base that the closing amendment names. The class-8 row (round 25, item 2 (a)) carries the line figure and the file figure, each with its commit.
+
+**1.7 §8 and §9.**
+- **Block-on-sight 18.** The addition commit touches any line of the two files other than the eight, or touches any other file. Or a line's form differs from 1.2's.
+- **Block-on-sight 19.** The merge resolution reorders the mint step away from 1.5's order. Or a projection refusal becomes reachable after `open_engine_stream`.
+- **Reviewer:**
+  - the addition commit's diff (eight insertions, two files);
+  - the `ecc4a37` observation, re-made by name;
+  - the kernel suite at the head.
+- **Architect:** 1.5 checked against `viewport_query` on `main` at `d6ec85a` and against §2b; 1.1's rule.
+- **Suites.** §9's suites run at the head after the addition. The results at `4682866` do not speak for the merged tree.
+
+### Amendment 2 — 2026-09-27, post-result: the closing record
+
+References and hashes only (the record cap, `state/directives/2026-09-18-record-cap.md`). Each row names its template class. Each hash is `git show <rev>:<path> | sed -n '<a>,<b>p' | sha256sum` over LF bytes, at a commit on main. The merge-base is `0ada14f` and the head is `76f92ba`. Written by the custodian.
+
+1. **Class 1, the commits.**
+   - `051c56f`, `8c4724c`, `12ccbeb` and `4682866`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:9-13 @ d4245fe sha256:60b5b15157c1377f8fcebee630b4b63df022630c28f6c4dd5a7d9ba447b2c737`.
+   - `ecc4a37` is the merge of main (Amendment 1, 1.5). `e2528ea` is Amendment 1. `76f92ba` carries Amendment 1, 1.2's eight lines.
+2. **Class 1, H1–H3 and P3.**
+   - At `4682866`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:15-19 @ d4245fe sha256:ebffcf8440359bf0d30b3d17f02596d86880c9fdea6d743be0c629243a967a74`.
+   - P3 at the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:260-275 @ bfb436d sha256:8253eaa06cd958ad8c555e852e4cff65cfbc2e3fccc983059b5418fa2eba2678`.
+3. **Class 1, P1, and P2 at `4682866`:** `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:21-23 @ d4245fe sha256:abf455e0b7ab910aafdb868ee24371d004b64f95debd46f15225e5e23f5ffa9a`.
+4. **Class 1, §4's mutations.** Each test's doc comment at `4682866` is its observation of record: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:25-41 @ d4245fe sha256:8e3b5090ebfc615d08b466430d105cc15a59d6b39d22306ef4904257dec84e7f`.
+5. **Class 1, Amendment 1's eight (its 1.3).**
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:1 @ 188b1f8 sha256:97848af56b5c7921376a859af0318bc3cf90ee5cba11fce5145d676f75502aee`
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:90-97 @ 188b1f8 sha256:2012cd8d60616c0992401831b0b376911d745621ab37884911c6e88825896d84`
+   - `state/consults/2026-09-27-kernel-close-races-merge-observation.md:102-134 @ 188b1f8 sha256:2b4477e08cbb61c8e25f4270d1fdd37d7ddac4056f698e29b4c8868f90da7830`
+6. **Class 1, P2 and P6 at the head, and §9's suites.**
+   - The run: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:1 @ bfb436d sha256:5d98894b75f871c0b32ca81ab8efc9fe7a83a55ab764798e9ac6bd8f27abc3b5`.
+   - The workspace: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:5-172 @ bfb436d sha256:1e30813239911359f174454d91271a606dde64345b3ed38906d5139d487fe2c9`.
+   - Clippy: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:174-178 @ bfb436d sha256:6f2664378ed6f460bd45896deb425ca9d34bd15e634a15495b6ed13b61ea46c1`.
+   - The shell: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:180-192 @ bfb436d sha256:b4955ca9c0d8f84b0098b26ed6934af181469c01e5732f0ef3b27225c611e48b`.
+   - The scripts: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:194-200 @ bfb436d sha256:c4762a5724be202fb90d49bbc5ecbc44b98884f01b81030bbbf81a8d198d39d7`.
+   - The verify tools, with their commits (P5 included): `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:202-210 @ bfb436d sha256:fd21c9b5bc4b741a6db514c62558db770522571dc008aad5bc184b9d3b0ef019`.
+   - Branch CI at `76f92ba`: Product CI Rust workspace `36351798704`, Product CI shell `36351798972` and Governance CI `36351798729`, all success.
+7. **Class 1, P4.**
+   - At the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:277-283 @ bfb436d sha256:08bb710ae5defe7328d4a5ff34f166412d40b5987da73022a23e3be41ade5e31`.
+   - At `4682866`, with the suites there: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:44-51 @ d4245fe sha256:25204a88b43ed265da8406685465c6904f299f577594cda0e3620c4a09bad1dc`.
+8. **Class 8, budget overrun, §7 not edited** (round 25, item 2 (a)).
+   - Declared: ≤ 600 lines and ≤ 10 files. Final: 786 lines and 11 files, by §7's command at the head: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:212-228 @ bfb436d sha256:ca1297d5cf8e0cdc737ed39beec8b06ff98588698d58a5892a68cbd963ef24d3`.
+   - At `4682866` against `3b421d5`: `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:53 @ d4245fe sha256:a4c8b8a739865444dbb3dda527fc1e967eba23ca44bf930ec6fbc9186cba8175`.
+   - Reason: the in-crate tests of §4 (iv) exceed §7's estimate, and Amendment 1 adds two files.
+9. **Class 1, the deviations from §4's changed-test list and §2e:** `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:55-60 @ d4245fe sha256:c5eadf494c9c4004b1d549cc62ea735ed370b60eed985003b69f82010d300f89`.
+10. **Class 1, §9's `cargo fmt --check` on the changed files.**
+    - `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:46 @ d4245fe sha256:81d4c8ced6a86eba7c04ed5b46956a7cee134b41c4658917ca93cab937495ea9` is superseded by `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:230-258 @ bfb436d sha256:4be31d1b352af93077a5acfe817f0c786458e53f78dd4e2f5d513cc35846b073`.
+    - It is clean neither at `0ada14f` nor at the head. No file's hunk count rises.
+    - The branch lines that a hunk rewrites include the one-line form declared by §2e item 1 and Amendment 1, 1.2. No formatting pass is made in this piece.
+11. **Class 1, routed and not done.** Two items go to PLAN node `kernel-close-races-followups` (proposed):
+    - `state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md:62-64 @ d4245fe sha256:b3899e2d9fa44d7539e2614513d03c10932212e99116f2cf198461408d95ee97`;
+    - the shifted cites in B1's comments (Amendment 1, 1.4).
+
+### Amendment 3 — 2026-09-27, post-result: record correction after gate 1 (record round 1 of 2)
+
+Made after gate 1's reports were seen: `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-architect.md` (F1) and `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-reviewer.md` (D1, D2). No code changes. Written by the custodian.
+
+1. **Class 1, a withdrawal row** (the reviewer's D1; round 15 (g)). §2e item 4 claims the test this piece deletes, and that claim binds once the node is done. The row below withdraws it:
+
+- withdrawn-test: `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md:173` @ d4245feaef1ed94a4947bd2b2d1df9cc91a1a610 sha256:031d3e86cedbb35e45658ea006e0e23160d1291eb40c403ab5b91b92d68c8242; ruling: round 23, item 2; carrier: round 23, item 2
+
+2. **Class 3, Amendment 2 row 10's second bullet** (the architect's F1, the reviewer's D2; the record cap, item (1)).
+   - The defect: that bullet restates the table that row 10's first bullet pins.
+   - The corrected reference is that pin: `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md:230-258 @ bfb436d sha256:4be31d1b352af93077a5acfe817f0c786458e53f78dd4e2f5d513cc35846b073`.
+   - The proof is the span itself.
+
+**Superseded:** Amendment 2, row 10, second bullet → row 10's first-bullet reference.
+
+### Amendment 4 — 2026-09-27, post-result: record correction after the record-round-1 read (record round 2 of 2)
+
+1. **Class 3, Amendment 3 row 1's second clause** (the architect's G2-1; round 15 (c)).
+   - The defect: that clause states `verify-test-claims`' behaviour without the tool's commit.
+   - The corrected reference: `state/consults/gates/2026-09-27-kernel-generation-close-races-gate1-reviewer.md:15 @ 68d261e sha256:4a539e0ce83c497dc979014413b50ea7441d7d40efb235e9e691e1e8714c8fab`.
+   - The proof is the span itself.
+
+**Superseded:** Amendment 3, row 1, second clause → that pin.

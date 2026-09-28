@@ -469,3 +469,45 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **W2-D:** session_01DTkTGu46c5SUiZ8LkL6yp4, launched at 17:04Z after batch 2's reading, with $202 before. It works on cloud/wave2-D from b3bf4f6. The prompt was assembled by script from the sighted brief and hash-checked on the clipboard and in the composer (cdb4363c…); it is filed at `state/cloud/wave2/W2-D-prompt.md`.
   - **CI:** ec2b1c3's Governance CI is green, which repairs d04bb80's red.
   - **Worktrees:** the scratch worktrees `C:/dev/wt/wave2-b` and `wave2-c` hold the reproductions. `wave2-c` carries the custodian's untracked C-1 scratch test.
+- 2026-09-28T17:40Z - **The 2026-09-28 S1 batch** (verbatim, `state/directives/2026-09-28-after-wave-s1-batch.md`; received as pasted text in the human's message). The human's ruling and Fable's after-wave batch confirm C-1, B-1 and A2-1 as S1, and each becomes a cut as ruled.
+  - **C-1:** `watcher-first-read-on-watch-thread`, in progress on `cut/watcher-first-read`.
+    - Its five-line form is 0d2576c, and main carries it byte-identical.
+    - The ruling places it "next, immediately after close-races' current step". Close-races' current step is #136, waiting on the human's click, so C-1 is the custodian's next work now. It is recorded as order 7 in the engine lane.
+    - P0 is the custodian's Windows reproduction. "Hits every session in the dev app" stays inferred until the human reports an observation.
+  - **B-1:** `filter-bind-admission-implicit-coercions` waits behind C-1, at order 9. Its P0 table and its proposal go to Fable before any code, and its code starts only after #139 merges.
+  - **#139's merge:** `wave2-b-admission-campaign-merge`, at order 8, is in progress now, in parallel. It gets a tests-only reviewer pass and the ignore-reason commit on cloud/wave2-B, then waits for the human's click.
+  - **A2-1:** `b1-close-nul-column-names`, at order 10, part of B1's close. Its dependency on C-1 records the ruling's sequence.
+  - **S2 proposed nodes, written now that the audit batches are complete:** `b1-session-ordinal-refusal-wording` (A1-1), `shell-admit-describe-failure-closes-open` and `kernel-close-dataset-unknown-keeps-openrecord` (W2-C's two observations).
+- 2026-09-28T17:45Z - **Wave 2 closed: W2-D reported, the balance is $201, and the wave cost $17 in total. C-1's worker and #139's reviewer are dispatched.**
+  - **W2-D** (filed at `state/cloud/wave2/W2-D.md`): 0 findings, as an implementation item.
+    - Linux went from 742 passed, 14 failed and 40 ignored at b3bf4f6 to 742 passed, 0 failed and 54 ignored at 7128874, with no backslash-named file.
+    - It opened PR #140, which carries the form, the custodian's D-2 and D-3, and the worker's D-1 and D-4. By §21c's rule that is 26 lines across 8 files, against ≤ 60 and 8.
+    - $202 to $201, so a delta of $1.
+    - The after-PR steps (Windows CI, the Windows `--list` identity check, one reviewer gate, the human's click) queue behind C-1.
+  - **The wave:** $218 to $201 is $17, from batch deltas of $8, $8 and $1. The ledger's totals line is in `state/cloud/wave2.md`.
+  - **C-1** (`cut/watcher-first-read`): a high-effort worker implements the form at 0d2576c, building on the shared target.
+  - **#139:** the custodian's ignore-reason commit is ebd7962 on cloud/wave2-B. The tests-only reviewer pass is running, with its local builds kept to the worktree's own target.
+- 2026-09-28T18:10Z - **#139's tests-only reviewer pass: PASS at ebd7962.** The report is filed byte-identical at `state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md`, and gate-log holds 266 records.
+  - **The findings:**
+    - the test is deterministic: seeds are constants, and three local runs produced hash-identical output;
+    - there is no new dependency;
+    - the CI runtime is 13.35 s on windows-latest (run 36459294374), and 25–27 s locally;
+    - the ignore reason names B-1 and the fix node.
+  - **Intake:** the reviewer's non-blocking notes 2 and 3 are added to B-1's node as input for its preregistration. They are an unasserted stream-error leak in the campaign, and INT64 overflow leaking file-derived values.
+  - **Next:** #139 is marked ready for review. It waits on the human's click, which must come before B-1's fix code starts.
+- 2026-09-28T18:45Z - **C-1's worker stopped on the size bound, the class-6 amendment was recorded, and the piece is under full gating.** The worker's report is filed at `state/consults/2026-09-28-watcher-first-read-worker-report-1.md`.
+  - **The fix works.**
+    - Each watch thread issues its own first read, behind a one-shot handshake.
+    - The regression test failed with `CoverageLost` on the pre-fix code, and passes with the fix.
+    - The handshake test's mutation failed by name.
+    - The workspace suite passes.
+  - **The size:** 416 lines across 2 files, against a declared ≤ 150. Most of it is step 6's spawn logic moving ahead of steps 4 and 5, which the line diff counts as deletions plus insertions. Every diff algorithm gives the same 416.
+  - **Line endings:** the worker's edit had rewritten `engine/src/watch.rs` as CRLF throughout. The custodian normalised it to LF, re-ran the two new tests and `source_watch_windows` (all passed), and committed at 0f68413.
+  - **The amendment:** 0c7be38 appends class 6 (Scope not edited). Under §21b's mid-piece clause the single-gate route closes, the short form stays, and the architect and reviewer gates run in parallel at 0c7be38.
+  - **Minutes (AUTONOMY §10):** the piece started at 17:39Z, against a budget of 120 minutes and a stop at 240.
+- 2026-09-28T18:50Z - **The human merged #136, #137, #139 and #140** (merge commits 74a9b24, 81be9b6, bb23bb3, ab8ec3d).
+  - **Marked done, each with `{pr: N}` in this commit:** `kernel-generation-close-races` (#136), `test-claims-landedness-bound` (#137) and `wave2-b-admission-campaign-merge` (#139). #137's rule is now live: a non-done node whose evidence names a merged PR fails verify:plan.
+  - **`suites-and-toolchain-beyond-windows` stays in progress.** #140 merged before its after-PR steps had run: the Windows `--list` identity check (default and ignored lists, bb23bb3 against ab8ec3d) and the reviewer gate over the whole PR. Both run now, after the merge, once C-1's gates free the machine. The node is marked done only if both pass.
+  - **CI:** 74a9b24 is green on all four workflows, and 81be9b6's Governance run is green. bb23bb3's product runs were cancelled, superseded by ab8ec3d. At ab8ec3d, shell and Pages are green, and the Rust workspace run was still going.
+  - **Now open to the human:** `adr-035-close-races-note`, ADR-035's appended note on what close-races made historical. It is the human's ruling, a red line.
+  - **Unblocked for the custodian:** `kernel-close-races-followups`. B-1's fix code may start once its P0 and proposal have been to Fable, because #139, its regression net, is merged.

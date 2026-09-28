@@ -4,7 +4,7 @@
 //! **Tier 1 — injected-signal ordering and emission**, `engine/SOURCE-WATCHER-PREREGISTRATION.md`
 //! §4: deterministic, through a test-implemented `SourceWatchArm`/`ArmedWatch`
 //! (`injected_watch::InjectedArm`) rather than the real Windows adapter — proves the kernel's own
-//! ordering rules (K1–K14) and Amendment 1's invariant, never OS timing.
+//! ordering rules (K1–K14), never OS timing.
 
 mod injected_watch;
 mod watch_support;
@@ -16,7 +16,7 @@ use spatial_data_plane::transport::SourceFactory;
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::WatchSignal;
 use spatial_kernel::skp::{
-    error_of, session_end_channel, SessionEndReason, SkpHost, StreamRegistry,
+    error_of, session_end_channel, SkpHost, StreamRegistry,
 };
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
@@ -374,9 +374,12 @@ fn a_loss_after_admission_ends_the_generation_and_describe_still_says_watching()
 // K10 — no batch from an ended generation is admitted and nothing reloads
 // -------------------------------------------------------------------------------------------
 
-/// RECORDED MUTATION: in `GenerationRegistry::live_or_mint`, mint a fresh generation over an
-/// invalidated one instead of returning `Err(reason)` (drop the `invalidated` check). Expected
-/// failure: the retry `viewport_query` below succeeds — a "reload" that must never happen.
+/// RECORDED MUTATION: in `GenerationRegistry::live_generation`, mint a fresh generation over an
+/// invalidated one instead of returning `Err(NotLive::Ended(reason))` (insert it and answer `Ok`).
+/// Expected failure: the retry `viewport_query` below succeeds — a "reload" that must never happen.
+/// Applied at `12ccbeb`, run and reverted:
+/// `no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads` FAILED on
+/// `no new ticket is ever minted against an ended generation`.
 #[test]
 fn no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
     let arm = injected_watch::InjectedArm::new();
@@ -473,36 +476,4 @@ fn two_opens_of_one_file_return_distinct_session_references() {
     let open1 = host.open_dataset(open_req(&path, "k14-a")).expect("open 1");
     let open2 = host.open_dataset(open_req(&path, "k14-b")).expect("open 2");
     assert_ne!(open1.session, open2.session);
-}
-
-// -------------------------------------------------------------------------------------------
-// Amendment 1 — a generation minted by live_or_mint carries an unheld reference and its end emits
-// -------------------------------------------------------------------------------------------
-
-/// RECORDED MUTATION: in `GenerationRegistry::live_or_mint`'s minting branch, reuse one shared,
-/// process-wide `SessionRef` for every call instead of `SessionRef::mint()` fresh each time.
-/// Expected failure: this test's distinctness assertion fails.
-#[test]
-fn a_generation_minted_by_live_or_mint_carries_an_unheld_reference_and_its_end_emits() {
-    let generations = spatial_kernel::skp::GenerationRegistry::new();
-    let tickets = StreamRegistry::new();
-    let (tx, rx) = session_end_channel();
-    let invalidator = spatial_kernel::skp::SessionInvalidator::new(generations.clone(), tickets, tx);
-
-    // Two datasets neither `open_dataset` ever minted for: `live_or_mint` gives each its own
-    // generation, carrying a `SessionRef` no client ever held.
-    let g1 = generations.live_or_mint("ds_never_opened_1").expect("a session for a stranger dataset");
-    let g2 = generations.live_or_mint("ds_never_opened_2").expect("a session for another stranger");
-    assert_ne!(g1, g2, "distinct generations, at least");
-
-    let report1 = generations
-        .invalidate("ds_never_opened_1", SessionEndReason::ObservedChange)
-        .expect("a live generation to end");
-    assert!(report1.session.as_str().starts_with("sr_"), "an unheld reference is still a real one");
-
-    // The end still emits — the reference being unheld does not make the enqueue skip.
-    invalidator.end_generation("ds_never_opened_2", SessionEndReason::ObservedChange);
-    let event = rx.recv_timeout(std::time::Duration::from_secs(5)).expect("the end emits");
-    assert!(event.session.as_str().starts_with("sr_"));
-    assert_ne!(report1.session, event.session, "distinct unheld references, not one shared value");
 }
