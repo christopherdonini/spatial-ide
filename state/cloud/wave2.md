@@ -10,3 +10,5 @@ WAVE2_BASELINE=d4245feaef1ed94a4947bd2b2d1df9cc91a1a610   The first main commit 
 |---|---|---|---|---|---|---|---|---|---|
 | W2-A1 (batch 1: W2-A1+W2-A2) | session_01LHoWubHb9NiPTCCwntMZEk (prompt: `state/cloud/wave2/W2-A1-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-28T07:01:52Z | running | $218 of $250 left (Cloud session credits, claude.ai Settings → Usage, read by the custodian in the browser about 07:00Z; wave 1's last reading was $219 at 2026-09-26T01:16Z) | pending | pending | pending | pending |
 | W2-A2 (batch 1: W2-A1+W2-A2) | session_0147PbB9MZp1TvcDQSvkckey (prompt: `state/cloud/wave2/W2-A2-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-28T07:02:40Z | running | (the pair's reading, above) | (the pair's reading) | (the pair's delta) | pending | pending |
+
+**Readings between launch and after:** $213 of $250 left, read by the human at about 07:08Z (expiry shown: 8:59 GMT+1, November 5). This is a mid-batch reading: at 07:09Z W2-A1 still showed two running tasks, building. It is not the batch's after-figure, which is read once both sessions have ended.
