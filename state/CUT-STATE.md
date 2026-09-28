@@ -469,3 +469,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **W2-D:** session_01DTkTGu46c5SUiZ8LkL6yp4, launched at 17:04Z after batch 2's reading, with $202 before. It works on cloud/wave2-D from b3bf4f6. The prompt was assembled by script from the sighted brief and hash-checked on the clipboard and in the composer (cdb4363c…); it is filed at `state/cloud/wave2/W2-D-prompt.md`.
   - **CI:** ec2b1c3's Governance CI is green, which repairs d04bb80's red.
   - **Worktrees:** the scratch worktrees `C:/dev/wt/wave2-b` and `wave2-c` hold the reproductions. `wave2-c` carries the custodian's untracked C-1 scratch test.
+- 2026-09-28T17:40Z - **The 2026-09-28 S1 batch** (verbatim, `state/directives/2026-09-28-after-wave-s1-batch.md`; received as pasted text in the human's message). The human's ruling and Fable's after-wave batch confirm C-1, B-1 and A2-1 as S1, and each becomes a cut as ruled.
+  - **C-1:** `watcher-first-read-on-watch-thread`, in progress on `cut/watcher-first-read`.
+    - Its five-line form is 0d2576c, and main carries it byte-identical.
+    - The ruling places it "next, immediately after close-races' current step". Close-races' current step is #136, waiting on the human's click, so C-1 is the custodian's next work now. It is recorded as order 7 in the engine lane.
+    - P0 is the custodian's Windows reproduction. "Hits every session in the dev app" stays inferred until the human reports an observation.
+  - **B-1:** `filter-bind-admission-implicit-coercions` waits behind C-1, at order 9. Its P0 table and its proposal go to Fable before any code, and its code starts only after #139 merges.
+  - **#139's merge:** `wave2-b-admission-campaign-merge`, at order 8, is in progress now, in parallel. It gets a tests-only reviewer pass and the ignore-reason commit on cloud/wave2-B, then waits for the human's click.
+  - **A2-1:** `b1-close-nul-column-names`, at order 10, part of B1's close. Its dependency on C-1 records the ruling's sequence.
+  - **S2 proposed nodes, written now that the audit batches are complete:** `b1-session-ordinal-refusal-wording` (A1-1), `shell-admit-describe-failure-closes-open` and `kernel-close-dataset-unknown-keeps-openrecord` (W2-C's two observations).

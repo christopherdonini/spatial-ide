@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ef236de56bb2c9ff8951e17ff4f929956b5ed1f5108126e9165f8c8df270125e`) at `2026-09-28T16:57:45.923Z`.
+Generated from `PLAN.yaml` (sha256 `181575a243f3b997603b61496c3492930243b42ea2fbd4ccfc84bf656216bc40`) at `2026-09-28T17:32:41.293Z`.
 
 ## 1. Next
 
@@ -18,6 +18,8 @@ Generated from `PLAN.yaml` (sha256 `ef236de56bb2c9ff8951e17ff4f929956b5ed1f51081
 
 ## 4. Blocked on dependencies
 
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) — blocked by: watcher-first-read-on-watch-thread
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — blocked by: watcher-first-read-on-watch-thread
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -27,6 +29,8 @@ Generated from `PLAN.yaml` (sha256 `ef236de56bb2c9ff8951e17ff4f929956b5ed1f51081
 
 ## 5. In progress
 
+- **watcher-first-read-on-watch-thread** — The watcher's first read on the watch thread -- a healthy session no longer ends as coverage-lost when the thread that armed its watch exits (wave-2 C-1, S1) — evidence: branch `cut/watcher-first-read`
+- **wave2-b-admission-campaign-merge** — PR #139 -- wave 2 B's filter-admission property campaign merged as B-1's regression net (a tests-only reviewer pass and the ignore reason, then the human's click) — evidence: branch `cloud/wave2-B`
 - **kernel-generation-close-races** — The kernel generation close races -- a post-close invalidate leaving a stray invalidated entry; a viewport_query racing close_dataset minting a generation for a closed name (ADR-035 drafter notes) — evidence: branch `cut/kernel-generation-close-races`
 - **test-claims-landedness-bound** — verify:test-claims -- bound the advisory window: a planned claim must become binding when its piece lands, not only when the plan says done (architect finding 4, 2026-09-16) — evidence: branch `governance/test-claims-landedness-bound`
 - **suites-and-toolchain-beyond-windows** — The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4) — evidence: branch `cloud/wave2-D`
@@ -74,6 +78,9 @@ Generated from `PLAN.yaml` (sha256 `ef236de56bb2c9ff8951e17ff4f929956b5ed1f51081
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (phase `prototype`) — never queued until placed
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (phase `prototype`) — never queued until placed
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
+- **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
+- **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
+- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

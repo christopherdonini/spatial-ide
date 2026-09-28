@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-28T16:57:46.012Z",
+  "generated_at": "2026-09-28T17:32:41.388Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
     "failures": [
-      "node \"suites-and-toolchain-beyond-windows\": gate \"engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md\" is not a tracked file",
+      "node \"watcher-first-read-on-watch-thread\": gate \"engine/WATCHER-FIRST-READ-PREREGISTRATION.md\" is not a tracked file",
       "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
       "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
     ]
@@ -13,12 +13,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 57229246464,
+        "bytes": 56856784896,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 368052707328,
+        "bytes": 368095678464,
         "total": 500090007552
       }
     ]
