@@ -93,6 +93,7 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
     catalog.open(handle.as_str(), &path, None).expect("open dataset");
     let tickets = StreamRegistry::new();
     let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -247,7 +248,7 @@ fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
 /// `REAL_SOURCE_COVERAGE_LOST_PRE_CHECK_REFUSAL_DETAIL` in
 /// `frontends/shell/src/testUtils/terminalShapes.ts`.
 ///
-/// Mutation: in `SkpHost::viewport_query`'s `live_or_mint` error arm, map every reason
+/// Mutation: in `SkpHost::viewport_query`'s `live_generation` error arm, map every reason
 /// (`SessionEndReason::CoverageLost` included) to `EngineError::SourceChanged` (block-on-sight 3's
 /// own violation). Applied, run and reverted on this branch: `assertion `left == right` failed:
 /// refused: the source file changed while it was open (...)`, `left: "engine.source_changed"`,

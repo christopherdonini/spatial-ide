@@ -254,6 +254,7 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
     let tickets = StreamRegistry::new();
     let host =
         SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {

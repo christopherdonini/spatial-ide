@@ -20,9 +20,12 @@
 //!
 //! **`SOURCE-WATCHER-PREREGISTRATION.md` §2b's Amendment 1 update.** `mint_for_open` now takes the
 //! `SessionRef` `open_dataset` mints (here, a bare `SessionRef::mint()` — these tests exercise the
-//! registry directly, never `open_dataset`); `live_or_mint` answers `Result<u64, SessionEndReason>`
-//! (`Err` where it used to answer `None`); `invalidate` takes a reason and answers
+//! registry directly, never `open_dataset`); `invalidate` takes a reason and answers
 //! `Option<EndReport>` (`.tickets` where it used to answer a bare `Vec<String>` directly).
+//!
+//! **`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2a.** `live_or_mint` is replaced by
+//! `live_generation`, which never mints and answers `Result<u64, NotLive>`: a dataset that
+//! `mint_for_open` never minted for answers `NotLive::NotOpen`.
 
 mod watch_support;
 
@@ -32,61 +35,83 @@ use std::sync::Arc;
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_kernel::skp::{
-    session_end_channel, GenerationRegistry, SessionEndReason, SkpHost, StreamRegistry,
+    session_end_channel, GenerationRegistry, NotLive, SessionEndReason, SkpHost, StreamRegistry,
     TicketLiveness,
 };
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
 use spatial_skp::v0::{DatasetHandle, SessionRef, StreamHandle, ViewportQueryRequest, SKP_VERSION};
 
-/// Mutation recorded in-source (`scripts/plan/verify-mutation.mjs`): deleting the
-/// `st.invalidated.get(dataset)` guard in `live_or_mint` makes an invalidated dataset resurrect
-/// and this test fail.
+/// Mutation recorded in-source (`scripts/plan/verify-mutation.mjs`): CR1's, restoring a minting
+/// arm in `live_generation` (a `SessionRef::mint()` generation on the no-mark, not-closing arm,
+/// returning `Ok`), makes a never-opened name answer `Ok` and this test fail. Applied at
+/// `12ccbeb`, run and reverted: `the_state_is_three_valued_never_minted_is_not_invalidated`
+/// FAILED on its first `NotOpen` assertion (`left: Ok(1)`).
 #[test]
 fn the_state_is_three_valued_never_minted_is_not_invalidated() {
     let g = GenerationRegistry::new();
 
-    // 1. Never minted: `live_or_mint` gives it a session rather than refusing. A dataset this
-    //    registry has never heard of has NOT been observed to change, and telling its caller its
-    //    file changed would be a false statement about the file (`docs/01` principle 8).
-    let first = g.live_or_mint("ds_never_seen").expect("a dataset with no history gets a session");
-
-    // 2. Live: the same call is idempotent and returns the same generation.
-    assert_eq!(g.live_or_mint("ds_never_seen"), Ok(first), "an existing session is not re-minted");
-
-    // 3. Invalidated: and only now does it refuse.
-    g.invalidate("ds_never_seen", SessionEndReason::ObservedChange);
+    // 1. Never minted: `live_generation` answers `NotOpen`, repeatedly, and mints nothing. A
+    //    dataset this registry has never heard of has NOT been observed to change, and telling its
+    //    caller its file changed would be a false statement about the file (`docs/01` principle 8).
+    for _ in 0..3 {
+        assert_eq!(g.live_generation("ds_never_seen"), Err(NotLive::NotOpen));
+    }
     assert!(
-        g.live_or_mint("ds_never_seen").is_err(),
-        "only an invalidated dataset refuses — that is the whole point of the third state"
+        !g.attribute_ticket("sh_1", "ds_never_seen"),
+        "nothing was minted to attribute to"
+    );
+
+    // 2. Live: only `mint_for_open` mints, and the same call then answers that generation.
+    let first = g.mint_for_open("ds_never_seen", SessionRef::mint());
+    assert_eq!(
+        g.live_generation("ds_never_seen"),
+        Ok(first),
+        "an existing session is not re-minted"
+    );
+
+    // 3. Invalidated: and only now does it refuse by the reason.
+    g.invalidate("ds_never_seen", SessionEndReason::ObservedChange);
+    assert_eq!(
+        g.live_generation("ds_never_seen"),
+        Err(NotLive::Ended(SessionEndReason::ObservedChange)),
+        "only an invalidated dataset refuses by the reason — that is the whole point of the third state"
     );
 }
 
 /// Mutation recorded in-source: removing `st.invalidated.remove(dataset)` from `mint_for_open`
-/// leaves a reopened dataset permanently refused and this test fails.
+/// leaves a reopened dataset permanently refused and this test fails. Applied at `12ccbeb`, run
+/// and reverted: `a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is`
+/// FAILED on `boundary 4's refusals say 'until reopen'; this is the reopen`.
 #[test]
 fn a_fresh_open_clears_an_earlier_invalidation_because_that_is_what_reopening_is() {
     let g = GenerationRegistry::new();
     let before = g.mint_for_open("ds_a", SessionRef::mint());
     g.invalidate("ds_a", SessionEndReason::ObservedChange);
-    assert!(g.live_or_mint("ds_a").is_err());
+    assert!(g.live_generation("ds_a").is_err());
 
     let after = g.mint_for_open("ds_a", SessionRef::mint());
     assert_ne!(after, before, "a reopen mints a new generation, never reuses the ended one");
     assert!(
-        g.live_or_mint("ds_a").is_ok(),
+        g.live_generation("ds_a").is_ok(),
         "boundary 4's refusals say 'until reopen'; this is the reopen"
     );
 }
 
-/// Mutation recorded in-source: making `live_or_mint` mint over an invalidated entry (dropping its
-/// early `return Err(reason)`) resurrects a dead session and this test fails.
+/// Mutation recorded in-source: making `live_generation` mint over an invalidated entry (its early
+/// `return Err(NotLive::Ended(reason))` replaced by a fresh generation inserted and `Ok`)
+/// resurrects a dead session and this test fails. Applied at `12ccbeb`, run and reverted:
+/// `live_generation_never_resurrects_an_invalidated_generation` FAILED on
+/// `repeated asking must not eventually succeed`.
 #[test]
-fn live_or_mint_never_resurrects_an_invalidated_generation() {
+fn live_generation_never_resurrects_an_invalidated_generation() {
     let g = GenerationRegistry::new();
     g.mint_for_open("ds_a", SessionRef::mint());
     g.invalidate("ds_a", SessionEndReason::ObservedChange);
     for _ in 0..5 {
-        assert!(g.live_or_mint("ds_a").is_err(), "repeated asking must not eventually succeed");
+        assert!(
+            g.live_generation("ds_a").is_err(),
+            "repeated asking must not eventually succeed"
+        );
     }
 }
 
@@ -131,7 +156,7 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     // dataset's changed source says nothing about another's. Its ticket survives the prune that
     // swept `ds_a`'s, which is the observable form of "untouched".
     assert_eq!(g.attributed_ticket_count(), 1);
-    assert!(g.live_or_mint("ds_b").is_ok());
+    assert!(g.live_generation("ds_b").is_ok());
 
     // Idempotent: invalidating again ends nothing further and returns nothing.
     assert!(
@@ -140,8 +165,13 @@ fn invalidate_returns_exactly_the_tickets_of_the_generation_it_ended() {
     );
 }
 
-/// Mutation recorded in-source: dropping either `st.live.remove` or the `tickets.retain` line in
-/// `forget_dataset` fails one of these assertions.
+/// Mutation recorded in-source: dropping `st.live.remove` in `forget_dataset` fails this test.
+/// Applied at `12ccbeb`, run and reverted:
+/// `forget_dataset_removes_the_generation_the_invalidation_and_every_attribution` FAILED on
+/// `forgetting removes a live generation` (`left: Ok(3)`). Dropping the `tickets.retain` line
+/// instead, applied at `12ccbeb`, run and reverted, fails nothing here: this test PASSED, because
+/// `prune_locked` sweeps an attribution whose generation is no longer live on the next call, so
+/// that line is not observable through this registry's public methods.
 #[test]
 fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution() {
     let g = GenerationRegistry::new();
@@ -152,11 +182,28 @@ fn forget_dataset_removes_the_generation_the_invalidation_and_every_attribution(
     g.forget_dataset("ds_a");
 
     assert_eq!(g.attributed_ticket_count(), 0, "the attribution is gone");
-    // The invalidation is gone too, so the name is a stranger again rather than a refused one —
+    // The invalidation is gone too, so the name is not open rather than a refused one —
     // `close_dataset` then `open_dataset` under the same name is an ordinary reopen.
-    assert!(
-        g.live_or_mint("ds_a").is_ok(),
+    assert_eq!(
+        g.live_generation("ds_a"),
+        Err(NotLive::NotOpen),
         "forgetting clears the invalidation as well as the generation"
+    );
+    let reopened = g.mint_for_open("ds_a", SessionRef::mint());
+    assert_eq!(
+        g.live_generation("ds_a"),
+        Ok(reopened),
+        "a reopen is `mint_for_open`"
+    );
+
+    // A generation still live when the close forgets it: `forget_dataset` itself removes it.
+    g.mint_for_open("ds_b", SessionRef::mint());
+    assert!(g.attribute_ticket("sh_b1", "ds_b"));
+    g.forget_dataset("ds_b");
+    assert_eq!(
+        g.live_generation("ds_b"),
+        Err(NotLive::NotOpen),
+        "forgetting removes a live generation"
     );
 }
 
@@ -301,6 +348,7 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
         watch_support::no_watch_arm(),
         session_end_channel().0,
     );
+    host.generations().mint_for_open(dataset.as_str(), SessionRef::mint());
 
     let request = |d: DatasetHandle| ViewportQueryRequest {
         skp: SKP_VERSION.to_string(),
