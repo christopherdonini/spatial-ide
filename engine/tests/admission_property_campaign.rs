@@ -1275,7 +1275,7 @@ fn point_view(fx: &Fixture, id: u64) -> (Bbox, BTreeSet<u64>) {
 /// terminal frame". Here each one is admitted, and the scan then ends in an `engine.query`
 /// terminal error whose text carries a value read from the file.
 #[test]
-#[ignore]
+#[ignore = "wave-2 finding B-1: asserts the fixed behaviour; PLAN node filter-bind-admission-implicit-coercions removes this ignore in its PR"]
 fn b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data() {
     let fx = fixture();
     let ds = Dataset::open(&fx.path).expect("open");
