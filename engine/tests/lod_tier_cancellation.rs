@@ -128,6 +128,7 @@ fn cancel_from_another_thread<'a>(
 // than the end of the row group already in flight, and the assertion reports an interval outside
 // LOD_CANCEL_OBSERVED_CEILING_MS.
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn cancel_observed_within_the_declared_ceiling() {
     let path = polygons_100k();
     let source = Dataset::open(&path).expect("open polygons-100k");

@@ -367,6 +367,7 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
 /// substring "generation" appears in these LOD tier-set files:` -- followed by this run's own
 /// `tiers.json` path (content-hash-keyed, not fixed text, not reproduced here).
 #[test]
+#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
 fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring() {
     let d = workspace("lod-tiers");
     let path = d.join("parcels.parquet");
