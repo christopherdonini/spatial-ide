@@ -21,7 +21,9 @@ use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::PlatformWatch;
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
-use spatial_skp::v0::{OpenDatasetRequest, ViewportQueryRequest, SKP_VERSION};
+use spatial_skp::v0::{
+    CoverageState, DescribeRequest, OpenDatasetRequest, ViewportQueryRequest, SKP_VERSION,
+};
 
 /// A harness ceiling, never a claim about delivery latency (ADR-018) — long enough that a real
 /// false `CoverageLost` (the bug this test guards against) would already have arrived.
@@ -36,11 +38,15 @@ fn dir(name: &str) -> PathBuf {
     d
 }
 
-/// RECORDED MUTATION: in `engine::watch::windows_watch::arm`, issue each handle's first
+/// RECORDED MUTATION: (1) in `engine::watch::windows_watch::arm`, issue each handle's first
 /// overlapped read on `arm`'s own caller thread again (today's order), instead of inside its
 /// watch thread. Expected failure: `session_ended` below is `Ok(..)` — a real event arrives —
 /// where `Err(_)` (nothing within `BOUNDED_WAIT`) is expected, because the opener thread's exit
 /// cancels the still-caller-owned pending read and the watch reports it as `CoverageLost`.
+/// (2) Vacuity (reviewer gate 1, S2): in `watch_thread`, unconditionally `ready.send(Err(..))`
+/// and return immediately, before ever calling `issue_read` — every arm becomes `ChecksOnly`
+/// instead of `Watching`. Expected failure: the `CoverageState::Watching` assertion below fails,
+/// because `describe`'s coverage state is `ChecksOnly` instead.
 #[test]
 fn the_opener_threads_exit_does_not_end_a_healthy_session() {
     let d = dir("c1");
@@ -77,6 +83,21 @@ fn the_opener_threads_exit_does_not_end_a_healthy_session() {
     let open = std::thread::spawn(move || opener_host.open_dataset(req).expect("open"))
         .join()
         .expect("the opener thread exits cleanly");
+
+    // Positive control (reviewer gate 1, S2): the watch must actually be armed, not merely
+    // absent-of-signal — kernel/tests/source_watch_ordering.rs:237 uses the same check.
+    let described = host
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: open.dataset.clone(),
+        })
+        .expect("describe");
+    assert_eq!(
+        described.coverage.state,
+        CoverageState::Watching,
+        "the watch must actually be armed: {:?}",
+        described.coverage
+    );
 
     let session_ended = rx.recv_timeout(BOUNDED_WAIT);
     assert!(
