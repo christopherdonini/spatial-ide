@@ -419,3 +419,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - Gate 1, the single reviewer, FAILED on B1–B3. The caller-rule fix makes the PR state data that `runVerify` supplies. Gate 2 PASSED, 148 lines across 6 files, and the branch CI is green.
   - After #137 merges, a node's evidence names its PR only in the commit that marks it done (memory: evidence-pr-only-with-done).
   - The ready set is now empty. The queue waits on the human: #135 (ADR-034 acceptance), #136 and #137 (clicks, merge commits), the ADR-035 note, and wave 2's three inputs (the prompts file, the baseline, and the promotion end date with the balance).
+- 2026-09-28T07:05Z - **Wave 2 batch 1 launched (W2-A1 + W2-A2) on the human's confirmation** (`state/directives/2026-09-27-wave2-confirmation.md`, 1573fa7).
+  - **The prompts file:** the source was hashed before copying and matched the human's figures: sha256 d9b3dabfda305ed165b494d3aa7d1e8dd2c3f14a278af53395a29aae864fc16a, 175 lines, 12,434 bytes. The tracked copy is `state/cloud/wave2-prompts.md`, byte for byte under a filing note that names its source only as the human's untracked copy. It went in as PR #138, merged by the custodian under AUTONOMY §9 at 3252198.
+  - **Baseline:** d4245fe, with its four green runs recorded in `state/cloud/wave2.md`. **Promotion:** ends 2026-11-05T07:59Z; the usage page agrees.
+  - **Balance before:** $218 of $250, read by the custodian about 07:00Z.
+  - **Sessions:** W2-A1 is session_01LHoWubHb9NiPTCCwntMZEk (07:01:52Z) and W2-A2 is session_0147PbB9MZp1TvcDQSvkckey (07:02:40Z). Both run Opus 5.5 at Medium on Default, spatial-ide, main. Each prompt was assembled by script and hash-checked on the clipboard and in the composer (1f8a7a59…, 0bd86528…), and each is filed beside its session ID under `state/cloud/wave2/`.
+  - **Still waiting on the human:** #135 (the ADR-034 ruling), #136 and #137 (clicks, merge commits), and the ADR-035 note.

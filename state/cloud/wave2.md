@@ -1,0 +1,12 @@
+# Wave 2 — the custodian's ledger
+
+Kept per `state/cloud/wave2-prompts.md` §2 and §5, in wave 1's recording format (`state/cloud/wave1-prompts.md` §6). The custodian fills it; no worker writes here. Each session's WAVE2 REPORT goes verbatim into `state/cloud/wave2/<item>.md` as immutable evidence, and each launched prompt sits beside its session ID in `state/cloud/wave2/<item>-prompt.md`. Balance before and after is recorded for each launch batch, in whole dollars. Spend is never estimated from tokens. A figure the platform does not show is recorded as "not attributable".
+
+WAVE2_BASELINE=d4245feaef1ed94a4947bd2b2d1df9cc91a1a610   The first main commit at or after d6ec85a (#134) with product CI green on every workflow that ran: Governance https://github.com/christopherdonini/spatial-ide/actions/runs/36349977840 · Rust workspace https://github.com/christopherdonini/spatial-ide/actions/runs/36349977821 · shell https://github.com/christopherdonini/spatial-ide/actions/runs/36349977938 · Pages https://github.com/christopherdonini/spatial-ide/actions/runs/36349977805. At d6ec85a the Rust workspace run was cancelled (https://github.com/christopherdonini/spatial-ide/actions/runs/36349334235). The human confirmed the pick (the 2026-09-27 wave-2 confirmation, item 2).
+
+**The promotion.** It ends 2026-11-04 23:59 PT (2026-11-05T07:59Z), per the human's confirmation (item 3), and the usage page shows the included credit expiring "8:59 AM GMT+1, November 5", which agrees. More than three days remain, so the normal pacing applies (pairs, per the prompts file's §3).
+
+| Item | Session ID | Model | Launched (UTC) | Ended | Balance before | Balance after | Spend (exact \| batch delta) | Findings | Dispositions |
+|---|---|---|---|---|---|---|---|---|---|
+| W2-A1 (batch 1: W2-A1+W2-A2) | session_01LHoWubHb9NiPTCCwntMZEk (prompt: `state/cloud/wave2/W2-A1-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-28T07:01:52Z | running | $218 of $250 left (Cloud session credits, claude.ai Settings → Usage, read by the custodian in the browser about 07:00Z; wave 1's last reading was $219 at 2026-09-26T01:16Z) | pending | pending | pending | pending |
+| W2-A2 (batch 1: W2-A1+W2-A2) | session_0147PbB9MZp1TvcDQSvkckey (prompt: `state/cloud/wave2/W2-A2-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-28T07:02:40Z | running | (the pair's reading, above) | (the pair's reading) | (the pair's delta) | pending | pending |
