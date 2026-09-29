@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T11:05:26.614Z",
+  "generated_at": "2026-09-29T11:18:20.501Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,12 +12,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 72337780736,
+        "bytes": 72330862592,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 365696729088,
+        "bytes": 365617848320,
         "total": 500090007552
       }
     ]
@@ -37,6 +37,13 @@
       "minutes": 20,
       "opened": "2026-09-14",
       "age_days": 15
+    },
+    {
+      "id": "filter-bind-admission-implicit-coercions",
+      "kind": "ruling",
+      "minutes": 25,
+      "opened": "2026-09-28",
+      "age_days": 1
     }
   ],
   "median_opened_to_done": {

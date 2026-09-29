@@ -680,3 +680,19 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **gate-log:** 273 records.
   - **PLAN:** `b1-close-nul-column-names` is in progress with `{branch: docs/a2-1-adr-texts}`.
   - **After the click:** the code branch opens from main, its first commit Amendment 12 (prepared in the custodian's scratchpad, with `<sight>` = 834b2e7), and a worker is dispatched.
+- 2026-09-29T09:50Z - **B-1's full-form preregistration is committed**, before any code, as `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`. It is the gate of `filter-bind-admission-implicit-coercions`.
+  - **The architect drafted it** against the 2026-09-29 sightings. Its consult, which holds the texts for the human to type (T-A to T-D) and the gaps, is `state/consults/2026-09-29-b1-prereg-architect-draft.md`.
+  - **What the form settles:**
+    - the type walk sits in stage 3, after the surrogate prepare, over the admitted tree, with (6ii) declared;
+    - `MAX_INTEGER_LITERAL_DIGITS = 20` and `MAX_DECIMAL_LITERAL_SCALE = 18`;
+    - `/` is declared floating-point division;
+    - the twelfth code carries four fixed reason values;
+    - the campaign's leak assertion excludes exactly the overflow class, naming node `stream-evaluation-failure-fixed-detail`;
+    - tests B-T1 to B-T10, each with its mutation; a 28-row corpus; and 26 block-on-sight items.
+  - **OPEN O-1 to O-6** go to Fable. Three are real gaps in the sighting's premises, and the custodian confirmed the two that can be measured at DuckDB v1.5.5:
+    - **O-1:** `/` divides in REAL when an operand is REAL and none is DOUBLE (P0's plans: `i32 / f32` casts `i32` to FLOAT). "A DOUBLE result" would be false there.
+    - **O-2:** a decimal literal with 21 or more integer digits in a list with a scale-18 literal fails its DECIMAL(38,18) cast (`state/drafts/b1-p0/o2-discriminator.txt`, run at 9c21145). The 20-digit bound must cover a decimal literal's integer part.
+    - **O-3:** reason 1's "can fail" is false for a refusal made only by a bound.
+  - **Also checked:** every test and symbol the form names as existing is in the tree, and F5 (the reproducer already asserts the fixed behaviour) holds.
+  - **PLAN:** the node waits on the human, `needs_human: {kind: ruling, minutes: 25}`, for Fable's O rulings and the human's typed texts (T-A, T-B, T-C). Its recorded status is `blocked`, per the derivation.
+  - **Code starts** only after the typed Note lands on main.

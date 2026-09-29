@@ -1,0 +1,8 @@
+B-1 O-2 discriminator (the architect's drafting consult, gap 2): output of a scratch test, engine/tests/scratch_b1_o2.rs, run at main 9c21145
+(DuckDB v1.5.5) and removed. An in-memory table t(i64 BIGINT) holding the BIGINT extremes and 1; json_serialize_plan's BOUND_CAST targets, then count(*).
+
+O2 | i64 IN (1234567890123456789012345678901234567.5, 0.000000000000000001) | casts ["BOUND_CONSTANT->DECIMAL(38,18)", "BOUND_REF->DECIMAL(38,18)"]  | exec Err("Conversion Error: Casting value \"1234567890123456789012345678901234567.5\" to type DECIMAL(38,18) failed: value is out of range!")
+O2 | i64 IN (123456789012345678901.5, 0.000000000000000001) | casts ["BOUND_CONSTANT->DECIMAL(38,18)", "BOUND_REF->DECIMAL(38,18)"]  | exec Err("Conversion Error: Casting value \"123456789012345678901.5\" to type DECIMAL(38,18) failed: value is out of range!")
+O2 | i64 IN (12345678901234567890.5, 0.000000000000000001) | casts ["BOUND_CONSTANT->DECIMAL(38,18)", "BOUND_REF->DECIMAL(38,18)"]  | exec Ok(0)
+O2 | i64 < 1234567890123456789012345678901234567.5 | casts ["BOUND_REF->DECIMAL(38,1)"]  | exec Ok(3)
+O2 | i64 BETWEEN 0.000000000000000001 AND 123456789012345678901.5 | casts ["BOUND_CONSTANT->DECIMAL(38,18)", "BOUND_REF->DECIMAL(38,18)"]  | exec Err("Conversion Error: Casting value \"123456789012345678901.5\" to type DECIMAL(38,18) failed: value is out of range!")
