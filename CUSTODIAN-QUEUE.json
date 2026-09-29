@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T11:18:20.417Z",
-  "plan_hash": "a50b8e0bd6cf46850774b570ae15f486d387d0c306a52c2ae00d7c59c48308a7",
+  "generated_at": "2026-09-29T11:22:32.481Z",
+  "plan_hash": "f99bd73d2c019cea4c86993627b03c803e6d60ea5ea0246237cd7fdbfa121d93",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -201,14 +201,14 @@
         "minutes": 0
       },
       "evidence": {
-        "branch": "docs/a2-1-adr-texts"
+        "branch": "cut/b1-close-nul-names"
       },
       "dates": {
         "opened": "2026-09-28",
         "done": null
       },
       "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code. Its gate is the draft until Fable's sight moves the text into engine/B1-PROJECTION-PREREGISTRATION.md as Amendment 12, when the gate follows it; the draft's named tests are planned claims meanwhile (verify-test-claims). SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md): OPEN (a)-(g) as recommended, plus section 8 item 34 (U+0000 rendered as a visible escape in every engine message, detail and log line) with a test beside N-1; the human accepted the ADR-021 Note. Route: the ADR-023 amendment and the ADR-021 Note land on main in one docs PR (reviewer and architect gates, the human's click); then the code branch opens with Amendment 12 appended to engine/B1-PROJECTION-PREREGISTRATION.md as its first commit, before any code (a done node's gate binds its claims, so the amendment lands on main with its tests). The draft stays this node's gate until then.",
-      "evidence_label": "branch `docs/a2-1-adr-texts`"
+      "evidence_label": "branch `cut/b1-close-nul-names`"
     }
   ],
   "proposed": [

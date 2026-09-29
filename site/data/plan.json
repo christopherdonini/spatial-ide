@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T11:18:22.279Z",
-  "plan_hash": "a50b8e0bd6cf46850774b570ae15f486d387d0c306a52c2ae00d7c59c48308a7",
+  "generated_at": "2026-09-29T11:22:34.304Z",
+  "plan_hash": "f99bd73d2c019cea4c86993627b03c803e6d60ea5ea0246237cd7fdbfa121d93",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4985,7 +4985,7 @@
       },
       "gate": "state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md",
       "evidence": {
-        "branch": "docs/a2-1-adr-texts"
+        "branch": "cut/b1-close-nul-names"
       },
       "budget_minutes": 180,
       "generation": 1,

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a50b8e0bd6cf46850774b570ae15f486d387d0c306a52c2ae00d7c59c48308a7`) at `2026-09-29T11:18:20.417Z`.
+Generated from `PLAN.yaml` (sha256 `f99bd73d2c019cea4c86993627b03c803e6d60ea5ea0246237cd7fdbfa121d93`) at `2026-09-29T11:22:32.481Z`.
 
 ## 1. Next
 
@@ -28,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `a50b8e0bd6cf46850774b570ae15f486d387d0c306a5
 
 ## 5. In progress
 
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — evidence: branch `docs/a2-1-adr-texts`
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — evidence: branch `cut/b1-close-nul-names`
 
 ## 6. Proposed / unscheduled
 

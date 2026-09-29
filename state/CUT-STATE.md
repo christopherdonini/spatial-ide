@@ -696,3 +696,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Also checked:** every test and symbol the form names as existing is in the tree, and F5 (the reproducer already asserts the fixed behaviour) holds.
   - **PLAN:** the node waits on the human, `needs_human: {kind: ruling, minutes: 25}`, for Fable's O rulings and the human's typed texts (T-A, T-B, T-C). Its recorded status is `blocked`, per the derivation.
   - **Code starts** only after the typed Note lands on main.
+- 2026-09-29T10:10Z - **The human merged #142 (6986b45).** A2-1's ADR texts are on main, and A2-1 proceeds to code.
+  - **Divergence:** it had diverged from the custodian's B-1 form commit (4b2c1d0), which was committed after a fetch but before a fast-forward. It was joined by a signed-off merge, d37fd76, since rebase is not allowed. The checks were re-run on the merged tree before the push.
+  - **The code branch:** `cut/b1-close-nul-names`, cut at d37fd76, in worktree `C:/dev/wt/b1-close-nul-names`. Its first commit is 63b240c: B1's form, Amendment 12 (class 9), before any code, with `<sight>` = 834b2e7, §8 item 34 and N-1a, and the architect gate's notes 1 and 5.
+  - **PLAN:** the node's evidence is `{branch: cut/b1-close-nul-names}`. Its gate stays the draft until the done commit moves it to `engine/B1-PROJECTION-PREREGISTRATION.md`.
+  - **Cleanup:** the docs worktree and local branch are removed. The remote `docs/a2-1-adr-texts` is left for the human.
+  - **Next:** a worker-high implements Amendment 12 on the branch.
