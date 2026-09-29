@@ -36,3 +36,7 @@ item 4); no implementation file changed for that update either.
 This directory's fixtures were updated again in place, to the `skp/0.6` literal at the merge of
 `main` into `cut/b1-engine-projection`, engine/B1-PROJECTION-PREREGISTRATION.md's Amendment 9;
 no implementation file changed for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.7` literal minted on
+`cut/b1-close-nul-names` (§10 Amendment 12, PLAN node `b1-close-nul-column-names`); no
+implementation file changed for that update either.

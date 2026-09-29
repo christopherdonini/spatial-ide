@@ -1,0 +1,8 @@
+{
+  "code": "skp.projection_column_name_not_addressable",
+  "message": "refused: `nu\\u0000l` is not addressable — the resident name `nu\\u0000l` is not addressable: DuckDB's Arrow export reports this position as `nu`, a different name than the one DESCRIBE binds it by, so no SELECT list built from either name can be trusted to reach it",
+  "fields": {
+    "column": "nu\u0000l",
+    "detail": "the resident name `nu\\u0000l` is not addressable: DuckDB's Arrow export reports this position as `nu`, a different name than the one DESCRIBE binds it by, so no SELECT list built from either name can be trusted to reach it"
+  }
+}

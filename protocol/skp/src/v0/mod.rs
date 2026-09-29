@@ -67,4 +67,13 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `2963021` (ahead of the bump, with the Rust fixture test; the TypeScript fixture test followed
 /// in `6cd1764`), `9348a40` and `5358ff6` (`SKP-V0.md` §4 item 13; §8's `skp/0.6` entry lists the
 /// full field set).
-pub const SKP_VERSION: &str = "skp/0.6";
+///
+/// `skp/0.7` (§10 Amendment 12, wave-2 A2-1, `engine/B1-PROJECTION-PREREGISTRATION.md`): one new
+/// `skp.projection_column_name_not_addressable` refusal code, with fields `column` and `detail` —
+/// a column whose bound name does not round-trip through this engine's own admission (DuckDB's
+/// Arrow export truncated it at U+0000, or the name itself carries U+0000) can never be projected,
+/// filtered by name, or serve as geometry or identity. No new request or response member; no new
+/// command; `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields`
+/// both directions, `==` unchanged, both sides' fixtures and the new error fixture updated in the
+/// same commit as the literal bump (`SKP-V0.md` §8's `skp/0.7` entry; §9.5).
+pub const SKP_VERSION: &str = "skp/0.7";
