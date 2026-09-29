@@ -300,9 +300,11 @@ impl fmt::Display for FilterError {
             Self::UnknownColumn { column } => {
                 write!(f, "refused: `{column}` is not a column this dataset carries")
             }
-            Self::ColumnNotFilterable { column, reason } => {
-                write!(f, "refused: `{column}` cannot be filtered on — {reason}")
-            }
+            Self::ColumnNotFilterable { column, reason } => write!(
+                f,
+                "refused: `{}` cannot be filtered on — {reason}",
+                crate::addressability::render_visible_escape(column)
+            ),
             Self::IdentityAliasAmbiguous { column, source_column } => write!(
                 f,
                 "refused: `{column}` is ambiguous — this dataset's identity is mapped from \
@@ -1052,6 +1054,12 @@ fn namespace_admit(
 /// carrying one cannot exist to test this against; this function is what a test calls instead,
 /// exactly as `stream::decode_dictionary_chunk_column` is (E-12's same accepted pattern).
 fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<DataType, FilterError> {
+    // **§10 Amendment 12, 12.1(d); test N-5.** A name that does not round-trip is left out of the
+    // filter namespace before any other check — including the dictionary exclusion below — because
+    // no SQL statement can address it at all, dictionary or not.
+    if let Some(detail) = crate::addressability::not_addressable_reason(field) {
+        return Err(FilterError::ColumnNotFilterable { column: name.to_string(), reason: detail });
+    }
     // **ADR-021 Note 2026-09-24; round 17 item 3.** Refused by name, before the type gate ever
     // runs — the gate now *admits* a dictionary (emitted as its value type), and the filter
     // namespace deliberately does not follow it there.
@@ -1241,6 +1249,23 @@ mod tests {
                 );
             }
             other => panic!("expected ColumnNotFilterable naming the encoding, got {other:?}"),
+        }
+    }
+
+    /// N-5 (§10 Amendment 12, wave-2 A2-1): `a_nul_named_column_is_refused_as_not_filterable_by_
+    /// name` — proven over a **constructed** `Field`, E-19's own pattern: a name carrying U+0000
+    /// left out of the filter namespace before the dictionary check even runs.
+    /// Mutation: the name check is removed from `filterable_column_type` (this arm deleted).
+    #[test]
+    fn a_nul_named_column_is_refused_as_not_filterable_by_name() {
+        let field = Field::new("nu\0l", DataType::Utf8, true);
+        match filterable_column_type("nu\0l", &field) {
+            Err(FilterError::ColumnNotFilterable { column, reason }) => {
+                assert_eq!(column, "nu\0l");
+                assert!(reason.contains("U+0000"), "reason must name U+0000: {reason}");
+                assert!(!reason.contains('\0'), "reason must not carry a raw NUL byte: {reason:?}");
+            }
+            other => panic!("expected ColumnNotFilterable naming U+0000, got {other:?}"),
         }
     }
 

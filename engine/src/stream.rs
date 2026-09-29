@@ -1428,7 +1428,7 @@ impl Dataset {
 
         if let Some(view) = q.bbox.as_ref() {
             let c = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
-                detail: "the file's `geo` metadata declares no covering.bbox".into(),
+                detail: self.no_covering_bbox_detail(""),
             })?;
 
             // ---------------------------------------------------------------------------------

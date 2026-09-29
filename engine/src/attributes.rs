@@ -184,6 +184,12 @@ pub enum ProjectionError {
     /// apart from every other refused type and render each one's own byte-for-byte "today's text"
     /// (O2), without a second, fallible lookup back into the file schema.
     TypeNotAdmitted { column: String, arrow_type: String, source_type: DataType, detail: String },
+    /// The column's own bound name does not round-trip through this engine's admission (§10
+    /// Amendment 12, 12.1(c)): DuckDB's Arrow export truncated it to a different name than the one
+    /// DESCRIBE binds it by, or it carries U+0000 outright. Checked first among the per-column
+    /// rules — before geometry, identity, duplicate and type — because no other rule can be
+    /// trusted to mean what it says about a name nothing can address.
+    ColumnNameNotAddressable { column: String, detail: String },
 }
 
 impl std::fmt::Display for ProjectionError {
@@ -234,6 +240,11 @@ impl std::fmt::Display for ProjectionError {
             Self::TypeNotAdmitted { column, arrow_type, detail, .. } => {
                 write!(f, "refused: `{column}` is {arrow_type} — {detail}")
             }
+            Self::ColumnNameNotAddressable { column, detail } => write!(
+                f,
+                "refused: `{}` is not addressable — {detail}",
+                crate::addressability::render_visible_escape(column)
+            ),
         }
     }
 }
@@ -311,6 +322,12 @@ impl From<ProjectionError> for EngineError {
                     ),
                 };
                 EngineError::AttributeUnpublishable { column: column.clone(), detail }
+            }
+            // **§10 Amendment 12, 12.1(e).** `detail` is already
+            // [`crate::addressability::not_addressable_reason`]'s own rendered text — carried
+            // verbatim, never re-derived, the same discipline `TypeNotAdmitted`'s arm above keeps.
+            ProjectionError::ColumnNameNotAddressable { column, detail } => {
+                EngineError::AttributeUnpublishable { column, detail }
             }
         }
     }
@@ -422,6 +439,9 @@ pub fn admit_projection_column(
     geometry_column: &str,
     identity_column: &str,
 ) -> std::result::Result<Field, ProjectionError> {
+    if let Some(detail) = crate::addressability::not_addressable_reason(field) {
+        return Err(ProjectionError::ColumnNameNotAddressable { column: field.name().clone(), detail });
+    }
     check_geometry_and_identity(field.name().as_str(), geometry_column, identity_column)?;
     type_check(field)
 }
@@ -490,6 +510,15 @@ pub fn admit_projection(
     let mut source_types = Vec::with_capacity(resolved.len());
     for field in resolved {
         let name = field.name().as_str();
+        // **§10 Amendment 12, 12.1(d): the per-column order is now name, geometry, identity,
+        // duplicate, type.** A name that does not round-trip is refused before any other
+        // per-column rule runs, the same order [`admit_projection_column`] applies.
+        if let Some(detail) = crate::addressability::not_addressable_reason(field) {
+            return Err(ProjectionError::ColumnNameNotAddressable {
+                column: name.to_string(),
+                detail,
+            });
+        }
         check_geometry_and_identity(name, geometry_column, identity_column)?;
         if seen.contains(&name) {
             return Err(ProjectionError::ColumnDuplicated { column: name.to_string() });
