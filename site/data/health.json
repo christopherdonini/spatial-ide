@@ -1,15 +1,18 @@
 {
-  "generated_at": "2026-09-28T21:27:37.096Z",
+  "generated_at": "2026-09-29T04:31:37.391Z",
   "source": "the custodian's machine",
   "drift": {
-    "ok": true,
-    "failures": []
+    "ok": false,
+    "failures": [
+      "site drift: C:\\dev\\spatial-ide\\site\\index.html differs from a fresh generation (PLAN.yaml, or verify-quotes.baseline.json's entry count, changed without regenerating site/)",
+      "site drift: C:\\dev\\spatial-ide\\site\\data\\plan.json differs from a fresh generation"
+    ]
   },
   "disk_free": {
     "drives": [
       {
         "drive": "C",
-        "bytes": 71256375296,
+        "bytes": 71219277824,
         "total": 510319915008
       },
       {
@@ -33,12 +36,12 @@
       "kind": "ruling",
       "minutes": 20,
       "opened": "2026-09-14",
-      "age_days": 14
+      "age_days": 15
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 92
+    "n": 93
   },
   "gate_first_pass": {
     "present": true,

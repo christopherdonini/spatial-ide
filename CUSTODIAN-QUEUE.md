@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c61d5b518bcf83d599f5c0`) at `2026-09-28T21:16:26.141Z`.
+Generated from `PLAN.yaml` (sha256 `471c9b822479ddd2306e8bc74ba487a52b8d249621f9a2ea50e0c8c366e82377`) at `2026-09-29T04:31:37.305Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`, order 10, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -18,8 +19,6 @@ Generated from `PLAN.yaml` (sha256 `70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c6
 
 ## 4. Blocked on dependencies
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) — blocked by: watcher-first-read-on-watch-thread
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — blocked by: watcher-first-read-on-watch-thread
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -29,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c6
 
 ## 5. In progress
 
-- **watcher-first-read-on-watch-thread** — The watcher's first read on the watch thread -- a healthy session no longer ends as coverage-lost when the thread that armed its watch exits (wave-2 C-1, S1) — evidence: branch `cut/watcher-first-read`
+- (none)
 
 ## 6. Proposed / unscheduled
 

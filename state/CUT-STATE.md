@@ -573,3 +573,13 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Machine facts:** the health refresh is 003f0d1, and the SESSION-CONTINUITY block above is flushed with tip 003f0d1.
   - **Main:** the working tree is clean apart from `.codex-remote-attachments/`.
   - **Lease:** session 805f1d1e relinquishes it with this commit, and `CUSTODIAN-LEASE` is rewritten to a single `relinquished:` line.
+- 2026-09-29T04:35Z - **Custodian session 2ef99c1a takes the lease; C-1's post-merge step is done, and `watcher-first-read-on-watch-thread` is done with `{pr: 141}`.**
+  - **The handover was verified before the lease was written.** `CUSTODIAN-LEASE` read `relinquished:` (session 805f1d1e), and origin/main's first parent is edbd939, the flush that carries the SESSION-CONTINUITY block.
+  - **The human merged #141** at 2026-09-29T04:21:26Z, as a merge commit: d4972e0, with parents edbd939 and fc3e51f.
+  - **The node is done** with `{pr: 141}` and `dates.done: 2026-09-29`. The queue, the site and the machine health are regenerated.
+  - **Two nodes now derive `ready`,** because their only dependency was C-1: `filter-bind-admission-implicit-coercions` (B-1, order 9, now Next) and `b1-close-nul-column-names` (A2-1, order 10). Their recorded status is changed from `blocked` to `ready` in this commit, as verify:plan's status-agreement check requires.
+    - A2-1 is still sequenced behind B1's close, as the flush's intended sequencing item (4) says. The PLAN does not record that wait as a dependency, and it is not started.
+  - **Checks before the commit:** verify:plan PASS; `queue.mjs --check` and `site.mjs --check` PASS; verify-cites, verify-quotes and verify-test-claims exit 0; the `node --test` scripts suite exits 0.
+  - **Worktrees removed:** `C:/dev/wt/watcher-first-read` (clean at fc3e51f, an ancestor of main) and `C:/dev/wt/wave2-c`. The local branch `cut/watcher-first-read` is deleted; the remote branch is left for the human.
+    - `wave2-c` held only the untracked scratch reproducer that `state/cloud/wave2/W2-C.md` cites, `kernel/tests/scratch_c1_windows.rs`. It was 3610 bytes, sha256 `2ca3eb49fb84ba38ecaf3cb3acb6018a9c8f81fd8593857122e4c79ba256e79e`. It was never committed and is now gone. #141's `kernel/tests/watcher_first_read_windows.rs` is the tracked regression test.
+  - **Next:** B-1's P0, the measured coercion table and the preregistration's proposal, which go to Fable before any code.

@@ -1,9 +1,66 @@
 {
-  "generated_at": "2026-09-28T21:16:26.141Z",
-  "plan_hash": "70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c61d5b518bcf83d599f5c0",
+  "generated_at": "2026-09-29T04:31:37.305Z",
+  "plan_hash": "471c9b822479ddd2306e8bc74ba487a52b8d249621f9a2ea50e0c8c366e82377",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "filter-bind-admission-implicit-coercions",
+    "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
+    "lane": "engine",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 9,
+    "budget_minutes": 180,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-28",
+      "done": null
+    },
+    "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic."
+  },
+  "ready": [
+    {
+      "id": "filter-bind-admission-implicit-coercions",
+      "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-28",
+        "done": null
+      },
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic."
+    },
+    {
+      "id": "b1-close-nul-column-names",
+      "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 10,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-28",
+        "done": null
+      },
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -34,50 +91,6 @@
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "filter-bind-admission-implicit-coercions",
-      "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 9,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic.",
-      "blocked_by": [
-        "watcher-first-read-on-watch-thread"
-      ]
-    },
-    {
-      "id": "b1-close-nul-column-names",
-      "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 10,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md.",
-      "blocked_by": [
-        "watcher-first-read-on-watch-thread"
-      ]
-    },
     {
       "id": "entry-79-b1-consult-items",
       "title": "Entry 79 — three items routed for Brief B stage B1's close",
@@ -211,30 +224,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "watcher-first-read-on-watch-thread",
-      "title": "The watcher's first read on the watch thread -- a healthy session no longer ends as coverage-lost when the thread that armed its watch exits (wave-2 C-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 7,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/watcher-first-read"
-      },
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line places C-1 next, immediately after close-races' current step; Fable's C-1 paragraph gives the direction (every ReadDirectoryChangesW issued by the watch thread that owns the handle, arm keeping its synchronous outcome through a one-shot handshake; no completion port, no keep-alive change), the two regression tests and the short form. Finding and the custodian's Windows reproduction: state/cloud/wave2/W2-C.md. Order 7 in the engine lane records the ruling's placement: the lane's highest open order was geometry-types-beyond-polygons' 6, which waits on the human.",
-      "evidence_label": "branch `cut/watcher-first-read`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

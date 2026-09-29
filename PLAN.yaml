@@ -3026,18 +3026,18 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: in-progress
+    status: done
     order: 7
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: engine/WATCHER-FIRST-READ-PREREGISTRATION.md
-    evidence: {branch: cut/watcher-first-read}
+    evidence: {pr: 141}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line places C-1 next, immediately after close-races' current step; Fable's C-1 paragraph gives the direction (every ReadDirectoryChangesW issued by the watch thread that owns the handle, arm keeping its synchronous outcome through a one-shot handshake; no completion port, no keep-alive change), the two regression tests and the short form. Finding and the custodian's Windows reproduction: state/cloud/wave2/W2-C.md. Order 7 in the engine lane records the ruling's placement: the lane's highest open order was geometry-types-beyond-polygons' 6, which waits on the human."
-    dates: {opened: 2026-09-28, done: null}
+    dates: {opened: 2026-09-28, done: 2026-09-29}
 
   - id: wave2-b-admission-campaign-merge
     title: "PR #139 -- wave 2 B's filter-admission property campaign merged as B-1's regression net (a tests-only reviewer pass and the ignore reason, then the human's click)"
@@ -3062,7 +3062,7 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 9
     depends_on: [watcher-first-read-on-watch-thread]
     needs_human: {kind: none, minutes: 0}
@@ -3080,7 +3080,7 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 10
     depends_on: [watcher-first-read-on-watch-thread]
     needs_human: {kind: none, minutes: 0}

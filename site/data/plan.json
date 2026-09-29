@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-28T21:27:38.818Z",
-  "plan_hash": "70024c76bc5d1ef1a68ec467802af0777f7f03f4a9c61d5b518bcf83d599f5c0",
+  "generated_at": "2026-09-29T04:31:39.078Z",
+  "plan_hash": "471c9b822479ddd2306e8bc74ba487a52b8d249621f9a2ea50e0c8c366e82377",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4892,7 +4892,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 7,
       "depends_on": [],
       "needs_human": {
@@ -4901,7 +4901,7 @@
       },
       "gate": "engine/WATCHER-FIRST-READ-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/watcher-first-read"
+        "pr": 141
       },
       "budget_minutes": 120,
       "generation": 1,
@@ -4910,7 +4910,7 @@
       "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line places C-1 next, immediately after close-races' current step; Fable's C-1 paragraph gives the direction (every ReadDirectoryChangesW issued by the watch thread that owns the handle, arm keeping its synchronous outcome through a one-shot handshake; no completion port, no keep-alive change), the two regression tests and the short form. Finding and the custodian's Windows reproduction: state/cloud/wave2/W2-C.md. Order 7 in the engine lane records the ruling's placement: the lane's highest open order was geometry-types-beyond-polygons' 6, which waits on the human.",
       "dates": {
         "opened": "2026-09-28",
-        "done": null
+        "done": "2026-09-29"
       }
     },
     {
@@ -4946,7 +4946,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 9,
       "depends_on": [
         "watcher-first-read-on-watch-thread"
@@ -4973,7 +4973,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 10,
       "depends_on": [
         "watcher-first-read-on-watch-thread"
