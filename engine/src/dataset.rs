@@ -75,11 +75,15 @@ static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
 /// `open_inner`'s call graph, provable by inspection, and this counter is what makes the other half
 /// — "the verification scan runs" for native and mapped identity — checkable the same way.
 ///
-/// **Its only caller is the test suite, named so the caller-grep can verify this exemption instead
+/// **Its only callers are the test suite, named so the caller-grep can verify this exemption instead
 /// of trusting the words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4, the same
 /// discipline `liveTicketSet.ts`'s `size` getter states for itself):
 /// `admission_instruments.rs`'s
-/// `session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan`.
+/// `session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan`;
+/// `b1_nul_native_id_scan_once.rs`'s
+/// `the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it` (N-10); and
+/// `b1_nul_declared_identity_no_scan.rs`'s
+/// `a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan` (N-11).
 pub fn identity_verification_scans() -> u64 {
     IDENTITY_VERIFICATION_SCANS.load(Ordering::SeqCst)
 }
@@ -529,9 +533,15 @@ impl Dataset {
         // [`Self::covering`], which "returns a usable covering only". The open itself still
         // succeeds; only a bbox query is refused, by [`Self::no_covering_bbox_detail`], synchronously
         // and before any lease.
-        let covering_unusable_reason =
-            geo.covering.as_ref().and_then(covering_not_addressable_reason);
-        let covering = if covering_unusable_reason.is_some() { None } else { geo.covering.clone() };
+        let covering_unusable_reason = geo
+            .covering
+            .as_ref()
+            .and_then(covering_not_addressable_reason);
+        let covering = if covering_unusable_reason.is_some() {
+            None
+        } else {
+            geo.covering.clone()
+        };
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -676,8 +686,9 @@ impl Dataset {
         observer: Option<&dyn index::IndexPhaseObserver>,
     ) -> Result<IndexReport> {
         let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
-            detail: self
-                .no_covering_bbox_detail(", so there is nothing to                      index in this slice"),
+            detail: self.no_covering_bbox_detail(
+                ", so there is nothing to                      index in this slice",
+            ),
         })?;
 
         index::observe(observer, index::IndexPhase::ContentHash);
@@ -1273,7 +1284,12 @@ fn convict_or_record(
 /// segment is free of U+0000 — including where a segment simply does not exist in the file (R-S3,
 /// k3's own case, decided separately by `field_path_exists`).
 fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
-    let paths = [&covering.xmin, &covering.ymin, &covering.xmax, &covering.ymax];
+    let paths = [
+        &covering.xmin,
+        &covering.ymin,
+        &covering.xmax,
+        &covering.ymax,
+    ];
     let hit = paths.iter().find_map(|p| {
         p.0.iter()
             .any(|seg| not_addressable(seg, None).is_some())
@@ -1568,9 +1584,9 @@ fn admit_identity(
         // The ADR-016 candidate list is still *reported* — on the envelope's record rather than in
         // a refusal — so an operator can still declare a mapping (R-I3's own sentence). It is
         // unranked and unpreselected, exactly as it is in the refusal.
-        return Ok(DatasetIdentity::new_session_ordinal(identity::candidate_identity_columns(
-            schema,
-        )));
+        return Ok(DatasetIdentity::new_session_ordinal(
+            identity::candidate_identity_columns(schema),
+        ));
     };
 
     // **12.1(d)'s declared-identity row.** A resolved field whose bound name does not round-trip
@@ -1684,10 +1700,12 @@ fn run_identity_scan(
     let (min, max) = match (row.get::<_, Option<u64>>(2), row.get::<_, Option<u64>>(3)) {
         (Ok(lo), Ok(hi)) => (lo.map(|v| v as i128), hi.map(|v| v as i128)),
         _ => {
-            let lo: Option<i64> =
-                row.get(2).map_err(|e| EngineError::Query(format!("identity min: {e}")))?;
-            let hi: Option<i64> =
-                row.get(3).map_err(|e| EngineError::Query(format!("identity max: {e}")))?;
+            let lo: Option<i64> = row
+                .get(2)
+                .map_err(|e| EngineError::Query(format!("identity min: {e}")))?;
+            let hi: Option<i64> = row
+                .get(3)
+                .map_err(|e| EngineError::Query(format!("identity max: {e}")))?;
             (lo.map(i128::from), hi.map(i128::from))
         }
     };
