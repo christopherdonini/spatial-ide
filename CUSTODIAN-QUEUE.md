@@ -1,17 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `471c9b822479ddd2306e8bc74ba487a52b8d249621f9a2ea50e0c8c366e82377`) at `2026-09-29T04:31:37.305Z`.
+Generated from `PLAN.yaml` (sha256 `cb4c30e49495d1d5a26c35bc3c15df07bb0ac35017703840ce38ca5aadf3c753`) at `2026-09-29T05:06:46.383Z`.
 
 ## 1. Next
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`)
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`)
 
 ## 2. Ready
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
 - **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`, order 10, budget 180 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 40 min)
+
+### sight
+
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (20 min)
 
 ### ruling
 

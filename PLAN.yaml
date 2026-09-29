@@ -3062,17 +3062,17 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: blocked
     order: 9
     depends_on: [watcher-first-read-on-watch-thread]
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: sight, minutes: 20}
     gate: none
     evidence: null
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic."
+    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code."
     dates: {opened: 2026-09-28, done: null}
 
   - id: b1-close-nul-column-names

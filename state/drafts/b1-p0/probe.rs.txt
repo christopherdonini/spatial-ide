@@ -1,0 +1,358 @@
+// SCRATCH — B-1 P0 probe (node filter-bind-admission-implicit-coercions). Kept here as evidence, as
+// text: it ran as an untracked integration test, engine/tests/scratch_b1_p0_coercions.rs, at main
+// 4e46166 (sha256 43708d8b95d0efa4950c2713dd518c7f2b794e7835d11037147c16a12d3a560e for the file as
+// run, whose first two comment lines this note replaces), and was removed after the run. To re-run: copy it to
+// engine/tests/, set B1_P0_OUT to an output .jsonl path, and run
+// `cargo test -p spatial-engine --test scratch_b1_p0_coercions -- --nocapture`. Writes JSON lines to
+// $B1_P0_OUT. The `u_str` literal's escape was mangled in the run (a NUL byte); its row is dropped.
+use duckdb::Connection;
+use serde_json::{json, Value};
+use std::collections::BTreeMap;
+use std::io::Write;
+
+const COLS: &[(&str, &str)] = &[
+    ("zone", "VARCHAR"),
+    ("flag", "BOOLEAN"),
+    ("i8", "TINYINT"),
+    ("i16", "SMALLINT"),
+    ("i32", "INTEGER"),
+    ("i64", "BIGINT"),
+    ("u8", "UTINYINT"),
+    ("u16", "USMALLINT"),
+    ("u32", "UINTEGER"),
+    ("u64", "UBIGINT"),
+    ("f32", "REAL"),
+    ("f64", "DOUBLE"),
+];
+
+const LITS: &[(&str, &str)] = &[
+    ("int", "1"),
+    ("int_neg", "-1"),
+    ("int_300", "300"),
+    ("int_big", "3000000000"),
+    ("int_huge", "9223372036854775808"),
+    ("int_uhuge", "170141183460469231731687303715884105728"),
+    ("dec_s1", "1.5"),
+    ("dec_s9", "0.000000001"),
+    ("dec_s18", "0.000000000000000001"),
+    ("dec_s19", "0.0000000000000000001"),
+    ("dec_s20", "0.00000000000000000001"),
+    ("dec_s27", "0.000000000000000000000000001"),
+    ("dec_s28", "0.0000000000000000000000000001"),
+    ("dec_s29", "0.00000000000000000000000000001"),
+    ("dec_s34", "0.0000000000000000000000000000000001"),
+    ("dec_s36", "0.000000000000000000000000000000000001"),
+    ("dec_0_1", "0.1"),
+    ("dec_2p53", "9007199254740993.0"),
+    ("dbl", "1e3"),
+    ("dbl_long", "1.00000000000000000000000000000000000001"),
+    ("str_x", "'x'"),
+    ("str_5", "'5'"),
+    ("str_true", "'true'"),
+    ("null", "NULL"),
+    ("x_hex", "x'41'"),
+    ("b_bits", "B'01'"),
+    ("e_str", "e'x'"),
+    ("n_str", "N'x'"),
+    ("u_str", "U&'\0041'"),
+    ("dollar", "$$x$$"),
+    ("dec_neg", "-1.5"),
+    ("dbl_neg", "-1e3"),
+];
+
+// Adversarial stored values per column (SQL literal text, cast to the column type on insert).
+fn values(col: &str) -> Vec<&'static str> {
+    match col {
+        "zone" => vec!["'civic'", "'1'", "'-1'", "'1.5'", "'true'", "'t'", "''", "' 7 '", "'300'", "'9223372036854775808'", "'NaN'", "'inf'", "NULL"],
+        "flag" => vec!["true", "false", "NULL"],
+        "i8" => vec!["-128", "-1", "0", "1", "127", "NULL"],
+        "i16" => vec!["-32768", "-1", "0", "1", "32767"],
+        "i32" => vec!["-2147483648", "-1", "0", "1", "16777217", "2147483647"],
+        "i64" => vec!["-9223372036854775808", "-1", "0", "1", "9007199254740993", "9223372036854775807"],
+        "u8" => vec!["0", "1", "255"],
+        "u16" => vec!["0", "1", "65535"],
+        "u32" => vec!["0", "1", "16777217", "4294967295"],
+        "u64" => vec!["0", "1", "9007199254740993", "18446744073709551615"],
+        "f32" => vec!["0.1", "-0.0", "16777216", "3.4028235e38", "'inf'", "'-inf'", "'nan'", "1e10"],
+        "f64" => vec!["0.1", "9007199254740993", "1e308", "'inf'", "'-inf'", "'nan'", "1e20"],
+        _ => unreachable!(),
+    }
+}
+
+fn q1(conn: &Connection, sql: &str) -> Result<String, String> {
+    let mut s = conn.prepare(sql).map_err(|e| e.to_string())?;
+    let mut rows = s.query([]).map_err(|e| e.to_string())?;
+    match rows.next() {
+        Err(e) => Err(e.to_string()),
+        Ok(None) => Err("no row".into()),
+        Ok(Some(r)) => {
+            let v: duckdb::types::Value = r.get(0).map_err(|e| e.to_string())?;
+            Ok(format!("{v:?}"))
+        }
+    }
+}
+
+fn type_str(t: &Value) -> String {
+    let id = t.get("id").and_then(Value::as_str).unwrap_or("?").to_string();
+    if id == "DECIMAL" {
+        let ti = &t["type_info"];
+        format!("DECIMAL({},{})", ti["width"], ti["scale"])
+    } else {
+        id
+    }
+}
+
+fn child_type(c: &Value) -> String {
+    match c.get("expression_class").and_then(Value::as_str) {
+        Some("BOUND_CONSTANT") => type_str(&c["value"]["type"]),
+        _ => c.get("return_type").map(type_str).unwrap_or_else(|| "?".into()),
+    }
+}
+
+fn child_desc(c: &Value) -> (String, String) {
+    let class = c.get("expression_class").and_then(Value::as_str).unwrap_or("?");
+    match class {
+        "BOUND_REF" | "BOUND_COLUMN_REF" => ("column".into(), c["alias"].as_str().unwrap_or("?").into()),
+        "BOUND_CONSTANT" => ("constant".into(), c["value"]["value"].to_string()),
+        "BOUND_FUNCTION" => ("function".into(), c["name"].as_str().unwrap_or("?").into()),
+        other => (other.to_string(), String::new()),
+    }
+}
+
+fn walk_casts(v: &Value, out: &mut Vec<Value>) {
+    match v {
+        Value::Object(m) => {
+            if m.get("expression_class").and_then(Value::as_str) == Some("BOUND_CAST") {
+                let child = &m["child"];
+                let from = child_type(child);
+                let to = type_str(&m["return_type"]);
+                let (kind, desc) = child_desc(child);
+                if from != to {
+                    out.push(json!({"kind": kind, "child": desc, "from": from, "to": to, "try": m["try_cast"]}));
+                }
+            }
+            for (_, x) in m {
+                walk_casts(x, out);
+            }
+        }
+        Value::Array(a) => a.iter().for_each(|x| walk_casts(x, out)),
+        _ => {}
+    }
+}
+
+fn find_filter_exprs(v: &Value, out: &mut Vec<Value>) {
+    match v {
+        Value::Object(m) => {
+            if m.get("type").and_then(Value::as_str) == Some("LOGICAL_FILTER") {
+                if let Some(e) = m.get("expressions") {
+                    out.push(e.clone());
+                }
+            }
+            for (_, x) in m {
+                find_filter_exprs(x, out);
+            }
+        }
+        Value::Array(a) => a.iter().for_each(|x| find_filter_exprs(x, out)),
+        _ => {}
+    }
+}
+
+fn plan_casts(conn: &Connection, pred: &str) -> (Option<String>, Vec<Value>) {
+    let sql = format!("SELECT * FROM t WHERE ({pred})");
+    let mut s = conn.prepare("SELECT json_serialize_plan(CAST(? AS VARCHAR))").unwrap();
+    let j: String = s.query_row([sql], |r| r.get(0)).unwrap();
+    let v: Value = serde_json::from_str(&j).unwrap();
+    if v["error"].as_bool() == Some(true) {
+        return (Some(format!("{}: {}", v["error_type"].as_str().unwrap_or(""), v["error_message"].as_str().unwrap_or(""))), vec![]);
+    }
+    let mut filters = vec![];
+    find_filter_exprs(&v, &mut filters);
+    let mut casts = vec![];
+    for f in &filters {
+        walk_casts(f, &mut casts);
+    }
+    if filters.is_empty() {
+        return (Some("NO LOGICAL_FILTER IN PLAN".into()), casts);
+    }
+    (None, casts)
+}
+
+// A byte-faithful replica of engine/src/predicate.rs `bind_admit`'s surrogate query (all 12 columns
+// in the namespace), since `bind_admit` is private. Structural and namespace admission pass for every
+// form here except the CAST-class ones, recorded separately.
+fn stage3(conn: &Connection, pred: &str) -> String {
+    let quote = |s: &str| format!("\"{}\"", s.replace('"', "\"\""));
+    let cols: Vec<String> = COLS.iter().map(|(n, t)| format!("CAST(NULL AS {t}) AS {}", quote(n))).collect();
+    let sql = format!(
+        "SELECT ({pred}) AS {} FROM (SELECT {}) AS {} LIMIT 0",
+        quote("__predicate_result"),
+        cols.join(", "),
+        quote("__surrogate")
+    );
+    let mut stmt = match conn.prepare(&sql) {
+        Ok(s) => s,
+        Err(e) => return format!("REJECTED_BY_BINDER: {e}"),
+    };
+    let arrow = match stmt.query_arrow([]) {
+        Ok(a) => a,
+        Err(e) => return format!("REJECTED_BY_BINDER: {e}"),
+    };
+    let schema = arrow.get_schema();
+    match schema.fields().first() {
+        None => "REJECTED_BY_BINDER: no columns".into(),
+        Some(f) if f.data_type() == &arrow::datatypes::DataType::Boolean => "ADMITTED".into(),
+        Some(f) => format!("NOT_BOOLEAN: {}", f.data_type()),
+    }
+}
+
+fn exec(conn: &Connection, path: &str, pred: &str) -> String {
+    // The real composition shape (stream.rs build_sql): (<predicate>) AND <bbox-like condition>.
+    let sql = format!("SELECT * FROM read_parquet(?) WHERE ({pred}) AND bx >= 0.0");
+    let mut s = match conn.prepare(&sql) {
+        Ok(s) => s,
+        Err(e) => return format!("PREPARE_ERR: {e}"),
+    };
+    let mut rows = match s.query([path]) {
+        Ok(r) => r,
+        Err(e) => return format!("EXEC_ERR: {e}"),
+    };
+    let mut n = 0u64;
+    loop {
+        match rows.next() {
+            Ok(Some(_)) => n += 1,
+            Ok(None) => return format!("OK: {n} rows"),
+            Err(e) => return format!("EXEC_ERR: {e}"),
+        }
+    }
+}
+
+#[test]
+fn b1_p0_coercion_table() {
+    let out_path = std::env::var("B1_P0_OUT").expect("B1_P0_OUT");
+    let dir = std::path::Path::new(&out_path).parent().unwrap().to_path_buf();
+    let pq = dir.join("b1_p0.parquet");
+    let pq_s = pq.to_string_lossy().replace('\\', "/");
+    let mut out = std::fs::File::create(&out_path).unwrap();
+    let conn = Connection::open_in_memory().unwrap();
+    let emit = |out: &mut std::fs::File, v: Value| writeln!(out, "{v}").unwrap();
+
+    emit(&mut out, json!({"meta": "version", "value": q1(&conn, "SELECT version()").unwrap()}));
+
+    let mut ddl = String::from("CREATE TABLE t (");
+    for (n, t) in COLS {
+        ddl.push_str(&format!("{n} {t}, "));
+    }
+    ddl.push_str("bx DOUBLE)");
+    conn.execute_batch(&ddl).unwrap();
+    let nrows = COLS.iter().map(|(n, _)| values(n).len()).max().unwrap();
+    for i in 0..nrows {
+        let mut vals = vec![];
+        for (n, t) in COLS {
+            let vs = values(n);
+            let v = vs.get(i).copied().unwrap_or("NULL");
+            vals.push(format!("CAST({v} AS {t})"));
+        }
+        vals.push("1.0".into());
+        conn.execute_batch(&format!("INSERT INTO t VALUES ({})", vals.join(", "))).unwrap();
+    }
+    conn.execute_batch(&format!("COPY t TO '{pq_s}' (FORMAT parquet)")).unwrap();
+    // Record the stored rows and the types read back from the parquet file.
+    {
+        let mut s = conn.prepare(&format!("DESCRIBE SELECT * FROM read_parquet('{pq_s}')")).unwrap();
+        let d: Vec<(String, String)> = s.query_map([], |r| Ok((r.get(0)?, r.get(1)?))).unwrap().map(|r| r.unwrap()).collect();
+        emit(&mut out, json!({"meta": "parquet_types", "value": d}));
+        for (n, _) in COLS {
+            let mut s = conn.prepare(&format!("SELECT CAST({n} AS VARCHAR) FROM t")).unwrap();
+            let d: Vec<Option<String>> = s.query_map([], |r| r.get(0)).unwrap().map(|r| r.unwrap()).collect();
+            emit(&mut out, json!({"meta": "stored", "column": n, "value": d}));
+        }
+    }
+    // Literal parse types.
+    for (label, text) in LITS {
+        emit(&mut out, json!({"meta": "literal_type", "label": label, "text": text, "typeof": q1(&conn, &format!("SELECT typeof({text})")).unwrap_or_else(|e| e)}));
+    }
+
+    let mut cases: Vec<(String, String, String, String)> = vec![]; // (family, column, operand label, predicate)
+    let cmp_ops = ["=", "<>", "<", "<=", ">", ">=", "IS DISTINCT FROM", "IS NOT DISTINCT FROM"];
+    let mut operands: Vec<(String, String)> = LITS.iter().map(|(l, t)| (format!("lit:{l}"), t.to_string())).collect();
+    for (n, t) in COLS {
+        operands.push((format!("col:{t}"), n.to_string()));
+    }
+    for (c, _) in COLS {
+        for (olabel, o) in &operands {
+            for op in cmp_ops {
+                cases.push((format!("cmp {op}"), c.to_string(), olabel.clone(), format!("{c} {op} {o}")));
+            }
+            cases.push(("cmp = reversed".into(), c.to_string(), olabel.clone(), format!("{o} = {c}")));
+            cases.push(("between".into(), c.to_string(), olabel.clone(), format!("{c} BETWEEN {o} AND {o}")));
+            if olabel.starts_with("lit:") {
+                cases.push(("in".into(), c.to_string(), olabel.clone(), format!("{c} IN ({o}, {o})")));
+            }
+            cases.push(("arith + then > 0".into(), c.to_string(), olabel.clone(), format!("{c} + {o} > 0")));
+            cases.push(("arith * then > 0".into(), c.to_string(), olabel.clone(), format!("{c} * {o} > 0")));
+            cases.push(("arith - then > 0".into(), c.to_string(), olabel.clone(), format!("{c} - {o} > 0")));
+            cases.push(("arith / then > 0".into(), c.to_string(), olabel.clone(), format!("{c} / {o} > 0")));
+        }
+        for (fam, p) in [
+            ("like", format!("{c} LIKE 'x%'")),
+            ("ilike", format!("{c} ILIKE 'x%'")),
+            ("like int pattern", format!("{c} LIKE 1")),
+            ("is null", format!("{c} IS NULL")),
+            ("is not null", format!("{c} IS NOT NULL")),
+            ("not", format!("NOT {c}")),
+            ("and flag", format!("{c} AND flag")),
+            ("flag or", format!("flag OR {c}")),
+            ("bare", c.to_string()),
+            ("unary minus then > 0", format!("-{c} > 0")),
+            ("arith + 1 = 0", format!("{c} + 1 = 0")),
+            ("arith * 2 = 0", format!("{c} * 2 = 0")),
+            ("arith / 0 = 0", format!("{c} / 0 = 0")),
+            ("arith self * then > 0", format!("{c} * {c} > 0")),
+            ("in mixed (1, 'x')", format!("{c} IN (1, 'x')")),
+            ("in mixed (1, 1.5)", format!("{c} IN (1, 1.5)")),
+            ("between mixed 1 AND 1.5", format!("{c} BETWEEN 1 AND 1.5")),
+            ("cmp = TRUE", format!("{c} = TRUE")),
+        ] {
+            cases.push((fam.into(), c.to_string(), String::new(), p));
+        }
+    }
+
+    let mut cast_checks: BTreeMap<(String, String, String), Value> = BTreeMap::new();
+    for (family, c, olabel, pred) in &cases {
+        let (plan_err, casts) = plan_casts(&conn, pred);
+        let s3 = stage3(&conn, pred);
+        let ex = exec(&conn, &pq_s, pred);
+        // For each column-side cast, measure over the stored values: does it fail, does it round?
+        for cast in &casts {
+            let kind = cast["kind"].as_str().unwrap().to_string();
+            let from = cast["from"].as_str().unwrap().to_string();
+            let to = cast["to"].as_str().unwrap().to_string();
+            if kind == "column" {
+                let col = cast["child"].as_str().unwrap().to_string();
+                let key = (col.clone(), from.clone(), to.clone());
+                cast_checks.entry(key).or_insert_with(|| {
+                    let fails = q1(&conn, &format!("SELECT count(*) FROM t WHERE {col} IS NOT NULL AND TRY_CAST({col} AS {to}) IS NULL"));
+                    let fail_vals = q1(&conn, &format!("SELECT string_agg(CAST({col} AS VARCHAR), ' | ') FROM t WHERE {col} IS NOT NULL AND TRY_CAST({col} AS {to}) IS NULL"));
+                    let lossy = q1(&conn, &format!("SELECT count(*) FROM t WHERE TRY_CAST({col} AS {to}) IS NOT NULL AND CAST(TRY_CAST({col} AS {to}) AS {from}) IS DISTINCT FROM {col}"));
+                    let lossy_vals = q1(&conn, &format!("SELECT string_agg(CAST({col} AS VARCHAR) || ' -> ' || CAST(TRY_CAST({col} AS {to}) AS VARCHAR), ' | ') FROM t WHERE TRY_CAST({col} AS {to}) IS NOT NULL AND CAST(TRY_CAST({col} AS {to}) AS {from}) IS DISTINCT FROM {col}"));
+                    json!({"fails": fails.unwrap_or_else(|e| e), "fail_values": fail_vals.unwrap_or_else(|e| e), "rounds": lossy.unwrap_or_else(|e| e), "round_values": lossy_vals.unwrap_or_else(|e| e)})
+                });
+            }
+        }
+        emit(&mut out, json!({"family": family, "column": c, "operand": olabel, "predicate": pred, "plan_error": plan_err, "casts": casts, "stage3_today": s3, "exec": ex}));
+    }
+    // Constant-side casts: every literal to every column type — fails? rounds?
+    for (label, text) in LITS {
+        for (_, t) in COLS {
+            let fails = q1(&conn, &format!("SELECT TRY_CAST({text} AS {t}) IS NULL AND {text} IS NOT NULL"));
+            let casted = q1(&conn, &format!("SELECT CAST(TRY_CAST({text} AS {t}) AS VARCHAR)"));
+            let rounds = q1(&conn, &format!("SELECT CAST(TRY_CAST({text} AS {t}) AS typeof_placeholder)").replace("typeof_placeholder", "VARCHAR"));
+            let _ = rounds;
+            let exact = q1(&conn, &format!("SELECT CAST(TRY_CAST({text} AS {t}) AS DECIMAL(38,0)) IS NOT DISTINCT FROM TRY_CAST({text} AS DECIMAL(38,0))"));
+            emit(&mut out, json!({"meta": "literal_cast", "label": label, "text": text, "to": t, "fails": fails.unwrap_or_else(|e| e), "result": casted.unwrap_or_else(|e| e), "int_part_preserved": exact.unwrap_or_else(|e| e)}));
+        }
+    }
+    for ((col, from, to), v) in cast_checks {
+        emit(&mut out, json!({"meta": "column_cast", "column": col, "from": from, "to": to, "check": v}));
+    }
+}

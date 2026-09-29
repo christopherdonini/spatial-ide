@@ -1,0 +1,77 @@
+// SCRATCH -- B-1 P0 discriminators (the architect's findings 12 and 14(a) on the draft). Appended to probe.rs.txt
+// and run as the untracked engine/tests/scratch_b1_p0_disc.rs at main 4e46166, filtered to this test; removed after.
+// Output: discriminators.txt.
+
+#[test]
+fn b1_p0_discriminators() {
+    let dir = std::env::temp_dir().join("b1-p0-disc");
+    std::fs::create_dir_all(&dir).unwrap();
+    let pq = dir.join("d.parquet");
+    let pq_s = pq.to_string_lossy().replace('\\', "/");
+    let conn = Connection::open_in_memory().unwrap();
+    let mut ddl = String::from("CREATE TABLE t (");
+    for (n, t) in COLS {
+        ddl.push_str(&format!("{n} {t}, "));
+    }
+    ddl.push_str("bx DOUBLE)");
+    conn.execute_batch(&ddl).unwrap();
+    let nrows = COLS.iter().map(|(n, _)| values(n).len()).max().unwrap();
+    for i in 0..nrows {
+        let mut vals = vec![];
+        for (n, t) in COLS {
+            let vs = values(n);
+            vals.push(format!("CAST({} AS {t})", vs.get(i).copied().unwrap_or("NULL")));
+        }
+        vals.push("1.0".into());
+        conn.execute_batch(&format!("INSERT INTO t VALUES ({})", vals.join(", "))).unwrap();
+    }
+    conn.execute_batch(&format!("COPY t TO '{pq_s}' (FORMAT parquet)")).unwrap();
+    for p in [
+        "i64 IN (9223372036854775808, 0.5)",
+        "i64 IN (3000000000, 0.5)",
+        "i64 BETWEEN 0.5 AND 9223372036854775808",
+        "i64 IN (1, 1.5, 3000000000)",
+        "i64 IN (170141183460469231731687303715884105727, 1)",
+        "i64 IN (170141183460469231731687303715884105727, 0.5)",
+        "u64 IN (-1, 0.5)",
+        "u64 IN (9223372036854775808, 0.000000000000000001)",
+        "u64 IN (-1, 0.000000000000000001)",
+        "u64 BETWEEN -1 AND 0.000000000000000001",
+        "i32 IN (3000000000, 0.5)",
+        "i8 IN (1, 0.000000000000000001)",
+        "i64 IN (0.5, 0.000000000000000001)",
+        "u64 IN (0.5, 0.000000000000000001, -1)",
+        "i64 = 9223372036854775808",
+        "i64 BETWEEN -9223372036854775809 AND 0.5",
+        "f32 IN (1, 1.5)",
+        "f64 IN (9223372036854775808, 0.5)",
+    ] {
+        let (perr, casts) = plan_casts(&conn, p);
+        let c: Vec<String> = casts
+            .iter()
+            .map(|c| format!("{} {}->{}", c["kind"].as_str().unwrap(), c["from"].as_str().unwrap(), c["to"].as_str().unwrap()))
+            .collect();
+        println!(
+            "N-ARY | {p} | perr={perr:?} | casts={c:?} | s3={} | exec={}",
+            stage3(&conn, p),
+            exec(&conn, &pq_s, p).lines().next().unwrap_or("")
+        );
+    }
+    let db = Connection::open(dir.join("inst.duckdb")).unwrap();
+    db.execute_batch(&format!("CREATE OR REPLACE TABLE t AS SELECT * FROM read_parquet('{pq_s}')")).unwrap();
+    let other = db.try_clone().unwrap();
+    let r = db
+        .prepare("SELECT count(*) FROM t WHERE u64 + 9223372036854775808 > 0")
+        .and_then(|mut s| s.query_row([], |r| r.get::<_, i64>(0)));
+    println!("INTERNAL on conn A: {r:?}");
+    let a: Result<i64, _> = db.prepare("SELECT count(*) FROM t").and_then(|mut s| s.query_row([], |r| r.get(0)));
+    let b: Result<i64, _> = other.prepare("SELECT count(*) FROM t").and_then(|mut s| s.query_row([], |r| r.get(0)));
+    let c3 = db
+        .try_clone()
+        .and_then(|c| c.prepare("SELECT count(*) FROM t").and_then(|mut s| s.query_row([], |r| r.get::<_, i64>(0))));
+    println!("after: conn A {a:?} | pre-existing conn B {b:?} | new conn C {c3:?}");
+    let mem = Connection::open_in_memory().unwrap();
+    let other2 = mem.try_clone().unwrap();
+    println!("surrogate INTERNAL: {}", stage3(&mem, "u64 + 9223372036854775808 > 0"));
+    println!("after surrogate: A {:?} | B {:?}", q1(&mem, "SELECT 42"), q1(&other2, "SELECT 42"));
+}

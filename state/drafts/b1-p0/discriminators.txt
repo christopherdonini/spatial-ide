@@ -1,0 +1,22 @@
+N-ARY | i64 IN (9223372036854775808, 0.5) | perr=None | casts=["column BIGINT->DECIMAL(38,1)", "constant HUGEINT->DECIMAL(38,1)", "constant DECIMAL(2,1)->DECIMAL(38,1)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | i64 IN (3000000000, 0.5) | perr=None | casts=["column BIGINT->DECIMAL(20,1)", "constant BIGINT->DECIMAL(20,1)", "constant DECIMAL(2,1)->DECIMAL(20,1)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | i64 BETWEEN 0.5 AND 9223372036854775808 | perr=None | casts=["column BIGINT->DECIMAL(38,1)", "constant DECIMAL(2,1)->DECIMAL(38,1)", "column BIGINT->DECIMAL(38,1)", "constant HUGEINT->DECIMAL(38,1)"] | s3=ADMITTED | exec=OK: 3 rows
+N-ARY | i64 IN (1, 1.5, 3000000000) | perr=None | casts=["column BIGINT->DECIMAL(20,1)", "constant INTEGER->DECIMAL(20,1)", "constant DECIMAL(2,1)->DECIMAL(20,1)", "constant BIGINT->DECIMAL(20,1)"] | s3=ADMITTED | exec=OK: 1 rows
+N-ARY | i64 IN (170141183460469231731687303715884105727, 1) | perr=None | casts=["column BIGINT->HUGEINT", "constant INTEGER->HUGEINT"] | s3=ADMITTED | exec=OK: 1 rows
+N-ARY | i64 IN (170141183460469231731687303715884105727, 0.5) | perr=None | casts=["column BIGINT->DECIMAL(38,1)", "constant HUGEINT->DECIMAL(38,1)", "constant DECIMAL(2,1)->DECIMAL(38,1)"] | s3=ADMITTED | exec=EXEC_ERR: Conversion Error: Could not cast value 170141183460469231731687303715884105727 to DECIMAL(38,1)
+N-ARY | u64 IN (-1, 0.5) | perr=None | casts=["column UBIGINT->DECIMAL(38,1)", "constant INTEGER->DECIMAL(38,1)", "constant DECIMAL(2,1)->DECIMAL(38,1)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | u64 IN (9223372036854775808, 0.000000000000000001) | perr=None | casts=["column UBIGINT->DECIMAL(38,18)", "constant HUGEINT->DECIMAL(38,18)", "constant DECIMAL(19,18)->DECIMAL(38,18)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | u64 IN (-1, 0.000000000000000001) | perr=None | casts=["column UBIGINT->DECIMAL(38,18)", "constant INTEGER->DECIMAL(38,18)", "constant DECIMAL(19,18)->DECIMAL(38,18)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | u64 BETWEEN -1 AND 0.000000000000000001 | perr=None | casts=["column UBIGINT->DECIMAL(38,18)", "constant INTEGER->DECIMAL(38,18)", "column UBIGINT->DECIMAL(38,18)", "constant DECIMAL(19,18)->DECIMAL(38,18)"] | s3=ADMITTED | exec=OK: 1 rows
+N-ARY | i32 IN (3000000000, 0.5) | perr=None | casts=["column INTEGER->DECIMAL(20,1)", "constant BIGINT->DECIMAL(20,1)", "constant DECIMAL(2,1)->DECIMAL(20,1)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | i8 IN (1, 0.000000000000000001) | perr=None | casts=["column TINYINT->DECIMAL(21,18)", "constant INTEGER->DECIMAL(21,18)", "constant DECIMAL(19,18)->DECIMAL(21,18)"] | s3=ADMITTED | exec=OK: 1 rows
+N-ARY | i64 IN (0.5, 0.000000000000000001) | perr=None | casts=["column BIGINT->DECIMAL(37,18)", "constant DECIMAL(2,1)->DECIMAL(37,18)", "constant DECIMAL(19,18)->DECIMAL(37,18)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | u64 IN (0.5, 0.000000000000000001, -1) | perr=None | casts=["column UBIGINT->DECIMAL(38,18)", "constant DECIMAL(2,1)->DECIMAL(38,18)", "constant DECIMAL(19,18)->DECIMAL(38,18)", "constant INTEGER->DECIMAL(38,18)"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | i64 = 9223372036854775808 | perr=None | casts=["column BIGINT->HUGEINT"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | i64 BETWEEN -9223372036854775809 AND 0.5 | perr=None | casts=["column BIGINT->DECIMAL(38,1)", "constant HUGEINT->DECIMAL(38,1)", "column BIGINT->DECIMAL(38,1)", "constant DECIMAL(2,1)->DECIMAL(38,1)"] | s3=ADMITTED | exec=OK: 3 rows
+N-ARY | f32 IN (1, 1.5) | perr=None | casts=["constant INTEGER->FLOAT", "constant DECIMAL(2,1)->FLOAT"] | s3=ADMITTED | exec=OK: 0 rows
+N-ARY | f64 IN (9223372036854775808, 0.5) | perr=None | casts=["constant HUGEINT->DOUBLE", "constant DECIMAL(2,1)->DOUBLE"] | s3=ADMITTED | exec=OK: 0 rows
+INTERNAL on conn A: Err(DuckDBFailure(Error { code: Unknown, extended_code: 1 }, Some("INTERNAL Error: Information loss on integer cast: value 9223372036854775808 outside of target range [-9223372036854775808, 9223372036854775807]\nThis error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.\nFor more information, see https://duckdb.org/docs/stable/dev/internal_errors")))
+after: conn A Ok(13) | pre-existing conn B Ok(13) | new conn C Ok(13)
+surrogate INTERNAL: REJECTED_BY_BINDER: INTERNAL Error: Information loss on integer cast: value 9223372036854775808 outside of target range [-9223372036854775808, 9223372036854775807]
+after surrogate: A Ok("Int(42)") | B Ok("Int(42)")

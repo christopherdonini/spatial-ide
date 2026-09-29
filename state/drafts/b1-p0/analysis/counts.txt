@@ -1,0 +1,11 @@
+cases (excluding the mangled u_str row and the forms stage 1 refuses as CAST: n_str, cmp = TRUE): 7620
+admitted by the stage-3 replica: 6804
+admitted, then the stream ends in an error: 1676
+   column cast fails / leaks a stored value : 576
+   literal conversion / no stored value : 1001
+   overflow / leaks a stored value : 91
+   overflow / no stored value : 8
+admitted with a numeric->BOOLEAN column cast: 30 ; of which run without error: 30
+admitted, run without error, a column-side cast rounds a stored witness: 363
+binder binds but the stage-3 replica refuses: 3 ['u64 + 9223372036854775808 > 0', 'u64 * 9223372036854775808 > 0', 'u64 - 9223372036854775808 > 0']
+binder refuses but the stage-3 replica admits: 0

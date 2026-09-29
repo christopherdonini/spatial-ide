@@ -583,3 +583,30 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Worktrees removed:** `C:/dev/wt/watcher-first-read` (clean at fc3e51f, an ancestor of main) and `C:/dev/wt/wave2-c`. The local branch `cut/watcher-first-read` is deleted; the remote branch is left for the human.
     - `wave2-c` held only the untracked scratch reproducer that `state/cloud/wave2/W2-C.md` cites, `kernel/tests/scratch_c1_windows.rs`. It was 3610 bytes, sha256 `2ca3eb49fb84ba38ecaf3cb3acb6018a9c8f81fd8593857122e4c79ba256e79e`. It was never committed and is now gone. #141's `kernel/tests/watcher_first_read_windows.rs` is the tracked regression test.
   - **Next:** B-1's P0, the measured coercion table and the preregistration's proposal, which go to Fable before any code.
+- 2026-09-29T06:10Z - **B-1's P0 is measured, and its table and proposal are filed for Fable's sighting before any code.** The draft is `state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md`.
+  - **The probe** ran at main 4e46166, with duckdb 1.10505.0 (DuckDB v1.5.5), as an untracked scratch integration test that was removed after the run. What is kept, under `state/drafts/b1-p0/`:
+    - its text, `probe.rs.txt`;
+    - the generated matrices, `matrices.txt`;
+    - the analysis scripts and the counts they derive, `analysis/`;
+    - two later discriminators, `discriminators.*`.
+  - **Method:**
+    - the binder's own casts, from `json_serialize_plan`, used only to measure;
+    - a replica of `bind_admit`'s surrogate query;
+    - a scan of a DuckDB-written parquet file of adversarial values, in `build_sql`'s shape;
+    - fail and round checks for every observed cast.
+  - **Findings:**
+    - Of 7,620 cases, today's bind admission admits 6,804, and 1,676 of those end in a stream error. In 667 of them the error text carries a stored file value: 576 from a column cast that fails, and 91 from integer overflow.
+    - 363 more run while a stored value is rounded before the comparison.
+    - 30 more silently cast a number to BOOLEAN under `NOT`, `AND` or `OR`. That is §7.6's own named case.
+    - `u64 {+,-,*} 9223372036854775808` raises a DuckDB INTERNAL error. Bind admission already refuses it synchronously, and it does not invalidate the database.
+  - **The architect's read** of the first version was a block on three points: Decision 8 misquoted and misread; `construct_not_admitted`'s definition misattributed to ADR-021; and rule 6 overstating what H5 covered. It is filed as `state/consults/2026-09-29-b1-p0-proposal-architect-read.md`. All three are corrected, and its notes are taken in.
+    - Its n-ary question was measured: `i64 IN (<39-digit literal>, 0.5)` passes both pairwise checks but fails when folded. Rule 3 now admits integer literals of at most 20 digits only.
+  - **The proposal:**
+    - a type-decided admitted set, with two bounds: integer literals of at most 20 digits, and `MAX_DECIMAL_LITERAL_SCALE = 18`;
+    - rule 6's literal rounding into a float column split into H5's shape and a new-policy part, which goes to Fable by name;
+    - the engine's own type walk over the allowlisted tree, pinned by a test-time binder-agreement test;
+    - arithmetic refused by result type (5a, recommended);
+    - a twelfth refusal code (6a, recommended; 6b is rejected on principle 8);
+    - three ADR-021 changes that are the human's typed text: the 6.3 Note, the Decision 8 code, and the arithmetic set. The arithmetic set sits under Consequences and "What this ADR does not decide", not in the Decision.
+  - **PLAN:** `filter-bind-admission-implicit-coercions` now waits on the human, `needs_human: {kind: sight, minutes: 20}`, for Fable's sight relayed by the human. Its recorded status is `blocked`, per the derivation. The queue and site are regenerated.
+  - **A2-1** (`b1-close-nul-column-names`) is now the only node that derives ready. The flush's intended sequencing item (4) holds it behind B1's close, so it is not started. The question has gone to the human.
