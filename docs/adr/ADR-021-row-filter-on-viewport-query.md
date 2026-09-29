@@ -240,3 +240,28 @@ item 2).
 
 1. Decision 5's namespace excludes any column that is not addressable (ADR-023, Amendment 2026-09-29, item 2), whatever its type. A predicate naming such a column is refused with the existing `skp.filter_column_not_filterable` (fields `column` and `reason`), with the `reason` stating the fact. A predicate naming the truncated prefix is refused `skp.filter_unknown_column`. No code is added, and decision 8's eleven codes stand.
 2. Implemented by PLAN node `b1-close-nul-column-names`.
+
+## Note 2026-09-30 — what bind admission admits and refuses (decision 6.3), and a twelfth refusal code (decision 8)
+
+*Appended under the human's typed acceptance of 2026-09-30 (the 2026-09-29 sightings, Fable's B-1 point 6; Fable's O rulings of 2026-09-30). The text above is unchanged, the Status line and the earlier Notes included. Implementation: `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`.*
+
+1. **The refused class.** Decision 6.3's implicit coercion is refused when the predicate's binding needs:
+   - a comparison of text with a non-text value;
+   - a conversion to or from BOOLEAN;
+   - a numeric literal beyond the declared bounds: more than 20 digits in its integer part, or a decimal scale above 18;
+   - a conversion that can fail during the scan;
+   - a conversion that changes a value read from the file before it is compared.
+2. **The admitted class.** Every conversion not named here is refused:
+   - identical types, and a NULL literal against anything;
+   - integer against integer: a lossless widening;
+   - an integer of at most 64 bits against a decimal literal within the bounds;
+   - a double literal against an integer of at most 32 bits;
+   - an integer of at most 16 bits against REAL, of at most 32 bits against DOUBLE, and REAL against DOUBLE;
+   - a numeric literal against a REAL or DOUBLE value. The literal becomes its nearest value in that float type, and the value from the file is never changed. The comparison is made in the float type, so values at the boundary can compare equal: a stored REAL 16777216 equals the literal 16777217;
+   - two numeric literals within the bounds.
+
+   The same rules apply inside `+`, `-` and `*`, except that a decimal literal beside an integer or a decimal is refused, because that conversion can fail. `AND`, `OR` and `NOT` take BOOLEAN operands only.
+3. **`/` is declared floating-point division.** It is admitted for any numeric operands. It divides in the float type the binder chooses: REAL when one operand is REAL and none is DOUBLE or a double literal, and DOUBLE otherwise. Its operands convert to that type, so an integer beyond 2^24 (REAL) or 2^53 (DOUBLE) rounds, and the result has that type. The float semantics belong to the operator. They are not an implicit coercion.
+4. **The arithmetic set is unchanged.** The two named function sets (Consequences; What this ADR does not decide) stand. An integer overflow in `+`, `-`, `*` or unary `-` involves no conversion and is not decided here.
+5. **Where it runs.** In stage 3, after the surrogate prepare and its BOOLEAN check. A predicate the binder refuses keeps `filter_rejected_by_binder`.
+6. **Decision 8 gains a twelfth code:** `filter_type_not_admitted`, with fields `construct` (the operator), `operand_types` (the engine's type names) and `reason` (one of five fixed values). It is refused synchronously, before any lease or mint, and carries no value read from the file. Decision 8's exhaustive mapping applies to the twelve. The Note of 2026-09-24 spoke to its own item, and this Note does not change it.
