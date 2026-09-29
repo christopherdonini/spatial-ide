@@ -610,3 +610,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - three ADR-021 changes that are the human's typed text: the 6.3 Note, the Decision 8 code, and the arithmetic set. The arithmetic set sits under Consequences and "What this ADR does not decide", not in the Decision.
   - **PLAN:** `filter-bind-admission-implicit-coercions` now waits on the human, `needs_human: {kind: sight, minutes: 20}`, for Fable's sight relayed by the human. Its recorded status is `blocked`, per the derivation. The queue and site are regenerated.
   - **A2-1** (`b1-close-nul-column-names`) is now the only node that derives ready. The flush's intended sequencing item (4) holds it behind B1's close, so it is not started. The question has gone to the human.
+- 2026-09-29T06:25Z - **The 2026-09-29 A2-1 clarification** (verbatim, `state/directives/2026-09-29-a2-1-clarification.md`). The human typed it as the answer to the custodian's A2-1 timing question, relaying Fable.
+  - **A2-1 lands before B1 closes,** through ADR-023's amendment while ADR-023 is Proposed. It does not wait for `b1-shell-half`. The flush's item (4) was loose wording.
+  - **Order:** B-1 stays first. A2-1's P0 and preregistration may run while B-1's proposal is with Fable. They come to Fable before any code, with any new refusal code and the ADR-023 amendment text. The human accepts the amendment with B1's close.
+  - **PLAN, on that word:**
+    - `entry-79-b1-consult-items`, the node that closes B1, now depends on `b1-close-nul-column-names`;
+    - both summaries cite the clarification;
+    - verify:plan PASS, and the queue and site are regenerated.
+  - **CI:** main's Governance CI and Pages are green on 568d82c.
+  - **Next:** A2-1's P0 and preregistration, while B-1's proposal waits on Fable.

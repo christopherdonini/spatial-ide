@@ -1210,7 +1210,7 @@ nodes:
     phase: prototype
     status: blocked
     order: 3
-    depends_on: [b1-engine-kernel-half, b1-shell-half]
+    depends_on: [b1-engine-kernel-half, b1-shell-half, b1-close-nul-column-names]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -1218,7 +1218,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: [79]
-    summary: "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27)."
+    summary: "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1."
     dates: {opened: null, done: null}
 
   - id: m13-bracketed-values
@@ -3090,7 +3090,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md."
+    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node."
     dates: {opened: 2026-09-28, done: null}
 
   - id: b1-session-ordinal-refusal-wording

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cb4c30e49495d1d5a26c35bc3c15df07bb0ac35017703840ce38ca5aadf3c753`) at `2026-09-29T05:06:46.383Z`.
+Generated from `PLAN.yaml` (sha256 `4822c58985f80746f7ccc495986dedcd81e05e7172beadf56237a4048b0452e3`) at `2026-09-29T06:50:57.716Z`.
 
 ## 1. Next
 
@@ -22,7 +22,7 @@ Generated from `PLAN.yaml` (sha256 `cb4c30e49495d1d5a26c35bc3c15df07bb0ac3501770
 
 ## 4. Blocked on dependencies
 
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half, b1-close-nul-column-names
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1

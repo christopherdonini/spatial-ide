@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T05:06:46.383Z",
-  "plan_hash": "cb4c30e49495d1d5a26c35bc3c15df07bb0ac35017703840ce38ca5aadf3c753",
+  "generated_at": "2026-09-29T06:50:57.716Z",
+  "plan_hash": "4822c58985f80746f7ccc495986dedcd81e05e7172beadf56237a4048b0452e3",
   "priorities_approved": true,
   "next": {
     "id": "b1-close-nul-column-names",
@@ -19,7 +19,7 @@
       "opened": "2026-09-28",
       "done": null
     },
-    "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md."
+    "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node."
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-09-28",
         "done": null
       },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md."
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node."
     }
   ],
   "waiting_on_human": {
@@ -109,9 +109,10 @@
         "opened": null,
         "done": null
       },
-      "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27).",
+      "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1.",
       "blocked_by": [
-        "b1-shell-half"
+        "b1-shell-half",
+        "b1-close-nul-column-names"
       ]
     },
     {
