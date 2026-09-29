@@ -1,0 +1,32 @@
+A2-1 P0 -- the extra probes P-1 to P-4 and O-1/O-2 (named in the architect's drafting consult), output of
+extra-probe.rs.txt, run as an untracked scratch test at main c1218dd, DuckDB v1.5.5;
+cargo test -p spatial-engine --features fixture --test scratch_a21_p0_extra -- --nocapture.
+
+=== p1a-format-default-struct-nul
+  open OK; covering present=true; admission=Some(AdmissionRecord { crs_provenance: FormatDefault, axis_provenance: FormatOverride, declared_axis_order: None, format_rule_reference: Some("geoparquet:1.1.0#crs-absent-default"), coordinate_unit: Degree, coordinate_unit_source: Some(FormatRule), sanity_level: NotChecked, sanity_reason: "the covering names `bb\0ox.xmin`, which the file's schema does not contain, so no level could be decided from it. Not checked" })
+  bbox stream: STREAM ITEM ERR after 0 item(s): Query("prepare: nul byte found in provided data at position: 62")
+=== p1b-format-default-child-nul
+  open OK; covering present=true; admission=Some(AdmissionRecord { crs_provenance: FormatDefault, axis_provenance: FormatOverride, declared_axis_order: None, format_rule_reference: Some("geoparquet:1.1.0#crs-absent-default"), coordinate_unit: Degree, coordinate_unit_source: Some(FormatRule), sanity_level: NotChecked, sanity_reason: "the covering names `bbox.xmin\0a`, which the file's schema does not contain, so no level could be decided from it. Not checked" })
+  bbox stream: STREAM ITEM ERR after 0 item(s): Query("prepare: nul byte found in provided data at position: 71")
+=== p1c-format-default-control
+  open OK; covering present=true; admission=Some(AdmissionRecord { crs_provenance: FormatDefault, axis_provenance: FormatOverride, declared_axis_order: None, format_rule_reference: Some("geoparquet:1.1.0#crs-absent-default"), coordinate_unit: Degree, coordinate_unit_source: Some(FormatRule), sanity_level: Metadata, sanity_reason: "read from the covering bbox columns' parquet statistics [7.4, 46.9, 7.4095, 46.9005] under the format rule geoparquet:1.1.0#crs-absent-default" })
+  bbox stream: STREAM OK: 1 item(s)
+=== p2-utf8-then-nul-int | export ["\"id\":UInt64", "\"geometry\":Binary", "\"zone\":Utf8", "\"zone\":Int64"] | DESCRIBE ["\"id\"", "\"geometry\"", "\"zone\"", "\"zone\\0x\""]
+  filter "zone = 'col0-row0'": ADMITTED; STREAM OK: 1 item(s)
+  filter "zone = 5": ADMITTED; STREAM ITEM ERR after 0 item(s): Query("execute: Conversion Error: Could not convert string 'col0-row0' to INT32 when casting from source column zone\n\nLINE 1: ...ELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE (zone = 5)\n                                                                      ^")
+  filter "zone > 3": ADMITTED; STREAM ITEM ERR after 0 item(s): Query("execute: Binder Error: Cannot compare values of type VARCHAR and type INTEGER_LITERAL - an explicit cast is required\n\nLINE 1: ... \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE (zone > 3)\n                                                                      ^")
+  filter "zone LIKE 'col0%'": REFUSED Filter(RejectedByBinder { detail: "Binder Error: No function matches the given name and argument types '~~(BIGINT, STRING_LITERAL)'. You might need to add explicit type casts.\n\tCandidate functions:\n\t~~(VARCHAR, VARCHAR) -> BOOLEAN\n\n\nLINE 1: SELECT (zone LIKE 'col0%') AS \"__predicate_result\" FROM (SELECT CAST...\n                     ^" })
+=== p2r-nul-int-then-utf8 | export ["\"id\":UInt64", "\"geometry\":Binary", "\"zone\":Int64", "\"zone\":Utf8"] | DESCRIBE ["\"id\"", "\"geometry\"", "\"zone\\0x\"", "\"zone\""]
+  filter "zone = 'col0-row0'": ADMITTED; STREAM OK: 0 item(s)
+  filter "zone = 5": ADMITTED; STREAM ITEM ERR after 0 item(s): Query("execute: Conversion Error: Could not convert string 'col1-row0' to INT32 when casting from source column zone\n\nLINE 1: ...ELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE (zone = 5)\n                                                                      ^")
+  filter "zone > 3": REFUSED Filter(RejectedByBinder { detail: "Binder Error: Cannot compare values of type VARCHAR and type INTEGER_LITERAL - an explicit cast is required\n\nLINE 1: SELECT (zone > 3) AS \"__predicate_result\" FROM (SELECT CAST(NULL AS UBIGINT...\n                     ^" })
+  filter "zone LIKE 'col0%'": ADMITTED; STREAM OK: 0 item(s)
+=== p3-utf8-nul-id-then-id | export ["\"key\":UInt64", "\"geometry\":Binary", "\"id\":Utf8", "\"id\":UInt64"] | DESCRIBE ["\"key\"", "\"geometry\"", "\"id\\0x\"", "\"id\""]
+  OPEN ERR: IdentityUnusable { column: "id", detail: "type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping — it is a synthesized identity, which ADR-016 refuses", candidate_columns: ["key", "id"] }
+=== p4 filter "zone = 'a\0b'": REFUSED Filter(Unparsable { detail: "unterminated quoted string at or near \"'a\"" })
+=== p4 filter "zone = 'x' -- \0": REFUSED Filter(Unparsable { detail: "syntax error at end of input" })
+=== p4 filter "\"zo\0ne\" IS NULL": REFUSED Filter(Unparsable { detail: "unterminated quoted identifier at or near \"\"zo\"" })
+=== p4 filter "zone = 'col0-row0'\0 OR 1=1": REFUSED Filter(Unparsable { detail: "syntax error at end of input" })
+=== p4 filter "zone = 'col0-row0'\0": REFUSED Filter(Unparsable { detail: "syntax error at end of input" })
+=== o1-two-nul-same-prefix | export ["\"id\":UInt64", "\"geometry\":Binary", "\"a\":Utf8", "\"a\":Utf8"] | DESCRIBE ["\"id\"", "\"geometry\"", "\"a\\0x\"", "\"a\\0y\""]
+=== o2-nul-case-dedup | export ["\"id\":UInt64", "\"geometry\":Binary", "\"zone\":Utf8", "\"ZONE\":Utf8"] | DESCRIBE ["\"id\"", "\"geometry\"", "\"zone\\0x\"", "\"ZONE\\0x_1\""]

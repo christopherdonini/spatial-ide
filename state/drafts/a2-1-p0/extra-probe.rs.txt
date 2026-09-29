@@ -1,0 +1,213 @@
+// SCRATCH -- A2-1 P0 extra probes. Kept here as evidence, as text: it ran as the untracked
+// engine/tests/scratch_a21_p0_extra.rs at main c1218dd (sha256 1a12b23c50dd4c07e348af36e32cb4d54c9aee1acf4baaf7f2ad9bbf0ccee6e0 for the file as run, whose first two
+// comment lines this note replaces) and was removed after the run. Output: extra-output.txt.
+use std::sync::Arc;
+
+use arrow::array::{ArrayRef, BinaryBuilder, Float64Array, Int64Builder, StringBuilder, StructArray, UInt64Builder};
+use arrow::datatypes::{DataType, Field, Fields, Schema};
+use arrow::record_batch::RecordBatch;
+use parquet::arrow::ArrowWriter;
+use parquet::file::metadata::KeyValue;
+use parquet::file::properties::WriterProperties;
+
+use spatial_engine::{AdmittedPredicate, Bbox, CancelToken, Dataset, ViewportQuery};
+
+const FEATURES: u64 = 10;
+
+#[derive(Clone, Copy)]
+enum T {
+    Utf8,
+    Int64,
+    UInt64,
+}
+
+/// `degrees`: coordinates in lon/lat and no `crs` key (the format default applies); otherwise LV95 metres with a
+/// PROJJSON crs. `covering`: Some((struct name, child names)) writes a bbox struct column and declares it.
+fn write(path: &std::path::Path, id_name: &str, cols: &[(&str, T)], degrees: bool, covering: Option<(&str, [&str; 4])>) {
+    let mut fields = vec![
+        Field::new(id_name, DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+    ];
+    for (n, t) in cols {
+        fields.push(Field::new(*n, match t { T::Utf8 => DataType::Utf8, T::Int64 => DataType::Int64, T::UInt64 => DataType::UInt64 }, true));
+    }
+    let mut ids = UInt64Builder::new();
+    let mut geoms = BinaryBuilder::new();
+    let (mut x0, mut y0, mut x1, mut y1) = (vec![], vec![], vec![], vec![]);
+    for i in 0..FEATURES {
+        ids.append_value(i);
+        let (e, n, d) = if degrees { (7.4 + i as f64 * 0.001, 46.9, 0.0005) } else { (2_600_000.0 + i as f64, 1_200_000.0 + i as f64, 1.0) };
+        geoms.append_value(spatial_engine::wkb::encode_polygon(&[vec![[e, n], [e + d, n], [e + d, n + d], [e, n]]]));
+        x0.push(e);
+        y0.push(n);
+        x1.push(e + d);
+        y1.push(n + d);
+    }
+    let mut arrays: Vec<ArrayRef> = vec![Arc::new(ids.finish()), Arc::new(geoms.finish())];
+    for (k, (_, t)) in cols.iter().enumerate() {
+        match t {
+            T::Utf8 => {
+                let mut b = StringBuilder::new();
+                for i in 0..FEATURES {
+                    b.append_value(format!("col{k}-row{i}"));
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+            T::Int64 => {
+                let mut b = Int64Builder::new();
+                for i in 0..FEATURES {
+                    b.append_value(k as i64 * 100 + i as i64);
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+            T::UInt64 => {
+                let mut b = UInt64Builder::new();
+                for i in 0..FEATURES {
+                    b.append_value(1000 + k as u64 * 100 + i);
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+        }
+    }
+    let j = |s: &str| serde_json::to_string(s).unwrap();
+    let mut covering_json = String::new();
+    if let Some((sname, child)) = covering {
+        let cf: Vec<Field> = child.iter().map(|c| Field::new(*c, DataType::Float64, false)).collect();
+        let st = StructArray::new(
+            Fields::from(cf.clone()),
+            vec![Arc::new(Float64Array::from(x0)), Arc::new(Float64Array::from(y0)), Arc::new(Float64Array::from(x1)), Arc::new(Float64Array::from(y1))],
+            None,
+        );
+        fields.push(Field::new(sname, DataType::Struct(Fields::from(cf)), false));
+        arrays.push(Arc::new(st));
+        covering_json = format!(
+            ",\"covering\":{{\"bbox\":{{\"xmin\":[{s},{}],\"ymin\":[{s},{}],\"xmax\":[{s},{}],\"ymax\":[{s},{}]}}}}",
+            j(child[0]), j(child[1]), j(child[2]), j(child[3]), s = j(sname)
+        );
+    }
+    let crs = if degrees { String::new() } else { format!(",\"crs\":{}", spatial_engine::fixture::LV95_PROJJSON) };
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"]{covering_json}{crs}}}}}}}"
+    );
+    let schema = Arc::new(Schema::new(fields));
+    let batch = RecordBatch::try_new(schema.clone(), arrays).unwrap();
+    let props = WriterProperties::builder().set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)])).build();
+    let f = std::fs::File::create(path).unwrap();
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
+fn stream(ds: &Dataset, q: &ViewportQuery) -> String {
+    let mut s = match ds.stream_with_cancel(q, CancelToken::new()) {
+        Ok(s) => s,
+        Err(e) => return format!("STREAM OPEN ERR: {e:?}"),
+    };
+    let mut buf = Vec::new();
+    let mut n = 0;
+    while let Some(info) = s.next_into(&mut buf) {
+        if let Err(e) = info {
+            return format!("STREAM ITEM ERR after {n} item(s): {e:?}");
+        }
+        n += 1;
+        buf.clear();
+    }
+    format!("STREAM OK: {n} item(s)")
+}
+
+fn export_and_describe(p: &str) -> String {
+    let conn = duckdb::Connection::open_in_memory().unwrap();
+    let ex = conn
+        .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
+        .unwrap()
+        .query_arrow([p])
+        .map(|a| a.get_schema().fields().iter().map(|f| format!("{:?}:{}", f.name(), f.data_type())).collect::<Vec<_>>())
+        .unwrap_or_else(|e| vec![e.to_string()]);
+    let mut st = conn.prepare("SELECT column_name FROM (DESCRIBE SELECT * FROM read_parquet(?))").unwrap();
+    let mut names = vec![];
+    for b in st.query_arrow([p]).unwrap() {
+        let c = b.column(0).as_any().downcast_ref::<arrow::array::StringArray>().unwrap().clone();
+        for i in 0..arrow::array::Array::len(&c) {
+            names.push(format!("{:?}", c.value(i)));
+        }
+    }
+    format!("export {ex:?} | DESCRIBE {names:?}")
+}
+
+fn filter(ds: &Dataset, pred: &str) -> String {
+    match AdmittedPredicate::admit(pred.to_string(), ds) {
+        Ok(ap) => {
+            let mut q = ViewportQuery::all();
+            q.filter = Some(ap);
+            format!("ADMITTED; {}", stream(ds, &q))
+        }
+        Err(e) => format!("REFUSED {e:?}"),
+    }
+}
+
+#[test]
+fn a21_p0_extra() {
+    let dir = std::env::temp_dir().join("a21-p0");
+    std::fs::create_dir_all(&dir).unwrap();
+    let std4 = ["xmin", "ymin", "xmax", "ymax"];
+    let bbox_deg = Bbox { xmin: 7.0, ymin: 46.0, xmax: 8.0, ymax: 47.0 };
+
+    // P-1: a U+0000 covering under the format default (no crs key, degrees, no geo bbox member).
+    for (tag, cov) in [("p1a-format-default-struct-nul", ("bb\0ox", std4)), ("p1b-format-default-child-nul", ("bbox", ["xmin\0a", "ymin", "xmax", "ymax"])), ("p1c-format-default-control", ("bbox", std4))] {
+        let path = dir.join(format!("{tag}.parquet"));
+        write(&path, "id", &[("a", T::Utf8)], true, Some(cov));
+        println!("=== {tag}");
+        match Dataset::open(&path) {
+            Ok(ds) => {
+                let a = ds.admission();
+                println!("  open OK; covering present={}; admission={a:?}", ds.covering().is_some());
+                let mut q = ViewportQuery::all();
+                q.bbox = Some(bbox_deg.clone());
+                q.bbox_crs = Some("OGC:CRS84".to_string());
+                println!("  bbox stream: {}", stream(&ds, &q));
+            }
+            Err(e) => println!("  OPEN ERR: {e:?}"),
+        }
+    }
+
+    // P-2: c03's order with different types: zone Utf8, then zone\0x Int64.
+    let path = dir.join("p2-utf8-then-nul-int.parquet");
+    write(&path, "id", &[("zone", T::Utf8), ("zone\0x", T::Int64)], false, None);
+    println!("=== p2-utf8-then-nul-int | {}", export_and_describe(&path.to_string_lossy()));
+    let ds = Dataset::open(&path).unwrap();
+    for pred in ["zone = 'col0-row0'", "zone = 5", "zone > 3", "zone LIKE 'col0%'"] {
+        println!("  filter {pred:?}: {}", filter(&ds, pred));
+    }
+    // And the reverse order (c02's) with the same predicates.
+    let path = dir.join("p2r-nul-int-then-utf8.parquet");
+    write(&path, "id", &[("zone\0x", T::Int64), ("zone", T::Utf8)], false, None);
+    println!("=== p2r-nul-int-then-utf8 | {}", export_and_describe(&path.to_string_lossy()));
+    let ds = Dataset::open(&path).unwrap();
+    for pred in ["zone = 'col0-row0'", "zone = 5", "zone > 3", "zone LIKE 'col0%'"] {
+        println!("  filter {pred:?}: {}", filter(&ds, pred));
+    }
+
+    // P-3: id\0x as Utf8 before a real id UInt64 (identity column written as a Utf8 attribute; the first field is a dummy key).
+    let path = dir.join("p3-utf8-nul-id-then-id.parquet");
+    write(&path, "key", &[("id\0x", T::Utf8), ("id", T::UInt64)], false, None);
+    println!("=== p3-utf8-nul-id-then-id | {}", export_and_describe(&path.to_string_lossy()));
+    match Dataset::open(&path) {
+        Ok(ds) => println!("  open OK; identity source={:?} session_ordinal={}", ds.identity().source().source_column(), ds.identity().source().is_session_ordinal()),
+        Err(e) => println!("  OPEN ERR: {e:?}"),
+    }
+
+    // P-4: U+0000 inside predicate text, on a clean file.
+    let path = dir.join("p4-clean.parquet");
+    write(&path, "id", &[("zone", T::Utf8)], false, None);
+    let ds = Dataset::open(&path).unwrap();
+    for pred in ["zone = 'a\0b'", "zone = 'x' -- \0", "\"zo\0ne\" IS NULL", "zone = 'col0-row0'\0 OR 1=1", "zone = 'col0-row0'\0"] {
+        println!("=== p4 filter {pred:?}: {}", filter(&ds, pred));
+    }
+
+    // Optional: two names truncating to one prefix; a U+0000 pair that DuckDB's case dedup renames.
+    for (tag, cols) in [("o1-two-nul-same-prefix", vec![("a\0x", T::Utf8), ("a\0y", T::Utf8)]), ("o2-nul-case-dedup", vec![("zone\0x", T::Utf8), ("ZONE\0x", T::Utf8)])] {
+        let path = dir.join(format!("{tag}.parquet"));
+        write(&path, "id", &cols, false, None);
+        println!("=== {tag} | {}", export_and_describe(&path.to_string_lossy()));
+    }
+}
