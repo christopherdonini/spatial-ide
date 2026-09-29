@@ -1,49 +1,11 @@
 {
-  "generated_at": "2026-09-29T06:50:57.716Z",
-  "plan_hash": "4822c58985f80746f7ccc495986dedcd81e05e7172beadf56237a4048b0452e3",
+  "generated_at": "2026-09-29T07:21:14.710Z",
+  "plan_hash": "5824e1eefef7b4b48a164cc3eb36d26b3695978bf7f8ce1327100bf7800287c2",
   "priorities_approved": true,
-  "next": {
-    "id": "b1-close-nul-column-names",
-    "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 10,
-    "budget_minutes": 180,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-28",
-      "done": null
-    },
-    "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node."
-  },
-  "ready": [
-    {
-      "id": "b1-close-nul-column-names",
-      "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 10,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
-    "total_minutes": 40,
+    "total_minutes": 65,
     "by_kind": {
       "click": [],
       "sight": [
@@ -65,6 +27,25 @@
             "done": null
           },
           "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code."
+        },
+        {
+          "id": "b1-close-nul-column-names",
+          "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
+          "lane": "engine",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": 10,
+          "budget_minutes": 180,
+          "needs_human": {
+            "kind": "sight",
+            "minutes": 25
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-09-28",
+            "done": null
+          },
+          "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code."
         }
       ],
       "ruling": [

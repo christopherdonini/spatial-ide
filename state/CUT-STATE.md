@@ -633,3 +633,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - A declared `key\0x` gets a false "no such column", and the truncated `key` offered in its place fails in turn.
     - A covering with a NUL in its struct or child name is kept at open, and every bbox query then fails after the mint. The control k3 does the same: it names a column the file lacks, with no NUL, which is a separate pre-existing hole.
   - **The preregistration** is dispatched to the architect for drafting. It is a class-9 scope addition to `engine/B1-PROJECTION-PREREGISTRATION.md`, per the Amendment 9 precedent, with the ADR-023 amendment text and OPEN markers. It comes to Fable before any code.
+- 2026-09-29T07:45Z - **A2-1's preregistration draft is filed for Fable's sighting before any code.** It is `state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md`.
+  - **What it is:** a class-9 scope addition, Amendment 12, to `engine/B1-PROJECTION-PREREGISTRATION.md`. It carries the ADR-023 amendment text, which is one new code, `skp.projection_column_name_not_addressable`; the SKP-V0 §9.5 row; an ADR-021 note excluding such columns from the filter namespace under the existing `filter_column_not_filterable`; and OPEN (a)-(g), each with a recommendation.
+  - **The architect drafted it** on the custodian's brief. Its consult is `state/consults/2026-09-29-a2-1-prereg-architect-draft.md`.
+  - **The custodian ran the consult's four missing probes and the optional pair** before filing, at c7f7e3c:
+    - **P-1:** a NUL covering under the format default opens, with a false sanity reason, and fails after the mint. That is not the consult's predicted open refusal.
+    - **P-2:** the filter namespace types a real `zone` from the `Int64` `zone\0x`. A valid `LIKE` is then falsely refused, and `zone > 3` fails after the mint.
+    - **P-3:** `id\0x` ahead of a real `id` falsely refuses the file's valid identity.
+    - **P-4:** a NUL in predicate text is refused synchronously in every shape. The NUL truncates the wrapper's tail, so there is no finding.
+    - **O-1 and O-2:** the positional rule classifies both.
+  - **The edits** to the consult's text are listed at the draft's head. Its quotes and references were checked against the files: the error docs, the directive, the SKP sections, the test names read at c37b427, and the B1 §8 items.
+  - **PLAN:** `b1-close-nul-column-names` now waits on the human, `needs_human: {kind: sight, minutes: 25}`, for Fable's sight. Its recorded status is `blocked`, per the derivation. The queue and site are regenerated.
+  - **Both S1 drafts are now with the human to relay to Fable:** B-1's proposal (568d82c) and A2-1's preregistration.

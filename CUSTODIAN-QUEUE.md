@@ -1,20 +1,21 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4822c58985f80746f7ccc495986dedcd81e05e7172beadf56237a4048b0452e3`) at `2026-09-29T06:50:57.716Z`.
+Generated from `PLAN.yaml` (sha256 `5824e1eefef7b4b48a164cc3eb36d26b3695978bf7f8ce1327100bf7800287c2`) at `2026-09-29T07:21:14.710Z`.
 
 ## 1. Next
 
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`, order 10, budget 180 min)
+- (none)
 
-## 3. Waiting on the human (total: 40 min)
+## 3. Waiting on the human (total: 65 min)
 
 ### sight
 
 - **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (20 min)
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (25 min)
 
 ### ruling
 
