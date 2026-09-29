@@ -850,3 +850,22 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - B8: the instrument doc names neither new caller.
     - B9: 12.0 pins a sha256 at branch commit c37b427. The architect prescribes one appended correction restating it in words form. That text is the one the 2026-09-29 formatting ruling kept exactly, so the correction appends and changes nothing.
   - **Next:** the gate-2 reviewer's report, then correction round 2 carrying both reports. It is the last round before the architect reduces (the record cap).
+- 2026-09-29T19:42Z - **Gate 2 (reviewer) on PR #143 at b4d7aa1: FAIL, B1-B6** (`state/consults/gates/2026-09-29-a2-1-gate2-reviewer.md`, byte-identical; gate-log attempt 3).
+  - **The findings largely overlap the architect's:**
+    - B1: N-14's leases.
+    - B2: K-2's hostile fixture unhashed.
+    - B3: N-3's c02 run in the p2 order.
+    - B4: N-10's fixture not p3.
+    - B5: the SERIAL mutex.
+    - B6: observation claims naming no commit.
+  - **What it established:**
+    - Every form mutation was observed at b4d7aa1, and that table is the observation of record.
+    - CI is all green on b4d7aa1, and there is no manifest diff.
+    - The `watch_support/mod.rs` reformat is explained: rustfmt run on `skp_projection.rs` also formats that submodule.
+    - The concurrent nul-byte failure did not reproduce in 80 unserialized runs. The quoted message is exactly the N-6 mutation's output, so a mutated tree during round 1 is the likelier source.
+  - **Round 1's report was false in two places:** N-14's lease assertions, and "zero overlapping rustfmt hunks" (the reviewer counts 55).
+  - **Correction round 2 is dispatched,** the last before the architect reduces (the record cap).
+    - The custodian first committed architect B9 on the branch as a2e8810: an appended two-sentence correction of record that restates 12.0's reproducer reference in round 25, item 2 (d)'s words form, leaving the line the formatting ruling kept unchanged.
+    - One fresh worker-high carries W1-W9 from both reports.
+    - W1 begins with a bounded reproduction attempt, with the SQL printed in Debug form. The worker stops under 12.3 if engine code carries U+0000 into a prepare, and the mutex goes in every case.
+    - The worker must show the command that proves each claim.
