@@ -10,16 +10,16 @@
 //! - `hostile_names_*`: names carrying double quotes, a backslash, a comma, a newline, a SQL
 //!   keyword, `;--`, surrounding spaces, a Unicode confusable and case-folding collisions all
 //!   round-trip to the right column's values. These pass at the baseline and record that the
-//!   SELECT-list quoting holds. Unchanged since this file's own reproducer commit (c37b427,
-//!   sha256 515db6f692edd7b78393a13b651c9222893101fceecf5626efb2a68ddd58190d).
+//!   SELECT-list quoting holds. Unchanged since this file's own reproducer commit, c37b427.
 //! - `a_nul_in_a_column_name_*`: **the defect these once reproduced is now closed.** DuckDB's
 //!   Arrow schema truncates a column name at an interior NUL; `dataset::probe_schema` now
 //!   reconciles that against DESCRIBE's own (untruncated) name and names the resident field by
 //!   the one DuckDB actually binds, so a position whose two names differ is caught by
 //!   `engine::addressability::not_addressable`/`not_addressable_for_field` at every use site before
 //!   any SQL runs. `N-1` and `N-2` invert the two tests these names used to carry (12.2).
-//! - Every fixture this file writes is hash-verified before and after the test that writes it
-//!   (§3's discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent).
+//! - Every fixture an N-test in this file writes is hash-verified before and after the test
+//!   that writes it (§3's discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12
+//!   precedent).
 
 use std::sync::Arc;
 
@@ -608,13 +608,7 @@ fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind()
 /// streams_its_other_columns` (c01). `"Num" IS NOT NULL` is admitted and streams; `"nu" IS NOT
 /// NULL` (the old truncated form) is refused `UnknownColumn`, never `ColumnNotFilterable`.
 /// Mutation: `namespace_admit` inserts every field's name into the namespace unconditionally,
-/// without the name check `filter_surrogate` (via `filterable_column_type`) applies. Observed by
-/// the gate-1 reviewer (`state/consults/gates/2026-09-29-a2-1-gate1-reviewer.md`) at 303dca0:
-/// `a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns` FAILED — `"Num"
-/// IS NOT NULL` no longer admits at all: `Num is filterable: Filter(RejectedByBinder { detail: "nul
-/// byte found in provided data at position: 155" })`. The surrogate SQL then carries every column's
-/// name, including the hostile one, so duckdb-rs's own prepare refuses the whole namespace at a
-/// lower level than this test's own assertion names — still a failure by name, not a silent pass.
+/// without the name check `filter_surrogate` (via `filterable_column_type`) applies.
 #[test]
 fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns() {
     let cols = [
@@ -812,12 +806,7 @@ fn a_declared_identity_naming_the_truncated_prefix_is_an_absent_column() {
 /// exactly when that position's bound and exported names differ — E10's positional rule (o1, o2),
 /// not only the two full-admission scenarios (c01, c02) this file's own N-1/N-2 already cover.
 /// Mutation: names are taken from `parquet_schema` — `probe_schema`'s DESCRIBE query swapped for
-/// `SELECT name FROM parquet_schema(?) OFFSET 1` (12.4 item 29's own named discriminator). Observed
-/// (gate-1 correction round 1, uncommitted on base 303dca0):
-/// `the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames` FAILED on the c07 case —
-/// `left: [""] / right: ["C2"]` — because `parquet_schema` disagrees with the binder in exactly the
-/// two cases E5 names (c07, c14; `docs`/12.1(a)'s own "a bind check or `parquet_schema` cannot
-/// supply" reasoning).
+/// `SELECT name FROM parquet_schema(?) OFFSET 1` (12.4 item 29's own named discriminator).
 // (case id, written columns, expected resident names at positions 2.., expected
 // exported-name-metadata presence at each of those positions) -- named, not inlined, on
 // `kernel/tests/skp_projection.rs`'s own `ProjectionRefusalCase` precedent (clippy's

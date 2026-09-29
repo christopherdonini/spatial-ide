@@ -230,7 +230,7 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
 /// own name contains U+0000) and p1b (a child segment does, the struct's own name clean) are
 /// checked, the same k1/k2 split N-13 makes for the LV95 shape.
 /// Mutation: `sanity_check`'s path check skips the not-addressable check (falls straight to
-/// `field_path_exists`, R-S3's own "the schema does not contain" wording).
+/// `field_path_exists`).
 #[test]
 fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason() {
     // p1a: the struct column's own name contains U+0000.
