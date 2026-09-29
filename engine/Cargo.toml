@@ -80,8 +80,3 @@ windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem", "Win32
 [dev-dependencies]
 # Enables the fixture writer for this crate's own tests without putting it in the shipped surface.
 spatial-engine = { path = ".", features = ["fixture"] }
-# §10 Amendment 12 (wave-2 A2-1), §3's fixture discipline: integration tests hash their own fixture
-# files before and after each run (`kernel/tests/skp_projection.rs`'s X12 precedent). Already an
-# ordinary dependency of this crate above (`sha2 = "0.10"`) — this adds no new crate to the tree,
-# only visibility of the one already resolved into `Cargo.lock` to this crate's own test binaries.
-sha2 = "0.10"
