@@ -1006,3 +1006,5 @@ How the existing items read with this addition:
 - **Record:** the gate reports are the observation of record. Any closing amendment is references and hashes only (the record cap).
 
 **Correction of record, appended 2026-09-29 (gate 2, architect B9).** 12.0's Reproducers line pins the reproducer file by sha256 at c37b427, a commit on `cloud/wave2-A2` that never reaches main, and round 15 (e) forbids a hash reference at a branch commit in an append-only record. In round 25, item 2 (d)'s words form that reference reads `engine/tests/b1_projection_hostile_names.rs` at c37b427, with no hash; the line itself stays as the 2026-09-29 formatting ruling kept it.
+
+**Closing record, Amendment 12 (2026-09-29; #143, merge commit 468a0ae).** 12.1(d), projection's single site: `attributes::check_geometry_and_identity` in `engine/src/attributes.rs` at 468a0ae. Gate reports: `state/consults/gates/2026-09-29-a2-1-gate1-architect.md`, `-gate1-reviewer.md`, `-gate2-architect.md`, `-gate2-reviewer.md`, `-gate3-architect.md`, `-gate3-reviewer.md`, `-reduction1-architect.md`, `-reduction1-reviewer.md`, `-reduction2-reviewer.md`.

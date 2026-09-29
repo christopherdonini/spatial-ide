@@ -937,3 +937,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - gate 3 at f4d81c5 passed the substance and failed on comment claims only;
     - two prescribed comment-only reductions (720f930 and c2ca7b4), each confirmed by the reviewer.
   - **After the merge:** the done commit (evidence {pr: 143}; the gate moved to `engine/B1-PROJECTION-PREREGISTRATION.md`; superseded rows pinned at 804a62c for the sighted draft's old-name claims; one closing reference to `attributes::check_geometry_and_identity` as 12.1(d)'s projection site). Then the worktree is removed, `cut/b1-close-nul-names` is deleted, and `cloud/wave2-A2` is kept.
+- 2026-09-29T21:59Z - **A2-1 is done: `b1-close-nul-column-names` has evidence {pr: 143} and dates.done 2026-09-29, in this one commit.**
+  - **PLAN:** the gate moves from the sighted draft to `engine/B1-PROJECTION-PREREGISTRATION.md`, the form Amendment 12 lives in.
+  - **The draft's claims:** the sighted draft (`state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md`) gains three appended superseded rows. They are pinned at 804a62c, which is on main, and cover lines 78, 135 and 138, where the draft named the two W2-A2 reproducers that N-1 and N-2 replace. `verify-test-claims` passes with 7 superseded claims, up from 3.
+  - **B1's form** gains Amendment 12's closing record, references only: 12.1(d)'s single projection site, `attributes::check_geometry_and_identity` at 468a0ae, and the nine gate-report paths.
+  - **Queue and site** are regenerated. `entry-79-b1-consult-items`, which closes B1, still waits on `b1-shell-half`.
+  - **Cleanup:**
+    - the worktree `C:/dev/wt/b1-close-nul-names` is removed, freeing its 23 GB target (C: now about 62 GB free);
+    - the merged `cut/b1-close-nul-names-2` is deleted locally and on origin; its commits are reachable from main through 468a0ae.
+  - **Kept, for the human:**
+    - The old branch `cut/b1-close-nul-names` (1507845). The formatting ruling kept it until #143 merged, but filed records cite its commits: the rebranch diff names 1507845, and worker report 1's observations are at cdadc6d and 1507845. Deleting it would leave them unresolvable, so it stays unless the human says otherwise.
+    - `cloud/wave2-A2`, for c37b427.
+  - **Main's CI at 468a0ae:** Governance and Pages pass, and the product workflows were still running at this commit.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T19:03:54.428Z",
-  "plan_hash": "f28bbcbee1613d8840a95b85bae5d9cb9d36ed45a2d1b1a58947cce5725c7470",
+  "generated_at": "2026-09-29T21:56:22.330Z",
+  "plan_hash": "9e6957ad55183fddef945baf9e3f37e961e35378420425f9512e742ce13bd1ff",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -72,8 +72,7 @@
       },
       "summary": "Entry 79's three items were RULED on 2026-09-11 (the wider named set with projection_empty_list mandatory; hover shows every projected column with the bound at admission; describe carries per-column projectable) and apply at B1's close -- no ruling remains; this node follows the B1 half Items 1 and 3 were delivered by #134 (the named projection refusals with projection_empty_list; describe's per-column projectable). Item 2 (the hover showing every projected column) is B1's shell half, held by the 2026-09-27 session order until the human's shell migration plan, so this node waits on b1-shell-half (2026-09-27). It also depends on b1-close-nul-column-names: A2-1 belongs to B1's contract and lands before B1 closes (the 2026-09-29 A2-1 clarification, state/directives/2026-09-29-a2-1-clarification.md), and this node is the one that closes B1. At B1's close the human accepts ADR-023's Amendment 2026-09-29 and ADR-021's Note 2026-09-29 together, because the Note relies on the amendment's definition of not addressable (Fable, 2026-09-29, item 1, from #142's architect note 4; state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md).",
       "blocked_by": [
-        "b1-shell-half",
-        "b1-close-nul-column-names"
+        "b1-shell-half"
       ]
     },
     {
@@ -187,30 +186,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "b1-close-nul-column-names",
-      "title": "B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 10,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/b1-close-nul-names-2"
-      },
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code. Its gate is the draft until Fable's sight moves the text into engine/B1-PROJECTION-PREREGISTRATION.md as Amendment 12, when the gate follows it; the draft's named tests are planned claims meanwhile (verify-test-claims). SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md): OPEN (a)-(g) as recommended, plus section 8 item 34 (U+0000 rendered as a visible escape in every engine message, detail and log line) with a test beside N-1; the human accepted the ADR-021 Note. Route: the ADR-023 amendment and the ADR-021 Note land on main in one docs PR (reviewer and architect gates, the human's click); then the code branch opens with Amendment 12 appended to engine/B1-PROJECTION-PREREGISTRATION.md as its first commit, before any code (a done node's gate binds its claims, so the amendment lands on main with its tests). The draft stays this node's gate until then.",
-      "evidence_label": "branch `cut/b1-close-nul-names-2`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

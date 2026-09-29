@@ -336,3 +336,8 @@ Add it as a dated note under §9.5; the "seven codes" heading stays untouched:
 8. Stated in 12.3.
 9. Done: the evidence is committed at c1218dd and c7f7e3c.
 10. Done: the names were read at c37b427, with the file's sha256 above.
+
+**Superseded rows (2026-09-29, the node's done commit after #143 merged as 468a0ae).** The two W2-A2 reproducers these lines name were replaced by N-1 and N-2 of `engine/B1-PROJECTION-PREREGISTRATION.md` §10, Amendment 12, which landed in #143.
+- Superseded: `state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md:78 @ 804a62c sha256:0bdc74f901656b28b946b7ba9cfd37bdacb4e14344fe98bcc140aa1031d073d7`, the Reproducers line naming both.
+- Superseded: `state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md:135 @ 804a62c sha256:cc1df425688ee78603c0c8a72eb0530f7b76b8279b4ab9758ef73fe86b9bc727`, the reproducer N-1 inverts.
+- Superseded: `state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md:138 @ 804a62c sha256:0010c21f5dc23392e084024f6b6692eb069d43437217eec2beeb7c8d06ff5c4f`, the reproducer N-2 inverts.

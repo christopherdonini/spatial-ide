@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f28bbcbee1613d8840a95b85bae5d9cb9d36ed45a2d1b1a58947cce5725c7470`) at `2026-09-29T19:03:54.428Z`.
+Generated from `PLAN.yaml` (sha256 `9e6957ad55183fddef945baf9e3f37e961e35378420425f9512e742ce13bd1ff`) at `2026-09-29T21:56:22.330Z`.
 
 ## 1. Next
 
@@ -19,7 +19,7 @@ Generated from `PLAN.yaml` (sha256 `f28bbcbee1613d8840a95b85bae5d9cb9d36ed45a2d1
 
 ## 4. Blocked on dependencies
 
-- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half, b1-close-nul-column-names
+- **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -28,7 +28,7 @@ Generated from `PLAN.yaml` (sha256 `f28bbcbee1613d8840a95b85bae5d9cb9d36ed45a2d1
 
 ## 5. In progress
 
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — evidence: branch `cut/b1-close-nul-names-2`
+- (none)
 
 ## 6. Proposed / unscheduled
 
