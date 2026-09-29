@@ -290,6 +290,13 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
         .fields()
         .iter()
         .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
+        // **§10 Amendment 12, 12.1(d); test N-9.** A column that is not addressable — checked
+        // through `addressability::not_addressable_for_field`, the one classifying function
+        // (12.4 item 25), never a second U+0000 test of its own — is omitted for the same reason a
+        // comma-carrying one already is: this list becomes `SkpError.fields.candidate_columns`, one
+        // comma-joined string, and a name nothing can address is not a candidate a caller could
+        // declare and have it work.
+        .filter(|f| crate::addressability::not_addressable_for_field(f).is_none())
         .map(|f| f.name().clone())
         .filter(|name| !name.contains(','))
         .collect()

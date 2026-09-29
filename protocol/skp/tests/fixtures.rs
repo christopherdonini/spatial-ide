@@ -258,8 +258,9 @@ fn describe_fixtures_carry_projectable_on_every_schema_row() {
     }
 }
 
-/// One error fixture per new `skp.projection_*` code (seven in all, §2.1) — each deserializes as
-/// `SkpError` and round-trips byte-identically.
+/// One error fixture per new `skp.projection_*` code (eight in all, §2.1; the eighth added by §10
+/// Amendment 12, wave-2 A2-1's `skp.projection_column_name_not_addressable`, N-17) — each
+/// deserializes as `SkpError` and round-trips byte-identically.
 // RECORDED MUTATION: in `protocol/skp/src/v0/error.rs::SkpError`, add
 // `#[serde(rename = "error_code")]` to `code`. Observed: this test fails by name --
 // "v0-error-projection_empty_list does not deserialize as SkpError: unknown field `code`,
@@ -275,6 +276,7 @@ fn every_new_projection_error_fixture_round_trips() {
         "v0-error-projection_column_is_identity",
         "v0-error-projection_column_duplicated",
         "v0-error-projection_too_many_columns",
+        "v0-error-projection_column_name_not_addressable",
     ] {
         let v = fixture(name);
         let parsed: SkpError = serde_json::from_value(v.clone())
@@ -372,11 +374,11 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.6`, attribute projection on `viewport_query` (Brief B stage B1). Mutation: the literal
-/// back to `"skp/0.5"`. Expected failure: this test fails by name.
+/// `skp/0.7` (§10 Amendment 12, wave-2 A2-1: `projection_column_name_not_addressable`). Mutation:
+/// the literal back to `"skp/0.6"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_6() {
-    assert_eq!(SKP_VERSION, "skp/0.6");
+fn skp_version_is_skp_0_7() {
+    assert_eq!(SKP_VERSION, "skp/0.7");
 }
 
 /// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.

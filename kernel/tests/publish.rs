@@ -25,14 +25,15 @@ use arrow::array::Array as _;
 use std::path::{Path, PathBuf};
 
 use spatial_engine::fixture::{
-    write_geoparquet, AttributeMode, CoordinateDomain, CrsMode, FixtureSpec, IdentityMode,
-    LicenseMode,
+    write_geoparquet, write_hostile_names, AttributeMode, CoordinateDomain, CrsMode, FixtureSpec,
+    HostileColumn, IdentityMode, LicenseMode,
 };
 use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::{self, redaction};
 use spatial_kernel::publish::{
-    publish_unguarded, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishError,
-    PublishPhase, PublishProgress, PublishRequest, ViewerAsset, ViewerAssets, ViewerLicenseInput,
+    preflight_pinless, publish_unguarded, CorrespondingSource, CorrespondingSourceKind,
+    OperatorLicense, PublishError, PublishPhase, PublishProgress, PublishRequest, ViewerAsset,
+    ViewerAssets, ViewerLicenseInput,
 };
 
 const STYLE: &str = r##"{
@@ -56,6 +57,14 @@ fn workspace(name: &str) -> PathBuf {
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
+}
+
+/// §3's fixture discipline (`engine/B1-PROJECTION-PREREGISTRATION.md` §10 Amendment 12, 12.2):
+/// a fixture is hash-verified before and after the test that generates it —
+/// `kernel/tests/skp_projection.rs`'s own X12 precedent, on this file's own `sha256_hex` import.
+fn sha256_file(path: &Path) -> String {
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    spatial_renderer::sha256_hex(&bytes)
 }
 
 fn fixture(dir: &Path, features: usize) -> PathBuf {
@@ -150,6 +159,53 @@ static LATER_FINISH: fn() -> String = later_finish;
 
 fn read(bundle: &Path, rel: &str) -> Vec<u8> {
     std::fs::read(bundle.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
+}
+
+/// N-16 (§10 Amendment 12, wave-2 A2-1): `publish_refuses_a_nul_named_column_at_preflight_before_
+/// any_write`. A file carrying `nu\0l` (Utf8), requested by its own bound name, is refused before
+/// any write — `preflight_pinless` never opens a destination file at all.
+/// Mutation: in `engine::attributes::ProjectionError`'s `From` impl, map
+/// `ColumnNameNotAddressable`'s arm to `ColumnUnknown`'s text (`"the file has no such column..."`)
+/// instead of carrying its own `detail` through — then this test's `detail` assertion fails by name.
+#[test]
+fn publish_refuses_a_nul_named_column_at_preflight_before_any_write() {
+    let dir = workspace("n16-hostile-name");
+    let path = dir.join("hostile.parquet");
+    write_hostile_names(
+        &path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
+    let ds = Dataset::open(&path).unwrap();
+    let viewer = viewer();
+    let destination = dir.join("out");
+    let mut req = request(&ds, &viewer, destination.clone());
+    req.attributes = vec!["nu\u{0}l".to_string()];
+
+    match preflight_pinless(&req) {
+        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column,
+            detail,
+        })) => {
+            assert_eq!(column, "nu\u{0}l");
+            assert!(!detail.contains('\0'), "{detail:?}");
+            assert!(detail.contains("\\u0000"), "{detail:?}");
+        }
+        other => panic!("expected AttributeUnpublishable naming the hostile column, got {other:?}"),
+    }
+    assert!(
+        !destination.exists(),
+        "no destination must exist before any write"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 #[test]

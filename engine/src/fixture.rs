@@ -25,7 +25,10 @@ use std::fs::File;
 use std::path::Path;
 use std::sync::Arc;
 
-use arrow::array::{ArrayRef, BinaryBuilder, Float64Builder, StructArray, UInt64Builder};
+use arrow::array::{
+    ArrayRef, BinaryBuilder, Float64Array, Float64Builder, Int64Builder, StringBuilder,
+    StructArray, UInt64Builder,
+};
 use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use parquet::arrow::ArrowWriter;
@@ -983,4 +986,222 @@ fn ring(rng: &mut SplitMix64, cx: f64, cy: f64, r: f64, n: usize) -> Vec<[f64; 2
     }
     pts.push(pts[0]);
     pts
+}
+
+// -------------------------------------------------------------------------------------------
+// §10 Amendment 12 (wave-2 A2-1) -- hostile-name fixtures, the P0 writer's own shape
+// (`state/drafts/a2-1-p0/probe.rs.txt` and `covering-probe.rs.txt`), promoted here as the shared
+// writer for the ordinary case: an `id`/geometry/attribute file (`write_hostile_names`), a hostile
+// geometry name (`write_hostile_geometry_name`), or a declared covering (`write_hostile_covering`).
+// This is not every test's only writer: `engine/tests/b1_projection_hostile_names.rs` keeps its own
+// local `write`, unchanged since c37b427, and
+// `engine/tests/b1_projection_hostile_covering.rs` adds a local
+// `write_format_default_covering` for a shape these functions do not cover (the format
+// default: no `crs` key, degrees, no geo `bbox` member).
+// -------------------------------------------------------------------------------------------
+
+/// One attribute column for [`write_hostile_names`]: its exact name (never sanitized) and whether
+/// it is `Int64` (else `Utf8`). Values are a pure function of the column's position and the row, so
+/// a column read from the wrong source is distinguishable by value -- [`hostile_value`].
+#[derive(Clone, Copy)]
+pub struct HostileColumn {
+    pub name: &'static str,
+    pub int: bool,
+}
+
+/// The value [`write_hostile_names`] wrote at column position `k`, row `i` -- a `Utf8` column's
+/// value; an `Int64` column's is `k as i64 * 100 + i as i64`.
+pub fn hostile_value(k: usize, i: u64) -> String {
+    format!("col{k}-row{i}")
+}
+
+/// Write a minimal GeoParquet file whose identity and attribute column names are exactly the
+/// caller's own strings, never sanitized -- the P0 probe's writer (`state/drafts/a2-1-p0/probe.rs.txt`).
+/// `id_name` names the `UInt64`, non-null identity-shaped column; the geometry column is always
+/// named `geometry`. Ten features, LV95 (EPSG:2056), `Polygon` only.
+pub fn write_hostile_names(path: &Path, id_name: &str, cols: &[HostileColumn]) {
+    let mut fields = vec![
+        Field::new(id_name, DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+    ];
+    for c in cols {
+        fields.push(Field::new(
+            c.name,
+            if c.int {
+                DataType::Int64
+            } else {
+                DataType::Utf8
+            },
+            true,
+        ));
+    }
+    let schema = Arc::new(Schema::new(fields));
+    write_hostile_batch(path, schema, cols, "geometry");
+}
+
+/// As [`write_hostile_names`], but with a hostile **geometry** column name (the P0 probe's c16/c17
+/// shape). `geometry_name` may itself carry U+0000; `geo.primary_column` declares exactly that name.
+pub fn write_hostile_geometry_name(path: &Path, geometry_name: &str, cols: &[HostileColumn]) {
+    let mut fields = vec![
+        Field::new("id", DataType::UInt64, false),
+        Field::new(geometry_name, DataType::Binary, false),
+    ];
+    for c in cols {
+        fields.push(Field::new(
+            c.name,
+            if c.int {
+                DataType::Int64
+            } else {
+                DataType::Utf8
+            },
+            true,
+        ));
+    }
+    let schema = Arc::new(Schema::new(fields));
+    write_hostile_batch(path, schema, cols, geometry_name);
+}
+
+/// Shared batch assembly and write for [`write_hostile_names`] and [`write_hostile_geometry_name`]:
+/// `id` (position 0, `UInt64`), a geometry column named `geometry_name` (position 1, `Binary`),
+/// then `cols` in declared order.
+fn write_hostile_batch(
+    path: &Path,
+    schema: arrow::datatypes::SchemaRef,
+    cols: &[HostileColumn],
+    geometry_name: &str,
+) {
+    const FEATURES: u64 = 10;
+    let mut ids = UInt64Builder::new();
+    let mut geoms = BinaryBuilder::new();
+    for i in 0..FEATURES {
+        ids.append_value(i);
+        let e = 2_600_000.0 + i as f64;
+        let n = 1_200_000.0 + i as f64;
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n],
+        ]]));
+    }
+    let mut arrays: Vec<ArrayRef> = vec![Arc::new(ids.finish()), Arc::new(geoms.finish())];
+    for (k, c) in cols.iter().enumerate() {
+        if c.int {
+            let mut b = Int64Builder::new();
+            for i in 0..FEATURES {
+                b.append_value(k as i64 * 100 + i as i64);
+            }
+            arrays.push(Arc::new(b.finish()));
+        } else {
+            let mut b = StringBuilder::new();
+            for i in 0..FEATURES {
+                b.append_value(hostile_value(k, i));
+            }
+            arrays.push(Arc::new(b.finish()));
+        }
+    }
+    let batch = RecordBatch::try_new(schema.clone(), arrays).unwrap();
+
+    let j = |s: &str| serde_json::to_string(s).unwrap();
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":{},\"columns\":{{{}:{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"crs\":{}}}}}}}",
+        j(geometry_name),
+        j(geometry_name),
+        LV95_PROJJSON
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let f = File::create(path).unwrap();
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
+/// Write a GeoParquet file declaring a covering `bbox` struct column under `struct_name`, with
+/// child names `children` (`[xmin, ymin, xmax, ymax]`) and a declared covering path of
+/// `(declared_struct_name, declared_children)` -- the P0 covering probe's own writer
+/// (`state/drafts/a2-1-p0/covering-probe.rs.txt`), promoted here so a declared path that differs
+/// from the written struct's own name/children (or that carries U+0000 in either) is constructible
+/// without a second parquet writer.
+pub fn write_hostile_covering(
+    path: &Path,
+    struct_name: &str,
+    children: [&str; 4],
+    declared: (&str, [&str; 4]),
+) {
+    const FEATURES: u64 = 10;
+    let mut ids = UInt64Builder::new();
+    let mut geoms = BinaryBuilder::new();
+    let (mut x0, mut y0, mut x1, mut y1) = (vec![], vec![], vec![], vec![]);
+    for i in 0..FEATURES {
+        ids.append_value(i);
+        let e = 2_600_000.0 + i as f64;
+        let n = 1_200_000.0 + i as f64;
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n],
+        ]]));
+        x0.push(e);
+        y0.push(n);
+        x1.push(e + 1.0);
+        y1.push(n + 1.0);
+    }
+    let child_fields: Vec<Field> = children
+        .iter()
+        .map(|c| Field::new(*c, DataType::Float64, false))
+        .collect();
+    let arrays: Vec<ArrayRef> = vec![
+        Arc::new(Float64Array::from(x0)),
+        Arc::new(Float64Array::from(y0)),
+        Arc::new(Float64Array::from(x1)),
+        Arc::new(Float64Array::from(y1)),
+    ];
+    let st = StructArray::new(Fields::from(child_fields.clone()), arrays, None);
+    let schema = Arc::new(Schema::new(vec![
+        Field::new("id", DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+        Field::new(
+            struct_name,
+            DataType::Struct(Fields::from(child_fields)),
+            false,
+        ),
+    ]));
+    let batch = RecordBatch::try_new(
+        schema.clone(),
+        vec![
+            Arc::new(ids.finish()),
+            Arc::new(geoms.finish()),
+            Arc::new(st),
+        ],
+    )
+    .unwrap();
+    let j = |s: &str| serde_json::to_string(s).unwrap();
+    let (ds, dc) = declared;
+    let covering = format!(
+        "{{\"bbox\":{{\"xmin\":[{},{}],\"ymin\":[{},{}],\"xmax\":[{},{}],\"ymax\":[{},{}]}}}}",
+        j(ds),
+        j(dc[0]),
+        j(ds),
+        j(dc[1]),
+        j(ds),
+        j(dc[2]),
+        j(ds),
+        j(dc[3])
+    );
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
+          \"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"covering\":{covering},\"crs\":{}}}}}}}",
+        LV95_PROJJSON
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let f = File::create(path).unwrap();
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
 }

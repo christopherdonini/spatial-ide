@@ -15,7 +15,10 @@ use futures_util::{SinkExt, StreamExt};
 use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::session::SUBPROTOCOL;
 use spatial_data_plane::{wire, RunningDataPlane};
-use spatial_engine::fixture::{f32_for, write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{
+    f32_for, write_geoparquet, write_hostile_names, AttributeMode, CrsMode, FixtureSpec,
+    HostileColumn, IdentityMode,
+};
 use spatial_engine::{CancelToken, IdentityDeclaration};
 use spatial_kernel::publish::{
     preflight_pinless, CorrespondingSource, CorrespondingSourceKind, PublishError, PublishRequest,
@@ -54,6 +57,21 @@ fn multitype_fixture(name: &str, features: usize) -> std::path::PathBuf {
         },
     )
     .expect("write fixture");
+    path
+}
+
+/// A file carrying one column whose name does not round-trip (§10 Amendment 12, wave-2 A2-1) — the
+/// P0 probe's c01 shape, promoted through `engine::fixture::write_hostile_names`.
+fn hostile_names_fixture(name: &str) -> std::path::PathBuf {
+    let path = fixture_dir().join(format!("skp-projection-{name}.parquet"));
+    write_hostile_names(
+        &path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
     path
 }
 
@@ -282,18 +300,24 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     );
 }
 
-// ---- K-2, K-3, K-4: the seven typed refusals -------------------------------------------------
+// ---- K-2, K-3, K-4, N-4: the eight typed refusals ----------------------------------------------
 
-/// K-2: `every_projection_refusal_is_synchronous_typed_and_pre_mint`, over the seven codes with
+/// K-2: `every_projection_refusal_is_synchronous_typed_and_pre_mint`, over the eight codes with
 /// their exact field keys (F11: after each refusal, no ticket exists for this dataset and the
 /// connection pool's own lease count is unchanged). K-3
 /// (`columns_empty_list_is_refused_never_read_as_null`) and K-4
 /// (`projection_error_of_maps_each_variant_to_its_own_code`) are proven from the same table, since
-/// all three read the same seven outcomes.
+/// all three read the same first seven codes. The eighth case, below the main loop, against a
+/// second, hostile-named fixture opened under its own handle (F12's harness applied again), is
+/// *this* test's own "changed existing test" (12.2's closing note: the closing `codes.len() == 7`
+/// assertion becomes 8) — a case distinct from, but proving the same code as,
+/// `a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint` (N-4,
+/// §10 Amendment 12, wave-2 A2-1), which is its own standalone test elsewhere in this file, not
+/// folded into this one.
 ///
 /// Mutations: K-2 — admit after `open_engine_stream` (then a refusal would leave a live ticket or
 /// a moved lease count). K-3 — map `Some([])` to `None` (then that one case admits instead of
-/// refusing). K-4 — two variants sharing a code (then the `BTreeSet` below has fewer than 7
+/// refusing). K-4 — two variants sharing a code (then the `BTreeSet` below has fewer than 8
 /// members).
 // RECORDED MUTATION (K-4): in `kernel/src/skp.rs::projection_error_of`, make the
 // `ColumnIsGeometry` arm return `"projection_column_is_identity"` (sharing `ColumnIsIdentity`'s
@@ -404,7 +428,84 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
         );
     }
 
-    assert_eq!(codes.len(), 7, "each of the seven refusals must map to its own code: {codes:?}");
+    // The eighth case (§10 Amendment 12, wave-2 A2-1), against its own hostile-named file -- F12's
+    // harness (`Catalog::open` under the fixture's own handle, `SkpHost::new`) applied a second
+    // time, because the multitype fixture above carries no column whose name does not round-trip.
+    // Distinct from, but proving the same code as, N-4's own standalone test (see the module doc
+    // above). Mutation: in `kernel/src/skp.rs::projection_error_of`, map
+    // `ProjectionError::ColumnNameNotAddressable` to `"projection_column_unknown"` instead (then
+    // `err.code` below reads `skp.projection_column_unknown`, and this case's own assertion fails
+    // by name).
+    let hostile_path = fixture_dir().join("skp-projection-k2-refusals-hostile.parquet");
+    write_hostile_names(
+        &hostile_path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let hostile_fixture_sha_before = sha256_file(&hostile_path);
+    let hostile_handle: DatasetHandle = "ds_00000000000000000000000000000011".parse().unwrap();
+    catalog
+        .open(hostile_handle.as_str(), &hostile_path, None)
+        .expect("open hostile-named fixture");
+    host.generations()
+        .mint_for_open(hostile_handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let hostile_ds = catalog
+        .get(hostile_handle.as_str())
+        .expect("hostile dataset in catalog");
+
+    let leases_before = hostile_ds.connections().leases_issued();
+    let cancelled_before = tickets.cancel_all_for_dataset(hostile_handle.as_str());
+    assert_eq!(
+        cancelled_before, 0,
+        "nul-named column: no ticket should exist before this case runs"
+    );
+
+    let err = host
+        .viewport_query(base_request(
+            hostile_handle.clone(),
+            Some(vec!["nu\u{0}l".to_string()]),
+        ))
+        .expect_err("nul-named column: must be refused");
+    assert_eq!(
+        err.code, "skp.projection_column_name_not_addressable",
+        "nul-named column: wrong code"
+    );
+    let actual_keys: BTreeSet<&str> = err.fields.keys().map(String::as_str).collect();
+    let expected_keys: BTreeSet<&str> = ["column", "detail"].into_iter().collect();
+    assert_eq!(
+        actual_keys, expected_keys,
+        "nul-named column: exact field key set"
+    );
+    assert_eq!(
+        err.fields.get("column").map(String::as_str),
+        Some("nu\u{0}l")
+    );
+    codes.insert(err.code.clone());
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(hostile_handle.as_str()),
+        0,
+        "nul-named column: refused synchronously and pre-mint -- no ticket to have minted"
+    );
+    assert_eq!(
+        hostile_ds.connections().leases_issued(),
+        leases_before,
+        "nul-named column: a projection refusal must not touch the stream connection pool at all"
+    );
+    assert_eq!(
+        sha256_file(&hostile_path),
+        hostile_fixture_sha_before,
+        "the hostile fixture file must be unchanged by this run"
+    );
+
+    assert_eq!(
+        codes.len(),
+        8,
+        "each of the eight refusals must map to its own code: {codes:?}"
+    );
 }
 
 /// X9 (Amendment 5, row 5.6): `every_projection_refusal_matches_its_committed_error_fixture_shape`
@@ -425,31 +526,93 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
     let path = multitype_fixture("k-x9-fixture-shape", 40);
     let handle: DatasetHandle = "ds_00000000000000000000000000000015".parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+
+    // **N-17's kernel half** (§10 Amendment 12, wave-2 A2-1): the eighth committed fixture needs a
+    // hostile-named file the multitype fixture above does not carry — a second dataset, opened
+    // under its own handle (F12's harness applied again), queried only by that one case below.
+    let hostile_path = fixture_dir().join("skp-projection-k-x9-fixture-shape-hostile.parquet");
+    write_hostile_names(
+        &hostile_path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let hostile_fixture_sha_before = sha256_file(&hostile_path);
+    let hostile_handle: DatasetHandle = "ds_00000000000000000000000000000016".parse().unwrap();
+    catalog
+        .open(hostile_handle.as_str(), &hostile_path, None)
+        .expect("open hostile-named fixture");
+    host.generations()
+        .mint_for_open(hostile_handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let too_many: Vec<String> = (0..33).map(|i| format!("bogus_{i}")).collect();
-    // (fixture file stem, columns that reproduce an equivalent live refusal)
-    let cases: Vec<(&str, Vec<String>)> = vec![
-        ("v0-error-projection_empty_list", vec![]),
-        ("v0-error-projection_too_many_columns", too_many),
-        ("v0-error-projection_column_unknown", vec!["nope".to_string()]),
-        ("v0-error-projection_column_is_geometry", vec!["geometry".to_string()]),
-        ("v0-error-projection_column_is_identity", vec!["id".to_string()]),
-        ("v0-error-projection_column_duplicated", vec!["zone".to_string(), "zone".to_string()]),
-        ("v0-error-projection_type_not_admitted", vec!["d32".to_string()]),
+    // (fixture file stem, the dataset handle this case queries, columns that reproduce an
+    // equivalent live refusal)
+    let cases: Vec<(&str, DatasetHandle, Vec<String>)> = vec![
+        ("v0-error-projection_empty_list", handle.clone(), vec![]),
+        (
+            "v0-error-projection_too_many_columns",
+            handle.clone(),
+            too_many,
+        ),
+        (
+            "v0-error-projection_column_unknown",
+            handle.clone(),
+            vec!["nope".to_string()],
+        ),
+        (
+            "v0-error-projection_column_is_geometry",
+            handle.clone(),
+            vec!["geometry".to_string()],
+        ),
+        (
+            "v0-error-projection_column_is_identity",
+            handle.clone(),
+            vec!["id".to_string()],
+        ),
+        (
+            "v0-error-projection_column_duplicated",
+            handle.clone(),
+            vec!["zone".to_string(), "zone".to_string()],
+        ),
+        (
+            "v0-error-projection_type_not_admitted",
+            handle.clone(),
+            vec!["d32".to_string()],
+        ),
+        (
+            "v0-error-projection_column_name_not_addressable",
+            hostile_handle.clone(),
+            vec!["nu\u{0}l".to_string()],
+        ),
     ];
 
-    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../protocol/skp/tests/data");
-    for (fixture_stem, columns) in cases {
-        let fixture_json = std::fs::read_to_string(fixtures_dir.join(format!("{fixture_stem}.json")))
-            .unwrap_or_else(|e| panic!("read {fixture_stem}.json: {e}"));
+    let fixtures_dir =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../protocol/skp/tests/data");
+    for (fixture_stem, case_handle, columns) in cases {
+        let fixture_json =
+            std::fs::read_to_string(fixtures_dir.join(format!("{fixture_stem}.json")))
+                .unwrap_or_else(|e| panic!("read {fixture_stem}.json: {e}"));
         let fixture_value: serde_json::Value =
             serde_json::from_str(&fixture_json).expect("fixture must be JSON");
-        let fixture_code = fixture_value["code"].as_str().expect("fixture must carry `code`").to_string();
+        let fixture_code = fixture_value["code"]
+            .as_str()
+            .expect("fixture must carry `code`")
+            .to_string();
         let fixture_keys: BTreeSet<String> = fixture_value["fields"]
             .as_object()
             .unwrap_or_else(|| panic!("{fixture_stem}: `fields` must be an object"))
@@ -458,9 +621,12 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
             .collect();
 
         let err = host
-            .viewport_query(base_request(handle.clone(), Some(columns)))
+            .viewport_query(base_request(case_handle, Some(columns)))
             .expect_err(&format!("{fixture_stem}: must be refused"));
-        assert_eq!(err.code, fixture_code, "{fixture_stem}: code must match the committed fixture");
+        assert_eq!(
+            err.code, fixture_code,
+            "{fixture_stem}: code must match the committed fixture"
+        );
         let live_keys: BTreeSet<String> = err.fields.keys().cloned().collect();
         assert_eq!(
             live_keys, fixture_keys,
@@ -468,6 +634,208 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
             err.code
         );
     }
+    assert_eq!(
+        sha256_file(&hostile_path),
+        hostile_fixture_sha_before,
+        "the hostile fixture file must be unchanged by this run"
+    );
+}
+
+// ---- N-4: the nul-named column's own refusal test ---------------------------------------------
+
+/// N-4 (§10 Amendment 12, wave-2 A2-1): `a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint`
+/// (kernel, K-2's pattern, F12's harness) — its own standalone test, separate from the eighth case
+/// folded into `every_projection_refusal_is_synchronous_typed_and_pre_mint` above. A hostile-named
+/// file, opened under its own handle (F12's harness), queried for its one nul-named column.
+///
+/// Asserts: the refusal carries `skp.projection_column_name_not_addressable` with its exact key
+/// set; `cancel_all_for_dataset` returns 0 both before and after; `leases_issued` is unchanged; and
+/// the refusal matches the committed error fixture's own key set (X9's fixture-equality pattern).
+///
+/// Mutation: in `kernel/src/skp.rs::projection_error_of`, map `ProjectionError::ColumnNameNotAddressable`
+/// to `"projection_column_unknown"` instead of its own code.
+#[test]
+fn a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint() {
+    let hostile_path = fixture_dir().join("skp-projection-n4-refusal-hostile.parquet");
+    write_hostile_names(
+        &hostile_path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&hostile_path);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000017".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog
+        .open(handle.as_str(), &hostile_path, None)
+        .expect("open hostile-named fixture");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
+
+    let leases_before = ds.connections().leases_issued();
+    let cancelled_before = tickets.cancel_all_for_dataset(handle.as_str());
+    assert_eq!(
+        cancelled_before, 0,
+        "no ticket should exist before this case runs"
+    );
+
+    let err = host
+        .viewport_query(base_request(
+            handle.clone(),
+            Some(vec!["nu\u{0}l".to_string()]),
+        ))
+        .expect_err("a nul-named column must be refused");
+    assert_eq!(
+        err.code, "skp.projection_column_name_not_addressable",
+        "wrong code"
+    );
+    let actual_keys: BTreeSet<&str> = err.fields.keys().map(String::as_str).collect();
+    let expected_keys: BTreeSet<&str> = ["column", "detail"].into_iter().collect();
+    assert_eq!(actual_keys, expected_keys, "exact field key set");
+    assert_eq!(
+        err.fields.get("column").map(String::as_str),
+        Some("nu\u{0}l")
+    );
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "refused synchronously and pre-mint -- no ticket to have minted"
+    );
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "a projection refusal must not touch the stream connection pool at all"
+    );
+
+    // X9's fixture-equality pattern: the live refusal's own key set matches the committed fixture's.
+    let fixtures_dir =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../protocol/skp/tests/data");
+    let fixture_json = std::fs::read_to_string(
+        fixtures_dir.join("v0-error-projection_column_name_not_addressable.json"),
+    )
+    .expect("read v0-error-projection_column_name_not_addressable.json");
+    let fixture_value: serde_json::Value =
+        serde_json::from_str(&fixture_json).expect("fixture must be JSON");
+    let fixture_code = fixture_value["code"]
+        .as_str()
+        .expect("fixture must carry `code`")
+        .to_string();
+    let fixture_keys: BTreeSet<String> = fixture_value["fields"]
+        .as_object()
+        .expect("`fields` must be an object")
+        .keys()
+        .cloned()
+        .collect();
+    assert_eq!(
+        err.code, fixture_code,
+        "code must match the committed fixture"
+    );
+    let live_keys: BTreeSet<String> = err.fields.keys().cloned().collect();
+    assert_eq!(
+        live_keys, fixture_keys,
+        "live field key set must match the committed fixture's"
+    );
+
+    assert_eq!(
+        sha256_file(&hostile_path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
+}
+
+// ---- N-13: the covering's kernel half -----------------------------------------------------------
+
+/// N-13's kernel half (§10 Amendment 12, wave-2 A2-1; k1, k2; engine and kernel): a hostile-covering
+/// file (k1's shape — the struct column's own name contains U+0000) opened through F12's harness.
+/// `describe`'s `covering_bbox` is `false` for the unusable covering, and a bbox `viewport_query`
+/// refuses `engine.no_covering_bbox` before the mint: no ticket exists before or after, and the
+/// connection pool's own lease count is unchanged.
+/// Mutation: `Dataset::covering()` (or its backing field) returns the declared covering whatever
+/// its usability — the same mutation the engine half of N-13 uses
+/// (`engine/tests/b1_projection_hostile_covering.rs`).
+#[test]
+fn a_hostile_covering_refuses_a_bbox_query_before_the_mint_and_describe_reports_no_covering() {
+    let hostile_path = fixture_dir().join("skp-projection-n13-hostile-covering.parquet");
+    spatial_engine::fixture::write_hostile_covering(
+        &hostile_path,
+        "bb\0ox",
+        ["xmin", "ymin", "xmax", "ymax"],
+        ("bb\0ox", ["xmin", "ymin", "xmax", "ymax"]),
+    );
+    let fixture_sha_before = sha256_file(&hostile_path);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000034".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog
+        .open(handle.as_str(), &hostile_path, None)
+        .expect("open hostile-covering fixture");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
+
+    let describe = host
+        .describe(spatial_skp::v0::DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle.clone(),
+        })
+        .expect("describe");
+    assert!(
+        !describe.covering_bbox,
+        "a covering whose path is not addressable is not usable"
+    );
+
+    let leases_before = ds.connections().leases_issued();
+    let cancelled_before = tickets.cancel_all_for_dataset(handle.as_str());
+    assert_eq!(
+        cancelled_before, 0,
+        "no ticket should exist before this case runs"
+    );
+
+    let mut req = base_request(handle.clone(), None);
+    req.bbox = Some(spatial_skp::v0::Bbox {
+        xmin: spatial_skp::v0::HexF64(2_599_000.0),
+        ymin: spatial_skp::v0::HexF64(1_199_000.0),
+        xmax: spatial_skp::v0::HexF64(2_601_000.0),
+        ymax: spatial_skp::v0::HexF64(1_201_000.0),
+    });
+    req.bbox_crs = Some("EPSG:2056".to_string());
+    let err = host
+        .viewport_query(req)
+        .expect_err("a hostile covering must refuse a bbox query");
+    assert_eq!(err.code, "engine.no_covering_bbox", "wrong code");
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "refused before the mint -- no ticket to have minted"
+    );
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "a covering refusal must not touch the stream connection pool at all"
+    );
+    assert_eq!(
+        sha256_file(&hostile_path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 // ---- X1: the filter refusal text for a still-refused type ------------------------------------
@@ -556,18 +924,30 @@ fn columns_empty_list_is_refused_never_read_as_null() {
 // `kernel/tests/skp_projection.rs:384`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn describe_projectable_agrees_with_viewport_query_admission_for_every_column() {
-    async fn check_one(handle: DatasetHandle, path: std::path::PathBuf, declared: Option<IdentityDeclaration>) {
+    async fn check_one(
+        handle: DatasetHandle,
+        path: std::path::PathBuf,
+        declared: Option<IdentityDeclaration>,
+    ) {
         let catalog = Arc::new(Catalog::new());
         match declared {
             Some(declaration) => {
                 // Mapped: declare the identity explicitly (K-5's "mapped" case, and X3's
                 // mapped-to-`i64` case below).
                 catalog
-                    .open_cancellable(handle.as_str(), &path, None, Some(declaration), &CancelToken::new())
+                    .open_cancellable(
+                        handle.as_str(),
+                        &path,
+                        None,
+                        Some(declaration),
+                        &CancelToken::new(),
+                    )
                     .expect("open with a declared identity mapping");
             }
             None => {
-                catalog.open(handle.as_str(), &path, None).expect("open dataset");
+                catalog
+                    .open(handle.as_str(), &path, None)
+                    .expect("open dataset");
             }
         }
         let tickets = StreamRegistry::new();
@@ -577,14 +957,19 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
             watch_support::no_watch_arm(),
             session_end_channel().0,
         );
-        host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+        host.generations()
+            .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
         let describe = host
-            .describe(spatial_skp::v0::DescribeRequest { skp: SKP_VERSION.to_string(), dataset: handle.clone() })
+            .describe(spatial_skp::v0::DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: handle.clone(),
+            })
             .expect("describe");
 
         for field in &describe.schema {
-            let outcome = host.viewport_query(base_request(handle.clone(), Some(vec![field.name.clone()])));
+            let outcome =
+                host.viewport_query(base_request(handle.clone(), Some(vec![field.name.clone()])));
             match (field.projectable, &outcome) {
                 (true, Ok(resp)) => {
                     tickets.cancel(resp.stream.as_str());
@@ -619,7 +1004,11 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
     check_one(
         "ds_0000000000000000000000000000002d".parse().unwrap(),
         mapped_multitype_fixture("k5-mapped", 20),
-        Some(IdentityDeclaration::new("parcel_key", "test", "2026-09-27T00:00:00Z")),
+        Some(IdentityDeclaration::new(
+            "parcel_key",
+            "test",
+            "2026-09-27T00:00:00Z",
+        )),
     )
     .await;
     // Session-ordinal: the same keyless (`ForeignKeyColumn`) fixture shape, opened with **no**
@@ -651,6 +1040,118 @@ async fn describe_projectable_agrees_with_viewport_query_admission_for_every_col
         "ds_00000000000000000000000000000031".parse().unwrap(),
         multitype_fixture("k5-x3-mapped-to-i64", 20),
         Some(mapped_to_i64),
+    )
+    .await;
+}
+
+// ---- N-3: projectable and admission agree on a nul-named column, and describe carries the bound
+// name -----------------------------------------------------------------------------------------
+
+/// N-3 (§10 Amendment 12, wave-2 A2-1): `projectable_and_admission_agree_on_a_nul_named_column`
+/// (c01, c02) — its own standalone test, separate from K-5's shared loop (the same deviation the
+/// custodian corrected for N-4 in 303dca0). For each of c01 (`nu\0l` alone) and c02 (`zone\0x`
+/// ahead of a real `zone`), `describe`'s own row carries the bound (DESCRIBE) name — never the Arrow
+/// export's truncated one — and every row's `projectable` agrees with `viewport_query`'s own
+/// admission (K-5's own agreement check).
+/// Mutation: the name rule moves into `admit_projection`'s pass 1 only, dropped from the shared
+/// `check_geometry_and_identity` helper `projectable` (`admit_projection_column`) also calls —
+/// `projectable` would then admit a not-addressable column while `viewport_query`'s own
+/// `admit_projection` still refuses it through pass 1, and the agreement assertion below fails.
+#[tokio::test(flavor = "multi_thread")]
+async fn projectable_and_admission_agree_on_a_nul_named_column() {
+    async fn check(handle: DatasetHandle, path: std::path::PathBuf, expected_names: &[&str]) {
+        let fixture_sha_before = sha256_file(&path);
+        let catalog = Arc::new(Catalog::new());
+        catalog
+            .open(handle.as_str(), &path, None)
+            .expect("open hostile-named fixture");
+        let tickets = StreamRegistry::new();
+        let host = SkpHost::new(
+            catalog.clone(),
+            tickets.clone(),
+            watch_support::no_watch_arm(),
+            session_end_channel().0,
+        );
+        host.generations()
+            .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+
+        let describe = host
+            .describe(spatial_skp::v0::DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: handle.clone(),
+            })
+            .expect("describe");
+
+        // Each row's `name` is the bound (DESCRIBE) name, not the Arrow export's truncated one.
+        let names: Vec<&str> = describe.schema.iter().map(|f| f.name.as_str()).collect();
+        for expected in expected_names {
+            assert!(
+                names.contains(expected),
+                "describe must carry the bound name `{expected}` -- got {names:?}"
+            );
+        }
+
+        for field in &describe.schema {
+            let outcome =
+                host.viewport_query(base_request(handle.clone(), Some(vec![field.name.clone()])));
+            match (field.projectable, &outcome) {
+                (true, Ok(resp)) => {
+                    tickets.cancel(resp.stream.as_str());
+                }
+                (false, Err(e)) => {
+                    assert!(
+                        e.code.starts_with("skp.projection_"),
+                        "column `{}` marked not-projectable, but was refused with `{}`, not a \
+                         projection code",
+                        field.name,
+                        e.code
+                    );
+                }
+                (true, Err(e)) => panic!(
+                    "column `{}` marked projectable, but viewport_query refused it: {e:?}",
+                    field.name
+                ),
+                (false, Ok(_)) => panic!(
+                    "column `{}` marked NOT projectable, but viewport_query admitted it",
+                    field.name
+                ),
+            }
+        }
+        assert_eq!(
+            sha256_file(&path),
+            fixture_sha_before,
+            "the fixture file must be unchanged by this run"
+        );
+    }
+
+    // c01: `nu\0l` alone.
+    check(
+        "ds_00000000000000000000000000000032".parse().unwrap(),
+        hostile_names_fixture("n3-c01-hostile-name"),
+        &["id", "geometry", "nu\u{0}l"],
+    )
+    .await;
+    // c02: `zone\0x` (Int64) ahead of a real `zone` (Utf8) -- the P0 output's own c02 order
+    // (`state/drafts/a2-1-p0/p0-output.txt`, the c02-nul-int-before-utf8 row).
+    let c02_path = fixture_dir().join("skp-projection-n3-c02-hostile-name.parquet");
+    write_hostile_names(
+        &c02_path,
+        "id",
+        &[
+            HostileColumn {
+                name: "zone\0x",
+                int: true,
+            },
+            HostileColumn {
+                name: "zone",
+                int: false,
+            },
+        ],
+    );
+    check(
+        "ds_00000000000000000000000000000033".parse().unwrap(),
+        c02_path,
+        &["id", "geometry", "zone", "zone\u{0}x"],
     )
     .await;
 }
