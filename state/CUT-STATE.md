@@ -645,3 +645,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The edits** to the consult's text are listed at the draft's head. Its quotes and references were checked against the files: the error docs, the directive, the SKP sections, the test names read at c37b427, and the B1 §8 items.
   - **PLAN:** `b1-close-nul-column-names` now waits on the human, `needs_human: {kind: sight, minutes: 25}`, for Fable's sight. Its recorded status is `blocked`, per the derivation. The queue and site are regenerated.
   - **Both S1 drafts are now with the human to relay to Fable:** B-1's proposal (568d82c) and A2-1's preregistration.
+- 2026-09-29T07:40Z - **Main was red at 804a62c on `verify:test-claims`.** It is repaired in this commit.
+  - **Cause:** the new `state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md` matches the checker's `*PREREGISTRATION*.md` scan and names 18 tests that do not exist yet.
+  - **Why the local run missed it:** the custodian ran the check before staging, and the tool reads tracked files only, so the file was invisible to it.
+  - **Repair:** `b1-close-nul-column-names` now names the draft as its `gate`, which makes those claims planned (advisory) while the node is not done. When Fable's sight moves the text into `engine/B1-PROJECTION-PREREGISTRATION.md` as Amendment 12, the gate follows it.
+  - **Lesson:** the verify scripts are run after `git add`. It is added to memory.
+  - **Also on main today:** the Pages run on 1af041b failed its gate on a GitHub API `HTTP 503` in the PR-merged check. It was transient, and the next Pages runs deployed.

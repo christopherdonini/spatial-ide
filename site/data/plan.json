@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T07:21:16.545Z",
-  "plan_hash": "5824e1eefef7b4b48a164cc3eb36d26b3695978bf7f8ce1327100bf7800287c2",
+  "generated_at": "2026-09-29T07:25:11.771Z",
+  "plan_hash": "ef92932baf3a97131c4e61ee9b284de1ee9f8acba8e906e2271a7f4b0f8b0c6c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4983,13 +4983,13 @@
         "kind": "sight",
         "minutes": 25
       },
-      "gate": "none",
+      "gate": "state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md",
       "evidence": null,
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code.",
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code. Its gate is the draft until Fable's sight moves the text into engine/B1-PROJECTION-PREREGISTRATION.md as Amendment 12, when the gate follows it; the draft's named tests are planned claims meanwhile (verify-test-claims).",
       "dates": {
         "opened": "2026-09-28",
         "done": null
