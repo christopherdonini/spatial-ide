@@ -702,3 +702,24 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **PLAN:** the node's evidence is `{branch: cut/b1-close-nul-names}`. Its gate stays the draft until the done commit moves it to `engine/B1-PROJECTION-PREREGISTRATION.md`.
   - **Cleanup:** the docs worktree and local branch are removed. The remote `docs/a2-1-adr-texts` is left for the human.
   - **Next:** a worker-high implements Amendment 12 on the branch.
+- 2026-09-29T13:30Z - **A2-1's implementation reported, and the branch was re-committed under the 2026-09-29 formatting ruling** (verbatim, `state/directives/2026-09-29-a2-1-amendment-12-formatting.md`, filed beside the sightings).
+  - **The worker's report** is `state/consults/2026-09-29-a2-1-worker-report-1.md`:
+    - two commits on `cut/b1-close-nul-names` (cdadc6d engine, 1507845 protocol, kernel and shell), with the literal at `skp/0.7`;
+    - every form mutation applied and observed by name, then reverted;
+    - the engine, kernel, skp and renderer suites green;
+    - a self-corrected, unpushed commit message that had claimed two mutations not yet run;
+    - two gaps, below.
+  - **Gap 1, `verify-test-claims` FAIL.**
+    - Four of the findings are in Amendment 12's sighted text: it names, in code formatting, the two old W2-A2 tests it replaces, and B1's form is a done node's gate. The fifth is N-4, a named test the worker folded into an existing test.
+    - The custodian asked the human. The human first answered "Tool change first", then relayed Fable's ruling, which replaces that answer: remove the code formatting from the four references and nothing else, and put the tool change to the 2026-10-02 window.
+    - **Done.** `cut/b1-close-nul-names-2`, from d37fd76, holds:
+      - 1add801, Amendment 12 re-committed with only those four code spans unformatted;
+      - 1a6584d and 19f37da, cdadc6d and 1507845 cherry-picked unchanged.
+    - `git diff 1507845 19f37da` is recorded in `state/consults/2026-09-29-a2-1-rebranch-diff.md`: one file, three lines, exactly the four backtick removals.
+    - The branch is pushed with no force-push, and the old branch is kept until the new PR merges.
+    - No PR existed for the old branch, so there is none to close.
+    - A fresh worker is adding N-4 as its own named test, as the form declares. That commit is a deviation fix outside the recorded diff, and the gates run on the head that results.
+    - The weekly window draft gains section C, `test-claims-same-pr-superseded-pin`.
+  - **Gap 2, `cargo test --workspace` not completed.** The custodian stopped the worker's leftover `cargo test -p spatial-engine` tree (PIDs 5272 and 19324 were running; the four other PIDs in the tree had already exited). It then ran `cargo test --workspace --features spatial-engine/fixture` at 1507845 itself: exit 0, zero FAILED, with the log in the custodian's scratchpad. Its tree differs from 19f37da only in the four formatting changes in a markdown file.
+  - **At the done commit:** the sighted draft on main (`state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md`, this node's gate until then) still names the two old tests in code formatting. When its claims start to bind, they need superseded rows pinned at 804a62c, which is on main. That goes with moving the gate to `engine/B1-PROJECTION-PREREGISTRATION.md`.
+  - **PLAN:** the node's evidence is `{branch: cut/b1-close-nul-names-2}`.

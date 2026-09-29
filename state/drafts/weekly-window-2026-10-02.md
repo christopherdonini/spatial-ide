@@ -66,3 +66,29 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
 - the §21c README-counting reading;
 - the health.mjs-in-worktree lesson;
 - whether segments naming no person are exempt from round 29 item 1's matcher (that one is the human's).
+
+## C. (added 2026-09-29) `verify-test-claims`: a superseded pin to a commit that the same PR introduces
+
+*Added on the 2026-09-29 formatting ruling (`state/directives/2026-09-29-a2-1-amendment-12-formatting.md`, its last item). It does not block A2-1, which was cleared by removing the code formatting from four references.*
+
+**The gap.**
+- The superseded rule of `scripts/plan/verify-test-claims.mjs` (its header, condition (e)) requires the pinned commit to be an ancestor of `origin/main`. It refuses the pin otherwise, so that a record never leans on a commit that a squash or rebase merge could drop.
+- A preregistration that must be committed before any code, and that names a test the same PR retires, therefore cannot carry a valid pin until after merge. This happens when B1's form, a done node's gate, gains an amendment that says a new test "inverts" an old one.
+- Meanwhile the PR's own required check stays red: the Governance workflow checks out with `fetch-depth: 0`, so `origin/main` always resolves.
+- It was met at A2-1's Amendment 12 on 2026-09-29.
+
+**Proposed shape: one small governance piece, `test-claims-same-pr-superseded-pin`.**
+1. Condition (e) also accepts a pinned commit that is reachable from the scanned HEAD but not from `origin/main`, only when both of these hold:
+   - the pinned file's claiming line is itself introduced in `origin/main..HEAD`;
+   - the node the file gates records that its PR merges as a merge commit.
+2. On `main`, after the merge, the existing rule already holds, because the commit is then an ancestor.
+3. Unit fixtures cover:
+   - the accepted case;
+   - a pin to a commit outside the range;
+   - a claiming line that predates the range;
+   - the squash hazard: a pin to a commit that is not reachable from HEAD.
+4. Gating: the reviewer, plus the architect if the rule is read as a guarantee under §21a (it changes a property under test). The preregistration is written before any code.
+
+**The question (draft wording), a second item beside A and B:**
+- (1) Adopt `test-claims-same-pr-superseded-pin` as described (Recommended).
+- (2) Hold. The known workaround is plain-text references, which was accepted as formatting-only for A2-1.

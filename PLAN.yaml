@@ -3085,7 +3085,7 @@ nodes:
     depends_on: [watcher-first-read-on-watch-thread]
     needs_human: {kind: none, minutes: 0}
     gate: state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md
-    evidence: {branch: cut/b1-close-nul-names}
+    evidence: {branch: cut/b1-close-nul-names-2}
     budget_minutes: 180
     generation: 1
     felt_verdict: false

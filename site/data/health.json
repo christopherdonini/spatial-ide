@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T11:22:32.567Z",
+  "generated_at": "2026-09-29T16:36:12.125Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": false,
@@ -12,12 +12,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 72326701056,
+        "bytes": 49916723200,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 365617848320,
+        "bytes": 365561839616,
         "total": 500090007552
       }
     ]
