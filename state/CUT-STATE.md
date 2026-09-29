@@ -811,3 +811,14 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The 2026-09-28 layer decisions are filed as a ruling.** `state/directives/2026-09-28-layer-model-decisions.md` holds the human's words only, byte-copied from the copy's §3. A dated RULED block sits above the first 2026-09-28 block.
   - **PLAN:** `shell-redesign-map-studio` names the decisions file as a migration-plan input, with no status or order change.
   - **The exposure scan** (canary first) is clean on the staged set.
+- 2026-09-29T19:03Z - **The 2026-09-29 holds check** is filed verbatim (`state/directives/2026-09-29-directives-not-duplicated-and-holds-check.md`).
+  - **The ruling:** no DIRECTIVE blocks. `DECISIONS-PENDING.md` holds decisions, instructions stay under `state/directives/`, and leaving out the status notes and questions was right.
+  - **A correction.** The custodian had said all four instructions were filed. The 2026-09-29 takeover was not; it is filed now, late, as `state/directives/2026-09-29-takeover.md`, verbatim from the transcript.
+  - **The one-time check** of each standing hold or ordering in the four instructions:
+    - **The 2026-09-27 session order.**
+      - Holds: B1's shell half and B2's screens now cite the directive in PLAN (`b1-shell-half` and `briefb-b2-save-reopen`, whose summaries had shown the wait only through the 2026-09-23 ruling). Further cloud spending has no PLAN node to carry it, so it sits in the continuity block's held list, citing the session order and the 2026-09-27 wave-2 authorisation (wave 2 only).
+      - Orderings: close-races and the Catalog::open reproduction are done nodes. ADR-034's acceptance, with MP-1's preregistration only after it, is on `geometry-types-beyond-polygons`, which cites the directive. The weekly window's A and B are in the draft.
+    - **The takeover:** complete; no standing hold.
+    - **The flush directive:** its standing rules (the milestone refresh, the round mirror from round 31) and its window items are process rules, not nodes. They are in the block.
+    - **The design-references directive:** item 4 is on `shell-redesign-map-studio`, citing the directive; no hold.
+  - **The weekly window** gains section F, the human's line: `state/directives/` (newest first) enters §0's reading order after `DECISIONS-PENDING.md`.

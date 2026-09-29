@@ -190,3 +190,7 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
   - (1) Adopt `stop-hook-stale-continuity` as described: the check runs before the background-tasks allow, and milestone refreshes are ledger-only (Recommended; Fable's recommendation).
   - (2) Adopt it, with every refresh preceded by a health refresh commit.
   - (3) Hold.
+
+## F. (added 2026-09-29) §0's reading order gains `state/directives/`
+
+Add `state/directives/` (newest first) to `AUTONOMY.md` §0's reading order, after `DECISIONS-PENDING.md`. The source is the human's line in `state/directives/2026-09-29-directives-not-duplicated-and-holds-check.md`, and the change is the human's to adopt at the window.
