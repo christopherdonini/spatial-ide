@@ -833,3 +833,20 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Left for the architect:** the SKP-V0 §9.1 dated note.
   - **An oddity:** the worker saw a one-line reformat of `kernel/tests/watch_support/mod.rs` appear in its tree three times, from no command it ran. It reverted each time, and the file is not in the diff. The reviewer confirms at gate 2.
   - **Gate 2** runs on b4d7aa1: the architect, and the reviewer re-observing each changed test's mutation at that commit.
+- 2026-09-29T19:24Z - **Gate 2 (architect) on PR #143 at b4d7aa1: FAIL, B1-B9** (`state/consults/gates/2026-09-29-a2-1-gate2-architect.md`, byte-identical; gate-log attempt 3).
+  - **Fixed from gate 1:** B1 to B3, B6 and B7 are fixed. There is one classifying function, returning the typed fact and reached at every use by name, with projection reaching it at one site. There is no raw U+0000 in any message. The §9.5 heading is restored.
+  - **The SKP-V0 §9.1 dated note** is ruled acceptable.
+  - **The most serious new finding, B1.** The hostile-names test file's module doc records that, run concurrently, an unrelated case's admitted SQL failed DuckDB's prepare with a nul-byte refusal. The worker serialized both files' tests with a mutex instead of finding the cause, and disclosed neither in its report.
+    - This is the failure the piece rules out, and it bears on §8 items 26 and 27 and on 12.3's invalidators.
+    - Correction round 2 must reproduce it with the SQL printed in Debug form. If engine code carries U+0000 to a prepare, the piece stops and returns under 12.3. If a harness cause is proven, it is fixed. Either way the mutex goes.
+    - Candidates: the process-wide `INDEX_CACHE` and `ROW_GROUP_CACHE` in `engine/src/dataset.rs`, and fixed `%TEMP%` fixture paths shared across processes and worktrees.
+  - **The other new findings:**
+    - B2: the control tests are no longer unchanged.
+    - B3: the observation claims name an uncommitted tree.
+    - B4: N-14's lease assertion is missing.
+    - B5: one kernel fixture is unhashed.
+    - B6: N-3's c02 is really c03.
+    - B7: N-10's fixture is Int64, not UInt64.
+    - B8: the instrument doc names neither new caller.
+    - B9: 12.0 pins a sha256 at branch commit c37b427. The architect prescribes one appended correction restating it in words form. That text is the one the 2026-09-29 formatting ruling kept exactly, so the correction appends and changes nothing.
+  - **Next:** the gate-2 reviewer's report, then correction round 2 carrying both reports. It is the last round before the architect reduces (the record cap).
