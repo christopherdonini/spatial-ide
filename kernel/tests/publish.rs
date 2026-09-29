@@ -59,6 +59,14 @@ fn workspace(name: &str) -> PathBuf {
     d
 }
 
+/// §3's fixture discipline (`engine/B1-PROJECTION-PREREGISTRATION.md` §10 Amendment 12, 12.2):
+/// a fixture is hash-verified before and after the test that generates it —
+/// `kernel/tests/skp_projection.rs`'s own X12 precedent, on this file's own `sha256_hex` import.
+fn sha256_file(path: &Path) -> String {
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    spatial_renderer::sha256_hex(&bytes)
+}
+
 fn fixture(dir: &Path, features: usize) -> PathBuf {
     let path = dir.join("parcels.parquet");
     write_geoparquet(
@@ -163,7 +171,15 @@ fn read(bundle: &Path, rel: &str) -> Vec<u8> {
 fn publish_refuses_a_nul_named_column_at_preflight_before_any_write() {
     let dir = workspace("n16-hostile-name");
     let path = dir.join("hostile.parquet");
-    write_hostile_names(&path, "id", &[HostileColumn { name: "nu\0l", int: false }]);
+    write_hostile_names(
+        &path,
+        "id",
+        &[HostileColumn {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).unwrap();
     let viewer = viewer();
     let destination = dir.join("out");
@@ -181,7 +197,15 @@ fn publish_refuses_a_nul_named_column_at_preflight_before_any_write() {
         }
         other => panic!("expected AttributeUnpublishable naming the hostile column, got {other:?}"),
     }
-    assert!(!destination.exists(), "no destination must exist before any write");
+    assert!(
+        !destination.exists(),
+        "no destination must exist before any write"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 #[test]
