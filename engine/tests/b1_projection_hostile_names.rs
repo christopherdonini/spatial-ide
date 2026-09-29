@@ -20,20 +20,8 @@
 //!   any SQL runs. `N-1` and `N-2` invert the two tests these names used to carry (12.2).
 //! - Every fixture this file writes is hash-verified before and after the test that writes it
 //!   (§3's discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent).
-//! - **Why every `#[test]` in this file takes [`SERIAL`] first.** `admission_instruments.rs`'s own
-//!   doc states the general hazard: "`cargo test` runs every `#[test]` fn *within* one file
-//!   concurrently, on shared threads, by default." This file's own tests hold more hostile,
-//!   U+0000-carrying names resident in the process at once than most (correction round 1 widened
-//!   N-1a and N-15 to more shapes), and running them concurrently was observed, empirically and
-//!   intermittently, to make an unrelated case's admitted SQL text fail DuckDB's own prepare with
-//!   `"nul byte found in provided data"` even though the printed text carried none — a
-//!   concurrency-sensitive fragility below this crate's own admission logic, not a defect this
-//!   piece's findings name or a behavior claim this file makes. Five repeated parallel runs at this
-//!   round's own base commit (303dca0, 14 tests, before this round's widening) did not reproduce it;
-//!   `--test-threads=1` never reproduced it either. Serializing this file's own tests is the
-//!   narrowest fix available without touching production code or the findings' scope.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use arrow::array::{Array, ArrayRef, BinaryBuilder, Int64Builder, StringBuilder, UInt64Builder};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -47,15 +35,6 @@ use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
 
 const FEATURES: u64 = 10;
-
-/// Serializes every `#[test]` in this file — see the module doc's own note on why.
-static SERIAL: Mutex<()> = Mutex::new(());
-
-fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
-    SERIAL
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-}
 
 /// An attribute column to write: its name and whether it is `Int64` (else `Utf8`). Values are a
 /// pure function of the column's position `k` and the row `i`, so a column read from the wrong
@@ -200,7 +179,6 @@ fn expected(k: usize) -> Vec<String> {
 /// values under its own name, in declared order.
 #[test]
 fn hostile_names_round_trip_to_their_own_columns() {
-    let _guard = serial_guard();
     let hostile: [&'static str; 8] = [
         "a\"b",
         "x\\y",
@@ -253,7 +231,6 @@ fn hostile_names_round_trip_to_their_own_columns() {
 /// from the identity or geometry only in case is renamed the same way (`ID_1`, `GEOMETRY_1`).
 #[test]
 fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
-    let _guard = serial_guard();
     let cols = [
         Col {
             name: "zone",
@@ -295,7 +272,6 @@ fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
 /// ordinary attribute). Recorded as observed, not as a defect: every name still binds one column.
 #[test]
 fn hostile_names_an_uppercase_id_under_a_mapped_identity_is_admitted_beside_id() {
-    let _guard = serial_guard();
     let cols = [Col {
         name: "ID",
         int: false,
@@ -359,7 +335,6 @@ fn drain_with_filter(
 /// against DESCRIBE.
 #[test]
 fn a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens() {
-    let _guard = serial_guard();
     let cols = [Col {
         name: "nu\0l",
         int: false,
@@ -383,7 +358,10 @@ fn a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens() {
         other => panic!("expected ColumnNameNotAddressable, got {other:?}"),
     }
     match ds.admit_projection(&["nu".to_string()]) {
-        Err(ProjectionError::ColumnUnknown { column, known_columns }) => {
+        Err(ProjectionError::ColumnUnknown {
+            column,
+            known_columns,
+        }) => {
             assert_eq!(column, "nu");
             assert!(
                 known_columns.iter().any(|c| c == "nu\u{0}l"),
@@ -417,7 +395,6 @@ fn a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens() {
 /// unchanged.
 #[test]
 fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detail() {
-    let _guard = serial_guard();
     fn assert_no_raw_nul(label: &str, text: &str) {
         assert!(!text.contains('\0'), "{label}: {text:?}");
         assert!(text.contains("\\u0000"), "{label}: {text:?}");
@@ -464,7 +441,10 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
     spatial_engine::fixture::write_hostile_geometry_name(
         &path,
         "geo\0m",
-        &[spatial_engine::fixture::HostileColumn { name: "a", int: false }],
+        &[spatial_engine::fixture::HostileColumn {
+            name: "a",
+            int: false,
+        }],
     );
     let fixture_sha_before = sha256_file(&path);
     match Dataset::open(&path) {
@@ -554,7 +534,6 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
 /// always returns `None`.
 #[test]
 fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind() {
-    let _guard = serial_guard();
     let cols = [
         Col {
             name: "zone\0x",
@@ -629,8 +608,8 @@ fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind()
 /// streams_its_other_columns` (c01). `"Num" IS NOT NULL` is admitted and streams; `"nu" IS NOT
 /// NULL` (the old truncated form) is refused `UnknownColumn`, never `ColumnNotFilterable`.
 /// Mutation: `namespace_admit` inserts every field's name into the namespace unconditionally,
-/// without the name check `filter_surrogate` (via `filterable_column_type`) applies. Observed
-/// (gate-1 correction round 1, uncommitted on base 303dca0):
+/// without the name check `filter_surrogate` (via `filterable_column_type`) applies. Observed by
+/// the gate-1 reviewer (`state/consults/gates/2026-09-29-a2-1-gate1-reviewer.md`) at 303dca0:
 /// `a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns` FAILED — `"Num"
 /// IS NOT NULL` no longer admits at all: `Num is filterable: Filter(RejectedByBinder { detail: "nul
 /// byte found in provided data at position: 155" })`. The surrogate SQL then carries every column's
@@ -638,10 +617,15 @@ fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind()
 /// lower level than this test's own assertion names — still a failure by name, not a silent pass.
 #[test]
 fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns() {
-    let _guard = serial_guard();
     let cols = [
-        Col { name: "nu\0l", int: false },
-        Col { name: "Num", int: false },
+        Col {
+            name: "nu\0l",
+            int: false,
+        },
+        Col {
+            name: "Num",
+            int: false,
+        },
     ];
     let path = path_for("nul-name-filter");
     write(&path, "id", &cols);
@@ -654,9 +638,9 @@ fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_column
     assert_eq!(string_values(&batches, "Num"), expected(1));
 
     match spatial_engine::AdmittedPredicate::admit("\"nu\" IS NOT NULL", &ds) {
-        Err(spatial_engine::PredicateAdmitError::Filter(spatial_engine::FilterError::UnknownColumn {
-            column,
-        })) => {
+        Err(spatial_engine::PredicateAdmitError::Filter(
+            spatial_engine::FilterError::UnknownColumn { column },
+        )) => {
             assert_eq!(column, "nu");
         }
         other => panic!("expected UnknownColumn for the truncated name, got {other:?}"),
@@ -678,10 +662,15 @@ fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_column
 /// two `zone` positions under one name.
 #[test]
 fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_name() {
-    let _guard = serial_guard();
     let cols = [
-        Col { name: "zone", int: false },
-        Col { name: "zone\0x", int: true },
+        Col {
+            name: "zone",
+            int: false,
+        },
+        Col {
+            name: "zone\0x",
+            int: true,
+        },
     ];
     let path = path_for("nul-shares-name-filter");
     write(&path, "id", &cols);
@@ -693,7 +682,11 @@ fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_nam
         .expect("zone LIKE 'col0%' must admit over the real Utf8 zone column");
     let batches = drain_with_filter(&ds, &["zone".to_string()], admitted).expect("stream");
     let values = string_values(&batches, "zone");
-    assert_eq!(values.len(), FEATURES as usize, "every row's zone begins col0-");
+    assert_eq!(
+        values.len(),
+        FEATURES as usize,
+        "every row's zone begins col0-"
+    );
     for v in &values {
         assert!(v.starts_with("col0-"), "{v}");
     }
@@ -710,12 +703,14 @@ fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_nam
 /// Mutation: the name check is removed from `dataset::check_geometry_column`.
 #[test]
 fn a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact() {
-    let _guard = serial_guard();
     let path = path_for("nul-geometry");
     spatial_engine::fixture::write_hostile_geometry_name(
         &path,
         "geo\0m",
-        &[spatial_engine::fixture::HostileColumn { name: "a", int: false }],
+        &[spatial_engine::fixture::HostileColumn {
+            name: "a",
+            int: false,
+        }],
     );
     let fixture_sha_before = sha256_file(&path);
     match Dataset::open(&path) {
@@ -742,7 +737,6 @@ fn a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact() {
 /// Mutation: `identity::candidate_identity_columns` drops the U+0000 omission.
 #[test]
 fn a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate() {
-    let _guard = serial_guard();
     let path = path_for("nul-native-id");
     write(
         &path,
@@ -759,7 +753,10 @@ fn a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate() {
         "no addressable native `id` exists on this file"
     );
     assert!(
-        !ds.identity().candidate_columns().iter().any(|c| c.contains('\0')),
+        !ds.identity()
+            .candidate_columns()
+            .iter()
+            .any(|c| c.contains('\0')),
         "the NUL-named column must never be offered as a candidate: {:?}",
         ds.identity().candidate_columns()
     );
@@ -783,7 +780,6 @@ fn a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate() {
 /// (truncated) name resolve.
 #[test]
 fn a_declared_identity_naming_the_truncated_prefix_is_an_absent_column() {
-    let _guard = serial_guard();
     let path = path_for("nul-declared-identity-truncated");
     write(
         &path,
@@ -830,7 +826,6 @@ type N15Case = (&'static str, Vec<Col>, Vec<&'static str>, Vec<bool>);
 
 #[test]
 fn the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames() {
-    let _guard = serial_guard();
     let cases: Vec<N15Case> = vec![
         (
             "c01",

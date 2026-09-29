@@ -7,13 +7,13 @@
 //! `engine::fixture::write_hostile_covering`.
 //!
 //! Every fixture this file writes is hash-verified before and after the test that writes it (§3's
-//! discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent). Both `#[test]`
-//! fns take [`SERIAL`] first, the same mitigation
-//! `engine/tests/b1_projection_hostile_names.rs`'s own module doc explains.
+//! discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent).
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use arrow::array::{ArrayRef, BinaryBuilder, Float64Array, StringBuilder, StructArray, UInt64Builder};
+use arrow::array::{
+    ArrayRef, BinaryBuilder, Float64Array, StringBuilder, StructArray, UInt64Builder,
+};
 use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use parquet::arrow::ArrowWriter;
@@ -35,15 +35,6 @@ fn sha256_file(path: &std::path::Path) -> String {
     let bytes = std::fs::read(path).expect("read fixture for hashing");
     let digest = Sha256::digest(&bytes);
     digest.iter().map(|b| format!("{b:02x}")).collect()
-}
-
-/// Serializes every `#[test]` in this file — see the module doc's own note on why.
-static SERIAL: Mutex<()> = Mutex::new(());
-
-fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
-    SERIAL
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 /// A GeoParquet file under the **format default** (no `crs` key, degrees, no geo `bbox` member) —
@@ -79,8 +70,10 @@ fn write_format_default_covering(path: &std::path::Path, struct_name: &str, chil
     }
     fields.push(Field::new("a", DataType::Utf8, true));
 
-    let child_fields: Vec<Field> =
-        children.iter().map(|c| Field::new(*c, DataType::Float64, false)).collect();
+    let child_fields: Vec<Field> = children
+        .iter()
+        .map(|c| Field::new(*c, DataType::Float64, false))
+        .collect();
     let st = StructArray::new(
         Fields::from(child_fields.clone()),
         vec![
@@ -91,11 +84,19 @@ fn write_format_default_covering(path: &std::path::Path, struct_name: &str, chil
         ],
         None,
     );
-    fields.push(Field::new(struct_name, DataType::Struct(Fields::from(child_fields)), false));
+    fields.push(Field::new(
+        struct_name,
+        DataType::Struct(Fields::from(child_fields)),
+        false,
+    ));
 
     let schema = Arc::new(Schema::new(fields));
-    let arrays: Vec<ArrayRef> =
-        vec![Arc::new(ids.finish()), Arc::new(geoms.finish()), Arc::new(a.finish()), Arc::new(st)];
+    let arrays: Vec<ArrayRef> = vec![
+        Arc::new(ids.finish()),
+        Arc::new(geoms.finish()),
+        Arc::new(a.finish()),
+        Arc::new(st),
+    ];
     let batch = RecordBatch::try_new(schema.clone(), arrays).unwrap();
 
     let j = |s: &str| serde_json::to_string(s).unwrap();
@@ -118,7 +119,12 @@ fn write_format_default_covering(path: &std::path::Path, struct_name: &str, chil
 
 fn bbox_query() -> ViewportQuery {
     let mut q = ViewportQuery::all();
-    q.bbox = Some(Bbox { xmin: 2_599_000.0, ymin: 1_199_000.0, xmax: 2_601_000.0, ymax: 1_201_000.0 });
+    q.bbox = Some(Bbox {
+        xmin: 2_599_000.0,
+        ymin: 1_199_000.0,
+        xmax: 2_601_000.0,
+        ymax: 1_201_000.0,
+    });
     q.bbox_crs = Some("EPSG:2056".to_string());
     q
 }
@@ -132,7 +138,6 @@ fn bbox_query() -> ViewportQuery {
 /// its usability.
 #[test]
 fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_before_any_lease() {
-    let _guard = serial_guard();
     // k1: the struct column's own name contains U+0000.
     let path = path_for("k1-struct-nul");
     write_hostile_covering(
@@ -143,14 +148,20 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
     );
     let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the open itself must still succeed");
-    assert!(ds.covering().is_none(), "a covering whose path is not addressable is not usable");
+    assert!(
+        ds.covering().is_none(),
+        "a covering whose path is not addressable is not usable"
+    );
 
     let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&bbox_query(), CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { detail }) => {
             assert!(!detail.contains('\0'), "{detail:?}");
         }
-        other => panic!("expected NoCoveringBbox before any lease, got {}", describe(other)),
+        other => panic!(
+            "expected NoCoveringBbox before any lease, got {}",
+            describe(other)
+        ),
     }
     assert_eq!(
         ds.connections().leases_issued(),
@@ -158,7 +169,9 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
         "k1: before any lease -- a covering refusal must not touch the connection pool"
     );
     // The no-bbox stream is unchanged: it opens and produces a batch, covering or not.
-    let mut stream = ds.stream_with_cancel(&ViewportQuery::all(), CancelToken::new()).expect("no-bbox stream opens");
+    let mut stream = ds
+        .stream_with_cancel(&ViewportQuery::all(), CancelToken::new())
+        .expect("no-bbox stream opens");
     let mut buf = Vec::new();
     let mut n = 0;
     while let Some(info) = stream.next_into(&mut buf) {
@@ -193,7 +206,10 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
     let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&bbox_query(), CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { .. }) => {}
-        other => panic!("expected NoCoveringBbox before any lease, got {}", describe(other)),
+        other => panic!(
+            "expected NoCoveringBbox before any lease, got {}",
+            describe(other)
+        ),
     }
     assert_eq!(
         ds.connections().leases_issued(),
@@ -217,24 +233,39 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
 /// `field_path_exists`, R-S3's own "the schema does not contain" wording).
 #[test]
 fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason() {
-    let _guard = serial_guard();
     // p1a: the struct column's own name contains U+0000.
     let path = path_for("p1a-format-default-struct-nul");
     write_format_default_covering(&path, "bb\0ox", ["xmin", "ymin", "xmax", "ymax"]);
     let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the format default admits an undeclared CRS file");
     let admission = ds.admission().expect("admission is always recorded");
-    assert_eq!(admission.sanity_level, spatial_engine::geoparquet::SanityLevel::NotChecked);
-    assert!(admission.sanity_reason.contains("U+0000"), "{}", admission.sanity_reason);
+    assert_eq!(
+        admission.sanity_level,
+        spatial_engine::geoparquet::SanityLevel::NotChecked
+    );
     assert!(
-        !admission.sanity_reason.to_lowercase().contains("does not contain"),
+        admission.sanity_reason.contains("U+0000"),
+        "{}",
+        admission.sanity_reason
+    );
+    assert!(
+        !admission
+            .sanity_reason
+            .to_lowercase()
+            .contains("does not contain"),
         "{}",
         admission.sanity_reason
     );
 
     let mut q = ViewportQuery::all();
-    q.bbox = Some(Bbox { xmin: 7.0, ymin: 46.0, xmax: 8.0, ymax: 47.0 });
+    q.bbox = Some(Bbox {
+        xmin: 7.0,
+        ymin: 46.0,
+        xmax: 8.0,
+        ymax: 47.0,
+    });
     q.bbox_crs = Some("OGC:CRS84".to_string());
+    let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&q, CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { .. }) => {}
         other => panic!(
@@ -242,6 +273,11 @@ fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_rea
             describe(other)
         ),
     }
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "p1a: before any lease -- a covering refusal must not touch the connection pool"
+    );
     assert_eq!(
         sha256_file(&path),
         fixture_sha_before,
@@ -271,6 +307,7 @@ fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_rea
         "{}",
         admission.sanity_reason
     );
+    let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&q, CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { .. }) => {}
         other => panic!(
@@ -278,6 +315,11 @@ fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_rea
             describe(other)
         ),
     }
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "p1b: before any lease -- a covering refusal must not touch the connection pool"
+    );
     assert_eq!(
         sha256_file(&path),
         fixture_sha_before,
