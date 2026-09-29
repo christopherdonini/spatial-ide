@@ -183,7 +183,12 @@ pub enum ProjectionError {
     /// (publish's own renderer) can tell a still-refused `Dictionary` and a still-refused `Float32`
     /// apart from every other refused type and render each one's own byte-for-byte "today's text"
     /// (O2), without a second, fallible lookup back into the file schema.
-    TypeNotAdmitted { column: String, arrow_type: String, source_type: DataType, detail: String },
+    TypeNotAdmitted {
+        column: String,
+        arrow_type: String,
+        source_type: DataType,
+        detail: String,
+    },
     /// The column's own bound name does not round-trip through this engine's admission (§10
     /// Amendment 12, 12.1(c)): DuckDB's Arrow export truncated it to a different name than the one
     /// DESCRIBE binds it by, or it carries U+0000 outright. Checked first among the per-column
@@ -200,7 +205,10 @@ impl std::fmt::Display for ProjectionError {
                 "refused: the declared projection names {saw} column(s), over the declared ceiling \
                  of {limit}"
             ),
-            Self::ColumnUnknown { column, known_columns } => {
+            Self::ColumnUnknown {
+                column,
+                known_columns,
+            } => {
                 // `known_columns` is comma-joined in the `candidate_columns` form on the wire
                 // (`kernel::skp::projection_error_of`); a name that contains a comma is omitted
                 // there, so this Display states that rather than silently listing a superset of
@@ -245,9 +253,17 @@ impl std::fmt::Display for ProjectionError {
                  this dataset's identity is mapped from `{id_column}`"
             ),
             Self::ColumnDuplicated { column } => {
-                write!(f, "refused: `{column}` is named twice in the declared projection")
+                write!(
+                    f,
+                    "refused: `{column}` is named twice in the declared projection"
+                )
             }
-            Self::TypeNotAdmitted { column, arrow_type, detail, .. } => {
+            Self::TypeNotAdmitted {
+                column,
+                arrow_type,
+                detail,
+                ..
+            } => {
                 write!(f, "refused: `{column}` is {arrow_type} — {detail}")
             }
             Self::ColumnNameNotAddressable { column, detail } => write!(
@@ -267,7 +283,12 @@ impl std::error::Error for ProjectionError {}
 /// 17 item 4, stop item 8). One function, so [`ProjectionError`]'s own `Display` and the kernel's
 /// wire field cannot silently list two different sets.
 pub fn known_columns_wire_field(known_columns: &[String]) -> String {
-    known_columns.iter().filter(|c| !c.contains(',')).cloned().collect::<Vec<_>>().join(",")
+    known_columns
+        .iter()
+        .filter(|c| !c.contains(','))
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 /// Serves publish, whose refusals are typed as [`EngineError`] rather than [`ProjectionError`]
@@ -327,7 +348,11 @@ impl From<ProjectionError> for EngineError {
             // bundle-format restriction) — anything else gets the final-arm text X1 restored.
             // `Float32` is unreachable here today (the live gate always admits it), kept for
             // exhaustiveness against the day the admitted set narrows again.
-            ProjectionError::TypeNotAdmitted { column, source_type, .. } => {
+            ProjectionError::TypeNotAdmitted {
+                column,
+                source_type,
+                ..
+            } => {
                 use DataType as D;
                 let detail = match &source_type {
                     D::Dictionary(..) => format!(
@@ -345,7 +370,10 @@ impl From<ProjectionError> for EngineError {
                          attribute (utf8, boolean, the 8/16/32/64-bit integers, float64)"
                     ),
                 };
-                EngineError::AttributeUnpublishable { column: column.clone(), detail }
+                EngineError::AttributeUnpublishable {
+                    column: column.clone(),
+                    detail,
+                }
             }
             // **§10 Amendment 12, 12.1(e).** `detail` is already
             // [`crate::addressability::NotAddressableFact::render`]'s own text — carried verbatim,
@@ -428,7 +456,9 @@ fn check_geometry_and_identity(
     }
     let name = field.name().as_str();
     if name == geometry_column {
-        return Err(ProjectionError::ColumnIsGeometry { column: name.to_string() });
+        return Err(ProjectionError::ColumnIsGeometry {
+            column: name.to_string(),
+        });
     }
     if name == crate::envelope::ID_COLUMN || name == identity_column {
         return Err(ProjectionError::ColumnIsIdentity {
@@ -525,12 +555,13 @@ pub fn admit_projection(
                 id_column: identity_column.to_string(),
             });
         }
-        let field = file_schema.iter().find(|f| f.name() == name).ok_or_else(|| {
-            ProjectionError::ColumnUnknown {
+        let field = file_schema
+            .iter()
+            .find(|f| f.name() == name)
+            .ok_or_else(|| ProjectionError::ColumnUnknown {
                 column: name.to_string(),
                 known_columns: file_schema.iter().map(|f| f.name().clone()).collect(),
-            }
-        })?;
+            })?;
         resolved.push(field);
     }
 
@@ -550,13 +581,18 @@ pub fn admit_projection(
         // applies.
         check_geometry_and_identity(field, geometry_column, identity_column)?;
         if seen.contains(&name) {
-            return Err(ProjectionError::ColumnDuplicated { column: name.to_string() });
+            return Err(ProjectionError::ColumnDuplicated {
+                column: name.to_string(),
+            });
         }
         seen.push(name);
         out.push(type_check(field)?);
         source_types.push(field.data_type().clone());
     }
-    Ok(AdmittedProjection { fields: out, source_types })
+    Ok(AdmittedProjection {
+        fields: out,
+        source_types,
+    })
 }
 
 #[cfg(test)]

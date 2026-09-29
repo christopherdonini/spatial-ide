@@ -1619,11 +1619,13 @@ fn projection_error_of(e: &ProjectionError) -> SkpError {
         // **§10 Amendment 12, 12.1(f).** The eighth code — `column` carries the bound name's raw
         // bytes (JSON-escaped by serialization, never the visible `\u0000` escape: that rendering
         // is for messages, not wire field values — 12.2 N-1a).
-        ProjectionError::ColumnNameNotAddressable { column, detail } => SkpError::protocol_with_fields(
-            "projection_column_name_not_addressable",
-            message,
-            [("column", column.clone()), ("detail", detail.clone())],
-        ),
+        ProjectionError::ColumnNameNotAddressable { column, detail } => {
+            SkpError::protocol_with_fields(
+                "projection_column_name_not_addressable",
+                message,
+                [("column", column.clone()), ("detail", detail.clone())],
+            )
+        }
     }
 }
 
