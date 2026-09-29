@@ -994,8 +994,8 @@ fn ring(rng: &mut SplitMix64, cx: f64, cy: f64, r: f64, n: usize) -> Vec<[f64; 2
 // writer for the ordinary case: an `id`/geometry/attribute file (`write_hostile_names`), a hostile
 // geometry name (`write_hostile_geometry_name`), or a declared covering (`write_hostile_covering`).
 // This is not every test's only writer: `engine/tests/b1_projection_hostile_names.rs` keeps its own
-// richer `write` for its pre-existing quoting-and-case-folding control tests (unchanged since
-// c37b427), and `engine/tests/b1_projection_hostile_covering.rs` adds a local
+// local `write`, unchanged since c37b427 and used by every test in that file, control and hostile
+// alike, and `engine/tests/b1_projection_hostile_covering.rs` adds a local
 // `write_format_default_covering` for the one shape these functions do not cover (the format
 // default: no `crs` key, degrees, no geo `bbox` member).
 // -------------------------------------------------------------------------------------------
@@ -1025,7 +1025,15 @@ pub fn write_hostile_names(path: &Path, id_name: &str, cols: &[HostileColumn]) {
         Field::new("geometry", DataType::Binary, false),
     ];
     for c in cols {
-        fields.push(Field::new(c.name, if c.int { DataType::Int64 } else { DataType::Utf8 }, true));
+        fields.push(Field::new(
+            c.name,
+            if c.int {
+                DataType::Int64
+            } else {
+                DataType::Utf8
+            },
+            true,
+        ));
     }
     let schema = Arc::new(Schema::new(fields));
     write_hostile_batch(path, schema, cols, "geometry");
@@ -1039,7 +1047,15 @@ pub fn write_hostile_geometry_name(path: &Path, geometry_name: &str, cols: &[Hos
         Field::new(geometry_name, DataType::Binary, false),
     ];
     for c in cols {
-        fields.push(Field::new(c.name, if c.int { DataType::Int64 } else { DataType::Utf8 }, true));
+        fields.push(Field::new(
+            c.name,
+            if c.int {
+                DataType::Int64
+            } else {
+                DataType::Utf8
+            },
+            true,
+        ));
     }
     let schema = Arc::new(Schema::new(fields));
     write_hostile_batch(path, schema, cols, geometry_name);
@@ -1061,7 +1077,12 @@ fn write_hostile_batch(
         ids.append_value(i);
         let e = 2_600_000.0 + i as f64;
         let n = 1_200_000.0 + i as f64;
-        geoms.append_value(encode_polygon(&[vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]]]));
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n],
+        ]]));
     }
     let mut arrays: Vec<ArrayRef> = vec![Arc::new(ids.finish()), Arc::new(geoms.finish())];
     for (k, c) in cols.iter().enumerate() {
@@ -1118,14 +1139,21 @@ pub fn write_hostile_covering(
         ids.append_value(i);
         let e = 2_600_000.0 + i as f64;
         let n = 1_200_000.0 + i as f64;
-        geoms.append_value(encode_polygon(&[vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]]]));
+        geoms.append_value(encode_polygon(&[vec![
+            [e, n],
+            [e + 1.0, n],
+            [e + 1.0, n + 1.0],
+            [e, n],
+        ]]));
         x0.push(e);
         y0.push(n);
         x1.push(e + 1.0);
         y1.push(n + 1.0);
     }
-    let child_fields: Vec<Field> =
-        children.iter().map(|c| Field::new(*c, DataType::Float64, false)).collect();
+    let child_fields: Vec<Field> = children
+        .iter()
+        .map(|c| Field::new(*c, DataType::Float64, false))
+        .collect();
     let arrays: Vec<ArrayRef> = vec![
         Arc::new(Float64Array::from(x0)),
         Arc::new(Float64Array::from(y0)),
@@ -1136,18 +1164,33 @@ pub fn write_hostile_covering(
     let schema = Arc::new(Schema::new(vec![
         Field::new("id", DataType::UInt64, false),
         Field::new("geometry", DataType::Binary, false),
-        Field::new(struct_name, DataType::Struct(Fields::from(child_fields)), false),
+        Field::new(
+            struct_name,
+            DataType::Struct(Fields::from(child_fields)),
+            false,
+        ),
     ]));
     let batch = RecordBatch::try_new(
         schema.clone(),
-        vec![Arc::new(ids.finish()), Arc::new(geoms.finish()), Arc::new(st)],
+        vec![
+            Arc::new(ids.finish()),
+            Arc::new(geoms.finish()),
+            Arc::new(st),
+        ],
     )
     .unwrap();
     let j = |s: &str| serde_json::to_string(s).unwrap();
     let (ds, dc) = declared;
     let covering = format!(
         "{{\"bbox\":{{\"xmin\":[{},{}],\"ymin\":[{},{}],\"xmax\":[{},{}],\"ymax\":[{},{}]}}}}",
-        j(ds), j(dc[0]), j(ds), j(dc[1]), j(ds), j(dc[2]), j(ds), j(dc[3])
+        j(ds),
+        j(dc[0]),
+        j(ds),
+        j(dc[1]),
+        j(ds),
+        j(dc[2]),
+        j(ds),
+        j(dc[3])
     );
     let geo = format!(
         "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\
