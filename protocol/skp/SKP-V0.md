@@ -86,6 +86,14 @@ sanity   { level: "metadata"|"sample"|"none", reason }
 pressure (`ConnectionsExhausted`), which would make a command described as pure able to fail on
 resource contention.
 
+> **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** `schema[].name` is the
+> **bound** name — the one DuckDB actually binds a SELECT list entry by (DESCRIBE's own name for
+> that position), not always the name its Arrow export would show. A position whose two names
+> differ carries a bound name containing U+0000 iff DuckDB's own export truncated it there; that
+> name still travels on the wire as its own bytes, JSON-escaped by ordinary serialization, and
+> `schema[].projectable` is `false` for it (§9.5's new code).
+
+
 ### `viewport_query`
 
 ```
@@ -416,6 +424,13 @@ predicate never names a table.
 > **projection**. A predicate naming a dictionary-encoded column is refused
 > `skp.filter_column_not_filterable`, `reason` stating the encoding — no new filter code. This note
 > amends this section's rule in place; it does not restate §7's own text elsewhere.
+
+> **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** A column whose bound name
+> does not round-trip through this engine's own admission (DuckDB's Arrow export truncated it at
+> U+0000, or the name itself carries U+0000) is **left out of this namespace** — no comparison
+> distinguishes it from a name that does, so it never reaches a surrogate at all. A predicate that
+> references one by name is refused `skp.filter_column_not_filterable`, `reason` naming the fact;
+> no new filter code. This note amends this section's rule in place.
 
 ### 7.4 Admitted constructs and the refused-by-name list
 
@@ -884,6 +899,33 @@ and `frontends/shell/src/skp/__tests__/fixtures.test.ts`); plain `==` comparison
 `deny_unknown_fields` kept both directions. The version's fixtures changed in `2963021`, `6cd1764`,
 `9348a40` and `5358ff6` (§4 item 13 states which side each carried). `skp/1` stays RESERVED.
 
+### skp/0.7 — column names that do not round-trip (§10 Amendment 12, wave-2 A2-1)
+
+**The version's FULL field set, as §8's own discipline requires — the one member `skp/0.7` adds.**
+
+One new typed refusal, mapped 1:1 from `engine::attributes::ProjectionError::ColumnNameNotAddressable`
+(`kernel::skp::projection_error_of`), the eighth `skp.projection_*` code (§9.5's own table):
+
+- **`skp.projection_column_name_not_addressable`**, fields `column` and `detail` — a column whose
+  bound name does not round-trip through this engine's own admission (DuckDB's Arrow export
+  truncated it at U+0000, or the name itself carries U+0000). Checked first among the per-column
+  rules (§9.4's dated note), so it is never masked by a geometry, identity, duplicate or type
+  refusal that could not be trusted to mean what it says about such a name.
+
+`describe`'s `schema[].name` is now documented as the **bound** name, and a filter predicate naming
+a not-addressable column is refused `skp.filter_column_not_filterable` (§7.3's dated note; no new
+filter code).
+
+**What `skp/0.7` deliberately does not add.** No new command, no new request or response member.
+`protocol/data-plane/` has an empty diff.
+
+Mechanics: one literal bumped once, `"skp/0.6"` → `"skp/0.7"`, in one commit on
+`cut/b1-close-nul-names`, which carries both sides' fixtures for the literal
+(`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs` and
+`frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixture
+(`v0-error-projection_column_name_not_addressable.json`) together; plain `==` comparison retained;
+`deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -896,6 +938,10 @@ wire shape, contract, refusal table, pre-lease admission, data plane.
 every derived struct in both directions. The literal bump and both sides' fixtures for it landed
 together in `6cd1764`; the version's fixtures also changed in `2963021`, `9348a40` and `5358ff6`
 (§4 item 13; the mechanics under §8's `skp/0.6` entry).
+
+> **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** `skp` is now compared
+> against `"skp/0.7"`, still `==`. `deny_unknown_fields` is unchanged; both sides' fixtures and the
+> new error fixture landed with the literal bump, in the same commit (§8's `skp/0.7` entry).
 
 ### 9.2 The wire shape
 
@@ -939,7 +985,12 @@ runs (ADR-023 §3; ADR-019):
    failure.
 5. The first failure is reported.
 
-### 9.5 Refusal taxonomy — seven codes
+> **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** Step 4's per-column order
+> is now **name, geometry, identity, duplicate, type**: whether the resolved column's own bound name
+> round-trips through this engine's admission is checked first, ahead of every other per-column
+> rule — a name nothing can address cannot be trusted to mean what any later rule says about it.
+
+### 9.5 Refusal taxonomy — eight codes
 
 | Code | Fields |
 |---|---|
@@ -950,10 +1001,17 @@ runs (ADR-023 §3; ADR-019):
 | `skp.projection_column_is_identity` | `column`, `id_column` |
 | `skp.projection_column_duplicated` | `column` |
 | `skp.projection_too_many_columns` | `limit`, `saw` |
+| `skp.projection_column_name_not_addressable` | `column`, `detail` |
 
 `known_columns` is comma-joined in the `candidate_columns` form (§8's `skp/0.2` entry); a name
 containing a comma is omitted, and the refusal's own `message` states that when it happens (round 17
 item 4, stop item 8).
+
+> **Dated note, `skp/0.7` (2026-09-29; §10 Amendment 12, wave-2 A2-1).** The eighth code,
+> `skp.projection_column_name_not_addressable`, refuses a column whose bound name does not
+> round-trip through this engine's own admission — DuckDB's Arrow export truncated it at U+0000, or
+> the name itself carries U+0000. `column` carries the bound name's own bytes; `detail` names which
+> of the two facts applies. Checked first among the per-column rules (§9.4's dated note).
 
 **Publish's own, separate restriction.** `kernel/src/publish`'s preflight refuses a `Float32` or
 dictionary-encoded column at preflight as a **bundle-format restriction** — ADR-017 §4, unedited,

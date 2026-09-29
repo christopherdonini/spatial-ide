@@ -420,6 +420,19 @@ describe("SKP v0 shared fixtures", () => {
     expect(err.fields.candidate_columns).toBe("parcel_key,tax_lot_number");
   });
 
+  // S-1's shell half (§10 Amendment 12, wave-2 A2-1): the eighth projection code's own fixture,
+  // read here the way "an identity_unusable refusal..." above reads its own single-code fixture.
+  // Mutation: drop `detail` from the fixture. Expected failure: this test fails by name.
+  it("a projection_column_name_not_addressable refusal carries column and detail (skp/0.7)", () => {
+    const err = loadFixture<SkpError>("v0-error-projection_column_name_not_addressable");
+    assertExactKeys(err, ["code", "message", "fields"], "projection_column_name_not_addressable error example");
+    expect(err.code).toBe("skp.projection_column_name_not_addressable");
+    expect(err.fields.column).toBeDefined();
+    expect(err.fields.detail).toBeDefined();
+    expect(err.fields.detail).not.toContain("\u0000");
+    expect(err.fields.detail).toContain("\\u0000");
+  });
+
   it("every request fixture carries the current SKP_VERSION this client also sends", () => {
     for (const name of [
       "v0-open_dataset-request",
