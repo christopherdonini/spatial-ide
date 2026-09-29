@@ -362,3 +362,7 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
   1. T-A (the ADR-021 Note, `<date>` = 2026-09-30) lands on main by a docs PR, byte-identical to the accepted text, before any code (§2.9).
   2. T-B and T-C bind the code.
   3. T-D lands with the code and the literal bump, never before. The literal is the one after main's at merge; main's is now `skp/0.7`.
+
+### Amendment 2 — 2026-09-30, before any code: Amendment 1's §3 consequence checked
+
+*A record only, by reference. Fable's check of Amendment 1's §3 item, that the rows refused only by a bound (C15's second case, C22, C23 and C24) predict `literal_out_of_bounds`: confirmed as the intended consequence of O-3, with no further sighting (`state/directives/2026-09-30-takeover.md`, item 2). No row, test, value or section changes.*

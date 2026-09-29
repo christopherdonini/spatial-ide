@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `73a85d19e23696b0e6fd938a3a66c4ac0e7c3fb313231bb2f572a2c6ce88943c`) at `2026-09-29T22:18:49.932Z`.
+Generated from `PLAN.yaml` (sha256 `b1ebb8964df5866f55899f67cca3d4d99993af3062e723355361572dda4175f3`) at `2026-09-29T22:34:51.824Z`.
 
 ## 1. Next
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `73a85d19e23696b0e6fd938a3a66c4ac0e7c3fb31323
 
 ## 5. In progress
 
-- (none)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) — evidence: branch `docs/b-1-adr-021-note`
 
 ## 6. Proposed / unscheduled
 

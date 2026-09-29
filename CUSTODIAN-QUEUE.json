@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-09-29T22:18:49.932Z",
-  "plan_hash": "73a85d19e23696b0e6fd938a3a66c4ac0e7c3fb313231bb2f572a2c6ce88943c",
+  "generated_at": "2026-09-29T22:34:51.824Z",
+  "plan_hash": "b1ebb8964df5866f55899f67cca3d4d99993af3062e723355361572dda4175f3",
   "priorities_approved": true,
-  "next": {
-    "id": "filter-bind-admission-implicit-coercions",
-    "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 9,
-    "budget_minutes": 180,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-28",
-      "done": null
-    },
-    "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code. SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 points 1-6): rule 6 (6ii) admitted and declared, pinned by f32 = 16777217 matching a stored 16777216; the 20-digit and scale-18 bounds with the named boundary literals in the binder-agreement pin; the mechanism accepted; arithmetic NOT 5a -- / declared floating-point division, other conversions inside arithmetic follow the admitted set, same-type integer overflow leaves B-1 for node stream-evaluation-failure-fixed-detail (5c); 6a with four reasons. Next: the full-form preregistration; then the human's typed texts together (the Decision 6.3 Note, Decision 8's twelfth code, the four reason strings for sight). The full-form preregistration is committed as engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md (architect-drafted, consult state/consults/2026-09-29-b1-prereg-architect-draft.md), with OPEN O-1 to O-6 for Fable: REAL division, the integer-digit bound on a decimal literal, reason 1's truth for bound-only refusals, the code name and fixed reason values, decimal-with-decimal arithmetic, and the excluded overflow class. O-1 and O-2 were confirmed against DuckDB v1.5.5 by the custodian. The human's typed texts (T-A the ADR-021 Note, T-B the twelfth code, T-C the four reason strings) are drafted in the consult; they and Fable's O rulings were this node's wait. RULED 2026-09-30: Fable's O rulings (state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md, Part 1) and the human's acceptance of T-A, T-B and T-C (Part 2; state/directives/2026-09-30-b1-acceptance-and-handoff.md), recorded as the form's section 10 Amendment 1. Next: T-A's docs PR (the ADR-021 Note, dated 2026-09-30), then code under full gating. No code starts before the typed Note lands on main."
-  },
-  "ready": [
-    {
-      "id": "filter-bind-admission-implicit-coercions",
-      "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code. SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 points 1-6): rule 6 (6ii) admitted and declared, pinned by f32 = 16777217 matching a stored 16777216; the 20-digit and scale-18 bounds with the named boundary literals in the binder-agreement pin; the mechanism accepted; arithmetic NOT 5a -- / declared floating-point division, other conversions inside arithmetic follow the admitted set, same-type integer overflow leaves B-1 for node stream-evaluation-failure-fixed-detail (5c); 6a with four reasons. Next: the full-form preregistration; then the human's typed texts together (the Decision 6.3 Note, Decision 8's twelfth code, the four reason strings for sight). The full-form preregistration is committed as engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md (architect-drafted, consult state/consults/2026-09-29-b1-prereg-architect-draft.md), with OPEN O-1 to O-6 for Fable: REAL division, the integer-digit bound on a decimal literal, reason 1's truth for bound-only refusals, the code name and fixed reason values, decimal-with-decimal arithmetic, and the excluded overflow class. O-1 and O-2 were confirmed against DuckDB v1.5.5 by the custodian. The human's typed texts (T-A the ADR-021 Note, T-B the twelfth code, T-C the four reason strings) are drafted in the consult; they and Fable's O rulings were this node's wait. RULED 2026-09-30: Fable's O rulings (state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md, Part 1) and the human's acceptance of T-A, T-B and T-C (Part 2; state/directives/2026-09-30-b1-acceptance-and-handoff.md), recorded as the form's section 10 Amendment 1. Next: T-A's docs PR (the ADR-021 Note, dated 2026-09-30), then code under full gating. No code starts before the typed Note lands on main."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -205,7 +167,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "filter-bind-admission-implicit-coercions",
+      "title": "Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "docs/b-1-adr-021-note"
+      },
+      "dates": {
+        "opened": "2026-09-28",
+        "done": null
+      },
+      "summary": "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code. SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 points 1-6): rule 6 (6ii) admitted and declared, pinned by f32 = 16777217 matching a stored 16777216; the 20-digit and scale-18 bounds with the named boundary literals in the binder-agreement pin; the mechanism accepted; arithmetic NOT 5a -- / declared floating-point division, other conversions inside arithmetic follow the admitted set, same-type integer overflow leaves B-1 for node stream-evaluation-failure-fixed-detail (5c); 6a with four reasons. Next: the full-form preregistration; then the human's typed texts together (the Decision 6.3 Note, Decision 8's twelfth code, the four reason strings for sight). The full-form preregistration is committed as engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md (architect-drafted, consult state/consults/2026-09-29-b1-prereg-architect-draft.md), with OPEN O-1 to O-6 for Fable: REAL division, the integer-digit bound on a decimal literal, reason 1's truth for bound-only refusals, the code name and fixed reason values, decimal-with-decimal arithmetic, and the excluded overflow class. O-1 and O-2 were confirmed against DuckDB v1.5.5 by the custodian. The human's typed texts (T-A the ADR-021 Note, T-B the twelfth code, T-C the four reason strings) are drafted in the consult; they and Fable's O rulings were this node's wait. RULED 2026-09-30: Fable's O rulings (state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md, Part 1) and the human's acceptance of T-A, T-B and T-C (Part 2; state/directives/2026-09-30-b1-acceptance-and-handoff.md), recorded as the form's section 10 Amendment 1. Next: T-A's docs PR (the ADR-021 Note, dated 2026-09-30), then code under full gating. No code starts before the typed Note lands on main. 2026-09-30: Fable confirmed Amendment 1's bound-only rows (the 2026-09-30 takeover, item 2), recorded as the form's Amendment 2 (generation 2 covers Amendments 1 and 2, before any dispatch). T-A's docs PR is on branch docs/b-1-adr-021-note (the ADR-021 Note dated 2026-09-30, byte-identical to Part 2); code starts after it merges, under full gating.",
+      "evidence_label": "branch `docs/b-1-adr-021-note`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
