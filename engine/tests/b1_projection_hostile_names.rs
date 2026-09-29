@@ -117,7 +117,7 @@ fn path_for(tag: &str) -> std::path::PathBuf {
     dir.join(format!("{tag}.parquet"))
 }
 
-/// §3's fixture discipline: every fixture this file writes is hashed before and after the test
+/// §3's fixture discipline: every fixture an N-test in this file writes is hashed before and after the test
 /// that uses it, the same `sha256_file` precedent `kernel/tests/skp_projection.rs`'s X12 (Amendment
 /// 5, row 5.6) established.
 fn sha256_file(path: &std::path::Path) -> String {

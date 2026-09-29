@@ -996,7 +996,7 @@ fn ring(rng: &mut SplitMix64, cx: f64, cy: f64, r: f64, n: usize) -> Vec<[f64; 2
 // This is not every test's only writer: `engine/tests/b1_projection_hostile_names.rs` keeps its own
 // local `write`, unchanged since c37b427, and
 // `engine/tests/b1_projection_hostile_covering.rs` adds a local
-// `write_format_default_covering` for the one shape these functions do not cover (the format
+// `write_format_default_covering` for a shape these functions do not cover (the format
 // default: no `crs` key, degrees, no geo `bbox` member).
 // -------------------------------------------------------------------------------------------
 
