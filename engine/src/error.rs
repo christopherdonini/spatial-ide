@@ -334,8 +334,9 @@ impl fmt::Display for EngineError {
             }
             Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
                 f,
-                "refused: `{column}` cannot serve as stable feature identity — {detail}. \
-                 Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent"
+                "refused: `{}` cannot serve as stable feature identity — {detail}. \
+                 Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent",
+                crate::addressability::render_visible_escape(column)
             ),
             // **Two sentences, and both are facts about this engine's own check**: what it found
             // differing, and what the check does not establish (boundary 4's limitation, in that
@@ -377,9 +378,10 @@ impl fmt::Display for EngineError {
             }
             Self::AttributeUnpublishable { column, detail } => write!(
                 f,
-                "refused: `{column}` cannot be published as an attribute — {detail}. Nothing is \
+                "refused: `{}` cannot be published as an attribute — {detail}. Nothing is \
                  cast, widened or stringified to make a column fit; a conversion the caller did \
-                 not ask for is the silent conversion docs/01 principle 8 forbids"
+                 not ask for is the silent conversion docs/01 principle 8 forbids",
+                crate::addressability::render_visible_escape(column)
             ),
             Self::SourceChangedUnderPublish { pinned, observed, detected_by } => write!(
                 f,

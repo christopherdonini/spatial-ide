@@ -11,9 +11,10 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
-use arrow::datatypes::{DataType, SchemaRef};
+use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use duckdb::Connection;
 
+use crate::addressability::{not_addressable_reason, render_visible_escape};
 use crate::cancel::CancelToken;
 use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
@@ -141,6 +142,12 @@ pub struct Dataset {
     path: PathBuf,
     envelope: BatchEnvelope,
     covering: Option<CoveringBbox>,
+    /// Why the file's own declared covering, if any, is not addressable — `None` when the file
+    /// declares no covering, or its declared covering round-trips (§10 Amendment 12, 12.1(d)).
+    /// `covering` above is already `None` whenever this is `Some`: [`Self::covering`] "returns a
+    /// usable covering only", so this field exists only to give [`Self::no_covering_bbox_detail`]
+    /// the fact to name, never as a second place either is decided.
+    covering_unusable_reason: Option<String>,
     geo: GeoMeta,
     file_schema: SchemaRef,
     /// This dataset's own bounded DuckDB connections.
@@ -516,10 +523,21 @@ impl Dataset {
         // connection that fails it is discarded and open still succeeds — with an empty pool.
         lease.release_healthy();
 
+        // **12.1(d)'s covering row.** A declared covering whose path is not addressable (a struct
+        // name or a child segment carrying U+0000 — no comparison covers this, so the check runs
+        // directly against the declared path text) is recorded but never handed out by
+        // [`Self::covering`], which "returns a usable covering only". The open itself still
+        // succeeds; only a bbox query is refused, by [`Self::no_covering_bbox_detail`], synchronously
+        // and before any lease.
+        let covering_unusable_reason =
+            geo.covering.as_ref().and_then(covering_not_addressable_reason);
+        let covering = if covering_unusable_reason.is_some() { None } else { geo.covering.clone() };
+
         Ok(Self {
             path: path.to_path_buf(),
             envelope: BatchEnvelope::admitted(crs, geo.primary_column.clone(), identity, admission),
-            covering: geo.covering.clone(),
+            covering,
+            covering_unusable_reason,
             geo,
             file_schema,
             pool,
@@ -658,8 +676,8 @@ impl Dataset {
         observer: Option<&dyn index::IndexPhaseObserver>,
     ) -> Result<IndexReport> {
         let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
-            detail: "the file's `geo` metadata declares no covering.bbox, so there is nothing to                      index in this slice"
-                .into(),
+            detail: self
+                .no_covering_bbox_detail(", so there is nothing to                      index in this slice"),
         })?;
 
         index::observe(observer, index::IndexPhase::ContentHash);
@@ -767,9 +785,7 @@ impl Dataset {
         observer: Option<&dyn index::IndexPhaseObserver>,
     ) -> Result<RowGroupReport> {
         let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
-            detail: "the file's `geo` metadata declares no covering.bbox, so a row group has no \
-                     envelope to reason about"
-                .into(),
+            detail: self.no_covering_bbox_detail(", so a row group has no envelope to reason about"),
         })?;
 
         index::observe(observer, index::IndexPhase::ContentHash);
@@ -870,8 +886,26 @@ impl Dataset {
         &self.geo.primary_column
     }
 
+    /// The file's declared covering — **a usable one only** (§10 Amendment 12, 12.1(d)): `None`
+    /// both where the file declares no covering and where it declares one this engine cannot
+    /// address (a struct or child segment carrying U+0000). [`Self::no_covering_bbox_detail`] is
+    /// what a `NoCoveringBbox` refusal names either way.
     pub fn covering(&self) -> Option<&CoveringBbox> {
         self.covering.as_ref()
+    }
+
+    /// The detail text for a `NoCoveringBbox` refusal — **one function**, so `build_sql`,
+    /// [`Self::build_index_observed`] and [`Self::build_row_group_index_observed`] state the same
+    /// fact whether the file declares no covering at all or declares one this engine cannot
+    /// address (12.1(d)). `why` is call-site prose appended to the shared fact, e.g. `", so there
+    /// is nothing to index in this slice"` — empty where a call site adds nothing of its own.
+    /// Byte-identical to today's text in the ordinary (no covering declared) case, so this changes
+    /// nothing declared unchanged (§10 Amendment 12, 12.3).
+    pub(crate) fn no_covering_bbox_detail(&self, why: &str) -> String {
+        match &self.covering_unusable_reason {
+            Some(reason) => format!("{reason}{why}"),
+            None => format!("the file's `geo` metadata declares no covering.bbox{why}"),
+        }
     }
 
     pub fn geoparquet_version(&self) -> &str {
@@ -968,6 +1002,13 @@ fn read_kv_metadata(conn: &Connection, path: &str) -> Result<Vec<(String, Vec<u8
         .collect())
 }
 
+/// Two drained reads of the same `SELECT * FROM read_parquet(?) LIMIT 0` (§10 Amendment 12,
+/// 12.1(a)) — the Arrow export (the types, and DuckDB's Arrow-truncated names) and DESCRIBE's
+/// `column_name` values (the names DuckDB actually binds by). Position *i* round-trips iff the two
+/// names are byte-equal; where they differ, **the resident field is named by DESCRIBE's name** (the
+/// one DuckDB binds), carrying the Arrow-export name as `spatial.exported_name` metadata (12.1(b)).
+/// This positional comparison is the discriminator a bind check or `parquet_schema` cannot supply
+/// (12.4 item 29).
 fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
     let mut stmt = conn
         .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
@@ -975,7 +1016,47 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
     let arrow = stmt
         .query_arrow([path])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
-    Ok(arrow.get_schema())
+    let exported = arrow.get_schema();
+
+    let mut describe_stmt = conn
+        .prepare("DESCRIBE SELECT * FROM read_parquet(?) LIMIT 0")
+        .map_err(|e| EngineError::Source(format!("prepare schema describe: {e}")))?;
+    let bound_names: Vec<String> = describe_stmt
+        .query_map([path], |row| row.get::<_, String>(0))
+        .map_err(|e| EngineError::Source(format!("schema describe: {e}")))?
+        .collect::<std::result::Result<Vec<_>, _>>()
+        .map_err(|e| EngineError::Source(format!("schema describe row: {e}")))?;
+
+    if bound_names.len() != exported.fields().len() {
+        return Err(EngineError::InternalInconsistency {
+            detail: format!(
+                "the schema probe's Arrow export reported {} column(s) but DESCRIBE reported {}; \
+                 which names round-trip could not be decided",
+                exported.fields().len(),
+                bound_names.len()
+            ),
+        });
+    }
+
+    let fields: Vec<Field> = exported
+        .fields()
+        .iter()
+        .zip(bound_names.iter())
+        .map(|(f, bound_name)| {
+            if bound_name == f.name() {
+                f.as_ref().clone()
+            } else {
+                let mut metadata = f.metadata().clone();
+                metadata.insert(
+                    crate::addressability::EXPORTED_NAME_KEY.to_string(),
+                    f.name().clone(),
+                );
+                Field::new(bound_name, f.data_type().clone(), f.is_nullable())
+                    .with_metadata(metadata)
+            }
+        })
+        .collect();
+    Ok(Arc::new(Schema::new_with_metadata(fields, exported.metadata().clone())))
 }
 
 /// The range check — **R-S1…R-S3** (`engine/ADMISSION-PREREGISTRATION.md` §2c), and **a sanity
@@ -1058,6 +1139,14 @@ fn sanity_check(
             ),
         ));
     };
+
+    // **12.1(d)'s covering row, checked before R-S3.** A path segment that contains U+0000 is a
+    // distinct fact from "the schema does not contain it" (R-S3 below, unchanged for k3): no
+    // schema comparison covers a struct-child segment, so this runs directly against the declared
+    // path text (12.1(c)'s second bullet). Test N-14.
+    if let Some(reason) = covering_not_addressable_reason(covering) {
+        return Ok((SanityLevel::NotChecked, format!("{reason}. Not checked")));
+    }
 
     // R-S3: a covering may name a column that is not in the file. Today such a file opens and
     // fails later at query; this cut leaves that behaviour alone and records the level as `none`
@@ -1169,6 +1258,29 @@ fn convict_or_record(
             ),
         ))
     }
+}
+
+/// `Some(reason)` when any segment of `covering`'s four declared paths contains U+0000 — 12.1(c)'s
+/// second bullet, "the rule for a name that no comparison covers, such as a covering's
+/// struct-child segment": this checks the declared path text directly, because a struct child has
+/// no independent DESCRIBE name to reconcile it against the way a top-level column does
+/// (`probe_schema`). `None` when every segment is free of U+0000 — including where a segment
+/// simply does not exist in the file (R-S3, k3's own case, decided separately by
+/// `field_path_exists`).
+fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
+    let paths = [&covering.xmin, &covering.ymin, &covering.xmax, &covering.ymax];
+    let hit = paths.iter().find_map(|p| {
+        if p.0.iter().any(|seg| seg.contains('\0')) {
+            Some(p.0.join("."))
+        } else {
+            None
+        }
+    })?;
+    Some(format!(
+        "the covering names `{}`, which contains U+0000 and so cannot be addressed in any SQL \
+         statement",
+        render_visible_escape(&hit)
+    ))
 }
 
 /// Whether a covering path resolves to a real field, walking struct children.
@@ -1458,6 +1570,20 @@ fn admit_identity(
         )));
     };
 
+    // **12.1(d)'s declared-identity row.** A resolved field whose bound name does not round-trip
+    // (only possible here when the caller's own declared name is the full, not-addressable name
+    // itself — a native lookup on the reserved `id` can never match one, since `id` carries no
+    // U+0000) is refused before any SQL is composed, the same [`EngineError::IdentityUnusable`]
+    // shape the "no such column" arm above already uses. Tests N-11 (declared) — N-9's native
+    // session-tier arm above never reaches a not-addressable match, by construction.
+    if let Some(reason) = not_addressable_reason(field) {
+        return Err(EngineError::IdentityUnusable {
+            column: column.clone(),
+            detail: reason,
+            candidate_columns: identity::candidate_identity_columns(schema),
+        });
+    }
+
     // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
     identity::admit_column_type(&column, field.data_type(), schema)?;
 
@@ -1567,6 +1693,12 @@ fn run_identity_scan(
 
 /// The geometry column, checked at open so a stream cannot fail halfway for a reason that was
 /// knowable up front.
+///
+/// **12.1(d)'s geometry row.** `schema` already carries DESCRIBE's own bound name at this position
+/// (`probe_schema`), so a declared name that does not round-trip is found here exactly as it is
+/// declared — and is refused as [`EngineError::GeoMetadata`], naming the U+0000 fact, never as
+/// "the file does not contain" (which is false: the file does contain it, under a name nothing can
+/// address). Test N-8.
 fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()> {
     let geom = schema
         .fields()
@@ -1574,9 +1706,15 @@ fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()
         .find(|f| f.name() == geometry_column)
         .ok_or_else(|| {
             EngineError::Source(format!(
-                "`geo.primary_column` names `{geometry_column}`, which the file does not contain"
+                "`geo.primary_column` names `{}`, which the file does not contain",
+                render_visible_escape(geometry_column)
             ))
         })?;
+    if let Some(reason) = not_addressable_reason(geom) {
+        return Err(EngineError::GeoMetadata(format!(
+            "`geo.primary_column` names the geometry column, but {reason}"
+        )));
+    }
     if !matches!(geom.data_type(), DataType::Binary | DataType::LargeBinary | DataType::BinaryView) {
         return Err(EngineError::Source(format!(
             "geometry column `{geometry_column}` is {}; WKB must be a binary column",

@@ -292,6 +292,11 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
         .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
         .map(|f| f.name().clone())
         .filter(|name| !name.contains(','))
+        // **§10 Amendment 12, 12.1(d); test N-9.** A column whose own name contains U+0000 is
+        // omitted for the same reason a comma-carrying one already is: this list becomes
+        // `SkpError.fields.candidate_columns`, one comma-joined string, and a name nothing can
+        // address is not a candidate a caller could declare and have it work.
+        .filter(|name| !name.contains('\0'))
         .collect()
 }
 
