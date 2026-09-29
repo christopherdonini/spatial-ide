@@ -773,3 +773,18 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The handoff** carries every blocking finding of both gate-1 reports as W1-W12, together with the architect's disclosed-deviation items, and the notes taken where cheap.
   - **The worker must:** run the form's own mutation for each test it adds or changes; stop, rather than amend or substitute, if an invalidator fires or a finding cannot be met as declared; and use the worktree's own cargo target.
   - **The block is refreshed** in this commit, per the flush directive's item 5.
+- 2026-09-29T18:11Z - **The human's message of about 18:02Z is filed**, verbatim and split by author:
+  - Fable's part: `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`, beside the 2026-09-29 sightings.
+  - The human's part: `state/directives/2026-09-29-design-references-and-layer-ruling.md`.
+  - **Fable, item 1.** Amendment 12's text added after the sight is SIGHTED as written: 12.1(g)'s sentence on the SKP-V0 notes (#142 architect note 5), N-5's sentence (note 1), N-1a and §8 item 34. Fable also noted that ADR-023's amendment and ADR-021's Note are accepted together at B1's close, and that is recorded in `entry-79-b1-consult-items`'s summary.
+  - **Fable, item 2.** RULED blocks are to be backfilled in one mechanical commit, which is the next commit, and §105 resumes with the round mirror from round 31.
+  - **Fable, item 3.** Fable's recommendations are folded into sections D and E of `state/drafts/weekly-window-2026-10-02.md`:
+    - D: one call, one round; `prompt_id` grouping is dropped.
+    - E: the check runs before the background-tasks allow, and milestone refreshes are ledger-only.
+    - The human decides at the window.
+  - **Fable, item 4.** Nothing further is needed on the stamps or the quote. Correction round 1 continues, then gate 2.
+  - **An incident while filing (no effect on the tree).**
+    - What happened: the first attempt passed the two headers inside a double-quoted `node -e` string, so bash ran the backticked paths as command substitutions. That executed `state/directives/2026-09-29-a2-1-and-b-1-sightings.md` and `state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md` as shell scripts.
+    - The result: both aborted on syntax errors within their first fourteen lines, and no line redirected or ran a real command. `git status` and a newer-than scan showed no changed or new file beyond the intended ones.
+    - The fix: the headers were rewritten, since their paths had been blanked. The bodies are checked to rejoin exactly to the message.
+    - The lesson: text goes through the Write tool or a script file, never inside a double-quoted shell string.

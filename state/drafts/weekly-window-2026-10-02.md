@@ -117,10 +117,10 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
    - It renders `tool_input.questions` in §4's format: the item number, the red-line marker, the digest text (the `question`), and the numbered options with their descriptions. The marker applies when the question text begins with `RED LINE`, the custodian's existing convention.
    - The file is plain text, with a blank line and a `---` rule between items, and item order equal to the ask order.
    - It writes `state/questions/round-<n>.md` and sends it as §16 requires: one message, or a document above 4096 characters.
-3. **Round numbering.**
-   - n is one more than the highest existing round file.
-   - A later call with the same `prompt_id` as the round just written is the same round's next question set. It is appended to that file and sent as "question set k".
-   - Open point: two unrelated rounds in one long turn would share a `prompt_id` and merge. The proposal accepts that, and the set label keeps them apart.
+3. **Round numbering: one call, one round.** Each `AskUserQuestion` call is its own round: one file, one message, numbered by call. n is one more than the highest existing round file.
+   - This follows Fable's recommendation of 2026-09-29 (`state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`, item 3); the human decides at the window.
+   - The first draft grouped calls by `prompt_id` into question sets. That was dropped, because two unrelated rounds in one long turn would have merged.
+   - Item 8's test case for it is replaced by one for two calls.
 4. **It never blocks and never alters the question.**
    - It exits 0 with nothing on stdout on every path, including a failed send or missing credentials, with the note on stderr.
    - It never exits 2, since that would block the call, and it never returns `permissionDecision` or `updatedInput`.
@@ -135,7 +135,7 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
 7. **§4's text.** A dated amendment appended at the end of `AUTONOMY.md` (not inserted mid-file) says that the hook discharges the mirror obligation. A round the custodian writes by hand for context remains allowed.
 8. **Tests** (`node --test`):
    - rendering from a recorded `tool_input`;
-   - the same-`prompt_id` append;
+   - two calls in one turn give two round files and two messages;
    - the red-line marker;
    - each silent case;
    - a failed send still exits 0 with empty stdout.
@@ -163,14 +163,14 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
    - It reuses `parseSessionContinuity` from `precompact-flush.mjs`.
 2. **Its place in `stop-queue.mjs`'s order:** after the override and HALT step and after the lease check (only the lease holder flushes), and before the background-tasks allow.
    - Moving it ahead of background tasks is deliberate: a turn that pauses for background work is exactly where a long wait meets an automatic compaction.
-   - Open point: keep background tasks first instead.
+   - Fable recommends this order (2026-09-29, item 3): one ledger-only flush commit clears the block. The human decides at the window.
 3. **Its block reason, which the model receives.** It names:
    - the newest ledger commit and its time;
    - the block's `flushed_at`;
    - the step: rewrite with `scripts/hooks/flush.mjs` from git and the ledger, commit ledger-only, push, then stop.
 4. **Loop protection.** It counts inside the existing continuation accounting (session cap 6, daily cap 40). A flush moves HEAD, which is the hook's progress signal, so one flush resets the consecutive count. A flush that cannot land (a failed push) runs into the caps and ends the turn.
 5. **What it mechanizes.** Item 5, the block refreshed at each milestone, becomes automatic. Any turn that commits to the ledger cannot end until the block follows it.
-   - Open point for the human: whether a milestone refresh also needs §7's `chore(site): health refresh` commit. The proposal says no: the health refresh stays with the handoff and pre-compaction flush, and milestone refreshes are ledger-only.
+   - A milestone refresh needs no `chore(site): health refresh` commit: the health refresh stays with handoffs and the pre-compaction flush (§7), and milestone refreshes are ledger-only. Fable agrees (2026-09-29, item 3); the human decides at the window.
 6. **The PreCompact block stays as the backstop, unchanged.**
 7. **Tests** (`node --test`):
    - stale after an entry-only ledger commit;
@@ -183,10 +183,10 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
 
 **The question (draft wording), items beside A to C:**
 - D:
-  - (1) Adopt `round-mirror-pretooluse-hook` as described (Recommended).
+  - (1) Adopt `round-mirror-pretooluse-hook` as described, one call per round (Recommended; Fable's recommendation).
   - (2) Adopt it as a backstop only: the hook sends only when no round file was written and mirrored in the turn.
   - (3) Hold.
 - E:
-  - (1) Adopt `stop-hook-stale-continuity` as described, with milestone refreshes ledger-only (Recommended).
+  - (1) Adopt `stop-hook-stale-continuity` as described: the check runs before the background-tasks allow, and milestone refreshes are ledger-only (Recommended; Fable's recommendation).
   - (2) Adopt it, with every refresh preceded by a health refresh commit.
   - (3) Hold.
