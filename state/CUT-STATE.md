@@ -926,3 +926,14 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The second reduction, c2ca7b4** (the custodian, signed off, no force-push), makes exactly those two one-line comment edits. `git diff -U0` shows four changed lines.
   - **Gate-log:** attempt 5, reviewer PASS and architect FAIL, both at 720f930.
   - **Next:** the reviewer confirms c2ca7b4 touches only those two lines, which is the architect's pass condition, and reports CI on c2ca7b4.
+- 2026-09-29T21:50Z - **PR #143 reached merge-ready at c2ca7b4, and the human merged it at 21:50:26Z as a merge commit, 468a0ae.** The custodian's commit of this entry was rejected as non-fast-forward by that merge. Main was fast-forwarded to 468a0ae and the entry recommitted.
+  - **The reviewer at c2ca7b4: PASS** (`state/consults/gates/2026-09-29-a2-1-reduction2-reviewer.md`; gate-log attempt 6). The diff against 720f930 is exactly the two prescribed comment lines, and the non-comment content is identical.
+  - **That meets the architect's stated pass condition** in `state/consults/gates/2026-09-29-a2-1-reduction1-architect.md`: with that commit and that check, the piece passes Amendment 12 with no further round, and the architect need not re-read. No separate architect record is added for c2ca7b4; the condition is the record.
+  - **CI on c2ca7b4 is all green**, including both Windows `cargo test --workspace` runs (36633714071 and 36633721591). The PR is MERGEABLE CLEAN.
+  - **The PR body** now lists every commit and the gate history. It asks for a merge commit only, never squash or rebase, because the records name 19f37da, 303dca0 and b4d7aa1. It also says `cloud/wave2-A2` stays, since c37b427 is named.
+  - **The piece's gate history:**
+    - gate 1 FAIL at 303dca0, then correction round 1;
+    - gate 2 FAIL at b4d7aa1, then correction round 2 (the last);
+    - gate 3 at f4d81c5 passed the substance and failed on comment claims only;
+    - two prescribed comment-only reductions (720f930 and c2ca7b4), each confirmed by the reviewer.
+  - **After the merge:** the done commit (evidence {pr: 143}; the gate moved to `engine/B1-PROJECTION-PREREGISTRATION.md`; superseded rows pinned at 804a62c for the sighted draft's old-name claims; one closing reference to `attributes::check_geometry_and_identity` as 12.1(d)'s projection site). Then the worktree is removed, `cut/b1-close-nul-names` is deleted, and `cloud/wave2-A2` is kept.
