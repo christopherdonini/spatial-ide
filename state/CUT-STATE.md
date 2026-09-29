@@ -869,3 +869,18 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - One fresh worker-high carries W1-W9 from both reports.
     - W1 begins with a bounded reproduction attempt, with the SQL printed in Debug form. The worker stops under 12.3 if engine code carries U+0000 into a prepare, and the mutex goes in every case.
     - The worker must show the command that proves each claim.
+- 2026-09-29T20:59Z - **A2-1 correction round 2 reported; gate 3 dispatched on PR #143 at f4d81c5.**
+  - **The worker's report** is `state/consults/2026-09-29-a2-1-worker-report-4.md`. It has six commits (a2e8810..f4d81c5), marks every gate-2 finding fixed, and hit no stop condition.
+    - W1: 120 unserialized runs of the two hostile binaries, with the SQL printed in Debug form on every prepare failure, produced no reproduction. The mutex and its rationale are removed.
+    - rustfmt hunks on the added lines went from 55 to 0.
+    - Engine 372, kernel 303 and skp 48 tests pass, and every check exits 0.
+    - Six branch-only `path:line` tokens are de-rooted at filing, and the note discloses it.
+  - **The custodian re-checked the central claims at f4d81c5** before gating. All hold:
+    - the three control-test bodies hash identically at c37b427 and f4d81c5, and differed at b4d7aa1;
+    - N-14 reads leases before and after for p1a and p1b;
+    - K-2's hostile fixture is hashed before and after;
+    - N-10's id is UInt64 and asserted;
+    - there is no manifest or data-plane diff;
+    - every commit is signed off.
+    - The report's mutex grep holds for the two files it names; the only other matches in `engine/tests/` are in an existing file this PR does not touch.
+  - **Gate 3** (architect and reviewer) runs at f4d81c5. This follows the last correction round the record cap allows; a remaining failure goes to the architect's reduction.
