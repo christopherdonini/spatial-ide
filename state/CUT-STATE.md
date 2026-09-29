@@ -751,3 +751,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Gate log:** two records, attempt 2 for the node (attempt 1 was #142's ADR texts), both FAIL.
   - **Next:** correction round 1 on `cut/b1-close-nul-names-2`, one fresh worker-high carrying every finding from both reports in one handoff. Then gate 2 on the new head.
   - **The pre-compaction flush was missed.** The session compacted with the SESSION-CONTINUITY block still at the 2026-09-28 handoff (tip 003f0d1). The ledger entries through 08a93f0 held the record, so nothing existed only in the session. The block is flushed in the commit after this one, on the human's question.
+- 2026-09-29T17:30Z - **The 2026-09-29 flush directive is filed** verbatim as `state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`. It covers six items:
+  - the printed block was stale;
+  - commit the gate-1 filings (already done, f570d8f);
+  - rewrite the block from `git log edbd939..HEAD` and the ledger;
+  - resume the round mirror from round 31;
+  - refresh the block at each milestone (PR opened, gate filed, directive filed);
+  - draft two weekly-window mechanism proposals as the human's decision.
+  - **The block** is rewritten in the flush commit after the health refresh that follows this one. It is built from git and this ledger, not from the compaction summary.
+  - **The round mirror lapsed after round 30.** It is recorded here once, and not backfilled.
+    - Two `AskUserQuestion` rounds ran on 2026-09-29 with no round file and no Telegram mirror: 05:08Z (A2-1's timing) and 13:07Z (`verify-test-claims` on A2-1's branch). Their answers are on record in `state/directives/2026-09-29-a2-1-clarification.md` and in the filing note of `state/directives/2026-09-29-a2-1-amendment-12-formatting.md`. Neither has a RULED block in `DECISIONS-PENDING.md`.
+    - The next round is numbered 31. Its file is written and mirrored before the question is asked.
+  - **The proposals** are drafted into `state/drafts/weekly-window-2026-10-02.md` after the hooks reference is checked. Then A2-1's correction round 1.
