@@ -919,8 +919,8 @@ filter code).
 **What `skp/0.7` deliberately does not add.** No new command, no new request or response member.
 `protocol/data-plane/` has an empty diff.
 
-Mechanics: one literal bumped once, `"skp/0.6"` → `"skp/0.7"`, in one commit on
-`cut/b1-close-nul-names`, which carries both sides' fixtures for the literal
+Mechanics: one literal bumped once, `"skp/0.6"` → `"skp/0.7"`, in one commit, `19f37da`, which
+carries both sides' fixtures for the literal
 (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs` and
 `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixture
 (`v0-error-projection_column_name_not_addressable.json`) together; plain `==` comparison retained;
@@ -990,7 +990,7 @@ runs (ADR-023 §3; ADR-019):
 > round-trips through this engine's admission is checked first, ahead of every other per-column
 > rule — a name nothing can address cannot be trusted to mean what any later rule says about it.
 
-### 9.5 Refusal taxonomy — eight codes
+### 9.5 Refusal taxonomy — seven codes
 
 | Code | Fields |
 |---|---|
