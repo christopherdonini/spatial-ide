@@ -822,3 +822,14 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - **The flush directive:** its standing rules (the milestone refresh, the round mirror from round 31) and its window items are process rules, not nodes. They are in the block.
     - **The design-references directive:** item 4 is on `shell-redesign-map-studio`, citing the directive; no hold.
   - **The weekly window** gains section F, the human's line: `state/directives/` (newest first) enters §0's reading order after `DECISIONS-PENDING.md`.
+- 2026-09-29T19:14Z - **A2-1 correction round 1 reported; gate 2 dispatched on PR #143 at b4d7aa1.**
+  - **The worker's report** is `state/consults/2026-09-29-a2-1-worker-report-3.md`:
+    - six commits, pushed 303dca0..3ab3180;
+    - every finding of both gate-1 reports marked fixed or left by name;
+    - the form's own mutation observed for each 12.2 test, uncommitted, on its fixes;
+    - engine 372, kernel 303 and skp 48 tests passing, and every check exit 0;
+    - no stop condition.
+  - **A manifest line removed.** The worker had added `sha2 = "0.10"` to `engine/Cargo.toml`'s dev-dependencies. `sha2` is already a regular dependency, which integration tests use (ten existing engine tests do). The custodian restored the manifest to main's bytes (b4d7aa1, signed off, no force-push), so the PR carries no manifest or lockfile change and no dependency decision arises. At b4d7aa1 the engine's test binaries compile, and the four changed engine test files pass (16 tests).
+  - **Left for the architect:** the SKP-V0 §9.1 dated note.
+  - **An oddity:** the worker saw a one-line reformat of `kernel/tests/watch_support/mod.rs` appear in its tree three times, from no command it ran. It reverted each time, and the file is not in the diff. The reviewer confirms at gate 2.
+  - **Gate 2** runs on b4d7aa1: the architect, and the reviewer re-observing each changed test's mutation at that commit.
