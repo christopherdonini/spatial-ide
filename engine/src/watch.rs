@@ -108,7 +108,7 @@ mod windows_watch {
     use std::os::windows::fs::OpenOptionsExt;
     use std::path::Path;
     use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
+    use std::sync::{mpsc, Arc};
 
     use windows_sys::Win32::Foundation::{
         CloseHandle, GetLastError, ERROR_NOTIFY_ENUM_DIR, ERROR_OPERATION_ABORTED, HANDLE,
@@ -205,19 +205,15 @@ mod windows_watch {
     }
 
     /// One pending (issued, not yet completed) overlapped read, owning the buffer and the
-    /// `OVERLAPPED` block the kernel writes into for as long as the read is outstanding.
+    /// `OVERLAPPED` block the kernel writes into for as long as the read is outstanding. Created
+    /// and dropped only on the one watch thread that owns its handle (wave-2 C-1: `issue_read` is
+    /// now called from inside `watch_thread` itself, never by `arm`) — it never crosses a thread
+    /// boundary and no closure ever captures one, so it needs no `Send` impl.
     struct PendingRead {
         handle: HANDLE,
         buffer: Box<[u8; WATCH_BUFFER_BYTES]>,
         overlapped: Box<OVERLAPPED>,
     }
-
-    // SAFETY: a Win32 `HANDLE` is an opaque, process-wide resource identifier (never a pointer this
-    // process dereferences), and `OVERLAPPED`'s own `hEvent` field here is always null (this module
-    // never sets it) — Windows documents both as safe to hand to another thread once the calling
-    // thread no longer touches them, which is exactly the ownership transfer `arm` performs when it
-    // moves a freshly-issued `PendingRead` into the one watch thread that owns it from then on.
-    unsafe impl Send for PendingRead {}
 
     impl Drop for PendingRead {
         /// Cancel this read specifically (**never null** — the fix ruling's §4 item 3, beyond B2: a
@@ -225,10 +221,10 @@ mod windows_watch {
         /// handle has since been issued could cancel that unrelated read instead) and
         /// **synchronize on the cancellation** before `buffer` and `overlapped` are freed —
         /// closing or freeing either while the driver may still be writing a (cancelled)
-        /// completion into them is a use-after-free waiting to happen. This makes dropping a
-        /// `PendingRead` always safe, including when a failed `Builder::spawn` drops the
-        /// closure that captured it without ever running [`watch_thread`]'s own
-        /// `GetOverlappedResult` (reviewer B2).
+        /// completion into them is a use-after-free waiting to happen. Runs only on this value's
+        /// own watch thread (see the struct doc above), either from the loop's next iteration or
+        /// from the thread unwinding — never from another thread's `Drop`, since nothing ever
+        /// sends a `PendingRead` elsewhere.
         fn drop(&mut self) {
             unsafe {
                 CancelIoEx(self.handle, self.overlapped.as_ref());
@@ -271,18 +267,41 @@ mod windows_watch {
         Ok(PendingRead { handle, buffer, overlapped })
     }
 
-    /// One armed handle's watch thread: waits for the outstanding read to complete, maps it, and
-    /// re-issues — until disarm or a `CoverageLost` (at most one signal per handle, §2a).
+    // SAFETY: a Win32 `HANDLE` is an opaque, process-wide resource identifier, never a pointer
+    // this process dereferences — Windows documents it as safe to hand to another thread once the
+    // calling thread no longer touches it, which is exactly the ownership transfer `arm` performs
+    // when it moves a freshly opened directory handle into `spawn_watch_thread`'s closure, to be
+    // owned from then on by the one watch thread that runs `watch_thread`.
+    struct SendableHandle(HANDLE);
+    unsafe impl Send for SendableHandle {}
+
+    /// One armed handle's watch thread. Issues this handle's own first overlapped read (wave-2
+    /// C-1: the issuing thread is the thread that owns it thereafter), reports that once through
+    /// `ready`, then waits, maps, and re-issues until disarm or `CoverageLost` (§2a).
+    #[allow(clippy::too_many_arguments)]
     fn watch_thread(
-        mut pending: PendingRead,
+        handle: SendableHandle,
         names: NameSet,
         kind: WatchKind,
         filter: u32,
         sink: WatchSink,
         fired: Arc<AtomicBool>,
         disarming: Arc<AtomicBool>,
+        ready: mpsc::Sender<Result<(), String>>,
     ) {
-        let handle = pending.handle;
+        let handle = handle.0;
+        let mut pending = match issue_read(handle, filter) {
+            Ok(p) => {
+                let _ = ready.send(Ok(()));
+                drop(ready);
+                p
+            }
+            Err(e) => {
+                let _ = ready.send(Err(e));
+                drop(ready);
+                return;
+            }
+        };
         loop {
             let mut transferred: u32 = 0;
             // SAFETY: `handle` and `pending.overlapped` are the same pair `issue_read` submitted;
@@ -432,8 +451,9 @@ mod windows_watch {
         join: Option<std::thread::JoinHandle<()>>,
     }
 
-    // SAFETY: see `PendingRead`'s own `Send` impl above — the same reasoning applies to the raw
-    // handle this struct closes on `Drop`, from whichever thread that `Drop` runs on.
+    // SAFETY: a Win32 `HANDLE` is an opaque, process-wide resource identifier, never a pointer
+    // this process dereferences — safe to close from whichever thread this struct's `Drop` runs
+    // on (see `SourceWatch::drop`, which joins each handle's watch thread before closing it).
     unsafe impl Send for Handle {}
 
     /// The product [`ArmedWatch`]: the parent handle always, the grandparent's if it was armed too.
@@ -473,6 +493,94 @@ mod windows_watch {
                 unsafe {
                     CloseHandle(h.raw);
                 }
+            }
+        }
+    }
+
+    /// `arm`'s mapping from one watch thread's handshake to its `ChecksOnly` reason (`which` is
+    /// `"parent"`/`"grandparent"`); exercised through `spawn_watch_thread` by wave-2 C-1
+    /// regression test (2), the same function `arm` calls below, not a reimplementation.
+    fn await_first_read(
+        ready: mpsc::Receiver<Result<(), String>>,
+        which: &str,
+    ) -> Result<(), String> {
+        match ready.recv() {
+            Ok(result) => result.map_err(|e| {
+                format!("[P6 placeholder] could not arm the {which} directory watch: {e}")
+            }),
+            // Unreachable by construction today (the watch thread always sends before it can
+            // return — see `watch_thread`'s own doc comment), but a fallback here keeps a panic
+            // off this product path (reviewer S1) — the caller's existing join-and-close path
+            // runs on this `Err` exactly as it does on an issuing error.
+            Err(_) => Err(format!(
+                "[P6 placeholder] could not arm the {which} directory watch: the watch thread \
+                 exited without reporting whether its first read was issued"
+            )),
+        }
+    }
+
+    /// Spawns `handle`'s own watch thread (named `thread_name`), which issues that handle's own
+    /// first read (wave-2 C-1), and waits on its handshake — `which` is `"parent"`/`"grandparent"`
+    /// for both the thread's own spawn-failure reason and `await_first_read`'s mapping. Closes
+    /// `handle` on any failure; the caller closes nothing else.
+    #[allow(clippy::too_many_arguments)]
+    fn spawn_watch_thread(
+        handle: HANDLE,
+        names: NameSet,
+        kind: WatchKind,
+        filter: u32,
+        sink: WatchSink,
+        fired: Arc<AtomicBool>,
+        thread_name: &str,
+        which: &str,
+    ) -> Result<Handle, String> {
+        let disarming = Arc::new(AtomicBool::new(false));
+        let (ready_tx, ready_rx) = mpsc::channel();
+        let sendable_handle = SendableHandle(handle);
+        let spawn_disarming = disarming.clone();
+        let spawn = std::thread::Builder::new()
+            .name(thread_name.to_string())
+            .spawn(move || {
+                watch_thread(
+                    sendable_handle,
+                    names,
+                    kind,
+                    filter,
+                    sink,
+                    fired,
+                    spawn_disarming,
+                    ready_tx,
+                )
+            });
+        let join = match spawn {
+            Ok(j) => j,
+            Err(e) => {
+                // SAFETY: the spawn itself failed, so no thread was ever created and nothing has
+                // touched `handle` since `arm` opened it — this call exclusively owns it here.
+                unsafe {
+                    CloseHandle(handle);
+                }
+                return Err(format!(
+                    "[P6 placeholder] could not spawn the {which} watch thread: {e}"
+                ));
+            }
+        };
+        match await_first_read(ready_rx, which) {
+            Ok(()) => Ok(Handle {
+                raw: handle,
+                disarming,
+                join: Some(join),
+            }),
+            Err(reason) => {
+                let _ = join.join();
+                // SAFETY: the watch thread has just been joined above, so nothing else is
+                // touching `handle` — whether it exited after `issue_read` failed (no
+                // `PendingRead` was ever created) or without sending at all (`await_first_read`'s
+                // `RecvError` mapping).
+                unsafe {
+                    CloseHandle(handle);
+                }
+                Err(reason)
             }
         }
     }
@@ -520,23 +628,35 @@ mod windows_watch {
             short: short_path_name(&canonical),
         };
 
-        // Step 4: P's first overlapped read.
+        // §2a's Arming list, items 4-6, issued both handles' first reads here in `arm`, then
+        // spawned the watch threads only once every read was pending. That ordering is
+        // superseded by this piece's Change line (`engine/WATCHER-FIRST-READ-PREREGISTRATION.md`):
+        // each handle's own thread now issues that handle's first read itself. The watcher
+        // preregistration's §§0-12 are immutable as filed (§22), so its text is not edited to
+        // match. The "Step 4"/"Step 5" labels below number this function's own order, not §2a's.
+        //
+        // Step 4: spawn P's watch thread. It issues P's own first overlapped read itself
+        // (wave-2 C-1) and reports that once through the handshake `spawn_watch_thread` awaits.
         const P_FILTER: u32 =
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-        let p_pending = match issue_read(parent_handle, P_FILTER) {
-            Ok(p) => p,
-            Err(e) => {
-                unsafe {
-                    CloseHandle(parent_handle);
-                }
-                return ArmOutcome::ChecksOnly {
-                    reason: format!("[P6 placeholder] could not arm the parent directory watch: {e}"),
-                }
-            }
+        let fired = Arc::new(AtomicBool::new(false));
+        let p_handle = match spawn_watch_thread(
+            parent_handle,
+            p_names,
+            WatchKind::Parent,
+            P_FILTER,
+            sink.clone(),
+            fired.clone(),
+            "spatial-source-watch-parent",
+            "parent",
+        ) {
+            Ok(h) => h,
+            Err(reason) => return ArmOutcome::ChecksOnly { reason },
         };
+        let mut handles = vec![p_handle];
 
-        // Step 5: the grandparent, G, unless P is a volume root (round 17 item 2).
-        let mut grandparent_armed: Option<(HANDLE, PendingRead, NameSet)> = None;
+        // Step 5: the grandparent, G, unless P is a volume root (round 17 item 2). Same handshake
+        // shape as P; any failure disarms and joins P first via `SourceWatch`'s own `Drop`.
         let is_volume_root = parent.parent().is_none();
         if !is_volume_root {
             if let Some(grandparent) = parent.parent().map(Path::to_path_buf) {
@@ -547,37 +667,10 @@ mod windows_watch {
                         .unwrap_or_default(),
                     short: short_path_name(&parent),
                 };
-                match open_directory(&grandparent) {
-                    Ok(g_handle) => match issue_read(g_handle, FILE_NOTIFY_CHANGE_DIR_NAME) {
-                        Ok(g_pending) => {
-                            grandparent_armed = Some((g_handle, g_pending, g_names));
-                        }
-                        Err(e) => {
-                            // A failure to arm G is checks-only too (the conservative reading
-                            // ruled as recommended) — dropping P's own not-yet-threaded read here
-                            // cancels and synchronizes it (`PendingRead::drop`) before its buffer
-                            // is freed (no thread exists yet to do that for us), then both
-                            // directories are released.
-                            drop(p_pending);
-                            unsafe {
-                                CloseHandle(parent_handle);
-                                CloseHandle(g_handle);
-                            }
-                            return ArmOutcome::ChecksOnly {
-                                reason: format!(
-                                    "[P6 placeholder] could not arm the grandparent directory \
-                                     watch: {e}"
-                                ),
-                            };
-                        }
-                    },
+                let g_handle = match open_directory(&grandparent) {
+                    Ok(h) => h,
                     Err(e) => {
-                        // Dropping P's own not-yet-threaded read cancels and synchronizes it
-                        // (`PendingRead::drop`) before its buffer is freed.
-                        drop(p_pending);
-                        unsafe {
-                            CloseHandle(parent_handle);
-                        }
+                        drop(SourceWatch { fired, handles });
                         return ArmOutcome::ChecksOnly {
                             reason: format!(
                                 "[P6 placeholder] could not open the grandparent directory to \
@@ -585,90 +678,22 @@ mod windows_watch {
                             ),
                         };
                     }
-                }
-            }
-        }
-
-        // Step 6: only once every read is pending, spawn one thread per handle. Reviewer B2: a
-        // failed spawn is a fallible OS call on a product path, never an `.expect()` panic — it
-        // falls back to `ChecksOnly` like every other arming failure above.
-        let fired = Arc::new(AtomicBool::new(false));
-
-        let p_disarming = Arc::new(AtomicBool::new(false));
-        let p_spawn = {
-            let sink = sink.clone();
-            let fired = fired.clone();
-            let disarming = p_disarming.clone();
-            std::thread::Builder::new()
-                .name("spatial-source-watch-parent".to_string())
-                .spawn(move || {
-                    watch_thread(p_pending, p_names, WatchKind::Parent, P_FILTER, sink, fired, disarming)
-                })
-        };
-        let p_join = match p_spawn {
-            Ok(j) => j,
-            Err(e) => {
-                // The closure above, including its `p_pending`, was already dropped by the
-                // failed `spawn` call — `PendingRead::drop` already cancelled and synchronized
-                // that outstanding read before its buffer was freed. Only the raw handles this
-                // function still owns need releasing.
-                unsafe {
-                    CloseHandle(parent_handle);
-                }
-                if let Some((g_handle, g_pending, _)) = grandparent_armed {
-                    drop(g_pending);
-                    unsafe {
-                        CloseHandle(g_handle);
-                    }
-                }
-                return ArmOutcome::ChecksOnly {
-                    reason: format!(
-                        "[P6 placeholder] could not spawn the parent watch thread: {e}"
-                    ),
                 };
-            }
-        };
-        let mut handles = Vec::with_capacity(2);
-        handles.push(Handle { raw: parent_handle, disarming: p_disarming, join: Some(p_join) });
-
-        if let Some((g_handle, g_pending, g_names)) = grandparent_armed {
-            let g_disarming = Arc::new(AtomicBool::new(false));
-            let g_spawn = {
-                let sink = sink.clone();
-                let fired = fired.clone();
-                let disarming = g_disarming.clone();
-                std::thread::Builder::new()
-                    .name("spatial-source-watch-grandparent".to_string())
-                    .spawn(move || {
-                        watch_thread(
-                            g_pending,
-                            g_names,
-                            WatchKind::Grandparent,
-                            FILE_NOTIFY_CHANGE_DIR_NAME,
-                            sink,
-                            fired,
-                            disarming,
-                        )
-                    })
-            };
-            match g_spawn {
-                Ok(j) => {
-                    handles.push(Handle { raw: g_handle, disarming: g_disarming, join: Some(j) });
-                }
-                Err(e) => {
-                    // `g_pending` was already dropped inside the failed `spawn` call above,
-                    // cancelled and synchronized by its own `Drop`. Build and drop a
-                    // `SourceWatch` holding only P, which disarms, joins and closes it, then
-                    // close G.
-                    drop(SourceWatch { fired: fired.clone(), handles });
-                    unsafe {
-                        CloseHandle(g_handle);
+                match spawn_watch_thread(
+                    g_handle,
+                    g_names,
+                    WatchKind::Grandparent,
+                    FILE_NOTIFY_CHANGE_DIR_NAME,
+                    sink,
+                    fired.clone(),
+                    "spatial-source-watch-grandparent",
+                    "grandparent",
+                ) {
+                    Ok(h) => handles.push(h),
+                    Err(reason) => {
+                        drop(SourceWatch { fired, handles });
+                        return ArmOutcome::ChecksOnly { reason };
                     }
-                    return ArmOutcome::ChecksOnly {
-                        reason: format!(
-                            "[P6 placeholder] could not spawn the grandparent watch thread: {e}"
-                        ),
-                    };
                 }
             }
         }
@@ -687,7 +712,12 @@ mod windows_watch {
 
     #[cfg(test)]
     mod tests {
-        use super::names_match;
+        use super::{
+            names_match, spawn_watch_thread, NameSet, WatchKind, WatchSink,
+            FILE_NOTIFY_CHANGE_FILE_NAME, HANDLE,
+        };
+        use std::sync::atomic::AtomicBool;
+        use std::sync::Arc;
 
         /// **The isolating proof for A7** (`engine/tests/source_watch_adapter.rs`). A real Windows
         /// rename event cannot isolate the fold from the byte-exact branch — every scenario that
@@ -706,6 +736,51 @@ mod windows_watch {
             assert!(names_match("Source.Dat", "sOURCE.dAT"));
             assert!(names_match("source.dat", "source.dat"));
             assert!(!names_match("source.dat", "sibling.dat"));
+        }
+
+        /// **Regression test (2)**, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md` (wave-2 C-1). A
+        /// watch thread started on an invalid directory handle cannot issue its first read; it
+        /// must report that failure through the one-shot handshake, and `spawn_watch_thread` —
+        /// the same function `arm` calls below, not a reimplementation — must turn it into the
+        /// `ChecksOnly` refusal `arm` would return, never `Ok`. This drives `spawn_watch_thread`
+        /// itself (architect gate 1, B1), not a reassembly of its own pieces, so it also reaches
+        /// its own join-and-close error path and `arm`'s own `Err(reason) => ChecksOnly` arms
+        /// (reviewer gate 1, N2).
+        ///
+        /// RECORDED MUTATION: (a) in `watch_thread`, send `ready.send(Ok(()))` unconditionally
+        /// before calling `issue_read` (report success before issuing the read). Expected
+        /// failure: this test's `Ok(_) => panic!(..)` arm below fires, because `spawn_watch_thread`
+        /// now returns `Ok(Handle { .. })` instead of `Err`. (b) in `spawn_watch_thread`, return
+        /// `Ok(Handle { .. })` regardless of `await_first_read`'s outcome (arm never consulting
+        /// the handshake). Expected failure: the same `Ok(_) => panic!(..)` arm fires, for the
+        /// same reason.
+        #[test]
+        fn an_invalid_handle_reports_its_issuing_error_through_the_handshake() {
+            let fired = Arc::new(AtomicBool::new(false));
+            let names = NameSet {
+                long: "source.dat".to_string(),
+                short: None,
+            };
+            let sink: WatchSink = Arc::new(|_signal| {});
+            let handle: HANDLE = std::ptr::null_mut();
+            let result = spawn_watch_thread(
+                handle,
+                names,
+                WatchKind::Parent,
+                FILE_NOTIFY_CHANGE_FILE_NAME,
+                sink,
+                fired,
+                "spatial-source-watch-test-parent",
+                "parent",
+            );
+            let reason = match result {
+                Err(reason) => reason,
+                Ok(_) => panic!("an invalid handle must fail to issue its first read"),
+            };
+            assert!(
+                reason.contains("could not arm the parent directory watch"),
+                "expected arm's own ChecksOnly reason text, got: {reason}"
+            );
         }
     }
 }
