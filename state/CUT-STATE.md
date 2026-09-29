@@ -619,3 +619,17 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - verify:plan PASS, and the queue and site are regenerated.
   - **CI:** main's Governance CI and Pages are green on 568d82c.
   - **Next:** A2-1's P0 and preregistration, while B-1's proposal waits on Fable.
+- 2026-09-29T07:00Z - **A2-1's P0 is measured,** at main 1af041b with DuckDB v1.5.5. The evidence is under `state/drafts/a2-1-p0/`:
+  - the probes `probe.rs.txt` and `covering-probe.rs.txt`, which ran as untracked scratch tests and were removed after the run;
+  - their outputs, `p0-output.txt` and `covering-output.txt`. A DuckDB error that echoed the temp path is redacted as `<temp path>`.
+  - **Facts:**
+    - The Arrow export truncates a name at its first NUL. A leading NUL, or a name that is only a NUL, exports as `""`. Struct child names are truncated too.
+    - `DESCRIBE`, read through Arrow, and `parquet_schema` return the full name. Comparing each exported name with DESCRIBE's name at the same position discriminates every NUL case. That includes the wrong-column cases, which a bind check misses: c02 and c03 (a real `zone` beside `zone\0x`) and c15 (`Num\0x` binds `num` case-insensitively, so a filter on `"Num"` is admitted and filters the other column).
+    - Every non-NUL class probed round-trips: NFD/NFC, whitespace, BOM, other control characters, long names, and DuckDB's renames `C2` and `Zone_1`.
+    - No SQL spelling names a NUL column through duckdb-rs. A raw NUL is refused before DuckDB. DuckDB 1.5.5 answers `U&"…"` with "NOT IMPLEMENTED". `COLUMNS(regex)` is outside every admitted surface.
+  - **Today, at open:**
+    - A NUL in the geometry name is refused synchronously, with a false reason ("does not contain").
+    - A native `id\0x` fails the identity scan with a binder error, or, beside a real `id`, uses the real one by accident.
+    - A declared `key\0x` gets a false "no such column", and the truncated `key` offered in its place fails in turn.
+    - A covering with a NUL in its struct or child name is kept at open, and every bbox query then fails after the mint. The control k3 does the same: it names a column the file lacks, with no NUL, which is a separate pre-existing hole.
+  - **The preregistration** is dispatched to the architect for drafting. It is a class-9 scope addition to `engine/B1-PROJECTION-PREREGISTRATION.md`, per the Amendment 9 precedent, with the ADR-023 amendment text and OPEN markers. It comes to Fable before any code.

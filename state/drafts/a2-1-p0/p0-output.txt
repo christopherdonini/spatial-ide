@@ -1,0 +1,273 @@
+A2-1 P0 -- the probe's output (state/drafts/a2-1-p0/probe.rs.txt, run as an untracked scratch test at main 1af041b,
+duckdb 1.10505.0 = DuckDB v1.5.5; cargo test -p spatial-engine --features fixture --test scratch_a21_p0_names -- --nocapture).
+Redaction: a DuckDB error echoing the temp file path is shown as <temp path> (DuckDB itself truncated it). Long runs of L are shortened.
+
+=== c01-interior-nul | written names: id="id" geom="geometry" cols=["nu\0l", "Num"]
+  arrow export names: Ok(["id", "geometry", "nu", "Num"])
+  DESCRIBE names:     Ok(["id", "geometry", "nu\0l", "Num"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "nu\0l", "Num"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "nu": ERR Binder Error: Referenced column "nu" not found in FROM clause!
+  bind "Num": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "nu" Utf8: describe projectable=true
+    project "nu": STREAM ITEM ERR after 0 batch(es): Query("execute: Binder Error: Referenced column \"nu\" not found in FROM clause!\nCandidate bindings: \"nu\\0l\", \"Num\"\n\nLINE 1: SELECT \"id\" AS \"id\", \"geometry\", \"nu\" FROM read_parquet(?)\n                                         ^")
+    filter "\"nu\" IS NOT NULL": ADMITTED; STREAM ITEM ERR after 0 batch(es): Query("execute: Binder Error: Referenced column \"nu\" not found in FROM clause!\nCandidate bindings: \"nu\\0l\", \"Num\"\n\nLINE 1: ...ELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE (\"nu\" IS NOT NULL)\n                                                                      ^")
+  field "Num" Utf8: describe projectable=true
+    project "Num": STREAM OK: 1 batch(es); first projected value Ok("col1-row0")
+    filter "\"Num\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c02-nul-int-before-utf8 | written names: id="id" geom="geometry" cols=["zone\0x", "zone"]
+  arrow export names: Ok(["id", "geometry", "zone", "zone"])
+  DESCRIBE names:     Ok(["id", "geometry", "zone\0x", "zone"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "zone\0x", "zone"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "zone": binds, type Utf8
+  bind "zone": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "zone" Int64: describe projectable=true
+    project "zone": STREAM ITEM ERR after 0 batch(es): EncodingMismatch { claimed: "attribute `zone` is Int64", found: "Utf8" }
+    filter "\"zone\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "zone" Utf8: describe projectable=true
+    project "zone": STREAM ITEM ERR after 0 batch(es): EncodingMismatch { claimed: "attribute `zone` is Int64", found: "Utf8" }
+    filter "\"zone\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c03-utf8-before-nul-same-type | written names: id="id" geom="geometry" cols=["zone", "zone\0x"]
+  arrow export names: Ok(["id", "geometry", "zone", "zone"])
+  DESCRIBE names:     Ok(["id", "geometry", "zone", "zone\0x"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "zone", "zone\0x"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "zone": binds, type Utf8
+  bind "zone": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "zone" Utf8: describe projectable=true
+    project "zone": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"zone\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "zone" Utf8: describe projectable=true
+    project "zone": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"zone\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c04-leading-nul | written names: id="id" geom="geometry" cols=["\0lead"]
+  arrow export names: Ok(["id", "geometry", ""])
+  DESCRIBE names:     Ok(["id", "geometry", "\0lead"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "\0lead"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "": ERR Parser Error: zero-length delimited identifier at or near """"
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "" Utf8: describe projectable=true
+    project "": STREAM ITEM ERR after 0 batch(es): Query("prepare: Parser Error: zero-length delimited identifier at or near \"\"\"\"\n\nLINE 1: SELECT \"id\" AS \"id\", \"geometry\", \"\" FROM read_parquet(?)\n                                         ^")
+    filter "\"\" IS NOT NULL": REFUSED Filter(Unparsable { detail: "zero-length delimited identifier at or near \"\"\"\"" })
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c05-trailing-nul | written names: id="id" geom="geometry" cols=["trail\0"]
+  arrow export names: Ok(["id", "geometry", "trail"])
+  DESCRIBE names:     Ok(["id", "geometry", "trail\0"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "trail\0"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "trail": ERR Binder Error: Referenced column "trail" not found in FROM clause!
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "trail" Utf8: describe projectable=true
+    project "trail": STREAM ITEM ERR after 0 batch(es): Query("execute: Binder Error: Referenced column \"trail\" not found in FROM clause!\nCandidate bindings: \"trail\\0\"\n\nLINE 1: SELECT \"id\" AS \"id\", \"geometry\", \"trail\" FROM read_parquet(?)\n                                         ^")
+    filter "\"trail\" IS NOT NULL": ADMITTED; STREAM ITEM ERR after 0 batch(es): Query("execute: Binder Error: Referenced column \"trail\" not found in FROM clause!\nCandidate bindings: \"trail\\0\"\n\nLINE 1: ...ELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE (\"trail\" IS NOT NULL)\n                                                                      ^")
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c06-nul-only | written names: id="id" geom="geometry" cols=["\0"]
+  arrow export names: Ok(["id", "geometry", ""])
+  DESCRIBE names:     Ok(["id", "geometry", "\0"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "\0"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "": ERR Parser Error: zero-length delimited identifier at or near """"
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "" Utf8: describe projectable=true
+    project "": STREAM ITEM ERR after 0 batch(es): Query("prepare: Parser Error: zero-length delimited identifier at or near \"\"\"\"\n\nLINE 1: SELECT \"id\" AS \"id\", \"geometry\", \"\" FROM read_parquet(?)\n                                         ^")
+    filter "\"\" IS NOT NULL": REFUSED Filter(Unparsable { detail: "zero-length delimited identifier at or near \"\"\"\"" })
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c07-empty-name | written names: id="id" geom="geometry" cols=[""]
+  arrow export names: Ok(["id", "geometry", "C2"])
+  DESCRIBE names:     Ok(["id", "geometry", "C2"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", ""])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "C2": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "C2" Utf8: describe projectable=true
+    project "C2": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"C2\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c08-nfd | written names: id="id" geom="geometry" cols=["e\u{301}té"]
+  arrow export names: Ok(["id", "geometry", "e\u{301}té"])
+  DESCRIBE names:     Ok(["id", "geometry", "e\u{301}té"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "e\u{301}té"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "e\u{301}té": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "e\u{301}té" Utf8: describe projectable=true
+    project "e\u{301}té": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"e\u{301}té\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c09-nfd-and-nfc | written names: id="id" geom="geometry" cols=["é", "e\u{301}"]
+  arrow export names: Ok(["id", "geometry", "é", "e\u{301}"])
+  DESCRIBE names:     Ok(["id", "geometry", "é", "e\u{301}"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "é", "e\u{301}"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "é": binds, type Utf8
+  bind "e\u{301}": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "é" Utf8: describe projectable=true
+    project "é": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"é\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "e\u{301}" Utf8: describe projectable=true
+    project "e\u{301}": STREAM OK: 1 batch(es); first projected value Ok("col1-row0")
+    filter "\"e\u{301}\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c10-space-only | written names: id="id" geom="geometry" cols=[" "]
+  arrow export names: Ok(["id", "geometry", " "])
+  DESCRIBE names:     Ok(["id", "geometry", " "])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", " "])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind " ": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field " " Utf8: describe projectable=true
+    project " ": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\" \" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c11-long | written names: id="id" geom="geometry" cols=["L…(5000 chars)"]
+  arrow export names: Ok(["id", "geometry", "L…(5000 chars)"])
+  DESCRIBE names:     Ok(["id", "geometry", "L…(5000 chars)"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "L…(5000 chars)"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "L…(5000 chars)": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "L…(5000 chars)" Utf8: describe projectable=true
+    project "L…(5000 chars)": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"L…(5000 chars)\" IS NOT NULL": REFUSED Filter(TooLong { limit: 4096, saw: 5014 })
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c12-bom | written names: id="id" geom="geometry" cols=["\u{feff}bom"]
+  arrow export names: Ok(["id", "geometry", "\u{feff}bom"])
+  DESCRIBE names:     Ok(["id", "geometry", "\u{feff}bom"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "\u{feff}bom"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "\u{feff}bom": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "\u{feff}bom" Utf8: describe projectable=true
+    project "\u{feff}bom": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"\u{feff}bom\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c13-control-chars | written names: id="id" geom="geometry" cols=["tab\tname", "\u{1}ctl", "del\u{7f}"]
+  arrow export names: Ok(["id", "geometry", "tab\tname", "\u{1}ctl", "del\u{7f}"])
+  DESCRIBE names:     Ok(["id", "geometry", "tab\tname", "\u{1}ctl", "del\u{7f}"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "tab\tname", "\u{1}ctl", "del\u{7f}"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "tab\tname": binds, type Utf8
+  bind "\u{1}ctl": binds, type Utf8
+  bind "del\u{7f}": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "tab\tname" Utf8: describe projectable=true
+    project "tab\tname": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"tab\tname\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "\u{1}ctl" Utf8: describe projectable=true
+    project "\u{1}ctl": STREAM OK: 1 batch(es); first projected value Ok("col1-row0")
+    filter "\"\u{1}ctl\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "del\u{7f}" Utf8: describe projectable=true
+    project "del\u{7f}": STREAM OK: 1 batch(es); first projected value Ok("col2-row0")
+    filter "\"del\u{7f}\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c14-case-dups | written names: id="id" geom="geometry" cols=["zone", "Zone", "Zone_1"]
+  arrow export names: Ok(["id", "geometry", "zone", "Zone_1", "Zone_1_1"])
+  DESCRIBE names:     Ok(["id", "geometry", "zone", "Zone_1", "Zone_1_1"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "zone", "Zone", "Zone_1"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "zone": binds, type Utf8
+  bind "Zone_1": binds, type Utf8
+  bind "Zone_1_1": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "zone" Utf8: describe projectable=true
+    project "zone": STREAM OK: 1 batch(es); first projected value Ok("col0-row0")
+    filter "\"zone\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "Zone_1" Utf8: describe projectable=true
+    project "Zone_1": STREAM OK: 1 batch(es); first projected value Ok("col1-row0")
+    filter "\"Zone_1\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "Zone_1_1" Utf8: describe projectable=true
+    project "Zone_1_1": STREAM OK: 1 batch(es); first projected value Ok("col2-row0")
+    filter "\"Zone_1_1\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c15-nul-truncates-to-other-name | written names: id="id" geom="geometry" cols=["Num\0x", "num"]
+  arrow export names: Ok(["id", "geometry", "Num", "num"])
+  DESCRIBE names:     Ok(["id", "geometry", "Num\0x", "num"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geometry", "Num\0x", "num"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "Num": binds, type Utf8
+  bind "num": binds, type Utf8
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  field "Num" Int64: describe projectable=true
+    project "Num": STREAM ITEM ERR after 0 batch(es): Query("result has no `Num` column")
+    filter "\"Num\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  field "num" Utf8: describe projectable=true
+    project "num": STREAM OK: 1 batch(es); first projected value Ok("col1-row0")
+    filter "\"num\" IS NOT NULL": ADMITTED; STREAM OK: 1 batch(es); first projected value 
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c16-geometry-nul | written names: id="id" geom="geo\0m" cols=["a"]
+  arrow export names: Ok(["id", "geo", "a"])
+  DESCRIBE names:     Ok(["id", "geo\0m", "a"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geo\0m", "a"])
+  bind "id": binds, type UInt64
+  bind "geo": ERR Binder Error: Referenced column "geo" not found in FROM clause!
+  bind "a": binds, type Utf8
+  OPEN ERR: Source("`geo.primary_column` names `geo\0m`, which the file does not contain")
+=== c17-geometry-nul-plus-geo | written names: id="id" geom="geo\0m" cols=["geo"]
+  arrow export names: Ok(["id", "geo", "geo"])
+  DESCRIBE names:     Ok(["id", "geo\0m", "geo"])
+  parquet_schema:     Ok(["arrow_schema", "id", "geo\0m", "geo"])
+  bind "id": binds, type UInt64
+  bind "geo": binds, type Binary
+  bind "geo": binds, type Binary
+  OPEN ERR: Source("`geo.primary_column` names `geo\0m`, which the file does not contain")
+=== c18-identity-nul-native | written names: id="id\0x" geom="geometry" cols=["a"]
+  arrow export names: Ok(["id", "geometry", "a"])
+  DESCRIBE names:     Ok(["id\0x", "geometry", "a"])
+  parquet_schema:     Ok(["arrow_schema", "id\0x", "geometry", "a"])
+  bind "id": ERR Binder Error: Referenced column "id" not found in FROM clause!
+  bind "geometry": binds, type Binary
+  bind "a": binds, type Utf8
+  OPEN ERR: Query("identity scan prepare: Binder Error: Referenced column \"id\" not found in FROM clause!\nCandidate bindings: \"id\\0x\"\n\nLINE 1: SELECT count(*), count(DISTINCT \"id\"), min(\"id\"), max(\"id\") FROM read_parquet('<temp path>\n                                        ^")
+=== c19-identity-nul-plus-id | written names: id="id\0x" geom="geometry" cols=["id"]
+  arrow export names: Ok(["id", "geometry", "id"])
+  DESCRIBE names:     Ok(["id\0x", "geometry", "id"])
+  parquet_schema:     Ok(["arrow_schema", "id\0x", "geometry", "id"])
+  bind "id": binds, type UInt64
+  bind "geometry": binds, type Binary
+  bind "id": binds, type UInt64
+  open OK; geometry_column="geometry" identity source column="id" session_ordinal=false
+  plain stream (no projection): STREAM OK: 1 batch(es); first projected value 
+=== c20-declared-identity-nul | written names: id="key\0x" geom="geometry" cols=["a"]
+  arrow export names: Ok(["key", "geometry", "a"])
+  DESCRIBE names:     Ok(["key\0x", "geometry", "a"])
+  parquet_schema:     Ok(["arrow_schema", "key\0x", "geometry", "a"])
+  bind "key": ERR Binder Error: Referenced column "key" not found in FROM clause!
+  bind "geometry": binds, type Binary
+  bind "a": binds, type Utf8
+  OPEN ERR: IdentityUnusable { column: "key\0x", detail: "the file has no such column", candidate_columns: ["key"] }
+=== c21-declared-identity-truncated | written names: id="key\0x" geom="geometry" cols=["a"]
+  arrow export names: Ok(["key", "geometry", "a"])
+  DESCRIBE names:     Ok(["key\0x", "geometry", "a"])
+  parquet_schema:     Ok(["arrow_schema", "key\0x", "geometry", "a"])
+  bind "key": ERR Binder Error: Referenced column "key" not found in FROM clause!
+  bind "geometry": binds, type Binary
+  bind "a": binds, type Utf8
+  OPEN ERR: Query("identity scan prepare: Binder Error: Referenced column \"key\" not found in FROM clause!\nCandidate bindings: \"key\\0x\"\n\nLINE 1: SELECT count(*), count(DISTINCT \"key\"), min(\"key\"), max(\"key\") FROM read_parquet('<temp path>\n                                        ^")
+SPELLING SELECT U&"nu\0000l" FROM read_parquet(?) LIMIT 0: Err("Parser Error: unicode_to_utf8 NOT IMPLEMENTED")
+SPELLING SELECT COLUMNS('^nu') FROM read_parquet(?) LIMIT 0: Ok(["\"nu\":Utf8"])
+SPELLING raw NUL in SQL text: Err("nul byte found in provided data at position: 10")
+test a21_p0_names ... ok

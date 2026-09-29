@@ -1,0 +1,123 @@
+// SCRATCH -- A2-1 P0 covering probe. Kept here as evidence, as text: it ran as the untracked
+// engine/tests/scratch_a21_p0_covering.rs at main 1af041b (sha256 e50628825e6a18944c8e9e9e0524358f73b699ae15a7a9035a160a3046277ba9 for the file as run, whose first two
+// comment lines this note replaces) and was removed after the run. Output: covering-output.txt.
+use std::sync::Arc;
+
+use arrow::array::{ArrayRef, BinaryBuilder, Float64Array, StructArray, UInt64Builder};
+use arrow::datatypes::{DataType, Field, Fields, Schema};
+use arrow::record_batch::RecordBatch;
+use parquet::arrow::ArrowWriter;
+use parquet::file::metadata::KeyValue;
+use parquet::file::properties::WriterProperties;
+
+use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
+
+const FEATURES: u64 = 10;
+
+fn write(path: &std::path::Path, struct_name: &str, child: [&str; 4], declared: (&str, [&str; 4])) {
+    let mut ids = UInt64Builder::new();
+    let mut geoms = BinaryBuilder::new();
+    let (mut x0, mut y0, mut x1, mut y1) = (vec![], vec![], vec![], vec![]);
+    for i in 0..FEATURES {
+        ids.append_value(i);
+        let e = 2_600_000.0 + i as f64;
+        let n = 1_200_000.0 + i as f64;
+        geoms.append_value(spatial_engine::wkb::encode_polygon(&[vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]]]));
+        x0.push(e);
+        y0.push(n);
+        x1.push(e + 1.0);
+        y1.push(n + 1.0);
+    }
+    let child_fields: Vec<Field> = child.iter().map(|c| Field::new(*c, DataType::Float64, false)).collect();
+    let arrays: Vec<ArrayRef> = vec![
+        Arc::new(Float64Array::from(x0)),
+        Arc::new(Float64Array::from(y0)),
+        Arc::new(Float64Array::from(x1)),
+        Arc::new(Float64Array::from(y1)),
+    ];
+    let st = StructArray::new(Fields::from(child_fields.clone()), arrays, None);
+    let schema = Arc::new(Schema::new(vec![
+        Field::new("id", DataType::UInt64, false),
+        Field::new("geometry", DataType::Binary, false),
+        Field::new(struct_name, DataType::Struct(Fields::from(child_fields)), false),
+    ]));
+    let batch = RecordBatch::try_new(
+        schema.clone(),
+        vec![Arc::new(ids.finish()), Arc::new(geoms.finish()), Arc::new(st)],
+    )
+    .unwrap();
+    let j = |s: &str| serde_json::to_string(s).unwrap();
+    let (ds, dc) = declared;
+    let covering = format!(
+        "{{\"bbox\":{{\"xmin\":[{},{}],\"ymin\":[{},{}],\"xmax\":[{},{}],\"ymax\":[{},{}]}}}}",
+        j(ds), j(dc[0]), j(ds), j(dc[1]), j(ds), j(dc[2]), j(ds), j(dc[3])
+    );
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":\"geometry\",\"columns\":{{\"geometry\":{{\"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"covering\":{covering},\"crs\":{}}}}}}}",
+        spatial_engine::fixture::LV95_PROJJSON
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let f = std::fs::File::create(path).unwrap();
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
+fn stream(ds: &Dataset, q: &ViewportQuery) -> String {
+    let mut s = match ds.stream_with_cancel(q, CancelToken::new()) {
+        Ok(s) => s,
+        Err(e) => return format!("STREAM OPEN ERR: {e:?}"),
+    };
+    let mut buf = Vec::new();
+    let mut n = 0;
+    while let Some(info) = s.next_into(&mut buf) {
+        if let Err(e) = info {
+            return format!("STREAM ITEM ERR after {n} item(s): {e:?}");
+        }
+        n += 1;
+        buf.clear();
+    }
+    format!("STREAM OK: {n} item(s)")
+}
+
+#[test]
+fn a21_p0_covering() {
+    let dir = std::env::temp_dir().join("a21-p0");
+    std::fs::create_dir_all(&dir).unwrap();
+    let std4 = ["xmin", "ymin", "xmax", "ymax"];
+    let cases: Vec<(&str, &str, [&str; 4], (&str, [&str; 4]))> = vec![
+        ("k0-control-bbox", "bbox", std4, ("bbox", std4)),
+        ("k1-struct-nul", "bb\0ox", std4, ("bb\0ox", std4)),
+        ("k2-child-nul", "bbox", ["xmin\0a", "ymin", "xmax", "ymax"], ("bbox", ["xmin\0a", "ymin", "xmax", "ymax"])),
+        ("k3-declares-missing-column", "bbox", std4, ("nobbox", std4)),
+    ];
+    let conn = duckdb::Connection::open_in_memory().unwrap();
+    for (tag, sname, child, declared) in cases {
+        let path = dir.join(format!("{tag}.parquet"));
+        write(&path, sname, child, declared);
+        let p = path.to_string_lossy().to_string();
+        let export = conn
+            .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
+            .unwrap()
+            .query_arrow([p.as_str()])
+            .map(|a| format!("{:?}", a.get_schema().fields().iter().map(|f| format!("{:?}:{}", f.name(), f.data_type())).collect::<Vec<_>>()))
+            .unwrap_or_else(|e| e.to_string());
+        println!("=== {tag} | written struct={sname:?} children={child:?} declared={declared:?}");
+        println!("  arrow export: {export}");
+        let ds = match Dataset::open(&path) {
+            Ok(d) => d,
+            Err(e) => {
+                println!("  OPEN ERR: {e:?}");
+                continue;
+            }
+        };
+        println!("  open OK; covering present={}", ds.covering().is_some());
+        let mut q = ViewportQuery::all();
+        q.bbox = Some(Bbox { xmin: 2_599_000.0, ymin: 1_199_000.0, xmax: 2_601_000.0, ymax: 1_201_000.0 });
+        q.bbox_crs = Some("EPSG:2056".to_string());
+        println!("  bbox stream: {}", stream(&ds, &q));
+        println!("  no-bbox stream: {}", stream(&ds, &ViewportQuery::all()));
+    }
+}

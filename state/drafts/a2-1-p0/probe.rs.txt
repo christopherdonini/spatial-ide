@@ -1,0 +1,243 @@
+// SCRATCH -- A2-1 P0 probe (node b1-close-nul-column-names). Kept here as evidence, as text: it ran as the untracked
+// engine/tests/scratch_a21_p0_names.rs at main 1af041b (sha256 f6f54e7b9b6232864ea7cffc75f77ddcbbc8d775a70ca2d6548911f9f56205fb for the file as run, whose first two
+// comment lines this note replaces) and was removed after the run. Output: p0-output.txt.
+use std::sync::Arc;
+
+use arrow::array::{Array, ArrayRef, BinaryBuilder, Int64Builder, StringArray, StringBuilder, UInt64Builder};
+use arrow::datatypes::{DataType, Field, Schema};
+use arrow::record_batch::RecordBatch;
+use parquet::arrow::ArrowWriter;
+use parquet::file::metadata::KeyValue;
+use parquet::file::properties::WriterProperties;
+
+use spatial_engine::identity::IdentityDeclaration;
+use spatial_engine::{AdmittedPredicate, CancelToken, Dataset, ViewportQuery};
+
+const FEATURES: u64 = 10;
+
+#[derive(Clone, Copy)]
+enum T {
+    Utf8,
+    Int64,
+    Binary,
+    UInt64,
+}
+
+struct Case {
+    tag: &'static str,
+    id_name: String,
+    geom_name: String,
+    cols: Vec<(String, T)>,
+    declared_identity: Option<String>,
+}
+
+fn write(path: &std::path::Path, c: &Case) {
+    let mut fields = vec![
+        Field::new(c.id_name.as_str(), DataType::UInt64, false),
+        Field::new(c.geom_name.as_str(), DataType::Binary, false),
+    ];
+    for (n, t) in &c.cols {
+        let dt = match t {
+            T::Utf8 => DataType::Utf8,
+            T::Int64 => DataType::Int64,
+            T::Binary => DataType::Binary,
+            T::UInt64 => DataType::UInt64,
+        };
+        fields.push(Field::new(n.as_str(), dt, true));
+    }
+    let schema = Arc::new(Schema::new(fields));
+    let mut ids = UInt64Builder::new();
+    let mut geoms = BinaryBuilder::new();
+    for i in 0..FEATURES {
+        ids.append_value(i);
+        let e = 2_600_000.0 + i as f64;
+        let n = 1_200_000.0 + i as f64;
+        geoms.append_value(spatial_engine::wkb::encode_polygon(&[vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]]]));
+    }
+    let mut arrays: Vec<ArrayRef> = vec![Arc::new(ids.finish()), Arc::new(geoms.finish())];
+    for (k, (_, t)) in c.cols.iter().enumerate() {
+        match t {
+            T::Utf8 => {
+                let mut b = StringBuilder::new();
+                for i in 0..FEATURES {
+                    b.append_value(format!("col{k}-row{i}"));
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+            T::Int64 => {
+                let mut b = Int64Builder::new();
+                for i in 0..FEATURES {
+                    b.append_value(k as i64 * 100 + i as i64);
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+            T::UInt64 => {
+                let mut b = UInt64Builder::new();
+                for i in 0..FEATURES {
+                    b.append_value(1000 + k as u64 * 100 + i);
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+            T::Binary => {
+                let mut b = BinaryBuilder::new();
+                for i in 0..FEATURES {
+                    let e = 2_700_000.0 + i as f64;
+                    let n = 1_300_000.0 + i as f64;
+                    b.append_value(spatial_engine::wkb::encode_polygon(&[vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]]]));
+                }
+                arrays.push(Arc::new(b.finish()));
+            }
+        }
+    }
+    let batch = RecordBatch::try_new(schema.clone(), arrays).unwrap();
+    let gname = serde_json::to_string(&c.geom_name).unwrap();
+    let geo = format!(
+        "{{\"version\":\"1.1.0\",\"primary_column\":{gname},\"columns\":{{{gname}:{{\"encoding\":\"WKB\",\"geometry_types\":[\"Polygon\"],\"crs\":{}}}}}}}",
+        spatial_engine::fixture::LV95_PROJJSON
+    );
+    let props = WriterProperties::builder()
+        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo)]))
+        .build();
+    let f = std::fs::File::create(path).unwrap();
+    let mut w = ArrowWriter::try_new(f, schema, Some(props)).unwrap();
+    w.write(&batch).unwrap();
+    w.close().unwrap();
+}
+
+fn names_of(conn: &duckdb::Connection, sql: &str, path: &str) -> Result<Vec<String>, String> {
+    let mut s = conn.prepare(sql).map_err(|e| e.to_string())?;
+    let mut a = s.query_arrow([path]).map_err(|e| e.to_string())?;
+    let mut out = vec![];
+    for b in &mut a {
+        let col = b.column(0).as_any().downcast_ref::<StringArray>().ok_or("not utf8")?.clone();
+        for i in 0..col.len() {
+            out.push(col.value(i).to_string());
+        }
+    }
+    Ok(out)
+}
+
+fn first_stream_item(ds: &Dataset, q: &ViewportQuery, names: &[String]) -> String {
+    let projection = match ds.resolve_projection(names) {
+        Ok(p) => p,
+        Err(e) => return format!("PROJECTION REFUSED: {e:?}"),
+    };
+    let mut stream = match ds.stream_projected_with_cancel(q, &projection, CancelToken::new()) {
+        Ok(s) => s,
+        Err(e) => return format!("STREAM OPEN ERR: {e:?}"),
+    };
+    let mut buf = Vec::new();
+    let mut batches = 0;
+    let mut first_values = String::new();
+    while let Some(info) = stream.next_into(&mut buf) {
+        if let Err(e) = info {
+            return format!("STREAM ITEM ERR after {batches} batch(es): {e:?}");
+        }
+        let reader = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+        for b in reader {
+            let b = b.unwrap();
+            if batches == 0 && b.num_columns() > 2 {
+                first_values = format!("{:?}", arrow::util::display::array_value_to_string(b.column(2), 0));
+            }
+            batches += 1;
+        }
+        buf.clear();
+    }
+    format!("STREAM OK: {batches} batch(es); first projected value {first_values}")
+}
+
+#[test]
+fn a21_p0_names() {
+    let dir = std::env::temp_dir().join("a21-p0");
+    std::fs::create_dir_all(&dir).unwrap();
+    let s = |x: &str| x.to_string();
+    let std_case = |tag: &'static str, cols: Vec<(String, T)>| Case { tag, id_name: s("id"), geom_name: s("geometry"), cols, declared_identity: None };
+    let cases = vec![
+        std_case("c01-interior-nul", vec![(s("nu\0l"), T::Utf8), (s("Num"), T::Utf8)]),
+        std_case("c02-nul-int-before-utf8", vec![(s("zone\0x"), T::Int64), (s("zone"), T::Utf8)]),
+        std_case("c03-utf8-before-nul-same-type", vec![(s("zone"), T::Utf8), (s("zone\0x"), T::Utf8)]),
+        std_case("c04-leading-nul", vec![(s("\0lead"), T::Utf8)]),
+        std_case("c05-trailing-nul", vec![(s("trail\0"), T::Utf8)]),
+        std_case("c06-nul-only", vec![(s("\0"), T::Utf8)]),
+        std_case("c07-empty-name", vec![(s(""), T::Utf8)]),
+        std_case("c08-nfd", vec![(s("e\u{0301}t\u{00e9}"), T::Utf8)]),
+        std_case("c09-nfd-and-nfc", vec![(s("\u{00e9}"), T::Utf8), (s("e\u{0301}"), T::Utf8)]),
+        std_case("c10-space-only", vec![(s(" "), T::Utf8)]),
+        std_case("c11-long", vec![("L".repeat(5000), T::Utf8)]),
+        std_case("c12-bom", vec![(s("\u{feff}bom"), T::Utf8)]),
+        std_case("c13-control-chars", vec![(s("tab\tname"), T::Utf8), (s("\u{0001}ctl"), T::Utf8), (s("del\u{007f}"), T::Utf8)]),
+        std_case("c14-case-dups", vec![(s("zone"), T::Utf8), (s("Zone"), T::Utf8), (s("Zone_1"), T::Utf8)]),
+        std_case("c15-nul-truncates-to-other-name", vec![(s("Num\0x"), T::Int64), (s("num"), T::Utf8)]),
+        Case { tag: "c16-geometry-nul", id_name: s("id"), geom_name: s("geo\0m"), cols: vec![(s("a"), T::Utf8)], declared_identity: None },
+        Case { tag: "c17-geometry-nul-plus-geo", id_name: s("id"), geom_name: s("geo\0m"), cols: vec![(s("geo"), T::Binary)], declared_identity: None },
+        Case { tag: "c18-identity-nul-native", id_name: s("id\0x"), geom_name: s("geometry"), cols: vec![(s("a"), T::Utf8)], declared_identity: None },
+        Case { tag: "c19-identity-nul-plus-id", id_name: s("id\0x"), geom_name: s("geometry"), cols: vec![(s("id"), T::UInt64)], declared_identity: None },
+        Case { tag: "c20-declared-identity-nul", id_name: s("key\0x"), geom_name: s("geometry"), cols: vec![(s("a"), T::Utf8)], declared_identity: Some(s("key\0x")) },
+        Case { tag: "c21-declared-identity-truncated", id_name: s("key\0x"), geom_name: s("geometry"), cols: vec![(s("a"), T::Utf8)], declared_identity: Some(s("key")) },
+    ];
+    let conn = duckdb::Connection::open_in_memory().unwrap();
+    for c in &cases {
+        let path = dir.join(format!("{}.parquet", c.tag));
+        write(&path, c);
+        let p = path.to_string_lossy().to_string();
+        println!("=== {} | written names: id={:?} geom={:?} cols={:?}", c.tag, c.id_name, c.geom_name, c.cols.iter().map(|x| &x.0).collect::<Vec<_>>());
+        // Raw DuckDB name sources.
+        let export: Result<Vec<String>, String> = conn
+            .prepare("SELECT * FROM read_parquet(?) LIMIT 0")
+            .map_err(|e| e.to_string())
+            .and_then(|mut st| st.query_arrow([p.as_str()]).map(|a| a.get_schema().fields().iter().map(|f| f.name().clone()).collect()).map_err(|e| e.to_string()));
+        println!("  arrow export names: {export:?}");
+        println!("  DESCRIBE names:     {:?}", names_of(&conn, "SELECT column_name FROM (DESCRIBE SELECT * FROM read_parquet(?))", &p));
+        println!("  parquet_schema:     {:?}", names_of(&conn, "SELECT name FROM parquet_schema(?)", &p));
+        if let Ok(ex) = &export {
+            for n in ex {
+                let q = format!("SELECT \"{}\" FROM read_parquet(?) LIMIT 0", n.replace('"', "\"\""));
+                let r = conn.prepare(&q).map_err(|e| e.to_string()).and_then(|mut st| st.query_arrow([p.as_str()]).map(|a| a.get_schema().field(0).data_type().to_string()).map_err(|e| e.to_string()));
+                println!("  bind {n:?}: {}", match r { Ok(t) => format!("binds, type {t}"), Err(e) => format!("ERR {}", e.lines().next().unwrap_or("")) });
+            }
+        }
+        // The engine's open and its uses by name.
+        let ds = match &c.declared_identity {
+            None => Dataset::open(&path),
+            Some(col) => Dataset::open_with_declared_identity(&path, IdentityDeclaration::new(col.as_str(), "probe", "2026-09-29T00:00:00Z"), &CancelToken::new()),
+        };
+        let ds = match ds {
+            Ok(d) => d,
+            Err(e) => {
+                println!("  OPEN ERR: {e:?}");
+                continue;
+            }
+        };
+        println!("  open OK; geometry_column={:?} identity source column={:?} session_ordinal={}", ds.geometry_column(), ds.identity().source().source_column(), ds.identity().source().is_session_ordinal());
+        let schema = ds.file_schema().clone();
+        for f in schema.fields().iter() {
+            let n = f.name().clone();
+            if n == ds.geometry_column() || n == "id" {
+                continue;
+            }
+            let projectable = spatial_engine::attributes::admit_projection_column(f, ds.geometry_column(), ds.identity().source().source_column());
+            println!("  field {n:?} {}: describe projectable={}", f.data_type(), projectable.is_ok());
+            if projectable.is_ok() {
+                println!("    project {n:?}: {}", first_stream_item(&ds, &ViewportQuery::all(), &[n.clone()]));
+            }
+            let pred = format!("\"{}\" IS NOT NULL", n.replace('"', "\"\""));
+            match AdmittedPredicate::admit(pred.clone(), &ds) {
+                Ok(ap) => {
+                    let mut q = ViewportQuery::all();
+                    q.filter = Some(ap);
+                    println!("    filter {pred:?}: ADMITTED; {}", first_stream_item(&ds, &q, &[]));
+                }
+                Err(e) => println!("    filter {pred:?}: REFUSED {e:?}"),
+            }
+        }
+        println!("  plain stream (no projection): {}", first_stream_item(&ds, &ViewportQuery::all(), &[]));
+    }
+    // Can any SQL spelling carry a NUL through duckdb-rs? (U& identifier escape.)
+    let p = dir.join("c01-interior-nul.parquet").to_string_lossy().to_string();
+    for q in ["SELECT U&\"nu\\0000l\" FROM read_parquet(?) LIMIT 0", "SELECT COLUMNS('^nu') FROM read_parquet(?) LIMIT 0"] {
+        let r = conn.prepare(q).map_err(|e| e.to_string()).and_then(|mut st| st.query_arrow([p.as_str()]).map(|a| a.get_schema().fields().iter().map(|f| format!("{:?}:{}", f.name(), f.data_type())).collect::<Vec<_>>()).map_err(|e| e.to_string()));
+        println!("SPELLING {q}: {r:?}");
+    }
+    let nul_sql = "SELECT \"nu\0l\" FROM read_parquet(?) LIMIT 0";
+    println!("SPELLING raw NUL in SQL text: {:?}", conn.prepare(nul_sql).map(|_| ()).map_err(|e| e.to_string()));
+}

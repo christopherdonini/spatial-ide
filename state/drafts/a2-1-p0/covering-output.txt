@@ -1,0 +1,23 @@
+A2-1 P0 -- the covering probe's output (covering-probe.rs.txt, run as an untracked scratch test at main 1af041b,
+duckdb 1.10505.0 = DuckDB v1.5.5; cargo test -p spatial-engine --features fixture --test scratch_a21_p0_covering -- --nocapture).
+
+=== k0-control-bbox | written struct="bbox" children=["xmin", "ymin", "xmax", "ymax"] declared=("bbox", ["xmin", "ymin", "xmax", "ymax"])
+  arrow export: ["\"id\":UInt64", "\"geometry\":Binary", "\"bbox\":Struct(\"xmin\": Float64, \"ymin\": Float64, \"xmax\": Float64, \"ymax\": Float64)"]
+  open OK; covering present=true
+  bbox stream: STREAM OK: 1 item(s)
+  no-bbox stream: STREAM OK: 1 item(s)
+=== k1-struct-nul | written struct="bb\0ox" children=["xmin", "ymin", "xmax", "ymax"] declared=("bb\0ox", ["xmin", "ymin", "xmax", "ymax"])
+  arrow export: ["\"id\":UInt64", "\"geometry\":Binary", "\"bb\":Struct(\"xmin\": Float64, \"ymin\": Float64, \"xmax\": Float64, \"ymax\": Float64)"]
+  open OK; covering present=true
+  bbox stream: STREAM ITEM ERR after 0 item(s): Query("prepare: nul byte found in provided data at position: 62")
+  no-bbox stream: STREAM OK: 1 item(s)
+=== k2-child-nul | written struct="bbox" children=["xmin\0a", "ymin", "xmax", "ymax"] declared=("bbox", ["xmin\0a", "ymin", "xmax", "ymax"])
+  arrow export: ["\"id\":UInt64", "\"geometry\":Binary", "\"bbox\":Struct(\"xmin\": Float64, \"ymin\": Float64, \"xmax\": Float64, \"ymax\": Float64)"]
+  open OK; covering present=true
+  bbox stream: STREAM ITEM ERR after 0 item(s): Query("prepare: nul byte found in provided data at position: 71")
+  no-bbox stream: STREAM OK: 1 item(s)
+=== k3-declares-missing-column | written struct="bbox" children=["xmin", "ymin", "xmax", "ymax"] declared=("nobbox", ["xmin", "ymin", "xmax", "ymax"])
+  arrow export: ["\"id\":UInt64", "\"geometry\":Binary", "\"bbox\":Struct(\"xmin\": Float64, \"ymin\": Float64, \"xmax\": Float64, \"ymax\": Float64)"]
+  open OK; covering present=true
+  bbox stream: STREAM ITEM ERR after 0 item(s): Query("execute: Binder Error: Referenced table \"nobbox\" not found!\nCandidate tables: \"read_parquet\"\n\nLINE 1: SELECT \"id\" AS \"id\", \"geometry\" FROM read_parquet(?) WHERE \"nobbox\".\"xmin\" <= ? AND \"nobbox\".\"xmax\" >= ? AND \"nobbox...\n                                                                   ^")
+  no-bbox stream: STREAM OK: 1 item(s)
