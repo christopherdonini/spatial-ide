@@ -901,3 +901,20 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - the PR body asks for a non-squash merge, because 19f37da, 303dca0 and b4d7aa1 are named in records;
     - `cloud/wave2-A2` stays on origin after #143 merges, because the form's correction and the control-test claims name c37b427 on it. That changes its disposition from "kept until the fixes land" to kept.
   - **Next:** the gate-3 reviewer's report, then the reduction commit.
+- 2026-09-29T21:28Z - **Gate 3 (reviewer) on PR #143 at f4d81c5: FAIL, B1-B2; the reduction is applied as 720f930, and both gates are confirming it.**
+  - **The reviewer's report** is `state/consults/gates/2026-09-29-a2-1-gate3-reviewer.md` (byte-identical; gate-log attempt 4). Its only blocking findings are the N-15 and N-6 observation cites in doc comments, the architect's B1-B2.
+  - **Everything else passes:**
+    - every gate-2 finding is fixed, checked from the code;
+    - round 2 is formatting-only in source, and f4d81c5 is rustfmt output byte for byte;
+    - every form mutation was observed at f4d81c5, and that table is the observation of record;
+    - 60 unserialized runs are clean, and CI is green on f4d81c5;
+    - the local `write` is byte-identical at c37b427 and f4d81c5.
+    - Its recount finds 3 rustfmt hunks left, not the worker's 0. That is a report claim, so it does not block.
+  - **The reduction, 720f930** (the custodian, signed off, no force-push), follows the architect's prescription item by item:
+    - N-6's and N-15's observation sentences are removed, since the observations live in the gate reports;
+    - the module doc's every-fixture claim is narrowed to the N-tests;
+    - N-14's R-S3 attribution is removed;
+    - `fixture.rs`'s used-by-every-test clause is removed;
+    - the module doc's c37b427 reference drops its sha256, which both gates suggested.
+  - **Checks on the reduction:** `git diff -U0` shows no changed line that is not a `//` comment. The two hostile binaries pass (12 and 2), and verify-cites, verify-quotes, verify-test-claims and the exposure scan all exit 0 on the branch.
+  - **Next:** the reviewer confirms the diff is comment-only and no test body changed, and the architect confirms the text carries out its prescription.
