@@ -159,3 +159,25 @@ What each changes in Document 1 when B1 opens: **§3** — the refusal set is th
 Until this is decided: the working canvas styles by literal only; the hover panel shows `id`
 only; and the hero slice's "colour by attribute" moment lives in the published bundle rather
 than in the shell. Each of those is a named limit, never presented as a product choice.
+
+## Amendment 2026-09-29 (Proposed; for the human's acceptance with B1's close) — a column name DuckDB binds but its Arrow export does not carry
+
+*Appended while this ADR is Proposed. Authority: the human's ruling of 2026-09-28 (`state/directives/2026-09-28-after-wave-s1-batch.md`, its ruling line and Fable's A2-1 paragraph), as clarified in `state/directives/2026-09-29-a2-1-clarification.md`. The Decision text above is unchanged. Evidence: wave-2 finding A2-1 (`state/cloud/wave2/W2-A2.md`) and its P0 (`state/drafts/a2-1-p0/`). Implementation: `engine/B1-PROJECTION-PREREGISTRATION.md` §10, Amendment 12.*
+
+1. **The fact.** A Parquet column name may contain U+0000. At DuckDB v1.5.5:
+   - the binder resolves the full name;
+   - the Arrow export truncates it at the first U+0000;
+   - no statement text the engine issues can carry U+0000.
+
+   The truncated name then binds to nothing, or to a different column.
+2. **Addressability.** The resident schema names every column by the name DuckDB binds. A column whose bound name and exported name differ is **not addressable**. This is found at open, by comparing the two lists position by position. One engine function decides it, and every use by name applies it. §2's rule of one admission function is unchanged: addressability is a precondition, not a second type policy.
+3. **§3 gains one code.** It is refused synchronously, before any lease or mint, like the others:
+   - **`skp.projection_column_name_not_addressable`**, with fields `column` (the bound name) and `detail` (the engine's fact).
+
+   A declared name that resolves to no column, including the truncated prefix, stays `skp.projection_column_unknown`. The per-column order becomes name, geometry, identity, duplicate, type. §3's set is now seven codes mapped from `ProjectionError`, plus `skp.projection_empty_list`.
+4. **§8, `describe`.** `projectable` is false for such a column, computed by the same per-column function. `schema[].name` is the bound name.
+5. **§10.** The code rides the literal after `main`'s at merge.
+6. **§11 gains item 10:** a column that is not addressable is admitted by any projection path, or its name is placed in any statement text.
+7. **Not decided here:**
+   - the filter namespace (ADR-021's note of 2026-09-29);
+   - the geometry, identity and covering outcomes at open, which use existing engine codes.
