@@ -730,3 +730,24 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - `verify-test-claims` PASS on the branch, and every other check exit 0.
   - **The diff against main:** 36 files, +1968/-130, and `protocol/data-plane/` is empty.
   - **The merge** is the human's, after both gates PASS, as a merge commit.
+- 2026-09-29T17:15Z - **Gate 1 on A2-1's PR #143 at 303dca0: FAIL on both gates.** Both reports are filed under `state/consults/gates/`, each checked mechanically against its hand-back message: byte-identical below the rule, apart from the file's closing newline.
+  - **Architect** (`2026-09-29-a2-1-gate1-architect.md`), B1-B8:
+    - B1: the covering and candidate uses apply the U+0000 rule themselves, and 12.1(c) returns prose, not the typed fact. This is 12.3's invalidator.
+    - B2: a raw U+0000 in `ColumnUnknown`'s `Display` and publish's detail (item 34).
+    - B3: N-1a is thinner than 12.2.
+    - B4: N-3 is folded into K-5, the N-13 kernel half is absent, and N-14, N-15 and N-10 fall short.
+    - B5: no fixture hash checks.
+    - B6: the SKP-V0 §9.5 heading was rewritten.
+    - B7: the Arrow read is not drained before DESCRIBE.
+    - B8: test text claims mutations that were never observed.
+  - **Reviewer** (`2026-09-29-a2-1-gate1-reviewer.md`), B1-B6:
+    - B1: item 34, reproduced.
+    - B2: N-3 missing by name. `verify-test-claims` cannot see it, because `projectable` is not a narrative prefix.
+    - B3: N-13's kernel half, and no lease assertions.
+    - B4: the N-10 and N-11 counters, and N-1a's `Display`.
+    - B5: fixture hashing.
+    - B6: 12.1(c)'s shape and item 25.
+    - It also ran every form mutation at 303dca0, including the form's own mutations for N-6, N-10 and N-15, which the worker had substituted. Its table is the observation of record at that head. CI is all green.
+  - **Gate log:** two records, attempt 2 for the node (attempt 1 was #142's ADR texts), both FAIL.
+  - **Next:** correction round 1 on `cut/b1-close-nul-names-2`, one fresh worker-high carrying every finding from both reports in one handoff. Then gate 2 on the new head.
+  - **The pre-compaction flush was missed.** The session compacted with the SESSION-CONTINUITY block still at the 2026-09-28 handoff (tip 003f0d1). The ledger entries through 08a93f0 held the record, so nothing existed only in the session. The block is flushed in the commit after this one, on the human's question.
