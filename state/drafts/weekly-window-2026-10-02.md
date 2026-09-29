@@ -92,3 +92,101 @@ The excluded standalone crates under `spikes/` and `protocol/transport-bakeoff` 
 **The question (draft wording), a second item beside A and B:**
 - (1) Adopt `test-claims-same-pr-superseded-pin` as described (Recommended).
 - (2) Hold. The known workaround is plain-text references, which was accepted as formatting-only for A2-1.
+
+## D. (added 2026-09-29) The round mirror as a PreToolUse hook on `AskUserQuestion`
+
+*Added on the 2026-09-29 flush directive (`state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`, item 6(a)), which puts it to this window as the human's decision.*
+
+**The gap.** §4's round mirror depends on the custodian remembering it. It lapsed after round 30: two rounds on 2026-09-29 went unmirrored (the ledger's 17:30Z entry).
+
+**The hook contract.** Checked by the custodian on 2026-09-29 against the downloaded page, https://code.claude.com/docs/en/hooks.md. The quotes below are byte-copied from it.
+- PreToolUse "Runs after Claude creates tool parameters and before processing the tool call." `AskUserQuestion` is in its list of matchable built-in tools.
+- The `AskUserQuestion` input table describes `questions` as: "Questions to present, each with a `question` string, short `header`, `options` array, and optional `multiSelect` flag". The page's example shows options carrying only `label`.
+- This session's two `AskUserQuestion` calls on 2026-09-29 carried exactly the following keys (read from the session transcript):
+  - `questions`;
+  - per question: `question`, `header`, `multiSelect`, `options`;
+  - per option: `label`, `description`.
+- Every event also receives the common fields, among them `session_id`, `prompt_id` and, inside a subagent, `agent_id`.
+- "Exit code 0 with no output means the hook has no decision to report, so the tool call continues through the normal [permission flow](/docs/en/permissions)."
+- The reference's PreToolUse decision control says `"allow"` does not suffice for `AskUserQuestion` without `updatedInput`. The hook therefore returns no decision at all.
+- The command-hook timeout "Defaults: 600 for `command`, `http`, and `mcp_tool`". The hook sets its own short timeout.
+
+**Proposed shape: one governance piece, `round-mirror-pretooluse-hook`.**
+1. **Wiring.** A `PreToolUse` entry in `.claude/settings.json` with matcher `AskUserQuestion` and timeout 15 (the Telegram notifier's figure). It runs a new mode of `scripts/hooks/questions-mirror.mjs` that reads the hook's stdin JSON and reuses `mirrorRound`.
+2. **What it sends: the tool's own text.**
+   - It renders `tool_input.questions` in §4's format: the item number, the red-line marker, the digest text (the `question`), and the numbered options with their descriptions. The marker applies when the question text begins with `RED LINE`, the custodian's existing convention.
+   - The file is plain text, with a blank line and a `---` rule between items, and item order equal to the ask order.
+   - It writes `state/questions/round-<n>.md` and sends it as §16 requires: one message, or a document above 4096 characters.
+3. **Round numbering.**
+   - n is one more than the highest existing round file.
+   - A later call with the same `prompt_id` as the round just written is the same round's next question set. It is appended to that file and sent as "question set k".
+   - Open point: two unrelated rounds in one long turn would share a `prompt_id` and merge. The proposal accepts that, and the set label keeps them apart.
+4. **It never blocks and never alters the question.**
+   - It exits 0 with nothing on stdout on every path, including a failed send or missing credentials, with the note on stderr.
+   - It never exits 2, since that would block the call, and it never returns `permissionDecision` or `updatedInput`.
+5. **It stays silent**:
+   - inside a subagent (`agent_id` present);
+   - in a session that does not hold `CUSTODIAN-LEASE`;
+   - in a cloud session (`isCloudSession`).
+6. **Unchanged:**
+   - Telegram stays read-and-copy, never an answer channel.
+   - `AskUserQuestion` stays the sole answer channel.
+   - The custodian commits the round file with its RULED record.
+7. **§4's text.** A dated amendment appended at the end of `AUTONOMY.md` (not inserted mid-file) says that the hook discharges the mirror obligation. A round the custodian writes by hand for context remains allowed.
+8. **Tests** (`node --test`):
+   - rendering from a recorded `tool_input`;
+   - the same-`prompt_id` append;
+   - the red-line marker;
+   - each silent case;
+   - a failed send still exits 0 with empty stdout.
+   - Mutation: drop the options' descriptions from the render; the rendering test fails.
+9. **Gating.** A preregistration before any code, then the reviewer. The architect joins if §21a is read to apply, since this is new tooling on the answer path.
+
+## E. (added 2026-09-29) Staleness the model can see: the Stop hook refuses to stop on a stale block
+
+*Added on the 2026-09-29 flush directive, item 6(b), as the human's decision.*
+
+**The gap.**
+- At 17:06Z on 2026-09-29, the PreCompact hook blocked an automatic compaction. Its record is `.claude/state/precompact-<session>.json`.
+- The model never saw the block, no flush followed, and the session compacted on a block from the day before.
+- The reference says what reaches whom at PreCompact: "Exit with code 2 to block compaction. For a manual `/compact`, the stderr message is shown to the user." For an automatic compaction it says: "If compaction was triggered proactively before the context limit, Claude Code skips it and the conversation continues uncompacted." It says nothing of the model.
+
+**The hook contract** (same page, byte-copied):
+- Stop decision control: `reason` is "Required when `decision` is `"block"`. Tells Claude why it should continue".
+- "A hook that blocks by exiting 2 routes the same way as `reason`: Claude receives the stderr message as the explanation for why it should continue."
+- The loop limit: "Claude Code applies an 8-consecutive-continuation cap: after stop hooks have continued the turn eight times in a row, Claude Code overrides the next block and ends the turn."
+- A subagent's summary of the page said the opposite, that the reason is not given to Claude. It was wrong on the page's text and is not relied on.
+
+**Proposed shape: one governance piece, `stop-hook-stale-continuity`.**
+1. **The predicate.** The block is stale when the newest commit on HEAD that touches `state/CUT-STATE.md` does not itself rewrite the block's `flushed_at:` line. In other words, a ledger commit has landed since the last flush.
+   - A commit that is flush-only, or an entry plus a flush in one ledger-only commit, is fresh.
+   - It reuses `parseSessionContinuity` from `precompact-flush.mjs`.
+2. **Its place in `stop-queue.mjs`'s order:** after the override and HALT step and after the lease check (only the lease holder flushes), and before the background-tasks allow.
+   - Moving it ahead of background tasks is deliberate: a turn that pauses for background work is exactly where a long wait meets an automatic compaction.
+   - Open point: keep background tasks first instead.
+3. **Its block reason, which the model receives.** It names:
+   - the newest ledger commit and its time;
+   - the block's `flushed_at`;
+   - the step: rewrite with `scripts/hooks/flush.mjs` from git and the ledger, commit ledger-only, push, then stop.
+4. **Loop protection.** It counts inside the existing continuation accounting (session cap 6, daily cap 40). A flush moves HEAD, which is the hook's progress signal, so one flush resets the consecutive count. A flush that cannot land (a failed push) runs into the caps and ends the turn.
+5. **What it mechanizes.** Item 5, the block refreshed at each milestone, becomes automatic. Any turn that commits to the ledger cannot end until the block follows it.
+   - Open point for the human: whether a milestone refresh also needs §7's `chore(site): health refresh` commit. The proposal says no: the health refresh stays with the handoff and pre-compaction flush, and milestone refreshes are ledger-only.
+6. **The PreCompact block stays as the backstop, unchanged.**
+7. **Tests** (`node --test`):
+   - stale after an entry-only ledger commit;
+   - fresh after a flush-only commit, and after entry plus flush in one commit;
+   - HALT and the environment override still allow;
+   - a non-holder session still allows;
+   - the caps still end the turn.
+   - Mutation: invert the predicate; the stale case fails.
+8. **Gating.** A preregistration before any code, then the reviewer, and the architect if §21a applies (it changes the stop behaviour of the custodian's loop). The §3 and §7 texts get a dated amendment appended at the end of `AUTONOMY.md`.
+
+**The question (draft wording), items beside A to C:**
+- D:
+  - (1) Adopt `round-mirror-pretooluse-hook` as described (Recommended).
+  - (2) Adopt it as a backstop only: the hook sends only when no round file was written and mirrored in the turn.
+  - (3) Hold.
+- E:
+  - (1) Adopt `stop-hook-stale-continuity` as described, with milestone refreshes ledger-only (Recommended).
+  - (2) Adopt it, with every refresh preceded by a health refresh commit.
+  - (3) Hold.
