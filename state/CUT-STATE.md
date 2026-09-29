@@ -884,3 +884,20 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - every commit is signed off.
     - The report's mutex grep holds for the two files it names; the only other matches in `engine/tests/` are in an existing file this PR does not touch.
   - **Gate 3** (architect and reviewer) runs at f4d81c5. This follows the last correction round the record cap allows; a remaining failure goes to the architect's reduction.
+- 2026-09-29T21:06Z - **Gate 3 (architect) on PR #143 at f4d81c5: FAIL, B1-B3, to be handled by reduction** (`state/consults/gates/2026-09-29-a2-1-gate3-architect.md`, byte-identical; gate-log attempt 4).
+  - **The substance passes.** Every gate-2 finding is fixed:
+    - the mutex is gone and the controls are identical to c37b427;
+    - N-14's leases, K-2's hash, N-3's c02, N-10's p3 UInt64 fixture and the instrument doc are in place;
+    - the B9 correction passes.
+    - No engine path carries U+0000 to a prepare, items 26 and 27 pass, and 12.3's invalidators did not fire.
+  - **The blocking findings are all in comments:**
+    - B1: N-15's observation cite still names no commit and quotes words it credits to 12.1(a), which does not contain them.
+    - B2: N-6 cites 303dca0, but its body changed after.
+    - B3: three comment claims are false or misattributed.
+  - **The architect prescribes a reduction, not a correction round:** one commit that touches comment lines only, per its report, and the reviewer checks that the commit touches only `//`, `//!` and `///` lines.
+  - **A miss by the custodian.** Worker report 4 said N-15 cites the gate-2 reviewer. That claim is false, and the filing note's re-check list did not cover it. The next filing re-checks every citation claim, not a sample.
+  - **For the closing record** (not blocking):
+    - 12.1(d)'s site is `attributes::check_geometry_and_identity`, recorded as one reference;
+    - the PR body asks for a non-squash merge, because 19f37da, 303dca0 and b4d7aa1 are named in records;
+    - `cloud/wave2-A2` stays on origin after #143 merges, because the form's correction and the control-test claims name c37b427 on it. That changes its disposition from "kept until the fixes land" to kept.
+  - **Next:** the gate-3 reviewer's report, then the reduction commit.
