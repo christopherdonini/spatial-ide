@@ -1,8 +1,8 @@
-> **Design reference, not Authority.** Copied on 2026-09-25 from the human's prototype folder outside the repository (`prototype/SPATIAL-IDE-DESIGN-NOTEBOOK.md`; sha256 e0079be6dcd9d65eafe7603c396697e4991bf22924ccfb236fc015b25c8536ba of the source bytes), on the human's instruction (`state/directives/2026-09-25-cloud-hooks.md` §4 and §5). It is design discussion for the Map studio direction (PLAN node `shell-redesign-map-studio`): it rules nothing, authorises no work, and no piece cites it as Authority. Its local file links point to the human's machine; the prototype it names is the sibling copy `map-studio-v7-codex.html`. Everything below this header is byte-identical to the source.
+> **Design reference, not Authority.** Copied on 2026-09-29 from the human's prototype folder outside the repository (`prototype/SPATIAL-IDE-DESIGN-NOTEBOOK.md`; sha256 bb79f4487bb6bfa186fc208e3632905df85fae4ebef29ff0ee48bd610a0bb5cc of the source bytes), on the human's instruction (`state/directives/2026-09-29-design-references-and-layer-ruling.md`, items 1 and 2). It is design discussion for the Map studio direction (PLAN node `shell-redesign-map-studio`): it rules nothing, authorises no work, and no piece cites it as Authority. It replaces in place the copy tracked since 2026-09-25 (source sha256 e0079be6dcd9d65eafe7603c396697e4991bf22924ccfb236fc015b25c8536ba; its profile roots substituted at 209a9c3). The prototype it names is the sibling copy `map-studio-v7-codex.html`, which is unchanged. Two mechanical transformations were applied to the source bytes, in this order, and nothing else changed: (a) each link whose target is a file tracked with it in `state/drafts/design/` was made relative: the text between the link's angle brackets, `%USERPROFILE%/Development/Claude/Spatial IDE/prototype/<file>` in the source with the profile root spelled out, became `./<file>` (4 links in this file); (b) `node scripts/hooks/profile-path-scan.mjs --redact` was run over the result, replacing each remaining profile root with `%USERPROFILE%` (1 in this file). Everything below this header is the source after (a) and (b).
 
 # Spatial IDE — Living Design Notebook
 
-**Updated:** 25 September 2026  
+**Updated:** 28 September 2026  
 **Purpose:** a shared discussion record for Christopher, the main architect and the custodian. It joins the prototype, workflow research and backend implications, including why a proposal exists and what would justify building it. **It is not an implementation brief, accepted ADR, permission to change the repository, or handoff.**
 
 This is a current-state notebook: edit summaries in place, preserve meaningful decision changes in the short change log, and link authoritative decisions rather than copying them. Update it when this design work continues; no background synchronization is implied.
@@ -20,13 +20,15 @@ This is a current-state notebook: edit summaries in place, preserve meaningful d
 9. [Sequencing and promotion tests](#9-sequencing-and-promotion-tests)
 10. [Decisions still to make](#10-decisions-still-to-make)
 11. [Evidence and reference index](#11-evidence-and-reference-index)
-12. [Change log](#12-change-log)
+12. [Architect review and structural freeze](#12-architect-review-and-structural-freeze)
+13. [Research track after v7](#13-research-track-after-v7)
+14. [Change log](#14-change-log)
 
 ## 1. Authority and current position
 
 ### What this notebook can and cannot establish
 
-- **Repository facts** below are from the local checkout inspected at `ffde0a7c3ac703ec8dc585dc6d8f5d25a2edcc98`. Remote PR and CI state were not independently checked for this assessment.
+- **Baseline repository facts** below are from the local checkout inspected at `ffde0a7c3ac703ec8dc585dc6d8f5d25a2edcc98`. A separate, narrow 28 September check at `85cb849244016dd0e3b050d6138fc40af18d4947` is identified in section 13; it does not refresh every earlier statement. Remote PR and CI state were not independently checked for these assessments.
 - **Prototype behaviour** is a simulation, not evidence that the product implements the same operation, security boundary, persistence, renderer or performance.
 - **Research observations** come from supplied NotebookLM extractions and targeted documentation checks. A tutorial demonstrates a mechanism; it does not measure user demand, frequency or efficiency. Missing timestamps remain missing.
 - **Recommendations** are proposals for the architect to assess. An attractive mock-up does not amend an ADR or authorize the custodian to implement it.
@@ -45,7 +47,7 @@ This is a current-state notebook: edit summaries in place, preserve meaningful d
 | B2 / B3 | Save/reopen, verified Prepare and publish-v2 are proposed, sequenced pieces | Designs must respect their distinctions without bringing forward backend scope. |
 | Watcher | In-progress work with separately declared coverage/check-quality facts | A watcher adds advisory detection, not snapshot consistency. Recheck its merged state before implementation. |
 
-The current prototype is [map-studio-v7-codex.html](<%USERPROFILE%/Development/Claude/Spatial IDE/prototype/map-studio-v7-codex.html>). The previous pass reported 40 checks and resolution of all 45 prototype command completions without script errors. Those are prototype checks, not kernel conformance or production acceptance, and were not re-run for this notebook-only pass.
+The current prototype is [map-studio-v7-codex.html](<./map-studio-v7-codex.html>). The previous pass reported 40 checks and resolution of all 45 prototype command completions without script errors. Those are prototype checks, not kernel conformance or production acceptance, and were not re-run for this notebook-only pass.
 
 ### Existing broader notebook
 
@@ -100,6 +102,8 @@ For reproducibility, save the actual camera/view definition: CRS, center, resolu
 The v7 experimental vocabulary is `/` commands, `@` fields, `#` feature search, `?` help, plus ordinary search. The new example `@roads` introduces a possible **resource/field collision**. Do not silently redefine the existing prefix. Prototype a scoped chooser or explicit forms such as `@layer:roads` and `@field:roads.surface`; settle the vocabulary before production.
 
 TAB completes a candidate or moves to the next required slot; it does not execute. Enter on an incomplete draft asks for the missing information. Never trap keyboard users in endless completion: define and test how focus leaves the bar.
+
+Batch 10 review clarification: this is a desired Spatial IDE keyboard interaction, not a claim that WAI-ARIA prescribes Tab-to-complete or a two-Tab exit. Preserve normal focus navigation or explicitly test the alternative; acceptance, draft completion and execution remain distinct.
 
 Applied filters are individual, editable cards/chips with enable/disable/remove controls. Preserve an advanced expression route: an arbitrary SQL predicate cannot always be losslessly divided into simple chips. Define how supported chips combine, preserve parentheses/null semantics, and keep unsupported expressions intact rather than rewriting them approximately.
 
@@ -191,6 +195,8 @@ These are design hypotheses informed by the research, not a request to build sev
 ### Classification key
 
 “Implement now” below means **recommended for the next bounded prototype pass**, not authority to alter the product. “Prototype now” means an experiment whose usability is still being tested. This notebook-only pass changes neither v7 nor the repository.
+
+**26 September sequencing update:** the classification below records the earlier assessment of value/readiness. Following the architect discussion, v7's structure is frozen; these proposals do not authorize another feature-expansion pass. Slots, pills and the other later-band interactions remain research candidates. The immediate next prototype activity is the realistic O-07 walkthrough, followed by the minimum-shell migration plan (§12).
 
 | Pattern | Classification | Priority | v7 disposition |
 | --- | --- | --- | --- |
@@ -429,7 +435,9 @@ Offline maps, sync conflicts and lock-screen integrations are not immediate requ
 
 ## 9. Sequencing and promotion tests
 
-### Smallest next prototype increment
+### Deferred prototype increment — not the immediate next step
+
+The sequence below remains a possible future experiment, not work to run before migration. The 26 September agreement prioritizes O-07 and the minimum shell instead (§12).
 
 1. Keep current explicit prefixes and define the resource/field disambiguation experiment.
 2. Add a single shared draft representation behind a few existing fixture commands.
@@ -467,16 +475,16 @@ B1/B2 screens can then land in the approved shell, with backend work following i
 
 | ID | Question | Recommended starting position |
 | --- | --- | --- |
-| O-01 | What does `@` mean when both fields and resources are searchable? | Preserve existing behaviour until a scoped chooser / explicit qualifier is tested. |
-| O-02 | May typing automatically create semantic pills? | Initially only after an explicit acceptance or clearly committed deterministic token; do not use a confidence score alone. |
-| O-03 | What happens when the active layer/selection changes during drafting? | Preserve a visible pinned target or mark the draft stale; never silently retarget Run. |
+| O-01 | What does `@` mean when both fields and resources are searchable? | Architect position, 26 September: fields of the active layer; layers remain in plain search. No new prefix required now. |
+| O-02 | May typing automatically create semantic pills? | Architect position: explicit acceptance only. This stays a later-band interaction, not minimum-shell work. |
+| O-03 | What happens when the active layer/selection changes during drafting? | Architect position: pinned target with a visible stale mark on relevant context change; never silently retarget Run. |
 | O-04 | Which operations need a preview? | Compact scope summaries for meaningful operations; no modal for routine UI navigation; retain existing mandatory approvals. |
-| O-05 | How does history expose alternate futures? | Prototype branch visibility, but defer persistent/recomputable branching until recipe/data retention semantics exist. |
+| O-05 | How does history expose alternate futures? | Architect position: display-only branches in the design reference; no recomputation. Actual branching remains later-band work. |
 | O-06 | When does a model enter the bar? | Only after a measured deterministic baseline fails important real tasks and model assistance improves net outcomes. |
 | O-07 | What is the first real workflow walkthrough? | Open a parcel delivery, find a zone/size subset, inspect without losing selection, style, then review Save/Prepare/Publish choices. |
 | O-08 | What promotes a prototype into a product cut? | Architect-approved migration/operation scope, owner-backed semantics, accessibility and regression checks—not visual approval alone. |
 
-Suggested architect discussion: settle O-01 through O-04 for the next small prototype experiment, keep O-05/O-06 as bounded future seams, and use O-07 to test whether the design really reduces work. The custodian should receive a separately approved, bounded brief, not be asked to implement this entire notebook.
+The positions above record the architect conversation supplied by Christopher, not new accepted ADRs. O-04/O-06/O-08 were supported as recommended; O-07 is next. The custodian should receive a separately approved, bounded brief, not be asked to implement this entire notebook.
 
 ## 11. Evidence and reference index
 
@@ -573,7 +581,266 @@ https://doc.esri.com/en/arcgis-pro/latest/help/analysis/geoprocessing/basics/geo
 
 Tutorial transcripts may omit the cursor, exact selection state, software version or timestamp. UI-frequency claims, source-specific undo behaviour and performance conclusions require additional evidence. The five new omni-bar patterns arrived as user-supplied proposals; no trend survey established that they are inherently better or required.
 
-## 12. Change log
+## 12. Architect review and structural freeze
+
+### 26 September — reported review, not an independently repeated browser test
+
+Christopher supplied the main architect's v7 review and their subsequent agreement. The architect reported exercising the prefixes, filter, field actions, feature search, scale and catalogue without script errors. They also reported feature-search counts leaking into other search modes. Treat that as a named prototype defect, **not fixed or independently reproduced by this notebook update**. No v7 file changed in this research pass.
+
+**Agreement:** freeze structural exploration at v7, perform the realistic parcel workflow O-07, then write a minimum-shell migration plan. Future features remain visible as ambitions and architectural attachment points; they are not silently discarded, but neither are all experiments automatically committed requirements.
+
+The reported migration bands are:
+
+| Band | Contents / boundary |
+| --- | --- |
+| Minimum shell | Existing layers/map/navigation; inspector Layer tab with predicate controls, style and source facts; attention/status areas including scale display; Activity Jobs/Problems/Console; existing commands through `/` and plain search. Composed filter clauses must remain the one admitted predicate, faithfully recorded. |
+| With the relevant backend piece | Feature attributes, categorical style and table with B1; `@` schema fields without implying statistics; Save/Prepare/workspace history with B2. Multi-selection needs its own identity/scope design and is not obtained merely by adding a panel. |
+| Later | Bounded feature search, summaries, repeat/workflows, branching history, statistics/calculation previews, ghost text/pills/models and capability discovery. Research can continue without implementing these. |
+
+### Nine seams, with limits that keep them small
+
+These are the architect's proposed migration seams, refined here as **discussion constraints**, not an approved implementation specification.
+
+| Seam | Future feature served | Smallest useful boundary / avoid |
+| --- | --- | --- |
+| Stable action IDs and a UI registry | Menus/search/shortcuts, later slots/previews | Reuse existing handlers and A/B/C exposure. Do not make binding-local actions public or route every pointer move/keystroke through a semantic command log. |
+| Draft → resolved intent | New input methods without a new execution path | Keep a narrow internal representation. No universal parser, resolver service or new SKP schema just to open existing commands. |
+| Typed state transitions | Workspace checkpoints and later repeat | Pure, composable reducers/state owners are sufficient. A reducer log is **not** durable history, data undo or a Workflow IR. Do not replay async effects by rerunning UI events. |
+| State keyed by layer identity | More layers, per-layer table/style/filter | Distinguish a layer/view ID from its dataset resource identity and runtime generation. A single-entry map does not implement multi-layer admission or scheduling. |
+| Selection separate from inspection | Multi-selection and explicit scope | Generation-bound selection can be a first contract. Cross-generation persistence requires validated identity mapping or a declared refusal/clear; it is not obligatory merely to support selection. |
+| Explicit resolved scope | Stable targets, repeat and batch | Require scope where the action needs it; UI layout actions need no dummy dataset scope. Include relevant context version, and revalidate at execution. |
+| Registered panel/tab/status contributions | New surfaces without layout surgery | Static typed contribution lists can suffice. No extension loader, plugin framework or generic UI engine. |
+| Typed conditions | One home for failures and actionable states | Preserve reason, owner, resource/generation and lifecycle. Display adapters consume existing facts; they do not invent kernel remedies or merge distinct conditions just because text/severity matches. |
+| Layout separate from workspace | Layout presets without recipe dirtiness | Keep panel visibility/sizes and transient focus outside semantic workspace checkpoints. Persist settings separately when authorized. |
+
+Additional guardrails:
+
+- Keep the map mounted through ordinary layout changes. Preserve intentional dataset/session lifecycle transitions; do not turn “mounted once” into a prohibition against required cleanup/reinitialization on rebind.
+- Reuse P3b's generation protection rather than building a competing frontend epoch authority. Draft revisions can be client-local without being new kernel generations.
+- Future history needs committed semantic changes, grouping, retained source references and an explicit restore contract. Recording every state event would retain noise and still miss external data state.
+- The self-describing-kernel topic should become a **problem statement before SKP v1 freeze**, with the architect pointing to ADR-029, ADR-035 and the conformance work. Those relationships are reported here from the conversation; no new review of those ADRs is claimed in this update.
+
+### Next human test and reference tracking
+
+O-07: open the Bern delivery; filter W1 parcels above 1,000 m²; inspect three without losing a deliberately created selection; colour by zone; review what Save, Prepare and Publish promise. Distinguish existing-product steps from fixture-only/later-band steps. Record hesitation, wrong-scope assumptions and wording problems, not a generic approval of every simulated capability.
+
+The architect asked the custodian to track v7 and the notebook under `state/drafts/design/` as non-authoritative references. **This assistant has not copied anything into the repository.** The custodian should perform that separately when authorized, adapting external links so tracked plans cite tracked references and preserving labels that distinguish simulations from product capabilities.
+
+## 13. Research track after v7
+
+Continue research in parallel with the walkthrough/migration planning. It should answer a named contract question, not generate an ever-larger GUI checklist. Close each batch with: cited observations, unknowns, one candidate boundary, its owning layer, and three tests. A result becomes a requirement only after a separate ruling.
+
+Ready-to-use source lists and short, split NotebookLM prompts are in [Research batches 08–10](<./RESEARCH-BATCHES-08-10.md>).
+
+| Batch | Decision it informs | Status |
+| --- | --- | --- |
+| 8 — Selection identity and lifetime | What survives filtering, source change, reopen and export? What is frozen versus recomputed? | Extraction reviewed with corrections; lifetime proposal awaits ruling |
+| 9 — Jobs, cancellation and partial outcomes | What does Cancel guarantee, which outputs remain, and when is retry safe? | Extraction reviewed with corrections; owner-contract mapping remains |
+| 10 — Contextual commands and accessible forms | What is visible, enabled, valid and authorized; how do defaults/slots change without overriding intent? | Extraction reviewed with corrections; keyboard/validation tests remain |
+| 11 — Visual composition and masks | What affects drawing versus queries, picking, analysis and published data? | Extraction reviewed with corrections; candidate policy awaits ruling |
+| 12 — Live derived layers and submodels | When is an effect a preview, a queryable result or a materialized artifact? | Full evidence and contract reviewed with corrections; candidate policy awaits ruling |
+| 13 — Layer states and revision history | What is captured, which meaning of time applies, and what must remain available? | Evidence and proposals reviewed with corrections; candidate policy awaits ruling |
+
+Run one batch at a time. Keep old sources archived, but deselect them for a new extraction, or use a separate notebook. Their absence from the active evidence set prevents an answer from quietly borrowing an unrelated rule. Prefer primary documentation for lifecycle/identity guarantees; tutorial videos remain useful for observing interaction and friction, not proving guarantees.
+
+After these batches, use unresolved implementation-relevant questions to choose any next research, rather than automatically expanding to ten more topics. This research is not a prerequisite to finishing the agreed O-07 test or writing the minimum-shell migration plan.
+
+### Reviewed synthesis of batches 8–10
+
+The reports supplied on 26 September contained useful distinctions, but several citations did not support their attached conclusions. The detailed correction ledger, revised owner responsibilities and nine proposed tests are now in [Research batches 08–10 — reviewed results](<./RESEARCH-BATCHES-08-10.md>).
+
+| Batch | Correction that affects our design | Minimum useful seam |
+| --- | --- | --- |
+| 8 | Selecting by expression is not automatically a continuously evaluated selection. A unique key within each revision does not alone prove identity continuity. Key regeneration does not prove coherent, immutable capture. | Separate inspected focus, generation-bound members and a saved rule. On generation change invalidate the old set; persistence needs a separate validated identity contract. |
+| 9 | Cancel requested is not stop confirmed, rollback or cleanup. UI callback delivery is not artifact installation. The extract reversed a QGIS rollback caveat and strengthened MCP SHOULD to MUST. | Consume owner-reported outcome/effects and retain uncertainty. A stale result cannot update the active map, but known durable effects still need a record. |
+| 10 | A custom Tab-completion mapping is not prescribed by ARIA. Disabled presentation differs by surface. Avoiding expensive synchronous validation does not require banning asynchronous validation. | Preserve user-input provenance, pinned target and draft/context binding. UI availability never replaces owner validation or permission enforcement. |
+
+Recommended candidate rules for the architect, not accepted requirements:
+
+- **Selection:** filtering and inspecting do not silently replace selected members; selected scope with zero members never silently means the whole layer. Re-running a saved rule can produce new members and must be labelled as such.
+- **Identity:** use admitted identities within the current generation. For persistence, establish namespace/continuity and handling of duplicate, missing, reused, split or merged keys; do not add a hidden full-file scan on every selection.
+- **Outcomes:** retain progress/control, owner outcome, completeness/quality and effects/cleanup as separate facts. Unknown client knowledge is not proof of owner failure. A complete empty result is not the same as an incomplete result.
+- **Prepare/export:** artifact installation and cleanup are attested by the owning subsystem, not inferred from the UI. An uncertain export never authorizes blind append retry or automatic deletion of an unverified destination.
+- **Drafts:** preserve explicit values when they become incompatible, show the error and require deliberate correction. Bounded async checks may be necessary for real operations; late checks cannot enable a different draft or generation.
+
+This synthesis strengthens the proposed seams without adding new panels, a command engine, a validation service, a scheduler or a second generation authority. The research pass is closed with known gaps retained; the O-07 walkthrough and minimum-shell migration stay next.
+
+### Layer research: creative interactions without hidden analytical scope
+
+Christopher's next proposals borrow adjustment layers, masks, layer comps, blend groups, Smart Objects and versioned layers from creative tools. Their useful aim is to reduce repeated copying, exporting and panel manipulation. They do not become requirements merely by appearing here.
+
+The premise needs correction: existing GIS is not limited to flat tables and opacity. QGIS documents compositing groups, render masking, map themes and render-time geometry generation; ArcGIS documents visual map clipping and reusable raster-function chains. The opportunity is a clearer, more integrated interaction model, not a claim that these mechanisms are absent from GIS. [QGIS groups/themes](https://docs.qgis.org/3.44/en/docs/user_manual/introduction/general_tools.html), [geometry generators](https://docs.qgis.org/3.44/en/docs/user_manual/style_library/symbol_selector.html), [ArcGIS clipping](https://doc.esri.com/en/arcgis-pro/latest/help/mapping/properties/clip-layers-in-a-map.html), [function templates](https://doc.esri.com/en/arcgis-pro/latest/help/analysis/raster-functions/raster-function-template.html).
+
+The source packs and short two-part prompts are in [Research batches 11–13](<./RESEARCH-BATCHES-11-13.md>). As of the later 27 September review, all three batches have been critically reviewed, including the complete Batch 12 contract and Batch 13 proposals. No resulting policy is accepted merely by this review, and no additional prototype work is authorized.
+
+#### Preliminary assessment of the six proposals
+
+| Idea | Useful adaptation | Boundary and implementation band |
+| --- | --- | --- |
+| Adjustment layers / live buffers | A named derived view with editable parameters, an explicit input and a preview/materialize distinction. | Research now; engine/workflow work later. Do not silently change a buffer's inputs when unrelated layers move below it. A style outline, render-time geometry and a queryable metric buffer are different results. |
+| Clipping masks | A reversible display mask attached to named targets, with visible mask provenance. | Strong future composition feature. Define picking, table and export scope separately. A mask changes the picture, not permissions; hidden data may still be delivered in a bundle. Raster examples also require the raster module. |
+| Layer comps / saved states | Named presentation presets; later richer analytical scenarios. | Strong candidate after multi-layer state exists. Specify captured values versus live references. Filters can trigger new queries, so switching cannot be promised instant. Do not conflate presets with workspace undo or verified data snapshots. |
+| Blending / passthrough | Explicit compositing scope, group isolation and a small justified set of blend modes. | Rendering feature, not numerical data fusion. Query scope must not inherit a graphics blending rule. Intermediate render surfaces have memory/performance costs to measure. |
+| Smart Objects / precompositions | One visible output with inspectable inputs, parameters and a drill-in view of an existing workflow. | Reuse future Workflow IR; no second execution engine. Decide linked versus pinned definitions, cache invalidation, portability, cancellation and error propagation before promising reusable “smart layers”. |
+| Time-travel layers | Choose a retained source revision and compare it with another under an explicit identity/analysis contract. | Long-term. Do not adopt Iceberg/Dolt for a timeline widget. Retention, coherent acquisition, multi-source consistency, feature identity and diff costs remain separate problems. |
+
+All verdicts are recommendations for discussion, not new acceptance gates or scope additions to the minimum shell.
+
+#### One layer is not one file: the important model distinction
+
+Keep these concepts separate, extending the existing layer-ID seam rather than constructing six new frameworks:
+
+- **Resource/revision:** the underlying dataset and what is actually known about its identity and consistency. A runtime generation over mutable bytes is not automatically a retained revision.
+- **Layer/view instance:** a named view of a resource, with its own predicate, styling and visibility. Several views can share one source without duplicating its bytes; this does not guarantee all query/GPU buffers can be shared.
+- **Composition:** draw order, masks, opacity and blend boundaries.
+- **Analysis dependency:** explicit input references and transformations; not accidental adjacency in the layer panel.
+- **Presentation preset or analytical scenario:** a declared bundle of view settings, or the richer combination of parameters and source/algorithm revisions.
+- **History/time:** workspace checkpoints, source revisions and observation-time filters are different axes.
+
+For example, “All parcels”, “W1 over 1,000 m²” and “Selected parcels for review” may become three views over one source. The last must say whether it follows a live selection, freezes generation-bound members or evaluates a saved rule. Naming it a layer does not solve Batch 8's identity problem. Selection, inspection and action scope remain explicit, and a stale shared source must not leave dependent views claiming current results.
+
+Proposed interaction: **Duplicate view** should mean another configuration over the same source; **Create independent dataset** should mean a data-producing operation with a destination and lifecycle. Removing a view must not imply deleting its source.
+
+#### Scope and correctness hazards worth researching
+
+1. **Do not let cosmetic reorder rewrite analysis.** Stable input references should survive draw-order changes. Changing group membership may deliberately alter a visual effect's scope, but must show that scope. A bulk operation on a folder needs an explicit resolved target list, not a borrowed passthrough setting.
+2. **A 500 m buffer is not a thick line.** The owner must resolve CRS, units, planar/geodesic semantics, tolerance and dissolve behaviour. A visible result can require inputs outside the viewport whose buffers cross into it. Neighbourhood and global operations have different execution bounds.
+3. **Non-destructive does not mean free.** Live derivations still scan, compute, tessellate and upload. Preview coverage/resolution, cancellation and outdated results need explicit states; full analytical exports cannot silently substitute a display approximation.
+4. **Masking is not redaction.** ArcGIS explicitly separates map clipping from query/analysis access. For us, exporting an image, exporting data and publishing a static bundle must each declare what they include. Hiding pixels alone must never establish a privacy claim. [ArcGIS clipping](https://doc.esri.com/en/arcgis-pro/latest/help/mapping/properties/clip-layers-in-a-map.html)
+5. **Saved appearance is not an immutable scenario.** QGIS themes reference named styles; subsequent edits can change what a theme displays. Our future design should choose deliberately between following a shared style and pinning its value/version. Missing inputs must not be silently replaced with today's data. [QGIS map themes](https://docs.qgis.org/3.44/en/docs/user_manual/introduction/general_tools.html)
+6. **A time slider needs a named clock.** Observation time, ingestion time, source commit time and workspace history can disagree. Iceberg's expired snapshots are unavailable for time travel. Dolt distinguishes its version commits from SQL transactions and documents that an AS OF view query can use today's view definition over historical rows. Data revision alone is therefore not a general reproducibility promise. [Iceberg maintenance](https://iceberg.apache.org/docs/latest/maintenance/), [Dolt history](https://www.dolthub.com/docs/sql-reference/version-control/querying-history/)
+
+The project's existing distinction between reference Save and verified Prepare remains relevant. A content hash identifies bytes; it does not by itself guarantee coherent capture, retention, access or a matching historical workflow definition. “Unlimited Ctrl-Z” and instant spatial diffs remain unproven ambitions, not consequences of choosing content-addressed storage.
+
+#### Additional layer-panel ideas to test, not add to v7
+
+- **Independent switches for visibility, pickability and editability.** A visible reference layer need not intercept clicks; a UI edit lock is not filesystem permission or source immutability. Keyboard/screen-reader labels must explain the difference.
+- **Temporary isolate/solo with a restore action.** Useful during inspection without destroying a carefully configured visibility preset.
+- **Search and organize views by name, source, geometry kind or purpose.** Keep the focused panel row distinct from selected map features. Tags/folders need not change analysis membership.
+- **A compact “what is this?” summary:** source or derived view, input references, current/limited/stale result and available provenance. Details on demand; no permanently expanded diagnostic prose.
+
+Prioritize the model distinction and understandable basic layer controls, then presentation presets and masks, then justified live derivations/submodels. Rich temporal/versioned workflows wait for retained data and a use case. Raster remains a separate backend/display workstream under the previously inspected vector-only baseline; this research pass is not a new repository audit.
+
+The only immediate architectural implication is to preserve the already proposed separation of layer identity, resource identity, generation, scope and layout. No mandatory new graph editor, cache service, plugin framework, renderer, database or SKP manifest follows. Later capabilities should expose their actual owner-defined scope, output kind, completeness and remedies through the future self-describing contract rather than teaching each client separate semantics.
+
+#### Initial reviewed implications of Batch 11 and partial Batch 12 — 27 September
+
+The correction ledger, owner proposals and test examples are in the research companion. This initial review used a truncated Batch 12 contract; the later continuation review below records the complete delivery.
+
+The useful refinement is not another layer type for every idea. It is a separation between **what an operation means**, **how it executes**, **where its results live**, and **what scope/completeness it promises**. A queryable derived view need not be written to disk; a retained output is not automatically complete over the whole source. Calling a workflow non-destructive is insufficient unless its operations actually declare and enforce that policy.
+
+Candidate decisions to take to the architect:
+
+- **Captured versus live masks:** a retained captured boundary and a live source reference have different lifetimes. A missing live dependency should suspend the affected masked rendering with a named condition, not silently remove or approximate the mask. Capturing or removing it is an explicit action.
+- **Picking versus table scope:** proposed default map picking follows visible/pickable content; table/query operations retain their explicitly declared scope, filters and authority. Display masking does not silently erase selected members or broaden an export.
+- **Publishing:** use the approved data scope and disclose target support for visual effects. Do not adopt the extraction's automatic “all unclipped data” policy; do not equate a convincing mask with data redaction.
+- **Dependency semantics:** draw-order changes must not retarget analysis. This does not dictate memory-array order, cache scheduling or a particular downstream GPU pass. Efficient physical execution may differ while preserving the same contract.
+- **Derived work:** separate effect/result kind, evaluation strategy, backing/retention, scope/completeness and committed effects. Reuse existing lifecycle/generation protections; late work cannot claim a new target, and completed artifact effects remain recorded.
+
+Corrections retained in the detailed ledger include overly broad persistence claims, an invented mask fallback, mandatory disk output, assumed model purity and “global means whole raster”. These are reasons to refine the contract, not abandon the concepts.
+
+This initial review did not accept any implementation policy. The later continuation closes the missing research, without adding another prototype version or changing the minimum-shell migration.
+
+#### Full Batch 12 and Batch 13 synthesis — later 27 September
+
+The follow-up attachment includes the complete derived-layer contract and both the evidence and proposal for Batch 13. Repeated answers and copied NotebookLM controls were treated as transcript noise, not extra evidence. Detailed source corrections and revised tests are in the research companion.
+
+Keep the valuable distinctions, but reject these accidental design changes:
+
+- **Materialized is not automatically immutable.** Writing an output, caching it and protecting a coherently acquired revision are different guarantees. A visual preview, virtual derived view and persisted output need not be mutually exclusive lifecycle states.
+- **Responsibilities are not new services.** CRS, lineage, caching, cancellation and completeness need owners; the source material does not require five new managers or prove full feature lineage. A valid schema is not proof of complete spatial coverage.
+- **Parameter revision is not source generation.** Bind every asynchronous result to the relevant source/session generation and operation/parameter revision. Debouncing, cancellation and backpressure remain valid; do not require immediate restart or a new source session for every slider change.
+- **Prepare keeps its established meaning.** It obtains or binds to a coherently acquired, retained immutable artifact under the recorded protection contract. Schema checks, parameter validation, licensing and mere revision existence are not substitutes.
+- **Workspace history remains separate from feature-edit undo.** Saving a recipe must not silently clear checkpoints or commit edits. Session-only prototype history and future persistent retention remain distinct positions; unlimited history is still not promised.
+- **Presets can follow or capture style.** QGIS's mutable-style precedent is useful, not mandatory. Make shared versus captured/versioned appearance explicit. Analytical scenarios additionally declare data and operation dependencies.
+- **Time needs two independent questions.** Which source revision is available, and which domain-time interval is selected within it? A date field need not mean observation time; the meaning is configured. An old observation added today is absent from an older revision, not because one clock overrides another.
+- **Reopening and recomputing are not the same promise.** A retained source revision alone does not preserve every historical algorithm, CRS transform or other dependency. A prior retained output can remain viewable even when rerunning its scenario is unavailable.
+
+My recommended human-facing concepts are View presets, Scenarios, Time filters, Data revisions and Workspace history. They need not become separate panels or subsystems. Keep DAG IDs and hashes in expandable provenance; keep personal panel layout separate from semantic recipe state.
+
+Research-derived next decisions for the architect, not automatic implementation:
+
+1. Define whether each saved preset follows shared styles or captures settings, and how missing references are reported.
+2. Specify derived-view scope/result identity and operation binding before adding live effects; use the existing future Workflow IR.
+3. Preserve Save/Prepare and history boundaries. Later define which retained dependencies a scenario protects from cleanup and for how long.
+
+The 11–13 research cycle is reviewed, with unknowns retained. Next consolidate these decisions and complete O-07/minimum-shell planning; commission another batch only for a concrete unresolved question. No storage-engine choice, new kernel manifest, prototype changes or repository edits follow from this review.
+
+#### Architect consolidation — 28 September, decisions awaiting Christopher
+
+Christopher supplied the architect's response to batches 11–13. It narrows migration-time work to (a) view identity separate from the resource, with separate drawing order, and (b) target-aware conditions. Other established seams remain; multi-view scheduling, masks, presets, derived resources and scenarios stay outside the minimum shell.
+
+**Scoped verification:** read-only check of the local tree at HEAD `85cb849244016dd0e3b050d6138fc40af18d4947`; no tracked changes were reported at the check. No tests, remote status or whole-project audit performed.
+
+- `protocol/skp/SKP-V0.md` §7.3 makes a filtered result part of a request, not a new addressable resource. §3 identifies session-scoped handles, and the idempotency shortfall says another open creates another Dataset and pool.
+- `engine/src/pool.rs` declares **four stream connections**, with separate admission and maintenance classes. This is not a universal four-query/total-connection limit. Its header also documents cancellation/reacquisition overlap, so scheduling cannot assume a cancel immediately frees a stream slot.
+- `frontends/shell/src/canvas/tileGridConstants.ts` permits three tile streams; the pool documentation accounts for the additional baseline query. Four stream connections is not a promise of four independently active views.
+- SKP's `close_dataset` contract cancels all live streams for the dataset and invalidates pending tickets. Keeping an Arc alive protects memory lifetime, not another consumer's logical session.
+- docs/11 and docs/13 already specify ResourceRefs, pinning and the Workflow IR as design direction. These documents do not establish that every lifecycle mechanism is implemented. Deferring addressable derived resources is consistent with the current protocol; lasting identity is a project design gate, not a universal technical requirement for all temporary query results.
+- The local queue still lists watcher-first-read-on-watch-thread (C-1) and generation-close-races in progress. The architect's ordering rationale was not treated as proof of completion.
+
+### Recommended answers, not recorded user rulings
+
+| Architect question | Recommendation and qualification |
+| --- | --- |
+| 1. Presets change presentation, not filters? | Yes for presentation presets. Keep predicates on views; a different filtered view can share the source. Applying a preset must not silently retarget a staged command or change its bound data scope. Image/published appearance can change by design; do not promise that no kind of export changes. |
+| 2. Live mask disappears: closed or open? | Fail closed for affected rendering, with a named condition. “Capture boundary” is eligible only when a complete usable boundary with known provenance is available; not an assumed remedy after loss, and never a partial/expired cache silently promoted to current truth. Explicit removal remains possible. A captured boundary and a live dependency keep distinct lifetimes. |
+| 3. Click only visible, pickable content? | Yes as default. Respect masks and declared layer pickability. Tables/search can reach otherwise hidden records under their own scope. Preserve selected members and explain hidden counts. Later overlap disambiguation must not silently enable hidden layers. |
+| 4. Remove last view, close source? | Yes only when it releases the last live consumer, or after explicit resolution of remaining work. A mask, dependent view or running operation may still rely on it. “Remove view” must not issue a broad close that cancels unrelated consumers. View-owned queries can be cancelled/drained under existing lifecycle rules. No separate Sources panel is required. |
+| 5. Scenarios use Workflow IR rather than a new object model? | Yes to one semantic model and execution path. A friendly Scenario/preset-comparison UI can front that IR later; users need not manipulate a technical notebook. Promise revision-pinned only when all required inputs actually meet that grade and remain available. Missing inputs never become latest silently. |
+
+The source-close qualification is the most important change. Today's single-view case can remain simple; future shared views need explicit ownership, not an assumption that the last visible panel owns every dependent operation. Hiding a view must also stay distinct from removing it.
+
+Mask invalidation needs one further distinction: refusal of an uncommitted filter draft does not itself prove the currently applied mask is unavailable. Preserve a still-valid committed mask and show the draft refusal separately; do not turn a parameter error into a fabricated source-session end. Fail-closed rendering applies when the required applied mask actually cannot be provided under its binding.
+
+Preserve the migration's small scope. Establish view/resource separation and condition targets without implementing Duplicate view or a scheduler now. A proposed test that Duplicate view never opens a second dataset belongs with that feature; migration can instead test existing view-to-resource binding and lifecycle. Conditions carry generation/context when relevant, not a fabricated source generation for a layout-only issue.
+
+Next: Christopher answers the five questions, O-07 is completed, and the architect incorporates only the agreed provisions into the migration plan. This notebook records recommendations, not Christopher's acceptance; no repository files or prototype were changed.
+
+## 14. Change log
+
+### 28 September 2026 — Architect consolidation and decision advice
+
+- Recorded the architect's narrow migration scope and five pending product choices.
+- Verified the scoped protocol/pool/lifecycle facts; distinguished stream capacity from total queries and memory ownership from session validity.
+- Recommended qualified agreement, especially closing only after the last live consumer and conditional availability of mask capture.
+- No user decision inferred, and no implementation, prototype or repository changes.
+
+### 27 September 2026 — Full Batch 12 continuation and Batch 13 review
+
+- Received the complete contract and scenario/history research, closing the earlier truncation.
+- Corrected unsupported model-export, immutable-file, owner-manager and source-generation assumptions.
+- Preserved Save/Prepare and workspace-history meanings; distinguished style following/capture, domain time/revision and state restore/recomputation.
+- Marked batches 11–13 reviewed, not accepted. Updated only the two external Markdown files.
+
+### 27 September 2026 — Batch 11 and partial Batch 12 review
+
+- Checked the supplied reports against primary documentation and a labelled supplemental QGIS output reference.
+- Replaced automatic mask clearing/full-data publishing with explicit proposed scope and lifetime policies.
+- Separated queryability, materialization and retention; rejected assuming all model operations preserve inputs.
+- Recorded the truncated Batch 12 contract honestly. Updated only external Markdown; no prototype or repository edits.
+
+### 26 September 2026 — Layer concepts and batches 11–13
+
+- Evaluated creative-tool analogies against existing GIS mechanisms and separated presentation from analysis and revision history.
+- Recorded explicit dependency, masking/privacy, CRS/preview, retention and historical-definition pitfalls.
+- Prepared three focused source packs with short split prompts; extraction and product rulings remain pending.
+- Added future layer-panel research ideas without changing v7, the migration band or any repository file.
+
+### 26 September 2026 — Batch 8–10 critical review
+
+- Checked the supplied extractions against primary sources; recorded corrections separately from future Spatial IDE policy.
+- Corrected live-selection, persistence, key-regeneration, rollback, cancellation-strength and ARIA/validation inferences.
+- Added revised candidate contracts, owners and acceptance examples to the research companion; linked their implications here.
+- Marked the three batches reviewed, not accepted or implemented. No prototype or repository changes.
+
+### 26 September 2026 — Architect agreement and research track
+
+- Recorded the structural freeze and minimum-shell/later-band split, superseding the earlier suggestion to immediately grow v7.
+- Recorded prefix, explicit-pill-acceptance and stale-target positions from the supplied architect conversation.
+- Added limits to the nine proposed seams, especially reducer versus history, selection lifetime, action exposure and intentional map lifecycle changes.
+- Preserved the architect-reported search-mode status leak as unresolved; did not change the prototype.
+- Prepared three focused research packs. No claims that NotebookLM has already loaded/extracted them, and no repository changes.
 
 ### 25 September 2026 — Initial consolidated notebook
 

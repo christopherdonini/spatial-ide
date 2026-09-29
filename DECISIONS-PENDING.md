@@ -59,6 +59,23 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
   Applied: 1af041b (the dependency encoded on `entry-79-b1-consult-items`; the clarification filed beside the 2026-09-28 ruling).
 
+**RULED 2026-09-28 — the layer-model decisions (the human's answers to Fable's five questions of 2026-09-28; filed 2026-09-29 on the human's instruction, `state/directives/2026-09-29-design-references-and-layer-ruling.md` item 3, whose sending confirms the quote is the human's; verbatim in `state/directives/2026-09-28-layer-model-decisions.md`, byte-copied from §3 of `state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md`, which carries the question titles; the human's words only):**
+
+- *The answer, byte-copied:*
+
+  > I agree with the narrowed migration scope. My preferred answers are:
+  >
+  > 1. Yes: presentation presets do not change filters. Filters belong to views; different filtered views may share one source. Applying a preset must not silently retarget an already-staged command. This protects data scope, while exported images can naturally change appearance.
+  > 2. Fail closed when the required live mask is unavailable. Show a named problem; never silently unmask or substitute a bounding box. Offer Capture only when a complete usable boundary with known provenance is actually available. Also distinguish a refused filter draft from losing the applied mask: a failed edit should not discard a still-valid committed mask.
+  > 3. Yes: map clicks target visible, pickable content. Tables and search keep their declared scope. Hidden selected features should remain selected, with their hidden count explained.
+  > 4. Close the session when its last live consumer releases it. Removing the last view normally does that, but a dependent mask, view or running operation may still own it. Removing a view must not silently cancel unrelated work. No separate Sources panel is needed; hiding a view must remain different from removing it.
+  > 5. Yes: scenarios use the existing Workflow IR direction. No second execution model. Later, we can offer a friendly Scenario interface without requiring users to understand a technical notebook. Claim revision-pinned only when the inputs actually satisfy that guarantee; missing revisions never become latest.
+  >
+  > Keep migration limited to view/resource separation, drawing order and target-aware conditions alongside the already-planned seams. Don’t implement Duplicate view or scheduling just to demonstrate the future architecture.
+  > After O-07, fold these decisions into the minimum-shell migration plan.
+
+  Applied: an input to the minimum-shell migration plan, which Fable writes after O-07 (PLAN node `shell-redesign-map-studio`, item 4); no status or order changes.
+
 **RULED 2026-09-28 — the HUMAN RULING line of the after-wave S1 batch (the human's message, pasted; verbatim in `state/directives/2026-09-28-after-wave-s1-batch.md`, whose Fable's notes are not copied here; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
 
 - *The ruling, byte-copied from the directive:*

@@ -788,3 +788,26 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The result: both aborted on syntax errors within their first fourteen lines, and no line redirected or ran a real command. `git status` and a newer-than scan showed no changed or new file beyond the intended ones.
     - The fix: the headers were rewritten, since their paths had been blanked. The bodies are checked to rejoin exactly to the message.
     - The lesson: text goes through the Write tool or a script file, never inside a double-quoted shell string.
+- 2026-09-29T18:18Z - **The RULED backfill is done (3c430fb)**, and the 2026-09-29 design-references directive is applied (this commit).
+  - **The backfill: six dated blocks**, placed above round 30, newest first, with additions only:
+    - the wave-2 answers and the 07:08Z balance reading (2026-09-28);
+    - the two 2026-09-28 HUMAN RULING lines (the W2-D sighting and the S1 batch);
+    - today's 05:08Z round (answered 06:50Z);
+    - today's 2026-09-29 HUMAN RULING line;
+    - today's 13:07Z round (answered 16:30Z).
+    - Each quote is byte-copied from its directive, and a script asserts each copy. Fable's text in those directives is not copied.
+  - **Left without a block, as neither an answer nor a HUMAN RULING line.** The human's instructions:
+    - the 2026-09-27 session order;
+    - the 2026-09-29 takeover message;
+    - the flush directive;
+    - the design-references directive.
+    - The status notes on PRs #123, #130 and #132 (2026-09-27) and the question of 17:09Z are also left out.
+    - Each directive is filed under `state/directives/`, and the human can ask for DIRECTIVE blocks.
+  - **The design references.** The four sources are copied into `state/drafts/design/` after their sha256 checked equal to the directive's: `SPATIAL-IDE-DESIGN-NOTEBOOK.md` (replacing the 2026-09-25 copy in place), `RESEARCH-BATCHES-08-10.md`, `RESEARCH-BATCHES-11-13.md` and `LAYER-MODEL-DECISIONS-2026-09-28.md`.
+    - Transformation (a), the relative links: five, the notebook's four and 08-10's one.
+    - Transformation (b), `profile-path-scan.mjs --redact`: one, the notebook's Desktop link.
+    - Each header records both transformations. A diff of each body against its source changes exactly lines 48, 52, 631, 648 and 672 of the notebook and line 7 of 08-10, and nothing in the other two.
+    - `map-studio-v7-codex.html` is untouched: its source sha256 equals the one in its tracked header.
+  - **The 2026-09-28 layer decisions are filed as a ruling.** `state/directives/2026-09-28-layer-model-decisions.md` holds the human's words only, byte-copied from the copy's §3. A dated RULED block sits above the first 2026-09-28 block.
+  - **PLAN:** `shell-redesign-map-studio` names the decisions file as a migration-plan input, with no status or order change.
+  - **The exposure scan** (canary first) is clean on the staged set.

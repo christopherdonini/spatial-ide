@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T18:11:10.119Z",
-  "plan_hash": "74efa058196537dabb23f3cdce6e329387f248a9c99ff16f66af504b4142f128",
+  "generated_at": "2026-09-29T18:18:35.401Z",
+  "plan_hash": "350b6620908952fa92a8a29a5501538c588e03ae6c838af8358f8a16e1656012",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2898,7 +2898,7 @@
       "entries": [
         119
       ],
-      "summary": "Migration requirement, RULED 2026-09-23 (later), entry 120 item (2), the human's words: every fact display binds to the dataset on the canvas, never to an in-flight open attempt. RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e))",
+      "summary": "Migration requirement, RULED 2026-09-23 (later), entry 120 item (2), the human's words: every fact display binds to the dataset on the canvas, never to an in-flight open attempt. RULED 2026-09-23 (late), shell direction, items (a)-(e) (state/directives/2026-09-23-entry-119-and-map-studio.md). The prototype is held outside the repository; no structural shell work is authorised until the migration plan is ruled. Held for the new structure (item (b)): B1's shell half (hover attributes, categorical style UI), B2's screens, and the watcher's status display; B1's engine/kernel half proceeds as sequenced. Small fixes inside existing components are fine and those components move wholesale (item (c)); no new permanent element in the canvas status stack or over the map, and a new display goes into an existing component and is listed in the ledger as a migration-inventory item (item (d)); PR #97 and the drill repairs proceed as ruled (item (e)). Migration-plan input (the human, 2026-09-29, state/directives/2026-09-29-design-references-and-layer-ruling.md item 4): state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md, whose human decisions are RULED 2026-09-28 (state/directives/2026-09-28-layer-model-decisions.md); Fable writes the plan after O-07. No status or order changes.",
       "dates": {
         "opened": "2026-09-23",
         "done": null
