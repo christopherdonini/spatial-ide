@@ -1057,8 +1057,11 @@ fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<Data
     // **§10 Amendment 12, 12.1(d); test N-5.** A name that does not round-trip is left out of the
     // filter namespace before any other check — including the dictionary exclusion below — because
     // no SQL statement can address it at all, dictionary or not.
-    if let Some(detail) = crate::addressability::not_addressable_reason(field) {
-        return Err(FilterError::ColumnNotFilterable { column: name.to_string(), reason: detail });
+    if let Some(fact) = crate::addressability::not_addressable_for_field(field) {
+        return Err(FilterError::ColumnNotFilterable {
+            column: name.to_string(),
+            reason: fact.render(),
+        });
     }
     // **ADR-021 Note 2026-09-24; round 17 item 3.** Refused by name, before the type gate ever
     // runs — the gate now *admits* a dictionary (emitted as its value type), and the filter
@@ -1260,10 +1263,33 @@ mod tests {
     fn a_nul_named_column_is_refused_as_not_filterable_by_name() {
         let field = Field::new("nu\0l", DataType::Utf8, true);
         match filterable_column_type("nu\0l", &field) {
-            Err(FilterError::ColumnNotFilterable { column, reason }) => {
+            Err(
+                ref err @ FilterError::ColumnNotFilterable {
+                    ref column,
+                    ref reason,
+                },
+            ) => {
                 assert_eq!(column, "nu\0l");
-                assert!(reason.contains("U+0000"), "reason must name U+0000: {reason}");
-                assert!(!reason.contains('\0'), "reason must not carry a raw NUL byte: {reason:?}");
+                assert!(
+                    reason.contains("U+0000"),
+                    "reason must name U+0000: {reason}"
+                );
+                assert!(
+                    !reason.contains('\0'),
+                    "reason must not carry a raw NUL byte: {reason:?}"
+                );
+                // N-1a's fifth shape (§8 item 34): `ColumnNotFilterable`'s own `Display`, proven
+                // here rather than live (E9: a raw U+0000 in predicate text is refused as
+                // unparsable before the namespace ever runs, so this shape is unreachable live).
+                let display = err.to_string();
+                assert!(
+                    !display.contains('\0'),
+                    "Display must not carry a raw NUL byte: {display:?}"
+                );
+                assert!(
+                    display.contains("\\u0000"),
+                    "Display must render the visible escape: {display:?}"
+                );
             }
             other => panic!("expected ColumnNotFilterable naming U+0000, got {other:?}"),
         }

@@ -204,14 +204,24 @@ impl std::fmt::Display for ProjectionError {
                 // `known_columns` is comma-joined in the `candidate_columns` form on the wire
                 // (`kernel::skp::projection_error_of`); a name that contains a comma is omitted
                 // there, so this Display states that rather than silently listing a superset of
-                // what the wire field carries (round 17 item 4, stop item 8).
-                let (kept, omitted): (Vec<&str>, usize) = {
-                    let kept: Vec<&str> =
-                        known_columns.iter().filter(|c| !c.contains(',')).map(String::as_str).collect();
+                // what the wire field carries (round 17 item 4, stop item 8). Every name is
+                // rendered through `render_visible_escape` (§8 item 34; N-1a) — the wire field
+                // itself (`known_columns_wire_field`) stays raw (OPEN A12-a).
+                let (kept, omitted): (Vec<String>, usize) = {
+                    let kept: Vec<String> = known_columns
+                        .iter()
+                        .filter(|c| !c.contains(','))
+                        .map(|c| crate::addressability::render_visible_escape(c))
+                        .collect();
                     let omitted = known_columns.len() - kept.len();
                     (kept, omitted)
                 };
-                write!(f, "refused: `{column}` is not a column this dataset carries (it has: {}", kept.join(", "))?;
+                write!(
+                    f,
+                    "refused: `{}` is not a column this dataset carries (it has: {}",
+                    crate::addressability::render_visible_escape(column),
+                    kept.join(", ")
+                )?;
                 if omitted > 0 {
                     write!(f, "; {omitted} name(s) containing a comma omitted")?;
                 }
@@ -268,13 +278,27 @@ pub fn known_columns_wire_field(known_columns: &[String]) -> String {
 impl From<ProjectionError> for EngineError {
     fn from(e: ProjectionError) -> Self {
         match e {
-            ProjectionError::TooManyColumns { limit, saw } => {
-                EngineError::CeilingExceeded { ceiling: "MAX_PROJECTED_ATTRIBUTES", limit, saw }
-            }
-            ProjectionError::ColumnUnknown { column, known_columns } => {
+            ProjectionError::TooManyColumns { limit, saw } => EngineError::CeilingExceeded {
+                ceiling: "MAX_PROJECTED_ATTRIBUTES",
+                limit,
+                saw,
+            },
+            ProjectionError::ColumnUnknown {
+                column,
+                known_columns,
+            } => {
+                // §8 item 34; N-1a: every name in the list is rendered through
+                // `render_visible_escape` before it reaches this detail text.
+                let rendered: Vec<String> = known_columns
+                    .iter()
+                    .map(|c| crate::addressability::render_visible_escape(c))
+                    .collect();
                 EngineError::AttributeUnpublishable {
                     column: column.clone(),
-                    detail: format!("the file has no such column (it has: {})", known_columns.join(", ")),
+                    detail: format!(
+                        "the file has no such column (it has: {})",
+                        rendered.join(", ")
+                    ),
                 }
             }
             ProjectionError::ColumnIsGeometry { column } => EngineError::AttributeUnpublishable {
@@ -324,8 +348,8 @@ impl From<ProjectionError> for EngineError {
                 EngineError::AttributeUnpublishable { column: column.clone(), detail }
             }
             // **§10 Amendment 12, 12.1(e).** `detail` is already
-            // [`crate::addressability::not_addressable_reason`]'s own rendered text — carried
-            // verbatim, never re-derived, the same discipline `TypeNotAdmitted`'s arm above keeps.
+            // [`crate::addressability::NotAddressableFact::render`]'s own text — carried verbatim,
+            // never re-derived, the same discipline `TypeNotAdmitted`'s arm above keeps.
             ProjectionError::ColumnNameNotAddressable { column, detail } => {
                 EngineError::AttributeUnpublishable { column, detail }
             }
@@ -374,10 +398,16 @@ impl AdmittedProjection {
     }
 }
 
-/// Geometry, then identity — the first two of the four per-column rules (X2's declared order:
-/// geometry, identity, duplicate, type). Shared by [`admit_projection_column`] (which has no
-/// duplicate concept of its own — a single column, alone) and [`admit_projection`]'s own per-column
-/// pass, which interleaves the duplicate check between this and the type check.
+/// Name, then geometry, then identity — the first three of the four per-column rules (§10
+/// Amendment 12, 12.1(d): the per-column order is now name, geometry, identity, duplicate, type).
+/// Shared by [`admit_projection_column`] (which has no duplicate concept of its own — a single
+/// column, alone) and [`admit_projection`]'s own per-column pass, which interleaves the duplicate
+/// check between this and the type check.
+///
+/// **This is projection's one site for [`crate::addressability::not_addressable_for_field`]**
+/// (12.4 item 25): both callers used to check it themselves before calling this function; moving
+/// the check inside it means projection reaches (c) at exactly one place, checked before geometry
+/// or identity can be asked about a name nothing can address.
 ///
 /// **The reserved wire identity name `id` refuses here too, whatever `identity_column` is** (X3):
 /// `admit_projection`'s own name-resolution pass already special-cases a *declared* `id` before this
@@ -386,10 +416,17 @@ impl AdmittedProjection {
 /// carries an unrelated column literally named `id` (identity mapped elsewhere) could disagree with
 /// `viewport_query`'s own admission of the reserved name (K-5's mapped-to-`i64` case).
 fn check_geometry_and_identity(
-    name: &str,
+    field: &Field,
     geometry_column: &str,
     identity_column: &str,
 ) -> std::result::Result<(), ProjectionError> {
+    if let Some(fact) = crate::addressability::not_addressable_for_field(field) {
+        return Err(ProjectionError::ColumnNameNotAddressable {
+            column: field.name().clone(),
+            detail: fact.render(),
+        });
+    }
+    let name = field.name().as_str();
     if name == geometry_column {
         return Err(ProjectionError::ColumnIsGeometry { column: name.to_string() });
     }
@@ -439,10 +476,7 @@ pub fn admit_projection_column(
     geometry_column: &str,
     identity_column: &str,
 ) -> std::result::Result<Field, ProjectionError> {
-    if let Some(detail) = crate::addressability::not_addressable_reason(field) {
-        return Err(ProjectionError::ColumnNameNotAddressable { column: field.name().clone(), detail });
-    }
-    check_geometry_and_identity(field.name().as_str(), geometry_column, identity_column)?;
+    check_geometry_and_identity(field, geometry_column, identity_column)?;
     type_check(field)
 }
 
@@ -511,15 +545,10 @@ pub fn admit_projection(
     for field in resolved {
         let name = field.name().as_str();
         // **§10 Amendment 12, 12.1(d): the per-column order is now name, geometry, identity,
-        // duplicate, type.** A name that does not round-trip is refused before any other
-        // per-column rule runs, the same order [`admit_projection_column`] applies.
-        if let Some(detail) = crate::addressability::not_addressable_reason(field) {
-            return Err(ProjectionError::ColumnNameNotAddressable {
-                column: name.to_string(),
-                detail,
-            });
-        }
-        check_geometry_and_identity(name, geometry_column, identity_column)?;
+        // duplicate, type.** [`check_geometry_and_identity`] checks the name first, so projection
+        // reaches (c) at exactly one site (12.4 item 25) — the same order [`admit_projection_column`]
+        // applies.
+        check_geometry_and_identity(field, geometry_column, identity_column)?;
         if seen.contains(&name) {
             return Err(ProjectionError::ColumnDuplicated { column: name.to_string() });
         }

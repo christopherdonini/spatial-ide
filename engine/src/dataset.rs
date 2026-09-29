@@ -14,7 +14,7 @@ use std::sync::Arc;
 use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use duckdb::Connection;
 
-use crate::addressability::{not_addressable_reason, render_visible_escape};
+use crate::addressability::{not_addressable, not_addressable_for_field, render_visible_escape};
 use crate::cancel::CancelToken;
 use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
@@ -1017,6 +1017,11 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
         .query_arrow([path])
         .map_err(|e| EngineError::Source(format!("schema probe: {e}")))?;
     let exported = arrow.get_schema();
+    // **§10 Amendment 12, 12.1(a); the architect gate's B7.** Drained in full before the next
+    // prepare runs on this connection — the same hazard `read_kv_metadata`'s own comment documents
+    // ("ActiveTransaction called without active transaction" from an abandoned mid-flight result,
+    // surfacing two calls later). `LIMIT 0` means this yields no batches, so draining costs nothing.
+    arrow.for_each(drop);
 
     let mut describe_stmt = conn
         .prepare("DESCRIBE SELECT * FROM read_parquet(?) LIMIT 0")
@@ -1262,19 +1267,17 @@ fn convict_or_record(
 
 /// `Some(reason)` when any segment of `covering`'s four declared paths contains U+0000 — 12.1(c)'s
 /// second bullet, "the rule for a name that no comparison covers, such as a covering's
-/// struct-child segment": this checks the declared path text directly, because a struct child has
-/// no independent DESCRIBE name to reconcile it against the way a top-level column does
-/// (`probe_schema`). `None` when every segment is free of U+0000 — including where a segment
-/// simply does not exist in the file (R-S3, k3's own case, decided separately by
-/// `field_path_exists`).
+/// struct-child segment": each segment is passed to [`crate::addressability::not_addressable`]
+/// directly (`exported: None`), because a struct child has no independent DESCRIBE name to
+/// reconcile it against the way a top-level column does (`probe_schema`). `None` when every
+/// segment is free of U+0000 — including where a segment simply does not exist in the file (R-S3,
+/// k3's own case, decided separately by `field_path_exists`).
 fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
     let paths = [&covering.xmin, &covering.ymin, &covering.xmax, &covering.ymax];
     let hit = paths.iter().find_map(|p| {
-        if p.0.iter().any(|seg| seg.contains('\0')) {
-            Some(p.0.join("."))
-        } else {
-            None
-        }
+        p.0.iter()
+            .any(|seg| not_addressable(seg, None).is_some())
+            .then(|| p.0.join("."))
     })?;
     Some(format!(
         "the covering names `{}`, which contains U+0000 and so cannot be addressed in any SQL \
@@ -1576,10 +1579,10 @@ fn admit_identity(
     // U+0000) is refused before any SQL is composed, the same [`EngineError::IdentityUnusable`]
     // shape the "no such column" arm above already uses. Tests N-11 (declared) — N-9's native
     // session-tier arm above never reaches a not-addressable match, by construction.
-    if let Some(reason) = not_addressable_reason(field) {
+    if let Some(fact) = not_addressable_for_field(field) {
         return Err(EngineError::IdentityUnusable {
             column: column.clone(),
-            detail: reason,
+            detail: fact.render(),
             candidate_columns: identity::candidate_identity_columns(schema),
         });
     }
@@ -1710,9 +1713,10 @@ fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()
                 render_visible_escape(geometry_column)
             ))
         })?;
-    if let Some(reason) = not_addressable_reason(geom) {
+    if let Some(fact) = not_addressable_for_field(geom) {
         return Err(EngineError::GeoMetadata(format!(
-            "`geo.primary_column` names the geometry column, but {reason}"
+            "`geo.primary_column` names the geometry column, but {}",
+            fact.render()
         )));
     }
     if !matches!(geom.data_type(), DataType::Binary | DataType::LargeBinary | DataType::BinaryView) {
