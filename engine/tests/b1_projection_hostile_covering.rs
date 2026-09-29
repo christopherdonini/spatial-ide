@@ -5,8 +5,13 @@
 //! column's own name, or one of its children — contains U+0000. Built from the P0 covering probe's
 //! own writer (`state/drafts/a2-1-p0/covering-probe.rs.txt`), promoted to
 //! `engine::fixture::write_hostile_covering`.
+//!
+//! Every fixture this file writes is hash-verified before and after the test that writes it (§3's
+//! discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent). Both `#[test]`
+//! fns take [`SERIAL`] first, the same mitigation
+//! `engine/tests/b1_projection_hostile_names.rs`'s own module doc explains.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use arrow::array::{ArrayRef, BinaryBuilder, Float64Array, StringBuilder, StructArray, UInt64Builder};
 use arrow::datatypes::{DataType, Field, Fields, Schema};
@@ -22,6 +27,23 @@ fn path_for(tag: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join("spatial-engine-b1-hostile-covering");
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(format!("{tag}.parquet"))
+}
+
+/// §3's fixture discipline (see the module doc).
+fn sha256_file(path: &std::path::Path) -> String {
+    use sha2::{Digest, Sha256};
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    let digest = Sha256::digest(&bytes);
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Serializes every `#[test]` in this file — see the module doc's own note on why.
+static SERIAL: Mutex<()> = Mutex::new(());
+
+fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
+    SERIAL
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 /// A GeoParquet file under the **format default** (no `crs` key, degrees, no geo `bbox` member) —
@@ -110,6 +132,7 @@ fn bbox_query() -> ViewportQuery {
 /// its usability.
 #[test]
 fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_before_any_lease() {
+    let _guard = serial_guard();
     // k1: the struct column's own name contains U+0000.
     let path = path_for("k1-struct-nul");
     write_hostile_covering(
@@ -118,15 +141,22 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
         ["xmin", "ymin", "xmax", "ymax"],
         ("bb\0ox", ["xmin", "ymin", "xmax", "ymax"]),
     );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the open itself must still succeed");
     assert!(ds.covering().is_none(), "a covering whose path is not addressable is not usable");
 
+    let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&bbox_query(), CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { detail }) => {
             assert!(!detail.contains('\0'), "{detail:?}");
         }
         other => panic!("expected NoCoveringBbox before any lease, got {}", describe(other)),
     }
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "k1: before any lease -- a covering refusal must not touch the connection pool"
+    );
     // The no-bbox stream is unchanged: it opens and produces a batch, covering or not.
     let mut stream = ds.stream_with_cancel(&ViewportQuery::all(), CancelToken::new()).expect("no-bbox stream opens");
     let mut buf = Vec::new();
@@ -136,7 +166,15 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
         n += 1;
         buf.clear();
     }
-    assert!(n > 0, "the no-bbox stream must still produce at least one batch");
+    assert!(
+        n > 0,
+        "the no-bbox stream must still produce at least one batch"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "k1: the fixture file must be unchanged by this run"
+    );
 
     // k2: one child segment contains U+0000; the struct's own name is clean.
     let path = path_for("k2-child-nul");
@@ -146,25 +184,44 @@ fn a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_bef
         ["xmin\0a", "ymin", "xmax", "ymax"],
         ("bbox", ["xmin\0a", "ymin", "xmax", "ymax"]),
     );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the open itself must still succeed");
-    assert!(ds.covering().is_none(), "a covering whose child segment is not addressable is not usable");
+    assert!(
+        ds.covering().is_none(),
+        "a covering whose child segment is not addressable is not usable"
+    );
+    let leases_before = ds.connections().leases_issued();
     match ds.stream_with_cancel(&bbox_query(), CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { .. }) => {}
         other => panic!("expected NoCoveringBbox before any lease, got {}", describe(other)),
     }
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "k2: before any lease -- a covering refusal must not touch the connection pool"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "k2: the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-14 (E6's p1a/p1b files): `a_nul_covering_under_the_format_default_records_not_checked_with_
-/// the_true_reason`. Under the format default (no `crs` key, degrees, no geo `bbox` member — the
-/// same struct-name-contains-U+0000 shape as k1, opened without an asserted CRS so the absent-key
-/// default applies), the sanity level is `NotChecked`; the reason names U+0000 and never says the
-/// schema lacks the column; a bbox query refuses `NoCoveringBbox` before any lease.
+/// the_true_reason`. Under the format default (no `crs` key, degrees, no geo `bbox` member),
+/// the sanity level is `NotChecked`; the reason names U+0000 and never says the schema lacks the
+/// column; a bbox query refuses `NoCoveringBbox` before any lease. Both p1a (the struct column's
+/// own name contains U+0000) and p1b (a child segment does, the struct's own name clean) are
+/// checked, the same k1/k2 split N-13 makes for the LV95 shape.
 /// Mutation: `sanity_check`'s path check skips the not-addressable check (falls straight to
 /// `field_path_exists`, R-S3's own "the schema does not contain" wording).
 #[test]
 fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason() {
+    let _guard = serial_guard();
+    // p1a: the struct column's own name contains U+0000.
     let path = path_for("p1a-format-default-struct-nul");
     write_format_default_covering(&path, "bb\0ox", ["xmin", "ymin", "xmax", "ymax"]);
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the format default admits an undeclared CRS file");
     let admission = ds.admission().expect("admission is always recorded");
     assert_eq!(admission.sanity_level, spatial_engine::geoparquet::SanityLevel::NotChecked);
@@ -180,8 +237,52 @@ fn a_nul_covering_under_the_format_default_records_not_checked_with_the_true_rea
     q.bbox_crs = Some("OGC:CRS84".to_string());
     match ds.stream_with_cancel(&q, CancelToken::new()) {
         Err(EngineError::NoCoveringBbox { .. }) => {}
-        other => panic!("expected NoCoveringBbox before any lease, got {}", describe(other)),
+        other => panic!(
+            "p1a: expected NoCoveringBbox before any lease, got {}",
+            describe(other)
+        ),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "p1a: the fixture file must be unchanged by this run"
+    );
+
+    // p1b: one child segment contains U+0000; the struct's own name is clean.
+    let path = path_for("p1b-format-default-child-nul");
+    write_format_default_covering(&path, "bbox", ["xmin\0a", "ymin", "xmax", "ymax"]);
+    let fixture_sha_before = sha256_file(&path);
+    let ds = Dataset::open(&path).expect("the format default admits an undeclared CRS file");
+    let admission = ds.admission().expect("admission is always recorded");
+    assert_eq!(
+        admission.sanity_level,
+        spatial_engine::geoparquet::SanityLevel::NotChecked
+    );
+    assert!(
+        admission.sanity_reason.contains("U+0000"),
+        "{}",
+        admission.sanity_reason
+    );
+    assert!(
+        !admission
+            .sanity_reason
+            .to_lowercase()
+            .contains("does not contain"),
+        "{}",
+        admission.sanity_reason
+    );
+    match ds.stream_with_cancel(&q, CancelToken::new()) {
+        Err(EngineError::NoCoveringBbox { .. }) => {}
+        other => panic!(
+            "p1b: expected NoCoveringBbox before any lease, got {}",
+            describe(other)
+        ),
+    }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "p1b: the fixture file must be unchanged by this run"
+    );
 }
 
 fn describe(r: Result<spatial_engine::BatchStream, EngineError>) -> String {

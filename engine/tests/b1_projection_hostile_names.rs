@@ -16,10 +16,24 @@
 //!   Arrow schema truncates a column name at an interior NUL; `dataset::probe_schema` now
 //!   reconciles that against DESCRIBE's own (untruncated) name and names the resident field by
 //!   the one DuckDB actually binds, so a position whose two names differ is caught by
-//!   `engine::addressability::not_addressable_reason` at every use site before any SQL runs. `N-1`
-//!   and `N-2` invert the two tests these names used to carry (12.2).
+//!   `engine::addressability::not_addressable`/`not_addressable_for_field` at every use site before
+//!   any SQL runs. `N-1` and `N-2` invert the two tests these names used to carry (12.2).
+//! - Every fixture this file writes is hash-verified before and after the test that writes it
+//!   (§3's discipline; `sha256_file`, `kernel/tests/skp_projection.rs`'s own X12 precedent).
+//! - **Why every `#[test]` in this file takes [`SERIAL`] first.** `admission_instruments.rs`'s own
+//!   doc states the general hazard: "`cargo test` runs every `#[test]` fn *within* one file
+//!   concurrently, on shared threads, by default." This file's own tests hold more hostile,
+//!   U+0000-carrying names resident in the process at once than most (correction round 1 widened
+//!   N-1a and N-15 to more shapes), and running them concurrently was observed, empirically and
+//!   intermittently, to make an unrelated case's admitted SQL text fail DuckDB's own prepare with
+//!   `"nul byte found in provided data"` even though the printed text carried none — a
+//!   concurrency-sensitive fragility below this crate's own admission logic, not a defect this
+//!   piece's findings name or a behavior claim this file makes. Five repeated parallel runs at this
+//!   round's own base commit (303dca0, 14 tests, before this round's widening) did not reproduce it;
+//!   `--test-threads=1` never reproduced it either. Serializing this file's own tests is the
+//!   narrowest fix available without touching production code or the findings' scope.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use arrow::array::{Array, ArrayRef, BinaryBuilder, Int64Builder, StringBuilder, UInt64Builder};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -33,6 +47,15 @@ use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
 
 const FEATURES: u64 = 10;
+
+/// Serializes every `#[test]` in this file — see the module doc's own note on why.
+static SERIAL: Mutex<()> = Mutex::new(());
+
+fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
+    SERIAL
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 /// An attribute column to write: its name and whether it is `Int64` (else `Utf8`). Values are a
 /// pure function of the column's position `k` and the row `i`, so a column read from the wrong
@@ -115,6 +138,16 @@ fn path_for(tag: &str) -> std::path::PathBuf {
     dir.join(format!("{tag}.parquet"))
 }
 
+/// §3's fixture discipline: every fixture this file writes is hashed before and after the test
+/// that uses it, the same `sha256_file` precedent `kernel/tests/skp_projection.rs`'s X12 (Amendment
+/// 5, row 5.6) established.
+fn sha256_file(path: &std::path::Path) -> String {
+    use sha2::{Digest, Sha256};
+    let bytes = std::fs::read(path).expect("read fixture for hashing");
+    let digest = Sha256::digest(&bytes);
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 fn file_names(ds: &Dataset) -> Vec<String> {
     ds.file_schema()
         .fields()
@@ -167,6 +200,7 @@ fn expected(k: usize) -> Vec<String> {
 /// values under its own name, in declared order.
 #[test]
 fn hostile_names_round_trip_to_their_own_columns() {
+    let _guard = serial_guard();
     let hostile: [&'static str; 8] = [
         "a\"b",
         "x\\y",
@@ -219,6 +253,7 @@ fn hostile_names_round_trip_to_their_own_columns() {
 /// from the identity or geometry only in case is renamed the same way (`ID_1`, `GEOMETRY_1`).
 #[test]
 fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
+    let _guard = serial_guard();
     let cols = [
         Col {
             name: "zone",
@@ -260,6 +295,7 @@ fn hostile_names_colliding_after_case_folding_bind_one_column_each() {
 /// ordinary attribute). Recorded as observed, not as a defect: every name still binds one column.
 #[test]
 fn hostile_names_an_uppercase_id_under_a_mapped_identity_is_admitted_beside_id() {
+    let _guard = serial_guard();
     let cols = [Col {
         name: "ID",
         int: false,
@@ -323,18 +359,22 @@ fn drain_with_filter(
 /// against DESCRIBE.
 #[test]
 fn a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens() {
+    let _guard = serial_guard();
     let cols = [Col {
         name: "nu\0l",
         int: false,
     }];
     let path = path_for("nul-name");
     write(&path, "id", &cols);
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open");
     assert_eq!(
         file_names(&ds),
         ["id", "geometry", "nu\u{0}l"],
         "the resident name is the full, untruncated one DESCRIBE binds by"
     );
+
+    let leases_before = ds.connections().leases_issued();
 
     match ds.admit_projection(&["nu\u{0}l".to_string()]) {
         Err(ProjectionError::ColumnNameNotAddressable { column, .. }) => {
@@ -352,28 +392,72 @@ fn a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens() {
         }
         other => panic!("expected ColumnUnknown, got {other:?}"),
     }
+
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "no stream opens -- a projection refusal must not touch the connection pool at all"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-1a (§10 Amendment 12, wave-2 A2-1): `a_nul_in_a_name_renders_as_a_visible_escape_in_every_
-/// engine_message_and_detail` (c01, c16, c20, k1; §8 item 34). Four of the five refusal shapes
-/// N-1a names are reachable live and checked here; the fifth, `ColumnNotFilterable`, is not
-/// reachable live at all (E9: a raw U+0000 in predicate text is refused as unparsable before the
-/// namespace ever runs) and is proven instead by `predicate.rs`'s own unit test, N-5.
+/// engine_message_and_detail` (c01, c16, c20, k1; §8 item 34). The `Display` text and every
+/// `detail`/`reason` field of each refusal these files produce must be free of a raw U+0000 —
+/// checked here for `ColumnUnknown` and `ColumnNameNotAddressable` (c01), `GeoMetadata` (c16),
+/// `IdentityUnusable` (c20) and `NoCoveringBbox` (k1). The fifth shape 12.2 names,
+/// `ColumnNotFilterable`, is not reachable live at all (E9: a raw U+0000 in predicate text is
+/// refused as unparsable before the namespace ever runs) and is proven instead by `predicate.rs`'s
+/// own unit test, N-5, which asserts its `Display` text the same way.
 /// Mutation: the rendering function (`addressability::render_visible_escape`) returns the name
 /// unchanged.
 #[test]
 fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detail() {
-    // ColumnNameNotAddressable (c01).
+    let _guard = serial_guard();
+    fn assert_no_raw_nul(label: &str, text: &str) {
+        assert!(!text.contains('\0'), "{label}: {text:?}");
+        assert!(text.contains("\\u0000"), "{label}: {text:?}");
+    }
+
+    // ColumnNameNotAddressable and ColumnUnknown (c01).
     let path = path_for("n1a-projection");
-    write(&path, "id", &[Col { name: "nu\0l", int: false }]);
+    write(
+        &path,
+        "id",
+        &[Col {
+            name: "nu\0l",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open");
     match ds.admit_projection(&["nu\u{0}l".to_string()]) {
-        Err(ProjectionError::ColumnNameNotAddressable { column: _, detail }) => {
-            assert!(!detail.contains('\0'), "{detail:?}");
-            assert!(detail.contains("\\u0000"), "{detail:?}");
+        Err(
+            ref err @ ProjectionError::ColumnNameNotAddressable {
+                column: _,
+                ref detail,
+            },
+        ) => {
+            assert_no_raw_nul("ColumnNameNotAddressable detail", detail);
+            assert_no_raw_nul("ColumnNameNotAddressable Display", &err.to_string());
         }
         other => panic!("expected ColumnNameNotAddressable, got {other:?}"),
     }
+    match ds.admit_projection(&["nu".to_string()]) {
+        Err(err @ ProjectionError::ColumnUnknown { .. }) => {
+            assert_no_raw_nul("ColumnUnknown Display", &err.to_string());
+        }
+        other => panic!("expected ColumnUnknown, got {other:?}"),
+    }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 
     // GeoMetadata (c16).
     let path = path_for("n1a-geometry");
@@ -382,27 +466,51 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
         "geo\0m",
         &[spatial_engine::fixture::HostileColumn { name: "a", int: false }],
     );
+    let fixture_sha_before = sha256_file(&path);
     match Dataset::open(&path) {
         Err(EngineError::GeoMetadata(msg)) => {
-            assert!(!msg.contains('\0'), "{msg:?}");
-            assert!(msg.contains("\\u0000"), "{msg:?}");
+            assert_no_raw_nul("GeoMetadata Display", &msg);
         }
         Ok(_) => panic!("expected GeoMetadata, got Ok"),
         Err(other) => panic!("expected GeoMetadata, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 
     // IdentityUnusable (c20).
     let path = path_for("n1a-identity");
-    write(&path, "key\0x", &[Col { name: "a", int: false }]);
+    write(
+        &path,
+        "key\0x",
+        &[Col {
+            name: "a",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
     let declaration = IdentityDeclaration::new("key\u{0}x", "test", "2026-09-29T00:00:00Z");
     match Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new()) {
-        Err(EngineError::IdentityUnusable { column: _, detail, .. }) => {
-            assert!(!detail.contains('\0'), "{detail:?}");
-            assert!(detail.contains("\\u0000"), "{detail:?}");
+        Err(
+            ref err @ EngineError::IdentityUnusable {
+                column: _,
+                ref detail,
+                ..
+            },
+        ) => {
+            assert_no_raw_nul("IdentityUnusable detail", detail);
+            assert_no_raw_nul("IdentityUnusable Display", &err.to_string());
         }
         Ok(_) => panic!("expected IdentityUnusable, got Ok"),
         Err(other) => panic!("expected IdentityUnusable, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 
     // NoCoveringBbox (k1).
     let path = path_for("n1a-covering");
@@ -412,6 +520,7 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
         ["xmin", "ymin", "xmax", "ymax"],
         ("bb\0ox", ["xmin", "ymin", "xmax", "ymax"]),
     );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("the open itself must still succeed");
     let mut q = ViewportQuery::all();
     q.bbox = Some(spatial_engine::Bbox {
@@ -422,13 +531,18 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
     });
     q.bbox_crs = Some("EPSG:2056".to_string());
     match ds.stream_with_cancel(&q, CancelToken::new()) {
-        Err(EngineError::NoCoveringBbox { detail }) => {
-            assert!(!detail.contains('\0'), "{detail:?}");
-            assert!(detail.contains("\\u0000"), "{detail:?}");
+        Err(ref err @ EngineError::NoCoveringBbox { ref detail }) => {
+            assert_no_raw_nul("NoCoveringBbox detail", detail);
+            assert_no_raw_nul("NoCoveringBbox Display", &err.to_string());
         }
         Ok(_) => panic!("expected NoCoveringBbox, got Ok"),
         Err(other) => panic!("expected NoCoveringBbox, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-2 (§10 Amendment 12, wave-2 A2-1): `a_nul_named_column_never_makes_admission_type_a_column_
@@ -436,9 +550,11 @@ fn a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detai
 /// than_duckdb_binds` (c02): the two positions no longer collide under one truncated name, so
 /// `zone` admits the real `Utf8` column and streams its own values, and the hostile position's own
 /// full name is refused on its own, separately.
-/// Mutation: the function in (c) (`addressability::not_addressable_reason`) always returns `None`.
+/// Mutation: the function in (c) (`addressability::not_addressable`/`not_addressable_for_field`)
+/// always returns `None`.
 #[test]
 fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind() {
+    let _guard = serial_guard();
     let cols = [
         Col {
             name: "zone\0x",
@@ -451,38 +567,85 @@ fn a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind()
     ];
     let path = path_for("nul-type");
     write(&path, "id", &cols);
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open");
     assert_eq!(file_names(&ds), ["id", "geometry", "zone\u{0}x", "zone"]);
 
     let batches = drain(&ds, &["zone".to_string()]).expect("stream");
+    // 12.2's own text: "streams values equal to a DuckDB read" — an independent oracle, ordered by
+    // `id` (K-1's own X11 precedent), rather than only the writer's own pure function.
+    let oracle: Vec<String> = {
+        let conn = spatial_engine::fixture::configured_connection().expect("oracle connection");
+        let path_str = path.to_string_lossy().to_string();
+        let mut stmt = conn
+            .prepare("SELECT \"zone\" FROM read_parquet(?) ORDER BY \"id\"")
+            .expect("prepare oracle");
+        let mut values = Vec::new();
+        for batch in stmt.query_arrow([path_str.as_str()]).expect("query oracle") {
+            let col = batch
+                .column_by_name("zone")
+                .unwrap()
+                .as_any()
+                .downcast_ref::<arrow::array::StringArray>()
+                .unwrap();
+            for r in 0..col.len() {
+                values.push(col.value(r).to_string());
+            }
+        }
+        values
+    };
+    assert_eq!(
+        oracle,
+        expected(1),
+        "sanity: the oracle itself must match the writer's own values"
+    );
     assert_eq!(
         string_values(&batches, "zone"),
-        expected(1),
-        "zone streams its own (Utf8) values, never the hostile position's"
+        oracle,
+        "zone streams its own (Utf8) values, equal to an independent DuckDB read, never the \
+         hostile position's"
     );
 
+    let leases_before = ds.connections().leases_issued();
     match ds.admit_projection(&["zone\u{0}x".to_string()]) {
         Err(ProjectionError::ColumnNameNotAddressable { column, .. }) => {
             assert_eq!(column, "zone\u{0}x");
         }
         other => panic!("expected ColumnNameNotAddressable, got {other:?}"),
     }
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "the hostile position's own refusal must not touch the connection pool at all"
+    );
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-6 (§10 Amendment 12, wave-2 A2-1): `a_filter_on_a_file_with_a_nul_named_column_binds_and_
 /// streams_its_other_columns` (c01). `"Num" IS NOT NULL` is admitted and streams; `"nu" IS NOT
 /// NULL` (the old truncated form) is refused `UnknownColumn`, never `ColumnNotFilterable`.
-/// Mutation: `namespace_admit` inserts every field without the name check (the surrogate SQL would
-/// then carry U+0000, which duckdb-rs itself refuses at prepare — this mutation is therefore
-/// observed as a different, lower-level failure than the one this test names, not a silent pass).
+/// Mutation: `namespace_admit` inserts every field's name into the namespace unconditionally,
+/// without the name check `filter_surrogate` (via `filterable_column_type`) applies. Observed
+/// (gate-1 correction round 1, uncommitted on base 303dca0):
+/// `a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns` FAILED — `"Num"
+/// IS NOT NULL` no longer admits at all: `Num is filterable: Filter(RejectedByBinder { detail: "nul
+/// byte found in provided data at position: 155" })`. The surrogate SQL then carries every column's
+/// name, including the hostile one, so duckdb-rs's own prepare refuses the whole namespace at a
+/// lower level than this test's own assertion names — still a failure by name, not a silent pass.
 #[test]
 fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns() {
+    let _guard = serial_guard();
     let cols = [
         Col { name: "nu\0l", int: false },
         Col { name: "Num", int: false },
     ];
     let path = path_for("nul-name-filter");
     write(&path, "id", &cols);
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open");
 
     let admitted = spatial_engine::AdmittedPredicate::admit("\"Num\" IS NOT NULL", &ds)
@@ -498,6 +661,11 @@ fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_column
         }
         other => panic!("expected UnknownColumn for the truncated name, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-7 (§10 Amendment 12, wave-2 A2-1): `a_filter_types_the_column_duckdb_binds_when_a_nul_named_
@@ -510,12 +678,14 @@ fn a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_column
 /// two `zone` positions under one name.
 #[test]
 fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_name() {
+    let _guard = serial_guard();
     let cols = [
         Col { name: "zone", int: false },
         Col { name: "zone\0x", int: true },
     ];
     let path = path_for("nul-shares-name-filter");
     write(&path, "id", &cols);
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open");
     assert_eq!(file_names(&ds), ["id", "geometry", "zone", "zone\u{0}x"]);
 
@@ -527,6 +697,11 @@ fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_nam
     for v in &values {
         assert!(v.starts_with("col0-"), "{v}");
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-8 (§10 Amendment 12, wave-2 A2-1): `a_geometry_column_whose_name_contains_u0000_refuses_open_
@@ -535,12 +710,14 @@ fn a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_nam
 /// Mutation: the name check is removed from `dataset::check_geometry_column`.
 #[test]
 fn a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact() {
+    let _guard = serial_guard();
     let path = path_for("nul-geometry");
     spatial_engine::fixture::write_hostile_geometry_name(
         &path,
         "geo\0m",
         &[spatial_engine::fixture::HostileColumn { name: "a", int: false }],
     );
+    let fixture_sha_before = sha256_file(&path);
     match Dataset::open(&path) {
         Err(EngineError::GeoMetadata(msg)) => {
             assert!(
@@ -552,6 +729,11 @@ fn a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact() {
         Ok(_) => panic!("expected GeoMetadata, got Ok"),
         Err(other) => panic!("expected GeoMetadata, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-9 (§10 Amendment 12, wave-2 A2-1): `a_native_id_with_u0000_opens_on_the_session_tier_with_no_
@@ -560,8 +742,17 @@ fn a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact() {
 /// Mutation: `identity::candidate_identity_columns` drops the U+0000 omission.
 #[test]
 fn a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate() {
+    let _guard = serial_guard();
     let path = path_for("nul-native-id");
-    write(&path, "id\0x", &[Col { name: "a", int: false }]);
+    write(
+        &path,
+        "id\0x",
+        &[Col {
+            name: "a",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
     let ds = Dataset::open(&path).expect("open must succeed, on the session tier");
     assert!(
         ds.identity().source().is_session_ordinal(),
@@ -572,54 +763,18 @@ fn a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate() {
         "the NUL-named column must never be offered as a candidate: {:?}",
         ds.identity().candidate_columns()
     );
-}
-
-/// N-10 (§10 Amendment 12, wave-2 A2-1): `the_native_id_is_the_column_duckdb_binds_when_a_nul_
-/// named_id_precedes_it` (E8's p3 file: `id\0x` ahead of a real, addressable `id`). The open
-/// succeeds natively on the real `id`, with the identity verification scan run once — which
-/// `admit_column_type` refusing a `Utf8` column would have prevented, so success here is itself
-/// the proof the scan bound the right position.
-/// Mutation: `probe_schema` returns the export's (truncated) names, which would again let `id\0x`'s
-/// truncated form shadow the real `id`.
-#[test]
-fn the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it() {
-    let cols = [
-        Col { name: "id\0x", int: false },
-        Col { name: "id", int: true },
-    ];
-    let path = path_for("nul-id-then-real-id");
-    write(&path, "key", &cols);
-    let ds = Dataset::open(&path).expect("open must succeed, native on the real `id`");
-    assert_eq!(file_names(&ds), ["key", "geometry", "id\u{0}x", "id"]);
-    assert!(!ds.identity().source().is_session_ordinal(), "a real, addressable `id` exists");
-    assert_eq!(ds.identity().source().source_column(), "id");
     assert_eq!(
-        ds.identity().uniqueness(),
-        spatial_engine::identity::IdUniqueness::VerifiedAtOpenFullFile,
-        "the native scan must have run, over the real column"
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
     );
 }
 
-/// N-11 (§10 Amendment 12, wave-2 A2-1): `a_declared_identity_naming_a_nul_named_column_is_refused_
-/// before_any_scan` (c20). `column` is the full name; `candidate_columns` is empty.
-/// Mutation: the name check is removed from the declared arm of `dataset::admit_identity`.
-#[test]
-fn a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan() {
-    let path = path_for("nul-declared-identity");
-    write(&path, "key\0x", &[Col { name: "a", int: false }]);
-    let declaration = IdentityDeclaration::new("key\u{0}x", "test", "2026-09-29T00:00:00Z");
-    match Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new()) {
-        Err(EngineError::IdentityUnusable { column, candidate_columns, .. }) => {
-            assert_eq!(column, "key\u{0}x");
-            assert!(
-                candidate_columns.is_empty(),
-                "the hostile column must never be a candidate: {candidate_columns:?}"
-            );
-        }
-        Ok(_) => panic!("expected IdentityUnusable, got Ok"),
-        Err(other) => panic!("expected IdentityUnusable, got {other:?}"),
-    }
-}
+// N-10 and N-11 moved to `b1_nul_native_id_scan_once.rs` and
+// `b1_nul_declared_identity_no_scan.rs`: both need `IDENTITY_VERIFICATION_SCANS`'s counter, which
+// is process-global, so each needs a process nothing else in the suite can touch it in
+// (`engine/tests/admission_instruments.rs`'s own precedent for why that file holds exactly one
+// `#[test]`; every other test in *this* file would otherwise race the same counter).
 
 /// N-12 (§10 Amendment 12, wave-2 A2-1): `a_declared_identity_naming_the_truncated_prefix_is_an_
 /// absent_column` (c21). Never `engine.query` — the truncated name the caller declared resolves to
@@ -628,8 +783,17 @@ fn a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan() {
 /// (truncated) name resolve.
 #[test]
 fn a_declared_identity_naming_the_truncated_prefix_is_an_absent_column() {
+    let _guard = serial_guard();
     let path = path_for("nul-declared-identity-truncated");
-    write(&path, "key\0x", &[Col { name: "a", int: false }]);
+    write(
+        &path,
+        "key\0x",
+        &[Col {
+            name: "a",
+            int: false,
+        }],
+    );
+    let fixture_sha_before = sha256_file(&path);
     let declaration = IdentityDeclaration::new("key", "test", "2026-09-29T00:00:00Z");
     match Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new()) {
         Err(EngineError::IdentityUnusable { column, .. }) => assert_eq!(column, "key"),
@@ -637,56 +801,205 @@ fn a_declared_identity_naming_the_truncated_prefix_is_an_absent_column() {
         Ok(_) => panic!("expected IdentityUnusable, got Ok"),
         Err(other) => panic!("expected IdentityUnusable, got {other:?}"),
     }
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture file must be unchanged by this run"
+    );
 }
 
 /// N-15 (§10 Amendment 12, wave-2 A2-1): `the_schema_probe_classifies_by_position_and_keeps_
-/// duckdbs_own_renames` (c07, c14, plus a NUL position). `C2` and `Zone_1`/`Zone_1_1` are
-/// byte-equal to today's, and carry no exported-name metadata; the metadata appears exactly at the
-/// one position whose name does not round-trip.
-/// Mutation: names are taken from the export list unconditionally (the reconciliation this test
-/// exercises is what the closing sibling tests above call reverting `probe_schema`; there is no
-/// `parquet_schema` call anywhere on this path to swap in its place).
+/// duckdbs_own_renames` (12.2: c01-c07, c14, c15, o1, o2 — the P0's own case ids,
+/// `state/drafts/a2-1-p0/{p0-output.txt,extra-output.txt}`). Every case's resident name is
+/// DESCRIBE's own bound name, never the Arrow export's truncated one; `C2` and `Zone_1`/`Zone_1_1`
+/// (c07, c14) are byte-equal to today's; and the exported-name metadata key appears at a position
+/// exactly when that position's bound and exported names differ — E10's positional rule (o1, o2),
+/// not only the two full-admission scenarios (c01, c02) this file's own N-1/N-2 already cover.
+/// Mutation: names are taken from `parquet_schema` — `probe_schema`'s DESCRIBE query swapped for
+/// `SELECT name FROM parquet_schema(?) OFFSET 1` (12.4 item 29's own named discriminator). Observed
+/// (gate-1 correction round 1, uncommitted on base 303dca0):
+/// `the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames` FAILED on the c07 case —
+/// `left: [""] / right: ["C2"]` — because `parquet_schema` disagrees with the binder in exactly the
+/// two cases E5 names (c07, c14; `docs`/12.1(a)'s own "a bind check or `parquet_schema` cannot
+/// supply" reasoning).
+// (case id, written columns, expected resident names at positions 2.., expected
+// exported-name-metadata presence at each of those positions) -- named, not inlined, on
+// `kernel/tests/skp_projection.rs`'s own `ProjectionRefusalCase` precedent (clippy's
+// `type_complexity` lint).
+type N15Case = (&'static str, Vec<Col>, Vec<&'static str>, Vec<bool>);
+
 #[test]
 fn the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames() {
-    let path = path_for("empty-name");
-    write(&path, "id", &[Col { name: "", int: false }]);
-    let ds = Dataset::open(&path).expect("open");
-    assert_eq!(file_names(&ds), ["id", "geometry", "C2"]);
-    assert!(
-        ds.file_schema().field(2).metadata().is_empty(),
-        "a name that round-trips carries no exported-name metadata"
-    );
+    let _guard = serial_guard();
+    let cases: Vec<N15Case> = vec![
+        (
+            "c01",
+            vec![
+                Col {
+                    name: "nu\0l",
+                    int: false,
+                },
+                Col {
+                    name: "Num",
+                    int: false,
+                },
+            ],
+            vec!["nu\u{0}l", "Num"],
+            vec![true, false],
+        ),
+        (
+            "c02",
+            vec![
+                Col {
+                    name: "zone\0x",
+                    int: true,
+                },
+                Col {
+                    name: "zone",
+                    int: false,
+                },
+            ],
+            vec!["zone\u{0}x", "zone"],
+            vec![true, false],
+        ),
+        (
+            "c03",
+            vec![
+                Col {
+                    name: "zone",
+                    int: false,
+                },
+                Col {
+                    name: "zone\0x",
+                    int: true,
+                },
+            ],
+            vec!["zone", "zone\u{0}x"],
+            vec![false, true],
+        ),
+        (
+            "c04",
+            vec![Col {
+                name: "\0lead",
+                int: false,
+            }],
+            vec!["\u{0}lead"],
+            vec![true],
+        ),
+        (
+            "c05",
+            vec![Col {
+                name: "trail\0",
+                int: false,
+            }],
+            vec!["trail\u{0}"],
+            vec![true],
+        ),
+        (
+            "c06",
+            vec![Col {
+                name: "\0",
+                int: false,
+            }],
+            vec!["\u{0}"],
+            vec![true],
+        ),
+        (
+            "c07",
+            vec![Col {
+                name: "",
+                int: false,
+            }],
+            vec!["C2"],
+            vec![false],
+        ),
+        (
+            "c14",
+            vec![
+                Col {
+                    name: "zone",
+                    int: false,
+                },
+                Col {
+                    name: "Zone",
+                    int: false,
+                },
+                Col {
+                    name: "Zone_1",
+                    int: false,
+                },
+            ],
+            vec!["zone", "Zone_1", "Zone_1_1"],
+            vec![false, false, false],
+        ),
+        (
+            "c15",
+            vec![
+                Col {
+                    name: "Num\0x",
+                    int: true,
+                },
+                Col {
+                    name: "num",
+                    int: false,
+                },
+            ],
+            vec!["Num\u{0}x", "num"],
+            vec![true, false],
+        ),
+        (
+            "o1",
+            vec![
+                Col {
+                    name: "a\0x",
+                    int: false,
+                },
+                Col {
+                    name: "a\0y",
+                    int: false,
+                },
+            ],
+            vec!["a\u{0}x", "a\u{0}y"],
+            vec![true, true],
+        ),
+        (
+            "o2",
+            vec![
+                Col {
+                    name: "zone\0x",
+                    int: false,
+                },
+                Col {
+                    name: "ZONE\0x",
+                    int: false,
+                },
+            ],
+            vec!["zone\u{0}x", "ZONE\u{0}x_1"],
+            vec![true, true],
+        ),
+    ];
 
-    let path = path_for("case-dups");
-    write(
-        &path,
-        "id",
-        &[
-            Col { name: "zone", int: false },
-            Col { name: "Zone", int: false },
-            Col { name: "Zone_1", int: false },
-        ],
-    );
-    let ds = Dataset::open(&path).expect("open");
-    assert_eq!(file_names(&ds), ["id", "geometry", "zone", "Zone_1", "Zone_1_1"]);
-    for i in 2..5 {
-        assert!(
-            ds.file_schema().field(i).metadata().is_empty(),
-            "field {i}: a name that round-trips carries no exported-name metadata"
+    for (tag, cols, expected_names, expected_metadata) in cases {
+        let path = path_for(&format!("n15-{tag}"));
+        write(&path, "id", &cols);
+        let fixture_sha_before = sha256_file(&path);
+        let ds = Dataset::open(&path).unwrap_or_else(|e| panic!("{tag}: open: {e:?}"));
+        assert_eq!(
+            &file_names(&ds)[2..],
+            expected_names.as_slice(),
+            "{tag}: resident names must be DESCRIBE's own bound names, positionally"
+        );
+        for (i, must_carry_metadata) in expected_metadata.iter().enumerate() {
+            let carries = !ds.file_schema().field(2 + i).metadata().is_empty();
+            assert_eq!(
+                carries, *must_carry_metadata,
+                "{tag}: field {i} exported-name metadata presence"
+            );
+        }
+        assert_eq!(
+            sha256_file(&path),
+            fixture_sha_before,
+            "{tag}: the fixture file must be unchanged by this run"
         );
     }
-
-    let path = path_for("nul-position-metadata");
-    write(
-        &path,
-        "id",
-        &[Col { name: "plain", int: false }, Col { name: "nu\0l", int: false }],
-    );
-    let ds = Dataset::open(&path).expect("open");
-    assert_eq!(file_names(&ds), ["id", "geometry", "plain", "nu\u{0}l"]);
-    assert!(ds.file_schema().field(2).metadata().is_empty(), "plain round-trips");
-    assert!(
-        !ds.file_schema().field(3).metadata().is_empty(),
-        "the exported-name key must appear exactly at the U+0000 position"
-    );
 }

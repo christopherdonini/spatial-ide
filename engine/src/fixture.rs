@@ -990,9 +990,14 @@ fn ring(rng: &mut SplitMix64, cx: f64, cy: f64, r: f64, n: usize) -> Vec<[f64; 2
 
 // -------------------------------------------------------------------------------------------
 // §10 Amendment 12 (wave-2 A2-1) -- hostile-name fixtures, the P0 writer's own shape
-// (`state/drafts/a2-1-p0/probe.rs.txt` and `covering-probe.rs.txt`), promoted here so every test
-// that needs a column name that does not round-trip (including one carrying a raw U+0000) shares
-// one writer instead of each test file repeating its own `ArrowWriter` setup.
+// (`state/drafts/a2-1-p0/probe.rs.txt` and `covering-probe.rs.txt`), promoted here as the shared
+// writer for the ordinary case: an `id`/geometry/attribute file (`write_hostile_names`), a hostile
+// geometry name (`write_hostile_geometry_name`), or a declared covering (`write_hostile_covering`).
+// This is not every test's only writer: `engine/tests/b1_projection_hostile_names.rs` keeps its own
+// richer `write` for its pre-existing quoting-and-case-folding control tests (unchanged since
+// c37b427), and `engine/tests/b1_projection_hostile_covering.rs` adds a local
+// `write_format_default_covering` for the one shape these functions do not cover (the format
+// default: no `crs` key, degrees, no geo `bbox` member).
 // -------------------------------------------------------------------------------------------
 
 /// One attribute column for [`write_hostile_names`]: its exact name (never sanitized) and whether
