@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T07:25:10.086Z",
+  "generated_at": "2026-09-29T10:55:33.410Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,7 +9,7 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 72386838528,
+        "bytes": 72383815680,
         "total": 510319915008
       },
       {
@@ -34,20 +34,6 @@
       "minutes": 20,
       "opened": "2026-09-14",
       "age_days": 15
-    },
-    {
-      "id": "filter-bind-admission-implicit-coercions",
-      "kind": "sight",
-      "minutes": 20,
-      "opened": "2026-09-28",
-      "age_days": 1
-    },
-    {
-      "id": "b1-close-nul-column-names",
-      "kind": "sight",
-      "minutes": 25,
-      "opened": "2026-09-28",
-      "age_days": 1
     }
   ],
   "median_opened_to_done": {

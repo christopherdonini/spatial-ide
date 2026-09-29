@@ -651,3 +651,23 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Repair:** `b1-close-nul-column-names` now names the draft as its `gate`, which makes those claims planned (advisory) while the node is not done. When Fable's sight moves the text into `engine/B1-PROJECTION-PREREGISTRATION.md` as Amendment 12, the gate follows it.
   - **Lesson:** the verify scripts are run after `git add`. It is added to memory.
   - **Also on main today:** the Pages run on 1af041b failed its gate on a GitHub API `HTTP 503` in the PR-merged check. It was transient, and the next Pages runs deployed.
+- 2026-09-29T08:30Z - **The 2026-09-29 sightings** (verbatim, `state/directives/2026-09-29-a2-1-and-b-1-sightings.md`). The human accepts the ADR-021 Note of the A2-1 draft's §2c as drafted. Fable sighted both drafts.
+  - **A2-1: SIGHTED.**
+    - OPEN (a)-(g) are ruled as recommended.
+    - One addition: §8 item 34, that U+0000 is rendered as a visible escape in every engine message, detail and log line, with a test beside N-1.
+    - This directive's filing commit is Amendment 12's `<sight>`.
+    - Code may start once the docs commit lands.
+    - k3 is its own proposed node, `covering-names-missing-column`. The custodian grades it an S1 candidate on SKP-V0's `viewport_query` entry, validated before any handle is minted, with the case for S2 stated.
+  - **B-1: SIGHTED against six points.**
+    - (6ii) is admitted and declared, pinned by `f32 = 16777217`.
+    - The two bounds hold, with the named boundary literals.
+    - The mechanism is accepted.
+    - Arithmetic is not 5a: `/` is declared floating-point division, and same-type overflow leaves B-1 for the new proposed node `stream-evaluation-failure-fixed-detail`, merged with W2-B's observation 2.
+    - The refusal is 6a with four reasons.
+    - The human's typed texts go together once the full form is drafted.
+  - **Unchanged, per the directive:** §9 stays as routed, TRUE and FALSE stay CAST-refused, and no upstream report is filed.
+  - **The route, recorded here because of how `verify-test-claims` treats binding:** a gate file named by a done node binds its claims, and B1's form is the gate of the done `b1-engine-kernel-half`.
+    - The docs PR therefore carries only the ADR-023 amendment and the ADR-021 Note. They name no tests. The reviewer and architect gate it, and the human clicks.
+    - Amendment 12 is the first commit on A2-1's code branch, before any code, and reaches main with its tests.
+    - The draft stays A2-1's gate until then.
+  - **PLAN:** both nodes derive ready, and the two proposed nodes are appended. verify:plan PASS.

@@ -3062,17 +3062,17 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 9
     depends_on: [watcher-first-read-on-watch-thread]
-    needs_human: {kind: sight, minutes: 20}
+    needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code."
+    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line puts B-1's P0 after C-1; Fable's B-1 paragraph: its own cut and preregistration; P0 a measured table (each admitted comparison form by each admitted column type: does the binder insert a cast, can it fail or narrow); the preregistration proposes the admitted set and the detection mechanism (the engine's own type rules over the allowlisted tree preferred to plan-text parsing) and comes to Fable before any code; an ADR-021 Decision change is the human's, as typed text; the file-value leak is fixed with it. The fix's code starts only after PR #139 merges (node wave2-b-admission-campaign-merge), and the fix's PR removes that test's ignore. Finding: state/cloud/wave2/W2-B.md. Intake for its preregistration, from the #139 gate-1 reviewer (state/consults/gates/2026-09-28-wave2-b-admission-campaign-merge-gate1-reviewer.md, non-blocking notes 2 and 3): the campaign records stream-error leaks but asserts none, and the fix PR could make that an assertion; admitted INT64 multiplication overflow ends in a terminal error carrying file-derived values, the same shape through arithmetic. P0 measured 2026-09-29 at main 4e46166 (duckdb 1.10505.0 = DuckDB v1.5.5); the table and the proposal (admitted set, the engine's type walk pinned by a test-time binder-agreement test, arithmetic overflow, the refusal code, the ADR-021 text the human types) are state/drafts/b1-p0/B1-P0-AND-PROPOSAL.md, with the probe and matrices beside it; the sight is Fable's, relayed by the human, before any code. SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 points 1-6): rule 6 (6ii) admitted and declared, pinned by f32 = 16777217 matching a stored 16777216; the 20-digit and scale-18 bounds with the named boundary literals in the binder-agreement pin; the mechanism accepted; arithmetic NOT 5a -- / declared floating-point division, other conversions inside arithmetic follow the admitted set, same-type integer overflow leaves B-1 for node stream-evaluation-failure-fixed-detail (5c); 6a with four reasons. Next: the full-form preregistration; then the human's typed texts together (the Decision 6.3 Note, Decision 8's twelfth code, the four reason strings for sight)."
     dates: {opened: 2026-09-28, done: null}
 
   - id: b1-close-nul-column-names
@@ -3080,17 +3080,17 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 10
     depends_on: [watcher-first-read-on-watch-thread]
-    needs_human: {kind: sight, minutes: 25}
+    needs_human: {kind: none, minutes: 0}
     gate: state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md
     evidence: null
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code. Its gate is the draft until Fable's sight moves the text into engine/B1-PROJECTION-PREREGISTRATION.md as Amendment 12, when the gate follows it; the draft's named tests are planned claims meanwhile (verify-test-claims)."
+    summary: "Ruled S1 in the 2026-09-28 S1 batch (state/directives/2026-09-28-after-wave-s1-batch.md): the human's ruling line fixes A2-1 as part of B1's close; Fable's A2-1 paragraph: the ordinary pre-close route while ADR-023 is Proposed, not a separate cut; the schema probe detects names that do not round-trip, and every use by name refuses them (W2-A2's observation 3 now in scope); the refusal names the real reason, and a new code would be an ADR-023 amendment with its own fixture, its text to Fable and accepted by the human with B1's close; the A2 reproducers inverted are the regression tests. The dependency on C-1 records the ruling's sequence (C-1 next). Finding: state/cloud/wave2/W2-A2.md. Clarified 2026-09-29 (state/directives/2026-09-29-a2-1-clarification.md): it lands BEFORE B1 closes, through ADR-023's amendment while ADR-023 is Proposed, and does not wait for b1-shell-half; its P0 and preregistration may run while B-1's proposal is with Fable; the preregistration, with any new refusal code and the ADR-023 amendment text, comes to Fable before any code; the human accepts the amendment with B1's close; entry-79-b1-consult-items, which closes B1, depends on this node. P0 measured 2026-09-29 (state/drafts/a2-1-p0/, committed at c1218dd and c7f7e3c); the preregistration draft -- a class-9 scope addition to engine/B1-PROJECTION-PREREGISTRATION.md with the ADR-023 amendment text, an ADR-021 note and OPEN (a)-(g) -- is state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md, architect-drafted on the custodian's brief; the sight is Fable's, relayed by the human, before any code. Its gate is the draft until Fable's sight moves the text into engine/B1-PROJECTION-PREREGISTRATION.md as Amendment 12, when the gate follows it; the draft's named tests are planned claims meanwhile (verify-test-claims). SIGHTED 2026-09-29 (state/directives/2026-09-29-a2-1-and-b-1-sightings.md): OPEN (a)-(g) as recommended, plus section 8 item 34 (U+0000 rendered as a visible escape in every engine message, detail and log line) with a test beside N-1; the human accepted the ADR-021 Note. Route: the ADR-023 amendment and the ADR-021 Note land on main in one docs PR (reviewer and architect gates, the human's click); then the code branch opens with Amendment 12 appended to engine/B1-PROJECTION-PREREGISTRATION.md as its first commit, before any code (a done node's gate binds its claims, so the amendment lands on main with its tests). The draft stays this node's gate until then."
     dates: {opened: 2026-09-28, done: null}
 
   - id: b1-session-ordinal-refusal-wording
@@ -3146,3 +3146,39 @@ nodes:
     entries: []
     summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory."
     dates: {opened: 2026-09-28, done: null}
+
+  - id: covering-names-missing-column
+    title: "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's A2-1 (c): k3 stays out of A2-1, its own proposed node, graded by whether it breaks a stated clause). Evidence: state/drafts/a2-1-p0/covering-output.txt, k3 -- the file's geo metadata declares a covering whose struct is absent (no U+0000); the open succeeds with the covering kept, and a bbox viewport_query fails at its first stream item with an engine.query binder error, after the mint. Custodian's grading: S1 CANDIDATE on the viewport_query entry in SKP-V0's first section (a bbox request is validated against the dataset before any handle is minted, so NoCoveringBbox returns synchronously and never as a data-plane terminal frame). The case for S2, for Fable to weigh: the file's own metadata is malformed, and the failure is loud and typed. A2-1 drops a covering that is unusable because of U+0000 at open (its Amendment 12, OPEN (c)); this node would decide the same for a covering naming an absent column, where refusing the open instead is on engine/ADMISSION-PREREGISTRATION.md section 12d's human list."
+    dates: {opened: 2026-09-29, done: null}
+
+  - id: stream-evaluation-failure-fixed-detail
+    title: "An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2)"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases)."
+    dates: {opened: 2026-09-29, done: null}

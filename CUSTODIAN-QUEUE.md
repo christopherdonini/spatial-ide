@@ -1,21 +1,17 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ef92932baf3a97131c4e61ee9b284de1ee9f8acba8e906e2271a7f4b0f8b0c6c`) at `2026-09-29T07:25:09.838Z`.
+Generated from `PLAN.yaml` (sha256 `4ee17998097156c899f0607ed1d9dcc7e281fbaf89005f4f14f37c886db52716`) at `2026-09-29T10:55:12.939Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`, order 10, budget 180 min)
 
-## 3. Waiting on the human (total: 65 min)
-
-### sight
-
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (20 min)
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (25 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### ruling
 
@@ -80,6 +76,8 @@ Generated from `PLAN.yaml` (sha256 `ef92932baf3a97131c4e61ee9b284de1ee9f8acba8e9
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
 - **shell-admit-describe-failure-closes-open** — admitDataset closes the dataset when describe fails after a successful open_dataset (wave-2 W2-C observation 2, S2) (phase `prototype`) — never queued until placed
 - **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (phase `prototype`) — never queued until placed
+- **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (phase `prototype`) — never queued until placed
+- **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
