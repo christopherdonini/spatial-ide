@@ -671,3 +671,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Amendment 12 is the first commit on A2-1's code branch, before any code, and reaches main with its tests.
     - The draft stays A2-1's gate until then.
   - **PLAN:** both nodes derive ready, and the two proposed nodes are appended. verify:plan PASS.
+- 2026-09-29T09:05Z - **A2-1's ADR texts are at PR #142** (`docs/a2-1-adr-texts` @ f15b869): ADR-023's Amendment 2026-09-29 and ADR-021's Note 2026-09-29, byte-copied from the sighted draft. **Both gates PASS at f15b869.** The PR waits on the human's click, as a merge commit.
+  - **The acceptance** of the ADR-021 Note is the human's typed word in the 2026-09-29 sightings (architect note 2).
+  - **Architect:** `state/consults/gates/2026-09-29-a2-1-adr-texts-gate1-architect.md`. The texts are word for word and append-only, the ADR-021 text is a Note and not a Decision change, and the references resolve; the forward reference to Amendment 12 is acceptable while ADR-023 is Proposed. There are five non-blocking notes:
+    - Notes 1 and 5 are taken into the prepared Amendment 12 as one line each: N-5 is not wire proof, because a wire NUL predicate is `filter_unparsable` first; and the SKP-V0 notes land with the code.
+    - Note 4 goes with ADR-023's acceptance at B1's close: the accepted ADR-021 Note leans on the amendment's definition.
+  - **Reviewer:** `state/consults/gates/2026-09-29-a2-1-adr-texts-gate1-reviewer.md`. Additions only. Both span sha256 values are recomputed and match. There is no Status line change. Every governance check and `node --test` (353/353) exit 0, and CI is green.
+  - **gate-log:** 273 records.
+  - **PLAN:** `b1-close-nul-column-names` is in progress with `{branch: docs/a2-1-adr-texts}`.
+  - **After the click:** the code branch opens from main, its first commit Amendment 12 (prepared in the custodian's scratchpad, with `<sight>` = 834b2e7), and a worker is dispatched.

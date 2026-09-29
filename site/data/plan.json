@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-29T10:55:35.486Z",
-  "plan_hash": "4ee17998097156c899f0607ed1d9dcc7e281fbaf89005f4f14f37c886db52716",
+  "generated_at": "2026-09-29T11:05:28.363Z",
+  "plan_hash": "17cd56dacfea23c32fdf9ce6854e862eac9eb9acf3729f9c086cc374dc2d2ed3",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4974,7 +4974,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 10,
       "depends_on": [
         "watcher-first-read-on-watch-thread"
@@ -4984,7 +4984,9 @@
         "minutes": 0
       },
       "gate": "state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "docs/a2-1-adr-texts"
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4ee17998097156c899f0607ed1d9dcc7e281fbaf89005f4f14f37c886db52716`) at `2026-09-29T10:55:12.939Z`.
+Generated from `PLAN.yaml` (sha256 `17cd56dacfea23c32fdf9ce6854e862eac9eb9acf3729f9c086cc374dc2d2ed3`) at `2026-09-29T11:05:26.526Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `4ee17998097156c899f0607ed1d9dcc7e281fbaf8900
 ## 2. Ready
 
 - **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
-- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) (lane `engine`, order 10, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -28,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `4ee17998097156c899f0607ed1d9dcc7e281fbaf8900
 
 ## 5. In progress
 
-- (none)
+- **b1-close-nul-column-names** — B1's close -- a column name that does not round-trip between DuckDB's Arrow export and its binder is refused by name at every use (projection, the filter namespace, the geometry and identity lookups at open), describe's facts flipping through the same functions (wave-2 A2-1, S1) — evidence: branch `docs/a2-1-adr-texts`
 
 ## 6. Proposed / unscheduled
 

@@ -3080,12 +3080,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 10
     depends_on: [watcher-first-read-on-watch-thread]
     needs_human: {kind: none, minutes: 0}
     gate: state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md
-    evidence: null
+    evidence: {branch: docs/a2-1-adr-texts}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
