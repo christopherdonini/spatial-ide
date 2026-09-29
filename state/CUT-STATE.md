@@ -723,3 +723,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Gap 2, `cargo test --workspace` not completed.** The custodian stopped the worker's leftover `cargo test -p spatial-engine` tree (PIDs 5272 and 19324 were running; the four other PIDs in the tree had already exited). It then ran `cargo test --workspace --features spatial-engine/fixture` at 1507845 itself: exit 0, zero FAILED, with the log in the custodian's scratchpad. Its tree differs from 19f37da only in the four formatting changes in a markdown file.
   - **At the done commit:** the sighted draft on main (`state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md`, this node's gate until then) still names the two old tests in code formatting. When its claims start to bind, they need superseded rows pinned at 804a62c, which is on main. That goes with moving the gate to `engine/B1-PROJECTION-PREREGISTRATION.md`.
   - **PLAN:** the node's evidence is `{branch: cut/b1-close-nul-names-2}`.
+- 2026-09-29T14:10Z - **A2-1's PR #143 is open** (`cut/b1-close-nul-names-2` @ 303dca0), with the architect and reviewer gates running at 303dca0.
+  - **N-4** is now its own named test. The correction worker's report is `state/consults/2026-09-29-a2-1-worker-report-2.md`:
+    - commit 303dca0, one test added;
+    - its mutation observed by name, with the test uncommitted on base 19f37da;
+    - `verify-test-claims` PASS on the branch, and every other check exit 0.
+  - **The diff against main:** 36 files, +1968/-130, and `protocol/data-plane/` is empty.
+  - **The merge** is the human's, after both gates PASS, as a merge commit.
