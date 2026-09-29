@@ -777,3 +777,231 @@ P6 sight list (round 12 (e)): read the last amendment first.
 ### Amendment 11 — 2026-09-27, post-merge: Amendment 8's words-form span pinned at a main commit
 
 Class 3 (round 25, item 2 (d); PLAN node `b1-post-merge-pins`). `273a79d` is reachable from main through the merge commit `d6ec85a`. The span Amendment 8 names in words: `engine/src/fixture.rs:273-274 @ 273a79d sha256:6e5c4af3a4160e8360a8e72baa1ce1c3b6b275858ce07b8c80c3c3edb0c29e0a`.
+
+### Amendment 12 — 2026-09-29, post-result (this addition's P0 seen; no code of it exists): scope addition on `state/directives/2026-09-28-after-wave-s1-batch.md` (its ruling line; Fable's A2-1 paragraph) and `state/directives/2026-09-29-a2-1-clarification.md`: column names that do not round-trip (wave-2 A2-1), PLAN node `b1-close-nul-column-names`
+
+This is class 9 (scope addition), not a record correction. It is written before any code of the addition. Fable sighted it at 834b2e7 (`state/directives/2026-09-29-a2-1-and-b-1-sightings.md`). That sighting rules OPEN A12-a to A12-g as recommended, so each "OPEN A12-x" below reads as ruled, and it adds §8 item 34 with test N-1a. The human's typed word accepts the ADR-021 note in the same directive. It lands before whichever node closes B1 (the 2026-09-29 clarification). The sighting also closes B1's form to further additions before B1's close.
+
+**12.0 Disclosure**
+
+**Sources:**
+- The finding: `state/cloud/wave2/W2-A2.md`, Finding A2-1, and the custodian's unproven observation 3.
+- The P0: run by the custodian against DuckDB v1.5.5 (crate `duckdb` 1.10505.0, per `Cargo.lock`), at main 1af041b and c1218dd, as untracked scratch tests since removed.
+- The probes and outputs are kept as text under `state/drafts/a2-1-p0/`, committed at c1218dd and c7f7e3c. They are evidence, not Authority.
+
+**Established by the P0.** Case ids refer to `p0-output.txt`, `covering-output.txt` and `extra-output.txt`.
+- **E1.** DuckDB's Arrow export truncates a top-level name at its first U+0000, and a struct child's name likewise (k2). DESCRIBE over the same `SELECT *`, and `parquet_schema`, both carry the full name (c01–c06, c15–c21, O-1, O-2).
+- **E2.** The truncated name does one of three things:
+  - binds to nothing (c01, c05, c16, c18, c20, c21);
+  - binds to a different column (c02, c03, c15, c17, c19);
+  - is empty and cannot be written as an identifier (c04, c06).
+
+  A bind check passes the second group.
+- **E3.** No SQL spelling carries U+0000 through duckdb-rs. A raw NUL is refused, and the `U&` escape is not implemented (the three SPELLING rows).
+- **E4.** Every use by name goes wrong today:
+  - **Projection** is admitted, then fails after the stream opens (c01, c02, c04, c05, c06, c15).
+  - **Filter:**
+    - admitted, then fails after the stream opens (c01, c05);
+    - admitted, and silently binds another column (c15; c02, c03 through the real same-named column);
+    - refused as unparsable (c04, c06).
+  - **`projectable`** is true for every such column.
+  - **Geometry** refuses the open with a false reason (c16, c17).
+  - **Native identity** refuses the open as a binder error (c18).
+  - **Declared identity** refuses with a false reason and a phantom candidate (c20), or with a binder error (c21).
+  - **A covering** whose path contains U+0000 opens, then fails at the first bbox stream item (k1, k2).
+- **E5.** Names that round-trip keep DuckDB's own bound names, identical in the export and in DESCRIBE:
+  - an empty name becomes `C2` (c07);
+  - case duplicates become `Zone_1` and `Zone_1_1` (c14);
+  - c08–c13 (NFD/NFC, a space, 5000 characters, a BOM, control characters) all round-trip.
+
+  `parquet_schema` disagrees with the binder in c07 and c14.
+- **E6 (P-1).** Under the format default (no `crs` key, degrees, no geo `bbox` member), a U+0000 covering opens:
+  - the sanity level is `NotChecked`, with the false reason "the covering names … which the file's schema does not contain" (the path check runs before any statement);
+  - the covering is kept, and the bbox stream fails after the mint (p1a, p1b).
+  - The control records `Metadata` (p1c).
+- **E7 (P-2).** A real `zone` (`Utf8`) beside `zone\0x` (`Int64`):
+  - `namespace_admit`'s map keeps the last of the two equal truncated names, so the surrogate carries the `Int64` column's type in one order;
+  - there, `zone LIKE 'col0%'` is falsely refused (`rejected_by_binder`), while `zone > 3` is admitted and fails after the mint (p2). The other order types it `Utf8` (p2r).
+- **E8 (P-3).** `id\0x` (`Utf8`) ahead of a real `id` (`UInt64`): the open falsely refuses the file's valid identity as `identity_unusable`, "type is Utf8" (p3).
+- **E9 (P-4).** U+0000 inside predicate text is refused synchronously as unparsable in all five shapes (p4), including a valid prefix followed by a NUL. The NUL truncates the admission wrapper's own tail. This is not a finding.
+- **E10 (O-1, O-2).**
+  - Two names truncating to one prefix export as two equal names, and DESCRIBE tells them apart (o1).
+  - DuckDB's case dedup renames the second of `zone\0x` and `ZONE\0x` to `ZONE\0x_1`, whose suffix the export loses (o2).
+  - The positional rule classifies both.
+- **k3** (a covering that names a column the file lacks, with no U+0000) fails at the first bbox item as a binder error. It is not an A2-1 case (OPEN A12-c).
+
+**Reproducers:** `a_nul_in_a_column_name_is_admitted_then_fails_after_the_stream_opens` and `a_nul_in_a_column_name_makes_admission_type_a_different_column_than_duckdb_binds`, in `engine/tests/b1_projection_hostile_names.rs` at c37b427 (`cloud/wave2-A2`, unmerged; nothing merges from it; file sha256 `515db6f692edd7b78393a13b651c9222893101fceecf5626efb2a68ddd58190d`). No code of this addition exists.
+
+**12.1 §2 shape**
+
+**(a) Detection, in `dataset::probe_schema`.** Two drained reads of the same `SELECT * FROM read_parquet(?) LIMIT 0` on the open's lease:
+- the Arrow export (the types);
+- DESCRIBE's `column_name` values (the names DuckDB binds).
+
+If the two lists differ in length, the open refuses `EngineError::InternalInconsistency`, naming both counts. Position *i* round-trips if and only if the two names are byte-equal. This positional comparison is the discriminator: a bind check misses E2's second group, and `parquet_schema` misreads E5.
+
+**(b) The resident schema.** `Dataset::file_schema` carries each position's export type under DESCRIBE's name (OPEN A12-a). A field that does not round-trip also carries its exported name, under the metadata key declared in §7. Every function that already receives the `Field` therefore reads the fact without a second lookup.
+
+**(c) One classifying function, `pub(crate)`.** A name is **not addressable** when either:
+- its `Field` carries an exported name that differs from its bound name; or
+- the name contains U+0000. This is the rule for a name that no comparison covers, such as a covering's struct-child segment (E1, E3).
+
+The function returns a typed engine fact: the bound name, the exported name where there is one, and the byte offset of the first U+0000.
+
+**(d) Every use by name goes through (c), at its existing single site:**
+
+| Use | Site | For a name that is not addressable |
+|---|---|---|
+| Projection, live and publish | `attributes::admit_projection_column` (shared by `admit_projection` pass 2 and `projectable`) | New `ProjectionError::ColumnNameNotAddressable { column, detail }`. The per-column order becomes name, geometry, identity, duplicate, type. |
+| describe `projectable` | `kernel::skp::describe_dataset`, through the same function | `false` |
+| Filter namespace: membership and a referenced name | `predicate::filterable_column_type`, and so `filter_surrogate` and `namespace_admit` (O4, row X5) | Left out of the namespace. When referenced: `FilterError::ColumnNotFilterable { column, reason }`. |
+| Geometry lookup at open | `dataset::check_geometry_column` | The open refuses `EngineError::GeoMetadata` (OPEN A12-b). |
+| Native identity | `dataset::admit_identity`, no-declaration arm | Never matches `id`. With no addressable `id`, the dataset takes the session tier, R-I3 (OPEN A12-d). With an addressable `id` beside it, it is native on that `id` (E8's file). |
+| Declared identity | `dataset::admit_identity`, declared arm, before any SQL | `EngineError::IdentityUnusable { column, detail, candidate_columns }`. No scan runs. |
+| Candidate list | `identity::candidate_identity_columns` | Omitted, beside the comma rule. |
+| Covering | At open, `dataset::sanity_check`'s path check (beside `field_path_exists`) and the stored covering. `Dataset::covering()` returns a usable covering only. `stream::build_sql`, `build_index_observed` and `build_row_group_index_observed` take their `NoCoveringBbox` detail from one private function. | The open succeeds with the covering recorded as unusable. A bbox query refuses `NoCoveringBbox` before any lease, with a detail naming the fact. The sanity level is `NotChecked`, with a reason naming the fact (OPEN A12-c). |
+
+**(e) Kernel and publish.**
+- `projection_error_of` gains one arm and stays exhaustive. `error_of` and `filter_error_of` are unchanged.
+- Publish: `From<ProjectionError> for EngineError` gains one arm, producing `AttributeUnpublishable { column, detail }`. `publish.engine` is unchanged.
+
+**(f) Wire.**
+- One new code (the ADR-023 amendment).
+- describe's `schema[].name` is the bound name, with U+0000 JSON-escaped (OPEN A12-a).
+- `covering_bbox` reports a usable covering (OPEN A12-c).
+- The literal is the one after main's at merge (§2.7's rule). It is `skp/0.6` today, and B-1's fix may take the next one.
+- Both sides' fixtures change in the bump commit, plus one error fixture for the new code.
+
+**(g) Documents.**
+- The ADR-023 amendment and the ADR-021 note (OPEN A12-f) land on main as a docs commit, after Fable's sight and before any code of this addition.
+- SKP-V0 gains dated notes only: §9.5 (the new row), §9.4 step 4, §7.3 (the namespace), describe's `name`, and the §8 entry for the new literal. Nothing earlier is rewritten. These notes, the §9.5 row included, land with the code and the literal bump, never with the ADR texts, which would otherwise document a code the wire does not yet carry (the architect gate on PR #142, note 5).
+
+**(h) Messages.** Every message states engine facts only. The wording is the human's, at B1's close (§1).
+
+**12.2 §4 tests, one mutation each**
+
+For each test, the mutation is applied, the test is run, its failure is recorded by name with the commit, and the mutation is reverted (round 25, item 2 (c)). Fixtures are generated in-test in the P0 writer's shape and hash-verified before and after each run (§3's discipline).
+
+The reproducer file's three passing control tests come along unchanged:
+- `hostile_names_round_trip_to_their_own_columns`;
+- `hostile_names_colliding_after_case_folding_bind_one_column_each`;
+- `hostile_names_an_uppercase_id_under_a_mapped_identity_is_admitted_beside_id`.
+
+- **N-1** `a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens`. It inverts `a_nul_in_a_column_name_is_admitted_then_fails_after_the_stream_opens` (c01).
+  - Asserts: the resident name is `nu\u{0}l`. `["nu\u{0}l"]` is refused `ColumnNameNotAddressable`. `["nu"]` is refused `ColumnUnknown`, with `known_columns` holding `nu\u{0}l` (under OPEN A12-a as recommended). No stream opens.
+  - Mutation: `probe_schema` returns the export's names.
+- **N-1a** `a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detail` (c01, c16, c20, k1; §8 item 34).
+  - Asserts: the `Display` text and every `detail` or `reason` field of each refusal these files produce contain no raw U+0000, and name the column with U+0000 rendered as the six ASCII characters `\u0000`. That covers `ColumnNameNotAddressable`, `ColumnNotFilterable`, `GeoMetadata`, `IdentityUnusable` and `NoCoveringBbox`. Every engine log line that names such a column goes through the same rendering function.
+  - Mutation: the rendering function returns the name unchanged.
+  - The wire's `column` and `known_columns` fields carry the bound name itself, JSON-escaped by serialization (OPEN A12-a). Those are field values, not messages.
+- **N-2** `a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind`. It inverts `a_nul_in_a_column_name_makes_admission_type_a_different_column_than_duckdb_binds` (c02).
+  - Asserts: `["zone"]` admits the `Utf8` column and streams values equal to a DuckDB read. `["zone\u{0}x"]` is refused `ColumnNameNotAddressable`.
+  - Mutation: the function in (c) always returns `Ok`.
+- **N-3** `projectable_and_admission_agree_on_a_nul_named_column` (kernel, K-5's harness, c01 and c02).
+  - Asserts: each row's `projectable` equals admission, and each row's `name` is the bound name.
+  - Mutation: the name rule moves into `admit_projection`'s pass 1 only.
+- **N-4** `a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint` (kernel, K-2's pattern, F12's harness).
+  - Asserts: the new code with its exact key set; `cancel_all_for_dataset` returns 0; `leases_issued` is unchanged; the refusal matches the committed error fixture (X9's pattern).
+  - Mutation: `projection_error_of` maps the variant to `projection_column_unknown`.
+- **N-5** `a_nul_named_column_is_refused_as_not_filterable_by_name` (a constructed `Field`, E-19's pattern).
+  - Asserts: the reason names U+0000.
+  - Mutation: the name check is removed from `filterable_column_type`.
+  - N-5 proves the namespace function. A wire predicate that carries U+0000 is refused `filter_unparsable` first (E9), and any wire test of one expects that code (the architect gate on PR #142, note 1).
+- **N-6** `a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns` (live, c01).
+  - Asserts: `"Num" IS NOT NULL` is admitted and streams. `"nu" IS NOT NULL` is refused `UnknownColumn`.
+  - Mutation: `namespace_admit` inserts every field without the name check (the surrogate SQL then carries U+0000).
+- **N-7** `a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_name` (E7's p2 file).
+  - Asserts: the namespace surrogate for `zone` is `VARCHAR`, and `zone LIKE 'col0%'` is admitted and streams the rows whose `zone` begins `col0`.
+  - Mutation: `probe_schema` returns the export's names.
+  - (`zone = 5` on that file is B-1's shape and is not asserted here.)
+- **N-8** `a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact` (c16, c17).
+  - Asserts: the message never says that the file lacks the column.
+  - Mutation: the name check is removed from `check_geometry_column`.
+- **N-9** `a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate` (c18).
+  - Mutation: `candidate_identity_columns` drops the U+0000 omission.
+- **N-10** `the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it` (E8's p3 file).
+  - Asserts: the open succeeds, native on the `UInt64` `id`, with the identity verification scan run once.
+  - Mutation: `admit_identity` matches by exported name.
+- **N-11** `a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan` (c20).
+  - Asserts: `column` is the full name; `candidate_columns` is empty; `IDENTITY_VERIFICATION_SCANS` is unchanged.
+  - Mutation: the name check is removed from the declared arm.
+- **N-12** `a_declared_identity_naming_the_truncated_prefix_is_an_absent_column` (c21).
+  - Asserts: never `engine.query`.
+  - Mutation: `probe_schema` returns the export's names.
+- **N-13** `a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_before_any_lease` (k1, k2; engine and kernel).
+  - Asserts: the open succeeds. The bbox stream's open returns `NoCoveringBbox`. The kernel's `viewport_query` refuses `engine.no_covering_bbox` before the mint. The no-bbox stream is unchanged.
+  - Mutation: `covering()` returns the declared covering whatever its usability.
+- **N-14** `a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason` (E6's p1a and p1b files).
+  - Asserts: the sanity level is `NotChecked`; the reason names U+0000 and never says the schema lacks the column; a bbox query refuses `NoCoveringBbox` before any lease.
+  - Mutation: `sanity_check`'s path check skips the function in (c).
+- **N-15** `the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames` (c01–c07, c14, c15, o1, o2).
+  - Asserts: `C2`, `Zone_1` and `Zone_1_1` are byte-equal to today's. The exported-name key appears exactly at the U+0000 positions.
+  - Mutation: names are taken from `parquet_schema`.
+- **N-16** `publish_refuses_a_nul_named_column_at_preflight_before_any_write`.
+  - Mutation: the new `From` arm renders `ColumnUnknown`'s detail.
+- **N-17** `every_projection_refusal_matches_its_committed_error_fixture_shape` is extended to eight codes, and both sides' fixture tests read the new fixture.
+  - Mutation: the fixture's `detail` key is renamed.
+
+**Changed existing tests:** the closing `codes.len() == 7` assertion in `every_projection_refusal_is_synchronous_typed_and_pre_mint` becomes 8, and the literal assertions follow.
+
+**12.3 §5**
+
+**Declared unchanged:**
+- For every name that round-trips (E5, including `C2`, `Zone_1`, `Zone_1_1` and c08–c13), byte for byte: the resident name, the describe row, namespace membership and surrogate, the projection outcome, `known_columns`, `candidate_columns`, and the identity and geometry outcomes.
+- The six existing `ProjectionError` variants: their codes, fields and texts.
+- The eleven filter codes (ADR-021 decision 8), and `error_of`'s arms.
+- Publish's codes and every existing publish text.
+- `build_sql` for every addressable name, the `WHERE` rule, and `BBOX_COND`.
+- `protocol/data-plane/` (an empty diff).
+- R-S3 for k3, unless OPEN A12-c rules otherwise.
+- Cold open gains one footer-only statement (the DESCRIBE read) on the open's lease. It is not bound to the cancel token, because it reads only the footer, as the existing schema probe does. No `docs/08` figure is claimed.
+
+**Invalidators** (stop and return to the architect):
+- On any fixture, the two lists differ in length, a position differs without U+0000, or a U+0000 name matches its export.
+- Any item declared unchanged moves.
+- A refusal of this addition cannot be made pre-lease and pre-mint.
+- The filter side needs a new code, or ADR-021's Decision text has to change.
+- A second classification function is needed.
+- A data-plane diff is needed.
+
+**Falsification:** at the pinned DuckDB, DESCRIBE's column order is not the export's order for the same `SELECT *`.
+
+**§7.** One new declaration: the `Field` metadata key that carries the exported name (`spatial.exported_name`). It is internal and never serialized to SKP or into a frame (§8 item 8). No constant changes.
+
+**12.4 §8, continuing from item 24**
+
+25. A use by name that does not reach (c) through its site in 12.1 (d), or a second classification function.
+26. A refusal from this addition that arrives as a data-plane terminal, arrives after a lease or mint, or comes after a statement naming the column has been prepared.
+27. A false code or detail for a name that is not addressable:
+    - `projection_column_unknown` or `projection_type_not_admitted` for its full name;
+    - "no such column" or "does not contain" for a column the file carries;
+    - "declares no covering.bbox" for a covering the file declares;
+    - `engine.query` from any open or query path.
+28. Any byte change for a name that round-trips.
+29. `parquet_schema`, a prefix match or a bind check used as the discriminator.
+30. A new filter code or a new `engine.*` code; any ADR-017 edit; or an ADR-021 or ADR-023 edit other than the texts Fable sighted, landed on main before the code.
+31. The new code without its error fixture on both sides in the literal-bump commit, or a literal that is not the one after main's at merge.
+32. A name that is not addressable appearing in `candidate_columns`, or the exported-name key reaching the wire or a frame.
+33. An engine message stating another module's consequence.
+34. An engine message, detail or log line that carries U+0000 as the raw byte rather than as the visible escape `\u0000` (the 2026-09-29 sightings, Fable's addition; test N-1a).
+
+How the existing items read with this addition:
+- Item 2's seven codes are eight (ADR-023 as amended).
+- Item 15 carves out the publish and filter observables of names that are not addressable, on the 2026-09-28 ruling.
+- Item 21 holds for this node's diff, because the ADR texts land on main beforehand.
+
+**12.5 §9.** Full gating: the piece touches an ADR, the wire and a guarantee.
+- **Architect:**
+  - 12.4 item by item, and items 1–24 as read above;
+  - the ADR texts on main byte-identical to what Fable sighted;
+  - the seam: kernel → engine through `ProjectionError`'s new variant, read on the branch and proved by N-4;
+  - the caller rule: the variant's product callers are `projection_error_of` and publish's `From`; (c)'s callers are the 12.1 (d) sites. The live non-null `columns` path stays under round 8's exemption (§2.9).
+- **Reviewer:**
+  - the full diff, with `git diff --stat origin/main...HEAD -- protocol/data-plane/` shown empty;
+  - each mutation observed;
+  - discharge claims resolved.
+- **Suites:** §9's list.
+- **Operator:** none. The strings are sighted with B1's close.
+- **Merge:** before the node that closes B1 (the dependency is in PLAN.yaml). The literal is computed at merge.
+- **Record:** the gate reports are the observation of record. Any closing amendment is references and hashes only (the record cap).
+
