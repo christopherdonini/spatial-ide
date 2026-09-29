@@ -949,3 +949,19 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The old branch `cut/b1-close-nul-names` (1507845). The formatting ruling kept it until #143 merged, but filed records cite its commits: the rebranch diff names 1507845, and worker report 1's observations are at cdadc6d and 1507845. Deleting it would leave them unresolvable, so it stays unless the human says otherwise.
     - `cloud/wave2-A2`, for c37b427.
   - **Main's CI at 468a0ae:** Governance and Pages pass, and the product workflows were still running at this commit.
+- 2026-09-29T22:20Z - **B-1's rulings and typed texts filed; the handoff checks run** (the 2026-09-30 B-1 acceptance and handoff, `state/directives/2026-09-30-b1-acceptance-and-handoff.md`).
+  - **The rulings file** is copied byte-identical to `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md`. Its sha256, 76e139be7a2515abae1b28c11b80a18f58f451d13e93dafd41ccbf427c23f079, was checked equal at the source and on the copy. It carries no profile path.
+  - **The human's acceptance line** of Part 2 (T-A, T-B and T-C, `<date>` = 2026-09-30) has a RULED block at the top of the list in `DECISIONS-PENDING.md` (§105; additions only).
+  - **The form:** `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md` §10 gains Amendment 1, a record only with no code. It covers O-1 (all REAL division admitted, with the rounding declared), O-3 (a fifth reason, `literal_out_of_bounds`, and the new precedence), C20 admitted, and §7's `/` line and five-value reason set.
+    - It also states one consequence that Part 1's last item does not list: under O-3's precedence, the bound-only rows C15 (second case), C22, C23 and C24 predict `literal_out_of_bounds`. That is marked for Fable's check alongside T-A's docs PR.
+  - **PLAN:** `filter-bind-admission-implicit-coercions` no longer waits on the human and derives ready. Its next step, the next session's first B-1 step, is T-A's docs PR (the ADR-021 Note dated 2026-09-30), then code under full gating. Nothing starts in this session.
+  - **Old branches, on Fable's item 2:** `cut/b1-close-nul-names` (1507845) and `cloud/wave2-A2` (c37b427) are kept, because filed records cite their commits. This supersedes the formatting ruling's "until #143 merges". Each is kept until no tracked record cites it.
+  - **CI on main:**
+    - 468a0ae: the Rust workspace run 36635907226 passed, and shell, Governance and Pages passed.
+    - 57cb447: shell 36637084121, Governance 36637083578 and Pages 36637083629 passed. The Rust workspace run 36637083570 was still running at the flush, and is the next session's FIRST check.
+    - The background watcher was stopped; it would not survive the session.
+  - **Nothing is left (item 4):**
+    - No worker or subagent of this session is running. The cloud sessions listed are the closed wave-1 and wave-2 ones, all idle. The one busy peer session belongs to another project.
+    - No question round has been asked since round 31 was set as the next number, so none needed mirroring. Every human answer and HUMAN RULING line has its RULED block.
+    - Every human message of the session is filed under `state/directives/`. The 17:09Z one-line question was filed late today, as `2026-09-29-flush-question.md`; the takeover was filed late at cc90121.
+    - Worktrees and branches are listed with their dispositions in the continuity block.

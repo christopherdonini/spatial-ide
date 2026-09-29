@@ -326,3 +326,39 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
 - **Record:** the gate reports are the observation of record. A closing amendment is references and hashes only (the record cap).
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — 2026-09-30, before any code: §2.12's OPEN items ruled, and the typed texts accepted
+
+*This amendment records two things. The first is Fable's rulings on O-1 to O-6 and on the architect's item 8: Part 1 of `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` (sha256 76e139be7a2515abae1b28c11b80a18f58f451d13e93dafd41ccbf427c23f079), cited by item and not reproduced. The second is the human's acceptance of that file's Part 2, which covers T-A, T-B and T-C with `<date>` filled as 2026-09-30 (RULED 2026-09-30 in `DECISIONS-PENDING.md`). This amendment is a record only; no code of this piece exists. Where a section is restated below, the text is this form's new wording, not a quotation of the rulings.*
+
+- **§2.12.**
+  - O-1 to O-6 are ruled. O-1 and O-3 take effect as below. O-2, O-4, O-5 and O-6 are accepted as this form states them.
+  - The architect's item 8 is accepted, with O-3's precedence.
+- **§2.5(c) is replaced (O-1).**
+  - `/` is declared floating-point division. It is admitted for any two numeric or NULL operands, and the literal bounds do not apply.
+  - It divides in the float type the binder chooses: REAL when one operand is REAL-typed and none is DOUBLE-typed or a double literal (F6), and DOUBLE otherwise.
+  - Its operands convert to that type. The rounding that follows is declared, not refused.
+  - The recommendation to admit only integers of at most 16 bits in REAL division, refusing wider ones `conversion_rounds`, is not adopted.
+  - B-T1 pins the chosen type (P-3's discriminator).
+- **§2.6 (O-3).** `TypeRefusalReason` is an enum of five: the four named, and `LiteralOutOfBounds` → `literal_out_of_bounds`. The precedence for a refused pair:
+  1. `text_with_non_text`, as stated.
+  2. `boolean_conversion`, as stated.
+  3. `literal_out_of_bounds`: a literal beyond §7's two bounds.
+  4. `conversion_can_fail`: a DECIMAL conversion wider than rule 4 admits, or §2.5(a)'s decimal literal beside an integer or a decimal (O-5).
+  5. `conversion_rounds`: everything else.
+
+  The reason sentences and the Display are T-C's, as accepted.
+- **§3, C20** (`i32 / f32 > 0`): admitted (O-1).
+- **§3, a consequence of O-3's precedence that Part 1's last item does not list.** This is for Fable's check alongside T-A's docs PR, before any code. The rows refused only by a bound predict `literal_out_of_bounds`, not `conversion_can_fail`:
+  - C15's second case (a decimal scale of 19);
+  - C22 (a 39-digit literal);
+  - C23 (a 21-digit integer part, O-2);
+  - C24 (a 21-digit literal).
+- **§7.**
+  - The `/` line of the declared cast set now reads: as `/` operands, any integer converts to the division's float type (§2.5(c)), with the rounding declared. The "under O-1" clause is removed.
+  - The reason set is five wire values (§2.6).
+  - The two bounds, the rest of the cast set and the budget stand.
+- **Order of work.**
+  1. T-A (the ADR-021 Note, `<date>` = 2026-09-30) lands on main by a docs PR, byte-identical to the accepted text, before any code (§2.9).
+  2. T-B and T-C bind the code.
+  3. T-D lands with the code and the literal bump, never before. The literal is the one after main's at merge; main's is now `skp/0.7`.

@@ -1,21 +1,20 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9e6957ad55183fddef945baf9e3f37e961e35378420425f9512e742ce13bd1ff`) at `2026-09-29T21:56:22.330Z`.
+Generated from `PLAN.yaml` (sha256 `73a85d19e23696b0e6fd938a3a66c4ac0e7c3fb313231bb2f572a2c6ce88943c`) at `2026-09-29T22:18:49.932Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (lane `engine`, order 9, budget 180 min)
 
-## 3. Waiting on the human (total: 45 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### ruling
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (20 min)
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) (25 min)
 
 ## 4. Blocked on dependencies
 
