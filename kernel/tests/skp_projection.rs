@@ -547,6 +547,75 @@ fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
     }
 }
 
+// ---- N-4: the nul-named column's own refusal test ---------------------------------------------
+
+/// N-4 (§10 Amendment 12, wave-2 A2-1): `a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint`
+/// (kernel, K-2's pattern, F12's harness) — its own standalone test, separate from the eighth case
+/// folded into `every_projection_refusal_is_synchronous_typed_and_pre_mint` above. A hostile-named
+/// file, opened under its own handle (F12's harness), queried for its one nul-named column.
+///
+/// Asserts: the refusal carries `skp.projection_column_name_not_addressable` with its exact key
+/// set; `cancel_all_for_dataset` returns 0 both before and after; `leases_issued` is unchanged; and
+/// the refusal matches the committed error fixture's own key set (X9's fixture-equality pattern).
+///
+/// Mutation: in `kernel/src/skp.rs::projection_error_of`, map `ProjectionError::ColumnNameNotAddressable`
+/// to `"projection_column_unknown"` instead of its own code.
+#[test]
+fn a_projection_naming_a_nul_named_column_is_refused_synchronously_typed_and_pre_mint() {
+    let hostile_path = fixture_dir().join("skp-projection-n4-refusal-hostile.parquet");
+    write_hostile_names(&hostile_path, "id", &[HostileColumn { name: "nu\0l", int: false }]);
+    let handle: DatasetHandle = "ds_00000000000000000000000000000017".parse().unwrap();
+    let catalog = Arc::new(Catalog::new());
+    catalog.open(handle.as_str(), &hostile_path, None).expect("open hostile-named fixture");
+    let tickets = StreamRegistry::new();
+    let host =
+        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
+    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
+
+    let leases_before = ds.connections().leases_issued();
+    let cancelled_before = tickets.cancel_all_for_dataset(handle.as_str());
+    assert_eq!(cancelled_before, 0, "no ticket should exist before this case runs");
+
+    let err = host
+        .viewport_query(base_request(handle.clone(), Some(vec!["nu\u{0}l".to_string()])))
+        .expect_err("a nul-named column must be refused");
+    assert_eq!(err.code, "skp.projection_column_name_not_addressable", "wrong code");
+    let actual_keys: BTreeSet<&str> = err.fields.keys().map(String::as_str).collect();
+    let expected_keys: BTreeSet<&str> = ["column", "detail"].into_iter().collect();
+    assert_eq!(actual_keys, expected_keys, "exact field key set");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("nu\u{0}l"));
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "refused synchronously and pre-mint -- no ticket to have minted"
+    );
+    assert_eq!(
+        ds.connections().leases_issued(),
+        leases_before,
+        "a projection refusal must not touch the stream connection pool at all"
+    );
+
+    // X9's fixture-equality pattern: the live refusal's own key set matches the committed fixture's.
+    let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../protocol/skp/tests/data");
+    let fixture_json =
+        std::fs::read_to_string(fixtures_dir.join("v0-error-projection_column_name_not_addressable.json"))
+            .expect("read v0-error-projection_column_name_not_addressable.json");
+    let fixture_value: serde_json::Value =
+        serde_json::from_str(&fixture_json).expect("fixture must be JSON");
+    let fixture_code = fixture_value["code"].as_str().expect("fixture must carry `code`").to_string();
+    let fixture_keys: BTreeSet<String> = fixture_value["fields"]
+        .as_object()
+        .expect("`fields` must be an object")
+        .keys()
+        .cloned()
+        .collect();
+    assert_eq!(err.code, fixture_code, "code must match the committed fixture");
+    let live_keys: BTreeSet<String> = err.fields.keys().cloned().collect();
+    assert_eq!(live_keys, fixture_keys, "live field key set must match the committed fixture's");
+}
+
 // ---- X1: the filter refusal text for a still-refused type ------------------------------------
 
 /// X1 (Amendment 5, row 5.6; O2): `a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte`
