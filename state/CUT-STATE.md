@@ -918,3 +918,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - the module doc's c37b427 reference drops its sha256, which both gates suggested.
   - **Checks on the reduction:** `git diff -U0` shows no changed line that is not a `//` comment. The two hostile binaries pass (12 and 2), and verify-cites, verify-quotes, verify-test-claims and the exposure scan all exit 0 on the branch.
   - **Next:** the reviewer confirms the diff is comment-only and no test body changed, and the architect confirms the text carries out its prescription.
+- 2026-09-29T21:31Z - **The gate-3 reduction was checked, and a second two-line reduction applied (c2ca7b4).**
+  - **The reviewer at 720f930: PASS** (`state/consults/gates/2026-09-29-a2-1-reduction1-reviewer.md`). All 29 changed lines are comment lines, every fn body hashes the same as at f4d81c5, and the control tests are still identical to c37b427's.
+  - **The architect at 720f930: FAIL** (`...-reduction1-architect.md`). The five prescribed edits are carried out, but two more false comment claims of the same kind remain, which the architect names as its own gate-3 miss:
+    - `sha256_file`'s doc still says every fixture the file writes is hashed;
+    - `fixture.rs` calls the covering writer the one shape the shared writers cannot express, but `write_p3_native_id` is a second.
+  - **The second reduction, c2ca7b4** (the custodian, signed off, no force-push), makes exactly those two one-line comment edits. `git diff -U0` shows four changed lines.
+  - **Gate-log:** attempt 5, reviewer PASS and architect FAIL, both at 720f930.
+  - **Next:** the reviewer confirms c2ca7b4 touches only those two lines, which is the architect's pass condition, and reports CI on c2ca7b4.
