@@ -29,6 +29,83 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-09-29 — the unnumbered question round of 13:07Z (AskUserQuestion, one item, answered at 16:30Z by option label; not mirrored, in the lapse after round 30; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`; verbatim):**
+
+- *Item 1 — `verify-test-claims` on A2-1's branch (by option label):* **"Tool change first"** Superseded before it was applied: the human then relayed Fable's formatting ruling, and the filing note of `state/directives/2026-09-29-a2-1-amendment-12-formatting.md` records the replacement. The tool change went to the 2026-10-02 window as section C.
+
+**RULED 2026-09-29 — the HUMAN RULING line of the 2026-09-29 sightings (the human's message, typed; verbatim in `state/directives/2026-09-29-a2-1-and-b-1-sightings.md`, whose Fable's sightings are not copied here; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
+
+- *The ruling, byte-copied from the directive:*
+
+  > HUMAN RULING 2026-09-29: the ADR-021 Note in state/drafts/a2-1-p0/A2-1-PREREGISTRATION.draft.md §2c
+  > ("a column that is not addressable is excluded from the namespace by name") is accepted as drafted. It
+  > lands on main with the ADR-023 amendment text, after Fable's sighting and before any code.
+
+  Applied: the Note landed with ADR-023's amendment as PR #142 (6986b45).
+
+**RULED 2026-09-29 — the unnumbered question round of 05:08Z (AskUserQuestion, one item, answered at 06:50Z; typed; not mirrored, in the lapse after round 30; verbatim in `state/directives/2026-09-29-a2-1-clarification.md`; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
+
+- *Item 1 — A2-1's timing (typed; the answer relays Fable's clarification of the 2026-09-28 ruling):*
+
+  > Fable's clarification of the 2026-09-28 ruling: "fixed as part of B1's close" means A2-1 belongs to B1's
+  > contract and must land BEFORE B1 closes, via ADR-023's amendment while it is still Proposed. It does not
+  > wait for b1-shell-half; nothing in the fix touches the shell. The handoff's "waits for B1's close" was
+  > Fable's loose wording.
+  > - Order: B-1 stays first. A2-1's P0 and preregistration may run while B-1's proposal is with Fable.
+  > - A2-1's preregistration comes to Fable before any code, including any new refusal code and the ADR-023
+  >   amendment text. The human accepts the amendment with B1's close.
+  > - Encode the dependency the other way: whichever node closes B1 depends on b1-close-nul-column-names.
+  >   Record this clarification beside the 2026-09-28 ruling.
+
+  Applied: 1af041b (the dependency encoded on `entry-79-b1-consult-items`; the clarification filed beside the 2026-09-28 ruling).
+
+**RULED 2026-09-28 — the HUMAN RULING line of the after-wave S1 batch (the human's message, pasted; verbatim in `state/directives/2026-09-28-after-wave-s1-batch.md`, whose Fable's notes are not copied here; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
+
+- *The ruling, byte-copied from the directive:*
+
+  > HUMAN RULING 2026-09-28: C-1 runs next, immediately after close-races' current step. B-1's P0 follows.
+  > A2-1 is fixed as part of B1's close.
+
+  Applied: C-1 done with {pr: 141} (4e46166); B-1's P0 filed (568d82c); A2-1 on PR #143.
+
+**RULED 2026-09-28 — the HUMAN RULING line of the W2-D sighting (the human's message; verbatim in `state/directives/2026-09-28-wave2-D-sighting.md`, whose Fable's notes are not copied here; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
+
+- *The ruling, byte-copied from the directive:*
+
+  > HUMAN RULING 2026-09-28: suites-and-toolchain-beyond-windows is placed, to run next after the node now
+  > in progress; W2-D may launch once Fable's sighting conditions below are met.
+
+  Applied: #140 merged; `suites-and-toolchain-beyond-windows` done with {pr: 140} (cc37148).
+
+**RULED 2026-09-28 — the wave-2 answers (the human's answers to the 2026-09-27 wave-2 authorisation's questions, typed at about 06:55Z, and the balance reading typed at 07:08Z; verbatim in `state/directives/2026-09-27-wave2-confirmation.md`, whose profile segment is redacted there by round 29 item 2; backfilled 2026-09-29 by Fable's item 2, `state/directives/2026-09-29-fable-amendment-12-sighted-and-ruled-backfill.md`):**
+
+- *The answers (human-confirmed), byte-copied from the directive's body:*
+
+  > Wave 2 answers (human-confirmed):
+  >
+  > 1. Prompts file: you may read it from C:\Users\<redacted:profile>\Development\Claude\Spatial IDE\WAVE2-CLOUD-PROMPTS.md.
+  >    Before copying, hash the source file itself: SHA-256 must be
+  >    d9b3dabfda305ed165b494d3aa7d1e8dd2c3f14a278af53395a29aae864fc16a (175 lines, 12,434 bytes). A mismatch
+  >    means stop and tell me. The content is confirmed as Fable's wave-2 file. Record the hash in the ledger.
+  >    The tracked copy (state/cloud/wave2-prompts.md) names its source only as "the human's untracked copy".
+  >    Never write the profile path into a tracked file.
+  >
+  > 2. Baseline: WAVE2_BASELINE = d4245feaef1ed94a4947bd2b2d1df9cc91a1a610. Fable confirmed it is d6ec85a's
+  >    direct child on main, and that d4245fe..0ada14f differs only under state/. That makes it the §2 rule's
+  >    own pick, not a deviation. Record the CI run links.
+  >
+  > 3. Promotion: ends <DATE>; balance now $<AMOUNT>. If fewer than 3 days remain, run the batches back to back.
+  >
+  > Proceed with launch step 5 (W2-A1 + W2-A2 first).
+  >
+  > 3. Promotion: ends 2026-11-04 23:59 PT (2026-11-05T07:59Z), per Anthropic's announcement as reported.
+  >    More than 3 days remain, so keep the normal pacing. Balance: if Chris can read the "Cloud session
+  >    credits" section at claude.ai Settings → Usage, record it. If not, record "before" as $219 carried
+  >    from wave 1's last reading (2026-09-26T01:16Z, not re-read), and record spend as "not attributable"
+  >    until the page shows a figure again.
+
+- *The balance reading (typed, 07:08Z):* **"213$ left, expires 8:59 gmt + 1 November 5th"** Recorded in `state/cloud/wave2.md` (the readings).
+
 **RULED 2026-09-27 — question round 30 (AskUserQuestion, one item, mirrored to Telegram first as `state/questions/round-30.md`; typed, verbatim; a red line):**
 
 - *Item 1 — S7, the local-profile override and the machine accounts (typed):* **"1): the local-profile override applies to the invented-name list only, never to the three machine accounts. runner, user and root name no person, so a session whose own profile is one of them does not refuse its own machine-account paths. The override's purpose is to protect a real person's name, and a generic account is not one"** Applied: the `exposure-profile-paths` preregistration's 2c (iii) stands as drafted, and its test `the_local_profile_override_spares_machine_accounts` pins it. The preregistration is committed next, before any code.
