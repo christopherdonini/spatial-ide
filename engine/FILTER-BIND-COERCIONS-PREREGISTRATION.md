@@ -366,3 +366,12 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
 ### Amendment 2 — 2026-09-30, before any code: Amendment 1's §3 consequence checked
 
 *A record only, by reference. Fable's check of Amendment 1's §3 item, that the rows refused only by a bound (C15's second case, C22, C23 and C24) predict `literal_out_of_bounds`: confirmed as the intended consequence of O-3, with no further sighting (`state/directives/2026-09-30-takeover.md`, item 2). No row, test, value or section changes.*
+
+### Amendment 3 — 2026-09-30, before any code: O-3's precedence applied to C2, C14, §5 and §8
+
+*A record only, by reference. Each change encodes O-3's precedence (Part 1 of `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md`), already recorded in Amendment 1's §2.6. Two more corpus rows carry a literal beyond §7's bounds, and two sections still counted four reasons. The custodian reported this as a P-004 closure, and Fable confirmed it with no sighting first (`state/directives/2026-09-30-fable-amendment-3-confirmed.md`). Where a section is restated below, the text is this form's new wording, not a quotation.*
+
+- **§3, C2** (`i64 < 0.000000000000000000000000001`, a decimal scale of 27): predicts TNA, `literal_out_of_bounds`. B-T4's C2 predicate follows its cell.
+- **§3, C14** (both cases: a 21-digit literal against BIGINT): predicts TNA, `literal_out_of_bounds`. B-T3's mutation (`MAX_INTEGER_LITERAL_DIGITS` = 21) still fails by name on C14.
+- **§5, invalidators:** the reason-sentence invalidator reads: a refusal that no five-reason sentence states truly.
+- **§8, item 9** reads: a reason outside the five, or a reason sentence false for a corpus row.

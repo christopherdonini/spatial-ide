@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b1ebb8964df5866f55899f67cca3d4d99993af3062e723355361572dda4175f3`) at `2026-09-29T22:34:51.824Z`.
+Generated from `PLAN.yaml` (sha256 `0d1aaf949bc2a12c5ad24c01040773f4956631ab906b2dc874e2973e51f14ff9`) at `2026-09-29T23:07:39.290Z`.
 
 ## 1. Next
 
@@ -27,7 +27,7 @@ Generated from `PLAN.yaml` (sha256 `b1ebb8964df5866f55899f67cca3d4d99993af3062e7
 
 ## 5. In progress
 
-- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) — evidence: branch `docs/b-1-adr-021-note`
+- **filter-bind-admission-implicit-coercions** — Bind admission refuses implicit coercions synchronously, carrying no file data -- P0 a measured cast table, then the admitted set and the detection mechanism to Fable before any code (wave-2 B-1, S1) — evidence: branch `cut/filter-bind-coercions`
 
 ## 6. Proposed / unscheduled
 
