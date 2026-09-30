@@ -128,7 +128,8 @@ pub use identity::{
 };
 pub use error::{EngineError, Result};
 pub use predicate::{
-    AdmittedPredicate, FilterError, PredicateAdmitError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,
+    AdmittedPredicate, FilterError, PredicateAdmitError, TypeRefusalReason, MAX_PREDICATE_BYTES,
+    MAX_PREDICATE_DEPTH,
 };
 pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_ADMISSION_CONNECTIONS, MAX_MAINTENANCE_CONNECTIONS,

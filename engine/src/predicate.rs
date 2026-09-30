@@ -104,11 +104,11 @@ impl AdmittedPredicate {
     /// MAX_ADMISSION_CONNECTIONS`), so a burst of filter admissions cannot bypass the pool's
     /// declared connection ceiling by minting ad-hoc connections per call.
     ///
-    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** Ten of its eleven admission
+    /// **Returns [`PredicateAdmitError`], not a bare [`FilterError`].** Eleven of its twelve admission
     /// refusals (every stage this module implements) still arrive wrapped in
-    /// [`PredicateAdmitError::Filter`], unchanged; the twelfth possibility, a residual admission-
+    /// [`PredicateAdmitError::Filter`], unchanged; the thirteenth possibility, a residual admission-
     /// lease exhaustion, is a fact about this pool's capacity, never about the predicate, and is
-    /// therefore a sibling variant rather than a twelfth `FilterError`/`skp.filter_*` case (ADR-021
+    /// therefore a sibling variant rather than a thirteenth `FilterError`/`skp.filter_*` case (ADR-021
     /// item 8 stays untouched — see [`PredicateAdmitError`]'s own doc).
     pub fn admit(text: impl Into<String>, dataset: &Dataset) -> Result<Self, PredicateAdmitError> {
         let text = text.into();
@@ -160,14 +160,14 @@ impl AdmittedPredicate {
         // is released healthy rather than discarded — P5's filter panel calls admission on every
         // keystroke, and destroying and recreating a DuckDB connection per refused keystroke would
         // be a real, avoidable cost.
-        let columns = match structural_admit(&text, conn) {
-            Ok(columns) => columns,
+        let structural = match structural_admit(&text, conn) {
+            Ok(structural) => structural,
             Err(e) => {
                 lease.release_healthy();
                 return Err(e.into());
             }
         };
-        let namespace = match namespace_admit(&columns, dataset) {
+        let namespace = match namespace_admit(&structural.columns, dataset) {
             Ok(namespace) => namespace,
             Err(e) => {
                 // `namespace_admit` never touches `conn` at all — the connection is exactly as
@@ -183,6 +183,12 @@ impl AdmittedPredicate {
         // confirmed is discarded", and a connection that ran a real prepared statement, even an
         // admitted one, is not the same trivial, data-only call stages 1/2 make.
         bind_admit(&text, &namespace, conn)?;
+
+        // The type walk (§2.1): runs only after `bind_admit` returns `Ok`, over the tree
+        // `structural_admit` already parsed — no second parse, no new DuckDB call, no plan read at
+        // runtime. A refusal here is a stage-3 refusal, so the lease is discarded exactly as
+        // `bind_admit`'s own refusals are (the `?` below never reaches `release_healthy`).
+        type_walk(&structural.operands, &namespace)?;
 
         // Reached only once every stage above returned `Ok`.
         lease.release_healthy();
@@ -216,7 +222,7 @@ impl AdmittedPredicate {
 
 /// Every refusal [`AdmittedPredicate::admit`] can produce.
 ///
-/// **A deliberate 1:1 correspondence with `NEXT-CUT.md` design essential 5's eleven `skp.filter_*`
+/// **A deliberate 1:1 correspondence with `NEXT-CUT.md` design essential 5's twelve `skp.filter_*`
 /// wire codes, field for field — not a coincidence.** P4 maps each variant to its SKP code by name;
 /// a twelfth variant here would be inventing wire taxonomy this crate does not own. Every match on
 /// this enum in this module is exhaustive, with no wildcard arm, for the same reason.
@@ -227,7 +233,7 @@ pub enum FilterError {
     /// **Not constructible by [`AdmittedPredicate::admit`] today.** `protocol/skp`'s `Filter::new`
     /// already refuses any dialect but `duckdb-expr/0` at the wire boundary, before predicate text
     /// ever reaches this crate (`CUT-STATE.md` P1). This variant exists only so `FilterError`'s
-    /// eleven arms match the SKP taxonomy exactly, so a later exhaustive match never needs a
+    /// twelve arms match the SKP taxonomy exactly, so a later exhaustive match never needs a
     /// wildcard arm to compile.
     DialectUnsupported { declared: String },
 
@@ -278,6 +284,24 @@ pub enum FilterError {
     /// predicate's own text, and this variant's own wire mapping (`skp.filter_rejected_by_binder`)
     /// must not be minted for it.
     RejectedByBinder { detail: String },
+
+    /// The predicate's binding needs an implicit coercion outside the admitted class the type walk
+    /// declares (§2 of `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, as amended) — a
+    /// comparison, junction or arithmetic operator whose operand types the walk does not admit.
+    /// Refused synchronously, in stage 3, after [`bind_admit`]'s own BOOLEAN check succeeds and
+    /// before any lease or mint. Carries no value read from the file: `construct`, `operand_types`
+    /// and `reason` are built from types, the operator and the reason only (§2.6).
+    TypeNotAdmitted {
+        /// The operator's canonical spelling (§2.6's declared map).
+        construct: String,
+        /// The first refused pair's rendered types, in tree order — or the single operand of a
+        /// junction (`AND`/`OR`/`NOT`). Joined with `"; "` on the wire (a `DECIMAL` name carries a
+        /// comma).
+        operand_types: Vec<String>,
+        /// One of [`TypeRefusalReason`]'s five fixed wire values, in the precedence §2.6 (as
+        /// amended by §10 Amendment 1) states.
+        reason: TypeRefusalReason,
+    },
 }
 
 impl fmt::Display for FilterError {
@@ -327,13 +351,19 @@ impl fmt::Display for FilterError {
             Self::RejectedByBinder { detail } => {
                 write!(f, "refused: DuckDB's binder rejected the predicate ({detail})")
             }
+            Self::TypeNotAdmitted { construct, operand_types, reason } => write!(
+                f,
+                "refused: `{construct}` over {}: {} (docs/01 principle 8)",
+                operand_types.join(" and "),
+                reason.sentence(),
+            ),
         }
     }
 }
 
 /// Every way [`AdmittedPredicate::admit`] can fail.
 ///
-/// **Why this is not a bare [`FilterError`].** `FilterError`'s eleven variants are a deliberate,
+/// **Why this is not a bare [`FilterError`].** `FilterError`'s twelve variants are a deliberate,
 /// closed, 1:1 correspondence with the wire's `skp.filter_*` taxonomy (this module's own doc,
 /// above) — every one of them is a claim about the *predicate's own text*. An admission-lease
 /// capacity failure (DECISIONS-PENDING entry 91 (a); ADR-033 (accepted 2026-09-14)) is not that kind of claim
@@ -341,13 +371,13 @@ impl fmt::Display for FilterError {
 /// the caller wrote. Folding it into `FilterError::RejectedByBinder` — the only shape available
 /// before this type existed — was exactly the defect entry 87 diagnosed: a typed refusal naming
 /// the wrong cause. Giving it a twelfth `FilterError` arm was rejected in the same review that
-/// added this type, for the same reason `FilterError`'s own doc gives for staying at eleven: it
+/// added this type, for the same reason `FilterError`'s own doc gives for staying at twelve: it
 /// would be inventing wire taxonomy this crate does not own (no new `skp.filter_*` code, ADR-021
 /// item 8) merely to carry information that was never about the wire's filter taxonomy to begin
 /// with. This type carries both without conflating them.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PredicateAdmitError {
-    /// One of [`FilterError`]'s eleven admission-content refusals, unchanged.
+    /// One of [`FilterError`]'s twelve admission-content refusals, unchanged.
     Filter(FilterError),
     /// [`crate::pool::LeaseClass::Admission`] had no free lease when this call needed one.
     ///
@@ -437,11 +467,21 @@ fn serialize_sql(wrapped: &str, conn: &Connection) -> Result<Value, FilterError>
     })
 }
 
+/// Stage 1's result (§2.2): every column name the walk collected (stage 2's input), and the
+/// admitted operand trees themselves, parsed once — stage 3's type walk consumes `operands`
+/// directly, issuing no second parse and no new DuckDB call (§2.1, §8 item 4).
+#[derive(Debug)]
+struct StructuralAdmission {
+    columns: Vec<String>,
+    operands: Vec<Value>,
+}
+
 /// Structural admission (stage 1). Parses `predicate` **twice**, differentially (see
 /// [`differential_operands`]), walks the returned operands against the declared allowlist, and
-/// returns every column name the walk collected (for stage 2). Enforces [`MAX_PREDICATE_BYTES`]
-/// before parsing at all, and [`MAX_PREDICATE_DEPTH`] during the walk.
-fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, FilterError> {
+/// returns every column name the walk collected (for stage 2) together with the operand trees
+/// (for stage 3's type walk). Enforces [`MAX_PREDICATE_BYTES`] before parsing at all, and
+/// [`MAX_PREDICATE_DEPTH`] during the walk.
+fn structural_admit(predicate: &str, conn: &Connection) -> Result<StructuralAdmission, FilterError> {
     if predicate.len() > MAX_PREDICATE_BYTES {
         return Err(FilterError::TooLong {
             limit: MAX_PREDICATE_BYTES as u64,
@@ -468,7 +508,7 @@ fn structural_admit(predicate: &str, conn: &Connection) -> Result<Vec<String>, F
     for operand in &operands {
         walk_expr(operand, 1, &mut columns)?;
     }
-    Ok(columns)
+    Ok(StructuralAdmission { columns, operands })
 }
 
 /// Parse `predicate` wrapped with `sentinel` appended (`wrap_with`) and, if the wrapper's own fixed
@@ -1197,6 +1237,882 @@ fn bind_admit(
     }
     Ok(())
 }
+// ---------------------------------------------------------------------------------------------
+// Stage 3 (continued) -- the type walk (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 2, as
+// amended by section 10 Amendment 1)
+// ---------------------------------------------------------------------------------------------
+
+/// A numeric literal's integer part may not exceed this many digits, sign excluded, counted from
+/// the value itself, never from its DuckDB parse type (section 2.2; section 7).
+const MAX_INTEGER_LITERAL_DIGITS: u32 = 20;
+
+/// A decimal literal's scale (digits after the point) may not exceed this (section 2.2; section 7).
+const MAX_DECIMAL_LITERAL_SCALE: u32 = 18;
+
+/// The reason a [`FilterError::TypeNotAdmitted`] refusal names -- five fixed wire values, in the
+/// precedence section 2.6 (as amended by section 10 Amendment 1) states. The sentence lives only
+/// in [`Self::sentence`] / [`FilterError`]'s own `Display`, never on the wire (O-4): a wording
+/// change never changes `reason`'s wire value.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TypeRefusalReason {
+    /// One side is VARCHAR (a column or a string literal) and the other is neither VARCHAR nor
+    /// NULL.
+    TextWithNonText,
+    /// One side is BOOLEAN and the other is neither BOOLEAN nor NULL.
+    BooleanConversion,
+    /// A literal beyond section 7's two declared bounds.
+    LiteralOutOfBounds,
+    /// A DECIMAL conversion wider than comparison rule 4 admits, or a decimal literal beside an
+    /// integer or a decimal in `+`, `-` or `*` (O-5).
+    ConversionCanFail,
+    /// Everything else a refused pair can be.
+    ConversionRounds,
+}
+
+impl TypeRefusalReason {
+    /// The wire's fixed snake_case value (T-B; O-4). Copied byte for byte from
+    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
+    /// this file.
+    pub fn wire_value(self) -> &'static str {
+        match self {
+            Self::TextWithNonText => "text_with_non_text",
+            Self::BooleanConversion => "boolean_conversion",
+            Self::LiteralOutOfBounds => "literal_out_of_bounds",
+            Self::ConversionCanFail => "conversion_can_fail",
+            Self::ConversionRounds => "conversion_rounds",
+        }
+    }
+
+    /// The `Display` sentence (T-C), never sent on the wire. Copied byte for byte from
+    /// `state/directives/B-1-RULINGS-AND-TYPED-TEXTS-2026-09-30.md` T-C by the script that wrote
+    /// this file.
+    fn sentence(self) -> &'static str {
+        match self {
+            Self::TextWithNonText => "a comparison of text with a non-text value",
+            Self::BooleanConversion => "a conversion to or from BOOLEAN",
+            Self::LiteralOutOfBounds => "a numeric literal beyond the declared bounds (20 integer digits; decimal scale 18)",
+            Self::ConversionCanFail => "a conversion that can fail during the scan",
+            Self::ConversionRounds => "a conversion that can round a value read from the file before it is compared",
+        }
+    }
+}
+
+/// Whether an operand is a column reference, a literal, or an arithmetic result -- `operand_types`
+/// suffixes a literal with `" literal"` and an arithmetic result with `" expression"` (section 2.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OperandKind {
+    Column,
+    Literal,
+    Expression,
+}
+
+/// The engine's own type names (section 2.2), the closed set `operand_types` renders from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum EngineType {
+    Varchar,
+    Boolean,
+    TinyInt,
+    SmallInt,
+    Integer,
+    BigInt,
+    UTinyInt,
+    USmallInt,
+    UInteger,
+    UBigInt,
+    HugeInt,
+    UHugeInt,
+    Real,
+    Double,
+    Decimal(u32, u32),
+    Null,
+}
+
+impl fmt::Display for EngineType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Varchar => write!(f, "VARCHAR"),
+            Self::Boolean => write!(f, "BOOLEAN"),
+            Self::TinyInt => write!(f, "TINYINT"),
+            Self::SmallInt => write!(f, "SMALLINT"),
+            Self::Integer => write!(f, "INTEGER"),
+            Self::BigInt => write!(f, "BIGINT"),
+            Self::UTinyInt => write!(f, "UTINYINT"),
+            Self::USmallInt => write!(f, "USMALLINT"),
+            Self::UInteger => write!(f, "UINTEGER"),
+            Self::UBigInt => write!(f, "UBIGINT"),
+            Self::HugeInt => write!(f, "HUGEINT"),
+            Self::UHugeInt => write!(f, "UHUGEINT"),
+            Self::Real => write!(f, "REAL"),
+            Self::Double => write!(f, "DOUBLE"),
+            Self::Decimal(w, s) => write!(f, "DECIMAL({w},{s})"),
+            Self::Null => write!(f, "NULL"),
+        }
+    }
+}
+
+/// A typed operand the walk has classified: its [`EngineType`], whether it is a column, a literal
+/// or an arithmetic result, and (for a literal) whether it sits within section 7's declared
+/// bounds -- `true` for every non-literal and for a literal type the bounds do not name (VARCHAR,
+/// DOUBLE, NULL).
+#[derive(Debug, Clone, PartialEq)]
+struct Typed {
+    ty: EngineType,
+    kind: OperandKind,
+    within_bounds: bool,
+    /// The literal's own integer value, carried only so arithmetic's constant-folding rule
+    /// ([`fold_or_promote_integer`]) can ask "does this specific value fit the other operand's
+    /// type" -- the same question DuckDB's own binder asks (observed at v1.5.5: `i8 + 1` keeps
+    /// TINYINT, `i8 + 300` promotes to INTEGER).
+    literal_int_value: Option<i128>,
+}
+
+impl Typed {
+    fn column(ty: EngineType) -> Self {
+        Self { ty, kind: OperandKind::Column, within_bounds: true, literal_int_value: None }
+    }
+
+    fn expression(ty: EngineType) -> Self {
+        Self { ty, kind: OperandKind::Expression, within_bounds: true, literal_int_value: None }
+    }
+
+    /// `operand_types`' own rendering of one entry (section 2.6): the type name, suffixed
+    /// `" literal"` or `" expression"` as [`Self::kind`] says, unsuffixed for a column.
+    fn render(&self) -> String {
+        let base = self.ty.to_string();
+        match self.kind {
+            OperandKind::Column => base,
+            OperandKind::Literal => format!("{base} literal"),
+            OperandKind::Expression => format!("{base} expression"),
+        }
+    }
+}
+
+/// A virtual BOOLEAN operand, standing in for the boolean context `AND`/`OR`/`NOT` impose on each
+/// of their own operands, so a single refused operand's reason is found by the same precedence
+/// logic ([`determine_reason`]) a refused pair uses.
+fn boolean_virtual() -> Typed {
+    Typed::column(EngineType::Boolean)
+}
+
+/// A virtual numeric (DOUBLE) operand, standing in for "any numeric type", used only to find the
+/// reason a unary `-`'s non-numeric operand is refused (section 2.5(b)).
+fn numeric_virtual() -> Typed {
+    Typed::column(EngineType::Double)
+}
+
+fn is_numeric(t: &Typed) -> bool {
+    int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Real | EngineType::Double | EngineType::Decimal(..))
+}
+
+/// `(bit width, is signed)` for every integer [`EngineType`] -- `None` for anything else. The
+/// closed set this engine's columns, arithmetic results and within-bounds literals ever carry
+/// (section 2.2): every value from any two of these fits a signed 128-bit (`HUGEINT`) integer,
+/// which is exactly what section 7's declared bounds exist to guarantee.
+fn int_bits_signed(ty: &EngineType) -> Option<(u32, bool)> {
+    match ty {
+        EngineType::TinyInt => Some((8, true)),
+        EngineType::SmallInt => Some((16, true)),
+        EngineType::Integer => Some((32, true)),
+        EngineType::BigInt => Some((64, true)),
+        EngineType::HugeInt => Some((128, true)),
+        EngineType::UTinyInt => Some((8, false)),
+        EngineType::USmallInt => Some((16, false)),
+        EngineType::UInteger => Some((32, false)),
+        EngineType::UBigInt => Some((64, false)),
+        EngineType::UHugeInt => Some((128, false)),
+        _ => None,
+    }
+}
+
+fn bits_signed_to_type(bits: u32, signed: bool) -> EngineType {
+    match (bits, signed) {
+        (8, true) => EngineType::TinyInt,
+        (16, true) => EngineType::SmallInt,
+        (32, true) => EngineType::Integer,
+        (64, true) => EngineType::BigInt,
+        (_, true) => EngineType::HugeInt,
+        (8, false) => EngineType::UTinyInt,
+        (16, false) => EngineType::USmallInt,
+        (32, false) => EngineType::UInteger,
+        (64, false) => EngineType::UBigInt,
+        (_, false) => EngineType::UHugeInt,
+    }
+}
+
+/// Does `v` fit exactly inside `ty`'s own range? Used only by [`fold_or_promote_integer`], to
+/// answer the same question DuckDB's binder asks a literal before it decides whether to fold the
+/// literal down to a column's own type or to promote instead (observed at v1.5.5).
+fn fits_int_type(v: i128, ty: &EngineType) -> bool {
+    let Some((bits, signed)) = int_bits_signed(ty) else { return false };
+    match (bits, signed) {
+        (8, true) => (i8::MIN as i128..=i8::MAX as i128).contains(&v),
+        (16, true) => (i16::MIN as i128..=i16::MAX as i128).contains(&v),
+        (32, true) => (i32::MIN as i128..=i32::MAX as i128).contains(&v),
+        (64, true) => (i64::MIN as i128..=i64::MAX as i128).contains(&v),
+        (_, true) => true,
+        (8, false) => (0..=u8::MAX as i128).contains(&v),
+        (16, false) => (0..=u16::MAX as i128).contains(&v),
+        (32, false) => (0..=u32::MAX as i128).contains(&v),
+        (64, false) => (0..=u64::MAX as i128).contains(&v),
+        (_, false) => v >= 0,
+    }
+}
+
+/// DuckDB's own integer-pair promotion table at v1.5.5 (measured directly: `json_serialize_plan`'s
+/// `return_type` over every pair of this engine's eight integer column types) -- **not** simply
+/// "the wider of the two": same-signedness pairs promote to the wider of the two, but a
+/// signed/unsigned pair promotes to `HUGEINT` whenever the unsigned side is 64 bits wide, to
+/// `BIGINT` whenever the signed side is no wider than the unsigned side (even where a narrower
+/// signed type would losslessly hold both, e.g. `i16 + u16` measures `BIGINT`, not `INTEGER`), and
+/// to the signed side's own type otherwise.
+fn int_promote(a: &EngineType, b: &EngineType) -> EngineType {
+    let (abits, asig) = int_bits_signed(a).expect("integer type");
+    let (bbits, bsig) = int_bits_signed(b).expect("integer type");
+    if asig == bsig {
+        return bits_signed_to_type(abits.max(bbits), asig);
+    }
+    let (sbits, ubits) = if asig { (abits, bbits) } else { (bbits, abits) };
+    if sbits > ubits {
+        bits_signed_to_type(sbits, true)
+    } else if ubits >= 64 {
+        EngineType::HugeInt
+    } else {
+        EngineType::BigInt
+    }
+}
+
+/// The result type of an admitted integer `+`/`-`/`*` pair (section 2.5(a)'s "integer with integer
+/// is admitted" line). DuckDB folds a literal to the other operand's own type first, when the
+/// literal's specific value fits it exactly (observed at v1.5.5: `i8 + 1` returns `TINYINT`, not
+/// `INTEGER`) -- checked before [`int_promote`]'s general table, which is for two non-literal
+/// operands (or two literals) and can overshoot a minimal common type.
+fn fold_or_promote_integer(l: &Typed, r: &Typed) -> EngineType {
+    if l.kind == OperandKind::Literal && r.kind != OperandKind::Literal {
+        if let Some(v) = l.literal_int_value {
+            if fits_int_type(v, &r.ty) {
+                return r.ty.clone();
+            }
+        }
+    }
+    if r.kind == OperandKind::Literal && l.kind != OperandKind::Literal {
+        if let Some(v) = r.literal_int_value {
+            if fits_int_type(v, &l.ty) {
+                return l.ty.clone();
+            }
+        }
+    }
+    int_promote(&l.ty, &r.ty)
+}
+
+/// The engine type a namespace surrogate string names -- the reverse of [`duckdb_type_name`],
+/// total over the closed set [`namespace_admit`] ever inserts.
+fn engine_type_of_surrogate(name: &str) -> EngineType {
+    match name {
+        "VARCHAR" => EngineType::Varchar,
+        "BOOLEAN" => EngineType::Boolean,
+        "TINYINT" => EngineType::TinyInt,
+        "SMALLINT" => EngineType::SmallInt,
+        "INTEGER" => EngineType::Integer,
+        "BIGINT" => EngineType::BigInt,
+        "UTINYINT" => EngineType::UTinyInt,
+        "USMALLINT" => EngineType::USmallInt,
+        "UINTEGER" => EngineType::UInteger,
+        "UBIGINT" => EngineType::UBigInt,
+        "DOUBLE" => EngineType::Double,
+        "REAL" => EngineType::Real,
+        other => unreachable!("namespace_admit only ever inserts duckdb_type_name's outputs: {other}"),
+    }
+}
+
+/// A `CONSTANT` node's integer value (`INTEGER`/`BIGINT`/`HUGEINT`/`UHUGEINT`), read from
+/// `json_serialize_sql`'s own JSON: a plain JSON number when it fits `i64`/`u64`, or DuckDB's own
+/// `{"lower": u64, "upper": ...}` split for a 128-bit value (`upper` signed for `HUGEINT`, unsigned
+/// for `UHUGEINT`) -- measured directly against `json_serialize_sql`'s real output while building
+/// this module.
+fn integer_literal_value(id: &str, raw: Option<&Value>) -> Result<i128, FilterError> {
+    let raw = raw.ok_or_else(|| missing_field("CONSTANT.value.value"))?;
+    if let Some(n) = raw.as_i64() {
+        return Ok(n as i128);
+    }
+    if let Some(n) = raw.as_u64() {
+        return Ok(n as i128);
+    }
+    let lower = raw
+        .get("lower")
+        .and_then(Value::as_u64)
+        .ok_or_else(|| missing_field("CONSTANT.value.value.lower"))?;
+    if id == "UHUGEINT" {
+        let upper = raw
+            .get("upper")
+            .and_then(Value::as_u64)
+            .ok_or_else(|| missing_field("CONSTANT.value.value.upper"))?;
+        let v: u128 = ((upper as u128) << 64) | (lower as u128);
+        // Already out of section 7's bound by construction (39+ digits); clamped only for a stable
+        // digit count -- `within_bounds` is already false for anything this large, and no admitted
+        // rule ever reads this value once it is out of bounds.
+        Ok(i128::try_from(v).unwrap_or(i128::MAX))
+    } else {
+        let upper = raw
+            .get("upper")
+            .and_then(Value::as_i64)
+            .ok_or_else(|| missing_field("CONSTANT.value.value.upper"))?;
+        Ok((upper as i128) * (1i128 << 64) + (lower as i128))
+    }
+}
+
+/// A `CONSTANT` node's [`Typed`] classification (section 2.2). The literal kinds are integer
+/// (`INTEGER`, `BIGINT`, `HUGEINT`, `UHUGEINT`), decimal, double, string (`VARCHAR`) and `NULL`; a
+/// literal of any other type refuses `ConstructNotAdmitted`, naming the type -- the walk's own
+/// final, unconditional-refusal arm for a literal kind it cannot name (never reached by any
+/// construct this crate's `structural_admit` admits today, since every literal `walk_expr` already
+/// lets through parses to one of these five; kept for totality, the same discipline every other
+/// `match` in this module keeps).
+fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
+    let value = node.get("value").ok_or_else(|| missing_field("CONSTANT.value"))?;
+    if value.get("is_null").and_then(Value::as_bool).unwrap_or(false) {
+        return Ok(Typed {
+            ty: EngineType::Null,
+            kind: OperandKind::Literal,
+            within_bounds: true,
+            literal_int_value: None,
+        });
+    }
+    let ty = value.get("type").ok_or_else(|| missing_field("CONSTANT.value.type"))?;
+    let id = ty.get("id").and_then(Value::as_str).unwrap_or("");
+    match id {
+        "INTEGER" | "BIGINT" | "HUGEINT" | "UHUGEINT" => {
+            let v = integer_literal_value(id, value.get("value"))?;
+            let digits = v.unsigned_abs().to_string().len() as u32;
+            let engine_ty = match id {
+                "INTEGER" => EngineType::Integer,
+                "BIGINT" => EngineType::BigInt,
+                "HUGEINT" => EngineType::HugeInt,
+                _ => EngineType::UHugeInt,
+            };
+            Ok(Typed {
+                ty: engine_ty,
+                kind: OperandKind::Literal,
+                within_bounds: digits <= MAX_INTEGER_LITERAL_DIGITS,
+                literal_int_value: Some(v),
+            })
+        }
+        "DECIMAL" => {
+            let info = ty
+                .get("type_info")
+                .ok_or_else(|| missing_field("CONSTANT.value.type.type_info"))?;
+            let width = info.get("width").and_then(Value::as_u64).unwrap_or(0) as u32;
+            let scale = info.get("scale").and_then(Value::as_u64).unwrap_or(0) as u32;
+            let integer_digits = width.saturating_sub(scale);
+            Ok(Typed {
+                ty: EngineType::Decimal(width, scale),
+                kind: OperandKind::Literal,
+                within_bounds: scale <= MAX_DECIMAL_LITERAL_SCALE
+                    && integer_digits <= MAX_INTEGER_LITERAL_DIGITS,
+                literal_int_value: None,
+            })
+        }
+        "DOUBLE" => Ok(Typed {
+            ty: EngineType::Double,
+            kind: OperandKind::Literal,
+            within_bounds: true,
+            literal_int_value: None,
+        }),
+        "VARCHAR" => Ok(Typed {
+            ty: EngineType::Varchar,
+            kind: OperandKind::Literal,
+            within_bounds: true,
+            literal_int_value: None,
+        }),
+        other => Err(FilterError::ConstructNotAdmitted {
+            construct: format!("a literal of type `{other}`"),
+        }),
+    }
+}
+
+/// The type of a value-producing node: a `CONSTANT`, a `COLUMN_REF`, or an admitted arithmetic
+/// `FUNCTION` (`+`, `-`, `*`, `/`). Anything else refuses `ConstructNotAdmitted` -- the walk's own
+/// final arm, unreachable through any text `structural_admit` admits today (B-T10 proves it over a
+/// constructed node, the `an_unrecognized_select_node_key_is_refused_rather_than_silently_passed`
+/// pattern).
+fn type_of_value(
+    node: &Value,
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<Typed, FilterError> {
+    let class = node.get("class").and_then(Value::as_str).unwrap_or("");
+    match class {
+        "CONSTANT" => literal_typed(node),
+        "COLUMN_REF" => {
+            let names = node
+                .get("column_names")
+                .and_then(Value::as_array)
+                .ok_or_else(|| missing_field("COLUMN_REF.column_names"))?;
+            let name = names
+                .first()
+                .and_then(Value::as_str)
+                .ok_or_else(|| missing_field("COLUMN_REF.column_names[0]"))?;
+            // Unreachable in practice: `namespace_admit` already refused any name absent from the
+            // namespace before stage 3 ever runs.
+            let surrogate = namespace
+                .get(name)
+                .copied()
+                .ok_or_else(|| FilterError::UnknownColumn { column: name.to_string() })?;
+            Ok(Typed::column(engine_type_of_surrogate(surrogate)))
+        }
+        "FUNCTION" => {
+            let name = node.get("function_name").and_then(Value::as_str).unwrap_or("");
+            let children = expect_children(node)?;
+            if name == "/" {
+                type_of_division(children, namespace)
+            } else if ADMITTED_ARITHMETIC_FUNCTIONS.contains(&name) {
+                type_of_arithmetic(name, children, namespace)
+            } else {
+                Err(FilterError::ConstructNotAdmitted {
+                    construct: format!("a function call (`{name}`)"),
+                })
+            }
+        }
+        other => Err(FilterError::ConstructNotAdmitted {
+            construct: format!("an untyped node class `{other}` in a value position"),
+        }),
+    }
+}
+
+/// `/`'s own admission and result type (section 2.5(c), replaced by section 10 Amendment 1 under
+/// O-1). Admitted for any two numeric-or-NULL operands, section 7's literal bounds **not**
+/// applied. Divides in the float type the binder chooses: `REAL` when one operand is REAL-typed
+/// and none is DOUBLE-typed or a double literal (F6), `DOUBLE` otherwise.
+fn type_of_division(
+    children: &[Value],
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<Typed, FilterError> {
+    if children.len() != 2 {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: format!("`/` with {} operand(s)", children.len()),
+        });
+    }
+    let left = type_of_value(&children[0], namespace)?;
+    let right = type_of_value(&children[1], namespace)?;
+    let is_varchar = |t: &Typed| t.ty == EngineType::Varchar;
+    let is_boolean = |t: &Typed| t.ty == EngineType::Boolean;
+    if is_varchar(&left) || is_varchar(&right) || is_boolean(&left) || is_boolean(&right) {
+        let reason = determine_reason(&left, &right, false);
+        return Err(FilterError::TypeNotAdmitted {
+            construct: "/".to_string(),
+            operand_types: vec![left.render(), right.render()],
+            reason,
+        });
+    }
+    let has_real = matches!(left.ty, EngineType::Real) || matches!(right.ty, EngineType::Real);
+    let has_double = matches!(left.ty, EngineType::Double) || matches!(right.ty, EngineType::Double);
+    let ty = if has_real && !has_double { EngineType::Real } else { EngineType::Double };
+    Ok(Typed::expression(ty))
+}
+
+/// `+`, `-`, `*`'s own admission and result type (section 2.5(a)). Unary `-` (one child) is
+/// admitted for any numeric operand, with the operand's own type (section 2.5(b)).
+fn type_of_arithmetic(
+    op: &str,
+    children: &[Value],
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<Typed, FilterError> {
+    if children.len() == 1 {
+        let operand = type_of_value(&children[0], namespace)?;
+        if is_numeric(&operand) {
+            return Ok(Typed { kind: OperandKind::Expression, ..operand });
+        }
+        let reason = determine_reason(&operand, &numeric_virtual(), false);
+        return Err(FilterError::TypeNotAdmitted {
+            construct: op.to_string(),
+            operand_types: vec![operand.render()],
+            reason,
+        });
+    }
+    let left = type_of_value(&children[0], namespace)?;
+    let right = type_of_value(&children[1], namespace)?;
+    match admitted_arithmetic_result(&left, &right) {
+        Some(ty) => Ok(Typed::expression(ty)),
+        None => {
+            let is_arith_decimal = is_decimal_arithmetic_pair(&left, &right);
+            let reason = determine_reason(&left, &right, is_arith_decimal);
+            Err(FilterError::TypeNotAdmitted {
+                construct: op.to_string(),
+                operand_types: vec![left.render(), right.render()],
+                reason,
+            })
+        }
+    }
+}
+
+/// Does `+`/`-`/`*` admit this pair (section 2.5(a), applying section 2.3's rules pairwise), and
+/// if so, its result type? `None` covers both "refused" and "not this arm's job" uniformly -- a
+/// decimal literal beside an integer or a decimal is refused outright (O-5) and never reaches any
+/// branch below, because none of them ever classifies a `Decimal` operand as admitted.
+fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
+    let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
+    let is_float_col = |t: &Typed| {
+        matches!(t.ty, EngineType::Real | EngineType::Double) && t.kind != OperandKind::Literal
+    };
+    let is_numeric_lit = |t: &Typed| {
+        t.kind == OperandKind::Literal
+            && t.within_bounds
+            && (int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
+    };
+    let is_double_lit = |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
+    let int_le = |t: &Typed, bits: u32| {
+        t.kind != OperandKind::Literal
+            && is_int(t)
+            && int_bits_signed(&t.ty).map(|(b, _)| b <= bits).unwrap_or(false)
+    };
+
+    // rule 3: integer with integer.
+    if is_int(l) && is_int(r) {
+        return Some(fold_or_promote_integer(l, r));
+    }
+    // rule 6: float with a literal within bounds.
+    if is_float_col(l) && is_numeric_lit(r) {
+        return Some(l.ty.clone());
+    }
+    if is_float_col(r) && is_numeric_lit(l) {
+        return Some(r.ty.clone());
+    }
+    // rule 7: float with an integer (column or expression), bit-width-limited; REAL against DOUBLE.
+    if matches!(l.ty, EngineType::Real) && is_float_col(l) && int_le(r, 16) {
+        return Some(EngineType::Real);
+    }
+    if matches!(r.ty, EngineType::Real) && is_float_col(r) && int_le(l, 16) {
+        return Some(EngineType::Real);
+    }
+    if matches!(l.ty, EngineType::Double) && is_float_col(l) && int_le(r, 32) {
+        return Some(EngineType::Double);
+    }
+    if matches!(r.ty, EngineType::Double) && is_float_col(r) && int_le(l, 32) {
+        return Some(EngineType::Double);
+    }
+    if matches!(l.ty, EngineType::Real)
+        && is_float_col(l)
+        && matches!(r.ty, EngineType::Double)
+        && is_float_col(r)
+    {
+        return Some(EngineType::Double);
+    }
+    if matches!(r.ty, EngineType::Real)
+        && is_float_col(r)
+        && matches!(l.ty, EngineType::Double)
+        && is_float_col(l)
+    {
+        return Some(EngineType::Double);
+    }
+    // rule 5: a double literal with an integer of at most 32 bits (column or expression).
+    if is_double_lit(l) && int_le(r, 32) {
+        return Some(EngineType::Double);
+    }
+    if is_double_lit(r) && int_le(l, 32) {
+        return Some(EngineType::Double);
+    }
+    None
+}
+
+/// Whether this pair is exactly section 2.5(a)'s named decimal-arithmetic refusal: a decimal
+/// literal beside an integer or a decimal (O-5) -- the one case [`determine_reason`] resolves to
+/// `ConversionCanFail` rather than `ConversionRounds`.
+fn is_decimal_arithmetic_pair(l: &Typed, r: &Typed) -> bool {
+    let is_decimal = |t: &Typed| matches!(t.ty, EngineType::Decimal(..));
+    let is_int_or_decimal = |t: &Typed| int_bits_signed(&t.ty).is_some() || is_decimal(t);
+    (is_decimal(l) && is_int_or_decimal(r)) || (is_decimal(r) && is_int_or_decimal(l))
+}
+
+/// Does this pair satisfy comparison rules 1-7 (section 2.3, "=", "<>", "<", "<=", ">", ">=",
+/// `IS [NOT] DISTINCT FROM`, a `BETWEEN` input against each bound, an `IN` needle against each
+/// member)? The first rule that matches admits the pair.
+fn is_admitted_comparison(l: &Typed, r: &Typed) -> bool {
+    // rule 1: identical types.
+    if l.ty == r.ty {
+        return true;
+    }
+    // rule 2: a NULL literal on either side.
+    if l.ty == EngineType::Null || r.ty == EngineType::Null {
+        return true;
+    }
+
+    let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
+    let is_int_literal = |t: &Typed| is_int(t) && t.kind == OperandKind::Literal;
+    let is_decimal_literal =
+        |t: &Typed| matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal && t.within_bounds;
+    let is_double_literal = |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
+    let is_numeric_literal_within_bounds = |t: &Typed| {
+        t.kind == OperandKind::Literal
+            && t.within_bounds
+            && (int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
+    };
+    let is_float_nonliteral =
+        |t: &Typed| matches!(t.ty, EngineType::Real | EngineType::Double) && t.kind != OperandKind::Literal;
+    let int_le = |t: &Typed, bits: u32| {
+        t.kind != OperandKind::Literal
+            && is_int(t)
+            && int_bits_signed(&t.ty).map(|(b, _)| b <= bits).unwrap_or(false)
+    };
+
+    // rule 3: integer against integer -- always representable via HUGEINT at worst (section 7's
+    // bounds exist precisely to guarantee this over this engine's closed type universe).
+    if is_int(l) && is_int(r) {
+        return true;
+    }
+    // rule 4.
+    if (is_int(l) && is_decimal_literal(r)) || (is_int(r) && is_decimal_literal(l)) {
+        return true;
+    }
+    if is_decimal_literal(l) && is_decimal_literal(r) {
+        return true;
+    }
+    // rule 5.
+    if (is_double_literal(l) && int_le(r, 32)) || (is_double_literal(r) && int_le(l, 32)) {
+        return true;
+    }
+    // rule 6(i): float against a numeric literal within bounds, or against a double literal.
+    if (is_float_nonliteral(l) && is_numeric_literal_within_bounds(r))
+        || (is_float_nonliteral(r) && is_numeric_literal_within_bounds(l))
+    {
+        return true;
+    }
+    // rule 6(ii): a double literal against an integer or decimal literal within bounds.
+    if (is_double_literal(l) && (is_int_literal(r) || is_decimal_literal(r)))
+        || (is_double_literal(r) && (is_int_literal(l) || is_decimal_literal(l)))
+    {
+        return true;
+    }
+    // rule 7.
+    if (matches!(l.ty, EngineType::Real) && is_float_nonliteral(l) && int_le(r, 16))
+        || (matches!(r.ty, EngineType::Real) && is_float_nonliteral(r) && int_le(l, 16))
+    {
+        return true;
+    }
+    if (matches!(l.ty, EngineType::Double) && is_float_nonliteral(l) && int_le(r, 32))
+        || (matches!(r.ty, EngineType::Double) && is_float_nonliteral(r) && int_le(l, 32))
+    {
+        return true;
+    }
+    if matches!(l.ty, EngineType::Real)
+        && is_float_nonliteral(l)
+        && matches!(r.ty, EngineType::Double)
+        && is_float_nonliteral(r)
+    {
+        return true;
+    }
+    if matches!(r.ty, EngineType::Real)
+        && is_float_nonliteral(r)
+        && matches!(l.ty, EngineType::Double)
+        && is_float_nonliteral(l)
+    {
+        return true;
+    }
+    false
+}
+
+/// The reason a refused pair (or a refused single junction operand, against a virtual BOOLEAN or
+/// numeric partner) is refused -- section 2.6's precedence, as amended by section 10 Amendment 1.
+fn determine_reason(l: &Typed, r: &Typed, is_arithmetic: bool) -> TypeRefusalReason {
+    let is_varchar = |t: &Typed| t.ty == EngineType::Varchar;
+    let is_null = |t: &Typed| t.ty == EngineType::Null;
+    let is_boolean = |t: &Typed| t.ty == EngineType::Boolean;
+
+    if (is_varchar(l) && !is_varchar(r) && !is_null(r)) || (is_varchar(r) && !is_varchar(l) && !is_null(l)) {
+        return TypeRefusalReason::TextWithNonText;
+    }
+    if (is_boolean(l) && !is_boolean(r) && !is_null(r)) || (is_boolean(r) && !is_boolean(l) && !is_null(l)) {
+        return TypeRefusalReason::BooleanConversion;
+    }
+    if !l.within_bounds || !r.within_bounds {
+        return TypeRefusalReason::LiteralOutOfBounds;
+    }
+    if is_arithmetic && is_decimal_arithmetic_pair(l, r) {
+        return TypeRefusalReason::ConversionCanFail;
+    }
+    TypeRefusalReason::ConversionRounds
+}
+
+fn comparison_construct_name(cmp_type: &str) -> &'static str {
+    match cmp_type {
+        "COMPARE_EQUAL" => "=",
+        "COMPARE_NOTEQUAL" => "<>",
+        "COMPARE_LESSTHAN" => "<",
+        "COMPARE_LESSTHANOREQUALTO" => "<=",
+        "COMPARE_GREATERTHAN" => ">",
+        "COMPARE_GREATERTHANOREQUALTO" => ">=",
+        "COMPARE_DISTINCT_FROM" => "IS DISTINCT FROM",
+        "COMPARE_NOT_DISTINCT_FROM" => "IS NOT DISTINCT FROM",
+        // Unreachable: `walk_expr`'s own COMPARISON arm admits every `COMPARE_*` type uniformly,
+        // and this list is every one `json_serialize_sql` produces for a binary comparison operator
+        // (measured while building this module). Kept total rather than panicking.
+        _ => "?",
+    }
+}
+
+fn check_pair(construct: &str, l: &Typed, r: &Typed, is_arithmetic: bool) -> Result<(), FilterError> {
+    let admitted =
+        if is_arithmetic { admitted_arithmetic_result(l, r).is_some() } else { is_admitted_comparison(l, r) };
+    if admitted {
+        return Ok(());
+    }
+    let reason = determine_reason(l, r, is_arithmetic);
+    Err(FilterError::TypeNotAdmitted {
+        construct: construct.to_string(),
+        operand_types: vec![l.render(), r.render()],
+        reason,
+    })
+}
+
+fn check_comparison(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+    let cmp_type = node.get("type").and_then(Value::as_str).unwrap_or("");
+    let construct = comparison_construct_name(cmp_type);
+    let left_node = node.get("left").ok_or_else(|| missing_field("COMPARISON.left"))?;
+    let right_node = node.get("right").ok_or_else(|| missing_field("COMPARISON.right"))?;
+    let left = type_of_value(left_node, namespace)?;
+    let right = type_of_value(right_node, namespace)?;
+    check_pair(construct, &left, &right, false)
+}
+
+fn check_between(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+    let input = node.get("input").ok_or_else(|| missing_field("BETWEEN.input"))?;
+    let lower = node.get("lower").ok_or_else(|| missing_field("BETWEEN.lower"))?;
+    let upper = node.get("upper").ok_or_else(|| missing_field("BETWEEN.upper"))?;
+    let ti = type_of_value(input, namespace)?;
+    let tl = type_of_value(lower, namespace)?;
+    check_pair("BETWEEN", &ti, &tl, false)?;
+    let tu = type_of_value(upper, namespace)?;
+    check_pair("BETWEEN", &ti, &tu, false)
+}
+
+fn check_in(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+    let children = expect_children(node)?;
+    let needle_node = children.first().ok_or_else(|| missing_field("COMPARE_IN.children[0]"))?;
+    let needle = type_of_value(needle_node, namespace)?;
+    for member in &children[1..] {
+        let tm = type_of_value(member, namespace)?;
+        check_pair("IN", &needle, &tm, false)?;
+    }
+    Ok(())
+}
+
+fn check_pattern(
+    function_name: &str,
+    children: &[Value],
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
+    let construct = if function_name == "~~*" { "ILIKE" } else { "LIKE" };
+    if children.len() != 2 {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: format!("`{construct}` with {} operand(s)", children.len()),
+        });
+    }
+    let operand = type_of_value(&children[0], namespace)?;
+    let pattern = type_of_value(&children[1], namespace)?;
+    let operand_ok = operand.ty == EngineType::Varchar;
+    let pattern_ok = pattern.ty == EngineType::Varchar || pattern.ty == EngineType::Null;
+    if operand_ok && pattern_ok {
+        return Ok(());
+    }
+    // section 2.4: "the operand is VARCHAR, and the pattern is a VARCHAR or NULL literal. Anything
+    // else refuses text_with_non_text." Today the binder refuses this first (structural admission
+    // -- the second operand of `~~`/`~~*` must already be a `CONSTANT`), so this arm is what makes
+    // the walk total rather than what fires live.
+    Err(FilterError::TypeNotAdmitted {
+        construct: construct.to_string(),
+        operand_types: vec![operand.render(), pattern.render()],
+        reason: TypeRefusalReason::TextWithNonText,
+    })
+}
+
+fn require_boolean_or_null(t: &Typed, construct: &'static str) -> Result<(), FilterError> {
+    if t.ty == EngineType::Boolean || t.ty == EngineType::Null {
+        return Ok(());
+    }
+    let reason = determine_reason(t, &boolean_virtual(), false);
+    Err(FilterError::TypeNotAdmitted {
+        construct: construct.to_string(),
+        operand_types: vec![t.render()],
+        reason,
+    })
+}
+
+/// Every child of an `AND`/`OR`/`NOT` (or the walk's own top-level implicit `AND` -- real
+/// composition is always `(<predicate>) AND <bbox>`, so every top-level operand is exactly one of
+/// that outer `AND`'s own children) must independently be BOOLEAN-typed or a NULL literal
+/// (section 2.4), on pain of `boolean_conversion` (or a higher-precedence reason, section 2.6).
+fn check_junction_children(
+    children: &[Value],
+    construct: &'static str,
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
+    for child in children {
+        check_boolean_operand(child, construct, namespace)?;
+    }
+    Ok(())
+}
+
+/// Dispatch one operand of a boolean context (the top-level implicit `AND`, or a real `AND`/`OR`):
+/// a construct that is inherently boolean-shaped (a comparison, `BETWEEN`, `IN`, `NOT`,
+/// `IS [NOT] NULL`, a nested `AND`/`OR`, `LIKE`/`ILIKE`) is walked on its own terms; anything else
+/// (a bare column, literal, or arithmetic expression) is typed and must be BOOLEAN or NULL.
+fn check_boolean_operand(
+    node: &Value,
+    construct: &'static str,
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
+    let class = node.get("class").and_then(Value::as_str).unwrap_or("");
+    match class {
+        "COMPARISON" => check_comparison(node, namespace),
+        "BETWEEN" => check_between(node, namespace),
+        "CONJUNCTION" => {
+            let inner = if node.get("type").and_then(Value::as_str) == Some("CONJUNCTION_OR") {
+                "OR"
+            } else {
+                "AND"
+            };
+            check_junction_children(expect_children(node)?, inner, namespace)
+        }
+        "OPERATOR" => {
+            let op_type = node.get("type").and_then(Value::as_str).unwrap_or("");
+            match op_type {
+                "OPERATOR_NOT" => check_junction_children(expect_children(node)?, "NOT", namespace),
+                "OPERATOR_IS_NULL" | "OPERATOR_IS_NOT_NULL" => {
+                    // section 2.4: "any typed operand, with no rule" -- still walked, so an inner
+                    // problem (a mistyped nested arithmetic expression) still surfaces, but the
+                    // operand's own type is never itself checked.
+                    let children = expect_children(node)?;
+                    let operand = children.first().ok_or_else(|| missing_field("OPERATOR.children[0]"))?;
+                    type_of_value(operand, namespace).map(|_| ())
+                }
+                "COMPARE_IN" => check_in(node, namespace),
+                _ => Ok(()),
+            }
+        }
+        "FUNCTION" => {
+            let name = node.get("function_name").and_then(Value::as_str).unwrap_or("");
+            if ADMITTED_PATTERN_FUNCTIONS.contains(&name) {
+                check_pattern(name, expect_children(node)?, namespace)
+            } else {
+                let typed = type_of_value(node, namespace)?;
+                require_boolean_or_null(&typed, construct)
+            }
+        }
+        _ => {
+            let typed = type_of_value(node, namespace)?;
+            require_boolean_or_null(&typed, construct)
+        }
+    }
+}
+
+/// The type walk (section 2), run once per [`AdmittedPredicate::admit`] call, after
+/// [`bind_admit`] returns `Ok`, over `structural_admit`'s own parsed operand list -- the tree is
+/// parsed only once (section 2.2). Real composition is always `(<predicate>) AND <bbox>`, so every
+/// top-level operand is treated exactly as one child of that outer `AND` (section 2.4's own rule),
+/// which is what catches an implicit coercion `bind_admit`'s own BOOLEAN check misses today (for
+/// example `i32 AND flag`, whose *overall* inferred type is already BOOLEAN via DuckDB's own
+/// implicit int-to-bool cast inside `AND`).
+fn type_walk(operands: &[Value], namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+    check_junction_children(operands, "AND", namespace)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -1477,7 +2393,8 @@ mod tests {
     #[test]
     fn a_predicate_that_is_itself_a_top_level_and_chain_still_admits_with_every_column_collected() {
         match structural_admit("a = 1 AND b = 2 AND c = 3", &conn()) {
-            Ok(columns) => {
+            Ok(admission) => {
+                let columns = admission.columns;
                 for name in ["a", "b", "c"] {
                     assert!(columns.iter().any(|c| c == name), "missing {name} in {columns:?}");
                 }
@@ -1530,7 +2447,9 @@ mod tests {
     #[test]
     fn a_predicate_that_legitimately_ends_in_its_own_one_equals_one_still_admits() {
         match structural_admit("id > 3 AND 1=1", &conn()) {
-            Ok(columns) => assert!(columns.iter().any(|c| c == "id"), "missing id in {columns:?}"),
+            Ok(admission) => {
+                assert!(admission.columns.iter().any(|c| c == "id"), "missing id in {:?}", admission.columns)
+            }
             other => panic!("expected this benign predicate to admit, got {other:?}"),
         }
     }
@@ -1563,6 +2482,37 @@ mod tests {
                 assert!(construct.contains("a_future_clause_this_module_has_never_seen"), "{construct}");
             }
             other => panic!("expected ConstructNotAdmitted naming the unrecognized key, got {other:?}"),
+        }
+    }
+
+    /// B-T10 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 4). A node the type walk cannot
+    /// name (in a value position) is refused, never silently passed -- the same
+    /// `an_unrecognized_select_node_key_is_refused_rather_than_silently_passed` pattern, applied to
+    /// `type_of_value`'s own final arm, and to `literal_typed`'s own final arm for a literal type
+    /// section 2.2 does not name. Mutation: either final arm returns `Ok`. It fails by name.
+    #[test]
+    fn an_untyped_node_or_literal_type_is_refused_by_the_type_walk() {
+        let namespace: BTreeMap<String, &'static str> = BTreeMap::new();
+
+        let node = serde_json::json!({"class": "WINDOW"});
+        match type_of_value(&node, &namespace) {
+            Err(FilterError::ConstructNotAdmitted { construct }) => {
+                assert!(construct.contains("WINDOW"), "{construct}");
+            }
+            other => panic!("expected ConstructNotAdmitted naming the unrecognized class, got {other:?}"),
+        }
+
+        let literal = serde_json::json!({
+            "class": "CONSTANT",
+            "value": {"is_null": false, "type": {"id": "DATE", "type_info": null}, "value": 0}
+        });
+        match type_of_value(&literal, &namespace) {
+            Err(FilterError::ConstructNotAdmitted { construct }) => {
+                assert!(construct.contains("DATE"), "{construct}");
+            }
+            other => panic!(
+                "expected ConstructNotAdmitted naming the unrecognized literal type, got {other:?}"
+            ),
         }
     }
 }
