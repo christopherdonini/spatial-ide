@@ -2224,4 +2224,61 @@ mod tests {
         );
         assert_eq!(store.len(), 0, "no pending attempt may be stashed for a refused prepare");
     }
+
+    #[test]
+    fn an_execute_time_publish_refusal_carries_its_typed_code_and_a_permission_refusal_does_not() {
+        let _guard = env_lock();
+        let d = workspace("execute-typed-code");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+
+        let (grants, store, attempt_id, phrase) = prepared(&d, "cancelled");
+        let cancel = CancelToken::new();
+        cancel.cancel();
+        let outcome = execute_with_progress(&grants, &store, &attempt_id, &phrase, &cancel, None);
+        let ExecuteOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
+        assert_eq!(message, format!("publish.cancelled: {}", spatial_kernel::publish::PublishError::Cancelled));
+        assert!(!d.join("out-cancelled").exists(), "a cancelled publish leaves no destination");
+
+        let (grants, store, attempt_id, _phrase) = prepared(&d, "wrong-phrase");
+        let outcome = execute(&grants, &store, &attempt_id, "not the phrase");
+        let ExecuteOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
+        assert!(!message.starts_with("publish."), "a permission refusal stays untyped: {message}");
+    }
+
+    #[test]
+    fn a_pin_phase_engine_failure_refuses_as_publish_engine() {
+        let d = workspace("pin-phase-engine");
+        let ds = Arc::new(unpinned_fixture(&d));
+        std::fs::remove_file(d.join("parcels.parquet")).unwrap();
+        let expected = ds
+            .pin_content_observed(&CancelToken::new(), None)
+            .expect_err("the source is gone, so hashing must fail")
+            .to_string();
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let outcome = prepare_with_progress(
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-08-16T10:00:00Z".into(),
+            &CancelToken::new(),
+            None,
+        );
+        let PrepareOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
+        let rest = message
+            .strip_prefix("publish.engine: ")
+            .unwrap_or_else(|| panic!("no publish.engine prefix: {message}"));
+        assert_eq!(rest, expected);
+        assert!(!rest.starts_with("publish."));
+        assert!(ds.content_pin().is_none());
+        assert_eq!(store.len(), 0);
+    }
 }
