@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `412bc845b765e800983b07e3422515480e3e9b0facf5c535a1391e7dad32c8b2`) at `2026-09-30T08:20:15.770Z`.
+Generated from `PLAN.yaml` (sha256 `fd9e77cf21fdd18c9fe79e40444b7aa68b20a5f545323cd66c5b40032a54e1b2`) at `2026-09-30T08:24:32.387Z`.
 
 ## 1. Next
 
-- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) (lane `engine`, order 11, budget 90 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -42,7 +42,7 @@ Generated from `PLAN.yaml` (sha256 `412bc845b765e800983b07e3422515480e3e9b0facf5
 
 ## 5. In progress
 
-- (none)
+- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) — evidence: branch `cut/cancel-before-execute`
 
 ## 6. Proposed / unscheduled
 

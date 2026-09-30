@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-09-30T08:20:15.770Z",
-  "plan_hash": "412bc845b765e800983b07e3422515480e3e9b0facf5c535a1391e7dad32c8b2",
+  "generated_at": "2026-09-30T08:24:32.387Z",
+  "plan_hash": "fd9e77cf21fdd18c9fe79e40444b7aa68b20a5f545323cd66c5b40032a54e1b2",
   "priorities_approved": true,
-  "next": {
-    "id": "engine-cancel-before-stream-window",
-    "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 11,
-    "budget_minutes": 90,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-26",
-      "done": null
-    },
-    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings."
-  },
-  "ready": [
-    {
-      "id": "engine-cancel-before-stream-window",
-      "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 11,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -535,7 +497,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "engine-cancel-before-stream-window",
+      "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 11,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/cancel-before-execute"
+      },
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings.",
+      "evidence_label": "branch `cut/cancel-before-execute`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

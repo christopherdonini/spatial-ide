@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T08:20:15.882Z",
-  "plan_hash": "412bc845b765e800983b07e3422515480e3e9b0facf5c535a1391e7dad32c8b2",
+  "generated_at": "2026-09-30T08:24:32.500Z",
+  "plan_hash": "fd9e77cf21fdd18c9fe79e40444b7aa68b20a5f545323cd66c5b40032a54e1b2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4757,7 +4757,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 11,
       "depends_on": [],
       "needs_human": {
@@ -4765,7 +4765,9 @@
         "minutes": 0
       },
       "gate": "engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/cancel-before-execute"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,

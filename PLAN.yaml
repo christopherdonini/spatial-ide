@@ -2918,12 +2918,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 11
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/cancel-before-execute}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
