@@ -399,6 +399,18 @@ impl EngineSourceFactory {
     /// `sh_` a valid ticket handle starts with, so `StreamHandle::from_str` fails deterministically
     /// on it — asserted by `kernel/tests/skp_admission.rs` rather than left to be assumed. One
     /// process never installs both admission paths (ADR-019's own consequence).
+    ///
+    /// **Three steps, composed in order and by nothing else:** parse, then [`Self::liveness_refusal`],
+    /// then [`Self::redeem_or_liveness_refusal`]. The second reads the dead-ticket record once
+    /// before `redeem`; the third reads it again only when `redeem` refuses.
+    ///
+    /// **Why the second read is sound.** `SessionInvalidator::end_generation` records an end
+    /// (`GenerationRegistry::invalidate` writes the dead-ticket record) *before* it cancels that
+    /// end's tickets (`StreamRegistry::cancel`). A `redeem` refusal that such a cancel caused
+    /// therefore finds the record already written, and answers the record's code rather than
+    /// `redeem`'s cancelled wording. A refusal with no record (a close, a client cancel, an unknown
+    /// handle) keeps `redeem`'s own words. **`Live` and `Unknown` never become a diagnosis**:
+    /// neither is a by-name refusal at either read (`docs/01` principle 8).
     fn create_from_ticket(
         tickets: &Arc<skp::StreamRegistry>,
         generations: &Arc<skp::GenerationRegistry>,
@@ -409,24 +421,34 @@ impl EngineSourceFactory {
         let handle: spatial_skp::v0::StreamHandle = handle_str
             .parse()
             .map_err(|e: String| format!("not a ticket this producer minted: {e}"))?;
-        // **The kernel-authoritative dead-ticket refusal (P3b §2c), and the reason exactly one of
-        // the three arms refuses by name.** P3 attempt 2 wrote a two-valued guard, on a factory
-        // nothing ever constructed, that told a caller its source "was observed to have changed"
-        // for any handle the map did not know — expired, already redeemed, never minted. That is a
-        // diagnosis this kernel had not made (`docs/01` principle 8), and the human's ruling of
-        // 2026-09-16 (round 4) removed it rather than carrying it.
-        //
-        // `Unknown` therefore falls through and says whatever `redeem` says, which is a statement
-        // about a ticket and never about a file.
-        match generations.ticket_liveness(handle.as_str()) {
+        if let Some(refusal) = Self::liveness_refusal(generations, handle.as_str()) {
+            return Err(refusal);
+        }
+        Self::redeem_or_liveness_refusal(tickets, generations, handle.as_str())
+    }
+
+    /// Step 2 of `create_from_ticket`: the dead-ticket refusal, when this registry holds one.
+    ///
+    /// **The kernel-authoritative dead-ticket refusal (P3b §2c), and the reason exactly one of
+    /// the three arms refuses by name.** P3 attempt 2 wrote a two-valued guard, on a factory
+    /// nothing ever constructed, that told a caller its source "was observed to have changed"
+    /// for any handle the map did not know — expired, already redeemed, never minted. That is a
+    /// diagnosis this kernel had not made (`docs/01` principle 8), and the human's ruling of
+    /// 2026-09-16 (round 4) removed it rather than carrying it.
+    ///
+    /// `Live` and `Unknown` therefore return `None` and say nothing: the caller goes on to
+    /// `redeem`, which says whatever it says, a statement about a ticket and never about a file.
+    fn liveness_refusal(
+        generations: &Arc<skp::GenerationRegistry>,
+        handle: &str,
+    ) -> Option<String> {
+        match generations.ticket_liveness(handle) {
             skp::TicketLiveness::EndedBySourceChange => {
-                // The `"<code>: <display>"` shape `skp::terminal_detail_of` mints
-                // (`kernel/src/skp.rs:1136`), which the data
-                // plane sends as `TERM_PRODUCER_FAILED`
-                // (`protocol/data-plane/src/server.rs:388-401`) and the shell's **existing**
-                // `isSourceChangedTerminal` already matches
-                // (`frontends/shell/src/streaming/liveTicketSet.ts:52-54`). No new client code
-                // path, no new field, no new frame.
+                // The `"<code>: <display>"` shape `skp::terminal_detail_of` mints, which the data
+                // plane's START arm (`factory.create` in `protocol/data-plane/src/server.rs`) sends
+                // as `TERM_PRODUCER_FAILED` and the shell's **existing** `isSessionEndedTerminal`
+                // (`frontends/shell/src/streaming/liveTicketSet.ts`) already matches. No new
+                // client code path, no new field, no new frame.
                 //
                 // `detail` is the pre-check's own sentence, byte-identical
                 // (`kernel/src/skp.rs`'s `viewport_query`), and deliberately not a component list:
@@ -434,7 +456,7 @@ impl EngineSourceFactory {
                 // `{size, mtime, footer-length, footer-hash}` here would be a second fabrication of
                 // the same class. What R-D2 declares `detail` to be on the paths that DO read the
                 // file is a named open item (P3b's §10 amendment).
-                Err(skp::terminal_detail_of(&spatial_engine::EngineError::SourceChanged {
+                Some(skp::terminal_detail_of(&spatial_engine::EngineError::SourceChanged {
                     detail: "{this dataset's session ended when its source was observed to have \
                              changed}"
                         .to_string(),
@@ -445,16 +467,32 @@ impl EngineSourceFactory {
             // registry holds no descriptor and never read the file, so `detail` names the fact
             // this registry itself knows, not a fabricated component list.
             skp::TicketLiveness::EndedByCoverageLoss => {
-                Err(skp::terminal_detail_of(&spatial_engine::EngineError::SourceCoverageLost {
+                Some(skp::terminal_detail_of(&spatial_engine::EngineError::SourceCoverageLost {
                     detail: "{[P6 placeholder] this dataset's session ended when the advisory \
                              watch on its source lost coverage}"
                         .to_string(),
                 }))
             }
-            skp::TicketLiveness::Live | skp::TicketLiveness::Unknown => {
-                tickets.redeem(handle.as_str())
-            }
+            skp::TicketLiveness::Live | skp::TicketLiveness::Unknown => None,
         }
+    }
+
+    /// Step 3 of `create_from_ticket`: redeem the ticket; on a refusal, read the dead-ticket record
+    /// once more and answer its code when it holds one, `redeem`'s own words when it does not.
+    /// Neither call is made under a lock this function holds. The reasoning is in
+    /// `create_from_ticket`'s doc.
+    ///
+    /// The return type is `SourceFactory::create`'s, so the lint's alias would name a type nothing
+    /// else here shares.
+    #[allow(clippy::type_complexity)]
+    fn redeem_or_liveness_refusal(
+        tickets: &Arc<skp::StreamRegistry>,
+        generations: &Arc<skp::GenerationRegistry>,
+        handle: &str,
+    ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+        tickets
+            .redeem(handle)
+            .map_err(|refusal| Self::liveness_refusal(generations, handle).unwrap_or(refusal))
     }
 }
 

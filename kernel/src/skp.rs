@@ -616,10 +616,12 @@ impl GenerationRegistry {
     /// changed because it cannot find a ticket (`docs/01` principle 8; the attempt-2 defect the
     /// human's round-4 ruling removed, `engine/ADMISSION-PREREGISTRATION.md:742-744`).
     ///
-    /// **Its product caller is `EngineSourceFactory::create_from_ticket`**
-    /// (`kernel/src/lib.rs:390`), reached on every real START frame through
-    /// `SourceFactory::create` (`kernel/src/lib.rs:321-336`,
-    /// `protocol/data-plane/src/server.rs:384`). This is not an instrument: it acts.
+    /// **Its product caller is `EngineSourceFactory::liveness_refusal`**, which
+    /// `EngineSourceFactory::create_from_ticket` calls and which
+    /// `EngineSourceFactory::redeem_or_liveness_refusal` calls again on a refusal, reached on every
+    /// real START frame through `SourceFactory::create` (`EngineSourceFactory`'s impl, in
+    /// `kernel/src/lib.rs`) and START's `factory.create` arm in `protocol/data-plane/src/server.rs`.
+    /// This is not an instrument: it acts.
     pub fn ticket_liveness(&self, handle: &str) -> TicketLiveness {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
@@ -3650,5 +3652,166 @@ mod ticket_drop_under_lock_regression {
             st.closing.is_empty(),
             "forget_dataset clears the closing mark"
         );
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // `kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md` §4 — a generation end between
+    // `create_from_ticket`'s liveness step and its redeem step, in-crate beside the close races (§3
+    // there). The window is driven by the step split on the test's own thread: no sleep, no spawned
+    // thread and no timeout.
+
+    /// A real `open_dataset` (no watch armed) and a real `viewport_query` ticket, past the liveness
+    /// step: `EngineSourceFactory::liveness_refusal` returns `None` for it, as it does for every
+    /// live ticket. Returns the host, the file, the open and the ticket's handle string.
+    fn a_ticket_past_the_liveness_step(
+        tag: &str,
+    ) -> (SkpHost, std::path::PathBuf, OpenDatasetResponse, String) {
+        let path = fixture(tag);
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let open = open_through(&host, &path, tag);
+        let ticket = host
+            .viewport_query(unrestricted_query(open.dataset.clone()))
+            .expect("a real ticket")
+            .stream
+            .as_str()
+            .to_string();
+        assert_eq!(
+            crate::EngineSourceFactory::liveness_refusal(&host.generations(), &ticket),
+            None,
+            "the liveness step passes a live ticket, so the end below lands between the two steps"
+        );
+        (host, path, open, ticket)
+    }
+
+    /// Guards against a vacuous pass: the end under test really cancelled the ticket before the
+    /// redeem step runs, so `redeem` has a refusal to word.
+    fn assert_cancelled_before_redeem(host: &SkpHost, ticket: &str) {
+        let map = host
+            .tickets
+            .tickets
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        assert!(
+            matches!(
+                map.get(ticket),
+                Some(TicketState::CancelledBeforeRedeem { .. })
+            ),
+            "the ticket is CancelledBeforeRedeem before the redeem step runs"
+        );
+    }
+
+    /// The redeem step, run whole on this thread; its refusal.
+    fn the_redeem_step_refusal(host: &SkpHost, ticket: &str) -> String {
+        match crate::EngineSourceFactory::redeem_or_liveness_refusal(
+            &host.tickets(),
+            &host.generations(),
+            ticket,
+        ) {
+            Ok(_) => panic!("the redeem step redeemed a ticket that was cancelled before it"),
+            Err(refusal) => refusal,
+        }
+    }
+
+    /// `redeem`'s own answer for a ticket that stays `CancelledBeforeRedeem`: the wording a refusal
+    /// with no dead-ticket record keeps (ii).
+    fn redeems_own_wording(host: &SkpHost, ticket: &str) -> String {
+        match host.tickets().redeem(ticket) {
+            Ok(_) => panic!("a cancelled ticket redeemed"),
+            Err(own) => own,
+        }
+    }
+
+    /// R1 (S1). The product end: a second `viewport_query` refuses at the pre-check on a moved
+    /// mtime and ends the generation, `ObservedChange`, between the two steps.
+    ///
+    /// TEST-FIRST (P1): at the split commit, before the re-read, this test FAILS on its prefix
+    /// assertion (the detail is `redeem`'s cancelled wording).
+    ///
+    /// REGISTERED MUTATION: delete the re-read in `redeem_or_liveness_refusal` (return `r`).
+    #[test]
+    fn an_end_between_liveness_and_redeem_refuses_by_its_code() {
+        let (host, path, open, ticket) = a_ticket_past_the_liveness_step("r1-source-changed");
+
+        touch_modification_time(&path);
+        let refused = host
+            .viewport_query(unrestricted_query(open.dataset))
+            .expect_err("the pre-check refuses the moved source and ends the generation");
+        assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
+        assert_cancelled_before_redeem(&host, &ticket);
+
+        let detail = the_redeem_step_refusal(&host, &ticket);
+        assert!(detail.starts_with("engine.source_changed: "), "{detail}");
+    }
+
+    /// R2 (S2). A close ends nothing by name: `close_dataset` cancels the ticket and forgets the
+    /// dataset's dead-ticket record, so the refusal is `redeem`'s own.
+    ///
+    /// REGISTERED MUTATION: make the fallback in `redeem_or_liveness_refusal` return the
+    /// source-changed refusal for every `r`.
+    #[test]
+    fn a_close_between_liveness_and_redeem_keeps_redeems_wording() {
+        let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r2-close");
+
+        close(&host, open.dataset);
+        assert_cancelled_before_redeem(&host, &ticket);
+
+        let detail = the_redeem_step_refusal(&host, &ticket);
+        assert!(!detail.starts_with("engine."), "{detail}");
+        assert_eq!(detail, redeems_own_wording(&host, &ticket));
+    }
+
+    /// R3 (S3). The sink's call: `end_generation(name, CoverageLost)` between the two steps takes
+    /// its own code, never `engine.source_changed` (block-on-sight 7).
+    ///
+    /// TEST-FIRST (P1): at the split commit, before the re-read, this test FAILS on its prefix
+    /// assertion.
+    ///
+    /// REGISTERED MUTATION: in `liveness_refusal`, map `EndedByCoverageLoss` to the source-changed
+    /// refusal.
+    #[test]
+    fn a_coverage_loss_between_liveness_and_redeem_keeps_its_own_code() {
+        let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r3-coverage-lost");
+
+        host.invalidator
+            .end_generation(open.dataset.as_str(), SessionEndReason::CoverageLost);
+        assert_cancelled_before_redeem(&host, &ticket);
+
+        let detail = the_redeem_step_refusal(&host, &ticket);
+        assert!(
+            detail.starts_with("engine.source_coverage_lost: "),
+            "{detail}"
+        );
+        assert!(!detail.starts_with("engine.source_changed"), "{detail}");
+    }
+
+    /// R4 (S4). A client cancel ends no generation: the generation stays live, the ticket is
+    /// `CancelledBeforeRedeem`, and the refusal is `redeem`'s own.
+    ///
+    /// REGISTERED MUTATION: R2's.
+    #[test]
+    fn a_client_cancel_between_liveness_and_redeem_keeps_redeems_wording() {
+        let (host, _path, open, ticket) = a_ticket_past_the_liveness_step("r4-client-cancel");
+
+        host.cancel(CancelRequest {
+            skp: SKP_VERSION.to_string(),
+            handle: ticket.clone(),
+        })
+        .expect("cancel");
+        assert_cancelled_before_redeem(&host, &ticket);
+        assert!(
+            host.generations()
+                .live_generation(open.dataset.as_str())
+                .is_ok(),
+            "a client cancel leaves the generation live"
+        );
+
+        let detail = the_redeem_step_refusal(&host, &ticket);
+        assert!(!detail.starts_with("engine."), "{detail}");
+        assert_eq!(detail, redeems_own_wording(&host, &ticket));
     }
 }
