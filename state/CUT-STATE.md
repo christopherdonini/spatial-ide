@@ -1190,3 +1190,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The ready set is `engine-cancel-before-stream-window` alone. verify:plan passes, and the queue and site are regenerated.
   - **Wave 3 at 07:53Z.** W3-A pushed `cloud/wave3-A` at 8a2ba65 and was writing its second report. W3-B was still running the workspace suite and the src-tauri check. W3-C ended, and its report was copied raw; its page timestamp, 07:38:24Z, is now confirmed as the report's.
   - **Next.** Node 1: a short-form preregistration as its own commit, then a worker-high (concurrency and cancellation), then the gates. Wave 3 is checked at the watcher's wake-ups, without interrupting the piece.
+- 2026-09-30T08:15Z - **Node 1's preregistration is with the architect; wave 3's finished reports are filed verbatim, with triage waiting for the batch to end.**
+  - **Node 1** (`engine-cancel-before-stream-window`) touches a cancellation guarantee, so it takes the full form and full gating under §21a. The architect was dispatched at about 08:10Z to draft it: the governing clause, a sibling search over the other `cancel.attach` sites, the candidate fix shapes, P0, and the draft. The node stays `ready` in PLAN until its form is committed.
+  - **Wave 3.** Two sessions have ended. W3-C ended at 07:38:24Z. W3-A's second report, the result, is timestamped 07:54:23Z, and its branch `cloud/wave3-A` is at 8a2ba65. W3-B is still running: at about 08:10Z the src-tauri `cargo test` was compiling.
+    - Filed verbatim with LF line endings, each scanning clean: `state/cloud/wave3/W3-A-stop.md` (55 lines), `W3-A.md` (167) and `W3-C.md` (133).
+    - Each copy was taken with the message's own Copy action. The files record each copy's write time.
+    - Custodian fields are filled at triage.
