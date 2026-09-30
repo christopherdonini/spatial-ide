@@ -64,4 +64,7 @@ Either way, the wave can re-run unchanged. The worktree is still at /tmp/wave3-b
 
 ## Custodian fields (filled locally, never by the worker)
 
-(Filled at triage, after the batch ends.)
+Session ID: session_017msPRjkMFYd5Zn4FxukM4r   Model: Opus 5.5, Medium (as launched)   Launched/ended: 2026-09-30T07:22Z / this stop precedes the human's reply of 07:32:36Z, and the session continued to its result.
+Spend: not individually attributable. The batch's single delta is recorded in `state/cloud/wave3.md` (Fable on Deviation 1: one delta for the batch).
+
+**Disposition: a stop, not a result** (Fable on Deviation 1, `state/directives/2026-09-30-fable-wave3-deviation-1.md`). It carries no finding to triage. Its stop was correct, and its raw inventory is superseded by the classified hits of the session's result, `state/cloud/wave3/W3-A.md`.

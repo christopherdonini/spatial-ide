@@ -201,4 +201,19 @@ Confidence: proven
 
 ## Custodian fields (filled locally, never by the worker)
 
-(Filled at triage, after the batch ends.)
+Session ID: session_01DmBGvV5LCpMZepxrs5Rmb2   Model: Opus 5.5, Medium (as launched; the composer still showed Medium at the end)   Launched/ended: 2026-09-30T07:23:34Z / the report at 08:11:27Z. No commits.
+Spend: not individually attributable. The batch's single delta is recorded in `state/cloud/wave3.md` (Fable on Deviation 1: one delta for the batch).
+
+**Triage against main at 292f3f4.** `git diff --stat a023546 292f3f4` over `engine/src`, `kernel/src`, `protocol`, `renderer/bundle-viewer/src`, `frontends/shell/src` and `frontends/shell/src-tauri/src` is empty, so every item below is **still present**. Severities follow `state/cloud/wave1-prompts.md` §4; routing follows `state/cloud/wave3-prompts.md` §5 (W3-A's findings become proposed nodes or join port-2; nothing becomes a cut during the wave).
+
+**The catalogue.** On Linux at the baseline: the workspace 777 passed, 0 failed, 54 ignored; the shell frontend's 1,092 tests and the bundle viewer's 80 pass under npm 11.20.0 on Node 22.22.2 (not CI's Node 24); `frontends/shell/src-tauri` compiles and its 59 tests pass after four system packages. Every failure on the way was a build-environment gap. Linux-container evidence at L1 only (R5).
+
+**Finding WAVE3-1: DISCARD, S3, as a finding; carried as port-1 intake.** The unused-constant warning off Windows sits in a declared boundary file. It matters only if port-1's Linux job denies warnings.
+
+**Finding WAVE3-2: DISCARD, S3, as a finding; carried as port-1 intake.** The three bare `#[ignore]`s are all-platform ignores. R6's printed ignored list should show a reason for each.
+
+**Intake routed.**
+- port-1-linux-l1: the counts; the 14 off-Windows ignores, whose reasons name the mechanism rather than §2's boundary label (the custodian's call, left to port-1's preregistration); WAVE3-1 and WAVE3-2.
+- port-3-shell-l1: the four packages in the order found (`libgtk-3-dev`, `libsoup-3.0-dev`, `libjavascriptcoregtk-4.1-dev`, `libwebkit2gtk-4.1-dev`); the two debug targets' combined 26.8 GB, which exhausted the container's disk once; appindicator not needed for check or test; Node 24 not exercised.
+
+**Unproven observations.** All four are kept as intake to port-3 and port-4 (disk, Node 24, appindicator at L2, the off-Windows ignores under `--ignored`). None is a finding.

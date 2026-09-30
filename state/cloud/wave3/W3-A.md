@@ -176,4 +176,25 @@ The earlier stop (the lens file was missing at the baseline) was resolved by the
 
 ## Custodian fields (filled locally, never by the worker)
 
-(Filled at triage, after the batch ends.)
+Session ID: session_017msPRjkMFYd5Zn4FxukM4r   Model: Opus 5.5, Medium (as launched); after the human's message of 07:32:36Z the composer showed Extra (`state/cloud/wave3.md`, the Resolution beside Deviation 1), observed and not interpreted   Launched/ended: 2026-09-30T07:22Z / the result at 07:54:23Z; `cloud/wave3-A` @ 8a2ba65.
+Spend: not individually attributable. The batch's single delta is recorded in `state/cloud/wave3.md` (Fable on Deviation 1: one delta for the batch).
+
+**Triage against main at 292f3f4.** `git diff --stat a023546 292f3f4` over `engine/src`, `kernel/src`, `protocol`, `renderer/bundle-viewer/src`, `frontends/shell/src` and `frontends/shell/src-tauri/src` is empty, so every item below is **still present**. Severities follow `state/cloud/wave1-prompts.md` §4; routing follows `state/cloud/wave3-prompts.md` §5 (W3-A's findings become proposed nodes or join port-2; nothing becomes a cut during the wave). The custodian read each finding's code path at main: `kernel/src/permission/audit/normalize.rs:63-72`, `kernel/src/publish/viewer_assets.rs:120-127`, `kernel/src/bundle/redaction.rs:127-133` and `kernel/src/permission/audit/log.rs:366-377`; each convinces.
+
+**Finding A-1: RECORD, S2.** Proven on Linux by the worker's two reproducers on `cloud/wave3-A`. It is real and bounded: no product runs on Linux or macOS today (KNOWN-LIMITATIONS 1), and Windows is correct because `\` is a separator there. It is accidental coupling in shared logic under PORTABILITY R4, and becomes the proposed node `posix-backslash-in-shared-path-logic`. Reproduced locally (Windows): not applicable, the defect is POSIX-only.
+
+**Finding A-2: RECORD, S2, and sent to Fable for weighing.** A redaction property (`kernel/PERMISSION-BOUNDARY.md:293-295`) silently weakens off Windows, R1's own case. It is S2 because no product runs off Windows today. The case for S1, for Fable to weigh in the after-wave batch: it is a permission-boundary property, which wave 1 §4 lists under S1. It becomes the proposed node `redaction-hostname-off-windows`. Reproduced locally (Windows): not applicable, Windows always sets COMPUTERNAME.
+
+**Finding A-3: RECORD, S2, joins `port-2-macos-l1-and-app-dirs`** (the application-directory boundary, PORTABILITY §1c item 1) as intake for its preregistration: an empty or relative `XDG_DATA_HOME` is treated as the XDG rule says, never as a working-directory-relative path. Reproduced locally (Windows): not applicable, the Windows arm reads LOCALAPPDATA, which is always set.
+
+**§1c corrections.**
+- 1c-1 (a), the LOD tier root reading LOCALAPPDATA with no cfg: port-2 intake, beside A-3. 1c-1 (b) is A-3.
+- 1c-2 (a), case-insensitive Linux mounts: port-2 intake, for its case-policy test.
+- 1c-2 (b), the ASCII-only fold on Windows: **RECORD, S2, code-path-only.** The custodian read it at main: `component_eq` uses `eq_ignore_ascii_case` (`kernel/src/permission/audit/normalize.rs:177-186`), and `is_inside` uses `to_ascii_lowercase` (`kernel/src/permission/audit/log.rs:386-392`). A profile path that differs only in non-ASCII case could escape the `<user-home>` redaction on Windows, the supported platform. Neither the worker nor the custodian observed it, and whether the resolved destination already carries the on-disk case is not settled. It becomes the proposed node `windows-case-fold-non-ascii`.
+
+**Unproven observations.**
+1. DISCARD, S3: unexercised. EDQUOT and EPERM in the unix error tables are port-1 intake.
+2. DISCARD, S3: no confidentiality claim covers the audit log's POSIX mode. Noted for port-2.
+3. DISCARD, S3: unexercised. SIGTERM handling in `publish-bundle` is port-1 intake.
+4. RECORD as port-1 intake: two Windows-only test assertions are compiled out with `#[cfg(windows)]` rather than ignored, so R6's printed ignored list never shows them.
+5. DISCARD, S3: the asymmetry is declared in the redaction module's doc.

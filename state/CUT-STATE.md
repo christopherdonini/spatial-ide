@@ -1209,3 +1209,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The batch.** W3-B's final report is timestamped 08:11:27Z. W3-A's is 07:54:23Z and W3-C's is 07:38:24Z. All three sessions are idle.
   - **Next.** The human is asked for the "Cloud session credits" balance after the batch, as a plain question, to be recorded as one delta for the batch. Then triage per the prompts file's §5, and the lesson for the next wave's baseline rule. S1 candidates and W3-C's measurements go to Fable as one batch.
   - **Node 1's worker-high** is running on `cut/cancel-before-execute`.
+- 2026-09-30T08:55Z - **Wave 3 triaged (Fable on Deviation 1's items; `state/cloud/wave3-prompts.md` §5). The after-wave batch for Fable is drafted as `state/drafts/wave3-after-wave-batch.md`. The spend waits for the human's after-reading.**
+  - **Custodian fields** are filled in all four report files, against main at 292f3f4. No product code has changed since the baseline. The custodian read the code path of each W3-A finding, and each convinces.
+  - **No S1 candidate.** A-2, the redaction hostname being invisible off Windows, is RECORD S2 and sent to Fable for weighing.
+  - **Proposed nodes (unplaced):** `posix-backslash-in-shared-path-logic` (A-1), `redaction-hostname-off-windows` (A-2), and `windows-case-fold-non-ascii`. The last is W3-A's §1c-2 correction (b), which the custodian read at main: the Windows fold is ASCII-only. It is code-path-only, and the one item that touches Windows.
+  - **Port intake.** A-3 goes to port-2. W3-B's counts, WAVE3-1 and WAVE3-2 go to port-1, and the package list and disk figure to port-3. Each is appended to the node's summary.
+  - **The lesson** for the next wave's baseline rule is recorded in `state/cloud/wave3.md`, with a pre-launch `git cat-file -e` check on every path a prompt names.
+  - **Mechanics note.** `site.mjs` refused the first title of `windows-case-fold-non-ascii`, because its METRIC pattern reads "3 sec" in "wave-3 section". The title was reworded.

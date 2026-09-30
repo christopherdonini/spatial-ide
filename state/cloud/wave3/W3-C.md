@@ -142,4 +142,7 @@ Reproduced locally (Windows):
 
 ## Custodian fields (filled locally, never by the worker)
 
-(Filled at triage, after the batch ends.)
+Session ID: session_01BrZYKUFM4c4oVeA27A2Yrd   Model: Opus 5.5, Medium (as launched)   Launched/ended: 2026-09-30T07:25:36Z / the report at 07:38:24Z; `cloud/wave3-C` @ 7b30259 (probe sources and raw outputs under `spikes/wave3-prepare-linux/`; nothing from it merges).
+Spend: not individually attributable. The batch's single delta is recorded in `state/cloud/wave3.md` (Fable on Deviation 1: one delta for the batch).
+
+**Findings: 0**, as a measurement task. **Disposition:** the measurements (probes 1 to 4) and the five unproven observations go to Fable in the after-wave batch, as input to B2's preregistration (PORTABILITY §4). They are observations on this kernel and these filesystems only, and nothing becomes a cut. Reproduced locally (Windows): not applicable.

@@ -2688,6 +2688,60 @@ nodes:
     summary: "Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it."
     dates: {opened: 2026-09-30, done: null}
 
+  - id: posix-backslash-in-shared-path-logic
+    title: "Shared path logic stops treating a backslash as a separator on POSIX: distinct audit destinations stay distinct, and a viewer asset named with a backslash is refused, not renamed (wave-3 A-1, S2)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-3 finding A-1, RECORD S2 (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux by the reproducers on cloud/wave3-A (8a2ba65, kernel/tests/wave3_a_portability_audit.rs): kernel/src/permission/audit/normalize.rs rewrites every backslash to a slash on every OS, so two different POSIX destinations are recorded as one audit string; kernel/src/publish/viewer_assets.rs rewrites a walked file name the same way before validate_relative_path can refuse the backslash. The same pattern at the audit log's is_inside (a false refusal only) and the redaction scan's file label (display only). PORTABILITY R1 and R4. Windows is correct. Proposed, not placed."
+    dates: {opened: 2026-09-30, done: null}
+
+  - id: redaction-hostname-off-windows
+    title: "The redaction scan knows the machine's hostname off Windows, so machine-identifier findings reach an audit record's residual_classes there too (wave-3 A-2, S2, sent to Fable for weighing)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Wave-3 finding A-2, RECORD S2 and sent to Fable for weighing in the after-wave batch (state/cloud/wave3/W3-A.md, custodian fields), proven on Linux: MachineIdentifiers::from_environment reads only COMPUTERNAME and HOSTNAME (kernel/src/bundle/redaction.rs), and default Linux shells do not export HOSTNAME, so the property kernel/PERMISSION-BOUNDARY.md states for machine-identifier findings silently weakens off Windows (PORTABILITY R1). The fix puts the hostname behind a named boundary (R2); any new dependency is a decision for its form. Windows always sets COMPUTERNAME. Proposed, not placed."
+    dates: {opened: 2026-09-30, done: null}
+
+  - id: windows-case-fold-non-ascii
+    title: "The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "From wave 3's W3-A (section 1c-2 correction (b)), RECORD S2, code-path-only (state/cloud/wave3/W3-A.md, custodian fields): on Windows, component_eq in kernel/src/permission/audit/normalize.rs uses eq_ignore_ascii_case and is_inside in kernel/src/permission/audit/log.rs uses to_ascii_lowercase, while NTFS also folds non-ASCII letters. Neither the worker nor the custodian observed an escape, and whether the resolved destination already carries the on-disk case is not settled: the form's first step settles it. Windows is the supported platform. Proposed, not placed."
+    dates: {opened: 2026-09-30, done: null}
+
   - id: verify-cites-test-temp-dirs
     title: "verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c))"
     kind: task
@@ -3252,7 +3306,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 32 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency."
+    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 32 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3)."
     dates: {opened: 2026-09-30, done: null}
 
   - id: port-2-macos-l1-and-app-dirs
@@ -3270,7 +3324,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency."
+    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2)."
     dates: {opened: 2026-09-30, done: null}
 
   - id: port-3-shell-l1
@@ -3288,7 +3342,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-3 waits for the shell migration's first merged milestone. Needs the CI system-packages decision for WebKitGTK in the Linux runner (section 7, item 3)."
+    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-3 waits for the shell migration's first merged milestone. Needs the CI system-packages decision for WebKitGTK in the Linux runner (section 7, item 3). Wave-3 intake (state/cloud/wave3/W3-B.md, custodian fields): src-tauri compiled and its 59 tests passed on Ubuntu 24.04 after four packages, in the order found: libgtk-3-dev, libsoup-3.0-dev, libjavascriptcoregtk-4.1-dev, libwebkit2gtk-4.1-dev; appindicator was not needed for check or test; the two debug targets took 26.8 GB and exhausted the container's disk once; Node 24 was not exercised."
     dates: {opened: 2026-09-30, done: null}
 
   - id: port-4-l2-smoke
