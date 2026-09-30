@@ -1220,3 +1220,19 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The ledger.** `state/cloud/wave3.md` carries the after-reading, the $10 delta and the wave's total. `state/drafts/wave3-after-wave-batch.md` section 4 carries the spend. The batch is ready for the human to relay to Fable.
   - **A correction.** Four ledger headings of this session were stamped ahead of their commits: 08:15Z (efc3c29 landed at 08:12:27Z), 08:35Z (c6f61f5, 08:23:18Z), 08:40Z (c5e25ec, 08:25:31Z) and 08:55Z (0b0eae5, 08:44:04Z). They now read 08:12Z, 08:23Z, 08:25Z and 08:44Z. The architect consult's delivery time is corrected the same way.
   - **Cause and practice.** The stamps were estimated, not read. From here, each stamp is taken from `date -u` when the entry is written.
+- 2026-09-30T10:38Z - **Node 1's worker reported; the branch was formatted and the P0 record amended onto the form; the PR is next.**
+  - **The interruption.** The worker-high's first run ended on an expired login. The human re-logged in, and the custodian found the worktree clean at fb98e43, unpushed, with no process left. The same agent was resumed with its context, re-ran every check, and pushed.
+    - The report is filed verbatim as `state/consults/2026-09-30-cancel-before-execute-worker-report-1.md`.
+    - The worker reports its model as Sonnet 5.5 after the resume and Sonnet 5 before it, with no override.
+  - **Results.**
+    - P0-1 returned `Ok` at a6f5310, alone before any product change, as predicted.
+    - P0-2: four functions clear the flag in the locked DuckDB (`duckdb.tar.gz` sha256 e11f1209...), and H1 holds.
+    - T2 to T5 pass, and all five mutations were observed failing by name.
+    - Checks: spatial-engine passes with and without `--features fixture` (383/0/12), spatial-kernel passes (305/0/28), and the scripts suite passes.
+    - The custodian re-verified the push, a6f5310's single file, the sign-offs, the 395 numstat, the untouched siblings, and P0-2's archive hash and clearing lines.
+  - **rustfmt.** The worker left 11 unformatted hunks in the lines it added: six in `cancel.rs` and five in the new test file.
+    - The custodian's commit c93d0ec, on the branch, before any gate, formats exactly those, and wraps the README sentence.
+    - It is formatting only: each file hashes the same at fb98e43 and c93d0ec with whitespace and `,{};` removed, and the cancel tests pass after it (the lib's 8, and T5).
+    - The baseline's own hunks (6 in `cancel.rs`, 47 in `stream.rs`) are untouched.
+  - **The form, on main.** §10 Amendment 1 (class 1) records P0-1 and P0-2. Amendment 2 (class 8, budget overrun, §7 not edited) records 429 against the declared 400, the reason being c93d0ec.
+  - **Disclosed for the gates.** The worker's off-scope note on the README blockquote stays true after the fix, because the pre-execute check still stops a stream cancelled before it starts, now as the guard's step 2. It is left for the architect.

@@ -104,3 +104,19 @@ All are assertions: typed outcomes, the watchdog flag, `Arc` counts, and `is_exe
 - **Operator:** none. No user-visible behaviour changes.
 
 ## §10. Amendments (opens empty, append-only)
+
+### Amendment 1 — P0-1 and P0-2 recorded (class 1)
+
+Written after P0-1 and P0-2 were run (class 1, a post-result amendment). It invalidates nothing.
+
+1. **P0-1.** `an_interrupt_raised_after_prepare_is_cleared_when_execution_begins` was committed alone at a6f5310, before any product change, and returned `Ok`, as §4 and §5 predict. §5's first invalidator did not fire. Its mutation, the execute routed through the guard, was observed failing by name. The record of the observation is the worker's report, `state/consults/2026-09-30-cancel-before-execute-worker-report-1.md`.
+2. **P0-2.** The source is `libduckdb-sys` 1.10505.0 (`Cargo.lock` line 1188, checksum 6cb514dab5e271e849235c1cb98bd65a2ae107fbd619a6740219319c54a71d95), whose bundled archive `duckdb.tar.gz` hashes sha256 e11f1209cdbb2a99b2ea2d348de21bdfb01dc494b55d1271df94b09c52bf229c. In its `duckdb/src/main/client_context.cpp`, `ClientContext::Interrupt` only sets the flag. The flag is cleared in four functions:
+   - `ClientContext::InitialCleanup`, reached from both `Prepare` overloads, `PendingQueryPreparedInternal`, `ParseStatements`, both `PendingQuery` overloads, `CancelTransaction`, and `PendingQueryInternal` for a relation;
+   - `ClientContext::RunFunctionInTransactionInternal`, when it opens an auto-commit transaction;
+   - `ClientContext::Query`, after a failed statement in a multi-statement batch;
+   - `ClientContext::ClearInterrupt`, an explicit clear.
+   H1 (§0) holds at the locked version. The custodian re-read the archive's hash and the four clearing lines in the worker's extraction; the enumeration by caller is the worker's (the report above).
+
+### Amendment 2 — budget overrun, §7 not edited (class 8)
+
+Budget overrun, §7 not edited. §7 declares at most 400 changed lines over at most 4 files. The final figure is 429 over 4 files at c93d0ec, by §7's command (`git diff --numstat c6f61f5...c93d0ec -- engine/src engine/tests engine/README.md`: `engine/README.md` 4+0, `engine/src/cancel.rs` 266+4, `engine/src/stream.rs` 28+18, `engine/tests/cancel_execute_window.rs` 109+0). At the worker's fb98e43 it was 395. The reason is the custodian's formatting commit c93d0ec, made before any gate: rustfmt over the lines this piece added (six hunks of `cancel.rs` and the new test file whole), and the README sentence wrapped to the file's width. Each changed file hashes identically at fb98e43 and at c93d0ec with whitespace and `,{};` removed. The baseline's own unformatted hunks in `cancel.rs` and `stream.rs` are left as they were.
