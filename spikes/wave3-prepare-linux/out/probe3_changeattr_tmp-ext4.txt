@@ -1,0 +1,30 @@
+$ probe3_changeattr /tmp/wave3-probe
+probe3_changeattr dir=/tmp/wave3-probe
+STATX_CHANGE_COOKIE not defined in userspace headers (/usr/include/linux/stat.h): no change-cookie field requestable
+statx stx_mask=0x1fff (MTIME yes, CTIME yes, SIZE yes)
+a | baseline                                     | size=1048576 mtime=1790753733.745653108 ctime=1790753733.745653108 | vs previous: UNCHANGED
+a | pwrite 4 B @4096 by other process            | size=1048576 mtime=1790753733.769308061 ctime=1790753733.769308061 | vs previous: mtime+ctime CHANGED
+a | no-op (re-stat)                              | size=1048576 mtime=1790753733.769308061 ctime=1790753733.769308061 | vs previous: UNCHANGED
+a | pwrite 4 B @8192 immediately after stat      | size=1048576 mtime=1790753733.770625690 ctime=1790753733.770625690 | vs previous: mtime+ctime CHANGED
+a | pwrite 4 B @8192 again 10 ms later           | size=1048576 mtime=1790753733.770710552 ctime=1790753733.770710552 | vs previous: mtime+ctime CHANGED
+a-rep | 200 back-to-back pwrites, observer statx after each: change visible after 200 of 200
+b1-no-msync | baseline                                     | size=1048576 mtime=1790753733.812778194 ctime=1790753733.812778194 | vs previous: UNCHANGED
+b1-no-msync | mmap MAP_SHARED rw (no store yet)            | size=1048576 mtime=1790753733.812778194 ctime=1790753733.812778194 | vs previous: UNCHANGED
+b1-no-msync | store 4 B page0 (first touch)                | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: mtime+ctime CHANGED
+b1-no-msync | store 4 B page0 again, 50 ms later           | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: UNCHANGED
+b1-no-msync | store 4 B page1 (first touch), 50 ms later   | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: UNCHANGED
+b1-no-msync | store 4 B page0 again, 50 ms later           | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: UNCHANGED
+b1-no-msync | re-stat 2 s later, no store                  | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: UNCHANGED
+b1-no-msync | store page0 again after 35 s (writeback window) | size=1048576 mtime=1790753733.834406238 ctime=1790753733.834406238 | vs previous: UNCHANGED
+b1-no-msync |   ... the store itself                       | size=1048576 mtime=1790753770.986405388 ctime=1790753770.986405388 | vs previous: mtime+ctime CHANGED
+b1-no-msync | munmap                                       | size=1048576 mtime=1790753770.986405388 ctime=1790753770.986405388 | vs previous: UNCHANGED
+b2-msync | baseline                                     | size=1048576 mtime=1790753770.988705120 ctime=1790753770.988705120 | vs previous: UNCHANGED
+b2-msync | mmap MAP_SHARED rw                           | size=1048576 mtime=1790753770.988705120 ctime=1790753770.988705120 | vs previous: UNCHANGED
+b2-msync | store 4 B page0 (first touch)                | size=1048576 mtime=1790753771.014405388 ctime=1790753771.014405388 | vs previous: mtime+ctime CHANGED
+b2-msync | store 4 B page0 again, 50 ms later           | size=1048576 mtime=1790753771.014405388 ctime=1790753771.014405388 | vs previous: UNCHANGED
+b2-msync | msync(MS_SYNC), 50 ms later                  | size=1048576 mtime=1790753771.014405388 ctime=1790753771.014405388 | vs previous: UNCHANGED
+b2-msync | store 4 B page0 after msync, 50 ms later     | size=1048576 mtime=1790753771.118405385 ctime=1790753771.118405385 | vs previous: mtime+ctime CHANGED
+b2-msync | store 4 B page0 again, 50 ms later           | size=1048576 mtime=1790753771.118405385 ctime=1790753771.118405385 | vs previous: UNCHANGED
+b2-msync | msync(MS_SYNC), 50 ms later                  | size=1048576 mtime=1790753771.118405385 ctime=1790753771.118405385 | vs previous: UNCHANGED
+b2-msync | munmap                                       | size=1048576 mtime=1790753771.118405385 ctime=1790753771.118405385 | vs previous: UNCHANGED
+exit=0

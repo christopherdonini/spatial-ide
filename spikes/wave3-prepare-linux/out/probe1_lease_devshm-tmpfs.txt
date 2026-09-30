@@ -1,0 +1,56 @@
+$ probe1_lease /dev/shm/wave3-probe c2
+probe1_lease dir=/dev/shm/wave3-probe st_dev=28 uid=0 euid=0
+CASE a-rdonly-no-other-opener: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE a'-own-process-also-has-O_RDWR: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE b-other-process-O_WRONLY: opener: open(flags=0x1) -> fd errno=0 (ok) after 0.000 s
+CASE b-other-process-O_WRONLY: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE b-after-writer-closed: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE b2-other-process-O_RDONLY: opener: open(flags=0x0) -> fd errno=0 (ok) after 0.000 s
+CASE b2-other-process-O_RDONLY: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1-O_WRONLY-holder-releases-0.5s: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1-O_WRONLY-holder-releases-0.5s: holder received signal 34 (SIGRTMIN=34) si_fd=3 (lease fd=3) 0.000 s after fork; F_GETLEASE now=F_UNLCK
+CASE c1-O_WRONLY-holder-releases-0.5s: holder F_SETLEASE F_UNLCK -> 0 at 0.500 s after fork
+CASE c1-O_WRONLY-holder-releases-0.5s: opener: open(flags=0x1) -> fd errno=0 (ok) after 0.500 s
+CASE c1-O_WRONLY-holder-releases-0.5s: opener's open returned 0.501 s after fork; holder F_GETLEASE after=F_UNLCK
+CASE c1-O_WRONLY-holder-releases-0.5s: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE c1b-O_WRONLY|O_NONBLOCK: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1b-O_WRONLY|O_NONBLOCK: holder received signal 34 (SIGRTMIN=34) si_fd=3 (lease fd=3) 0.000 s after fork; F_GETLEASE now=F_UNLCK
+CASE c1b-O_WRONLY|O_NONBLOCK: holder F_SETLEASE F_UNLCK -> 0 at 0.501 s after fork
+CASE c1b-O_WRONLY|O_NONBLOCK: opener: open(flags=0x801) -> -1 errno=11 (Resource temporarily unavailable) after 0.000 s
+CASE c1b-O_WRONLY|O_NONBLOCK: opener's open returned 0.501 s after fork; holder F_GETLEASE after=F_UNLCK
+CASE c1b-O_WRONLY|O_NONBLOCK: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1c-O_RDONLY-opener: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1c-O_RDONLY-opener: holder received NO signal within 2 s; F_GETLEASE=F_RDLCK
+CASE c1c-O_RDONLY-opener: opener: open(flags=0x0) -> fd errno=0 (ok) after 0.000 s
+CASE c1c-O_RDONLY-opener: opener's open returned 2.000 s after fork; holder F_GETLEASE after=F_RDLCK
+CASE c1c-O_RDONLY-opener: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: holder received signal 34 (SIGRTMIN=34) si_fd=3 (lease fd=3) 0.000 s after fork; F_GETLEASE now=F_UNLCK
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: holder F_SETLEASE F_UNLCK -> 0 at 0.501 s after fork
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: opener: open(flags=0x202) -> fd errno=0 (ok) after 0.501 s
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: opener's open returned 0.501 s after fork; holder F_GETLEASE after=F_UNLCK
+CASE c1d-O_RDWR|O_TRUNC-holder-releases-0.5s: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE c2-O_WRONLY-holder-keeps-lease: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE c2-O_WRONLY-holder-keeps-lease: holder received signal 34 (SIGRTMIN=34) si_fd=3 (lease fd=3) 0.000 s after fork; F_GETLEASE now=F_UNLCK
+CASE c2-O_WRONLY-holder-keeps-lease: holder keeps the lease (does not release); polling F_GETLEASE once per second
+CASE c2-O_WRONLY-holder-keeps-lease: t=5.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=10.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=15.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=20.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=25.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=30.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=35.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=40.0 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: t=45.1 s F_GETLEASE=F_UNLCK (opener still blocked)
+CASE c2-O_WRONLY-holder-keeps-lease: opener: open(flags=0x1) -> fd errno=0 (ok) after 45.050 s
+CASE c2-O_WRONLY-holder-keeps-lease: opener's open returned 45.052 s after fork; holder F_GETLEASE after=F_UNLCK
+CASE c2-O_WRONLY-holder-keeps-lease: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE d1-root-with-CAP_LEASE-on-file-owned-by-65534: F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE d2: child uid=65534 euid=65534
+CASE d2-uid65534-on-own-file(control): F_SETLEASE F_RDLCK -> 0 (GRANTED); F_GETLEASE=F_RDLCK
+CASE d3-uid65534-no-CAP_LEASE-on-file-owned-by-root: F_SETLEASE F_RDLCK -> -1 errno=13 (Permission denied) (REFUSED)
+CASE e1-other-process-MAP_SHARED-rw-fd-open: opener: open(flags=0x2) -> fd errno=0 (ok) after 0.000 s; fd kept, MAP_SHARED|PROT_WRITE mapping kept
+CASE e1-other-process-MAP_SHARED-rw-fd-open: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+CASE e2-other-process-MAP_SHARED-rw-fd-closed: opener: open(flags=0x2) -> fd errno=0 (ok) after 0.000 s; fd closed, MAP_SHARED|PROT_WRITE mapping kept
+CASE e2-other-process-MAP_SHARED-rw-fd-closed: F_SETLEASE F_RDLCK -> -1 errno=11 (Resource temporarily unavailable) (REFUSED)
+exit=0

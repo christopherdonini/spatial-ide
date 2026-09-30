@@ -1,0 +1,22 @@
+cp (GNU coreutils) 9.4
+## /tmp/wave3-baseline/spikes/wave3-prepare-linux/work fs=ext2/ext3
+$ probe2_clone /tmp/wave3-baseline/spikes/wave3-prepare-linux/work
+probe2_clone dir=/tmp/wave3-baseline/spikes/wave3-prepare-linux/work: ioctl(FICLONE) -> -1 errno=95 (Operation not supported) (NOT SUPPORTED); dst size=0
+exit=0
+$ cp --reflink=always cp_src.dat cp_dst.dat  (in /tmp/wave3-baseline/spikes/wave3-prepare-linux/work)
+cp: failed to clone 'cp_dst.dat' from 'cp_src.dat': Operation not supported
+exit=1
+## /tmp/wave3-probe fs=ext2/ext3
+$ probe2_clone /tmp/wave3-probe
+probe2_clone dir=/tmp/wave3-probe: ioctl(FICLONE) -> -1 errno=95 (Operation not supported) (NOT SUPPORTED); dst size=0
+exit=0
+$ cp --reflink=always cp_src.dat cp_dst.dat  (in /tmp/wave3-probe)
+cp: failed to clone 'cp_dst.dat' from 'cp_src.dat': Operation not supported
+exit=1
+## /dev/shm/wave3-probe fs=tmpfs
+$ probe2_clone /dev/shm/wave3-probe
+probe2_clone dir=/dev/shm/wave3-probe: ioctl(FICLONE) -> -1 errno=95 (Operation not supported) (NOT SUPPORTED); dst size=0
+exit=0
+$ cp --reflink=always cp_src.dat cp_dst.dat  (in /dev/shm/wave3-probe)
+cp: failed to clone 'cp_dst.dat' from 'cp_src.dat': Operation not supported
+exit=1
