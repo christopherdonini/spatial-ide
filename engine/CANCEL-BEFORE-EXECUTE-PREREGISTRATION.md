@@ -120,3 +120,17 @@ Written after P0-1 and P0-2 were run (class 1, a post-result amendment). It inva
 ### Amendment 2 — budget overrun, §7 not edited (class 8)
 
 Budget overrun, §7 not edited. §7 declares at most 400 changed lines over at most 4 files. The final figure is 429 over 4 files at c93d0ec, by §7's command (`git diff --numstat c6f61f5...c93d0ec -- engine/src engine/tests engine/README.md`: `engine/README.md` 4+0, `engine/src/cancel.rs` 266+4, `engine/src/stream.rs` 28+18, `engine/tests/cancel_execute_window.rs` 109+0). At the worker's fb98e43 it was 395. The reason is the custodian's formatting commit c93d0ec, made before any gate: rustfmt over the lines this piece added (six hunks of `cancel.rs` and the new test file whole), and the README sentence wrapped to the file's width. Each changed file hashes identically at fb98e43 and at c93d0ec with whitespace and `,{};` removed. The baseline's own unformatted hunks in `cancel.rs` and `stream.rs` are left as they were.
+
+### Amendment 3 — T5 missed its window on CI; F3 re-declared (class 2)
+
+Written after gate 1's results were seen (class 2, a deviation recorded after results, with the reason). §3's F3 and §5 are not edited.
+
+1. **The deviation.** At c93d0ec, T5 failed on windows-latest in PR run 36703920918: the producer was never observed executing within the liveness deadline. The push run 36703531817 at the same commit passed, and five local runs passed. The evidence is the gate-1 reviewer's report, checks 3 and 8 (`state/consults/gates/2026-09-30-cancel-before-execute-gate1-reviewer.md`). By §5's third invalidator, that run is invalid, not a result.
+2. **The reason, a hypothesis nobody has measured** (the gate-1 reviewer's B2). F3's viewport lies wholly outside the extent, so DuckDB can exclude every row group from the bbox statistics. If it does, `stream_arrow` need not scan the file, and F3's premise, a whole-file scan before any chunk, does not hold on a fast runner.
+3. **F3 re-declared.**
+   - The fixture is the same: 2,000,000 features, written by the test.
+   - It is streamed with a viewport that covers the whole extent and an admitted predicate (`ViewportQuery`'s `filter`) that matches no row and that DuckDB cannot decide from row-group statistics, so that `stream_arrow` reads every row group before any chunk.
+   - Before T5 relies on the predicate, the worker names it and records two things in its report: evidence that DuckDB reads every row group for it (a scratch `EXPLAIN ANALYZE` or an equivalent count), and repeated passing local runs of the unmutated T5.
+   - If no admitted predicate can meet this, the worker stops and reports, and the piece comes back as a new amendment.
+   - T5's fixture moves to a per-run temporary path, removed at the end (the gate-1 notes on the shared path).
+4. **Unchanged.** T5's name, its assertions, its mutation, and §5's third invalidator, which still covers a window F3 makes too short. By its assertion alone, T5 still cannot tell a missed window from its mutation (the gate-1 reviewer's B2). The re-declared F3 is what makes a missed window implausible. A missed window on a later head is still an invalid run, recorded as such.

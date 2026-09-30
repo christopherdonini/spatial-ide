@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T08:41:16.715Z",
-  "plan_hash": "546aa72a565d8e98a8fb96734e2a168fd1703c6b283e48ba63966e443f8a7c7c",
+  "generated_at": "2026-09-30T11:35:03.427Z",
+  "plan_hash": "f50aabf984b9c79fd4555be12497a6201615d9a83e7c92fc385ea8d6477cc416",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -517,7 +517,7 @@
         "opened": "2026-09-26",
         "done": null
       },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings.",
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings. Gate 1 at c93d0ec: FAIL/FAIL (state/consults/gates/2026-09-30-cancel-before-execute-gate1-*.md): a spawn panic (both gates), two doc claims (architect B2, B3), and T5 missing its window on CI (reviewer B2); the form's Amendment 3 (class 2) re-declares F3, so the generation is 2; correction round 1 of the two the record cap allows.",
       "evidence_label": "branch `cut/cancel-before-execute`"
     }
   ],
@@ -900,7 +900,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it."
+      "summary": "Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it. Also carried here from gate 1 on PR #146 (state/consults/gates/2026-09-30-cancel-before-execute-gate1-reviewer.md, N4): engine/README.md item 3's blockquote, which the gate-1 architect ruled still true but which reads inconsistently with the corrected attach doc, and the lease_for_stream doc in engine/src/dataset.rs that the form's section 0 names false."
     },
     {
       "id": "posix-backslash-in-shared-path-logic",
