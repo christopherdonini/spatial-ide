@@ -128,7 +128,8 @@ pub use identity::{
 };
 pub use error::{EngineError, Result};
 pub use predicate::{
-    AdmittedPredicate, FilterError, PredicateAdmitError, MAX_PREDICATE_BYTES, MAX_PREDICATE_DEPTH,
+    AdmittedPredicate, FilterError, PredicateAdmitError, TypeRefusalReason, MAX_PREDICATE_BYTES,
+    MAX_PREDICATE_DEPTH,
 };
 pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_ADMISSION_CONNECTIONS, MAX_MAINTENANCE_CONNECTIONS,
@@ -143,5 +144,3 @@ pub use stream::{
     MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS,
     PUBLISH_PARTITION_TARGET_BYTES, PUBLISH_STREAM_POLL_INTERVAL, TARGET_BATCH_BYTES,
 };
-
-pub use predicate::TypeRefusalReason;
