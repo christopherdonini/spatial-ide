@@ -157,3 +157,16 @@ Assertions only: the outcome variant, the message prefix and equality, the desti
   - The human accepted this label change in ruling G1 (round 32).
 
 ## §10. Amendments (opens empty, append-only)
+
+### Amendment 1 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #149 merged at 2026-09-30T20:33:26Z as merge commit 88e238b (parents 98ad9ca and a633b02), not a squash. 4a2bb00 (this form), 55ce85e (B), cc9c9a1 (C), 855d826 (D) and a633b02 are reachable from main, so this form's commit precedes its code on main (the gate-1 architect, item 1 (b)).
+- **The gates:** gate 1 at a633b02, PASS/PASS: `state/consults/gates/2026-09-30-publish-refusal-src-tauri-gate1-architect.md` and `state/consults/gates/2026-09-30-publish-refusal-src-tauri-gate1-reviewer.md`.
+- **The observations of record:**
+  - P0 at 55ce85e: the gate-1 reviewer's check 2;
+  - M1 to M4 at a633b02: the gate-1 reviewer's mutation table;
+  - the worker's own runs: `state/consults/2026-09-30-publish-refusal-src-tauri-worker-report-1.md`.
+- **Readings the gate made:** committing this form as its branch's first commit is accepted (the gate-1 architect, item 1). The architect's N1 is answered by the reviewer's checks 4 and 7.
+- **Size:** 120 against §7's 170, over 2 files. No overrun.
+- **The node** closes with its first piece, PR #148 (`kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md`, the node's PLAN `gate`).

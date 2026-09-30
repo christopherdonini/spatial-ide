@@ -87,3 +87,17 @@ Written after gate 1's results were seen (class 1, a post-result amendment). §3
 1. **The finding.** The gate-1 reviewer's N1 (`state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-reviewer.md`). T1 and `a_viewport_in_the_wrong_crs_is_refused_end_to_end` both call `fixture("crs", 500)`, and `fixture` rewrites its file on every call. Run in parallel, one test can truncate the file while the other reads it. It was not reproduced in 60 paired runs: it is a latent race in the new test, not an observed failure. It invalidates no result.
 2. **F1 re-declared.** T1's fixture is `fixture("crs-raw-create", 500)`: F1's generator, specification and feature count, written to a file of its own. T1's name, START frame, four assertions and mutation do not change, and neither does its sibling.
 3. **Owed by correction round 1, at its head:** T1 and its sibling pass; T1's mutation is re-observed; §7 is counted again. The P0 observation at 4db0865 stands: it depends on the dataset's CRS, which the specification fixes, not on the file's name.
+
+### Amendment 2 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #148 merged at 2026-09-30T20:33:13Z as merge commit 98ad9ca (parents 356a733 and 3777ad0), not a squash. 4db0865 (B), 92045df (C), 8b4f153 (D) and 3777ad0 (correction round 1) are reachable from main.
+- **The gates:** gate 1 at 8b4f153, PASS/PASS: `state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md` and `state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-reviewer.md`. Gate 2 at 3777ad0, scoped to Amendment 1, PASS/PASS: `state/consults/gates/2026-09-30-raw-path-refusal-code-gate2-architect.md` and `state/consults/gates/2026-09-30-raw-path-refusal-code-gate2-reviewer.md`.
+- **The observations of record:**
+  - P0 at 4db0865: the gate-1 reviewer's check 2;
+  - the mutation at 3777ad0: the gate-2 reviewer's mutation observation;
+  - the worker's own runs: `state/consults/2026-09-30-raw-path-refusal-code-worker-report-1.md` and `state/consults/2026-09-30-raw-path-refusal-code-worker-report-2.md`.
+- **Readings the gate made:** D is formatting only (the gate-1 architect, item 5, with the custodian's check in that report's filing note). Amendment 1 is class 1 (the gate-2 architect, item 1).
+- **Routed:** the gate-1 architect's N1 goes to PLAN node `kernel-close-races-followups`.
+- **Size:** 44 against §7's 60, over 2 files. No overrun.
+- **The node** closes with its second piece, PR #149, under `frontends/shell/PUBLISH-REFUSAL-CODE-SRC-TAURI-PREREGISTRATION.md`. A4-2 is closed as declared (question round 32, G2).

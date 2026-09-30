@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `291cd96b629bcfa578ed3a51d28fa75074701c3625366b5a833b4214da2a01de`) at `2026-09-30T18:32:26.414Z`.
+Generated from `PLAN.yaml` (sha256 `80be520fac3d4ef9c2675a5aa9db46ccb89bcaa7024cf1e53d868fef39783c04`) at `2026-09-30T20:35:45.642Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (lane `kernel-protocol`, order 7, budget 30 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,6 @@ Generated from `PLAN.yaml` (sha256 `291cd96b629bcfa578ed3a51d28fa75074701c362536
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) — blocked by: publish-refusal-codes-and-attempt-lifecycle
 - **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) — blocked by: kernel-close-dataset-unknown-keeps-openrecord
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: audit-reader-char-boundary
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
@@ -40,7 +39,7 @@ Generated from `PLAN.yaml` (sha256 `291cd96b629bcfa578ed3a51d28fa75074701c362536
 
 ## 5. In progress
 
-- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end (wave-1 A4-1 to A4-4): A4-4 in the kernel, A4-1 and A4-3 as src-tauri lines, A4-2 closed as declared (round 32); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) — evidence: branch `cut/raw-path-refusal-code`
+- (none)
 
 ## 6. Proposed / unscheduled
 
