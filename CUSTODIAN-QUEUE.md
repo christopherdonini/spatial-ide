@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bb01df4b111a54a0e036a10bae69db7c1fa989f711b5d782d94e630878d268bf`) at `2026-09-30T06:30:02.719Z`.
+Generated from `PLAN.yaml` (sha256 `cefd1c3bf5718570ca843a6a4b228fe542a79b3e0f088114c4d265478a8fac9c`) at `2026-09-30T06:43:21.000Z`.
 
 ## 1. Next
 
@@ -78,6 +78,10 @@ Generated from `PLAN.yaml` (sha256 `bb01df4b111a54a0e036a10bae69db7c1fa989f711b5
 - **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (phase `prototype`) — never queued until placed
 - **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2) (phase `prototype`) — never queued until placed
 - **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (phase `prototype`) — never queued until placed
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (phase `prototype`) — never queued until placed
+- **port-2-macos-l1-and-app-dirs** — PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume (phase `prototype`) — never queued until placed
+- **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
+- **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
