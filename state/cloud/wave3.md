@@ -12,3 +12,10 @@ WAVE3_BASELINE=a02354677d6c03aaed4b2dbdf4d14b09621d5766   The first main commit 
 
 | Item | Session ID | Model | Launched (UTC) | Ended | Balance before | Balance after | Spend (exact \| batch delta) | Findings | Dispositions |
 |---|---|---|---|---|---|---|---|---|---|
+| W3-A (one batch: W3-A+W3-B+W3-C) | session_017msPRjkMFYd5Zn4FxukM4r (prompt: `state/cloud/wave3/W3-A-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-30T07:22Z | (running) | $201 (Cloud session credits, read by the human and typed at about 07:19Z: the wave-3 balance, `state/directives/2026-09-30-wave3-balance.md`) | (after the batch ends) | (after the batch ends) | | |
+| W3-B (one batch: W3-A+W3-B+W3-C) | session_01DmBGvV5LCpMZepxrs5Rmb2 (prompt: `state/cloud/wave3/W3-B-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-30T07:23:34Z | (running) | (the batch's reading, above) | (the batch's reading) | (the batch's delta) | | |
+| W3-C (one batch: W3-A+W3-B+W3-C) | session_01BrZYKUFM4c4oVeA27A2Yrd (prompt: `state/cloud/wave3/W3-C-prompt.md`) | Opus 5.5, Medium (as launched) | 2026-09-30T07:25:36Z | (running) | (the batch's reading, above) | (the batch's reading) | (the batch's delta) | | |
+
+#### Deviation 1, 2026-09-30 — the portability plan is not in the baseline tree
+
+The three prompts send the worker to `state/directives/PORTABILITY-2026-09-30.md`. That file was added at cf86d60, after the baseline a023546, so it is absent from `/tmp/wave3-baseline`. It is present in each session's own checkout, which is on main. W3-C's session noted this in its first message ("it exists only on main, not at the baseline"). The launched texts are unchanged, and no message was sent into any session. The wave-3 authorisation's item (b) fixes the baseline rule, and a023546 is correct under it. The effect is read at triage: each report shows where the worker read the plan from.
