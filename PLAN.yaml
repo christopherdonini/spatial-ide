@@ -3241,12 +3241,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 7
     depends_on: [publish-refusal-codes-and-attempt-lifecycle]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/close-dataset-unknown}
     budget_minutes: 30
     generation: 1
     felt_verdict: false

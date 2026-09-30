@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7e0588efe00e680147a3eb1e332154a0481becfa1c6a8b2496c989eea24ea545`) at `2026-09-30T20:49:57.211Z`.
+Generated from `PLAN.yaml` (sha256 `88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098fa647ee21c96d87e6a21`) at `2026-09-30T20:52:40.010Z`.
 
 ## 1. Next
 
-- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (lane `kernel-protocol`, order 7, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -39,7 +39,7 @@ Generated from `PLAN.yaml` (sha256 `7e0588efe00e680147a3eb1e332154a0481becfa1c6a
 
 ## 5. In progress
 
-- (none)
+- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) — evidence: branch `cut/close-dataset-unknown`
 
 ## 6. Proposed / unscheduled
 

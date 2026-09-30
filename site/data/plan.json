@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T20:49:57.401Z",
-  "plan_hash": "7e0588efe00e680147a3eb1e332154a0481becfa1c6a8b2496c989eea24ea545",
+  "generated_at": "2026-09-30T20:52:40.136Z",
+  "plan_hash": "88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098fa647ee21c96d87e6a21",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5236,7 +5236,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 7,
       "depends_on": [
         "publish-refusal-codes-and-attempt-lifecycle"
@@ -5246,7 +5246,9 @@
         "minutes": 0
       },
       "gate": "kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/close-dataset-unknown"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
