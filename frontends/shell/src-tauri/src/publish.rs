@@ -2241,14 +2241,30 @@ mod tests {
         let cancel = CancelToken::new();
         cancel.cancel();
         let outcome = execute_with_progress(&grants, &store, &attempt_id, &phrase, &cancel, None);
-        let ExecuteOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
-        assert_eq!(message, format!("publish.cancelled: {}", spatial_kernel::publish::PublishError::Cancelled));
-        assert!(!d.join("out-cancelled").exists(), "a cancelled publish leaves no destination");
+        let ExecuteOutcome::Refused { message } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert_eq!(
+            message,
+            format!(
+                "publish.cancelled: {}",
+                spatial_kernel::publish::PublishError::Cancelled
+            )
+        );
+        assert!(
+            !d.join("out-cancelled").exists(),
+            "a cancelled publish leaves no destination"
+        );
 
         let (grants, store, attempt_id, _phrase) = prepared(&d, "wrong-phrase");
         let outcome = execute(&grants, &store, &attempt_id, "not the phrase");
-        let ExecuteOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
-        assert!(!message.starts_with("publish."), "a permission refusal stays untyped: {message}");
+        let ExecuteOutcome::Refused { message } = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert!(
+            !message.starts_with("publish."),
+            "a permission refusal stays untyped: {message}"
+        );
     }
 
     #[test]
@@ -2277,7 +2293,9 @@ mod tests {
             &CancelToken::new(),
             None,
         );
-        let PrepareOutcome::Refused { message } = outcome else { panic!("got {outcome:?}") };
+        let PrepareOutcome::Refused { message } = outcome else {
+            panic!("got {outcome:?}")
+        };
         let rest = message
             .strip_prefix("publish.engine: ")
             .unwrap_or_else(|| panic!("no publish.engine prefix: {message}"));
