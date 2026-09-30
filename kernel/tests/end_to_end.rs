@@ -520,6 +520,43 @@ async fn a_viewport_in_the_wrong_crs_is_refused_end_to_end() {
     dp.shutdown().await;
 }
 
+#[tokio::test]
+async fn a_create_time_engine_refusal_on_the_raw_path_carries_its_typed_code() {
+    let (path, _) = fixture("crs-raw-create", 500);
+    let dp = host(&path).await;
+    let mut client = connect(&dp).await;
+
+    start(
+        &mut client,
+        StreamParams {
+            dataset: DATASET.into(),
+            bbox: Some([7.0, 46.0, 8.0, 47.0]),
+            bbox_crs: Some("EPSG:4326".into()),
+            limit: None,
+        },
+    )
+    .await;
+    let mut c = Collected::default();
+    drain(&mut client, &mut c).await;
+
+    let (code, detail) = c.terminal.expect("terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED);
+    let rest = detail
+        .strip_prefix("engine.viewport_crs_mismatch: ")
+        .unwrap_or_else(|| panic!("the detail carries its typed code: {detail}"));
+    assert!(
+        rest.contains("EPSG:4326"),
+        "the words still name the CRS: {detail}"
+    );
+    assert!(
+        !rest.starts_with("engine."),
+        "the code is minted once: {detail}"
+    );
+    assert_eq!(c.batches, 0, "nothing is drawn in the wrong CRS");
+    client.close(None).await.ok();
+    dp.shutdown().await;
+}
+
 // ---------------------------------------------------------------------------------------------
 // H6 — no transport vocabulary anywhere it does not belong
 // ---------------------------------------------------------------------------------------------
