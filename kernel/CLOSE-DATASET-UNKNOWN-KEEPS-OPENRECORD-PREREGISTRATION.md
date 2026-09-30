@@ -165,3 +165,18 @@ Assertions only:
 - **Operator:** none. Nothing user-visible changes.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9)
+
+### Amendment 1 — the claim narrowed to every outcome after the SKP version check (class 5)
+
+Written after gate 1's results were seen (class 5, a scope-narrowing on a gate). The gate is the gate-1 architect's B1 and item 2 (`state/consults/gates/2026-09-30-close-dataset-unknown-gate1-architect.md`). Byte-copied from that report's item 2, verbatim: "So a close refused as `skp.version_unsupported` leaves the OpenRecord and its watch in place." `check_version` stays first: a request in an unsupported version acts on nothing.
+1. **§1's May claim** reads "by any outcome after the SKP version check" wherever it says "by any outcome".
+2. **§2 item 2's comment** states release on every outcome after the version check, not on every outcome. The product comment's matching phrase is reworded to that in correction round 1. The change is one comment line, inside §2 item 2's Scope and counted in §7.
+3. **§5's Falsification** reads "after `close_dataset(name)` returns from any outcome after the SKP version check" in its first clause. Its other clauses are unchanged.
+4. §1 to §9 are not edited. Nothing else narrows: the fix, T1, T2, their mutations and §8 stand.
+
+### Amendment 2 — the §9 suites of record at gate 1 (class 1)
+
+Written after gate 1's results were seen (class 1, a post-result amendment). It invalidates nothing. It answers the gate-1 architect's B2.
+1. **The suites of record at e1c37b0** are the gate-1 reviewer's check 5 (`state/consults/gates/2026-09-30-close-dataset-unknown-gate1-reviewer.md`). Each is named there with its tool commit and exit code: `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify.mjs` (`verify:plan`) at main 9cf31c8 and in the branch worktree, and `verify-mutation --base 1e68aba --head e1c37b0`. All exit 0.
+2. **`cargo fmt --check` cannot be green for this crate.** `cargo fmt --check -p spatial-kernel` exits 1 at the base 1e68aba and at e1c37b0, with 1046 `Diff in` hunks each (the custodian's runs, 2026-09-30; the base in a scratch worktree, since removed). §9's formatting suite is therefore read as no new hunk, measured by that count and by rustfmt's hunk count for `kernel/src/skp.rs` (99 at both). This is the reading nodes 1 to 3 used.
+3. **Under M2, T1 also fails,** as well as T2 (the gate-1 reviewer's mutation table; the gate-1 architect's N1). §4 registers M2 against T2 only.
