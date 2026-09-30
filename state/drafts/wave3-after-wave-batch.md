@@ -49,4 +49,4 @@ The custodian's triage (wave 1 §4's rule, against main at 292f3f4) finds no S1 
 
 ## 4. Spend
 
-The batch's single delta is recorded in `state/cloud/wave3.md` once the human reads the after-balance ($201 before).
+$201 before and $191 after (the human's readings): one delta of $10 for the batch, not individually attributable (`state/cloud/wave3.md`).
