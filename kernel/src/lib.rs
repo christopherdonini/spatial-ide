@@ -399,6 +399,18 @@ impl EngineSourceFactory {
     /// `sh_` a valid ticket handle starts with, so `StreamHandle::from_str` fails deterministically
     /// on it — asserted by `kernel/tests/skp_admission.rs` rather than left to be assumed. One
     /// process never installs both admission paths (ADR-019's own consequence).
+    ///
+    /// **Three steps, composed in order and by nothing else:** parse, then [`Self::liveness_refusal`],
+    /// then [`Self::redeem_or_liveness_refusal`]. The second reads the dead-ticket record once
+    /// before `redeem`; the third reads it again only when `redeem` refuses.
+    ///
+    /// **Why the second read is sound.** `SessionInvalidator::end_generation` records an end
+    /// (`GenerationRegistry::invalidate` writes the dead-ticket record) *before* it cancels that
+    /// end's tickets (`StreamRegistry::cancel`). A `redeem` refusal that such a cancel caused
+    /// therefore finds the record already written, and answers the record's code rather than
+    /// `redeem`'s cancelled wording. A refusal with no record (a close, a client cancel, an unknown
+    /// handle) keeps `redeem`'s own words. **`Live` and `Unknown` never become a diagnosis**:
+    /// neither is a by-name refusal at either read (`docs/01` principle 8).
     fn create_from_ticket(
         tickets: &Arc<skp::StreamRegistry>,
         generations: &Arc<skp::GenerationRegistry>,
@@ -465,13 +477,22 @@ impl EngineSourceFactory {
         }
     }
 
-    /// Step 3 of `create_from_ticket`: redeem the ticket.
+    /// Step 3 of `create_from_ticket`: redeem the ticket; on a refusal, read the dead-ticket record
+    /// once more and answer its code when it holds one, `redeem`'s own words when it does not.
+    /// Neither call is made under a lock this function holds. The reasoning is in
+    /// `create_from_ticket`'s doc.
+    ///
+    /// The return type is `SourceFactory::create`'s, so the lint's alias would name a type nothing
+    /// else here shares.
+    #[allow(clippy::type_complexity)]
     fn redeem_or_liveness_refusal(
         tickets: &Arc<skp::StreamRegistry>,
-        _generations: &Arc<skp::GenerationRegistry>,
+        generations: &Arc<skp::GenerationRegistry>,
         handle: &str,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
-        tickets.redeem(handle)
+        tickets
+            .redeem(handle)
+            .map_err(|refusal| Self::liveness_refusal(generations, handle).unwrap_or(refusal))
     }
 }
 

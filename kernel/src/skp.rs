@@ -616,10 +616,12 @@ impl GenerationRegistry {
     /// changed because it cannot find a ticket (`docs/01` principle 8; the attempt-2 defect the
     /// human's round-4 ruling removed, `engine/ADMISSION-PREREGISTRATION.md:742-744`).
     ///
-    /// **Its product caller is `EngineSourceFactory::create_from_ticket`**
-    /// (`kernel/src/lib.rs:390`), reached on every real START frame through
-    /// `SourceFactory::create` (`kernel/src/lib.rs:321-336`,
-    /// `protocol/data-plane/src/server.rs:384`). This is not an instrument: it acts.
+    /// **Its product caller is `EngineSourceFactory::liveness_refusal`**, which
+    /// `EngineSourceFactory::create_from_ticket` calls and which
+    /// `EngineSourceFactory::redeem_or_liveness_refusal` calls again on a refusal, reached on every
+    /// real START frame through `SourceFactory::create` (`EngineSourceFactory`'s impl, in
+    /// `kernel/src/lib.rs`) and START's `factory.create` arm in `protocol/data-plane/src/server.rs`.
+    /// This is not an instrument: it acts.
     pub fn ticket_liveness(&self, handle: &str) -> TicketLiveness {
         let mut st = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         Self::prune_locked(&mut st);
