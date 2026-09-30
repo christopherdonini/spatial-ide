@@ -374,11 +374,26 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.7` (§10 Amendment 12, wave-2 A2-1: `projection_column_name_not_addressable`). Mutation:
-/// the literal back to `"skp/0.6"`. Expected failure: this test fails by name.
+/// `skp/0.8` (bind admission's type rules, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`).
+/// Mutation: the literal back to `"skp/0.7"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_7() {
-    assert_eq!(SKP_VERSION, "skp/0.7");
+fn skp_version_is_skp_0_8() {
+    assert_eq!(SKP_VERSION, "skp/0.8");
+}
+
+/// B-T8 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §4). Mutation: FX-4's `reason` key renamed. It
+/// fails by name.
+#[test]
+fn the_filter_type_not_admitted_error_fixture_round_trips() {
+    let name = "v0-error-filter_type_not_admitted";
+    let v = fixture(name);
+    let parsed: SkpError = serde_json::from_value(v.clone())
+        .unwrap_or_else(|e| panic!("{name} does not deserialize as SkpError: {e}"));
+    assert_eq!(parsed.code, "skp.filter_type_not_admitted");
+    let mut keys: Vec<&String> = parsed.fields.keys().collect();
+    keys.sort();
+    assert_eq!(keys, vec!["construct", "operand_types", "reason"], "{name}: exact key set");
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
 }
 
 /// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.
