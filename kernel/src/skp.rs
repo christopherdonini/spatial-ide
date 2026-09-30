@@ -3869,10 +3869,12 @@ mod ticket_drop_under_lock_regression {
     /// T1 (S1). A close of a dataset whose catalog entry is already gone refuses as before and
     /// still drops the `OpenRecord` (and so the watch) it held.
     ///
-    /// TEST-FIRST (P0): at the test-only commit this test FAILED on its record-absent assertion.
+    /// TEST-FIRST (P0): at `4f045da`, before the change, this test FAILED on `the close removed the
+    /// record`.
     ///
     /// REGISTERED MUTATION: restore the base order (the `watches` removal below the
-    /// `unknown_dataset` check).
+    /// `unknown_dataset` check). Applied at `f4fb9ed`, run and reverted: this test FAILED on `the
+    /// close removed the record`; T2 passed.
     #[test]
     fn a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch() {
         let path = fixture("close-unknown-keeps-record");
@@ -3909,7 +3911,8 @@ mod ticket_drop_under_lock_regression {
 
     /// T2 (S2). An ordinary close returns only after its watch is dropped and its record removed.
     ///
-    /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`.
+    /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`. Applied at `f4fb9ed`,
+    /// run and reverted: this test FAILED on `the close removed the record`.
     #[test]
     fn a_close_drops_its_watch_before_it_returns() {
         let path = fixture("close-drops-its-watch");
