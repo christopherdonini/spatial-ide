@@ -1441,15 +1441,17 @@ impl SkpHost {
     ) -> Result<CloseDatasetResponse, SkpError> {
         check_version(&req.skp)?;
         let name = req.dataset.as_str();
-        if self.catalog.get(name).is_none() {
-            return Err(SkpError::unknown_dataset(name));
-        }
         // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: the `OpenRecord` (and so the watch) is removed
         // under the map guard and dropped only after release — disarming and joining the watch
         // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
-        // `forget_dataset`.
+        // `forget_dataset`. This is the first step, ahead of the `unknown_dataset` check, so a close
+        // releases its dataset's watch on every outcome, the refusal included
+        // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
         let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
         drop(removed_watch);
+        if self.catalog.get(name).is_none() {
+            return Err(SkpError::unknown_dataset(name));
+        }
         // The order is `begin_close`, `cancel_all_for_dataset`, `forget_dataset`, `catalog.remove`
         // (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2c), and this call linearizes at
         // `begin_close` (§2d): a racing `viewport_query` answers what it would answer wholly before
