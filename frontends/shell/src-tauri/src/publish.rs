@@ -26,8 +26,9 @@
 //!
 //! ## Two things this module deliberately does NOT do (later pieces, `NEXT-CUT.md`'s phase table)
 //!
-//! - **Typed-refusal structure** (`RefusalBlock`/`formatRefusal`) is P2's. A refusal crosses to JS
-//!   here as plain `Display` text (`{ status: "refused", message: "..." }`).
+//! - **Typed-refusal structure** (`RefusalBlock`/`formatRefusal`) is P2's. A `PublishError`
+//!   refusal crosses to JS as `refusal_detail()` (`publish.<code>: <Display>`); a permission,
+//!   audit or other refusal crosses as plain `Display` text (`{ status: "refused", message: "..." }`).
 //! - **Progress and cancel events** are P2's (a Tauri event + `CancelToken`, instrument surface, not
 //!   SKP). [`execute`] runs with `None` progress on a token nothing outside the call can reach.
 //!
@@ -731,6 +732,9 @@ pub fn execute_with_progress(
                 detail: format!("{path}: {detail}"),
             }
         }
+        // A `PublishError` keeps its typed code, as at the preflight sites (SKP-V0's typed-refusal
+        // bullet); `Permission` and `Audit` refusals stay plain Display text below.
+        Err(BoundaryError::Publish(e)) => ExecuteOutcome::Refused { message: e.refusal_detail() },
         Err(e) => ExecuteOutcome::Refused { message: e.to_string() },
     }
 }
@@ -1070,7 +1074,8 @@ pub fn ensure_pinned_with_progress(
     match dataset.pin_content_observed(cancel, on_progress) {
         Ok(_) => EnsurePinnedOutcome::Ok,
         Err(EngineError::Cancelled) => EnsurePinnedOutcome::Cancelled,
-        Err(e) => EnsurePinnedOutcome::Failed(e.to_string()),
+        // The typed code travels with the prose (SKP-V0's typed-refusal bullet): `publish.engine`.
+        Err(e) => EnsurePinnedOutcome::Failed(publish::PublishError::from(e).refusal_detail()),
     }
 }
 
