@@ -1445,7 +1445,8 @@ impl SkpHost {
         // under the map guard and dropped only after release — disarming and joining the watch
         // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
         // `forget_dataset`. This is the first step, ahead of the `unknown_dataset` check, so a
-        // close releases its dataset's watch on every outcome, the refusal included
+        // close releases its dataset's watch on every outcome after the SKP version check, the
+        // `unknown_dataset` refusal included
         // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
         let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
         drop(removed_watch);
