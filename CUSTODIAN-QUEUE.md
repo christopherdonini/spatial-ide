@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `381034f3a53a49b38bcd0ace94f9603b6fda88c3a6944d068a632a3f5e332784`) at `2026-09-30T15:53:45.225Z`.
+Generated from `PLAN.yaml` (sha256 `4bebde93e479f17f7a2d394ad77c47a2a2103e547c09821f3d765af49b8690da`) at `2026-09-30T16:00:14.962Z`.
 
 ## 1. Next
 
-- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) (lane `kernel-protocol`, order 6, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -41,7 +41,7 @@ Generated from `PLAN.yaml` (sha256 `381034f3a53a49b38bcd0ace94f9603b6fda88c3a694
 
 ## 5. In progress
 
-- (none)
+- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) — evidence: branch `cut/ticket-liveness-redeem`
 
 ## 6. Proposed / unscheduled
 

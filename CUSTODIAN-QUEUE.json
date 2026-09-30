@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-09-30T15:53:45.225Z",
-  "plan_hash": "381034f3a53a49b38bcd0ace94f9603b6fda88c3a6944d068a632a3f5e332784",
+  "generated_at": "2026-09-30T16:00:14.962Z",
+  "plan_hash": "4bebde93e479f17f7a2d394ad77c47a2a2103e547c09821f3d765af49b8690da",
   "priorities_approved": true,
-  "next": {
-    "id": "kernel-ticket-liveness-redeem-wording",
-    "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
-    "lane": "kernel-protocol",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 6,
-    "budget_minutes": 60,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-27",
-      "done": null
-    },
-    "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes. The full-form preregistration is committed as kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md), under full gating: re-read ticket_liveness after a redeem refusal, through a private step split, with no wire change and no new string; its reading R (ADR-035 Decision 2 already requires the by-name refusal) goes to the gate, and a rejection is invalidator I6, the human's. Correction to this summary: the fix shape is in state/drafts/kernel-generation-close-races-prereg.draft.md, For the custodian, not in the committed close-races form's section 0 item 5, which only puts the window out of that piece's scope."
-  },
-  "ready": [
-    {
-      "id": "kernel-ticket-liveness-redeem-wording",
-      "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 6,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes. The full-form preregistration is committed as kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md), under full gating: re-read ticket_liveness after a redeem refusal, through a private step split, with no wire change and no new string; its reading R (ADR-035 Decision 2 already requires the by-name refusal) goes to the gate, and a rejection is invalidator I6, the human's. Correction to this summary: the fix shape is in state/drafts/kernel-generation-close-races-prereg.draft.md, For the custodian, not in the committed close-races form's section 0 item 5, which only puts the window out of that piece's scope."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -513,7 +475,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "kernel-ticket-liveness-redeem-wording",
+      "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/ticket-liveness-redeem"
+      },
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes. The full-form preregistration is committed as kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md), under full gating: re-read ticket_liveness after a redeem refusal, through a private step split, with no wire change and no new string; its reading R (ADR-035 Decision 2 already requires the by-name refusal) goes to the gate, and a rejection is invalidator I6, the human's. Correction to this summary: the fix shape is in state/drafts/kernel-generation-close-races-prereg.draft.md, For the custodian, not in the committed close-races form's section 0 item 5, which only puts the window out of that piece's scope.",
+      "evidence_label": "branch `cut/ticket-liveness-redeem`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

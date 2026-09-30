@@ -2816,12 +2816,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 6
     depends_on: [engine-cancel-before-stream-window]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/ticket-liveness-redeem}
     budget_minutes: 60
     generation: 1
     felt_verdict: false

@@ -1288,3 +1288,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The closing record** is the form's §10 Amendment 5, references only: the merge, the four gate reports, the round-1 report, the gate-2 reviewer's mutation table as the observation of record, Amendment 4 for size, and the siblings node.
   - **Checks.** verify-test-claims now binds the form's tests; the 4 planned are node 2's.
   - **The queue.** Node 2, `kernel-ticket-liveness-redeem-wording`, is ready and Next.
+- 2026-09-30T16:00Z - **Node 2 is in progress on `cut/ticket-liveness-redeem`, from 6b77287.**
+  - **Setup.** The worktree is `C:/dev/wt/ticket-liveness-redeem` with the DCO fence armed, and the target is `D:/wt-targets/ticket-liveness-redeem`.
+  - **Node 1's cleanup.** Its worktree was removed after being checked clean at the merged 9801778. Its 23 GB D: target was removed after inspection: build output, check logs and the scratch DuckDB extraction, none of it cited as Authority.
+  - **The worker.** One worker-high is dispatched at node:kernel-ticket-liveness-redeem-wording@g1. It builds commit B (the split plus R1 to R4, with R1 and R3 failing), then commit C (the re-read), each mutation observed, and no PR.

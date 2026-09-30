@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T15:53:45.338Z",
-  "plan_hash": "381034f3a53a49b38bcd0ace94f9603b6fda88c3a6944d068a632a3f5e332784",
+  "generated_at": "2026-09-30T16:00:15.091Z",
+  "plan_hash": "4bebde93e479f17f7a2d394ad77c47a2a2103e547c09821f3d765af49b8690da",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4591,7 +4591,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 6,
       "depends_on": [
         "engine-cancel-before-stream-window"
@@ -4601,7 +4601,9 @@
         "minutes": 0
       },
       "gate": "kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/ticket-liveness-redeem"
+      },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
