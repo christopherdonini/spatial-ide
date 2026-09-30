@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T03:35:41.897Z",
-  "plan_hash": "a9b0e48dcd7c348429fccaf9bc7c5170baa36a84ee9956a55938b788fcba708d",
+  "generated_at": "2026-09-30T06:07:22.786Z",
+  "plan_hash": "cf907b05cbf45b2cf1504174feffa643547327467036a78ec56036e9a7e950cf",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1027,6 +1027,25 @@
         "done": null
       },
       "summary": "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases)."
+    },
+    {
+      "id": "type-walk-null-literal-arithmetic",
+      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason."
     }
   ],
   "unscheduled": [

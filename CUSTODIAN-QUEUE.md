@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a9b0e48dcd7c348429fccaf9bc7c5170baa36a84ee9956a55938b788fcba708d`) at `2026-09-30T03:35:41.897Z`.
+Generated from `PLAN.yaml` (sha256 `cf907b05cbf45b2cf1504174feffa643547327467036a78ec56036e9a7e950cf`) at `2026-09-30T06:07:22.786Z`.
 
 ## 1. Next
 
@@ -77,6 +77,7 @@ Generated from `PLAN.yaml` (sha256 `a9b0e48dcd7c348429fccaf9bc7c5170baa36a84ee99
 - **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) (phase `prototype`) — never queued until placed
 - **covering-names-missing-column** — A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3) (phase `prototype`) — never queued until placed
 - **stream-evaluation-failure-fixed-detail** — An admitted predicate's evaluation failure (same-type integer overflow) ends the stream with a fixed, engine-authored detail carrying no file values and no SQL (B-1's 5c, merged with W2-B observation 2) (phase `prototype`) — never queued until placed
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
