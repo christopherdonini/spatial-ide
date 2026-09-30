@@ -544,8 +544,14 @@ async fn a_create_time_engine_refusal_on_the_raw_path_carries_its_typed_code() {
     let rest = detail
         .strip_prefix("engine.viewport_crs_mismatch: ")
         .unwrap_or_else(|| panic!("the detail carries its typed code: {detail}"));
-    assert!(rest.contains("EPSG:4326"), "the words still name the CRS: {detail}");
-    assert!(!rest.starts_with("engine."), "the code is minted once: {detail}");
+    assert!(
+        rest.contains("EPSG:4326"),
+        "the words still name the CRS: {detail}"
+    );
+    assert!(
+        !rest.starts_with("engine."),
+        "the code is minted once: {detail}"
+    );
     assert_eq!(c.batches, 0, "nothing is drawn in the wrong CRS");
     client.close(None).await.ok();
     dp.shutdown().await;
