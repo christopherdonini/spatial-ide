@@ -375,7 +375,12 @@ impl EngineSourceFactory {
         //
         // `None`: the raw `StreamParams` path predates `viewport_query.columns` and gets no
         // projection (F5; the caller rule) — `StreamParams` itself has no such field.
-        let (stream, cancel) = open_engine_stream(&ds, &query, None).map_err(|e| e.to_string())?;
+        //
+        // The create-time refusal takes the same `"<code>: <display>"` shape the mid-stream arm
+        // of `EngineSource::next_into` gives it: `skp::terminal_detail_of` is the one place that
+        // prefix is minted.
+        let (stream, cancel) =
+            open_engine_stream(&ds, &query, None).map_err(|e| skp::terminal_detail_of(&e))?;
         Ok(wrap_for_data_plane(
             stream,
             cancel,
