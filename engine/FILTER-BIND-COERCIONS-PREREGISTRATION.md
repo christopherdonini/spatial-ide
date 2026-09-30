@@ -375,3 +375,37 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
 - **§3, C14** (both cases: a 21-digit literal against BIGINT): predicts TNA, `literal_out_of_bounds`. B-T3's mutation (`MAX_INTEGER_LITERAL_DIGITS` = 21) still fails by name on C14.
 - **§5, invalidators:** the reason-sentence invalidator reads: a refusal that no five-reason sentence states truly.
 - **§8, item 9** reads: a reason outside the five, or a reason sentence false for a corpus row.
+
+### Amendment 4 — 2026-09-30, after gate attempt 2's results, before the round-2 code: §2.3's BETWEEN junction, §2.5(b), new §3 rows C29–C38, and in §4 where B-T1's check (ii) lives, B-T1's enumeration and mutation, B-T3 and B-T8
+
+*A record only, by reference. It was written after the results of gate attempt 2 were seen. The findings are in `state/consults/gates/2026-09-30-b-1-code-gate1-reviewer.md`, B1 to B7 and N1 and N4, and in `state/consults/gates/2026-09-30-b-1-code-gate1-architect.md`, B2 to B6 and item 8. The reviewer's B1 is §5's cast invalidator. The architect ruled that it is removable inside the sighted design, so no new sighting is needed. The Note, the bounds, the reasons and the precedence are unchanged. Where a section is restated below, the text is this form's new wording, not a quotation. Rows C29–C38 are post-result.*
+
+- **§2.3, BETWEEN.** The junction list's BETWEEN item now reads: in a `BETWEEN`, every pair of its three operands, in the order input with lower, input with upper, lower with upper. `operand_types` names the first refused pair in that order. The `IN` item is unchanged, because `walk_expr` admits only literal members. The closing paragraph's list argument covers literal operands. A non-literal BETWEEN bound is covered by the all-pairs rule.
+- **§2.5(b).** Unary `-` is admitted on any numeric operand or a NULL literal, and its type is the operand's type.
+- **§3, new rows:**
+  - C29: `u64 * i64 < 0.5` predicts TNA `<`, with operand types `HUGEINT expression; DECIMAL(2,1) literal` and reason `conversion_can_fail`. The walk's HUGEINT type for this product is the worker's v1.5.5 table, which I have not seen. The discriminator is B-T1b.
+  - C30: `u64 * -9223372036854775808 < 0.5` predicts TNA, `conversion_can_fail`. Operand types are not asserted.
+  - C31: `f32 * f32 > 0` and `f64 + f64 > 0` predict admitted. Hypothesis: the results are REAL and DOUBLE. The discriminator is B-T1b.
+  - C32: `i32 + NULL > 0` and `-NULL > 0` predict admitted. Hypothesis: the plan casts only the NULL. The discriminator is B-T1 (i).
+  - C33: `(f32 + 1e3) = i32` predicts admitted. The `+` result is DOUBLE by rule 6's widening, as the reviewer observed in B4.
+  - C34: `(i32 > 0) = flag`, `(i32 > 0) IS NOT NULL` and `flag = (zone LIKE 'c%')` predict admitted.
+  - C35: `i16 BETWEEN f32 AND i64` predicts TNA `BETWEEN`, with operand types `REAL; BIGINT` and reason `conversion_rounds`.
+  - C36: `i32 BETWEEN i64 AND f64` predicts TNA `BETWEEN`, with operand types `BIGINT; DOUBLE` and reason `conversion_rounds`.
+  - C37: `i64 BETWEEN u64 AND 0.5` and `i64 BETWEEN u64 AND 0.000000000000000001` predict admitted. Hypothesis: the plan's common type is DECIMAL(w,s) with w at most 38, reached by integer casts only. The discriminator is B-T1 (i). A falsification is §5's invalidator.
+  - C38: `i16 BETWEEN i32 AND f64` predicts admitted. It is the control.
+- **§4, B-T1 check (ii) moves** to a new unit test, B-T1b, `the_walk_types_every_arithmetic_node_as_the_binder_does`, in `engine/src/predicate.rs`'s `mod tests`.
+  - Private access within the crate adds no `pub` item (§2.11).
+  - It builds an in-memory table with FX-1's schema. Over it, it rebuilds the arithmetic cases of B-T1's enumeration, completed as below, plus C29–C33. It cannot import an integration test's generator, so it rebuilds the cases from the same operand lists, and its count is asserted as a literal.
+  - For every arithmetic node the walk types `Ok`, it asserts that the walk's type equals the `return_type` of that node in `json_serialize_plan`, including `/`'s own node. Plan text is read at test time only, so §8 item 4 is untouched.
+  - Mutation: rule 6 returns the float column's own type beside a double literal (the arm at ff3a841). It fails by name on the `f32 + 1e3` cases.
+  - B-T1 keeps checks (i) and (iii). Its re-derived table is removed: `expected_arith_type`, `expected_arith_type_colcol`, `expected_division_type`, `fold_or_promote_test`, and `ArithNode`'s use for check (ii).
+- **§4, B-T1's enumeration** is five parts, each counted separately:
+  1. the probe set, 7,620;
+  2. discriminators.txt's N-ARY lists;
+  3. the boundary literals of the sightings' point 2 with their negatives, bare against every integer column and in mixed `IN`/`BETWEEN` lists with 0.5 and with scale 18;
+  4. C23-shaped rows;
+  5. `BETWEEN` over every ordered triple of FX-1's twelve columns, 1,728 cases.
+
+  Second mutation: `check_between` checks only input against each bound. It fails by name on C35's plan cast.
+- **§4, B-T3.** C25 also asserts `RejectedByBinder` with Display's prefix unchanged, and C27 asserts that `construct` names CAST.
+- **§4, B-T8.** "A byte-identical round trip" now reads: a round trip equal as JSON values, as the precedent `every_new_projection_error_fixture_round_trips` does. Its claim is reduced to what the test proves (round 15 (b)).
