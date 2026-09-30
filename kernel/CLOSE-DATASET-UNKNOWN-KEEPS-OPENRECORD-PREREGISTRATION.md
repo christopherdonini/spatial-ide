@@ -180,3 +180,10 @@ Written after gate 1's results were seen (class 1, a post-result amendment). It 
 1. **The suites of record at e1c37b0** are the gate-1 reviewer's check 5 (`state/consults/gates/2026-09-30-close-dataset-unknown-gate1-reviewer.md`). Each is named there with its tool commit and exit code: `verify-cites`, `verify-quotes`, `verify-test-claims` and `verify.mjs` (`verify:plan`) at main 9cf31c8 and in the branch worktree, and `verify-mutation --base 1e68aba --head e1c37b0`. All exit 0.
 2. **`cargo fmt --check` cannot be green for this crate.** `cargo fmt --check -p spatial-kernel` exits 1 at the base 1e68aba and at e1c37b0, with 1046 `Diff in` hunks each (the custodian's runs, 2026-09-30; the base in a scratch worktree, since removed). §9's formatting suite is therefore read as no new hunk, measured by that count and by rustfmt's hunk count for `kernel/src/skp.rs` (99 at both). This is the reading nodes 1 to 3 used.
 3. **Under M2, T1 also fails,** as well as T2 (the gate-1 reviewer's mutation table; the gate-1 architect's N1). §4 registers M2 against T2 only.
+
+### Amendment 3 — Amendment 1's quote pinned; two references corrected (class 3)
+
+Written after gate 2's results were seen (class 3, record fixes; no claim changes). It answers the gate-2 architect's B1 and N1 and the gate-2 reviewer's N1 (`state/consults/gates/2026-09-30-close-dataset-unknown-gate2-architect.md` and `state/consults/gates/2026-09-30-close-dataset-unknown-gate2-reviewer.md`).
+1. Amendment 1's quoted sentence is a sub-line span of `state/consults/gates/2026-09-30-close-dataset-unknown-gate1-architect.md:11` @ dd912f7 sha256:44c52d70f133c6fb8767cbbac2de2ee4a402ddcb485164caaf0f01fac6b298bf, the hash taken over the whole line. It was matched against that line by `grep` before Amendment 1's commit (one hit), and again by a fixed-string `grep` for this amendment (one hit).
+2. Amendment 2 item 2's "the reading nodes 1 to 3 used" has its precedent at `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md` §7.
+3. Amendment 1 item 2's "one comment line" landed as one line reworded into two, +2/−1 at 094a21d, counted in §7 (127 of 150).
