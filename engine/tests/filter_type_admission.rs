@@ -302,11 +302,52 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
         ("C28", "zone = $$x$$", Admitted),
         ("C28", "zone = NULL", Admitted),
         ("C28", "zone LIKE 'c%'", Admitted),
+        // section 10 Amendment 4, post-result (gate attempt 2's findings).
+        (
+            "C29",
+            "u64 * i64 < 0.5",
+            tna_named(
+                "<",
+                ConversionCanFail,
+                &["HUGEINT expression", "DECIMAL(2,1) literal"],
+            ),
+        ),
+        (
+            "C30",
+            "u64 * -9223372036854775808 < 0.5",
+            tna(ConversionCanFail),
+        ),
+        ("C31", "f32 * f32 > 0", Admitted),
+        ("C31", "f64 + f64 > 0", Admitted),
+        ("C32", "i32 + NULL > 0", Admitted),
+        ("C32", "-NULL > 0", Admitted),
+        ("C33", "(f32 + 1e3) = i32", Admitted),
+        ("C34", "(i32 > 0) = flag", Admitted),
+        ("C34", "(i32 > 0) IS NOT NULL", Admitted),
+        ("C34", "flag = (zone LIKE 'c%')", Admitted),
+        (
+            "C35",
+            "i16 BETWEEN f32 AND i64",
+            tna_named("BETWEEN", ConversionRounds, &["REAL", "BIGINT"]),
+        ),
+        (
+            "C36",
+            "i32 BETWEEN i64 AND f64",
+            tna_named("BETWEEN", ConversionRounds, &["BIGINT", "DOUBLE"]),
+        ),
+        ("C37", "i64 BETWEEN u64 AND 0.5", Admitted),
+        (
+            "C37",
+            "i64 BETWEEN u64 AND 0.000000000000000001",
+            Admitted,
+        ),
+        ("C38", "i16 BETWEEN i32 AND f64", Admitted),
     ]
 }
 
-/// B-T3 (section 4). Section 3's table, cell by cell. Mutation: `MAX_INTEGER_LITERAL_DIGITS` = 21.
-/// It fails by name on C14.
+/// B-T3 (section 4, as amended by section 10 Amendment 4). Section 3's table, cell by cell. C25
+/// also asserts `RejectedByBinder` with Display's prefix unchanged, and C27 asserts that
+/// `construct` names CAST. Mutation: `MAX_INTEGER_LITERAL_DIGITS` = 21. It fails by name on C14.
 #[test]
 fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types() {
     let fx = fixture();
@@ -354,6 +395,35 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
                     }
                 };
                 assert_eq!(actual, *code, "{row} ({predicate:?}): code");
+                // Amendment 4, section 4 B-T3: C25 also asserts `RejectedByBinder` with Display's
+                // prefix unchanged (section 5's declared-unchanged list).
+                if row == "C25" {
+                    match &e {
+                        PredicateAdmitError::Filter(FilterError::RejectedByBinder { .. }) => {}
+                        other => panic!("{row} ({predicate:?}): expected RejectedByBinder, got {other:?}"),
+                    }
+                    assert!(
+                        e.to_string()
+                            .starts_with("refused: DuckDB's binder rejected the predicate ("),
+                        "{row} ({predicate:?}): Display's prefix changed: {e}"
+                    );
+                }
+                // Amendment 4, section 4 B-T3: C27 asserts that `construct` names CAST.
+                if row == "C27" {
+                    match &e {
+                        PredicateAdmitError::Filter(FilterError::ConstructNotAdmitted {
+                            construct,
+                        }) => {
+                            assert!(
+                                construct.contains("CAST"),
+                                "{row} ({predicate:?}): construct should name CAST, got {construct:?}"
+                            );
+                        }
+                        other => panic!(
+                            "{row} ({predicate:?}): expected ConstructNotAdmitted naming CAST, got {other:?}"
+                        ),
+                    }
+                }
             }
             (Predicted::Code(code), Ok(_)) => {
                 panic!("{row} ({predicate:?}): expected refused {code}, got admitted")
@@ -488,27 +558,16 @@ fn family_predicate(fam: &str, c: &str) -> String {
     }
 }
 
-/// One arithmetic node a case's predicate carries, general over which side (if either) is a column
-/// or a literal -- `Binary`'s two [`ArithOperand`]s for `+`, `-`, `*`, `/`, `Unary`'s one duckdb
-/// column type for unary `-`. B-T1's check (ii) (the walk's arithmetic result type equals the
-/// plan's `return_type`) is checked against every admitted case that carries one, literal operands
-/// and the literal-to-column folding rule included (`ArithOperand`'s own doc).
-#[derive(Debug, Clone, Copy)]
-enum ArithNode {
-    Binary(ArithOperand, &'static str, ArithOperand),
-    Unary(&'static str),
-}
-
-/// One generated case. `arith` is `Some` for every case built from a `+`, `-`, `*`, `/` or unary
-/// `-` node (section 2.5) -- checked by B-T1's check (ii) where the case is admitted. `arith_op` is
-/// set for every case built from `+`, `-`, `*` or unary `-` (whatever the other operand is) --
-/// section 2.5(d)'s declared campaign exclusion (overflow in admitted integer arithmetic) is
-/// checked against it for check (iii).
+/// One generated case. `arith_op` is set for every case built from `+`, `-`, `*` or unary `-`
+/// (whatever the other operand is) -- section 2.5(d)'s declared campaign exclusion (overflow in
+/// admitted integer arithmetic) is checked against it for check (iii). Section 10 Amendment 4
+/// moves check (ii) (the walk's arithmetic result type equals the plan's `return_type`) to a new
+/// unit test in `engine/src/predicate.rs`'s `mod tests`, `the_walk_types_every_arithmetic_node_as_
+/// the_binder_does` (B-T1b) -- this struct no longer carries an `ArithNode` for it.
 struct Case {
     label: String,
     predicate: String,
     arith_op: Option<&'static str>,
-    arith: Option<ArithNode>,
 }
 
 /// The probe's own case set (`probe.rs.txt`'s `cases` construction), less `u_str`/`n_str`/
@@ -526,43 +585,39 @@ fn generate_cases() -> Vec<Case> {
         "IS NOT DISTINCT FROM",
     ];
 
-    let mut operands: Vec<(String, String, Option<&'static str>)> = LITS
+    let mut operands: Vec<(String, String)> = LITS
         .iter()
-        .map(|(l, t)| (format!("lit:{l}"), t.to_string(), None))
+        .map(|(l, t)| (format!("lit:{l}"), t.to_string()))
         .collect();
     for (n, t) in COLS {
-        operands.push((format!("col:{t}"), n.to_string(), Some(*t)));
+        operands.push((format!("col:{t}"), n.to_string()));
     }
 
     let mut cases = Vec::new();
-    for (c, cty) in COLS {
-        for (olabel, o, oty) in &operands {
+    for (c, _cty) in COLS {
+        for (olabel, o) in &operands {
             for op in CMP {
                 cases.push(Case {
                     label: format!("cmp {op} {c} {olabel}"),
                     predicate: format!("{c} {op} {o}"),
                     arith_op: None,
-                    arith: None,
                 });
             }
             cases.push(Case {
                 label: format!("cmp = reversed {c} {olabel}"),
                 predicate: format!("{o} = {c}"),
                 arith_op: None,
-                arith: None,
             });
             cases.push(Case {
                 label: format!("between {c} {olabel}"),
                 predicate: format!("{c} BETWEEN {o} AND {o}"),
                 arith_op: None,
-                arith: None,
             });
             if olabel.starts_with("lit:") {
                 cases.push(Case {
                     label: format!("in {c} {olabel}"),
                     predicate: format!("{c} IN ({o}, {o})"),
                     arith_op: None,
-                    arith: None,
                 });
             }
             for (fam, op) in [
@@ -575,11 +630,6 @@ fn generate_cases() -> Vec<Case> {
                     label: format!("{fam} {c} {olabel}"),
                     predicate: format!("{c} {op} {o} > 0"),
                     arith_op: Some(op),
-                    arith: Some(ArithNode::Binary(
-                        ArithOperand::Col(*cty),
-                        op,
-                        arith_operand_of(olabel, *oty),
-                    )),
                 });
             }
         }
@@ -591,35 +641,10 @@ fn generate_cases() -> Vec<Case> {
                 "arith / 0 = 0" => Some("/"),
                 _ => None,
             };
-            let arith = match *fam {
-                "unary minus then > 0" => Some(ArithNode::Unary(*cty)),
-                "arith + 1 = 0" => Some(ArithNode::Binary(
-                    ArithOperand::Col(*cty),
-                    "+",
-                    ArithOperand::IntLit(1),
-                )),
-                "arith * 2 = 0" => Some(ArithNode::Binary(
-                    ArithOperand::Col(*cty),
-                    "*",
-                    ArithOperand::IntLit(2),
-                )),
-                "arith / 0 = 0" => Some(ArithNode::Binary(
-                    ArithOperand::Col(*cty),
-                    "/",
-                    ArithOperand::IntLit(0),
-                )),
-                "arith self * then > 0" => Some(ArithNode::Binary(
-                    ArithOperand::Col(*cty),
-                    "*",
-                    ArithOperand::Col(*cty),
-                )),
-                _ => None,
-            };
             cases.push(Case {
                 label: format!("{fam} {c}"),
                 predicate: family_predicate(fam, c),
                 arith_op,
-                arith,
             });
         }
     }
@@ -729,27 +754,6 @@ fn walk_casts(v: &Value, in_division: bool, out: &mut Vec<Cast>) {
     }
 }
 
-fn find_arith_return_types(v: &Value, out: &mut Vec<(String, String)>) {
-    match v {
-        Value::Object(m) => {
-            if m.get("expression_class").and_then(Value::as_str) == Some("BOUND_FUNCTION")
-                && m.get("is_operator").and_then(Value::as_bool) == Some(true)
-            {
-                if let Some(name) = m.get("name").and_then(Value::as_str) {
-                    if ["+", "-", "*"].contains(&name) {
-                        out.push((name.to_string(), type_str(&m["return_type"])));
-                    }
-                }
-            }
-            for (_, x) in m {
-                find_arith_return_types(x, out);
-            }
-        }
-        Value::Array(a) => a.iter().for_each(|x| find_arith_return_types(x, out)),
-        _ => {}
-    }
-}
-
 /// `json_serialize_plan` of `SELECT * FROM read_parquet('<FX-1>') WHERE (<pred>)` -- an oracle
 /// wholly independent of `AdmittedPredicate::admit`'s own decision (it runs whether or not the
 /// engine admitted `pred`; only admitted cases' plans are inspected by the caller).
@@ -801,10 +805,15 @@ fn decimal_width(name: &str) -> Option<u32> {
 
 /// Section 7's declared cast set, re-derived from the governing text (independent of
 /// `predicate.rs::type_of_arithmetic`/`is_admitted_comparison`'s own implementation): no cast to or
-/// from BOOLEAN (except `NULL`), no cast from VARCHAR; integer to a wider integer or `HUGEINT`;
-/// integer of at most 64 bits to `DECIMAL(w,s)` with `w` at most 38; integer of at most 16 bits to
-/// `REAL`, of at most 32 bits to `DOUBLE`; `REAL` to `DOUBLE`; as `/` operands, any integer to the
-/// division's float type; on literals, numeric to numeric, `NULL` to any, VARCHAR to VARCHAR only.
+/// from BOOLEAN (except `NULL`), no cast from VARCHAR; integer to a wider integer of the *same*
+/// signedness or to `HUGEINT` unconditionally; integer of at most 64 bits to `DECIMAL(w,s)` with
+/// `w` at most 38; integer of at most 16 bits to `REAL`, of at most 32 bits to `DOUBLE`; `REAL` to
+/// `DOUBLE`; as `/` operands, any integer to the division's float type; on literals, numeric to
+/// numeric, `NULL` to any, VARCHAR to VARCHAR only. Corrected in round 2 (W2; architect B2) to
+/// match section 7 exactly: `UHUGEINT` is reachable only via the general integer branch below (an
+/// unsigned integer widening to it), never unconditionally the way `HUGEINT` is (section 7 says
+/// "or HUGEINT", not "or a huge integer type"), and a `DECIMAL` target is declared only for a
+/// **from** side of at most 64 bits.
 fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool {
     if from == to {
         return true;
@@ -829,7 +838,7 @@ fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool
         }
     }
     if let Some((fb, fs)) = int_info(from) {
-        if to == "HUGEINT" || to == "UHUGEINT" {
+        if to == "HUGEINT" {
             return true;
         }
         if let Some((tb, ts)) = int_info(to) {
@@ -842,7 +851,7 @@ fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool
             return false;
         }
         if to.starts_with("DECIMAL(") {
-            return decimal_width(to).unwrap_or(99) <= 38;
+            return fb <= 64 && decimal_width(to).unwrap_or(99) <= 38;
         }
         if to == "FLOAT" {
             return fb <= 16;
@@ -858,249 +867,188 @@ fn is_declared_cast(kind: &str, from: &str, to: &str, in_division: bool) -> bool
     false
 }
 
-// ---- Oracle 3: the declared integer-promotion table (section 2.5(a)), re-derived independently ----
-
-fn bits_to_name(bits: u32, signed: bool) -> &'static str {
-    match (bits, signed) {
-        (8, true) => "TINYINT",
-        (16, true) => "SMALLINT",
-        (32, true) => "INTEGER",
-        (64, true) => "BIGINT",
-        (_, true) => "HUGEINT",
-        (8, false) => "UTINYINT",
-        (16, false) => "USMALLINT",
-        (32, false) => "UINTEGER",
-        (64, false) => "UBIGINT",
-        (_, false) => "UHUGEINT",
-    }
-}
-
-fn int_promote(a: &str, b: &str) -> &'static str {
-    let (ab, asig) = int_info(a).expect("integer type");
-    let (bb, bsig) = int_info(b).expect("integer type");
-    if asig == bsig {
-        return bits_to_name(ab.max(bb), asig);
-    }
-    let (sb, ub) = if asig { (ab, bb) } else { (bb, ab) };
-    if sb > ub {
-        bits_to_name(sb, true)
-    } else if ub >= 64 {
-        "HUGEINT"
-    } else {
-        "BIGINT"
-    }
-}
-
-fn is_float_name(n: &str) -> bool {
-    n == "FLOAT" || n == "DOUBLE"
-}
-
-/// The expected arithmetic result type for `a op b`, both columns (no literal-folding to
-/// replicate) -- `None` when `op` does not admit this pair at all (the caller only applies this
-/// where the engine itself admitted the case).
-fn expected_arith_type_colcol(a: &str, b: &str) -> Option<&'static str> {
-    if int_info(a).is_some() && int_info(b).is_some() {
-        return Some(int_promote(a, b));
-    }
-    if is_float_name(a) || is_float_name(b) {
-        return match (a, b) {
-            ("FLOAT", "DOUBLE") | ("DOUBLE", "FLOAT") => Some("DOUBLE"),
-            _ if a == "FLOAT" || b == "FLOAT" => Some("FLOAT"),
-            _ => Some("DOUBLE"),
-        };
-    }
-    None
-}
-
-/// One operand of an arithmetic node, known statically from how the case was built (never read at
-/// runtime) -- enough to re-derive section 2.5(a)'s declared table and `fold_or_promote_integer`'s
-/// own literal-folding rule independently of `predicate.rs`.
-#[derive(Debug, Clone, Copy)]
-enum ArithOperand {
-    /// A column, by its DuckDB type name (`COLS`).
-    Col(&'static str),
-    /// An integer literal within section 7's bounds, its exact value -- the only integer literals
-    /// this corpus ever admits into `+`/`-`/`*` against an integer column (`LITS`'s `int`,
-    /// `int_neg`, `int_300`, `int_big`, `int_huge`, and the family forms' inline `1`/`2`/`0`).
-    IntLit(i128),
-    /// A decimal literal within section 7's bounds (`LITS`'s `dec_s1`, `dec_s9`, `dec_s18`,
-    /// `dec_0_1`, `dec_2p53`, `dec_neg`): rule 6's "numeric literal within bounds" against a float
-    /// column (section 2.3), but O-5 refuses it outright against an integer or another decimal.
-    DecimalLit,
-    /// A literal DuckDB parses as `DOUBLE` (`LITS`'s `dbl`, `dbl_neg`, `dbl_long` -- confirmed by
-    /// direct `json_serialize_sql` probing while building this test, the same discipline the
-    /// product's own doc comments cite).
-    DoubleLit,
-    /// Any other operand a case can carry (a decimal literal beyond section 7's bounds, a string,
-    /// `NULL`, a bit/blob/dollar literal, `int_uhuge`): section 2.5(a) never admits `+`/`-`/`*` for
-    /// these (an out-of-bounds literal is refused outright; the rest fail an earlier numeric check),
-    /// so no admitted case reaches `(ii)` with one -- kept only so classification stays total.
-    NeverArithAdmitted,
-}
-
-/// `LITS`'s own label -> [`ArithOperand`], for the literal operand of an "arith X" case built from
-/// the main loop (`generate_cases`). Division reads this classification too: declared
-/// floating-point division only needs to know whether the literal is `DoubleLit`, which this same
-/// mapping already carries.
-fn lits_arith_operand(label: &str) -> ArithOperand {
-    match label {
-        "int" => ArithOperand::IntLit(1),
-        "int_neg" => ArithOperand::IntLit(-1),
-        "int_300" => ArithOperand::IntLit(300),
-        "int_big" => ArithOperand::IntLit(3_000_000_000),
-        "int_huge" => ArithOperand::IntLit(9_223_372_036_854_775_808),
-        // Within section 7's bounds (scale <= 18, integer digits <= 20) -- `dec_s19` and wider
-        // scales are not, and fall through to `NeverArithAdmitted`.
-        "dec_s1" | "dec_s9" | "dec_s18" | "dec_0_1" | "dec_2p53" | "dec_neg" => {
-            ArithOperand::DecimalLit
-        }
-        "dbl" | "dbl_neg" | "dbl_long" => ArithOperand::DoubleLit,
-        _ => ArithOperand::NeverArithAdmitted,
-    }
-}
-
-/// The literal or column operand of an "arith X" case built from the main loop: `oty` is `Some` for
-/// a column (its DuckDB type name), `None` for a literal (`olabel` is `"lit:<LITS label>"`).
-fn arith_operand_of(olabel: &str, oty: Option<&'static str>) -> ArithOperand {
-    match oty {
-        Some(t) => ArithOperand::Col(t),
-        None => lits_arith_operand(
-            olabel
-                .strip_prefix("lit:")
-                .expect("a literal operand's own label"),
-        ),
-    }
-}
-
-/// Does `v` fit exactly inside integer type `ty`'s own range -- `fits_int_type`'s precedent in
-/// `predicate.rs`, re-derived here from `int_info` (oracle 2) rather than read from it.
-fn fits_int_range(v: i128, ty: &str) -> bool {
-    let Some((bits, signed)) = int_info(ty) else {
-        return false;
-    };
-    match (bits, signed) {
-        (8, true) => (i8::MIN as i128..=i8::MAX as i128).contains(&v),
-        (16, true) => (i16::MIN as i128..=i16::MAX as i128).contains(&v),
-        (32, true) => (i32::MIN as i128..=i32::MAX as i128).contains(&v),
-        (64, true) => (i64::MIN as i128..=i64::MAX as i128).contains(&v),
-        (_, true) => true,
-        (8, false) => (0..=u8::MAX as i128).contains(&v),
-        (16, false) => (0..=u16::MAX as i128).contains(&v),
-        (32, false) => (0..=u32::MAX as i128).contains(&v),
-        (64, false) => (0..=u64::MAX as i128).contains(&v),
-        (_, false) => v >= 0,
-    }
-}
-
-/// The DuckDB type name an integer literal of value `v` parses as -- `literal_typed`'s own sequence
-/// (`INTEGER`, `BIGINT`, `HUGEINT`; this corpus's admitted literal values never reach `UHUGEINT`),
-/// confirmed by direct `json_serialize_sql` probing while building this test (`int_huge`'s
-/// `9223372036854775808` measures `HUGEINT`).
-fn int_literal_type_name(v: i128) -> &'static str {
-    if (i32::MIN as i128..=i32::MAX as i128).contains(&v) {
-        "INTEGER"
-    } else if (i64::MIN as i128..=i64::MAX as i128).contains(&v) {
-        "BIGINT"
-    } else {
-        "HUGEINT"
-    }
-}
-
-/// The `+`/`-`/`*` result type when one operand is an integer literal of value `v` and the other is
-/// the integer column `other` -- `fold_or_promote_integer`'s own precedent (section 2.5(a) rule 3):
-/// DuckDB folds the literal down to the column's own type first when its exact value fits (measured
-/// at v1.5.5: `i8 + 1` stays `TINYINT`), and only promotes via `int_promote` when it does not.
-fn fold_or_promote_test(v: i128, other: &'static str) -> &'static str {
-    if fits_int_range(v, other) {
-        other
-    } else {
-        int_promote(int_literal_type_name(v), other)
-    }
-}
-
-/// The expected `+`/`-`/`*` result type for any operand pair this corpus builds. Generalizes
-/// [`expected_arith_type_colcol`] (still used for the column/column arm) to a literal on either
-/// side, applying section 2.5(a)'s rules 3, 5 and 6 the same way `admitted_arithmetic_result` does.
-/// `None` means the declared table does not admit this pair at all (the caller only applies this
-/// where the engine itself admitted the case).
-fn expected_arith_type(l: ArithOperand, r: ArithOperand) -> Option<&'static str> {
-    use ArithOperand::{Col, DecimalLit, DoubleLit, IntLit};
-    match (l, r) {
-        (Col(a), Col(b)) => expected_arith_type_colcol(a, b),
-        (Col(a), IntLit(v)) | (IntLit(v), Col(a)) => {
-            if int_info(a).is_some() {
-                // rule 3: integer with an integer literal within bounds -- fold or promote.
-                Some(fold_or_promote_test(v, a))
-            } else if is_float_name(a) {
-                // rule 6: a float column with an integer literal within bounds -> the column's own
-                // type (only a *double* literal widens a REAL column to DOUBLE; see the DoubleLit
-                // arm below).
-                Some(a)
-            } else {
-                None
-            }
-        }
-        (Col(a), DecimalLit) | (DecimalLit, Col(a)) => {
-            if is_float_name(a) {
-                // rule 6: a float column with a decimal literal within bounds -> the column's own
-                // type (the widening the sightings note is stated only for a *double* literal).
-                Some(a)
-            } else {
-                // O-5: a decimal literal beside an integer refuses outright (section 2.5(a)).
-                None
-            }
-        }
-        (Col(a), DoubleLit) | (DoubleLit, Col(a)) => {
-            if is_float_name(a) {
-                // rule 6: "a REAL operand against a double literal widens to DOUBLE, which is
-                // lossless" (section 2.3 rule 6, section 10 Amendment 1's restatement) -- a DOUBLE
-                // column already carries that type.
-                Some("DOUBLE")
-            } else if int_info(a).map(|(bits, _)| bits <= 32).unwrap_or(false) {
-                // rule 5: a double literal with an integer of at most 32 bits -> DOUBLE.
-                Some("DOUBLE")
-            } else {
-                None
-            }
-        }
-        _ => None,
-    }
-}
-
-/// `/`'s own expected result type (section 2.5(c), replaced by section 10 Amendment 1 under O-1),
-/// over a column or a literal on either side: `FLOAT` when one operand is `FLOAT`-typed and neither
-/// operand is `DOUBLE`-typed or a `DOUBLE` literal, else `DOUBLE`. A literal is never itself
-/// `FLOAT`-typed (DuckDB's own literal kinds never include `REAL`), so only `DoubleLit` can change
-/// the choice.
-fn expected_division_type(l: ArithOperand, r: ArithOperand) -> &'static str {
-    use ArithOperand::{Col, DoubleLit};
-    let is_real = |o: &ArithOperand| matches!(o, Col(n) if *n == "FLOAT");
-    let is_double =
-        |o: &ArithOperand| matches!(o, Col(n) if *n == "DOUBLE") || matches!(o, DoubleLit);
-    if (is_real(&l) || is_real(&r)) && !(is_double(&l) || is_double(&r)) {
-        "FLOAT"
-    } else {
-        "DOUBLE"
-    }
-}
-
 /// Section 2.5(d)'s declared campaign exclusion: overflow in admitted integer arithmetic
 /// (`+`, `-`, `*`, unary `-`). Every admission rule this piece implements only ever admits
 /// `+`/`-`/`*` between two "Integer"-class operands or a float-involving pair (section 2.5(a)),
-/// and float arithmetic never raises DuckDB's "Overflow" error text (IEEE 754 has no such trap) --
-/// so an admitted case whose operator is one of these four and whose stream error contains
-/// "Overflow" is, by construction, exactly section 2.5(d)'s class, with no need to separately
-/// re-derive "both operands are integer" from the case's own text. `/` is excluded by name:
-/// section 2.5(d) names only `+`, `-`, `*` and unary `-`.
+/// and float arithmetic never raises DuckDB's "Overflow" error text at v1.5.5 (correction round 2,
+/// W11; architect B8) (IEEE 754 has no such trap) -- so an admitted case whose operator is one of
+/// these four and whose stream error contains "Overflow" is, by construction, exactly section
+/// 2.5(d)'s class, with no need to separately re-derive "both operands are integer" from the
+/// case's own text. `/` is excluded by name: section 2.5(d) names only `+`, `-`, `*` and unary `-`.
 fn is_declared_overflow(arith_op: Option<&str>, terminal_error: &str) -> bool {
     terminal_error.contains("Overflow") && matches!(arith_op, Some("+") | Some("-") | Some("*"))
 }
 
-/// B-T1 (section 4). The enumeration is the probe's case set, less `u_str`/`n_str`/`cmp = TRUE`
-/// (`generate_cases`'s own doc), asserted equal to 7,620. FX-1 carries inf, -inf, nan and the
-/// maximum for both REAL and DOUBLE by construction (`FILTER_WITNESS_F32`/`FILTER_WITNESS_F64`).
+/// section 10 Amendment 4's B-T1 enumeration part 2: discriminators.txt's N-ARY lists
+/// (`state/drafts/b1-p0/discriminators.txt`, every `^N-ARY` row's own predicate, byte for byte),
+/// 18 rows exactly.
+const NARY_PREDICATES: &[&str] = &[
+    "i64 IN (9223372036854775808, 0.5)",
+    "i64 IN (3000000000, 0.5)",
+    "i64 BETWEEN 0.5 AND 9223372036854775808",
+    "i64 IN (1, 1.5, 3000000000)",
+    "i64 IN (170141183460469231731687303715884105727, 1)",
+    "i64 IN (170141183460469231731687303715884105727, 0.5)",
+    "u64 IN (-1, 0.5)",
+    "u64 IN (9223372036854775808, 0.000000000000000001)",
+    "u64 IN (-1, 0.000000000000000001)",
+    "u64 BETWEEN -1 AND 0.000000000000000001",
+    "i32 IN (3000000000, 0.5)",
+    "i8 IN (1, 0.000000000000000001)",
+    "i64 IN (0.5, 0.000000000000000001)",
+    "u64 IN (0.5, 0.000000000000000001, -1)",
+    "i64 = 9223372036854775808",
+    "i64 BETWEEN -9223372036854775809 AND 0.5",
+    "f32 IN (1, 1.5)",
+    "f64 IN (9223372036854775808, 0.5)",
+];
+
+fn nary_cases() -> Vec<Case> {
+    NARY_PREDICATES
+        .iter()
+        .map(|p| Case {
+            label: format!("N-ARY {p}"),
+            predicate: p.to_string(),
+            arith_op: None,
+        })
+        .collect()
+}
+
+/// The sightings' B-1 point 2 boundary literals and their negatives (`state/directives/
+/// 2026-09-29-a2-1-and-b-1-sightings.md`): u64::MAX, u64::MAX+1 and the 20-nines admitted case, and
+/// the 21-digit refused case.
+const BOUNDARY_MAGNITUDES: &[&str] = &[
+    "18446744073709551615",
+    "18446744073709551616",
+    "99999999999999999999",
+    "100000000000000000000",
+];
+
+/// section 10 Amendment 4's B-T1 enumeration part 3: the sightings' point 2 boundary literals with
+/// their negatives (8 literals total), bare against every integer column and in mixed `IN`/
+/// `BETWEEN` lists with `0.5` and with a scale-18 literal -- 8 columns x 8 literals x 5 forms = 320
+/// cases. It also carries the two Amendment 4 hypothesis pins whose own discriminator is named
+/// "B-T1 (i)": C32's second case (`-NULL > 0`, no column at all) and C37 (an integer `BETWEEN` a
+/// `UBIGINT` column bound and a decimal literal) -- 323 cases in all.
+fn boundary_literal_cases() -> Vec<Case> {
+    let int_cols: Vec<&str> = COLS
+        .iter()
+        .filter(|(_, ty)| int_info(ty).is_some())
+        .map(|(name, _)| *name)
+        .collect();
+    let mut literals: Vec<String> = Vec::new();
+    for m in BOUNDARY_MAGNITUDES {
+        literals.push((*m).to_string());
+        literals.push(format!("-{m}"));
+    }
+
+    let mut cases = Vec::new();
+    for c in &int_cols {
+        for lit in &literals {
+            cases.push(Case {
+                label: format!("boundary bare {c} {lit}"),
+                predicate: format!("{c} = {lit}"),
+                arith_op: None,
+            });
+            cases.push(Case {
+                label: format!("boundary in-0.5 {c} {lit}"),
+                predicate: format!("{c} IN ({lit}, 0.5)"),
+                arith_op: None,
+            });
+            cases.push(Case {
+                label: format!("boundary in-scale18 {c} {lit}"),
+                predicate: format!("{c} IN ({lit}, 0.000000000000000001)"),
+                arith_op: None,
+            });
+            cases.push(Case {
+                label: format!("boundary between-0.5 {c} {lit}"),
+                predicate: format!("{c} BETWEEN {lit} AND 0.5"),
+                arith_op: None,
+            });
+            cases.push(Case {
+                label: format!("boundary between-scale18 {c} {lit}"),
+                predicate: format!("{c} BETWEEN {lit} AND 0.000000000000000001"),
+                arith_op: None,
+            });
+        }
+    }
+    cases.push(Case {
+        label: "C32 second case: -NULL > 0".to_string(),
+        predicate: "-NULL > 0".to_string(),
+        arith_op: Some("-"),
+    });
+    cases.push(Case {
+        label: "C37a: i64 BETWEEN u64 AND 0.5".to_string(),
+        predicate: "i64 BETWEEN u64 AND 0.5".to_string(),
+        arith_op: None,
+    });
+    cases.push(Case {
+        label: "C37b: i64 BETWEEN u64 AND 0.000000000000000001".to_string(),
+        predicate: "i64 BETWEEN u64 AND 0.000000000000000001".to_string(),
+        arith_op: None,
+    });
+    cases
+}
+
+/// section 10 Amendment 4's B-T1 enumeration part 4: C23-shaped rows -- C23 itself
+/// (`i64 IN (123456789012345678901.5, 0.000000000000000001)`, a 21-integer-digit decimal literal,
+/// beyond section 7's bound, mixed with a scale-18 literal) generalized over every integer column
+/// and both `IN` and `BETWEEN` -- 8 columns x 2 forms = 16 cases.
+const C23_OUT_OF_BOUNDS_DECIMAL: &str = "123456789012345678901.5";
+const C23_SCALE_18_DECIMAL: &str = "0.000000000000000001";
+
+fn c23_shaped_cases() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for (c, ty) in COLS {
+        if int_info(ty).is_none() {
+            continue;
+        }
+        cases.push(Case {
+            label: format!("C23-shaped in {c}"),
+            predicate: format!("{c} IN ({C23_OUT_OF_BOUNDS_DECIMAL}, {C23_SCALE_18_DECIMAL})"),
+            arith_op: None,
+        });
+        cases.push(Case {
+            label: format!("C23-shaped between {c}"),
+            predicate: format!("{c} BETWEEN {C23_OUT_OF_BOUNDS_DECIMAL} AND {C23_SCALE_18_DECIMAL}"),
+            arith_op: None,
+        });
+    }
+    cases
+}
+
+/// section 10 Amendment 4's B-T1 enumeration part 5: `BETWEEN` over every ordered triple of FX-1's
+/// twelve columns, 12<sup>3</sup> = 1,728 cases exactly -- this is what pins the all-pairs
+/// `BETWEEN` fix (reviewer B1; section 2.3 as amended): a column-bound triple like
+/// `i16 BETWEEN f32 AND i64` only refuses once the lower-upper pair is itself checked.
+fn between_triple_cases() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for (a, _) in COLS {
+        for (b, _) in COLS {
+            for (c, _) in COLS {
+                cases.push(Case {
+                    label: format!("between-triple {a} BETWEEN {b} AND {c}"),
+                    predicate: format!("{a} BETWEEN {b} AND {c}"),
+                    arith_op: None,
+                });
+            }
+        }
+    }
+    cases
+}
+
+/// B-T1 (section 4, as amended by section 10 Amendment 4). The enumeration is five parts, each
+/// counted and asserted separately: the probe set (7,620); discriminators.txt's N-ARY lists (18);
+/// the boundary literals with their negatives, bare and in mixed lists, plus the C32/C37 pins
+/// (323); the C23-shaped rows (16); and `BETWEEN` over every ordered triple of FX-1's twelve
+/// columns (1,728). FX-1 carries inf, -inf, nan and the maximum for both REAL and DOUBLE by
+/// construction (`FILTER_WITNESS_F32`/`FILTER_WITNESS_F64`). Amendment 4 moves check (ii) (the
+/// walk's arithmetic result type against the plan's `return_type`) to B-T1b
+/// (`engine/src/predicate.rs`'s `mod tests`); this test keeps only checks (i) and (iii).
 /// Mutation: rule 5 widened to 64-bit integers. It fails by name on `i64 = 1e3` (a BIGINT->DOUBLE
-/// column cast outside the declared set).
+/// column cast outside the declared set). Second mutation (Amendment 4): `check_between` checks
+/// only input against each bound. It fails by name on C35's plan cast (`i16 BETWEEN f32 AND i64`,
+/// part 5's own enumeration).
 #[test]
 fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     assert!(spatial_engine::fixture::FILTER_WITNESS_F32.contains(&f32::INFINITY));
@@ -1121,12 +1069,25 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     let conn = configured_connection().expect("oracle connection");
     let fx1_path = fx.path.to_string_lossy().replace('\\', "/");
 
-    let cases = generate_cases();
-    assert_eq!(
-        cases.len(),
-        7_620,
-        "section 4 B-T1's declared enumeration count"
-    );
+    let part1 = generate_cases();
+    assert_eq!(part1.len(), 7_620, "B-T1 enumeration part 1: the probe set");
+    let part2 = nary_cases();
+    assert_eq!(part2.len(), 18, "B-T1 enumeration part 2: discriminators.txt's N-ARY lists");
+    let part3 = boundary_literal_cases();
+    assert_eq!(part3.len(), 323, "B-T1 enumeration part 3: boundary literals");
+    let part4 = c23_shaped_cases();
+    assert_eq!(part4.len(), 16, "B-T1 enumeration part 4: C23-shaped rows");
+    let part5 = between_triple_cases();
+    assert_eq!(part5.len(), 1_728, "B-T1 enumeration part 5: BETWEEN triples");
+
+    let cases: Vec<Case> = part1
+        .into_iter()
+        .chain(part2)
+        .chain(part3)
+        .chain(part4)
+        .chain(part5)
+        .collect();
+    assert_eq!(cases.len(), 9_705, "B-T1's five parts together");
 
     let mut admitted = 0usize;
     let mut refused = 0usize;
@@ -1169,81 +1130,7 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
             }
         }
 
-        // (ii) the walk's arithmetic result type equals the plan's return_type -- every admitted
-        // case built from a +, -, *, / or unary - node, literal operands and the literal-to-column
-        // folding rule included (`ArithNode`/`ArithOperand`'s own doc).
-        if let Some(node) = case.arith {
-            let mut rt = Vec::new();
-            for f in &filters {
-                find_arith_return_types(f, &mut rt);
-            }
-            match node {
-                ArithNode::Binary(l, op, r) if op == "/" => {
-                    // division's own return type sits on the top-level comparison's own child, not
-                    // on a named BOUND_FUNCTION -- read it from the composed cast set instead: both
-                    // operands must have been declared-cast into the same float type, or needed no
-                    // cast because they already carried it.
-                    let expected = expected_division_type(l, r);
-                    let observed: Vec<&str> = casts
-                        .iter()
-                        .filter(|c| c.in_division)
-                        .map(|c| c.to.as_str())
-                        .collect();
-                    if observed.iter().any(|t| *t != expected) {
-                        failures.push(format!(
-                            "{}: division result type -- expected {expected}, casts show {observed:?}",
-                            case.label
-                        ));
-                    }
-                }
-                ArithNode::Binary(l, op, r) => match expected_arith_type(l, r) {
-                    Some(expected) => {
-                        if rt.is_empty() {
-                            failures.push(format!(
-                                "{}: no {op} BOUND_FUNCTION found in the plan",
-                                case.label
-                            ));
-                        }
-                        for (name, ty) in &rt {
-                            if name == op && ty != expected {
-                                failures.push(format!(
-                                    "{}: {op} return_type -- expected {expected}, plan says {ty}",
-                                    case.label
-                                ));
-                            }
-                        }
-                    }
-                    None => failures.push(format!(
-                        "{}: admitted, but this {op} operand pair is not in the declared \
-                         arithmetic-admission set at all ({l:?}, {r:?})",
-                        case.label
-                    )),
-                },
-                ArithNode::Unary(cty) => {
-                    if is_numeric_name(cty) {
-                        if rt.is_empty() {
-                            failures.push(format!(
-                                "{}: no unary - BOUND_FUNCTION found in the plan",
-                                case.label
-                            ));
-                        }
-                        for (name, ty) in &rt {
-                            if name == "-" && ty != cty {
-                                failures.push(format!(
-                                    "{}: unary - return_type -- expected {cty}, plan says {ty}",
-                                    case.label
-                                ));
-                            }
-                        }
-                    } else {
-                        failures.push(format!(
-                            "{}: admitted, but unary - over a non-numeric {cty} is not in the declared set",
-                            case.label
-                        ));
-                    }
-                }
-            }
-        }
+        // (ii) moved to B-T1b (`engine/src/predicate.rs`'s `mod tests`, section 10 Amendment 4).
 
         // (iii) the product stream ends without error, outside section 2.5(d).
         match drain_ids(&ds, &admitted_predicate) {

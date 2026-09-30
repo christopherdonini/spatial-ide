@@ -1986,8 +1986,9 @@ pub fn error_of(e: &EngineError) -> SkpError {
 
 /// Maps every `FilterError` variant (`engine::predicate`, P3's admission) to its declared
 /// `skp.filter_*` wire code and named fields — `NEXT-CUT.md` design essential 5's taxonomy,
-/// field for field. **No wildcard arm**: a twelfth `FilterError` variant fails this build until it
-/// is mapped here, the same discipline [`error_of`] applies to `EngineError` above. `message` is
+/// field for field. **No wildcard arm**: a thirteenth `FilterError` variant fails this build until
+/// it is mapped here (correction round 2, W10; architect B7, reviewer B7), the same discipline
+/// [`error_of`] applies to `EngineError` above. `message` is
 /// `FilterError`'s own `Display` output, unedited, exactly [`error_of`]'s own convention.
 pub fn filter_error_of(e: &FilterError) -> SkpError {
     let message = e.to_string();
@@ -2053,8 +2054,9 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
     }
 }
 
-/// [`filter_error_of`]'s `TypeNotAdmitted` arm, named so this module's own tests can call it
-/// directly (B-T6). `operand_types`' entries are joined with `"; "` on the wire
+/// [`filter_error_of`]'s `TypeNotAdmitted` arm, factored out for readability. B-T6 calls
+/// [`filter_error_of`] itself, not this function directly (correction round 2, W12; architect N4,
+/// reviewer N5). `operand_types`' entries are joined with `"; "` on the wire
 /// (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §2.6: a `DECIMAL` name carries a comma).
 /// `reason`'s wire value comes from [`TypeRefusalReason::wire_value`] (O-4) — never from this
 /// module's own text.

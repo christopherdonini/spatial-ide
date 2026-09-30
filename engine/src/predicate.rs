@@ -224,7 +224,8 @@ impl AdmittedPredicate {
 ///
 /// **A deliberate 1:1 correspondence with `NEXT-CUT.md` design essential 5's twelve `skp.filter_*`
 /// wire codes, field for field — not a coincidence.** P4 maps each variant to its SKP code by name;
-/// a twelfth variant here would be inventing wire taxonomy this crate does not own. Every match on
+/// a thirteenth variant here would be inventing wire taxonomy this crate does not own (correction
+/// round 2, W10; architect B7, reviewer B7). Every match on
 /// this enum in this module is exhaustive, with no wildcard arm, for the same reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterError {
@@ -1552,8 +1553,8 @@ fn engine_type_of_surrogate(name: &str) -> EngineType {
 /// A `CONSTANT` node's integer value (`INTEGER`/`BIGINT`/`HUGEINT`/`UHUGEINT`), read from
 /// `json_serialize_sql`'s own JSON: a plain JSON number when it fits `i64`/`u64`, or DuckDB's own
 /// `{"lower": u64, "upper": ...}` split for a 128-bit value (`upper` signed for `HUGEINT`, unsigned
-/// for `UHUGEINT`) -- measured directly against `json_serialize_sql`'s real output while building
-/// this module.
+/// for `UHUGEINT`) -- measured directly against `json_serialize_sql`'s real output at v1.5.5 while
+/// building this module (correction round 2, W11; architect B8).
 fn integer_literal_value(id: &str, raw: Option<&Value>) -> Result<i128, FilterError> {
     let raw = raw.ok_or_else(|| missing_field("CONSTANT.value.value"))?;
     if let Some(n) = raw.as_i64() {
@@ -1662,11 +1663,17 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
     }
 }
 
-/// The type of a value-producing node: a `CONSTANT`, a `COLUMN_REF`, or an admitted arithmetic
-/// `FUNCTION` (`+`, `-`, `*`, `/`). Anything else refuses `ConstructNotAdmitted` -- the walk's own
-/// final arm, unreachable through any text `structural_admit` admits today (B-T10 proves it over a
-/// constructed node, the `an_unrecognized_select_node_key_is_refused_rather_than_silently_passed`
-/// pattern).
+/// The type of a value-producing node: a `CONSTANT`, a `COLUMN_REF`, an admitted arithmetic
+/// `FUNCTION` (`+`, `-`, `*`, `/`), or one of the BOOLEAN-valued nodes `walk_expr` admits in a
+/// value position -- a comparison, `BETWEEN`, a conjunction, `NOT`, `IS [NOT] NULL`, `IN`, or a
+/// `LIKE`/`ILIKE` pattern function (correction round 2, W5; architect B5, reviewer B3). Each of
+/// those is walked under its own existing check first, so a problem inside it still surfaces with
+/// its own reason; only the *outer* result is typed here, as BOOLEAN, section 2.3 rule 1's own
+/// admission for a case like `(i32 > 0) = flag`. This gives `type_of_value` one arm per
+/// `walk_expr` admitted arm (section 2.2's "mirror... one to one"); anything else refuses
+/// `ConstructNotAdmitted` -- the walk's own final arm, unreachable through any text
+/// `structural_admit` admits today (B-T10 proves it over a constructed node, the
+/// `an_unrecognized_select_node_key_is_refused_rather_than_silently_passed` pattern).
 fn type_of_value(
     node: &Value,
     namespace: &BTreeMap<String, &'static str>,
@@ -1694,6 +1701,47 @@ fn type_of_value(
                     })?;
             Ok(Typed::column(engine_type_of_surrogate(surrogate)))
         }
+        "COMPARISON" => {
+            check_comparison(node, namespace)?;
+            Ok(Typed::expression(EngineType::Boolean))
+        }
+        "BETWEEN" => {
+            check_between(node, namespace)?;
+            Ok(Typed::expression(EngineType::Boolean))
+        }
+        "CONJUNCTION" => {
+            let inner = if node.get("type").and_then(Value::as_str) == Some("CONJUNCTION_OR") {
+                "OR"
+            } else {
+                "AND"
+            };
+            check_junction_children(expect_children(node)?, inner, namespace)?;
+            Ok(Typed::expression(EngineType::Boolean))
+        }
+        "OPERATOR" => {
+            let op_type = node.get("type").and_then(Value::as_str).unwrap_or("");
+            match op_type {
+                "OPERATOR_NOT" => {
+                    check_junction_children(expect_children(node)?, "NOT", namespace)?;
+                    Ok(Typed::expression(EngineType::Boolean))
+                }
+                "OPERATOR_IS_NULL" | "OPERATOR_IS_NOT_NULL" => {
+                    let children = expect_children(node)?;
+                    let operand = children
+                        .first()
+                        .ok_or_else(|| missing_field("OPERATOR.children[0]"))?;
+                    type_of_value(operand, namespace)?;
+                    Ok(Typed::expression(EngineType::Boolean))
+                }
+                "COMPARE_IN" => {
+                    check_in(node, namespace)?;
+                    Ok(Typed::expression(EngineType::Boolean))
+                }
+                other => Err(FilterError::ConstructNotAdmitted {
+                    construct: format!("OPERATOR::{other} in a value position"),
+                }),
+            }
+        }
         "FUNCTION" => {
             let name = node
                 .get("function_name")
@@ -1704,6 +1752,9 @@ fn type_of_value(
                 type_of_division(children, namespace)
             } else if ADMITTED_ARITHMETIC_FUNCTIONS.contains(&name) {
                 type_of_arithmetic(name, children, namespace)
+            } else if ADMITTED_PATTERN_FUNCTIONS.contains(&name) {
+                check_pattern(name, children, namespace)?;
+                Ok(Typed::expression(EngineType::Boolean))
             } else {
                 Err(FilterError::ConstructNotAdmitted {
                     construct: format!("a function call (`{name}`)"),
@@ -1753,7 +1804,8 @@ fn type_of_division(
 }
 
 /// `+`, `-`, `*`'s own admission and result type (section 2.5(a)). Unary `-` (one child) is
-/// admitted for any numeric operand, with the operand's own type (section 2.5(b)).
+/// admitted for any numeric operand or a NULL literal, with the operand's own type (section
+/// 2.5(b), as amended by section 10 Amendment 4).
 fn type_of_arithmetic(
     op: &str,
     children: &[Value],
@@ -1761,7 +1813,7 @@ fn type_of_arithmetic(
 ) -> Result<Typed, FilterError> {
     if children.len() == 1 {
         let operand = type_of_value(&children[0], namespace)?;
-        if is_numeric(&operand) {
+        if is_numeric(&operand) || operand.ty == EngineType::Null {
             return Ok(Typed {
                 kind: OperandKind::Expression,
                 ..operand
@@ -1814,16 +1866,37 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
                 .unwrap_or(false)
     };
 
+    // rule 1: identical types (correction round 2, W3; architect B3, reviewer N1) -- no conversion
+    // at all, so `f32 * f32` and `f64 + f64` keep their own shared type. Scoped to REAL/DOUBLE
+    // only: an identical-type shortcut over every `EngineType` would also admit VARCHAR-with-
+    // VARCHAR and DECIMAL-with-DECIMAL arithmetic, which section 2.5(a)'s own text refuses
+    // unconditionally (`text_with_non_text`, and O-5's decimal-with-decimal); integer-with-integer
+    // is already rule 3's job below, which this would only duplicate.
+    if l.ty == r.ty && matches!(l.ty, EngineType::Real | EngineType::Double) {
+        return Some(l.ty.clone());
+    }
+    // rule 2: a NULL literal on either side (correction round 2, W3), when the other operand is
+    // itself numeric -- the binder casts only the NULL, and the result carries the other operand's
+    // own type. Guarded on `is_numeric` for the same reason rule 1 is scoped above: section
+    // 2.5(a)'s string/boolean refusals apply regardless of a NULL partner.
+    if l.ty == EngineType::Null && is_numeric(r) {
+        return Some(r.ty.clone());
+    }
+    if r.ty == EngineType::Null && is_numeric(l) {
+        return Some(l.ty.clone());
+    }
     // rule 3: integer with integer.
     if is_int(l) && is_int(r) {
         return Some(fold_or_promote_integer(l, r));
     }
-    // rule 6: float with a literal within bounds.
+    // rule 6: float with a literal within bounds. A double literal widens even a REAL column to
+    // DOUBLE (correction round 2, W4; architect B4, reviewer B4) -- the same widening rule 6
+    // already states for comparisons (section 2.3).
     if is_float_col(l) && is_numeric_lit(r) {
-        return Some(l.ty.clone());
+        return Some(if is_double_lit(r) { EngineType::Double } else { l.ty.clone() });
     }
     if is_float_col(r) && is_numeric_lit(l) {
-        return Some(r.ty.clone());
+        return Some(if is_double_lit(l) { EngineType::Double } else { r.ty.clone() });
     }
     // rule 7: float with an integer (column or expression), bit-width-limited; REAL against DOUBLE.
     if matches!(l.ty, EngineType::Real) && is_float_col(l) && int_le(r, 16) {
@@ -1913,8 +1986,16 @@ fn is_admitted_comparison(l: &Typed, r: &Typed) -> bool {
     if is_int(l) && is_int(r) {
         return true;
     }
-    // rule 4.
-    if (is_int(l) && is_decimal_literal(r)) || (is_int(r) && is_decimal_literal(l)) {
+    // rule 4: "an integer of at most 64 bits, or an integer literal" (correction round 2, W2;
+    // architect B2) -- a non-literal integer (a column or an arithmetic result, for example a
+    // `u64 * i64` product typed HUGEINT) must not exceed 64 bits; a literal integer carries no
+    // extra bit-width bound here because section 7's digit bound already caps it.
+    let int64_or_literal = |t: &Typed| {
+        is_int(t)
+            && (t.kind == OperandKind::Literal
+                || int_bits_signed(&t.ty).map(|(b, _)| b <= 64).unwrap_or(false))
+    };
+    if (int64_or_literal(l) && is_decimal_literal(r)) || (int64_or_literal(r) && is_decimal_literal(l)) {
         return true;
     }
     if is_decimal_literal(l) && is_decimal_literal(r) {
@@ -1984,14 +2065,29 @@ fn determine_reason(l: &Typed, r: &Typed, is_arithmetic: bool) -> TypeRefusalRea
     if !l.within_bounds || !r.within_bounds {
         return TypeRefusalReason::LiteralOutOfBounds;
     }
+    // section 2.6 item 4's first clause, "a DECIMAL conversion wider than rule 4 admits"
+    // (correction round 2, W2; Amendment 4 rows C29-C30): comparison rule 4 bounds a non-literal
+    // integer side to 64 bits, so an arithmetic result wider than that (a HUGEINT/UHUGEINT
+    // expression) beside a decimal literal is refused for that reason, not the residual
+    // `ConversionRounds`.
+    let is_decimal_lit = |t: &Typed| {
+        matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal
+    };
+    let is_wide_int = |t: &Typed| {
+        t.kind != OperandKind::Literal
+            && int_bits_signed(&t.ty).map(|(b, _)| b > 64).unwrap_or(false)
+    };
+    if (is_decimal_lit(l) && is_wide_int(r)) || (is_decimal_lit(r) && is_wide_int(l)) {
+        return TypeRefusalReason::ConversionCanFail;
+    }
     if is_arithmetic && is_decimal_arithmetic_pair(l, r) {
         return TypeRefusalReason::ConversionCanFail;
     }
     TypeRefusalReason::ConversionRounds
 }
 
-fn comparison_construct_name(cmp_type: &str) -> &'static str {
-    match cmp_type {
+fn comparison_construct_name(cmp_type: &str) -> Result<&'static str, FilterError> {
+    Ok(match cmp_type {
         "COMPARE_EQUAL" => "=",
         "COMPARE_NOTEQUAL" => "<>",
         "COMPARE_LESSTHAN" => "<",
@@ -2002,9 +2098,15 @@ fn comparison_construct_name(cmp_type: &str) -> &'static str {
         "COMPARE_NOT_DISTINCT_FROM" => "IS NOT DISTINCT FROM",
         // Unreachable: `walk_expr`'s own COMPARISON arm admits every `COMPARE_*` type uniformly,
         // and this list is every one `json_serialize_sql` produces for a binary comparison operator
-        // (measured while building this module). Kept total rather than panicking.
-        _ => "?",
-    }
+        // (measured at v1.5.5 while building this module). Refuses rather than emitting a
+        // `construct` outside section 2.6's declared map (correction round 2, W1; architect N3,
+        // reviewer N2).
+        other => {
+            return Err(FilterError::ConstructNotAdmitted {
+                construct: format!("a comparison type `{other}`"),
+            })
+        }
+    })
 }
 
 fn check_pair(
@@ -2034,7 +2136,7 @@ fn check_comparison(
     namespace: &BTreeMap<String, &'static str>,
 ) -> Result<(), FilterError> {
     let cmp_type = node.get("type").and_then(Value::as_str).unwrap_or("");
-    let construct = comparison_construct_name(cmp_type);
+    let construct = comparison_construct_name(cmp_type)?;
     let left_node = node
         .get("left")
         .ok_or_else(|| missing_field("COMPARISON.left"))?;
@@ -2046,6 +2148,12 @@ fn check_comparison(
     check_pair(construct, &left, &right, false)
 }
 
+/// section 2.3's `BETWEEN` item, as amended by section 10 Amendment 4 (correction round 2, W6;
+/// reviewer B1, the architect's consult ruling it removable inside the sighted design): every pair
+/// of the three operands is checked, in the order input-lower, input-upper, lower-upper.
+/// `operand_types` (via [`check_pair`]) names the first refused pair in that order. `IN` is
+/// unchanged (`check_in`): `walk_expr`'s own `COMPARE_IN` arm admits only literal members, so the
+/// needle is the only operand ever carrying file data there, unlike a non-literal `BETWEEN` bound.
 fn check_between(
     node: &Value,
     namespace: &BTreeMap<String, &'static str>,
@@ -2063,7 +2171,8 @@ fn check_between(
     let tl = type_of_value(lower, namespace)?;
     check_pair("BETWEEN", &ti, &tl, false)?;
     let tu = type_of_value(upper, namespace)?;
-    check_pair("BETWEEN", &ti, &tu, false)
+    check_pair("BETWEEN", &ti, &tu, false)?;
+    check_pair("BETWEEN", &tl, &tu, false)
 }
 
 fn check_in(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
@@ -2175,7 +2284,13 @@ fn check_boolean_operand(
                     type_of_value(operand, namespace).map(|_| ())
                 }
                 "COMPARE_IN" => check_in(node, namespace),
-                _ => Ok(()),
+                // section 8 item 5: a rule table may not admit by default. `walk_expr`'s own
+                // OPERATOR arm never reaches this with any `op_type` but the three named above
+                // (correction round 2, W1) -- kept total, refusing rather than admitting, the same
+                // discipline every other match in this module keeps.
+                other => Err(FilterError::ConstructNotAdmitted {
+                    construct: format!("OPERATOR::{other} in a boolean context"),
+                }),
             }
         }
         "FUNCTION" => {
@@ -2617,5 +2732,319 @@ mod tests {
                 "expected ConstructNotAdmitted naming the unrecognized literal type, got {other:?}"
             ),
         }
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // B-T1b (section 10 Amendment 4) -- the walk's own arithmetic types against the binder's,
+    // over an in-memory table carrying FX-1's schema, never a real GeoParquet file (no file data
+    // is read; section 8 item 4 is unaffected since this reads a plan at test time only).
+    // -----------------------------------------------------------------------------------------
+
+    /// FX-1's twelve columns (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 3), by name and
+    /// surrogate type -- doubles as the namespace [`type_of_value`] needs and the in-memory table's
+    /// own DDL column type (`REAL` is valid SQL for a 4-byte float, the same as `FLOAT`).
+    const BT1B_COLS: &[(&str, &str)] = &[
+        ("zone", "VARCHAR"),
+        ("flag", "BOOLEAN"),
+        ("i8", "TINYINT"),
+        ("i16", "SMALLINT"),
+        ("i32", "INTEGER"),
+        ("i64", "BIGINT"),
+        ("u8", "UTINYINT"),
+        ("u16", "USMALLINT"),
+        ("u32", "UINTEGER"),
+        ("u64", "UBIGINT"),
+        ("f32", "REAL"),
+        ("f64", "DOUBLE"),
+    ];
+
+    /// `engine/tests/filter_type_admission.rs`'s own `LITS`, byte for byte -- this test cannot
+    /// import an integration test's generator (Amendment 4), so the operand lists are rebuilt here.
+    const BT1B_LITS: &[&str] = &[
+        "1",
+        "-1",
+        "300",
+        "3000000000",
+        "9223372036854775808",
+        "170141183460469231731687303715884105728",
+        "1.5",
+        "0.000000001",
+        "0.000000000000000001",
+        "0.0000000000000000001",
+        "0.00000000000000000001",
+        "0.000000000000000000000000001",
+        "0.0000000000000000000000000001",
+        "0.00000000000000000000000000001",
+        "0.0000000000000000000000000000000001",
+        "0.000000000000000000000000000000000001",
+        "0.1",
+        "9007199254740993.0",
+        "1e3",
+        "1.00000000000000000000000000000000000001",
+        "'x'",
+        "'5'",
+        "'true'",
+        "NULL",
+        "x'41'",
+        "B'01'",
+        "e'x'",
+        "$$x$$",
+        "-1.5",
+        "-1e3",
+    ];
+
+    /// One rebuilt B-T1b case: `predicate` always has the shape `(<arithmetic-node>) <cmp> <other>`,
+    /// so the top-level `COMPARISON`'s own `left` child is always the arithmetic node under test.
+    /// `op`/`arity` name which `BOUND_FUNCTION` in the plan is the one to read back.
+    struct Bt1bCase {
+        label: String,
+        predicate: String,
+        op: &'static str,
+        arity: usize,
+    }
+
+    /// section 10 Amendment 4's B-T1b enumeration: `engine/tests/filter_type_admission.rs`'s own
+    /// `generate_cases` arithmetic forms (the main loop's four `+`/`-`/`*`/`/` family members, and
+    /// the per-column unary-minus/`+1`/`*2`/`/0`/self-`*` family forms), rebuilt from the same
+    /// operand lists, plus Amendment 4's C29-C33 (post-result).
+    fn bt1b_generate_cases() -> Vec<Bt1bCase> {
+        let mut operands: Vec<String> = BT1B_LITS.iter().map(|s| s.to_string()).collect();
+        operands.extend(BT1B_COLS.iter().map(|(n, _)| n.to_string()));
+
+        let mut cases = Vec::new();
+        for (c, _) in BT1B_COLS {
+            for o in &operands {
+                for op in ["+", "-", "*", "/"] {
+                    cases.push(Bt1bCase {
+                        label: format!("arith {op} {c} {o}"),
+                        predicate: format!("({c} {op} {o}) = 0"),
+                        op,
+                        arity: 2,
+                    });
+                }
+            }
+            cases.push(Bt1bCase {
+                label: format!("unary - {c}"),
+                predicate: format!("(-{c}) = 0"),
+                op: "-",
+                arity: 1,
+            });
+            cases.push(Bt1bCase {
+                label: format!("arith + 1 = 0 {c}"),
+                predicate: format!("({c} + 1) = 0"),
+                op: "+",
+                arity: 2,
+            });
+            cases.push(Bt1bCase {
+                label: format!("arith * 2 = 0 {c}"),
+                predicate: format!("({c} * 2) = 0"),
+                op: "*",
+                arity: 2,
+            });
+            cases.push(Bt1bCase {
+                label: format!("arith / 0 = 0 {c}"),
+                predicate: format!("({c} / 0) = 0"),
+                op: "/",
+                arity: 2,
+            });
+            cases.push(Bt1bCase {
+                label: format!("arith self * then > 0 {c}"),
+                predicate: format!("({c} * {c}) = 0"),
+                op: "*",
+                arity: 2,
+            });
+        }
+        cases.push(Bt1bCase {
+            label: "C29: u64 * i64 < 0.5".to_string(),
+            predicate: "(u64 * i64) < 0.5".to_string(),
+            op: "*",
+            arity: 2,
+        });
+        cases.push(Bt1bCase {
+            label: "C30: u64 * -9223372036854775808 < 0.5".to_string(),
+            predicate: "(u64 * -9223372036854775808) < 0.5".to_string(),
+            op: "*",
+            arity: 2,
+        });
+        cases.push(Bt1bCase {
+            label: "C31a: f32 * f32 > 0".to_string(),
+            predicate: "(f32 * f32) > 0".to_string(),
+            op: "*",
+            arity: 2,
+        });
+        cases.push(Bt1bCase {
+            label: "C31b: f64 + f64 > 0".to_string(),
+            predicate: "(f64 + f64) > 0".to_string(),
+            op: "+",
+            arity: 2,
+        });
+        cases.push(Bt1bCase {
+            label: "C32a: i32 + NULL > 0".to_string(),
+            predicate: "(i32 + NULL) > 0".to_string(),
+            op: "+",
+            arity: 2,
+        });
+        cases.push(Bt1bCase {
+            label: "C32b: -NULL > 0".to_string(),
+            predicate: "(-NULL) > 0".to_string(),
+            op: "-",
+            arity: 1,
+        });
+        cases.push(Bt1bCase {
+            label: "C33: (f32 + 1e3) = i32".to_string(),
+            predicate: "(f32 + 1e3) = i32".to_string(),
+            op: "+",
+            arity: 2,
+        });
+        cases
+    }
+
+    fn bt1b_plan_json(conn: &Connection, predicate: &str) -> Value {
+        let sql = format!("SELECT * FROM fx1 WHERE ({predicate})");
+        let j: String = conn
+            .query_row(
+                "SELECT json_serialize_plan(CAST(? AS VARCHAR))",
+                [sql.as_str()],
+                |r| r.get(0),
+            )
+            .unwrap_or_else(|e| panic!("{predicate:?}: json_serialize_plan failed: {e}"));
+        serde_json::from_str(&j).unwrap_or_else(|e| panic!("{predicate:?}: plan JSON parse failed: {e}"))
+    }
+
+    fn bt1b_find_filter_exprs(v: &Value, out: &mut Vec<Value>) {
+        match v {
+            Value::Object(m) => {
+                if m.get("type").and_then(Value::as_str) == Some("LOGICAL_FILTER") {
+                    if let Some(e) = m.get("expressions") {
+                        out.push(e.clone());
+                    }
+                }
+                for (_, x) in m {
+                    bt1b_find_filter_exprs(x, out);
+                }
+            }
+            Value::Array(a) => a.iter().for_each(|x| bt1b_find_filter_exprs(x, out)),
+            _ => {}
+        }
+    }
+
+    fn bt1b_type_str(t: &Value) -> String {
+        let id = t.get("id").and_then(Value::as_str).unwrap_or("?").to_string();
+        if id == "DECIMAL" {
+            let ti = &t["type_info"];
+            format!("DECIMAL({},{})", ti["width"], ti["scale"])
+        } else {
+            id
+        }
+    }
+
+    /// Every `BOUND_FUNCTION` under `v` named `name` with exactly `arity` children -- the plan's
+    /// own oracle for the one arithmetic node each [`Bt1bCase`] carries.
+    fn bt1b_find_function_return_types(v: &Value, name: &str, arity: usize, out: &mut Vec<String>) {
+        match v {
+            Value::Object(m) => {
+                if m.get("expression_class").and_then(Value::as_str) == Some("BOUND_FUNCTION")
+                    && m.get("is_operator").and_then(Value::as_bool) == Some(true)
+                    && m.get("name").and_then(Value::as_str) == Some(name)
+                    && m.get("children").and_then(Value::as_array).map(|c| c.len())
+                        == Some(arity)
+                {
+                    out.push(bt1b_type_str(&m["return_type"]));
+                }
+                for (_, x) in m {
+                    bt1b_find_function_return_types(x, name, arity, out);
+                }
+            }
+            Value::Array(a) => a.iter().for_each(|x| bt1b_find_function_return_types(x, name, arity, out)),
+            _ => {}
+        }
+    }
+
+    /// [`EngineType`] rendered the way `json_serialize_plan` names it -- identical to
+    /// [`EngineType`]'s own `Display` except `Real`, whose engine-facing name is `REAL` (section
+    /// 2.2's own rendering) while DuckDB's internal type id is `FLOAT` (measured at v1.5.5).
+    fn bt1b_engine_type_as_plan_id(ty: &EngineType) -> String {
+        match ty {
+            EngineType::Real => "FLOAT".to_string(),
+            other => other.to_string(),
+        }
+    }
+
+    /// B-T1b, `the_walk_types_every_arithmetic_node_as_the_binder_does`
+    /// (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 10 Amendment 4). For every arithmetic
+    /// node the walk types `Ok`, asserts that the walk's type equals the `return_type` of that
+    /// node in `json_serialize_plan`, `/`'s own node included. Private access within the crate
+    /// adds no `pub` item (section 2.11). Mutation: rule 6 returns the float column's own type
+    /// beside a double literal (the arm at ff3a841). It fails by name on the `f32 + 1e3` cases.
+    #[test]
+    fn the_walk_types_every_arithmetic_node_as_the_binder_does() {
+        let conn = Connection::open_in_memory().expect("in-memory duckdb connection");
+        conn.execute_batch(
+            "CREATE TABLE fx1 (
+                zone VARCHAR, flag BOOLEAN,
+                i8 TINYINT, i16 SMALLINT, i32 INTEGER, i64 BIGINT,
+                u8 UTINYINT, u16 USMALLINT, u32 UINTEGER, u64 UBIGINT,
+                f32 REAL, f64 DOUBLE
+            )",
+        )
+        .expect("create the FX-1-shaped in-memory table");
+
+        let namespace: BTreeMap<String, &'static str> =
+            BT1B_COLS.iter().map(|(n, t)| (n.to_string(), *t)).collect();
+
+        let cases = bt1b_generate_cases();
+        assert_eq!(cases.len(), 2_083, "B-T1b's own rebuilt case count");
+
+        let mut checked = 0usize;
+        let mut failures: Vec<String> = Vec::new();
+
+        for case in &cases {
+            let admission = match structural_admit(&case.predicate, &conn) {
+                Ok(a) => a,
+                Err(_) => continue, // refused before the type walk; nothing to compare.
+            };
+            let Some(top) = admission.operands.into_iter().next() else {
+                continue;
+            };
+            let arith_node = top.get("left").cloned().unwrap_or_else(|| top.clone());
+            let typed = match type_of_value(&arith_node, &namespace) {
+                Ok(t) => t,
+                Err(_) => continue, // the walk itself refuses this node; nothing to compare.
+            };
+
+            let plan = bt1b_plan_json(&conn, &case.predicate);
+            let mut filters = Vec::new();
+            bt1b_find_filter_exprs(&plan, &mut filters);
+            let mut return_types = Vec::new();
+            for f in &filters {
+                bt1b_find_function_return_types(f, case.op, case.arity, &mut return_types);
+            }
+            if return_types.is_empty() {
+                // Constant-folded away (for example a NULL-involving node) -- not independently
+                // observable through this plan-based oracle.
+                continue;
+            }
+            checked += 1;
+            let expected = bt1b_engine_type_as_plan_id(&typed.ty);
+            for observed in &return_types {
+                if *observed != expected {
+                    failures.push(format!(
+                        "{}: the walk says {expected}, the plan's {} return_type says {observed}",
+                        case.label, case.op
+                    ));
+                }
+            }
+        }
+
+        println!("B-T1b: {checked} arithmetic nodes checked, {} failures", failures.len());
+        for f in failures.iter().take(40) {
+            println!("  {f}");
+        }
+        assert!(
+            failures.is_empty(),
+            "{} B-T1b counterexample(s); see the report above",
+            failures.len()
+        );
+        assert!(checked > 0, "B-T1b must actually check at least one arithmetic node");
     }
 }
