@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T22:22:56.855Z",
+  "generated_at": "2026-09-30T06:45:21.418Z",
   "source": "the custodian's machine",
   "drift": {
     "ok": true,
@@ -9,12 +9,12 @@
     "drives": [
       {
         "drive": "C",
-        "bytes": 66071240704,
+        "bytes": 60019752960,
         "total": 510319915008
       },
       {
         "drive": "D",
-        "bytes": 365502046208,
+        "bytes": 364035813376,
         "total": 500090007552
       }
     ]
@@ -33,18 +33,18 @@
       "kind": "ruling",
       "minutes": 20,
       "opened": "2026-09-14",
-      "age_days": 15
+      "age_days": 16
     }
   ],
   "median_opened_to_done": {
     "days": 1,
-    "n": 94
+    "n": 95
   },
   "gate_first_pass": {
     "present": true,
-    "nodes": 65,
-    "first_pass": 23,
-    "rate": 0.35384615384615387
+    "nodes": 66,
+    "first_pass": 24,
+    "rate": 0.36363636363636365
   },
   "record_rounds": {
     "present": true,
