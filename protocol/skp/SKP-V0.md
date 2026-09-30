@@ -450,6 +450,11 @@ no-function-call rules are what stop a "read dataset A" grant from becoming "rea
 unrecognized construct is always the final, unconditional-refusal arm, never a silent pass
 (`engine/src/predicate.rs`).
 
+> **Dated note, `skp/0.8` (2026-09-30; ADR-021's Note 2026-09-30; `engine/
+> FILTER-BIND-COERCIONS-PREREGISTRATION.md`).** The admitted constructs above are also subject to
+> stage 3's type rules (§7.6). `/` is floating-point division in the float type the binder chooses,
+> as ADR-021's Note 2026-09-30 declares. No construct is added or removed.
+
 ### 7.5 Refusal taxonomy — eleven `skp.filter_*` codes
 
 Exhaustive, no wildcard arm, mapped field-for-field from `engine::predicate::FilterError`
@@ -475,6 +480,11 @@ constructor `kernel/` uses today produces a declared identity mapping whose sour
 from the wire's own `id` name while the file also carries its own, unrelated `id` column. Written
 now, fires the day a caller supplies one.
 
+> **Dated note, `skp/0.8` (2026-09-30; `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`).** One
+> row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
+> five `reason` values: `text_with_non_text`, `boolean_conversion`, `literal_out_of_bounds`,
+> `conversion_can_fail`, `conversion_rounds`. The heading above stays as it is.
+
 ### 7.6 Three-stage admission, pre-lease and pre-mint
 
 `AdmittedPredicate::admit` (`engine/src/predicate.rs`) runs three named stages, on `spawn_blocking`,
@@ -493,6 +503,12 @@ frame arriving after a round trip:
    from the admitted namespace (`CAST(NULL AS ...)` literals only, no file I/O), and its inferred
    type is asserted `BOOLEAN`; an implicit int-to-bool (or any other) coercion is refused rather
    than silently accepted.
+
+> **Dated note, `skp/0.8` (2026-09-30; ADR-021's Note 2026-09-30; `engine/
+> FILTER-BIND-COERCIONS-PREREGISTRATION.md`).** Stage 3's refused coercion is the class ADR-021's
+> Note 2026-09-30 defines. After the surrogate prepare and the BOOLEAN check above, the engine
+> types the admitted tree and refuses anything outside the admitted class as
+> `skp.filter_type_not_admitted`. A binder refusal keeps `skp.filter_rejected_by_binder`.
 
 ### 7.7 Named shortfall
 
@@ -924,6 +940,25 @@ carries both sides' fixtures for the literal
 (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs` and
 `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixture
 (`v0-error-projection_column_name_not_addressable.json`) together; plain `==` comparison retained;
+`deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
+
+### skp/0.8 — bind admission's type rules (`engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`)
+
+**The version's FULL field set, as §8's own discipline requires — no request or response member,
+no command.** One new typed refusal, mapped 1:1 from `engine::predicate::FilterError::
+TypeNotAdmitted` (`kernel::skp::filter_error_of`), the twelfth `skp.filter_*` code (§7.5's dated
+note):
+
+- **`skp.filter_type_not_admitted`**, fields `construct`, `operand_types` (entries joined with
+  `"; "`) and `reason` (one of five fixed values). Refused synchronously, in stage 3, after the
+  surrogate prepare and the BOOLEAN check (§7.6's dated note), before any lease or mint.
+
+`protocol/data-plane/` has an empty diff.
+
+Mechanics: one literal bumped once, `"skp/0.7"` → `"skp/0.8"`, in one commit, which carries both
+sides' fixtures for the literal (`protocol/skp/tests/data/*.json`, `protocol/skp/tests/fixtures.rs`
+and `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixture
+(`v0-error-filter_type_not_admitted.json`) together; plain `==` comparison retained;
 `deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
 
 ## 9. Attribute projection on `viewport_query`

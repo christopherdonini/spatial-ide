@@ -1,0 +1,9 @@
+{
+  "code": "skp.filter_type_not_admitted",
+  "message": "refused: `=` over VARCHAR and INTEGER literal: a comparison of text with a non-text value (docs/01 principle 8)",
+  "fields": {
+    "construct": "=",
+    "operand_types": "VARCHAR; INTEGER literal",
+    "reason": "text_with_non_text"
+  }
+}

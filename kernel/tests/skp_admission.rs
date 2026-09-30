@@ -458,6 +458,71 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
     );
 }
 
+/// B-T7 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §4): the type walk (stage 3, after
+/// `bind_admit`) refuses a text/non-text coercion synchronously, typed, before any lease or mint —
+/// FX-3 (`fixture_zoned`), `zone = 1` (a VARCHAR column against an INTEGER literal). Mutation:
+/// `AdmittedPredicate::admit` skips the type walk. It fails by name (the call is admitted).
+#[tokio::test(flavor = "multi_thread")]
+async fn a_filtered_viewport_query_comparing_text_with_a_number_refuses_synchronously_typed_and_mints_no_ticket(
+) {
+    let (path, _facts) = fixture_zoned("filter-type-not-admitted", 500);
+    let handle = dataset_handle();
+    let catalog = Arc::new(Catalog::new());
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        catalog,
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+
+    let err = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle.clone(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(duckdb_filter("zone = 1")),
+            columns: None,
+        })
+        .expect_err("a text/non-text coercion must be refused, not silently admitted");
+
+    assert_eq!(err.code, "skp.filter_type_not_admitted");
+    let mut keys: Vec<&String> = err.fields.keys().collect();
+    keys.sort();
+    assert_eq!(
+        keys,
+        vec!["construct", "operand_types", "reason"],
+        "exact key set"
+    );
+
+    let fx4_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../protocol/skp/tests/data/v0-error-filter_type_not_admitted.json");
+    let fx4_raw = std::fs::read_to_string(&fx4_path)
+        .unwrap_or_else(|e| panic!("{}: {e}", fx4_path.display()));
+    let fx4: serde_json::Value =
+        serde_json::from_str(&fx4_raw).unwrap_or_else(|e| panic!("{}: {e}", fx4_path.display()));
+    assert_eq!(fx4["code"], err.code, "code must equal FX-4");
+    assert_eq!(fx4["message"], err.message, "message must equal FX-4");
+    assert_eq!(
+        serde_json::to_value(&err.fields).unwrap(),
+        fx4["fields"],
+        "fields must equal FX-4"
+    );
+
+    assert_eq!(
+        tickets.cancel_all_for_dataset(handle.as_str()),
+        0,
+        "admission refused before `tickets.mint` ever ran; there is no ticket to have minted"
+    );
+}
+
 /// **Re-aimed at Brief A P1's ruled contract, and the change is the ruling rather than a fix.**
 ///
 /// This test asserted that an absent `crs` key was refused at open with `engine.crs_undeclared`.

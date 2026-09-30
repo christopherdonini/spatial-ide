@@ -40,12 +40,12 @@ use serde_json::Value;
 
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::fixture::{
-    configured_connection, i64_for, text_for, write_geoparquet, zone_for, AttributeMode, CrsMode,
+    configured_connection, i64_for, text_for, write_geoparquet, AttributeMode, CrsMode,
     FixtureFacts, FixtureSpec, ZONE_VALUES,
 };
 use spatial_engine::{
-    AdmittedPredicate, Bbox, Dataset, FilterError, PredicateAdmitError, ViewportQuery, ID_COLUMN,
-    MAX_PREDICATE_BYTES,
+    AdmittedPredicate, Bbox, Dataset, FilterError, PredicateAdmitError, TypeRefusalReason,
+    ViewportQuery, ID_COLUMN, MAX_PREDICATE_BYTES,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -627,6 +627,7 @@ fn code_of(e: &FilterError) -> &'static str {
         FilterError::TooLong { .. } => "skp.filter_too_long",
         FilterError::TooDeep { .. } => "skp.filter_too_deep",
         FilterError::RejectedByBinder { .. } => "skp.filter_rejected_by_binder",
+        FilterError::TypeNotAdmitted { .. } => "skp.filter_type_not_admitted",
     }
 }
 
@@ -1005,6 +1006,24 @@ struct Counterexample {
     detail: String,
 }
 
+/// The campaign's one declared exclusion (section 2.5(d); section 2.10): overflow in admitted
+/// integer arithmetic (`+`, `-`, `*`, unary `-`), whose operand conversions are all lossless
+/// widenings -- out of scope for this piece, and routed to node
+/// `stream-evaluation-failure-fixed-detail`. Identified by both of these: the predicate's typed
+/// class, integer arithmetic (this fixture's own integer-typed operands, `i64` and `id`, and any
+/// integer literal, joined by `+`, `-` or `*`), and a terminal text containing `Overflow`. Removed
+/// when node `stream-evaluation-failure-fixed-detail` lands.
+fn is_declared_integer_arithmetic_overflow(predicate: &str, terminal_error: &str) -> bool {
+    if !terminal_error.contains("Overflow") {
+        return false;
+    }
+    ["i64", "id"].iter().any(|c| {
+        [" + ", " - ", " * "].iter().any(|op| {
+            predicate.contains(&format!("{c}{op}")) || predicate.contains(&format!("{op}{c}"))
+        })
+    })
+}
+
 #[test]
 fn filter_admission_property_campaign() {
     let fx = fixture();
@@ -1126,8 +1145,19 @@ fn filter_admission_property_campaign() {
                         let l = leaked(&tokens, &predicate, &err);
                         if !l.is_empty() {
                             stream_error_leaks.push((predicate.clone(), err.clone()));
+                            // section 2.10: "no stream error carries file data" -- no exclusion
+                            // covers this; a leak is always a counterexample.
+                            fail("P4", format!("admitted predicate's stream error carries file data {l:?}: {err}"));
                         }
-                        stream_error_samples.entry(predicate.clone()).or_insert(err);
+                        stream_error_samples.entry(predicate.clone()).or_insert(err.clone());
+                        // section 2.10: "asserts that no admitted predicate's stream ends in
+                        // error", with the one declared exclusion (section 2.5(d)).
+                        if !is_declared_integer_arithmetic_overflow(&predicate, &err) {
+                            fail(
+                                "P1",
+                                format!("admitted predicate's stream ended in error outside section 2.5(d): {err}"),
+                            );
+                        }
                     }
                 }
             }
@@ -1201,138 +1231,42 @@ fn filter_admission_property_campaign() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Minimised reproducer for the campaign's counterexample (#[ignore]d: it asserts the stated
-// guarantee and fails at the audited baseline; run with `-- --ignored`).
+// B-1's reproducer (wave-2 finding), now asserting the fixed behaviour (F5).
 // ---------------------------------------------------------------------------------------------
 
-/// Drain `predicate` over `view` with `limit`, unprojected; return (row ids, terminal error text).
-fn drain_ids(ds: &Dataset, predicate: &str, view: Bbox, limit: u64) -> (Vec<u64>, Option<String>) {
-    let ap = AdmittedPredicate::admit(predicate, ds).expect("admitted");
-    let q = ViewportQuery::viewport(view, ds.crs().identifier())
-        .with_limit(limit)
-        .with_filter(ap);
-    let mut s = ds
-        .stream_with_cancel(&q, CancelToken::new())
-        .expect("stream");
-    let mut ids = Vec::new();
-    let mut buf = Vec::new();
-    while let Some(info) = s.next_into(&mut buf) {
-        match info {
-            Ok(_) => {
-                let reader =
-                    arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None)
-                        .unwrap();
-                for b in reader {
-                    let b = b.unwrap();
-                    let c = b
-                        .column_by_name(ID_COLUMN)
-                        .unwrap()
-                        .as_any()
-                        .downcast_ref::<UInt64Array>()
-                        .unwrap()
-                        .clone();
-                    ids.extend((0..b.num_rows()).map(|r| c.value(r)));
-                }
-            }
-            Err(e) => return (ids, Some(e.to_string())),
-        }
-        buf.clear();
-    }
-    (ids, None)
-}
-
-/// A degenerate viewport at the centre of feature `id`'s covering bbox, and the ids whose covering
-/// bbox contains that point (what the composed bbox condition admits).
-fn point_view(fx: &Fixture, id: u64) -> (Bbox, BTreeSet<u64>) {
-    let [a, b, c, d] = fx.covering[&id];
-    let (x, y) = ((a + c) / 2.0, (b + d) / 2.0);
-    let inside = fx
-        .covering
-        .iter()
-        .filter(|(_, [xmin, ymin, xmax, ymax])| {
-            *xmin <= x && *xmax >= x && *ymin <= y && *ymax >= y
-        })
-        .map(|(k, _)| *k)
-        .collect();
-    (
-        Bbox {
-            xmin: x,
-            ymin: y,
-            xmax: x,
-            ymax: y,
-        },
-        inside,
-    )
-}
-
-/// Counterexample B-1 (G4 seed 0x0b02a00400000004, whose `i64 < 0.000000000000000000000000001`
-/// and `id < 'inf'` cases were admitted and then failed in the scan; minimised by hand): bind admission (stage 3) admits a predicate whose
-/// binding needs an implicit coercion — a VARCHAR column cast to INTEGER (`zone = 1`), a BIGINT
-/// column cast to DECIMAL(38,27) (`i64 < 0.000000000000000000000000001`), a literal cast to
-/// BOOLEAN (`flag = 'x'`) — because the zero-row surrogate never executes the cast. SKP-V0 §7.6
-/// stage 3 states "an implicit int-to-bool (or any other) coercion is refused rather than silently
-/// accepted", and that a refused predicate returns synchronously and typed, "never as a data-plane
-/// terminal frame". Here each one is admitted, and the scan then ends in an `engine.query`
-/// terminal error whose text carries a value read from the file.
+/// B-T4 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 4). Was: counterexample B-1, wave-2
+/// finding, asserting only that nothing was admitted. Now (F5; the type walk lands): each of the
+/// three predicates is refused `TypeNotAdmitted`, with the corpus's own reason for its row (C1,
+/// C2 as amended by section 10 Amendment 3, C3) -- `zone = 1` and `flag = 'x'` for a text/non-text
+/// mismatch, `i64 < 0.000000000000000000000000001` for a decimal literal beyond the declared
+/// scale bound. Mutation: `AdmittedPredicate::admit` skips the type walk. It fails by name on this
+/// test's own no-admission assertion below (each predicate would then admit).
 #[test]
-#[ignore = "wave-2 finding B-1: asserts the fixed behaviour; PLAN node filter-bind-admission-implicit-coercions removes this ignore in its PR"]
 fn b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data() {
     let fx = fixture();
     let ds = Dataset::open(&fx.path).expect("open");
-    let i64_values: BTreeMap<String, u64> = (0..FIXTURE_FEATURES as u64)
-        .map(|id| (i64_for(FIXTURE_SEED, id).to_string(), id))
-        .collect();
-    let (view, inside) = point_view(fx, 400);
-    println!(
-        "viewport: degenerate point inside feature 400; ids the bbox condition admits: {inside:?}"
-    );
 
-    let mut admitted = Vec::new();
-    for p in [
-        "zone = 1",
-        "i64 < 0.000000000000000000000000001",
-        "flag = 'x'",
-    ] {
-        let o = admit(&ds, p);
-        println!(
-            "{p:?} -> {}",
-            if matches!(o, Outcome::Admitted(_)) {
-                "ADMITTED".to_string()
-            } else {
-                format!("{o:?}")
+    let cases: [(&str, TypeRefusalReason); 3] = [
+        ("zone = 1", TypeRefusalReason::TextWithNonText),
+        (
+            "i64 < 0.000000000000000000000000001",
+            TypeRefusalReason::LiteralOutOfBounds,
+        ),
+        ("flag = 'x'", TypeRefusalReason::TextWithNonText),
+    ];
+
+    for (p, expected_reason) in cases {
+        match admit(&ds, p) {
+            Outcome::Refused(PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                reason,
+                ..
+            })) => {
+                assert_eq!(
+                    reason, expected_reason,
+                    "{p:?}: expected reason {expected_reason:?}, got {reason:?}"
+                );
             }
-        );
-        if matches!(o, Outcome::Admitted(_)) {
-            let (ids, err) = drain_ids(&ds, p, view, 1);
-            let err = err.unwrap_or_default();
-            println!(
-                "  stream: {} row(s); terminal error: {:?}",
-                ids.len(),
-                err.lines().next().unwrap_or("")
-            );
-            for z in ZONE_VALUES {
-                if !p.contains(z) && err.contains(&format!("'{z}'")) {
-                    let holders: Vec<u64> = inside
-                        .iter()
-                        .copied()
-                        .filter(|id| zone_for(FIXTURE_SEED, *id) == Some(z))
-                        .collect();
-                    println!("  -> the error carries the file's zone value {z:?} (in-view holders: {holders:?})");
-                }
-            }
-            for (v, id) in &i64_values {
-                if err.contains(v.as_str()) {
-                    println!(
-                        "  -> the error carries feature {id}'s i64 value {v}; feature {id} is {} the viewport",
-                        if inside.contains(id) { "INSIDE" } else { "OUTSIDE" }
-                    );
-                }
-            }
-            admitted.push(p);
+            other => panic!("{p:?}: expected a TypeNotAdmitted refusal, got {other:?}"),
         }
     }
-    assert!(
-        admitted.is_empty(),
-        "implicit coercions admitted by bind admission: {admitted:?}"
-    );
 }

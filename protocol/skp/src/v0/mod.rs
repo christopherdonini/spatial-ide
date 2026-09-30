@@ -76,4 +76,12 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// command; `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields`
 /// both directions, `==` unchanged, both sides' fixtures and the new error fixture updated in the
 /// same commit as the literal bump (`SKP-V0.md` §8's `skp/0.7` entry; §9.5).
-pub const SKP_VERSION: &str = "skp/0.7";
+///
+/// `skp/0.8` (bind admission's type rules, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, node
+/// `filter-bind-admission-implicit-coercions`): one new `skp.filter_type_not_admitted` refusal
+/// code, with fields `construct`, `operand_types` (entries joined with `; `) and `reason` (one of
+/// five fixed values; ADR-021's Note 2026-09-30). No new request or response member; no new
+/// command; `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields`
+/// both directions, `==` unchanged, both sides' fixtures and the new error fixture updated in the
+/// same commit as the literal bump (`SKP-V0.md` §8's `skp/0.8` entry; §7.5).
+pub const SKP_VERSION: &str = "skp/0.8";

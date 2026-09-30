@@ -40,3 +40,8 @@ no implementation file changed for that update either.
 This directory's fixtures were updated again in place, to the `skp/0.7` literal minted in commit
 `19f37da` (§10 Amendment 12, PLAN node `b1-close-nul-column-names`); no implementation file changed
 for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.8` literal at the merge of
+`cut/filter-bind-coercions` into `main`, PLAN node `filter-bind-admission-implicit-coercions`
+(`engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md` §2.8); no implementation file changed for that
+update either.

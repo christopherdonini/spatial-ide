@@ -433,6 +433,18 @@ describe("SKP v0 shared fixtures", () => {
     expect(err.fields.detail).toContain("\\u0000");
   });
 
+  // B-T9 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 4). Mutation: the same rename (FX-4's
+  // `reason` key), and it fails by name.
+  it("a filter_type_not_admitted refusal parses with its three fields (skp/0.8)", () => {
+    const err = loadFixture<SkpError>("v0-error-filter_type_not_admitted");
+    assertExactKeys(err, ["code", "message", "fields"], "filter_type_not_admitted error example");
+    expect(err.code).toBe("skp.filter_type_not_admitted");
+    assertExactKeys(err.fields, ["construct", "operand_types", "reason"], "filter_type_not_admitted fields");
+    expect(err.fields.construct).toBe("=");
+    expect(err.fields.operand_types).toBe("VARCHAR; INTEGER literal");
+    expect(err.fields.reason).toBe("text_with_non_text");
+  });
+
   it("every request fixture carries the current SKP_VERSION this client also sends", () => {
     for (const name of [
       "v0-open_dataset-request",

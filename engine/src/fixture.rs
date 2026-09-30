@@ -184,6 +184,133 @@ pub enum AttributeMode {
     /// [`text_for`]). `CategoricalZone` carries only `zone` (F13); every other admitted-or-refused
     /// type B1's tests need comes from this variant instead of a second `zone`-only mode.
     MultiType,
+    /// FX-1 ("FILTER-BIND-COERCIONS-PREREGISTRATION.md" section 3): `id` (`UInt64`) plus twelve
+    /// columns -- `zone` (`Utf8`), `flag` (`Boolean`), `i8`, `i16`, `i32`, `i64`, `u8`, `u16`,
+    /// `u32`, `u64` (the eight integer widths), `f32` (`Float32`), `f64` (`Float64`) -- for the
+    /// type walk's own corpus (`engine/tests/filter_type_admission.rs`). Row `id` takes witness
+    /// `[id % len]` of each column's own declared list (`FILTER_WITNESS_*` below), a pure function
+    /// of `id` alone -- unlike every other column here, no `(seed, id)` hash, because FX-1's whole
+    /// point is the declared witness set, not a derived one. Dev-feature-gated with no shipped-
+    /// build caller -- the caller rule's own precedent, `MultiType`.
+    FilterWitness,
+}
+
+/// FX-1's `zone` column witness list (section 3) -- thirteen values, cycled by `id % 13`: a plain
+/// word, digit strings, a decimal string, boolean-shaped strings, the empty string, whitespace-
+/// padded, a huge digit string, `NaN`/`inf` spellings, and `NULL`.
+pub const FILTER_WITNESS_VARCHAR: [Option<&str>; 13] = [
+    Some("civic"),
+    Some("1"),
+    Some("-1"),
+    Some("1.5"),
+    Some("true"),
+    Some("t"),
+    Some(""),
+    Some(" 7 "),
+    Some("300"),
+    Some("9223372036854775808"),
+    Some("NaN"),
+    Some("inf"),
+    None,
+];
+
+/// FX-1's `flag` column witness list (section 3): true, false, NULL.
+pub const FILTER_WITNESS_FLAG: [Option<bool>; 3] = [Some(true), Some(false), None];
+
+/// FX-1's `i8` column witness list (section 3): the type's minimum, negative one, 0, 1 and maximum.
+pub const FILTER_WITNESS_I8: [i8; 5] = [i8::MIN, -1, 0, 1, i8::MAX];
+/// FX-1's `i16` column witness list (section 3).
+pub const FILTER_WITNESS_I16: [i16; 5] = [i16::MIN, -1, 0, 1, i16::MAX];
+/// FX-1's `i32` column witness list (section 3), plus 16777217 (2^24 + 1, the first integer a
+/// `REAL` cannot represent exactly).
+pub const FILTER_WITNESS_I32: [i32; 6] = [i32::MIN, -1, 0, 1, 16_777_217, i32::MAX];
+/// FX-1's `i64` column witness list (section 3), plus 9007199254740993 (2^53 + 1, the first
+/// integer a `DOUBLE` cannot represent exactly).
+pub const FILTER_WITNESS_I64: [i64; 6] = [i64::MIN, -1, 0, 1, 9_007_199_254_740_993, i64::MAX];
+/// FX-1's `u8` column witness list (section 3).
+pub const FILTER_WITNESS_U8: [u8; 3] = [0, 1, u8::MAX];
+/// FX-1's `u16` column witness list (section 3).
+pub const FILTER_WITNESS_U16: [u16; 3] = [0, 1, u16::MAX];
+/// FX-1's `u32` column witness list (section 3), plus 16777217.
+pub const FILTER_WITNESS_U32: [u32; 4] = [0, 1, 16_777_217, u32::MAX];
+/// FX-1's `u64` column witness list (section 3), plus 9007199254740993.
+pub const FILTER_WITNESS_U64: [u64; 4] = [0, 1, 9_007_199_254_740_993, u64::MAX];
+/// FX-1's `f32` (`REAL`) column witness list (section 3): 0.1, negative zero, 16777216 (2^24, the
+/// boundary `FILTER_WITNESS_I32`'s 16777217 sits one past), `f32::MAX`, inf, -inf, nan, 1e10.
+pub const FILTER_WITNESS_F32: [f32; 8] = [
+    0.1,
+    -0.0,
+    16_777_216.0,
+    f32::MAX,
+    f32::INFINITY,
+    f32::NEG_INFINITY,
+    f32::NAN,
+    1e10,
+];
+/// FX-1's `f64` (`DOUBLE`) column witness list (section 3): 0.1, 9007199254740993 (2^53 + 1),
+/// `f64::MAX`, inf, -inf, nan, 1e20.
+pub const FILTER_WITNESS_F64: [f64; 7] = [
+    0.1,
+    9_007_199_254_740_993.0,
+    f64::MAX,
+    f64::INFINITY,
+    f64::NEG_INFINITY,
+    f64::NAN,
+    1e20,
+];
+
+/// FX-1's `[id % len]` witness rule (section 3), shared by every `FILTER_WITNESS_*` accessor below.
+fn witness<T: Copy>(list: &[T], id: u64) -> T {
+    list[(id % list.len() as u64) as usize]
+}
+
+/// FX-1's `zone` value for row `id`.
+pub fn filter_witness_varchar(id: u64) -> Option<&'static str> {
+    witness(&FILTER_WITNESS_VARCHAR, id)
+}
+/// FX-1's `flag` value for row `id`.
+pub fn filter_witness_flag(id: u64) -> Option<bool> {
+    witness(&FILTER_WITNESS_FLAG, id)
+}
+/// FX-1's `i8` value for row `id`.
+pub fn filter_witness_i8(id: u64) -> i8 {
+    witness(&FILTER_WITNESS_I8, id)
+}
+/// FX-1's `i16` value for row `id`.
+pub fn filter_witness_i16(id: u64) -> i16 {
+    witness(&FILTER_WITNESS_I16, id)
+}
+/// FX-1's `i32` value for row `id`.
+pub fn filter_witness_i32(id: u64) -> i32 {
+    witness(&FILTER_WITNESS_I32, id)
+}
+/// FX-1's `i64` value for row `id`.
+pub fn filter_witness_i64(id: u64) -> i64 {
+    witness(&FILTER_WITNESS_I64, id)
+}
+/// FX-1's `u8` value for row `id`.
+pub fn filter_witness_u8(id: u64) -> u8 {
+    witness(&FILTER_WITNESS_U8, id)
+}
+/// FX-1's `u16` value for row `id`.
+pub fn filter_witness_u16(id: u64) -> u16 {
+    witness(&FILTER_WITNESS_U16, id)
+}
+/// FX-1's `u32` value for row `id`.
+pub fn filter_witness_u32(id: u64) -> u32 {
+    witness(&FILTER_WITNESS_U32, id)
+}
+/// FX-1's `u64` value for row `id`.
+pub fn filter_witness_u64(id: u64) -> u64 {
+    witness(&FILTER_WITNESS_U64, id)
+}
+/// FX-1's `f32` value for row `id`.
+pub fn filter_witness_f32(id: u64) -> f32 {
+    witness(&FILTER_WITNESS_F32, id)
+}
+/// FX-1's `f64` value for row `id`.
+pub fn filter_witness_f64(id: u64) -> f64 {
+    witness(&FILTER_WITNESS_F64, id)
 }
 
 /// Whether the fixture's parquet footer declares license metadata.
@@ -478,6 +605,22 @@ fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) ->
         fields.push(Arc::new(Field::new("flag", DataType::Boolean, false)));
         fields.push(Arc::new(Field::new("d32", DataType::Date32, false)));
         fields.push(Arc::new(Field::new("text", DataType::Utf8, false)));
+    }
+    if attributes == AttributeMode::FilterWitness {
+        // FX-1's declared file order (section 3): id, zone, flag, then the eight integer widths,
+        // then f32, f64.
+        fields.push(Arc::new(Field::new("zone", DataType::Utf8, true)));
+        fields.push(Arc::new(Field::new("flag", DataType::Boolean, true)));
+        fields.push(Arc::new(Field::new("i8", DataType::Int8, false)));
+        fields.push(Arc::new(Field::new("i16", DataType::Int16, false)));
+        fields.push(Arc::new(Field::new("i32", DataType::Int32, false)));
+        fields.push(Arc::new(Field::new("i64", DataType::Int64, false)));
+        fields.push(Arc::new(Field::new("u8", DataType::UInt8, false)));
+        fields.push(Arc::new(Field::new("u16", DataType::UInt16, false)));
+        fields.push(Arc::new(Field::new("u32", DataType::UInt32, false)));
+        fields.push(Arc::new(Field::new("u64", DataType::UInt64, false)));
+        fields.push(Arc::new(Field::new("f32", DataType::Float32, false)));
+        fields.push(Arc::new(Field::new("f64", DataType::Float64, false)));
     }
     fields.push(Arc::new(Field::new("geometry", DataType::Binary, false)));
     Arc::new(Schema::new(fields))
@@ -794,6 +937,14 @@ fn generate(
         let mut flags = arrow::array::BooleanBuilder::with_capacity(n);
         let mut d32s = arrow::array::Date32Builder::with_capacity(n);
         let mut texts = arrow::array::StringBuilder::new();
+        let mut fw_i8s = arrow::array::Int8Builder::with_capacity(n);
+        let mut fw_i16s = arrow::array::Int16Builder::with_capacity(n);
+        let mut fw_i32s = arrow::array::Int32Builder::with_capacity(n);
+        let mut fw_u8s = arrow::array::UInt8Builder::with_capacity(n);
+        let mut fw_u16s = arrow::array::UInt16Builder::with_capacity(n);
+        let mut fw_u32s = arrow::array::UInt32Builder::with_capacity(n);
+        let mut fw_u64s = arrow::array::UInt64Builder::with_capacity(n);
+        let mut fw_f64s = Float64Builder::with_capacity(n);
         let (mut xmin_b, mut ymin_b, mut xmax_b, mut ymax_b) = (
             Float64Builder::with_capacity(n),
             Float64Builder::with_capacity(n),
@@ -869,6 +1020,28 @@ fn generate(
                 d32s.append_value(date32_for(spec.seed, id));
                 texts.append_value(text_for(spec.seed, id));
             }
+            if spec.attributes == AttributeMode::FilterWitness {
+                // Every value here is `[id % len]` of its own declared list (section 3) -- a pure
+                // function of `id` alone, no `(seed, id)` hash.
+                match filter_witness_varchar(id) {
+                    Some(v) => zones.append_value(v),
+                    None => zones.append_null(),
+                }
+                match filter_witness_flag(id) {
+                    Some(v) => flags.append_value(v),
+                    None => flags.append_null(),
+                }
+                fw_i8s.append_value(filter_witness_i8(id));
+                fw_i16s.append_value(filter_witness_i16(id));
+                fw_i32s.append_value(filter_witness_i32(id));
+                i64s.append_value(filter_witness_i64(id));
+                fw_u8s.append_value(filter_witness_u8(id));
+                fw_u16s.append_value(filter_witness_u16(id));
+                fw_u32s.append_value(filter_witness_u32(id));
+                fw_u64s.append_value(filter_witness_u64(id));
+                f32s.append_value(filter_witness_f32(id));
+                fw_f64s.append_value(filter_witness_f64(id));
+            }
             geoms.append_value(encode_polygon(&rings));
             xmin_b.append_value(xmin);
             ymin_b.append_value(ymin);
@@ -904,6 +1077,20 @@ fn generate(
             cols.push(Arc::new(flags.finish()) as ArrayRef);
             cols.push(Arc::new(d32s.finish()) as ArrayRef);
             cols.push(Arc::new(texts.finish()) as ArrayRef);
+        }
+        if spec.attributes == AttributeMode::FilterWitness {
+            cols.push(Arc::new(zones.finish()) as ArrayRef);
+            cols.push(Arc::new(flags.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_i8s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_i16s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_i32s.finish()) as ArrayRef);
+            cols.push(Arc::new(i64s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_u8s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_u16s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_u32s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_u64s.finish()) as ArrayRef);
+            cols.push(Arc::new(f32s.finish()) as ArrayRef);
+            cols.push(Arc::new(fw_f64s.finish()) as ArrayRef);
         }
         cols.push(Arc::new(geoms.finish()));
 

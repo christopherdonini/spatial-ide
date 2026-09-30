@@ -22,8 +22,8 @@ use std::path::Path;
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
 use spatial_engine::{
     AdmittedPredicate, AdmittedProjection, ArmOutcome, ArmedWatch, CancelToken, Dataset,
-    EngineError, FilterError, PredicateAdmitError, ProjectionError, SourceWatchArm, ViewportQuery,
-    WatchSignal, WatchSink,
+    EngineError, FilterError, PredicateAdmitError, ProjectionError, SourceWatchArm,
+    TypeRefusalReason, ViewportQuery, WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
@@ -1289,10 +1289,10 @@ impl SkpHost {
         // extra IO beyond DuckDB's own parse/bind against what is already open) but strictly
         // *before* `open_engine_stream` below ever leases a `Class::Stream` connection and *before*
         // `self.tickets.mint` ever runs. A refused predicate returns here, synchronously, as one of
-        // the eleven typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
+        // the twelve typed `skp.filter_*` codes (`filter_error_of`) — never as a data-plane terminal
         // frame arriving after a round trip, and never after a ticket a client would have to redeem
         // just to learn it was refused (SKP-V0 §1, ADR-019 §1). A residual admission-*lease*
-        // exhaustion is not one of those eleven: it routes through `engine.connections_exhausted`
+        // exhaustion is not one of those twelve: it routes through `engine.connections_exhausted`
         // instead — see [`predicate_admit_error_of`].
         // **A ticket is refused under an invalidated generation, before anything is built** (§13 D;
         // boundary 4's "new tickets refused under G"). The kernel side is authoritative: this
@@ -1565,7 +1565,7 @@ fn viewport_query_build_error_of(e: ViewportQueryBuildError) -> SkpError {
 /// `EngineError::ConnectionsExhausted` arm to `engine.connections_exhausted` (SKP-V0.md `:266`'s
 /// `engine.` + variant-name rule) — the ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)):
 /// residual exhaustion surfaces as the typed `engine.connections_exhausted`, **never** as a false
-/// binder refusal. ADR-021 item 8's eleven-code `skp.filter_*` list is untouched: this function
+/// binder refusal. ADR-021 item 8's twelve-code `skp.filter_*` list is untouched: this function
 /// mints no code either side of the match does not already mint.
 fn predicate_admit_error_of(e: PredicateAdmitError) -> SkpError {
     match e {
@@ -1986,8 +1986,9 @@ pub fn error_of(e: &EngineError) -> SkpError {
 
 /// Maps every `FilterError` variant (`engine::predicate`, P3's admission) to its declared
 /// `skp.filter_*` wire code and named fields — `NEXT-CUT.md` design essential 5's taxonomy,
-/// field for field. **No wildcard arm**: a twelfth `FilterError` variant fails this build until it
-/// is mapped here, the same discipline [`error_of`] applies to `EngineError` above. `message` is
+/// field for field. **No wildcard arm**: a thirteenth `FilterError` variant fails this build until
+/// it is mapped here (correction round 2, W10; architect B7, reviewer B7), the same discipline
+/// [`error_of`] applies to `EngineError` above. `message` is
 /// `FilterError`'s own `Display` output, unedited, exactly [`error_of`]'s own convention.
 pub fn filter_error_of(e: &FilterError) -> SkpError {
     let message = e.to_string();
@@ -2045,7 +2046,35 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
             message,
             [("detail", detail.clone())],
         ),
+        FilterError::TypeNotAdmitted {
+            construct,
+            operand_types,
+            reason,
+        } => filter_type_not_admitted(message, construct.clone(), operand_types, *reason),
     }
+}
+
+/// [`filter_error_of`]'s `TypeNotAdmitted` arm, factored out for readability. B-T6 calls
+/// [`filter_error_of`] itself, not this function directly (correction round 2, W12; architect N4,
+/// reviewer N5). `operand_types`' entries are joined with `"; "` on the wire
+/// (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §2.6: a `DECIMAL` name carries a comma).
+/// `reason`'s wire value comes from [`TypeRefusalReason::wire_value`] (O-4) — never from this
+/// module's own text.
+fn filter_type_not_admitted(
+    message: String,
+    construct: String,
+    operand_types: &[String],
+    reason: TypeRefusalReason,
+) -> SkpError {
+    SkpError::protocol_with_fields(
+        "filter_type_not_admitted",
+        message,
+        [
+            ("construct", construct),
+            ("operand_types", operand_types.join("; ")),
+            ("reason", reason.wire_value().to_string()),
+        ],
+    )
 }
 
 /// A [`SourceWatchArm`] that always returns `ChecksOnly` — every test in this file that constructs
@@ -2353,7 +2382,7 @@ mod tests {
     //
     // `filter_error_of`'s match has no wildcard arm (a compile-time exhaustiveness property, same
     // discipline `error_of` uses above), and unlike `every_engine_error_variant_maps_to_a_distinct_
-    // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s eleven variants gets
+    // engine_dot_code`'s three-of-twenty sample, every one of `FilterError`'s twelve variants gets
     // its own test below — code AND every field key asserted, never a bare `is_err`.
 
     #[test]
@@ -2443,6 +2472,28 @@ mod tests {
         assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
     }
 
+    /// B-T6 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §4). Mutation: the arm maps to
+    /// `filter_rejected_by_binder`. It fails by name.
+    #[test]
+    fn filter_type_not_admitted_maps_to_its_code_and_fields() {
+        let e = filter_error_of(&FilterError::TypeNotAdmitted {
+            construct: "=".to_string(),
+            operand_types: vec!["VARCHAR".to_string(), "INTEGER literal".to_string()],
+            reason: TypeRefusalReason::TextWithNonText,
+        });
+        assert_eq!(e.code, "skp.filter_type_not_admitted");
+        assert_eq!(e.fields.get("construct").map(String::as_str), Some("="));
+        assert_eq!(
+            e.fields.get("operand_types").map(String::as_str),
+            Some("VARCHAR; INTEGER literal")
+        );
+        assert_eq!(
+            e.fields.get("reason").map(String::as_str),
+            Some("text_with_non_text")
+        );
+        assert_eq!(e.fields.len(), 3, "no extra field: {e:?}");
+    }
+
     /// The ruling of 2026-09-13 (DECISIONS-PENDING entry 91 (a)) at this crate's own boundary: a
     /// residual admission-lease exhaustion reaching `viewport_query`'s error match surfaces as the
     /// typed `engine.connections_exhausted`, **never** as a binder rejection. Before this arm
@@ -2465,7 +2516,7 @@ mod tests {
         assert_eq!(e.fields.get("capacity").map(String::as_str), Some("4"));
 
         // The other half of the same match, in the same test: an admission-*content* refusal still
-        // takes `filter_error_of`'s eleven-code route, unchanged (ADR-021 item 8) — including the
+        // takes `filter_error_of`'s twelve-code route, unchanged (ADR-021 item 8) — including the
         // genuine binder rejection, whose code the arm above must not be allowed to steal.
         let e = predicate_admit_error_of(PredicateAdmitError::Filter(
             FilterError::RejectedByBinder { detail: "binder refused".into() },
