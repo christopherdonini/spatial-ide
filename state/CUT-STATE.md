@@ -1322,3 +1322,8 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - the gate's three readings (§8 item 1, P3, and the cites' new site);
     - the composition proven by inspection, with no test claimed against its bypass;
     - size 253 of 300.
+- 2026-09-30T17:48Z - **Node 3's A4-4 form is committed before any code (`kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md`, the node's gate). A4-1 to A4-3 need the human's ruling; the draft for them is `state/drafts/round-32-node3-premise-correction.md`.**
+  - **The architect's draft** is filed as `state/consults/2026-09-30-publish-refusal-codes-architect-draft.md`, with the DRAFT section elided. Its verdict: only A4-4 is kernel work.
+  - **A4-4, proceeding.** On the raw-params path, a create-time engine refusal becomes `skp::terminal_detail_of(&e)` instead of `e.to_string()`. It mints no new code or string and changes nothing in the shell, which installs `ticket_only`. T1 extends the wrong-CRS end-to-end case. The budget is 60 lines over 2 files, under full gating (§21a).
+  - **A4-1 to A4-3, a premise correction for the human.** A4-1 (execute) and A4-3 (pin phase) are dropped by src-tauri lines, and A4-2's `publish.engine` is a declared code. So the site and the code are the human's to decide. They join round 32 on 2026-10-02 unless the human asks sooner. The node stays open until they are answered and done.
+  - **Custodian's checks.** Every cited site was checked at a446efd and at 37333ef, and the span hashes were computed at a446efd. The existing wrong-CRS test asserts only `contains("EPSG:4326")`. No consumer matches a raw-path create-time detail.
