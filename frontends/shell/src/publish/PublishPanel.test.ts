@@ -110,6 +110,22 @@ describe("nextStateFromPrepareOutcome", () => {
     const outcome: PrepareOutcome = { status: "cancelled" };
     expect(nextStateFromPrepareOutcome(outcome)).toEqual({ kind: "cancelled" });
   });
+
+  // The string is what `publish.rs::a_pin_phase_engine_failure_refuses_as_publish_engine` received
+  // at this branch's fix commit, byte-captured on Windows (its OS text is Windows'); no assertion
+  // below depends on that text.
+  it("refused, pin-phase engine failure -> code publish.engine, message without the prefix", () => {
+    const outcome: PrepareOutcome = {
+      status: "refused",
+      message: "publish.engine: source: open for hashing: The system cannot find the file specified. (os error 2)",
+    };
+    const next = nextStateFromPrepareOutcome(outcome);
+    expect(next.kind).toBe("refused");
+    if (next.kind === "refused") {
+      expect(next.refusal.code).toBe("publish.engine");
+      expect(next.refusal.message.startsWith("publish.")).toBe(false);
+    }
+  });
 });
 
 describe("nextStateFromDialogSettled", () => {
@@ -146,6 +162,24 @@ describe("nextStateFromDialogSettled", () => {
     const next = nextStateFromDialogSettled({ kind: "executed", outcome });
     expect(next.kind).toBe("refused");
     if (next.kind === "refused") expect(next.refusal.message).toBe("typed phrase did not match");
+  });
+
+  // The string is what `publish.rs::an_execute_time_publish_refusal_carries_its_typed_code_and_a_permission_refusal_does_not`
+  // received at this branch's fix commit, byte-captured.
+  it("executed/refused, execute-time typed refusal -> code publish.cancelled, message without the prefix", () => {
+    const outcome: ExecuteOutcome = {
+      status: "refused",
+      message:
+        "publish.cancelled: cancelled: no bundle exists under the destination name and the staging directory has been removed",
+    };
+    const next = nextStateFromDialogSettled({ kind: "executed", outcome });
+    expect(next.kind).toBe("refused");
+    if (next.kind === "refused") {
+      expect(next.refusal.code).toBe("publish.cancelled");
+      expect(next.refusal.message).toBe(
+        "cancelled: no bundle exists under the destination name and the staging directory has been removed",
+      );
+    }
   });
 
   it("executed/unknown-attempt -> a refusal explaining nothing was authorized or denied", () => {
