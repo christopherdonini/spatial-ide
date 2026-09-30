@@ -9,8 +9,10 @@
 
 use std::time::{Duration, Instant};
 
-use spatial_engine::fixture::{write_geoparquet_cancellable, FixtureFacts, FixtureSpec};
-use spatial_engine::{Bbox, CancelToken, Dataset, EngineError, ViewportQuery};
+use spatial_engine::fixture::{
+    write_geoparquet_cancellable, AttributeMode, FixtureFacts, FixtureSpec,
+};
+use spatial_engine::{AdmittedPredicate, Bbox, CancelToken, Dataset, EngineError, ViewportQuery};
 
 /// Bounds only how long a failing test runs (form §7). Never reported as a latency.
 const TEST_LIVENESS_DEADLINE: Duration = Duration::from_secs(60);
@@ -21,41 +23,61 @@ const TEST_LIVENESS_DEADLINE: Duration = Duration::from_secs(60);
 /// `is_executing()`.
 const FEATURES: usize = 2_000_000;
 
-fn fixture_path() -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join("spatial-engine-cancel-execute-window");
-    std::fs::create_dir_all(&dir).expect("fixture dir");
-    dir.join("no-match.parquet")
+/// The admitted predicate F3 streams with (form §10 Amendment 3, item 3). It matches no row: every
+/// `zone` is one of `fixture::ZONE_VALUES` or NULL and none contains `zz`, and `id + id < id` is
+/// false for every unsigned id. **Both disjuncts are needed.** Each alone is decided by DuckDB
+/// without reading the row groups, so the whole call returns at once; the `OR` of the two is not,
+/// and every row of every row group goes through a `FILTER` above the scan before any chunk exists.
+/// That was checked for this predicate by `EXPLAIN ANALYZE` outside the repo, and is not asserted
+/// here: a missed window is an invalid run (form §5), and this test cannot tell it from its mutation.
+const NEVER_TRUE: &str = "zone LIKE '%zz%' OR id + id < id";
+
+/// The fixture directory, unique to this run and removed when the test ends, on a panic too.
+struct RunDir(std::path::PathBuf);
+
+impl RunDir {
+    fn new() -> Self {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        let dir = std::env::temp_dir().join(format!(
+            "spatial-engine-cancel-execute-window-{}-{nanos}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        Self(dir)
+    }
 }
 
-/// A viewport outside the data entirely, so the scan matches no row and `stream_arrow` must walk
-/// the whole file before yielding anything. The same structural device
-/// `engine/tests/connection_reuse.rs`'s `matches_nothing` uses, restated here rather than shared:
-/// this workspace's integration test binaries do not import code from one another
-/// (`kernel/tests/skp_filter_cancellation.rs`'s module doc states the same convention).
-fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
+impl Drop for RunDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+/// A viewport covering the whole extent, so the bbox admits every row and only the predicate
+/// decides. The scan can then not be shortened by excluding row groups on the bbox statistics.
+fn whole_extent(facts: &FixtureFacts) -> Bbox {
     let e = facts.extent;
-    let w = e[2] - e[0];
-    let h = e[3] - e[1];
-    ViewportQuery::viewport(
-        Bbox {
-            xmin: e[2] + w,
-            ymin: e[3] + h,
-            xmax: e[2] + w * 2.0,
-            ymax: e[3] + h * 2.0,
-        },
-        "EPSG:2056",
-    )
+    Bbox {
+        xmin: e[0],
+        ymin: e[1],
+        xmax: e[2],
+        ymax: e[3],
+    }
 }
 
 #[test]
 fn a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled() {
-    let path = fixture_path();
+    let run_dir = RunDir::new();
+    let path = run_dir.0.join("no-match.parquet");
     let facts = write_geoparquet_cancellable(
         &path,
         &FixtureSpec {
             features: FEATURES,
             avg_vertices: 12,
             hole_every: 0,
+            attributes: AttributeMode::CategoricalZone,
             ..Default::default()
         },
         &CancelToken::new(),
@@ -64,9 +86,11 @@ fn a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled() {
     .expect("write fixture");
 
     let ds = Dataset::open(&path).expect("open");
+    let filter = AdmittedPredicate::admit(NEVER_TRUE, &ds).expect("the predicate is admitted");
+    let query = ViewportQuery::viewport(whole_extent(&facts), "EPSG:2056").with_filter(filter);
     let cancel = CancelToken::new();
     let mut stream = ds
-        .stream_with_cancel(&matches_nothing(&facts), cancel.clone())
+        .stream_with_cancel(&query, cancel.clone())
         .expect("stream");
 
     // Spin on `is_executing()` until the producer thread is actually inside `execute_guarded`'s

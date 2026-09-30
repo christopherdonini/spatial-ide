@@ -9,14 +9,15 @@
 //! place: a filter that scans for seconds before its first batch would keep scanning. So
 //! `CancelToken::cancel` calls DuckDB's own interrupt on the connection running the query, and the
 //! between-batch check is the second line of defence rather than the only one — qualified by
-//! `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`: DuckDB clears its own interrupt flag at the
-//! start of every `Prepare`/`PendingQueryPreparedInternal`/`RunFunctionInTransactionInternal` (P0-2
-//! enumerates the call sites), so an interrupt raised between `attach` and the moment execution
-//! actually begins is not, by itself, guaranteed to reach the query it was meant for. The window
-//! guard below (`CancelToken::execute_guarded`) is what closes that gap: it checks the flag
-//! immediately before running the closure that executes, and re-raises the interrupt on a timer
-//! for as long as that closure is in flight, so a cancel landing anywhere in the window is either
-//! seen before execution starts or re-delivered while it runs.
+//! `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`: DuckDB clears its own interrupt flag in
+//! `ClientContext::InitialCleanup`, which `Prepare` and `PendingQueryPreparedInternal` reach among
+//! others, and in `RunFunctionInTransactionInternal` only when that function opens an auto-commit
+//! transaction (§10 Amendment 1, item 2, enumerates the clearing functions), so an interrupt raised
+//! between `attach` and the moment execution actually begins is not, by itself, guaranteed to reach
+//! the query it was meant for. The window guard below (`CancelToken::execute_guarded`) is what
+//! closes that gap: it checks the flag immediately before running the closure that executes, and
+//! re-raises the interrupt on a timer for as long as that closure is in flight, so a cancel landing
+//! anywhere in the window is either seen before execution starts or re-delivered while it runs.
 //!
 //! `docs/08`'s budget is "Cancellation acknowledged < 100 ms, **any operation**" — including the
 //! operation that has not produced anything yet.
@@ -41,16 +42,29 @@ pub struct CancelToken {
 #[derive(Default)]
 struct Inner {
     cancelled: AtomicBool,
-    /// Present from the moment a query is bound to this token. A cancel that arrives before the
-    /// handle is attached is not lost: `attach` interrupts immediately if the flag is already set.
-    /// **Qualified:** this is what stops a query cancelled before `attach` or before `prepare`.
-    /// Between `prepare` and execution's own start, DuckDB clears the flag it would otherwise
-    /// interrupt against, so that window is closed by callers that execute through
-    /// `execute_guarded`, not by this field alone.
+    /// Present from the moment a query is bound to this token. `attach` interrupts immediately if
+    /// the flag is already set, but that interrupt is **not latched**: on an idle connection DuckDB
+    /// does not carry it into the next query (`an_interrupt_on_an_idle_connection_is_not_latched`),
+    /// and it clears its own flag at the start of `prepare` and of execution. So this field is not
+    /// what stops a query cancelled before `attach` or before `prepare`. That is a flag check:
+    /// `stream::produce`'s check before it prepares, and `execute_guarded`'s step 2 — **qualified:**
+    /// only for a caller that checks under the guard; a caller that executes without it has no such
+    /// check. What the interrupt through this field does reach is a query already running, which is
+    /// what `cancel_inner` and its re-interrupter raise it against.
     interrupt: Mutex<Option<Arc<InterruptHandle>>>,
     /// Set for exactly the duration of one `execute_guarded` closure. Read by the re-interrupter
     /// thread and by the `is_executing` instrument accessor.
     in_execute: AtomicBool,
+}
+
+/// Clears `Inner::in_execute` when dropped, so an unwind out of the guarded closure cannot leave the
+/// flag set.
+struct WindowOpen<'a>(&'a AtomicBool);
+
+impl Drop for WindowOpen<'_> {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::SeqCst);
+    }
 }
 
 /// The outcome of running a closure through [`CancelToken::execute_guarded`].
@@ -119,24 +133,28 @@ impl CancelToken {
         // connection is still bound, and stops the moment either is no longer true.
         if !already && self.inner.in_execute.load(Ordering::SeqCst) {
             let inner = Arc::clone(&self.inner);
-            std::thread::spawn(move || loop {
-                let bound = inner
-                    .interrupt
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .is_some();
-                if !inner.in_execute.load(Ordering::SeqCst) || !bound {
-                    break;
-                }
-                std::thread::sleep(REINTERRUPT_INTERVAL);
-                // Interrupt only under the slot mutex, so a `detach` racing this sleep is never
-                // reached after the connection has been handed back — the same discipline `attach`
-                // and `detach` already keep.
-                let slot = inner.interrupt.lock().unwrap_or_else(|e| e.into_inner());
-                if let Some(h) = slot.as_ref() {
-                    h.interrupt();
-                }
-            });
+            // `Builder::spawn`, not `thread::spawn`: this runs from `BatchStream`'s `Drop` too, and
+            // `thread::spawn` panics when the OS refuses a thread. A refusal is discarded: stopping
+            // then degrades to what an interrupt raised above alone does for this cancel, and the
+            // outcome stays `Cancelled` through the guard's step 4 (form §2 item 3). Named, like
+            // the producer thread (`stream.rs`).
+            let _ = std::thread::Builder::new()
+                .name("engine-cancel-reinterrupt".into())
+                .spawn(move || loop {
+                    std::thread::sleep(REINTERRUPT_INTERVAL);
+                    // Both conditions are read under the slot mutex, after the sleep and before the
+                    // interrupt: a `detach` racing the sleep is never reached after the connection
+                    // has been handed back (the discipline `attach` and `detach` keep), and a window
+                    // that closed during the sleep is not interrupted into.
+                    let slot = inner.interrupt.lock().unwrap_or_else(|e| e.into_inner());
+                    if !inner.in_execute.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    match slot.as_ref() {
+                        Some(h) => h.interrupt(),
+                        None => break,
+                    }
+                });
         }
     }
 
@@ -156,12 +174,14 @@ impl CancelToken {
     ///    return [`Guarded::Cancelled`] — an `Err` from `f` is returned unchanged either way.
     pub(crate) fn execute_guarded<T, E>(&self, f: impl FnOnce() -> Result<T, E>) -> Guarded<T, E> {
         self.inner.in_execute.store(true, Ordering::SeqCst);
+        // Clears `in_execute` on every way out, an unwind out of `f` included.
+        let window = WindowOpen(&self.inner.in_execute);
         if self.inner.cancelled.load(Ordering::SeqCst) {
-            self.inner.in_execute.store(false, Ordering::SeqCst);
             return Guarded::Cancelled;
         }
         let result = f();
-        self.inner.in_execute.store(false, Ordering::SeqCst);
+        // Step 4 clears before it reads `cancelled`, so the drop is explicit here.
+        drop(window);
         match result {
             Ok(v) => {
                 if self.inner.cancelled.load(Ordering::SeqCst) {
