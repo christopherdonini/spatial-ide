@@ -1752,31 +1752,48 @@ fn produce(
         params.push(&ymin);
     }
 
-    if cancel.is_cancelled() {
-        return Err(EngineError::Cancelled);
-    }
-
-    // `SPAN_PARAM_ASSEMBLY` (`sql_prepared → execute_called`) closes here: parameter-`Vec`
-    // construction plus the cancellation check above, named so it is not inferred by subtracting
-    // the other segments from `query`.
-    crate::trace::mark(crate::trace::EXECUTE_CALLED, 0, 0);
-
-    let arrow_result = stmt.stream_arrow(params.as_slice());
-    // **A new `PRODUCER_CANCELLED` site, found by `cut/sql-filter` P4's own testing (the sibling site
-    // just below the `catch_unwind` this function's row-fetch loop wraps is the other one this piece
-    // adds).** `stream_arrow` binds *and executes* in one call (the comment below already says the
+    // `SPAN_PARAM_ASSEMBLY` (`sql_prepared → execute_called`) closes at the `EXECUTE_CALLED` stamp
+    // inside the closure below: parameter-`Vec` construction plus the guard's own first two steps,
+    // named so it is not inferred by subtracting the other segments from `query`. The cancellation
+    // check that used to sit here is now step 2 inside `execute_guarded` — folded in rather than
+    // duplicated, because a check here and a separate check inside the guard would still leave the
+    // gap between them open.
+    // **`stream_arrow` binds *and executes* in one call** (the comment below already says the
     // vendored crate exposes no boundary between the two) — for a selective, late-matching predicate
     // this one call is where the *entire* non-matching prefix gets scanned, because nothing yields a
-    // chunk this producer could check `cancel.is_cancelled()` between until a match is found. An
-    // interrupt landing here surfaces as this call's own `Err`, not a panic on a later `.next()`, and
-    // was silently unmarked before this fix — the exact scenario a late-matching filter makes the
-    // common case, not a corner case.
-    if arrow_result.is_err() && cancel.is_cancelled() {
-        crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
-    }
-    let mut arrow = arrow_result.map_err(|e| classify(cancel, format!("execute: {e}")))?;
-    // **`SPAN_BIND_AND_EXECUTE` (`execute_called → execute_returned`) brackets exactly this call,
-    // which binds parameters *and* executes in one step.** The vendored `duckdb` crate has no
+    // chunk this producer could check `cancel.is_cancelled()` between until a match is found. Routed
+    // through `execute_guarded` (`cancel.rs`, `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`)
+    // rather than called bare: a cancel landing between `prepare` and here, or during this call
+    // itself, is not lost to the window DuckDB's own interrupt-clearing-on-execute opens (see
+    // `cancel.rs`'s header) — the guard checks immediately before running this closure and the
+    // re-interrupter it starts keeps re-raising for as long as the closure is in flight.
+    let mut arrow = match cancel.execute_guarded(|| {
+        // Stamped inside the closure so that a guard `Cancelled` from step 2, which never runs this
+        // closure, leaves no `execute_called` — the trace a stream cancelled before its execute
+        // left before this guard existed.
+        crate::trace::mark(crate::trace::EXECUTE_CALLED, 0, 0);
+        stmt.stream_arrow(params.as_slice())
+    }) {
+        crate::cancel::Guarded::Cancelled => {
+            crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
+            return Err(EngineError::Cancelled);
+        }
+        crate::cancel::Guarded::Err(e) => {
+            // **A `PRODUCER_CANCELLED` site found by `cut/sql-filter` P4's own testing** (the
+            // sibling site just below the `catch_unwind` this function's row-fetch loop wraps is
+            // the other one that piece added): an interrupt landing inside `stream_arrow` surfaces
+            // as this call's own `Err`, not a panic on a later `.next()`.
+            if cancel.is_cancelled() {
+                crate::trace::mark(crate::trace::PRODUCER_CANCELLED, 0, 0);
+            }
+            return Err(classify(cancel, format!("execute: {e}")));
+        }
+        crate::cancel::Guarded::Ok(arrow) => arrow,
+    };
+    // **`SPAN_BIND_AND_EXECUTE` (`execute_called → execute_returned`) brackets this call, which
+    // binds parameters *and* executes in one step, plus the guard's own step 4 (two atomic
+    // operations) on the `Ok` path — `execute_returned` is stamped only there, as before the guard
+    // existed.** The vendored `duckdb` crate has no
     // public API on this path that separates them — `Statement::stream_arrow` is `__bind_in` then
     // `execute_streaming` with no observable boundary between — so this span may never be quoted as
     // either half alone.

@@ -46,6 +46,10 @@ holds the connection's interrupt handle.
 > belt-and-braces; it is the only thing that stops a stream cancelled before it started. Pinned by
 > `an_interrupt_on_an_idle_connection_is_not_latched`.
 
+A narrower window than that check alone can close — between the check and the call it guards,
+where DuckDB clears its own interrupt flag on execution's start — is closed by
+`CancelToken::execute_guarded` and its re-interrupter (`engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`).
+
 **4. DuckDB's own GeoParquet conversion is turned off, deliberately.** `SET
 enable_geoparquet_conversion=false` on every connection. With it on, DuckDB interprets the file's
 `geo` metadata and hands back a converted geometry type — a **second CRS policy** in the path, one
