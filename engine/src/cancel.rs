@@ -194,6 +194,27 @@ mod tests {
     }
 
     #[test]
+    fn an_interrupt_raised_after_prepare_is_cleared_when_execution_begins() {
+        // P0-1 (`engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md` §4): attach, prepare, cancel,
+        // then execute — the interrupt lands on an idle, already-prepared connection, before
+        // `query_arrow` begins running it. H1 predicts DuckDB clears its interrupt flag at the
+        // start of execution, so this query completes rather than failing.
+        let conn = duckdb::Connection::open_in_memory().unwrap();
+        let t = CancelToken::new();
+        t.attach(conn.interrupt_handle()).unwrap();
+
+        let mut stmt = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
+        t.cancel();
+
+        let outcome = stmt.query_arrow([]);
+        assert!(
+            outcome.is_ok(),
+            "an interrupt raised between prepare and execute must not fail execution: {:?}",
+            outcome.err()
+        );
+    }
+
+    #[test]
     fn an_interrupt_on_an_idle_connection_is_not_latched() {
         // Pinning the finding recorded on `attach`: this is *why* the producer checks the flag
         // before executing. If DuckDB ever starts latching interrupts, this test fails and the
