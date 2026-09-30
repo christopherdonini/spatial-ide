@@ -409,3 +409,18 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
   Second mutation: `check_between` checks only input against each bound. It fails by name on C35's plan cast.
 - **§4, B-T3.** C25 also asserts `RejectedByBinder` with Display's prefix unchanged, and C27 asserts that `construct` names CAST.
 - **§4, B-T8.** "A byte-identical round trip" now reads: a round trip equal as JSON values, as the precedent `every_new_projection_error_fixture_round_trips` does. Its claim is reduced to what the test proves (round 15 (b)).
+
+### Amendment 5 — 2026-09-30, after correction round 2's final code commit: budget overrun, §7 not edited
+
+*Class 8 (`docs/PREREGISTRATION-TEMPLATE.md`, Round 25 additions; round 25, item 2 (a)). A record only.*
+
+- **Declared (§7):** at most 1,800 insertions plus deletions, over at most 32 files of non-generated code, tests and test data.
+- **Final, by §7's own counting command** (`git diff --numstat origin/main...HEAD` with §7's exclusions), at commit 42a8c73 on `cut/filter-bind-coercions`, merge base 6e16d65: 3,214 insertions plus 244 deletions, 3,458 in all, over 25 files. The file count is within its bound. The line count is not.
+- **Reason:** size, not scope, per item 9 of `state/consults/gates/2026-09-30-b-1-code-gate1-architect.md`. The overrun traces to §§2-4 as amended:
+  - the walk and its declared promotion table (§2.2);
+  - B-T1's five-part enumeration and B-T1b (§4, Amendment 4);
+  - B-T3's corpus with rows C29-C38 (§3, Amendment 4);
+  - FX-1's accessors (§3);
+  - the literal fixtures (§2.8);
+  - rustfmt's line splits of added code.
+- §7 is not edited. A later code commit on the branch gets a superseding class-8 row here.
