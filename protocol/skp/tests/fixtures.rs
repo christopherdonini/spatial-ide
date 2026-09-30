@@ -392,8 +392,16 @@ fn the_filter_type_not_admitted_error_fixture_round_trips() {
     assert_eq!(parsed.code, "skp.filter_type_not_admitted");
     let mut keys: Vec<&String> = parsed.fields.keys().collect();
     keys.sort();
-    assert_eq!(keys, vec!["construct", "operand_types", "reason"], "{name}: exact key set");
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
+    assert_eq!(
+        keys,
+        vec!["construct", "operand_types", "reason"],
+        "{name}: exact key set"
+    );
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "{name}: round trip changed the JSON shape"
+    );
 }
 
 /// `skp/0.5`, the advisory source-change watcher. `OpenDatasetResponse` gains `session`.

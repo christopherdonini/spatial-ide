@@ -21,7 +21,10 @@ use sha2::{Digest, Sha256};
 
 use spatial_engine::cancel::CancelToken;
 use spatial_engine::fixture::{configured_connection, AttributeMode, CrsMode, FixtureSpec};
-use spatial_engine::{AdmittedPredicate, Dataset, FilterError, PredicateAdmitError, TypeRefusalReason, ViewportQuery, ID_COLUMN};
+use spatial_engine::{
+    AdmittedPredicate, Dataset, FilterError, PredicateAdmitError, TypeRefusalReason, ViewportQuery,
+    ID_COLUMN,
+};
 
 const FIXTURE_SEED: u64 = 0x5EED_2056_0B03_0001;
 /// FX-1's feature count (section 3): the longest declared witness list (`zone`, 13 entries) sets
@@ -32,7 +35,11 @@ fn sha256_hex(path: &std::path::Path) -> String {
     let bytes = std::fs::read(path).expect("read fixture for hashing");
     let mut hasher = Sha256::new();
     hasher.update(&bytes);
-    hasher.finalize().iter().map(|b| format!("{b:02x}")).collect()
+    hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// FX-1, written once (the `predicate_admission.rs` / `live_projection.rs` `OnceLock` precedent).
@@ -64,7 +71,11 @@ fn fixture() -> &'static Fixture {
 
 /// Section 3's own end-of-run check: FX-1's bytes are unchanged since the write.
 fn assert_fixture_unchanged(fx: &Fixture) {
-    assert_eq!(sha256_hex(&fx.path), fx.sha256, "FX-1 changed since it was written");
+    assert_eq!(
+        sha256_hex(&fx.path),
+        fx.sha256,
+        "FX-1 changed since it was written"
+    );
 }
 
 fn dataset() -> Dataset {
@@ -73,17 +84,28 @@ fn dataset() -> Dataset {
 
 /// Drain an admitted predicate's stream over the whole file (`ViewportQuery::all()`) into the set
 /// of `id`s it delivered, or the terminal error text.
-fn drain_ids(ds: &Dataset, predicate: &AdmittedPredicate) -> Result<std::collections::BTreeSet<u64>, String> {
+fn drain_ids(
+    ds: &Dataset,
+    predicate: &AdmittedPredicate,
+) -> Result<std::collections::BTreeSet<u64>, String> {
     let query = ViewportQuery::all().with_filter(predicate.clone());
-    let mut stream = ds.stream_with_cancel(&query, CancelToken::new()).map_err(|e| e.to_string())?;
+    let mut stream = ds
+        .stream_with_cancel(&query, CancelToken::new())
+        .map_err(|e| e.to_string())?;
     let mut ids = std::collections::BTreeSet::new();
     let mut buf = Vec::new();
     while let Some(info) = stream.next_into(&mut buf) {
         info.map_err(|e| e.to_string())?;
-        let reader = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+        let reader =
+            arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
         for batch in reader {
             let batch = batch.unwrap();
-            let col = batch.column_by_name(ID_COLUMN).unwrap().as_any().downcast_ref::<UInt64Array>().unwrap();
+            let col = batch
+                .column_by_name(ID_COLUMN)
+                .unwrap()
+                .as_any()
+                .downcast_ref::<UInt64Array>()
+                .unwrap();
             for r in 0..batch.num_rows() {
                 ids.insert(col.value(r));
             }
@@ -108,11 +130,16 @@ fn a_float32_column_compared_with_16777217_matches_a_stored_16777216() {
     let expected: std::collections::BTreeSet<u64> = (0..FX1_FEATURES as u64)
         .filter(|&id| spatial_engine::fixture::filter_witness_f32(id) == 16_777_216.0f32)
         .collect();
-    assert!(!expected.is_empty(), "FX-1 must carry the 16777216 witness, or this test proves nothing");
+    assert!(
+        !expected.is_empty(),
+        "FX-1 must carry the 16777216 witness, or this test proves nothing"
+    );
 
     for text in ["f32 = 16777217", "f32 = 16777216"] {
-        let admitted = AdmittedPredicate::admit(text, &ds).unwrap_or_else(|e| panic!("{text}: expected admitted, got {e}"));
-        let ids = drain_ids(&ds, &admitted).unwrap_or_else(|e| panic!("{text}: expected the stream to succeed, got {e}"));
+        let admitted = AdmittedPredicate::admit(text, &ds)
+            .unwrap_or_else(|e| panic!("{text}: expected admitted, got {e}"));
+        let ids = drain_ids(&ds, &admitted)
+            .unwrap_or_else(|e| panic!("{text}: expected the stream to succeed, got {e}"));
         assert_eq!(ids, expected, "`{text}` over FX-1's declared f32 witnesses");
     }
 
@@ -126,16 +153,32 @@ fn a_float32_column_compared_with_16777217_matches_a_stored_16777216() {
 #[derive(Debug, Clone, PartialEq)]
 enum Predicted {
     Admitted,
-    Tna { construct: Option<&'static str>, reason: TypeRefusalReason, operand_types: Option<&'static [&'static str]> },
+    Tna {
+        construct: Option<&'static str>,
+        reason: TypeRefusalReason,
+        operand_types: Option<&'static [&'static str]>,
+    },
     Code(&'static str),
 }
 
 fn tna(reason: TypeRefusalReason) -> Predicted {
-    Predicted::Tna { construct: None, reason, operand_types: None }
+    Predicted::Tna {
+        construct: None,
+        reason,
+        operand_types: None,
+    }
 }
 
-fn tna_named(construct: &'static str, reason: TypeRefusalReason, operand_types: &'static [&'static str]) -> Predicted {
-    Predicted::Tna { construct: Some(construct), reason, operand_types: Some(operand_types) }
+fn tna_named(
+    construct: &'static str,
+    reason: TypeRefusalReason,
+    operand_types: &'static [&'static str],
+) -> Predicted {
+    Predicted::Tna {
+        construct: Some(construct),
+        reason,
+        operand_types: Some(operand_types),
+    }
 }
 
 /// Section 3's corpus, as amended (section 10 Amendments 1 and 3). One row per predicate; a row
@@ -145,28 +188,64 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
     use Predicted::Admitted;
     use TypeRefusalReason::*;
     vec![
-        ("C1", "zone = 1", tna_named("=", TextWithNonText, &["VARCHAR", "INTEGER literal"])),
-        ("C2", "i64 < 0.000000000000000000000000001", tna(LiteralOutOfBounds)),
+        (
+            "C1",
+            "zone = 1",
+            tna_named("=", TextWithNonText, &["VARCHAR", "INTEGER literal"]),
+        ),
+        (
+            "C2",
+            "i64 < 0.000000000000000000000000001",
+            tna(LiteralOutOfBounds),
+        ),
         ("C3", "flag = 'x'", tna(TextWithNonText)),
         ("C4", "flag = 1", tna(BooleanConversion)),
-        ("C5", "NOT i32", tna_named("NOT", BooleanConversion, &["INTEGER"])),
-        ("C6", "i32 AND flag", tna_named("AND", BooleanConversion, &["INTEGER"])),
+        (
+            "C5",
+            "NOT i32",
+            tna_named("NOT", BooleanConversion, &["INTEGER"]),
+        ),
+        (
+            "C6",
+            "i32 AND flag",
+            tna_named("AND", BooleanConversion, &["INTEGER"]),
+        ),
         ("C7", "i64 = 1e3", tna(ConversionRounds)),
         ("C8", "i32 = f32", tna(ConversionRounds)),
         ("C9", "i64 < f64", tna(ConversionRounds)),
-        ("C10", "i64 + 0.5 > 0", tna_named("+", ConversionCanFail, &["BIGINT", "DECIMAL(2,1) literal"])),
+        (
+            "C10",
+            "i64 + 0.5 > 0",
+            tna_named("+", ConversionCanFail, &["BIGINT", "DECIMAL(2,1) literal"]),
+        ),
         ("C11", "id < 'inf'", tna(TextWithNonText)),
-        ("C12", "zone IN (1, 2)", tna_named("IN", TextWithNonText, &["VARCHAR", "INTEGER literal"])),
+        (
+            "C12",
+            "zone IN (1, 2)",
+            tna_named("IN", TextWithNonText, &["VARCHAR", "INTEGER literal"]),
+        ),
         ("C13", "u64 = 18446744073709551615", Admitted),
         ("C13", "u64 = 18446744073709551616", Admitted),
         ("C13", "u64 = 99999999999999999999", Admitted),
         ("C13", "i64 = -18446744073709551615", Admitted),
         ("C13", "i64 = -18446744073709551616", Admitted),
         ("C13", "i64 = -99999999999999999999", Admitted),
-        ("C14", "i64 = 100000000000000000000", tna(LiteralOutOfBounds)),
-        ("C14", "i64 = -100000000000000000000", tna(LiteralOutOfBounds)),
+        (
+            "C14",
+            "i64 = 100000000000000000000",
+            tna(LiteralOutOfBounds),
+        ),
+        (
+            "C14",
+            "i64 = -100000000000000000000",
+            tna(LiteralOutOfBounds),
+        ),
         ("C15", "u64 > 0.000000000000000001", Admitted),
-        ("C15", "u64 > 0.0000000000000000001", tna(LiteralOutOfBounds)),
+        (
+            "C15",
+            "u64 > 0.0000000000000000001",
+            tna(LiteralOutOfBounds),
+        ),
         ("C16", "f32 = 16777217", Admitted),
         ("C16", "f32 = 0.1", Admitted),
         ("C16", "f32 = 1e3", Admitted),
@@ -177,16 +256,48 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
         ("C19", "i32 + f32 > 0", tna(ConversionRounds)),
         ("C20", "i32 / f32 > 0", Admitted),
         ("C21", "i64 IN (9223372036854775808, 0.5)", Admitted),
-        ("C22", "i64 IN (170141183460469231731687303715884105727, 0.5)", tna(LiteralOutOfBounds)),
-        ("C23", "i64 IN (123456789012345678901.5, 0.000000000000000001)", tna(LiteralOutOfBounds)),
-        ("C24", "f64 = 100000000000000000000", tna(LiteralOutOfBounds)),
-        ("C25", "zone < 1", Predicted::Code("skp.filter_rejected_by_binder")),
-        ("C25", "zone LIKE 1", Predicted::Code("skp.filter_rejected_by_binder")),
-        ("C25", "u64 + 9223372036854775808 > 0", Predicted::Code("skp.filter_rejected_by_binder")),
+        (
+            "C22",
+            "i64 IN (170141183460469231731687303715884105727, 0.5)",
+            tna(LiteralOutOfBounds),
+        ),
+        (
+            "C23",
+            "i64 IN (123456789012345678901.5, 0.000000000000000001)",
+            tna(LiteralOutOfBounds),
+        ),
+        (
+            "C24",
+            "f64 = 100000000000000000000",
+            tna(LiteralOutOfBounds),
+        ),
+        (
+            "C25",
+            "zone < 1",
+            Predicted::Code("skp.filter_rejected_by_binder"),
+        ),
+        (
+            "C25",
+            "zone LIKE 1",
+            Predicted::Code("skp.filter_rejected_by_binder"),
+        ),
+        (
+            "C25",
+            "u64 + 9223372036854775808 > 0",
+            Predicted::Code("skp.filter_rejected_by_binder"),
+        ),
         ("C26", "i32", Predicted::Code("skp.filter_not_boolean")),
         ("C26", "flag", Admitted),
-        ("C27", "flag = TRUE", Predicted::Code("skp.filter_construct_not_admitted")),
-        ("C27", "CAST(zone AS INT) = 1", Predicted::Code("skp.filter_construct_not_admitted")),
+        (
+            "C27",
+            "flag = TRUE",
+            Predicted::Code("skp.filter_construct_not_admitted"),
+        ),
+        (
+            "C27",
+            "CAST(zone AS INT) = 1",
+            Predicted::Code("skp.filter_construct_not_admitted"),
+        ),
         ("C28", "zone = x'41'", Admitted),
         ("C28", "zone = $$x$$", Admitted),
         ("C28", "zone = NULL", Admitted),
@@ -208,13 +319,28 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
             (Predicted::Admitted, Err(e)) => {
                 panic!("{row} ({predicate:?}): expected admitted, got refused: {e}")
             }
-            (Predicted::Tna { construct, reason, operand_types }, Err(PredicateAdmitError::Filter(FilterError::TypeNotAdmitted { construct: c, operand_types: ot, reason: r }))) => {
+            (
+                Predicted::Tna {
+                    construct,
+                    reason,
+                    operand_types,
+                },
+                Err(PredicateAdmitError::Filter(FilterError::TypeNotAdmitted {
+                    construct: c,
+                    operand_types: ot,
+                    reason: r,
+                })),
+            ) => {
                 assert_eq!(&r, reason, "{row} ({predicate:?}): reason");
                 if let Some(expected_construct) = construct {
                     assert_eq!(&c, expected_construct, "{row} ({predicate:?}): construct");
                 }
                 if let Some(expected_types) = operand_types {
-                    assert_eq!(ot, expected_types.to_vec(), "{row} ({predicate:?}): operand_types");
+                    assert_eq!(
+                        ot,
+                        expected_types.to_vec(),
+                        "{row} ({predicate:?}): operand_types"
+                    );
                 }
             }
             (Predicted::Tna { .. }, other) => {
@@ -223,7 +349,9 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
             (Predicted::Code(code), Err(e)) => {
                 let actual = match &e {
                     PredicateAdmitError::Filter(fe) => campaign_code_of(fe),
-                    PredicateAdmitError::ConnectionsExhausted { .. } => "engine.connections_exhausted",
+                    PredicateAdmitError::ConnectionsExhausted { .. } => {
+                        "engine.connections_exhausted"
+                    }
                 };
                 assert_eq!(actual, *code, "{row} ({predicate:?}): code");
             }
@@ -387,10 +515,21 @@ struct Case {
 /// `cmp = TRUE` (see `LITS`/`FAMILY`'s own docs) -- 7,620 cases exactly (section 4 B-T1;
 /// `state/drafts/b1-p0/analysis/counts.txt`).
 fn generate_cases() -> Vec<Case> {
-    const CMP: &[&str] = &["=", "<>", "<", "<=", ">", ">=", "IS DISTINCT FROM", "IS NOT DISTINCT FROM"];
+    const CMP: &[&str] = &[
+        "=",
+        "<>",
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "IS DISTINCT FROM",
+        "IS NOT DISTINCT FROM",
+    ];
 
-    let mut operands: Vec<(String, String, Option<&'static str>)> =
-        LITS.iter().map(|(l, t)| (format!("lit:{l}"), t.to_string(), None)).collect();
+    let mut operands: Vec<(String, String, Option<&'static str>)> = LITS
+        .iter()
+        .map(|(l, t)| (format!("lit:{l}"), t.to_string(), None))
+        .collect();
     for (n, t) in COLS {
         operands.push((format!("col:{t}"), n.to_string(), Some(*t)));
     }
@@ -436,7 +575,11 @@ fn generate_cases() -> Vec<Case> {
                     label: format!("{fam} {c} {olabel}"),
                     predicate: format!("{c} {op} {o} > 0"),
                     arith_op: Some(op),
-                    arith: Some(ArithNode::Binary(ArithOperand::Col(*cty), op, arith_operand_of(olabel, *oty))),
+                    arith: Some(ArithNode::Binary(
+                        ArithOperand::Col(*cty),
+                        op,
+                        arith_operand_of(olabel, *oty),
+                    )),
                 });
             }
         }
@@ -450,18 +593,26 @@ fn generate_cases() -> Vec<Case> {
             };
             let arith = match *fam {
                 "unary minus then > 0" => Some(ArithNode::Unary(*cty)),
-                "arith + 1 = 0" => {
-                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "+", ArithOperand::IntLit(1)))
-                }
-                "arith * 2 = 0" => {
-                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "*", ArithOperand::IntLit(2)))
-                }
-                "arith / 0 = 0" => {
-                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "/", ArithOperand::IntLit(0)))
-                }
-                "arith self * then > 0" => {
-                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "*", ArithOperand::Col(*cty)))
-                }
+                "arith + 1 = 0" => Some(ArithNode::Binary(
+                    ArithOperand::Col(*cty),
+                    "+",
+                    ArithOperand::IntLit(1),
+                )),
+                "arith * 2 = 0" => Some(ArithNode::Binary(
+                    ArithOperand::Col(*cty),
+                    "*",
+                    ArithOperand::IntLit(2),
+                )),
+                "arith / 0 = 0" => Some(ArithNode::Binary(
+                    ArithOperand::Col(*cty),
+                    "/",
+                    ArithOperand::IntLit(0),
+                )),
+                "arith self * then > 0" => Some(ArithNode::Binary(
+                    ArithOperand::Col(*cty),
+                    "*",
+                    ArithOperand::Col(*cty),
+                )),
                 _ => None,
             };
             cases.push(Case {
@@ -495,7 +646,11 @@ fn find_filter_exprs(v: &Value, out: &mut Vec<Value>) {
 }
 
 fn type_str(t: &Value) -> String {
-    let id = t.get("id").and_then(Value::as_str).unwrap_or("?").to_string();
+    let id = t
+        .get("id")
+        .and_then(Value::as_str)
+        .unwrap_or("?")
+        .to_string();
     if id == "DECIMAL" {
         let ti = &t["type_info"];
         format!("DECIMAL({},{})", ti["width"], ti["scale"])
@@ -507,7 +662,10 @@ fn type_str(t: &Value) -> String {
 fn child_type(c: &Value) -> String {
     match c.get("expression_class").and_then(Value::as_str) {
         Some("BOUND_CONSTANT") => type_str(&c["value"]["type"]),
-        _ => c.get("return_type").map(type_str).unwrap_or_else(|| "?".into()),
+        _ => c
+            .get("return_type")
+            .map(type_str)
+            .unwrap_or_else(|| "?".into()),
     }
 }
 
@@ -536,7 +694,12 @@ fn walk_casts(v: &Value, in_division: bool, out: &mut Vec<Cast>) {
                 let from = child_type(child);
                 let to = type_str(&m["return_type"]);
                 if from != to {
-                    out.push(Cast { kind: child_kind(child), from, to, in_division });
+                    out.push(Cast {
+                        kind: child_kind(child),
+                        from,
+                        to,
+                        in_division,
+                    });
                 }
                 walk_casts(child, in_division, out);
                 return;
@@ -593,8 +756,14 @@ fn find_arith_return_types(v: &Value, out: &mut Vec<(String, String)>) {
 fn plan_json(conn: &Connection, fx1_path: &str, pred: &str) -> Value {
     let sql = format!("SELECT * FROM read_parquet('{fx1_path}') WHERE ({pred})");
     let j: String = conn
-        .query_row("SELECT json_serialize_plan(CAST(? AS VARCHAR))", [sql.as_str()], |r| r.get(0))
-        .unwrap_or_else(|e| panic!("json_serialize_plan could not even be called for {pred:?}: {e}"));
+        .query_row(
+            "SELECT json_serialize_plan(CAST(? AS VARCHAR))",
+            [sql.as_str()],
+            |r| r.get(0),
+        )
+        .unwrap_or_else(|e| {
+            panic!("json_serialize_plan could not even be called for {pred:?}: {e}")
+        });
     serde_json::from_str(&j).unwrap_or_else(|e| panic!("{pred:?}: plan JSON did not parse: {e}"))
 }
 
@@ -621,7 +790,13 @@ fn is_numeric_name(name: &str) -> bool {
 }
 
 fn decimal_width(name: &str) -> Option<u32> {
-    name.strip_prefix("DECIMAL(")?.strip_suffix(')')?.split(',').next()?.trim().parse().ok()
+    name.strip_prefix("DECIMAL(")?
+        .strip_suffix(')')?
+        .split(',')
+        .next()?
+        .trim()
+        .parse()
+        .ok()
 }
 
 /// Section 7's declared cast set, re-derived from the governing text (independent of
@@ -776,7 +951,9 @@ fn lits_arith_operand(label: &str) -> ArithOperand {
         "int_huge" => ArithOperand::IntLit(9_223_372_036_854_775_808),
         // Within section 7's bounds (scale <= 18, integer digits <= 20) -- `dec_s19` and wider
         // scales are not, and fall through to `NeverArithAdmitted`.
-        "dec_s1" | "dec_s9" | "dec_s18" | "dec_0_1" | "dec_2p53" | "dec_neg" => ArithOperand::DecimalLit,
+        "dec_s1" | "dec_s9" | "dec_s18" | "dec_0_1" | "dec_2p53" | "dec_neg" => {
+            ArithOperand::DecimalLit
+        }
         "dbl" | "dbl_neg" | "dbl_long" => ArithOperand::DoubleLit,
         _ => ArithOperand::NeverArithAdmitted,
     }
@@ -787,14 +964,20 @@ fn lits_arith_operand(label: &str) -> ArithOperand {
 fn arith_operand_of(olabel: &str, oty: Option<&'static str>) -> ArithOperand {
     match oty {
         Some(t) => ArithOperand::Col(t),
-        None => lits_arith_operand(olabel.strip_prefix("lit:").expect("a literal operand's own label")),
+        None => lits_arith_operand(
+            olabel
+                .strip_prefix("lit:")
+                .expect("a literal operand's own label"),
+        ),
     }
 }
 
 /// Does `v` fit exactly inside integer type `ty`'s own range -- `fits_int_type`'s precedent in
 /// `predicate.rs`, re-derived here from `int_info` (oracle 2) rather than read from it.
 fn fits_int_range(v: i128, ty: &str) -> bool {
-    let Some((bits, signed)) = int_info(ty) else { return false };
+    let Some((bits, signed)) = int_info(ty) else {
+        return false;
+    };
     match (bits, signed) {
         (8, true) => (i8::MIN as i128..=i8::MAX as i128).contains(&v),
         (16, true) => (i16::MIN as i128..=i16::MAX as i128).contains(&v),
@@ -892,7 +1075,8 @@ fn expected_arith_type(l: ArithOperand, r: ArithOperand) -> Option<&'static str>
 fn expected_division_type(l: ArithOperand, r: ArithOperand) -> &'static str {
     use ArithOperand::{Col, DoubleLit};
     let is_real = |o: &ArithOperand| matches!(o, Col(n) if *n == "FLOAT");
-    let is_double = |o: &ArithOperand| matches!(o, Col(n) if *n == "DOUBLE") || matches!(o, DoubleLit);
+    let is_double =
+        |o: &ArithOperand| matches!(o, Col(n) if *n == "DOUBLE") || matches!(o, DoubleLit);
     if (is_real(&l) || is_real(&r)) && !(is_double(&l) || is_double(&r)) {
         "FLOAT"
     } else {
@@ -921,11 +1105,15 @@ fn is_declared_overflow(arith_op: Option<&str>, terminal_error: &str) -> bool {
 fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     assert!(spatial_engine::fixture::FILTER_WITNESS_F32.contains(&f32::INFINITY));
     assert!(spatial_engine::fixture::FILTER_WITNESS_F32.contains(&f32::NEG_INFINITY));
-    assert!(spatial_engine::fixture::FILTER_WITNESS_F32.iter().any(|v| v.is_nan()));
+    assert!(spatial_engine::fixture::FILTER_WITNESS_F32
+        .iter()
+        .any(|v| v.is_nan()));
     assert!(spatial_engine::fixture::FILTER_WITNESS_F32.contains(&f32::MAX));
     assert!(spatial_engine::fixture::FILTER_WITNESS_F64.contains(&f64::INFINITY));
     assert!(spatial_engine::fixture::FILTER_WITNESS_F64.contains(&f64::NEG_INFINITY));
-    assert!(spatial_engine::fixture::FILTER_WITNESS_F64.iter().any(|v| v.is_nan()));
+    assert!(spatial_engine::fixture::FILTER_WITNESS_F64
+        .iter()
+        .any(|v| v.is_nan()));
     assert!(spatial_engine::fixture::FILTER_WITNESS_F64.contains(&f64::MAX));
 
     let fx = fixture();
@@ -934,7 +1122,11 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     let fx1_path = fx.path.to_string_lossy().replace('\\', "/");
 
     let cases = generate_cases();
-    assert_eq!(cases.len(), 7_620, "section 4 B-T1's declared enumeration count");
+    assert_eq!(
+        cases.len(),
+        7_620,
+        "section 4 B-T1's declared enumeration count"
+    );
 
     let mut admitted = 0usize;
     let mut refused = 0usize;
@@ -1007,7 +1199,10 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
                 ArithNode::Binary(l, op, r) => match expected_arith_type(l, r) {
                     Some(expected) => {
                         if rt.is_empty() {
-                            failures.push(format!("{}: no {op} BOUND_FUNCTION found in the plan", case.label));
+                            failures.push(format!(
+                                "{}: no {op} BOUND_FUNCTION found in the plan",
+                                case.label
+                            ));
                         }
                         for (name, ty) in &rt {
                             if name == op && ty != expected {
@@ -1027,7 +1222,10 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
                 ArithNode::Unary(cty) => {
                     if is_numeric_name(cty) {
                         if rt.is_empty() {
-                            failures.push(format!("{}: no unary - BOUND_FUNCTION found in the plan", case.label));
+                            failures.push(format!(
+                                "{}: no unary - BOUND_FUNCTION found in the plan",
+                                case.label
+                            ));
                         }
                         for (name, ty) in &rt {
                             if name == "-" && ty != cty {
@@ -1052,17 +1250,27 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
             Ok(_) => {}
             Err(e) => {
                 if !is_declared_overflow(case.arith_op, &e) {
-                    failures.push(format!("{}: admitted, but the stream ended in error: {e}", case.label));
+                    failures.push(format!(
+                        "{}: admitted, but the stream ended in error: {e}",
+                        case.label
+                    ));
                 }
             }
         }
     }
 
-    println!("B-T1: {admitted} admitted, {refused} refused, {} failures", failures.len());
+    println!(
+        "B-T1: {admitted} admitted, {refused} refused, {} failures",
+        failures.len()
+    );
     for f in failures.iter().take(40) {
         println!("  {f}");
     }
-    assert!(failures.is_empty(), "{} B-T1 counterexample(s); see the report above", failures.len());
+    assert!(
+        failures.is_empty(),
+        "{} B-T1 counterexample(s); see the report above",
+        failures.len()
+    );
 
     assert_fixture_unchanged(fx);
 }

@@ -22,8 +22,8 @@ use std::path::Path;
 use spatial_data_plane::transport::{BatchSource, SourceCancel};
 use spatial_engine::{
     AdmittedPredicate, AdmittedProjection, ArmOutcome, ArmedWatch, CancelToken, Dataset,
-    EngineError, FilterError, PredicateAdmitError, ProjectionError, SourceWatchArm, TypeRefusalReason,
-    ViewportQuery, WatchSignal, WatchSink,
+    EngineError, FilterError, PredicateAdmitError, ProjectionError, SourceWatchArm,
+    TypeRefusalReason, ViewportQuery, WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
     CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
@@ -2045,9 +2045,11 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
             message,
             [("detail", detail.clone())],
         ),
-        FilterError::TypeNotAdmitted { construct, operand_types, reason } => {
-            filter_type_not_admitted(message, construct.clone(), operand_types, *reason)
-        }
+        FilterError::TypeNotAdmitted {
+            construct,
+            operand_types,
+            reason,
+        } => filter_type_not_admitted(message, construct.clone(), operand_types, *reason),
     }
 }
 
@@ -2483,7 +2485,10 @@ mod tests {
             e.fields.get("operand_types").map(String::as_str),
             Some("VARCHAR; INTEGER literal")
         );
-        assert_eq!(e.fields.get("reason").map(String::as_str), Some("text_with_non_text"));
+        assert_eq!(
+            e.fields.get("reason").map(String::as_str),
+            Some("text_with_non_text")
+        );
         assert_eq!(e.fields.len(), 3, "no extra field: {e:?}");
     }
 

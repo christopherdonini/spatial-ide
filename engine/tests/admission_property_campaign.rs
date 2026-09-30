@@ -1018,9 +1018,9 @@ fn is_declared_integer_arithmetic_overflow(predicate: &str, terminal_error: &str
         return false;
     }
     ["i64", "id"].iter().any(|c| {
-        [" + ", " - ", " * "]
-            .iter()
-            .any(|op| predicate.contains(&format!("{c}{op}")) || predicate.contains(&format!("{op}{c}")))
+        [" + ", " - ", " * "].iter().any(|op| {
+            predicate.contains(&format!("{c}{op}")) || predicate.contains(&format!("{op}{c}"))
+        })
     })
 }
 

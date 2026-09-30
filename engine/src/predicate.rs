@@ -481,7 +481,10 @@ struct StructuralAdmission {
 /// returns every column name the walk collected (for stage 2) together with the operand trees
 /// (for stage 3's type walk). Enforces [`MAX_PREDICATE_BYTES`] before parsing at all, and
 /// [`MAX_PREDICATE_DEPTH`] during the walk.
-fn structural_admit(predicate: &str, conn: &Connection) -> Result<StructuralAdmission, FilterError> {
+fn structural_admit(
+    predicate: &str,
+    conn: &Connection,
+) -> Result<StructuralAdmission, FilterError> {
     if predicate.len() > MAX_PREDICATE_BYTES {
         return Err(FilterError::TooLong {
             limit: MAX_PREDICATE_BYTES as u64,
@@ -1290,9 +1293,13 @@ impl TypeRefusalReason {
         match self {
             Self::TextWithNonText => "a comparison of text with a non-text value",
             Self::BooleanConversion => "a conversion to or from BOOLEAN",
-            Self::LiteralOutOfBounds => "a numeric literal beyond the declared bounds (20 integer digits; decimal scale 18)",
+            Self::LiteralOutOfBounds => {
+                "a numeric literal beyond the declared bounds (20 integer digits; decimal scale 18)"
+            }
             Self::ConversionCanFail => "a conversion that can fail during the scan",
-            Self::ConversionRounds => "a conversion that can round a value read from the file before it is compared",
+            Self::ConversionRounds => {
+                "a conversion that can round a value read from the file before it is compared"
+            }
         }
     }
 }
@@ -1368,11 +1375,21 @@ struct Typed {
 
 impl Typed {
     fn column(ty: EngineType) -> Self {
-        Self { ty, kind: OperandKind::Column, within_bounds: true, literal_int_value: None }
+        Self {
+            ty,
+            kind: OperandKind::Column,
+            within_bounds: true,
+            literal_int_value: None,
+        }
     }
 
     fn expression(ty: EngineType) -> Self {
-        Self { ty, kind: OperandKind::Expression, within_bounds: true, literal_int_value: None }
+        Self {
+            ty,
+            kind: OperandKind::Expression,
+            within_bounds: true,
+            literal_int_value: None,
+        }
     }
 
     /// `operand_types`' own rendering of one entry (section 2.6): the type name, suffixed
@@ -1401,7 +1418,11 @@ fn numeric_virtual() -> Typed {
 }
 
 fn is_numeric(t: &Typed) -> bool {
-    int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Real | EngineType::Double | EngineType::Decimal(..))
+    int_bits_signed(&t.ty).is_some()
+        || matches!(
+            t.ty,
+            EngineType::Real | EngineType::Double | EngineType::Decimal(..)
+        )
 }
 
 /// `(bit width, is signed)` for every integer [`EngineType`] -- `None` for anything else. The
@@ -1443,7 +1464,9 @@ fn bits_signed_to_type(bits: u32, signed: bool) -> EngineType {
 /// answer the same question DuckDB's binder asks a literal before it decides whether to fold the
 /// literal down to a column's own type or to promote instead (observed at v1.5.5).
 fn fits_int_type(v: i128, ty: &EngineType) -> bool {
-    let Some((bits, signed)) = int_bits_signed(ty) else { return false };
+    let Some((bits, signed)) = int_bits_signed(ty) else {
+        return false;
+    };
     match (bits, signed) {
         (8, true) => (i8::MIN as i128..=i8::MAX as i128).contains(&v),
         (16, true) => (i16::MIN as i128..=i16::MAX as i128).contains(&v),
@@ -1520,7 +1543,9 @@ fn engine_type_of_surrogate(name: &str) -> EngineType {
         "UBIGINT" => EngineType::UBigInt,
         "DOUBLE" => EngineType::Double,
         "REAL" => EngineType::Real,
-        other => unreachable!("namespace_admit only ever inserts duckdb_type_name's outputs: {other}"),
+        other => {
+            unreachable!("namespace_admit only ever inserts duckdb_type_name's outputs: {other}")
+        }
     }
 }
 
@@ -1568,8 +1593,14 @@ fn integer_literal_value(id: &str, raw: Option<&Value>) -> Result<i128, FilterEr
 /// lets through parses to one of these five; kept for totality, the same discipline every other
 /// `match` in this module keeps).
 fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
-    let value = node.get("value").ok_or_else(|| missing_field("CONSTANT.value"))?;
-    if value.get("is_null").and_then(Value::as_bool).unwrap_or(false) {
+    let value = node
+        .get("value")
+        .ok_or_else(|| missing_field("CONSTANT.value"))?;
+    if value
+        .get("is_null")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
         return Ok(Typed {
             ty: EngineType::Null,
             kind: OperandKind::Literal,
@@ -1577,7 +1608,9 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
             literal_int_value: None,
         });
     }
-    let ty = value.get("type").ok_or_else(|| missing_field("CONSTANT.value.type"))?;
+    let ty = value
+        .get("type")
+        .ok_or_else(|| missing_field("CONSTANT.value.type"))?;
     let id = ty.get("id").and_then(Value::as_str).unwrap_or("");
     match id {
         "INTEGER" | "BIGINT" | "HUGEINT" | "UHUGEINT" => {
@@ -1652,14 +1685,20 @@ fn type_of_value(
                 .ok_or_else(|| missing_field("COLUMN_REF.column_names[0]"))?;
             // Unreachable in practice: `namespace_admit` already refused any name absent from the
             // namespace before stage 3 ever runs.
-            let surrogate = namespace
-                .get(name)
-                .copied()
-                .ok_or_else(|| FilterError::UnknownColumn { column: name.to_string() })?;
+            let surrogate =
+                namespace
+                    .get(name)
+                    .copied()
+                    .ok_or_else(|| FilterError::UnknownColumn {
+                        column: name.to_string(),
+                    })?;
             Ok(Typed::column(engine_type_of_surrogate(surrogate)))
         }
         "FUNCTION" => {
-            let name = node.get("function_name").and_then(Value::as_str).unwrap_or("");
+            let name = node
+                .get("function_name")
+                .and_then(Value::as_str)
+                .unwrap_or("");
             let children = expect_children(node)?;
             if name == "/" {
                 type_of_division(children, namespace)
@@ -1703,8 +1742,13 @@ fn type_of_division(
         });
     }
     let has_real = matches!(left.ty, EngineType::Real) || matches!(right.ty, EngineType::Real);
-    let has_double = matches!(left.ty, EngineType::Double) || matches!(right.ty, EngineType::Double);
-    let ty = if has_real && !has_double { EngineType::Real } else { EngineType::Double };
+    let has_double =
+        matches!(left.ty, EngineType::Double) || matches!(right.ty, EngineType::Double);
+    let ty = if has_real && !has_double {
+        EngineType::Real
+    } else {
+        EngineType::Double
+    };
     Ok(Typed::expression(ty))
 }
 
@@ -1718,7 +1762,10 @@ fn type_of_arithmetic(
     if children.len() == 1 {
         let operand = type_of_value(&children[0], namespace)?;
         if is_numeric(&operand) {
-            return Ok(Typed { kind: OperandKind::Expression, ..operand });
+            return Ok(Typed {
+                kind: OperandKind::Expression,
+                ..operand
+            });
         }
         let reason = determine_reason(&operand, &numeric_virtual(), false);
         return Err(FilterError::TypeNotAdmitted {
@@ -1755,13 +1802,16 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
     let is_numeric_lit = |t: &Typed| {
         t.kind == OperandKind::Literal
             && t.within_bounds
-            && (int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
+            && (int_bits_signed(&t.ty).is_some()
+                || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
     };
     let is_double_lit = |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
     let int_le = |t: &Typed, bits: u32| {
         t.kind != OperandKind::Literal
             && is_int(t)
-            && int_bits_signed(&t.ty).map(|(b, _)| b <= bits).unwrap_or(false)
+            && int_bits_signed(&t.ty)
+                .map(|(b, _)| b <= bits)
+                .unwrap_or(false)
     };
 
     // rule 3: integer with integer.
@@ -1836,20 +1886,26 @@ fn is_admitted_comparison(l: &Typed, r: &Typed) -> bool {
 
     let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
     let is_int_literal = |t: &Typed| is_int(t) && t.kind == OperandKind::Literal;
-    let is_decimal_literal =
-        |t: &Typed| matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal && t.within_bounds;
-    let is_double_literal = |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
+    let is_decimal_literal = |t: &Typed| {
+        matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal && t.within_bounds
+    };
+    let is_double_literal =
+        |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
     let is_numeric_literal_within_bounds = |t: &Typed| {
         t.kind == OperandKind::Literal
             && t.within_bounds
-            && (int_bits_signed(&t.ty).is_some() || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
+            && (int_bits_signed(&t.ty).is_some()
+                || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
     };
-    let is_float_nonliteral =
-        |t: &Typed| matches!(t.ty, EngineType::Real | EngineType::Double) && t.kind != OperandKind::Literal;
+    let is_float_nonliteral = |t: &Typed| {
+        matches!(t.ty, EngineType::Real | EngineType::Double) && t.kind != OperandKind::Literal
+    };
     let int_le = |t: &Typed, bits: u32| {
         t.kind != OperandKind::Literal
             && is_int(t)
-            && int_bits_signed(&t.ty).map(|(b, _)| b <= bits).unwrap_or(false)
+            && int_bits_signed(&t.ty)
+                .map(|(b, _)| b <= bits)
+                .unwrap_or(false)
     };
 
     // rule 3: integer against integer -- always representable via HUGEINT at worst (section 7's
@@ -1915,10 +1971,14 @@ fn determine_reason(l: &Typed, r: &Typed, is_arithmetic: bool) -> TypeRefusalRea
     let is_null = |t: &Typed| t.ty == EngineType::Null;
     let is_boolean = |t: &Typed| t.ty == EngineType::Boolean;
 
-    if (is_varchar(l) && !is_varchar(r) && !is_null(r)) || (is_varchar(r) && !is_varchar(l) && !is_null(l)) {
+    if (is_varchar(l) && !is_varchar(r) && !is_null(r))
+        || (is_varchar(r) && !is_varchar(l) && !is_null(l))
+    {
         return TypeRefusalReason::TextWithNonText;
     }
-    if (is_boolean(l) && !is_boolean(r) && !is_null(r)) || (is_boolean(r) && !is_boolean(l) && !is_null(l)) {
+    if (is_boolean(l) && !is_boolean(r) && !is_null(r))
+        || (is_boolean(r) && !is_boolean(l) && !is_null(l))
+    {
         return TypeRefusalReason::BooleanConversion;
     }
     if !l.within_bounds || !r.within_bounds {
@@ -1947,9 +2007,17 @@ fn comparison_construct_name(cmp_type: &str) -> &'static str {
     }
 }
 
-fn check_pair(construct: &str, l: &Typed, r: &Typed, is_arithmetic: bool) -> Result<(), FilterError> {
-    let admitted =
-        if is_arithmetic { admitted_arithmetic_result(l, r).is_some() } else { is_admitted_comparison(l, r) };
+fn check_pair(
+    construct: &str,
+    l: &Typed,
+    r: &Typed,
+    is_arithmetic: bool,
+) -> Result<(), FilterError> {
+    let admitted = if is_arithmetic {
+        admitted_arithmetic_result(l, r).is_some()
+    } else {
+        is_admitted_comparison(l, r)
+    };
     if admitted {
         return Ok(());
     }
@@ -1961,20 +2029,36 @@ fn check_pair(construct: &str, l: &Typed, r: &Typed, is_arithmetic: bool) -> Res
     })
 }
 
-fn check_comparison(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+fn check_comparison(
+    node: &Value,
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
     let cmp_type = node.get("type").and_then(Value::as_str).unwrap_or("");
     let construct = comparison_construct_name(cmp_type);
-    let left_node = node.get("left").ok_or_else(|| missing_field("COMPARISON.left"))?;
-    let right_node = node.get("right").ok_or_else(|| missing_field("COMPARISON.right"))?;
+    let left_node = node
+        .get("left")
+        .ok_or_else(|| missing_field("COMPARISON.left"))?;
+    let right_node = node
+        .get("right")
+        .ok_or_else(|| missing_field("COMPARISON.right"))?;
     let left = type_of_value(left_node, namespace)?;
     let right = type_of_value(right_node, namespace)?;
     check_pair(construct, &left, &right, false)
 }
 
-fn check_between(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
-    let input = node.get("input").ok_or_else(|| missing_field("BETWEEN.input"))?;
-    let lower = node.get("lower").ok_or_else(|| missing_field("BETWEEN.lower"))?;
-    let upper = node.get("upper").ok_or_else(|| missing_field("BETWEEN.upper"))?;
+fn check_between(
+    node: &Value,
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
+    let input = node
+        .get("input")
+        .ok_or_else(|| missing_field("BETWEEN.input"))?;
+    let lower = node
+        .get("lower")
+        .ok_or_else(|| missing_field("BETWEEN.lower"))?;
+    let upper = node
+        .get("upper")
+        .ok_or_else(|| missing_field("BETWEEN.upper"))?;
     let ti = type_of_value(input, namespace)?;
     let tl = type_of_value(lower, namespace)?;
     check_pair("BETWEEN", &ti, &tl, false)?;
@@ -1984,7 +2068,9 @@ fn check_between(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Re
 
 fn check_in(node: &Value, namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
     let children = expect_children(node)?;
-    let needle_node = children.first().ok_or_else(|| missing_field("COMPARE_IN.children[0]"))?;
+    let needle_node = children
+        .first()
+        .ok_or_else(|| missing_field("COMPARE_IN.children[0]"))?;
     let needle = type_of_value(needle_node, namespace)?;
     for member in &children[1..] {
         let tm = type_of_value(member, namespace)?;
@@ -1998,7 +2084,11 @@ fn check_pattern(
     children: &[Value],
     namespace: &BTreeMap<String, &'static str>,
 ) -> Result<(), FilterError> {
-    let construct = if function_name == "~~*" { "ILIKE" } else { "LIKE" };
+    let construct = if function_name == "~~*" {
+        "ILIKE"
+    } else {
+        "LIKE"
+    };
     if children.len() != 2 {
         return Err(FilterError::ConstructNotAdmitted {
             construct: format!("`{construct}` with {} operand(s)", children.len()),
@@ -2079,7 +2169,9 @@ fn check_boolean_operand(
                     // problem (a mistyped nested arithmetic expression) still surfaces, but the
                     // operand's own type is never itself checked.
                     let children = expect_children(node)?;
-                    let operand = children.first().ok_or_else(|| missing_field("OPERATOR.children[0]"))?;
+                    let operand = children
+                        .first()
+                        .ok_or_else(|| missing_field("OPERATOR.children[0]"))?;
                     type_of_value(operand, namespace).map(|_| ())
                 }
                 "COMPARE_IN" => check_in(node, namespace),
@@ -2087,7 +2179,10 @@ fn check_boolean_operand(
             }
         }
         "FUNCTION" => {
-            let name = node.get("function_name").and_then(Value::as_str).unwrap_or("");
+            let name = node
+                .get("function_name")
+                .and_then(Value::as_str)
+                .unwrap_or("");
             if ADMITTED_PATTERN_FUNCTIONS.contains(&name) {
                 check_pattern(name, expect_children(node)?, namespace)
             } else {
@@ -2109,10 +2204,12 @@ fn check_boolean_operand(
 /// which is what catches an implicit coercion `bind_admit`'s own BOOLEAN check misses today (for
 /// example `i32 AND flag`, whose *overall* inferred type is already BOOLEAN via DuckDB's own
 /// implicit int-to-bool cast inside `AND`).
-fn type_walk(operands: &[Value], namespace: &BTreeMap<String, &'static str>) -> Result<(), FilterError> {
+fn type_walk(
+    operands: &[Value],
+    namespace: &BTreeMap<String, &'static str>,
+) -> Result<(), FilterError> {
     check_junction_children(operands, "AND", namespace)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -2448,7 +2545,11 @@ mod tests {
     fn a_predicate_that_legitimately_ends_in_its_own_one_equals_one_still_admits() {
         match structural_admit("id > 3 AND 1=1", &conn()) {
             Ok(admission) => {
-                assert!(admission.columns.iter().any(|c| c == "id"), "missing id in {:?}", admission.columns)
+                assert!(
+                    admission.columns.iter().any(|c| c == "id"),
+                    "missing id in {:?}",
+                    admission.columns
+                )
             }
             other => panic!("expected this benign predicate to admit, got {other:?}"),
         }
@@ -2499,7 +2600,9 @@ mod tests {
             Err(FilterError::ConstructNotAdmitted { construct }) => {
                 assert!(construct.contains("WINDOW"), "{construct}");
             }
-            other => panic!("expected ConstructNotAdmitted naming the unrecognized class, got {other:?}"),
+            other => {
+                panic!("expected ConstructNotAdmitted naming the unrecognized class, got {other:?}")
+            }
         }
 
         let literal = serde_json::json!({

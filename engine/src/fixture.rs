@@ -237,12 +237,27 @@ pub const FILTER_WITNESS_U32: [u32; 4] = [0, 1, 16_777_217, u32::MAX];
 pub const FILTER_WITNESS_U64: [u64; 4] = [0, 1, 9_007_199_254_740_993, u64::MAX];
 /// FX-1's `f32` (`REAL`) column witness list (section 3): 0.1, negative zero, 16777216 (2^24, the
 /// boundary `FILTER_WITNESS_I32`'s 16777217 sits one past), `f32::MAX`, inf, -inf, nan, 1e10.
-pub const FILTER_WITNESS_F32: [f32; 8] =
-    [0.1, -0.0, 16_777_216.0, f32::MAX, f32::INFINITY, f32::NEG_INFINITY, f32::NAN, 1e10];
+pub const FILTER_WITNESS_F32: [f32; 8] = [
+    0.1,
+    -0.0,
+    16_777_216.0,
+    f32::MAX,
+    f32::INFINITY,
+    f32::NEG_INFINITY,
+    f32::NAN,
+    1e10,
+];
 /// FX-1's `f64` (`DOUBLE`) column witness list (section 3): 0.1, 9007199254740993 (2^53 + 1),
 /// `f64::MAX`, inf, -inf, nan, 1e20.
-pub const FILTER_WITNESS_F64: [f64; 7] =
-    [0.1, 9_007_199_254_740_993.0, f64::MAX, f64::INFINITY, f64::NEG_INFINITY, f64::NAN, 1e20];
+pub const FILTER_WITNESS_F64: [f64; 7] = [
+    0.1,
+    9_007_199_254_740_993.0,
+    f64::MAX,
+    f64::INFINITY,
+    f64::NEG_INFINITY,
+    f64::NAN,
+    1e20,
+];
 
 /// FX-1's `[id % len]` witness rule (section 3), shared by every `FILTER_WITNESS_*` accessor below.
 fn witness<T: Copy>(list: &[T], id: u64) -> T {
