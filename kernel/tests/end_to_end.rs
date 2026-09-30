@@ -522,7 +522,7 @@ async fn a_viewport_in_the_wrong_crs_is_refused_end_to_end() {
 
 #[tokio::test]
 async fn a_create_time_engine_refusal_on_the_raw_path_carries_its_typed_code() {
-    let (path, _) = fixture("crs", 500);
+    let (path, _) = fixture("crs-raw-create", 500);
     let dp = host(&path).await;
     let mut client = connect(&dp).await;
 
