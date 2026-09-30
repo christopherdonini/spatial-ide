@@ -424,3 +424,11 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
   - the literal fixtures (§2.8);
   - rustfmt's line splits of added code.
 - §7 is not edited. A later code commit on the branch gets a superseding class-8 row here.
+
+### Amendment 6 — 2026-09-30, after the comment-only reduction: budget overrun, §7 not edited (supersedes Amendment 5's figure)
+
+*Class 8, a record only. It supersedes Amendment 5's final figure, which was taken at 42a8c73.*
+
+- The architect's gate-attempt-3 B1 (`state/consults/gates/2026-09-30-b-1-code-gate2-architect.md`) was applied as a comment-only reduction in commit fb2e75c on `cut/filter-bind-coercions`. The same commit carries that report's N4, also a comment.
+- **Final, by §7's own counting command,** at fb2e75c: 3,215 insertions plus 244 deletions, 3,459 in all, over 25 files. The declared budget is 1,800 over 32.
+- The reason is Amendment 5's, unchanged. §7 is not edited.
