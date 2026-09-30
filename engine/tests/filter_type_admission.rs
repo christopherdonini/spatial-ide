@@ -360,18 +360,27 @@ fn family_predicate(fam: &str, c: &str) -> String {
     }
 }
 
-/// One generated case. `arith_colcol` is `Some((op, other_duckdb_type))` for the four
-/// "arith X then > 0" forms whose other operand is itself a column (`Some(ty)`) -- B-T1's check
-/// (ii) (the walk's arithmetic result type equals the plan's `return_type`) is checked exactly
-/// there, the cleanest mechanically-verifiable subset (column-against-column, so no
-/// literal-folding arithmetic to replicate). `arith_op` is set for every case built from `+`,
-/// `-`, `*` or unary `-` (whatever the other operand is) -- section 2.5(d)'s declared campaign
-/// exclusion (overflow in admitted integer arithmetic) is checked against it for check (iii).
+/// One arithmetic node a case's predicate carries, general over which side (if either) is a column
+/// or a literal -- `Binary`'s two [`ArithOperand`]s for `+`, `-`, `*`, `/`, `Unary`'s one duckdb
+/// column type for unary `-`. B-T1's check (ii) (the walk's arithmetic result type equals the
+/// plan's `return_type`) is checked against every admitted case that carries one, literal operands
+/// and the literal-to-column folding rule included (`ArithOperand`'s own doc).
+#[derive(Debug, Clone, Copy)]
+enum ArithNode {
+    Binary(ArithOperand, &'static str, ArithOperand),
+    Unary(&'static str),
+}
+
+/// One generated case. `arith` is `Some` for every case built from a `+`, `-`, `*`, `/` or unary
+/// `-` node (section 2.5) -- checked by B-T1's check (ii) where the case is admitted. `arith_op` is
+/// set for every case built from `+`, `-`, `*` or unary `-` (whatever the other operand is) --
+/// section 2.5(d)'s declared campaign exclusion (overflow in admitted integer arithmetic) is
+/// checked against it for check (iii).
 struct Case {
     label: String,
     predicate: String,
     arith_op: Option<&'static str>,
-    arith_colcol: Option<(&'static str, &'static str, &'static str)>,
+    arith: Option<ArithNode>,
 }
 
 /// The probe's own case set (`probe.rs.txt`'s `cases` construction), less `u_str`/`n_str`/
@@ -394,27 +403,27 @@ fn generate_cases() -> Vec<Case> {
                     label: format!("cmp {op} {c} {olabel}"),
                     predicate: format!("{c} {op} {o}"),
                     arith_op: None,
-                    arith_colcol: None,
+                    arith: None,
                 });
             }
             cases.push(Case {
                 label: format!("cmp = reversed {c} {olabel}"),
                 predicate: format!("{o} = {c}"),
                 arith_op: None,
-                arith_colcol: None,
+                arith: None,
             });
             cases.push(Case {
                 label: format!("between {c} {olabel}"),
                 predicate: format!("{c} BETWEEN {o} AND {o}"),
                 arith_op: None,
-                arith_colcol: None,
+                arith: None,
             });
             if olabel.starts_with("lit:") {
                 cases.push(Case {
                     label: format!("in {c} {olabel}"),
                     predicate: format!("{c} IN ({o}, {o})"),
                     arith_op: None,
-                    arith_colcol: None,
+                    arith: None,
                 });
             }
             for (fam, op) in [
@@ -427,7 +436,7 @@ fn generate_cases() -> Vec<Case> {
                     label: format!("{fam} {c} {olabel}"),
                     predicate: format!("{c} {op} {o} > 0"),
                     arith_op: Some(op),
-                    arith_colcol: oty.map(|oty| (*cty, oty, op)),
+                    arith: Some(ArithNode::Binary(ArithOperand::Col(*cty), op, arith_operand_of(olabel, *oty))),
                 });
             }
         }
@@ -439,11 +448,27 @@ fn generate_cases() -> Vec<Case> {
                 "arith / 0 = 0" => Some("/"),
                 _ => None,
             };
+            let arith = match *fam {
+                "unary minus then > 0" => Some(ArithNode::Unary(*cty)),
+                "arith + 1 = 0" => {
+                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "+", ArithOperand::IntLit(1)))
+                }
+                "arith * 2 = 0" => {
+                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "*", ArithOperand::IntLit(2)))
+                }
+                "arith / 0 = 0" => {
+                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "/", ArithOperand::IntLit(0)))
+                }
+                "arith self * then > 0" => {
+                    Some(ArithNode::Binary(ArithOperand::Col(*cty), "*", ArithOperand::Col(*cty)))
+                }
+                _ => None,
+            };
             cases.push(Case {
                 label: format!("{fam} {c}"),
                 predicate: family_predicate(fam, c),
                 arith_op,
-                arith_colcol: None,
+                arith,
             });
         }
     }
@@ -691,6 +716,10 @@ fn int_promote(a: &str, b: &str) -> &'static str {
     }
 }
 
+fn is_float_name(n: &str) -> bool {
+    n == "FLOAT" || n == "DOUBLE"
+}
+
 /// The expected arithmetic result type for `a op b`, both columns (no literal-folding to
 /// replicate) -- `None` when `op` does not admit this pair at all (the caller only applies this
 /// where the engine itself admitted the case).
@@ -698,8 +727,7 @@ fn expected_arith_type_colcol(a: &str, b: &str) -> Option<&'static str> {
     if int_info(a).is_some() && int_info(b).is_some() {
         return Some(int_promote(a, b));
     }
-    let is_float = |n: &str| n == "FLOAT" || n == "DOUBLE";
-    if is_float(a) || is_float(b) {
+    if is_float_name(a) || is_float_name(b) {
         return match (a, b) {
             ("FLOAT", "DOUBLE") | ("DOUBLE", "FLOAT") => Some("DOUBLE"),
             _ if a == "FLOAT" || b == "FLOAT" => Some("FLOAT"),
@@ -709,10 +737,163 @@ fn expected_arith_type_colcol(a: &str, b: &str) -> Option<&'static str> {
     None
 }
 
-fn expected_division_type_colcol(a: &str, b: &str) -> &'static str {
-    let has_real = a == "FLOAT" || b == "FLOAT";
-    let has_double = a == "DOUBLE" || b == "DOUBLE";
-    if has_real && !has_double {
+/// One operand of an arithmetic node, known statically from how the case was built (never read at
+/// runtime) -- enough to re-derive section 2.5(a)'s declared table and `fold_or_promote_integer`'s
+/// own literal-folding rule independently of `predicate.rs`.
+#[derive(Debug, Clone, Copy)]
+enum ArithOperand {
+    /// A column, by its DuckDB type name (`COLS`).
+    Col(&'static str),
+    /// An integer literal within section 7's bounds, its exact value -- the only integer literals
+    /// this corpus ever admits into `+`/`-`/`*` against an integer column (`LITS`'s `int`,
+    /// `int_neg`, `int_300`, `int_big`, `int_huge`, and the family forms' inline `1`/`2`/`0`).
+    IntLit(i128),
+    /// A decimal literal within section 7's bounds (`LITS`'s `dec_s1`, `dec_s9`, `dec_s18`,
+    /// `dec_0_1`, `dec_2p53`, `dec_neg`): rule 6's "numeric literal within bounds" against a float
+    /// column (section 2.3), but O-5 refuses it outright against an integer or another decimal.
+    DecimalLit,
+    /// A literal DuckDB parses as `DOUBLE` (`LITS`'s `dbl`, `dbl_neg`, `dbl_long` -- confirmed by
+    /// direct `json_serialize_sql` probing while building this test, the same discipline the
+    /// product's own doc comments cite).
+    DoubleLit,
+    /// Any other operand a case can carry (a decimal literal beyond section 7's bounds, a string,
+    /// `NULL`, a bit/blob/dollar literal, `int_uhuge`): section 2.5(a) never admits `+`/`-`/`*` for
+    /// these (an out-of-bounds literal is refused outright; the rest fail an earlier numeric check),
+    /// so no admitted case reaches `(ii)` with one -- kept only so classification stays total.
+    NeverArithAdmitted,
+}
+
+/// `LITS`'s own label -> [`ArithOperand`], for the literal operand of an "arith X" case built from
+/// the main loop (`generate_cases`). Division reads this classification too: declared
+/// floating-point division only needs to know whether the literal is `DoubleLit`, which this same
+/// mapping already carries.
+fn lits_arith_operand(label: &str) -> ArithOperand {
+    match label {
+        "int" => ArithOperand::IntLit(1),
+        "int_neg" => ArithOperand::IntLit(-1),
+        "int_300" => ArithOperand::IntLit(300),
+        "int_big" => ArithOperand::IntLit(3_000_000_000),
+        "int_huge" => ArithOperand::IntLit(9_223_372_036_854_775_808),
+        // Within section 7's bounds (scale <= 18, integer digits <= 20) -- `dec_s19` and wider
+        // scales are not, and fall through to `NeverArithAdmitted`.
+        "dec_s1" | "dec_s9" | "dec_s18" | "dec_0_1" | "dec_2p53" | "dec_neg" => ArithOperand::DecimalLit,
+        "dbl" | "dbl_neg" | "dbl_long" => ArithOperand::DoubleLit,
+        _ => ArithOperand::NeverArithAdmitted,
+    }
+}
+
+/// The literal or column operand of an "arith X" case built from the main loop: `oty` is `Some` for
+/// a column (its DuckDB type name), `None` for a literal (`olabel` is `"lit:<LITS label>"`).
+fn arith_operand_of(olabel: &str, oty: Option<&'static str>) -> ArithOperand {
+    match oty {
+        Some(t) => ArithOperand::Col(t),
+        None => lits_arith_operand(olabel.strip_prefix("lit:").expect("a literal operand's own label")),
+    }
+}
+
+/// Does `v` fit exactly inside integer type `ty`'s own range -- `fits_int_type`'s precedent in
+/// `predicate.rs`, re-derived here from `int_info` (oracle 2) rather than read from it.
+fn fits_int_range(v: i128, ty: &str) -> bool {
+    let Some((bits, signed)) = int_info(ty) else { return false };
+    match (bits, signed) {
+        (8, true) => (i8::MIN as i128..=i8::MAX as i128).contains(&v),
+        (16, true) => (i16::MIN as i128..=i16::MAX as i128).contains(&v),
+        (32, true) => (i32::MIN as i128..=i32::MAX as i128).contains(&v),
+        (64, true) => (i64::MIN as i128..=i64::MAX as i128).contains(&v),
+        (_, true) => true,
+        (8, false) => (0..=u8::MAX as i128).contains(&v),
+        (16, false) => (0..=u16::MAX as i128).contains(&v),
+        (32, false) => (0..=u32::MAX as i128).contains(&v),
+        (64, false) => (0..=u64::MAX as i128).contains(&v),
+        (_, false) => v >= 0,
+    }
+}
+
+/// The DuckDB type name an integer literal of value `v` parses as -- `literal_typed`'s own sequence
+/// (`INTEGER`, `BIGINT`, `HUGEINT`; this corpus's admitted literal values never reach `UHUGEINT`),
+/// confirmed by direct `json_serialize_sql` probing while building this test (`int_huge`'s
+/// `9223372036854775808` measures `HUGEINT`).
+fn int_literal_type_name(v: i128) -> &'static str {
+    if (i32::MIN as i128..=i32::MAX as i128).contains(&v) {
+        "INTEGER"
+    } else if (i64::MIN as i128..=i64::MAX as i128).contains(&v) {
+        "BIGINT"
+    } else {
+        "HUGEINT"
+    }
+}
+
+/// The `+`/`-`/`*` result type when one operand is an integer literal of value `v` and the other is
+/// the integer column `other` -- `fold_or_promote_integer`'s own precedent (section 2.5(a) rule 3):
+/// DuckDB folds the literal down to the column's own type first when its exact value fits (measured
+/// at v1.5.5: `i8 + 1` stays `TINYINT`), and only promotes via `int_promote` when it does not.
+fn fold_or_promote_test(v: i128, other: &'static str) -> &'static str {
+    if fits_int_range(v, other) {
+        other
+    } else {
+        int_promote(int_literal_type_name(v), other)
+    }
+}
+
+/// The expected `+`/`-`/`*` result type for any operand pair this corpus builds. Generalizes
+/// [`expected_arith_type_colcol`] (still used for the column/column arm) to a literal on either
+/// side, applying section 2.5(a)'s rules 3, 5 and 6 the same way `admitted_arithmetic_result` does.
+/// `None` means the declared table does not admit this pair at all (the caller only applies this
+/// where the engine itself admitted the case).
+fn expected_arith_type(l: ArithOperand, r: ArithOperand) -> Option<&'static str> {
+    use ArithOperand::{Col, DecimalLit, DoubleLit, IntLit};
+    match (l, r) {
+        (Col(a), Col(b)) => expected_arith_type_colcol(a, b),
+        (Col(a), IntLit(v)) | (IntLit(v), Col(a)) => {
+            if int_info(a).is_some() {
+                // rule 3: integer with an integer literal within bounds -- fold or promote.
+                Some(fold_or_promote_test(v, a))
+            } else if is_float_name(a) {
+                // rule 6: a float column with an integer literal within bounds -> the column's own
+                // type (only a *double* literal widens a REAL column to DOUBLE; see the DoubleLit
+                // arm below).
+                Some(a)
+            } else {
+                None
+            }
+        }
+        (Col(a), DecimalLit) | (DecimalLit, Col(a)) => {
+            if is_float_name(a) {
+                // rule 6: a float column with a decimal literal within bounds -> the column's own
+                // type (the widening the sightings note is stated only for a *double* literal).
+                Some(a)
+            } else {
+                // O-5: a decimal literal beside an integer refuses outright (section 2.5(a)).
+                None
+            }
+        }
+        (Col(a), DoubleLit) | (DoubleLit, Col(a)) => {
+            if is_float_name(a) {
+                // rule 6: "a REAL operand against a double literal widens to DOUBLE, which is
+                // lossless" (section 2.3 rule 6, section 10 Amendment 1's restatement) -- a DOUBLE
+                // column already carries that type.
+                Some("DOUBLE")
+            } else if int_info(a).map(|(bits, _)| bits <= 32).unwrap_or(false) {
+                // rule 5: a double literal with an integer of at most 32 bits -> DOUBLE.
+                Some("DOUBLE")
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+/// `/`'s own expected result type (section 2.5(c), replaced by section 10 Amendment 1 under O-1),
+/// over a column or a literal on either side: `FLOAT` when one operand is `FLOAT`-typed and neither
+/// operand is `DOUBLE`-typed or a `DOUBLE` literal, else `DOUBLE`. A literal is never itself
+/// `FLOAT`-typed (DuckDB's own literal kinds never include `REAL`), so only `DoubleLit` can change
+/// the choice.
+fn expected_division_type(l: ArithOperand, r: ArithOperand) -> &'static str {
+    use ArithOperand::{Col, DoubleLit};
+    let is_real = |o: &ArithOperand| matches!(o, Col(n) if *n == "FLOAT");
+    let is_double = |o: &ArithOperand| matches!(o, Col(n) if *n == "DOUBLE") || matches!(o, DoubleLit);
+    if (is_real(&l) || is_real(&r)) && !(is_double(&l) || is_double(&r)) {
         "FLOAT"
     } else {
         "DOUBLE"
@@ -796,32 +977,34 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
             }
         }
 
-        // (ii) the walk's arithmetic result type equals the plan's return_type -- column-against-
-        // column arithmetic only (see `Case::arith_colcol`'s own doc).
-        if let Some((a, b, op)) = case.arith_colcol {
+        // (ii) the walk's arithmetic result type equals the plan's return_type -- every admitted
+        // case built from a +, -, *, / or unary - node, literal operands and the literal-to-column
+        // folding rule included (`ArithNode`/`ArithOperand`'s own doc).
+        if let Some(node) = case.arith {
             let mut rt = Vec::new();
             for f in &filters {
                 find_arith_return_types(f, &mut rt);
             }
-            if op == "/" {
-                // division's own return type sits on the top-level comparison's own child, not on
-                // a named BOUND_FUNCTION -- read it from the composed cast set instead: both
-                // operands must have been declared-cast into the same float type, or needed no
-                // cast because they already carried it.
-                let expected = expected_division_type_colcol(a, b);
-                let observed: Vec<&str> = casts
-                    .iter()
-                    .filter(|c| c.in_division)
-                    .map(|c| c.to.as_str())
-                    .collect();
-                if observed.iter().any(|t| *t != expected) {
-                    failures.push(format!(
-                        "{}: division result type -- expected {expected}, casts show {observed:?}",
-                        case.label
-                    ));
+            match node {
+                ArithNode::Binary(l, op, r) if op == "/" => {
+                    // division's own return type sits on the top-level comparison's own child, not
+                    // on a named BOUND_FUNCTION -- read it from the composed cast set instead: both
+                    // operands must have been declared-cast into the same float type, or needed no
+                    // cast because they already carried it.
+                    let expected = expected_division_type(l, r);
+                    let observed: Vec<&str> = casts
+                        .iter()
+                        .filter(|c| c.in_division)
+                        .map(|c| c.to.as_str())
+                        .collect();
+                    if observed.iter().any(|t| *t != expected) {
+                        failures.push(format!(
+                            "{}: division result type -- expected {expected}, casts show {observed:?}",
+                            case.label
+                        ));
+                    }
                 }
-            } else {
-                match expected_arith_type_colcol(a, b) {
+                ArithNode::Binary(l, op, r) => match expected_arith_type(l, r) {
                     Some(expected) => {
                         if rt.is_empty() {
                             failures.push(format!("{}: no {op} BOUND_FUNCTION found in the plan", case.label));
@@ -836,9 +1019,30 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
                         }
                     }
                     None => failures.push(format!(
-                        "{}: admitted, but {a} {op} {b} is not in the declared arithmetic-admission set at all",
+                        "{}: admitted, but this {op} operand pair is not in the declared \
+                         arithmetic-admission set at all ({l:?}, {r:?})",
                         case.label
                     )),
+                },
+                ArithNode::Unary(cty) => {
+                    if is_numeric_name(cty) {
+                        if rt.is_empty() {
+                            failures.push(format!("{}: no unary - BOUND_FUNCTION found in the plan", case.label));
+                        }
+                        for (name, ty) in &rt {
+                            if name == "-" && ty != cty {
+                                failures.push(format!(
+                                    "{}: unary - return_type -- expected {cty}, plan says {ty}",
+                                    case.label
+                                ));
+                            }
+                        }
+                    } else {
+                        failures.push(format!(
+                            "{}: admitted, but unary - over a non-numeric {cty} is not in the declared set",
+                            case.label
+                        ));
+                    }
                 }
             }
         }
