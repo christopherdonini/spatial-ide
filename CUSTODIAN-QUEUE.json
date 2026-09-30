@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T16:00:14.962Z",
-  "plan_hash": "4bebde93e479f17f7a2d394ad77c47a2a2103e547c09821f3d765af49b8690da",
+  "generated_at": "2026-09-30T17:21:58.800Z",
+  "plan_hash": "157a2c9d113ba35724a21a29da4e287d062d7735fa4c0d73e48f88b55737069d",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -293,7 +293,7 @@
         "opened": "2026-09-27",
         "done": null
       },
-      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes.",
+      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base.",
       "blocked_by": [
         "b1-engine-kernel-half-followups"
       ]
