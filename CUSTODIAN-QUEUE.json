@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-09-30T17:47:50.331Z",
-  "plan_hash": "29926bca182d5a949e4cb79c8e7d6f35a0235d014029cfe6b3c57b65b60b6a77",
+  "generated_at": "2026-09-30T17:51:27.238Z",
+  "plan_hash": "8330eea04dd664876718883eeabc0608f3c3e7fbf7b5366269a927f6b54350f7",
   "priorities_approved": true,
-  "next": {
-    "id": "publish-refusal-codes-and-attempt-lifecycle",
-    "title": "Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2)",
-    "lane": "publish-viewer",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 4,
-    "budget_minutes": 90,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-26",
-      "done": null
-    },
-    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Round 31, item 2 (RULED 2026-09-30): split; this node keeps the kernel half (A4-1 to A4-4) and its budget becomes 90; A1 observations 1-2 and A5-2 are publish-attempt-lifecycle-src-tauri, position 8. Placed by question round 31, item 1 (RULED 2026-09-30): position 3 of 16 in the human's order, order 4 in its lane. It depends on kernel-ticket-liveness-redeem-wording, position 2, so that the order holds across lanes. The full-form preregistration for A4-4 is committed as kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-publish-refusal-codes-architect-draft.md), under full gating: a create-time engine refusal on the raw-params path keeps its typed code through skp::terminal_detail_of, with no new code or string. Premise correction from the draft: A4-1 and A4-3 are dropped by src-tauri lines (the execute arm and the pin-phase arm of frontends/shell/src-tauri/src/publish.rs), and A4-2 is the declared publish.engine code (protocol/skp/SKP-V0.md), so all three wait on the human for their site and code (state/drafts/round-32-node3-premise-correction.md, for question round 32 on 2026-10-02 unless asked sooner). The node stays open until they are answered and done; it is not set done on the A4-4 PR alone."
-  },
-  "ready": [
-    {
-      "id": "publish-refusal-codes-and-attempt-lifecycle",
-      "title": "Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 4,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Round 31, item 2 (RULED 2026-09-30): split; this node keeps the kernel half (A4-1 to A4-4) and its budget becomes 90; A1 observations 1-2 and A5-2 are publish-attempt-lifecycle-src-tauri, position 8. Placed by question round 31, item 1 (RULED 2026-09-30): position 3 of 16 in the human's order, order 4 in its lane. It depends on kernel-ticket-liveness-redeem-wording, position 2, so that the order holds across lanes. The full-form preregistration for A4-4 is committed as kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-publish-refusal-codes-architect-draft.md), under full gating: a create-time engine refusal on the raw-params path keeps its typed code through skp::terminal_detail_of, with no new code or string. Premise correction from the draft: A4-1 and A4-3 are dropped by src-tauri lines (the execute arm and the pin-phase arm of frontends/shell/src-tauri/src/publish.rs), and A4-2 is the declared publish.engine code (protocol/skp/SKP-V0.md), so all three wait on the human for their site and code (state/drafts/round-32-node3-premise-correction.md, for question round 32 on 2026-10-02 unless asked sooner). The node stays open until they are answered and done; it is not set done on the A4-4 PR alone."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -491,7 +453,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "publish-refusal-codes-and-attempt-lifecycle",
+      "title": "Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 4,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/raw-path-refusal-code"
+      },
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Round 31, item 2 (RULED 2026-09-30): split; this node keeps the kernel half (A4-1 to A4-4) and its budget becomes 90; A1 observations 1-2 and A5-2 are publish-attempt-lifecycle-src-tauri, position 8. Placed by question round 31, item 1 (RULED 2026-09-30): position 3 of 16 in the human's order, order 4 in its lane. It depends on kernel-ticket-liveness-redeem-wording, position 2, so that the order holds across lanes. The full-form preregistration for A4-4 is committed as kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-publish-refusal-codes-architect-draft.md), under full gating: a create-time engine refusal on the raw-params path keeps its typed code through skp::terminal_detail_of, with no new code or string. Premise correction from the draft: A4-1 and A4-3 are dropped by src-tauri lines (the execute arm and the pin-phase arm of frontends/shell/src-tauri/src/publish.rs), and A4-2 is the declared publish.engine code (protocol/skp/SKP-V0.md), so all three wait on the human for their site and code (state/drafts/round-32-node3-premise-correction.md, for question round 32 on 2026-10-02 unless asked sooner). The node stays open until they are answered and done; it is not set done on the A4-4 PR alone.",
+      "evidence_label": "branch `cut/raw-path-refusal-code`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

@@ -2918,12 +2918,12 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: ready
+    status: in-progress
     order: 4
     depends_on: [kernel-ticket-liveness-redeem-wording]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/raw-path-refusal-code}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

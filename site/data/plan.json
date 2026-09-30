@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T17:47:50.447Z",
-  "plan_hash": "29926bca182d5a949e4cb79c8e7d6f35a0235d014029cfe6b3c57b65b60b6a77",
+  "generated_at": "2026-09-30T17:51:27.355Z",
+  "plan_hash": "8330eea04dd664876718883eeabc0608f3c3e7fbf7b5366269a927f6b54350f7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4755,7 +4755,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 4,
       "depends_on": [
         "kernel-ticket-liveness-redeem-wording"
@@ -4765,7 +4765,9 @@
         "minutes": 0
       },
       "gate": "kernel/RAW-PATH-CREATE-REFUSAL-CODE-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/raw-path-refusal-code"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
