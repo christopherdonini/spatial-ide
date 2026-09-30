@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-09-30T06:43:21.000Z",
-  "plan_hash": "cefd1c3bf5718570ca843a6a4b228fe542a79b3e0f088114c4d265478a8fac9c",
+  "generated_at": "2026-09-30T08:02:59.374Z",
+  "plan_hash": "fba1ef053a00a0c90d3d32b69aa63a654a2044c8138541b1a79fd7ae85915a76",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "engine-cancel-before-stream-window",
+    "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
+    "lane": "engine",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 11,
+    "budget_minutes": 90,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-26",
+      "done": null
+    },
+    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane."
+  },
+  "ready": [
+    {
+      "id": "engine-cancel-before-stream-window",
+      "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 11,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -34,6 +72,72 @@
     }
   },
   "blocked_on_dependencies": [
+    {
+      "id": "type-walk-null-literal-arithmetic",
+      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 12,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes.",
+      "blocked_by": [
+        "kernel-ticket-drop-followups"
+      ]
+    },
+    {
+      "id": "timing-assertions-under-contention",
+      "title": "Two latency assertions fail under concurrent build load and pass alone",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 13,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
+      "blocked_by": [
+        "timing-tests-assert-property-not-budget"
+      ]
+    },
+    {
+      "id": "b1-engine-kernel-half-followups",
+      "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 14,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes.",
+      "blocked_by": [
+        "timing-assertions-under-contention"
+      ]
+    },
     {
       "id": "entry-79-b1-consult-items",
       "title": "Entry 79 — three items routed for Brief B stage B1's close",
@@ -76,6 +180,270 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
+      ]
+    },
+    {
+      "id": "kernel-ticket-liveness-redeem-wording",
+      "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes.",
+      "blocked_by": [
+        "engine-cancel-before-stream-window"
+      ]
+    },
+    {
+      "id": "kernel-close-dataset-unknown-keeps-openrecord",
+      "title": "close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 7,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-28",
+        "done": null
+      },
+      "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes.",
+      "blocked_by": [
+        "publish-refusal-codes-and-attempt-lifecycle"
+      ]
+    },
+    {
+      "id": "catalog-open-replace-drop-latency-note",
+      "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 8,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes.",
+      "blocked_by": [
+        "kernel-close-dataset-unknown-keeps-openrecord"
+      ]
+    },
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes.",
+      "blocked_by": [
+        "audit-reader-char-boundary"
+      ]
+    },
+    {
+      "id": "kernel-ticket-drop-followups",
+      "title": "StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 10,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-24",
+        "done": null
+      },
+      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes.",
+      "blocked_by": [
+        "publish-attempt-lifecycle-src-tauri"
+      ]
+    },
+    {
+      "id": "watch-grandparent-spawn-signal",
+      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 11,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes.",
+      "blocked_by": [
+        "type-walk-null-literal-arithmetic"
+      ]
+    },
+    {
+      "id": "timing-tests-assert-property-not-budget",
+      "title": "The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 12,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five). Placed by question round 31, item 1 (RULED 2026-09-30): position 12 of 16 in the human's order, order 12 in its lane. It depends on watch-grandparent-spawn-signal, position 11, so that the order holds across lanes.",
+      "blocked_by": [
+        "watch-grandparent-spawn-signal"
+      ]
+    },
+    {
+      "id": "kernel-close-races-followups",
+      "title": "kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 13,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes.",
+      "blocked_by": [
+        "b1-engine-kernel-half-followups"
+      ]
+    },
+    {
+      "id": "data-plane-crowded-start-detail-spaces",
+      "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 14,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
+      "blocked_by": [
+        "kernel-close-races-followups"
+      ]
+    },
+    {
+      "id": "publish-refusal-codes-and-attempt-lifecycle",
+      "title": "Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 4,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Round 31, item 2 (RULED 2026-09-30): split; this node keeps the kernel half (A4-1 to A4-4) and its budget becomes 90; A1 observations 1-2 and A5-2 are publish-attempt-lifecycle-src-tauri, position 8. Placed by question round 31, item 1 (RULED 2026-09-30): position 3 of 16 in the human's order, order 4 in its lane. It depends on kernel-ticket-liveness-redeem-wording, position 2, so that the order holds across lanes.",
+      "blocked_by": [
+        "kernel-ticket-liveness-redeem-wording"
+      ]
+    },
+    {
+      "id": "audit-reader-char-boundary",
+      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 5,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes.",
+      "blocked_by": [
+        "catalog-open-replace-drop-latency-note"
+      ]
+    },
+    {
+      "id": "publish-attempt-lifecycle-src-tauri",
+      "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 6,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes.",
+      "blocked_by": [
+        "skp-cancel-state-closed-set"
       ]
     },
     {
@@ -206,25 +574,6 @@
         "done": null
       },
       "summary": "RETURNED TO PROPOSED 2026-09-22 (the custodian, reconciling the human's separate-tracks direction): its dependencies are done, but its preregistration is not drafted and the LOD track is not scheduled among the product priorities -- the human places it. The human, 2026-09-22: the lifecycle design completes before any product caller serves tiers, reconciled with Prepare's artifact ownership, cancellation and retention; a saved-work input is never deleted under a render-cache eviction rule; the integrated benefit measured, no carried-over speed claim; basic Save never waits for LOD; no renderer rewrite. Hard precondition (the human, round 8): no product path calls build_tiers before the tier-cache lifecycle is declared. Its own preregistration first (engine/LOD-PREREGISTRATION.md section 1, 2f and 9 name it as owed: selection, the labels' shell surface, the prepare report, the first operator walkthrough); the statvfs free-space counterpart and a non-Windows tier root are owed with docs/07's macOS/Linux gates, not here"
-    },
-    {
-      "id": "kernel-ticket-drop-followups",
-      "title": "StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a)."
     },
     {
       "id": "crs-zoom-constants-per-unit",
@@ -455,25 +804,6 @@
       "summary": "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
     },
     {
-      "id": "timing-tests-assert-property-not-budget",
-      "title": "The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a))",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
-    },
-    {
       "id": "verify-mutation-test-temp-dirs",
       "title": "verify-mutation's own tests remove their mkdtemp directories (weekly window (b))",
       "lane": "governance",
@@ -550,25 +880,6 @@
       "summary": "RULED 2026-09-26, question round 25, item 1, (f): ADR-023's section 2 widenings sit uneasily beside ADR-021's notes; an architect consult says whether a note is owed, and any ADR text stays the human's (a red line). Raised by PR #113's architect gate (b1-engine-kernel-half's summary). Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
     },
     {
-      "id": "catalog-open-replace-drop-latency-note",
-      "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3)."
-    },
-    {
       "id": "data-plane-crate-fmt",
       "title": "spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a))",
       "lane": "kernel-protocol",
@@ -586,25 +897,6 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md)."
-    },
-    {
-      "id": "data-plane-crowded-start-detail-spaces",
-      "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7)."
     },
     {
       "id": "verify-cites-test-temp-dirs",
@@ -645,82 +937,6 @@
       "summary": ".githooks/commit-msg reads the commit source from $2, which git 2.49.0 never passes to commit-msg, so the local hook refuses unsigned merges that .github/workflows/dco.yml skips; align the local rule with CI's under its own form, since the fix changes local DCO behaviour (the exposure piece's Amendment 4 draft, 4.5; gate 1 reports under state/consults/gates/)."
     },
     {
-      "id": "kernel-ticket-liveness-redeem-wording",
-      "title": "ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md)."
-    },
-    {
-      "id": "watch-grandparent-spawn-signal",
-      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1."
-    },
-    {
-      "id": "b1-engine-kernel-half-followups",
-      "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes)."
-    },
-    {
-      "id": "timing-assertions-under-contention",
-      "title": "Two latency assertions fail under concurrent build load and pass alone",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are."
-    },
-    {
       "id": "exposure-scan-followups",
       "title": "The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment",
       "lane": "governance",
@@ -738,25 +954,6 @@
         "done": null
       },
       "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window."
-    },
-    {
-      "id": "publish-refusal-codes-and-attempt-lifecycle",
-      "title": "Publish path: refusal codes kept end to end, and the attempt lifecycle (wave-1 A4-1 to A4-4, A1 observations 1-2, A5-2)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. A4-1 to A4-4: a refusal's code is lost on the publish execute path, collapsed to publish.engine, absent at the pin phase, and unprefixed on the raw-params admission path (state/cloud/wave1/A4.md). A1 observation 1: RunningPublishes keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md)."
     },
     {
       "id": "shell-session-log-line-framing",
@@ -778,25 +975,6 @@
       "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. frontends/shell/src-tauri/src/state.rs's append interpolates level raw and escapes only newlines in message, against its own one-line contract (state/cloud/wave1/A1.md, Finding A1-2)."
     },
     {
-      "id": "engine-cancel-before-stream-window",
-      "title": "A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md)."
-    },
-    {
       "id": "tile-issue-epoch-growth",
       "title": "TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5)",
       "lane": "shell",
@@ -814,63 +992,6 @@
         "done": null
       },
       "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. issueEpoch grows with the distinct tile keys visited and is freed when the dataset closes: a per-session growth with a ceiling (state/cloud/wave1/A5.md)."
-    },
-    {
-      "id": "audit-reader-char-boundary",
-      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md)."
-    },
-    {
-      "id": "skp-cancel-state-closed-set",
-      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list."
-    },
-    {
-      "id": "kernel-close-races-followups",
-      "title": "kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule."
     },
     {
       "id": "adr-035-close-races-note",
@@ -949,25 +1070,6 @@
       "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 2; recorded as filed, the 2026-09-28 S1 batch): a describe failure after a successful open falls to the catch without closing the dataset, leaving its catalog entry, OpenRecord and watch; no reachable describe refusal after a successful open was found, so the path is unreachable today."
     },
     {
-      "id": "kernel-close-dataset-unknown-keeps-openrecord",
-      "title": "close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory."
-    },
-    {
       "id": "covering-names-missing-column",
       "title": "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)",
       "lane": "engine",
@@ -1006,25 +1108,6 @@
       "summary": "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases)."
     },
     {
-      "id": "type-walk-null-literal-arithmetic",
-      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason."
-    },
-    {
       "id": "port-1-linux-l1",
       "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
       "lane": "platform",
@@ -1041,7 +1124,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 31 on 2026-10-02. Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency."
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 32 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency."
     },
     {
       "id": "port-2-macos-l1-and-app-dirs",
