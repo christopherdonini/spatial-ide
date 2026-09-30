@@ -1876,9 +1876,9 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
         return Some(l.ty.clone());
     }
     // rule 2: a NULL literal on either side (correction round 2, W3), when the other operand is
-    // itself numeric -- the binder casts only the NULL, and the result carries the other operand's
-    // own type. Guarded on `is_numeric` for the same reason rule 1 is scoped above: section
-    // 2.5(a)'s string/boolean refusals apply regardless of a NULL partner.
+    // itself numeric -- the walk gives the result the other operand's own type (the walk's rule,
+    // not a claim about the plan). Guarded on `is_numeric` for the same reason rule 1 is scoped
+    // above: section 2.5(a)'s string/boolean refusals apply regardless of a NULL partner.
     if l.ty == EngineType::Null && is_numeric(r) {
         return Some(r.ty.clone());
     }
@@ -2753,7 +2753,7 @@ mod tests {
 
     /// FX-1's twelve columns (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` section 3), by name and
     /// surrogate type -- doubles as the namespace [`type_of_value`] needs and the in-memory table's
-    /// own DDL column type (`REAL` is valid SQL for a 4-byte float, the same as `FLOAT`).
+    /// own DDL column type (at v1.5.5, `REAL` is valid SQL for a 4-byte float, as `FLOAT` is).
     const BT1B_COLS: &[(&str, &str)] = &[
         ("zone", "VARCHAR"),
         ("flag", "BOOLEAN"),
@@ -3037,8 +3037,8 @@ mod tests {
                 bt1b_find_function_return_types(f, case.op, case.arity, &mut return_types);
             }
             if return_types.is_empty() {
-                // Constant-folded away (for example a NULL-involving node) -- not independently
-                // observable through this plan-based oracle.
+                // Constant-folded away at v1.5.5 (for example a NULL-involving node) -- not
+                // independently observable through this plan-based oracle.
                 continue;
             }
             checked += 1;

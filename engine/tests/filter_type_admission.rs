@@ -804,7 +804,8 @@ fn decimal_width(name: &str) -> Option<u32> {
 /// Section 7's declared cast set, re-derived from the governing text (independent of
 /// `predicate.rs::type_of_arithmetic`/`is_admitted_comparison`'s own implementation): no cast to or
 /// from BOOLEAN (except `NULL`), no cast from VARCHAR; integer to a wider integer of the *same*
-/// signedness or to `HUGEINT` unconditionally; integer of at most 64 bits to `DECIMAL(w,s)` with
+/// signedness, an unsigned integer to a wider signed one, or any integer to `HUGEINT`
+/// unconditionally; integer of at most 64 bits to `DECIMAL(w,s)` with
 /// `w` at most 38; integer of at most 16 bits to `REAL`, of at most 32 bits to `DOUBLE`; `REAL` to
 /// `DOUBLE`; as `/` operands, any integer to the division's float type; on literals, numeric to
 /// numeric, `NULL` to any, VARCHAR to VARCHAR only. Corrected in round 2 (W2; architect B2) to
