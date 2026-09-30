@@ -138,3 +138,15 @@ Written after gate 1's results were seen (class 2, a deviation recorded after re
 ### Amendment 4 — budget overrun, §7 not edited (class 8), at correction round 1's head
 
 Budget overrun, §7 not edited. At 9801778, correction round 1's head, §7's command (`git diff --numstat c6f61f5...9801778 -- engine/src engine/tests engine/README.md`) gives 494 over 4 files against the declared 400 over 4: `engine/README.md` 4+0, `engine/src/cancel.rs` 288+6, `engine/src/stream.rs` 40+23, `engine/tests/cancel_execute_window.rs` 133+0. Amendment 2's 429 stands as c93d0ec's record. The reason is gate 1's fixes, listed in `state/consults/2026-09-30-cancel-before-execute-worker-report-2.md`: the named spawn, the two doc corrections, T5 under Amendment 3's F3 with its per-run fixture, and the folded notes. Amendment 3, item 3's predicate evidence is that report's PREDICATE EVIDENCE section.
+
+### Amendment 5 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #146 merged at 2026-09-30T15:52:14Z as merge commit 1e0b470 (parents 4aadde1 and 9801778), not a squash. a6f5310, fb98e43, c93d0ec and 9801778 are reachable from main.
+- **The gates:**
+  - gate 1 at c93d0ec, FAIL/FAIL: `state/consults/gates/2026-09-30-cancel-before-execute-gate1-architect.md` and `state/consults/gates/2026-09-30-cancel-before-execute-gate1-reviewer.md`;
+  - correction round 1: `state/consults/2026-09-30-cancel-before-execute-worker-report-2.md`;
+  - gate 2 at 9801778, PASS/PASS: `state/consults/gates/2026-09-30-cancel-before-execute-gate2-architect.md` and `state/consults/gates/2026-09-30-cancel-before-execute-gate2-reviewer.md`.
+- **The observations of record** for §4's five mutations at the merged head: the gate-2 reviewer's mutation table.
+- **Size:** Amendment 4.
+- **Carried out of this piece:** the proposed node `engine-cancel-before-execute-siblings`. The gate-2 notes are non-blocking, left for the next edit of their files.

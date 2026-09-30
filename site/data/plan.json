@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T14:48:25.625Z",
-  "plan_hash": "4902b1b605f6456136c9854c8622134963477e7be6aed09b2303b13baef16df8",
+  "generated_at": "2026-09-30T15:53:45.338Z",
+  "plan_hash": "381034f3a53a49b38bcd0ace94f9603b6fda88c3a6944d068a632a3f5e332784",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4591,7 +4591,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 6,
       "depends_on": [
         "engine-cancel-before-stream-window"
@@ -4832,7 +4832,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 11,
       "depends_on": [],
       "needs_human": {
@@ -4841,7 +4841,7 @@
       },
       "gate": "engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/cancel-before-execute"
+        "pr": 146
       },
       "budget_minutes": 90,
       "generation": 2,
@@ -4850,7 +4850,7 @@
       "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings. Gate 1 at c93d0ec: FAIL/FAIL (state/consults/gates/2026-09-30-cancel-before-execute-gate1-*.md): a spawn panic (both gates), two doc claims (architect B2, B3), and T5 missing its window on CI (reviewer B2); the form's Amendment 3 (class 2) re-declares F3, so the generation is 2; correction round 1 of the two the record cap allows.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-09-30"
       }
     },
     {

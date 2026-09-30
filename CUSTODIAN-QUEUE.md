@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4902b1b605f6456136c9854c8622134963477e7be6aed09b2303b13baef16df8`) at `2026-09-30T14:48:25.466Z`.
+Generated from `PLAN.yaml` (sha256 `381034f3a53a49b38bcd0ace94f9603b6fda88c3a6944d068a632a3f5e332784`) at `2026-09-30T15:53:45.225Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) (lane `kernel-protocol`, order 6, budget 60 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,6 @@ Generated from `PLAN.yaml` (sha256 `4902b1b605f6456136c9854c8622134963477e7be6ae
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) — blocked by: engine-cancel-before-stream-window
 - **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) — blocked by: publish-refusal-codes-and-attempt-lifecycle
 - **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) — blocked by: kernel-close-dataset-unknown-keeps-openrecord
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: audit-reader-char-boundary
@@ -42,7 +41,7 @@ Generated from `PLAN.yaml` (sha256 `4902b1b605f6456136c9854c8622134963477e7be6ae
 
 ## 5. In progress
 
-- **engine-cancel-before-stream-window** — A cancel landing between the producer's last cancellation check and stream_arrow is not lost (wave-1 A5 observation 4) — evidence: branch `cut/cancel-before-execute`
+- (none)
 
 ## 6. Proposed / unscheduled
 
