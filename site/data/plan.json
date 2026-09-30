@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T11:35:03.587Z",
-  "plan_hash": "f50aabf984b9c79fd4555be12497a6201615d9a83e7c92fc385ea8d6477cc416",
+  "generated_at": "2026-09-30T14:48:25.625Z",
+  "plan_hash": "4902b1b605f6456136c9854c8622134963477e7be6aed09b2303b13baef16df8",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4600,13 +4600,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes.",
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): a generation end landing between ticket_liveness and redeem. The architect's fix shape: re-read ticket_liveness after a redeem refusal. Recorded S2 under the wave-1 severity rule (state/cloud/wave1/A2.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 2 of 16 in the human's order, order 6 in its lane. It depends on engine-cancel-before-stream-window, position 1, so that the order holds across lanes. The full-form preregistration is committed as kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md), under full gating: re-read ticket_liveness after a redeem refusal, through a private step split, with no wire change and no new string; its reading R (ADR-035 Decision 2 already requires the by-name refusal) goes to the gate, and a rejection is invalidator I6, the human's. Correction to this summary: the fix shape is in state/drafts/kernel-generation-close-races-prereg.draft.md, For the custodian, not in the committed close-races form's section 0 item 5, which only puts the window out of that piece's scope.",
       "dates": {
         "opened": "2026-09-27",
         "done": null

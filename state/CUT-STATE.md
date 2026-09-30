@@ -1274,3 +1274,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The suites are green, 494 and the rustfmt baseline counts are confirmed, and the trace grep reproduces.
   - **Housekeeping.** The reviewer left two wait-loops of its own polling task files for text that would never come. A third loop, from session 53e23d1b on 2026-09-16, was also found. All three were grep and sleep loops with no side effects. They were identified by command line, and each process tree was stopped with taskkill.
   - **Next.** The human's merge click, then the done commit (`{pr: 146}`, a references-only closing amendment). After that, node 2 (`kernel-ticket-liveness-redeem-wording`) becomes ready.
+- 2026-09-30T14:48Z - **Node 2's full-form preregistration is committed before any code, while node 1's PR #146 waits on the human's merge click: `kernel/TICKET-LIVENESS-REDEEM-PREREGISTRATION.md`, the node's gate.**
+  - **The status stays blocked on node 1.** Node 2 depends on it. Committing a form on a blocked node follows B-1's precedent (4b2c1d0).
+  - **The architect's draft** is the consult `state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md`, verbatim, with the draft section elided.
+    - **The defect.** A generation end landing between `ticket_liveness` and `redeem` gives the cancelled-before-redeemed wording, where ADR-035 Decision 2 requires the by-name refusal while the dead-ticket record holds.
+    - **The fix.** Re-read `ticket_liveness` after a refusal from `redeem`, through a private step split. There is no wire change and no new string.
+    - **Reading R.** Decision 2 already requires the by-name refusal. If a gate rejects that reading, invalidator I6 brings it to the human. The piece is under full gating, §21a's fourth category.
+  - **Custodian's checks** at ce2a59b: the two calls take separate locks and nothing is held across both; `redeem`'s wording; `end_generation` records before it cancels; ADR-035 D2's sub-bullet; the cited draft is tracked.
+  - **The one edit to the draft:** the form is committed on main, not as the branch's first commit.
+  - **PLAN.** Node 2's `gate` is set. Its summary is corrected: the fix shape is in the close-races draft, not the committed form. verify-test-claims passes with 11 planned.
