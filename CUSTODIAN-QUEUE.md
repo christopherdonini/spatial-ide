@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8330eea04dd664876718883eeabc0608f3c3e7fbf7b5366269a927f6b54350f7`) at `2026-09-30T17:51:27.238Z`.
+Generated from `PLAN.yaml` (sha256 `ab38ef257dd5fef5d400bec783b4aca41be80bc27c7a39ecd9e19283ebf94671`) at `2026-09-30T18:14:04.559Z`.
 
 ## 1. Next
 
@@ -40,7 +40,7 @@ Generated from `PLAN.yaml` (sha256 `8330eea04dd664876718883eeabc0608f3c3e7fbf7b5
 
 ## 5. In progress
 
-- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) — evidence: branch `cut/raw-path-refusal-code`
+- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end (wave-1 A4-1 to A4-4): A4-4 in the kernel, A4-1 and A4-3 as src-tauri lines, A4-2 closed as declared (round 32); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) — evidence: branch `cut/raw-path-refusal-code`
 
 ## 6. Proposed / unscheduled
 
