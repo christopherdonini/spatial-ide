@@ -134,3 +134,7 @@ Written after gate 1's results were seen (class 2, a deviation recorded after re
    - If no admitted predicate can meet this, the worker stops and reports, and the piece comes back as a new amendment.
    - T5's fixture moves to a per-run temporary path, removed at the end (the gate-1 notes on the shared path).
 4. **Unchanged.** T5's name, its assertions, its mutation, and §5's third invalidator, which still covers a window F3 makes too short. By its assertion alone, T5 still cannot tell a missed window from its mutation (the gate-1 reviewer's B2). The re-declared F3 is what makes a missed window implausible. A missed window on a later head is still an invalid run, recorded as such.
+
+### Amendment 4 — budget overrun, §7 not edited (class 8), at correction round 1's head
+
+Budget overrun, §7 not edited. At 9801778, correction round 1's head, §7's command (`git diff --numstat c6f61f5...9801778 -- engine/src engine/tests engine/README.md`) gives 494 over 4 files against the declared 400 over 4: `engine/README.md` 4+0, `engine/src/cancel.rs` 288+6, `engine/src/stream.rs` 40+23, `engine/tests/cancel_execute_window.rs` 133+0. Amendment 2's 429 stands as c93d0ec's record. The reason is gate 1's fixes, listed in `state/consults/2026-09-30-cancel-before-execute-worker-report-2.md`: the named spawn, the two doc corrections, T5 under Amendment 3's F3 with its per-run fixture, and the folded notes. Amendment 3, item 3's predicate evidence is that report's PREDICATE EVIDENCE section.
