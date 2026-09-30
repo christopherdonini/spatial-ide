@@ -1196,3 +1196,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Filed verbatim with LF line endings, each scanning clean: `state/cloud/wave3/W3-A-stop.md` (55 lines), `W3-A.md` (167) and `W3-C.md` (133).
     - Each copy was taken with the message's own Copy action. The files record each copy's write time.
     - Custodian fields are filled at triage.
+- 2026-09-30T08:35Z - **Node 1's full-form preregistration committed before any code: `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`, the node's gate.**
+  - **The architect's draft** (the consult, `state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md`, filed verbatim with two marked elisions) recommends shape A: a crate-private window guard around the execute call, and a re-interrupter spawned by `cancel` while an execute is in flight. P0-1 pins the premise at the producer's ordering, and P0-2 enumerates DuckDB's interrupt-clear points from the locked tarball.
+  - **The window is wider than the finding said.** By the architect's reading, DuckDB clears its interrupt flag at the start of prepare and execute, so moving the check later cannot close it. P0-2 confirms this.
+  - **Custodian's checks before commit.** The three in-code statements the draft calls false read as described at 8efc554. The named tests, `stream_with_cancel` and the `fixture` feature exist, and `Cargo.lock` line 1188's checksum matches.
+  - **Custodian's edits, listed in the form's header.** The three span hashes were computed and verify-quotes passes with the form staged. F3 is 2,000,000 features, the late-match precedent. The kernel package is `spatial-kernel`. The liveness-watchdog reading is stated for the gates: a harness bound, not a latency.
+  - **Scope.** The six sibling `attach` sites are out of scope and recorded as the proposed node `engine-cancel-before-execute-siblings`, depending on node 1 and unplaced. The size budget is 400 lines over 4 files; full gating applies under §21a either way. The architect notes that the node's 90 budget minutes is likely short.
+  - **Checks.** verify-test-claims passes (6 planned), and verify:plan, verify-cites and verify-quotes pass.
+  - **Next.** A branch and worktree, the node set in progress, and a worker-high dispatched on P0-1 and P0-2 first. A P0-1 `Err` stops the piece for an amendment.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fba1ef053a00a0c90d3d32b69aa63a654a2044c8138541b1a79fd7ae85915a76`) at `2026-09-30T08:02:59.374Z`.
+Generated from `PLAN.yaml` (sha256 `412bc845b765e800983b07e3422515480e3e9b0facf5c535a1391e7dad32c8b2`) at `2026-09-30T08:20:15.770Z`.
 
 ## 1. Next
 
@@ -67,6 +67,7 @@ Generated from `PLAN.yaml` (sha256 `fba1ef053a00a0c90d3d32b69aa63a654a2044c81385
 - **verify-quotes-show-cites-narrowed** — verify-quotes --show-cites prints no false FAILs when narrowed (weekly window (e)) (phase `prototype`) — never queued until placed
 - **adr-023-s2-widenings-adr-021-consult** — Consult: whether ADR-023's section 2 widenings owe ADR-021 a note (weekly window (f)) (phase `prototype`) — never queued until placed
 - **data-plane-crate-fmt** — spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a)) (phase `prototype`) — never queued until placed
+- **engine-cancel-before-execute-siblings** — The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded) (phase `prototype`) — never queued until placed
 - **verify-cites-test-temp-dirs** — verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c)) (phase `prototype`) — never queued until placed
 - **dco-hook-merge-skip** — The local DCO hook's merge skip never fires (found by the exposure-profile-paths gate 1) (phase `prototype`) — never queued until placed
 - **exposure-scan-followups** — The exposure scan's routed items -- hits in files main added after 16df0d7, type changes the diff filter skips, the punctuation-only segment (phase `prototype`) — never queued until placed

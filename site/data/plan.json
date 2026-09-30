@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-30T08:02:59.489Z",
-  "plan_hash": "fba1ef053a00a0c90d3d32b69aa63a654a2044c8138541b1a79fd7ae85915a76",
+  "generated_at": "2026-09-30T08:20:15.882Z",
+  "plan_hash": "412bc845b765e800983b07e3422515480e3e9b0facf5c535a1391e7dad32c8b2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4378,6 +4378,33 @@
       }
     },
     {
+      "id": "engine-cancel-before-execute-siblings",
+      "title": "The six other cancel.attach sites reuse the execute-window guard, so a cancel before execution stops the work, not only the outcome (dataset.rs identity scan and index.rs first, their work unbounded)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "engine-cancel-before-stream-window"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Recorded by engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md, section 2 item 4, from the architect's sibling search (state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md, item 2): engine/src/dataset.rs:1332 (metadata and the covering sample, bounded), engine/src/dataset.rs:1636 (the identity scan at open, unbounded by file size), engine/src/index.rs:332 (query_arrow materialising up to MAX_INDEXED_FEATURES), engine/src/rowgroup.rs:336 (parquet_metadata, bounded by the footer), engine/src/layout.rs:345 and engine/src/layout.rs:438 (the measurement harness only), each at 8efc554, have the same pre-execute window with no check before executing; each checks after detach, so the outcome is Cancelled and the work is not stopped. Proposed, not placed: the human places it.",
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      }
+    },
+    {
       "id": "verify-cites-test-temp-dirs",
       "title": "verify-cites' pre-existing test removes its temp directory (round 26, item 4 (c))",
       "kind": "task",
@@ -4737,13 +4764,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane.",
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. engine/src/stream.rs checks is_cancelled just before stream_arrow, and engine/src/cancel.rs records that an interrupt on an idle connection is not latched; a cancel in that window is lost for one query, bounded by the query (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 1 of 16 in the human's order, order 11 in its lane. The full-form preregistration is committed as engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md): shape A, a window guard around the execute call and a re-interrupter while it is in flight, with P0-1 (the premise at the producer's ordering) and P0-2 (DuckDB's clear points) before code; the six sibling attach sites are out of scope, recorded as node engine-cancel-before-execute-siblings.",
       "dates": {
         "opened": "2026-09-26",
         "done": null
