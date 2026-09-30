@@ -37,7 +37,12 @@ fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
     let w = e[2] - e[0];
     let h = e[3] - e[1];
     ViewportQuery::viewport(
-        Bbox { xmin: e[2] + w, ymin: e[3] + h, xmax: e[2] + w * 2.0, ymax: e[3] + h * 2.0 },
+        Bbox {
+            xmin: e[2] + w,
+            ymin: e[3] + h,
+            xmax: e[2] + w * 2.0,
+            ymax: e[3] + h * 2.0,
+        },
         "EPSG:2056",
     )
 }
@@ -47,7 +52,12 @@ fn a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled() {
     let path = fixture_path();
     let facts = write_geoparquet_cancellable(
         &path,
-        &FixtureSpec { features: FEATURES, avg_vertices: 12, hole_every: 0, ..Default::default() },
+        &FixtureSpec {
+            features: FEATURES,
+            avg_vertices: 12,
+            hole_every: 0,
+            ..Default::default()
+        },
         &CancelToken::new(),
         None,
     )
@@ -55,15 +65,19 @@ fn a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled() {
 
     let ds = Dataset::open(&path).expect("open");
     let cancel = CancelToken::new();
-    let mut stream =
-        ds.stream_with_cancel(&matches_nothing(&facts), cancel.clone()).expect("stream");
+    let mut stream = ds
+        .stream_with_cancel(&matches_nothing(&facts), cancel.clone())
+        .expect("stream");
 
     // Spin on `is_executing()` until the producer thread is actually inside `execute_guarded`'s
     // closure — i.e. inside `stmt.stream_arrow(..)` — rather than cancelling blind. This is the
     // assertion that the shipped `produce` really routes execution through the guard at all.
     let deadline = Instant::now() + TEST_LIVENESS_DEADLINE;
     while !cancel.is_executing() {
-        assert!(Instant::now() < deadline, "timed out waiting for the producer to start executing");
+        assert!(
+            Instant::now() < deadline,
+            "timed out waiting for the producer to start executing"
+        );
         std::thread::sleep(Duration::from_millis(1));
     }
 
@@ -78,7 +92,10 @@ fn a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled() {
              cancellation inside the execute window. It is reported as inconclusive rather than \
              counted as a pass"
         ),
-        other => panic!("expected a cancelled terminal, got {:?}", other.map(|r| r.map(|_| ()))),
+        other => panic!(
+            "expected a cancelled terminal, got {:?}",
+            other.map(|r| r.map(|_| ()))
+        ),
     }
 
     let deadline = Instant::now() + TEST_LIVENESS_DEADLINE;

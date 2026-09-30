@@ -120,7 +120,11 @@ impl CancelToken {
         if !already && self.inner.in_execute.load(Ordering::SeqCst) {
             let inner = Arc::clone(&self.inner);
             std::thread::spawn(move || loop {
-                let bound = inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).is_some();
+                let bound = inner
+                    .interrupt
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .is_some();
                 if !inner.in_execute.load(Ordering::SeqCst) || !bound {
                     break;
                 }
@@ -249,7 +253,10 @@ mod tests {
     fn until_live(what: &str, f: impl Fn() -> bool) {
         let deadline = std::time::Instant::now() + TEST_LIVENESS_DEADLINE;
         while !f() {
-            assert!(std::time::Instant::now() < deadline, "timed out waiting for: {what}");
+            assert!(
+                std::time::Instant::now() < deadline,
+                "timed out waiting for: {what}"
+            );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
     }
@@ -321,7 +328,9 @@ mod tests {
         let t = CancelToken::new();
         t.attach(conn.interrupt_handle()).unwrap();
 
-        let mut stmt = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
+        let mut stmt = conn
+            .prepare("SELECT count(*) FROM range(0, 1000) t(i)")
+            .unwrap();
         t.cancel();
 
         let outcome = stmt.query_arrow([]);
@@ -405,14 +414,18 @@ mod tests {
         });
         assert!(matches!(outcome, Guarded::Err(_)), "the query must end");
 
-        until_live("the re-interrupter thread to exit", || Arc::strong_count(&t.inner) == before);
+        until_live("the re-interrupter thread to exit", || {
+            Arc::strong_count(&t.inner) == before
+        });
         println!(
             "the_re_interrupter_exits_when_the_execute_window_closes: fell back in {:?}",
             start.elapsed()
         );
 
         drop(stmt);
-        let mut stmt2 = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
+        let mut stmt2 = conn
+            .prepare("SELECT count(*) FROM range(0, 1000) t(i)")
+            .unwrap();
         assert!(
             stmt2.query_arrow([]).is_ok(),
             "the connection must still serve an ordinary query once the window has closed"
@@ -426,7 +439,9 @@ mod tests {
         let conn = duckdb::Connection::open_in_memory().unwrap();
         let t = CancelToken::new();
         t.attach(conn.interrupt_handle()).unwrap();
-        let mut stmt = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
+        let mut stmt = conn
+            .prepare("SELECT count(*) FROM range(0, 1000) t(i)")
+            .unwrap();
 
         let outcome = t.execute_guarded(|| {
             let r = stmt.query_arrow([]);
