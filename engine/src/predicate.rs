@@ -1893,10 +1893,18 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
     // DOUBLE (correction round 2, W4; architect B4, reviewer B4) -- the same widening rule 6
     // already states for comparisons (section 2.3).
     if is_float_col(l) && is_numeric_lit(r) {
-        return Some(if is_double_lit(r) { EngineType::Double } else { l.ty.clone() });
+        return Some(if is_double_lit(r) {
+            EngineType::Double
+        } else {
+            l.ty.clone()
+        });
     }
     if is_float_col(r) && is_numeric_lit(l) {
-        return Some(if is_double_lit(l) { EngineType::Double } else { r.ty.clone() });
+        return Some(if is_double_lit(l) {
+            EngineType::Double
+        } else {
+            r.ty.clone()
+        });
     }
     // rule 7: float with an integer (column or expression), bit-width-limited; REAL against DOUBLE.
     if matches!(l.ty, EngineType::Real) && is_float_col(l) && int_le(r, 16) {
@@ -1993,9 +2001,13 @@ fn is_admitted_comparison(l: &Typed, r: &Typed) -> bool {
     let int64_or_literal = |t: &Typed| {
         is_int(t)
             && (t.kind == OperandKind::Literal
-                || int_bits_signed(&t.ty).map(|(b, _)| b <= 64).unwrap_or(false))
+                || int_bits_signed(&t.ty)
+                    .map(|(b, _)| b <= 64)
+                    .unwrap_or(false))
     };
-    if (int64_or_literal(l) && is_decimal_literal(r)) || (int64_or_literal(r) && is_decimal_literal(l)) {
+    if (int64_or_literal(l) && is_decimal_literal(r))
+        || (int64_or_literal(r) && is_decimal_literal(l))
+    {
         return true;
     }
     if is_decimal_literal(l) && is_decimal_literal(r) {
@@ -2070,9 +2082,8 @@ fn determine_reason(l: &Typed, r: &Typed, is_arithmetic: bool) -> TypeRefusalRea
     // integer side to 64 bits, so an arithmetic result wider than that (a HUGEINT/UHUGEINT
     // expression) beside a decimal literal is refused for that reason, not the residual
     // `ConversionRounds`.
-    let is_decimal_lit = |t: &Typed| {
-        matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal
-    };
+    let is_decimal_lit =
+        |t: &Typed| matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal;
     let is_wide_int = |t: &Typed| {
         t.kind != OperandKind::Literal
             && int_bits_signed(&t.ty).map(|(b, _)| b > 64).unwrap_or(false)
@@ -2908,7 +2919,8 @@ mod tests {
                 |r| r.get(0),
             )
             .unwrap_or_else(|e| panic!("{predicate:?}: json_serialize_plan failed: {e}"));
-        serde_json::from_str(&j).unwrap_or_else(|e| panic!("{predicate:?}: plan JSON parse failed: {e}"))
+        serde_json::from_str(&j)
+            .unwrap_or_else(|e| panic!("{predicate:?}: plan JSON parse failed: {e}"))
     }
 
     fn bt1b_find_filter_exprs(v: &Value, out: &mut Vec<Value>) {
@@ -2929,7 +2941,11 @@ mod tests {
     }
 
     fn bt1b_type_str(t: &Value) -> String {
-        let id = t.get("id").and_then(Value::as_str).unwrap_or("?").to_string();
+        let id = t
+            .get("id")
+            .and_then(Value::as_str)
+            .unwrap_or("?")
+            .to_string();
         if id == "DECIMAL" {
             let ti = &t["type_info"];
             format!("DECIMAL({},{})", ti["width"], ti["scale"])
@@ -2946,8 +2962,7 @@ mod tests {
                 if m.get("expression_class").and_then(Value::as_str) == Some("BOUND_FUNCTION")
                     && m.get("is_operator").and_then(Value::as_bool) == Some(true)
                     && m.get("name").and_then(Value::as_str) == Some(name)
-                    && m.get("children").and_then(Value::as_array).map(|c| c.len())
-                        == Some(arity)
+                    && m.get("children").and_then(Value::as_array).map(|c| c.len()) == Some(arity)
                 {
                     out.push(bt1b_type_str(&m["return_type"]));
                 }
@@ -2955,7 +2970,9 @@ mod tests {
                     bt1b_find_function_return_types(x, name, arity, out);
                 }
             }
-            Value::Array(a) => a.iter().for_each(|x| bt1b_find_function_return_types(x, name, arity, out)),
+            Value::Array(a) => a
+                .iter()
+                .for_each(|x| bt1b_find_function_return_types(x, name, arity, out)),
             _ => {}
         }
     }
@@ -3036,7 +3053,10 @@ mod tests {
             }
         }
 
-        println!("B-T1b: {checked} arithmetic nodes checked, {} failures", failures.len());
+        println!(
+            "B-T1b: {checked} arithmetic nodes checked, {} failures",
+            failures.len()
+        );
         for f in failures.iter().take(40) {
             println!("  {f}");
         }
@@ -3045,6 +3065,9 @@ mod tests {
             "{} B-T1b counterexample(s); see the report above",
             failures.len()
         );
-        assert!(checked > 0, "B-T1b must actually check at least one arithmetic node");
+        assert!(
+            checked > 0,
+            "B-T1b must actually check at least one arithmetic node"
+        );
     }
 }

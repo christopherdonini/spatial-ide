@@ -336,11 +336,7 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
             tna_named("BETWEEN", ConversionRounds, &["BIGINT", "DOUBLE"]),
         ),
         ("C37", "i64 BETWEEN u64 AND 0.5", Admitted),
-        (
-            "C37",
-            "i64 BETWEEN u64 AND 0.000000000000000001",
-            Admitted,
-        ),
+        ("C37", "i64 BETWEEN u64 AND 0.000000000000000001", Admitted),
         ("C38", "i16 BETWEEN i32 AND f64", Admitted),
     ]
 }
@@ -400,7 +396,9 @@ fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types
                 if row == "C25" {
                     match &e {
                         PredicateAdmitError::Filter(FilterError::RejectedByBinder { .. }) => {}
-                        other => panic!("{row} ({predicate:?}): expected RejectedByBinder, got {other:?}"),
+                        other => panic!(
+                            "{row} ({predicate:?}): expected RejectedByBinder, got {other:?}"
+                        ),
                     }
                     assert!(
                         e.to_string()
@@ -1010,7 +1008,9 @@ fn c23_shaped_cases() -> Vec<Case> {
         });
         cases.push(Case {
             label: format!("C23-shaped between {c}"),
-            predicate: format!("{c} BETWEEN {C23_OUT_OF_BOUNDS_DECIMAL} AND {C23_SCALE_18_DECIMAL}"),
+            predicate: format!(
+                "{c} BETWEEN {C23_OUT_OF_BOUNDS_DECIMAL} AND {C23_SCALE_18_DECIMAL}"
+            ),
             arith_op: None,
         });
     }
@@ -1072,13 +1072,25 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     let part1 = generate_cases();
     assert_eq!(part1.len(), 7_620, "B-T1 enumeration part 1: the probe set");
     let part2 = nary_cases();
-    assert_eq!(part2.len(), 18, "B-T1 enumeration part 2: discriminators.txt's N-ARY lists");
+    assert_eq!(
+        part2.len(),
+        18,
+        "B-T1 enumeration part 2: discriminators.txt's N-ARY lists"
+    );
     let part3 = boundary_literal_cases();
-    assert_eq!(part3.len(), 323, "B-T1 enumeration part 3: boundary literals");
+    assert_eq!(
+        part3.len(),
+        323,
+        "B-T1 enumeration part 3: boundary literals"
+    );
     let part4 = c23_shaped_cases();
     assert_eq!(part4.len(), 16, "B-T1 enumeration part 4: C23-shaped rows");
     let part5 = between_triple_cases();
-    assert_eq!(part5.len(), 1_728, "B-T1 enumeration part 5: BETWEEN triples");
+    assert_eq!(
+        part5.len(),
+        1_728,
+        "B-T1 enumeration part 5: BETWEEN triples"
+    );
 
     let cases: Vec<Case> = part1
         .into_iter()
