@@ -1372,3 +1372,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Routed.** The #148 architect's N1 goes to node 15, `kernel-close-races-followups`. The SKP-V0 bullet is append-only history, so the next change-log entry names the second prefix site.
   - **Cleanup.** Both worktrees and their D: targets (35 GB) were removed after inspection. C: has about 57 GB free.
   - **Node 4** is `kernel-close-dataset-unknown-keeps-openrecord`: wave-2 W2-C observation 3, S2. The architect drafts its form read-only, including the gating level.
+- 2026-09-30T20:50Z - **Node 4's form is committed before any code (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md`, the node's gate), under full gating. Nothing needs the human.**
+  - **The architect's draft** is filed as `state/consults/2026-09-30-close-dataset-unknown-architect-draft.md`, with the fenced DRAFT elided.
+  - **The defect.** The observation holds at 24224d5: `close_dataset` returns `unknown_dataset` before it removes the OpenRecord, so the watch (2 handles and 2 threads on Windows) and its admitted sink outlive the close. No product path reaches it: the only two catalog removers both run before or after the record's lifetime.
+  - **The fix.** The removal and its drop move above the catalog check. The refusal and the wire are unchanged.
+  - **The tests.** T1 is the P0 and fails at the base; T2 proves the success path. Each has one mutation, with no timing, thread or hook.
+  - **Gating and budget.** Full gating (§21a): a stated guarantee (the watcher form's watch-lifetime line and released-at-close row) and the close-races order. R3 does not engage. The budget is 150 lines in 1 file.
+  - **Custodian's edits.** The 17 span hashes at 24224d5, each rechecked. The fixture-name rule is added (§4 and §8 item 14): this module's `fixture` also rewrites on every call, the lesson of PR #148's correction round.
+  - **Routed.** The architect's N1 is an unreachable close-during-open-admission interleaving. It is recorded as the proposed node `kernel-close-during-open-admission`, for the next placement round.

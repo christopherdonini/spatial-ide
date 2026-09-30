@@ -3219,6 +3219,23 @@ nodes:
     summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 2; recorded as filed, the 2026-09-28 S1 batch): a describe failure after a successful open falls to the catch without closing the dataset, leaving its catalog entry, OpenRecord and watch; no reachable describe refusal after a successful open was found, so the path is unreachable today."
     dates: {opened: 2026-09-28, done: null}
 
+  - id: kernel-close-during-open-admission
+    title: "A close naming a handle between open_dataset's catalog insert and its admission forgets the name, then open mints a generation and returns Ok for a dataset the catalog no longer has (node 4's drafting consult, N1; unreachable in the product)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Found by the architect while drafting kernel-close-dataset-unknown-keeps-openrecord's form (state/consults/2026-09-30-close-dataset-unknown-architect-draft.md, N1), unproven: in SkpHost::open_dataset, the catalog entry is inserted before admission mints the generation and inserts the OpenRecord; a close_dataset naming the new handle in that window forgets the name, admission then mints a generation after the forget, and open returns Ok for a dataset the catalog no longer holds. Unreachable in the product: the handle is a 128-bit CSPRNG value returned only by that open, and Catalog::names has no product caller; a test could reach it with a re-entrant resolves_unchanged. In the close-races territory (round 22, item 1). Not graded; proposed so that the next placement round can place or discard it."
+    dates: {opened: 2026-09-30, done: null}
   - id: kernel-close-dataset-unknown-keeps-openrecord
     title: "close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2)"
     kind: task
@@ -3228,13 +3245,13 @@ nodes:
     order: 7
     depends_on: [publish-refusal-codes-and-attempt-lifecycle]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md
     evidence: null
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes."
+    summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes. The full-form preregistration is committed as kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-close-dataset-unknown-architect-draft.md), under full gating (a stated guarantee: the watcher form's watch-lifetime line and its released-at-close row; the close-races order): the OpenRecord removal and its drop move above the catalog check, so a close releases the watch on every outcome, with the refusal unchanged and no wire change. The observation holds at 24224d5 and no product path reaches it."
     dates: {opened: 2026-09-28, done: null}
 
   - id: covering-names-missing-column
