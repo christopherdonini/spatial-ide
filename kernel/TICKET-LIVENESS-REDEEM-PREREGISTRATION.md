@@ -113,3 +113,18 @@ All are assertions: the typed prefixes and the registry state in §4, read in-cr
 - **Portability:** not OS-dependent (R3 not engaged); L1 on all three.
 
 ## §10. Amendments (opens empty, append-only)
+
+### Amendment 1 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #147 merged at 2026-09-30T17:34:31Z as merge commit bff107e (parents a446efd and 616f20d), not a squash. add5ef8 (B) and 616f20d (C) are reachable from main.
+- **The gates:** gate 1 at 616f20d, PASS/PASS: `state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md`, `state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-reviewer.md` and `state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect-confirmation.md`. Reading R is confirmed, and I6 did not fire.
+- **The observations of record:**
+  - P1 at add5ef8 and M1 to M3 at 616f20d: the gate-1 reviewer's report (its checks 2 and 3);
+  - the worker's own run: `state/consults/2026-09-30-ticket-liveness-redeem-worker-report-1.md`.
+- **Readings the gate made:**
+  - §8 item 1 is read as §2a's only product caller, with §2b's composed call inside it (the gate-1 architect, N1).
+  - P3 and §8 item 5 bind the product diff (the gate-1 architect, item 3).
+  - §2c's line cites were replaced where they now sit, in `liveness_refusal` (the gate-1 architect, N2).
+- **Not proven by a test:** the composition in `create_from_ticket` is proven by inspection at 616f20d. No test is claimed against the unregistered mutation that bypasses it (the gate-1 architect's confirmation, item 1). The optional `#[deny(dead_code)]` hardening was not taken.
+- **Size:** 253 against §7's 300, over 2 files. No overrun.

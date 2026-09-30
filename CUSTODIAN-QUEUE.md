@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `157a2c9d113ba35724a21a29da4e287d062d7735fa4c0d73e48f88b55737069d`) at `2026-09-30T17:21:58.800Z`.
+Generated from `PLAN.yaml` (sha256 `baf30a574f5c6e6304bf0bb0670b1eb9e8d7ebafce26afd2ee25e2b868619abd`) at `2026-09-30T17:35:34.771Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) (lane `publish-viewer`)
 
 ## 2. Ready
 
-- (none)
+- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) (lane `publish-viewer`, order 4, budget 90 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -31,7 +31,6 @@ Generated from `PLAN.yaml` (sha256 `157a2c9d113ba35724a21a29da4e287d062d7735fa4c
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
-- **publish-refusal-codes-and-attempt-lifecycle** — Publish path: refusal codes kept end to end, the kernel half (wave-1 A4-1 to A4-4); the attempt lifecycle is split out to publish-attempt-lifecycle-src-tauri (round 31, item 2) — blocked by: kernel-ticket-liveness-redeem-wording
 - **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) — blocked by: catalog-open-replace-drop-latency-note
 - **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — blocked by: skp-cancel-state-closed-set
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -41,7 +40,7 @@ Generated from `PLAN.yaml` (sha256 `157a2c9d113ba35724a21a29da4e287d062d7735fa4c
 
 ## 5. In progress
 
-- **kernel-ticket-liveness-redeem-wording** — ticket_liveness and redeem under two locks turn an engine.source_changed refusal into a cancelled-before-redeemed wording (wave-1 A2 observation 2, S2) — evidence: branch `cut/ticket-liveness-redeem`
+- (none)
 
 ## 6. Proposed / unscheduled
 
