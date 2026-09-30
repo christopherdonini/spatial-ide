@@ -187,3 +187,9 @@ Written after gate 2's results were seen (class 3, record fixes; no claim change
 1. Amendment 1's quoted sentence is a sub-line span of `state/consults/gates/2026-09-30-close-dataset-unknown-gate1-architect.md:11` @ dd912f7 sha256:44c52d70f133c6fb8767cbbac2de2ee4a402ddcb485164caaf0f01fac6b298bf, the hash taken over the whole line. It was matched against that line by `grep` before Amendment 1's commit (one hit), and again by a fixed-string `grep` for this amendment (one hit).
 2. Amendment 2 item 2's "the reading nodes 1 to 3 used" has its precedent at `state/consults/2026-09-27-kernel-close-races-suites-76f92ba.md` §7.
 3. Amendment 1 item 2's "one comment line" landed as one line reworded into two, +2/−1 at 094a21d, counted in §7 (127 of 150).
+
+### Superseded index (as of Amendment 3) — read this amendment first
+- §1 May claim, §2 item 2, §5 Falsification's first clause: superseded by Amendment 1 items 1–3.
+- §4's M2 registration: supplemented by Amendment 2 item 3.
+- Amendment 1 item 2's "one comment line": superseded by Amendment 3 item 3.
+- §9's `cargo fmt --check`: read per Amendment 2 item 2.
