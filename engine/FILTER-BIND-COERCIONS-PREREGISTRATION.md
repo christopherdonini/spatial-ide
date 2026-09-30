@@ -432,3 +432,16 @@ Full gating (AUTONOMY §21a): the piece touches an ADR, the wire and a stated gu
 - The architect's gate-attempt-3 B1 (`state/consults/gates/2026-09-30-b-1-code-gate2-architect.md`) was applied as a comment-only reduction in commit fb2e75c on `cut/filter-bind-coercions`. The same commit carries that report's N4, also a comment.
 - **Final, by §7's own counting command,** at fb2e75c: 3,215 insertions plus 244 deletions, 3,459 in all, over 25 files. The declared budget is 1,800 over 32.
 - The reason is Amendment 5's, unchanged. §7 is not edited.
+
+### Amendment 7 — 2026-09-30, closing record (references only)
+
+*The record cap. PR #145 merged 2026-09-30T06:28:48Z as merge commit 8959f51 (parents 9b4b632 and 9ee215c).*
+
+- **Gate reports**, under `state/consults/gates/`:
+  - #144: `2026-09-30-b-1-adr-note-gate1-architect.md` and `...-reviewer.md`;
+  - attempt 2 at ff3a841: `2026-09-30-b-1-code-gate1-architect.md` and `...-reviewer.md`;
+  - attempt 3 at 53c6e3e: `2026-09-30-b-1-code-gate2-architect.md` and `...-reviewer.md`;
+  - the reduction at 9ee215c: `2026-09-30-b-1-code-reduction1-architect.md` and `...-reviewer.md`.
+  The reviewer's mutation tables at ff3a841 and 53c6e3e are the observations of record.
+- **§2.8's shell-side literal:** `SKP_VERSION` in `frontends/shell/src/skp/types.ts` (the attempt-2 architect report, item 7).
+- **Follow-up:** node `type-walk-null-literal-arithmetic` (proposed).
