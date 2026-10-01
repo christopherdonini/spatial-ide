@@ -451,9 +451,14 @@ mod tests {
         assert_eq!(plain_date("2026-08-17T08:44\u{e9}"), "2026-08-17 08:44");
     }
 
-    /// Mutation M2 observed at 256154c: with the new condition's index 16 changed to 15, this test
+    /// Mutation M2 observed at efe19e6: with the new condition's index 16 changed to 15, this test
     /// panics at its first record (the standard library's char-boundary panic, byte index 16 inside
     /// a 2-byte character); the change was reverted.
+    ///
+    /// Mutation M1 observed on this text at efe19e6: with the condition restored to its base
+    /// text (`at.len() >= 16`), this test panics (end byte index 16 is not a char boundary, inside
+    /// the character at bytes 15..17), and so does M2 on this text (index 16 changed to 15); each
+    /// change was reverted.
     #[test]
     fn each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value() {
         let at = r"2026-08-17T08:4\u00e9";
