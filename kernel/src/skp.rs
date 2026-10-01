@@ -1441,15 +1441,18 @@ impl SkpHost {
     ) -> Result<CloseDatasetResponse, SkpError> {
         check_version(&req.skp)?;
         let name = req.dataset.as_str();
-        if self.catalog.get(name).is_none() {
-            return Err(SkpError::unknown_dataset(name));
-        }
         // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: the `OpenRecord` (and so the watch) is removed
         // under the map guard and dropped only after release — disarming and joining the watch
         // thread(s) before anything below runs, so the watcher can never reach `invalidate` after
-        // `forget_dataset`.
+        // `forget_dataset`. This is the first step, ahead of the `unknown_dataset` check, so a
+        // close releases its dataset's watch on every outcome after the SKP version check, the
+        // `unknown_dataset` refusal included
+        // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
         let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
         drop(removed_watch);
+        if self.catalog.get(name).is_none() {
+            return Err(SkpError::unknown_dataset(name));
+        }
         // The order is `begin_close`, `cancel_all_for_dataset`, `forget_dataset`, `catalog.remove`
         // (`kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md` §2c), and this call linearizes at
         // `begin_close` (§2d): a racing `viewport_query` answers what it would answer wholly before
@@ -2679,6 +2682,7 @@ mod tests {
 #[cfg(test)]
 mod ticket_drop_under_lock_regression {
     use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::mpsc;
     use std::time::Duration;
 
@@ -3813,5 +3817,120 @@ mod ticket_drop_under_lock_regression {
         let detail = the_redeem_step_refusal(&host, &ticket);
         assert!(!detail.starts_with("engine."), "{detail}");
         assert_eq!(detail, redeems_own_wording(&host, &ticket));
+    }
+
+    // `kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §4: a close releases its
+    // dataset's watch on every outcome. No sleep, spawned thread or timeout.
+
+    /// An [`ArmedWatch`] whose `Drop` sets a flag the test holds; `resolves_unchanged` is `true`.
+    struct FlagWatch(Arc<AtomicBool>);
+    impl ArmedWatch for FlagWatch {
+        fn resolves_unchanged(&self) -> bool {
+            true
+        }
+    }
+    impl Drop for FlagWatch {
+        fn drop(&mut self) {
+            self.0.store(true, Ordering::SeqCst);
+        }
+    }
+
+    /// Arms `Watching` over a [`FlagWatch`] sharing the test's flag.
+    struct FlagArm(Arc<AtomicBool>);
+    impl SourceWatchArm for FlagArm {
+        fn arm(&self, _path: &Path, _sink: WatchSink) -> ArmOutcome {
+            ArmOutcome::Watching(Box::new(FlagWatch(self.0.clone())))
+        }
+    }
+
+    fn watching_host(flag: &Arc<AtomicBool>) -> SkpHost {
+        let arm = Arc::new(FlagArm(flag.clone()));
+        SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            arm,
+            discard_session_end_events(),
+        )
+    }
+
+    fn close_req(dataset: DatasetHandle) -> CloseDatasetRequest {
+        CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+        }
+    }
+
+    fn holds_a_record(host: &SkpHost, name: &str) -> bool {
+        host.watches
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .contains_key(name)
+    }
+
+    /// T1 (S1). A close of a dataset whose catalog entry is already gone refuses as before and
+    /// still drops the `OpenRecord` (and so the watch) it held.
+    ///
+    /// TEST-FIRST (P0): at `4f045da`, before the change, this test FAILED on `the close removed the
+    /// record`.
+    ///
+    /// REGISTERED MUTATION: restore the base order (the `watches` removal below the
+    /// `unknown_dataset` check). Applied at `f4fb9ed`, run and reverted: this test FAILED on `the
+    /// close removed the record`; T2 passed.
+    #[test]
+    fn a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch() {
+        let path = fixture("close-unknown-keeps-record");
+        let dropped = Arc::new(AtomicBool::new(false));
+        let host = watching_host(&dropped);
+        let open = open_through(&host, &path, "close-unknown");
+        let name = open.dataset.as_str().to_string();
+        assert!(holds_a_record(&host, &name), "precondition: a record");
+        assert!(!dropped.load(Ordering::SeqCst), "precondition: armed");
+        assert!(
+            host.catalog().remove(&name).is_some(),
+            "the entry was present"
+        );
+
+        let refused = host
+            .close_dataset(close_req(open.dataset.clone()))
+            .expect_err("refused");
+        assert_eq!(refused.code, "skp.unknown_dataset", "{}", refused.message);
+        assert_eq!(refused.fields.get("handle"), Some(&name));
+        assert!(
+            !holds_a_record(&host, &name),
+            "the close removed the record"
+        );
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "the close dropped the watch"
+        );
+
+        let again = host
+            .close_dataset(close_req(open.dataset))
+            .expect_err("refused again");
+        assert_eq!(again.code, "skp.unknown_dataset", "{}", again.message);
+    }
+
+    /// T2 (S2). An ordinary close returns only after its watch is dropped and its record removed.
+    ///
+    /// REGISTERED MUTATION: delete the `watches` removal in `close_dataset`. Applied at `f4fb9ed`,
+    /// run and reverted: this test FAILED on `the close removed the record`.
+    #[test]
+    fn a_close_drops_its_watch_before_it_returns() {
+        let path = fixture("close-drops-its-watch");
+        let dropped = Arc::new(AtomicBool::new(false));
+        let host = watching_host(&dropped);
+        let open = open_through(&host, &path, "close-drops");
+        let name = open.dataset.as_str().to_string();
+
+        let closed = host.close_dataset(close_req(open.dataset)).expect("close");
+        assert_eq!(closed.cancelled_streams, 0);
+        assert!(
+            !holds_a_record(&host, &name),
+            "the close removed the record"
+        );
+        assert!(
+            dropped.load(Ordering::SeqCst),
+            "the close dropped the watch"
+        );
     }
 }
