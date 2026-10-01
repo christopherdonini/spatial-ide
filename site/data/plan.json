@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-01T10:58:31.302Z",
-  "plan_hash": "7b4b57ae3ce5c379a68eb7e81f44dca49187d45fd6a98e7755b6c1d0a7a46f8d",
+  "generated_at": "2026-10-01T11:02:57.635Z",
+  "plan_hash": "9ae9334f11c1b3b1961e7c210efa741c9df9da927ff27c7b9246b8b5b5bfa4e0",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4915,7 +4915,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 5,
       "depends_on": [
         "catalog-open-replace-drop-latency-note"
@@ -4925,7 +4925,9 @@
         "minutes": 0
       },
       "gate": "kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/audit-reader-char-boundary"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,

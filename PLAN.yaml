@@ -3025,12 +3025,12 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: ready
+    status: in-progress
     order: 5
     depends_on: [catalog-open-replace-drop-latency-note]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/audit-reader-char-boundary}
     budget_minutes: 30
     generation: 1
     felt_verdict: false

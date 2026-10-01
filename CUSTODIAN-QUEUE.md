@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7b4b57ae3ce5c379a68eb7e81f44dca49187d45fd6a98e7755b6c1d0a7a46f8d`) at `2026-10-01T10:58:31.182Z`.
+Generated from `PLAN.yaml` (sha256 `9ae9334f11c1b3b1961e7c210efa741c9df9da927ff27c7b9246b8b5b5bfa4e0`) at `2026-10-01T11:02:57.529Z`.
 
 ## 1. Next
 
-- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (lane `publish-viewer`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (lane `publish-viewer`, order 5, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -37,7 +37,7 @@ Generated from `PLAN.yaml` (sha256 `7b4b57ae3ce5c379a68eb7e81f44dca49187d45fd6a9
 
 ## 5. In progress
 
-- (none)
+- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) — evidence: branch `cut/audit-reader-char-boundary`
 
 ## 6. Proposed / unscheduled
 
