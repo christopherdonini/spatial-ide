@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-01T10:44:04.956Z",
-  "plan_hash": "4c23f991e09b9b3c6ef9d3eef94aea72d4d6a28929ea1865a28d1ff38050b5fd",
+  "generated_at": "2026-10-01T10:58:31.302Z",
+  "plan_hash": "7b4b57ae3ce5c379a68eb7e81f44dca49187d45fd6a98e7755b6c1d0a7a46f8d",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4885,6 +4885,31 @@
       }
     },
     {
+      "id": "audit-show-invalid-utf8-whole-refusal",
+      "title": "publish-bundle --audit-show refuses the whole audit log over one invalid UTF-8 byte, instead of reporting that line as CORRUPT (node 6 drafting consult)",
+      "kind": "task",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Found by the architect while drafting audit-reader-char-boundary (state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md, the second report): audit_show_lines reads the log with read_to_string, which errors on any invalid UTF-8, and the CLI then refuses the whole log naming its path, so one bad byte hides every record rather than showing one CORRUPT line. Not a panic; trusted, local input; not reproduced. The architect suggests S2, or S3 under the unreproduced tie-breaker; graded at placement. Any fix that adds a CORRUPT form for such a line is new operator wording, which is the human ruling.",
+      "dates": {
+        "opened": "2026-10-01",
+        "done": null
+      }
+    },
+    {
       "id": "audit-reader-char-boundary",
       "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
       "kind": "task",
@@ -4899,13 +4924,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes.",
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes. The full-form preregistration is committed as kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md), under full gating: plain_date guards byte 16 with is_char_boundary, so a value cut there goes to the existing as-stored fallback (no new string, code or exit code); the five misquoted doc passages in the same file are corrected to attributed paraphrase (one credited the custodian wording to the human as verbatim). The whole-log UTF-8 refusal the draft found is the proposed node audit-show-invalid-utf8-whole-refusal.",
       "dates": {
         "opened": "2026-09-26",
         "done": null

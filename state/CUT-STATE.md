@@ -1443,3 +1443,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Cleanup.** The worktree and its D: target were removed after inspection.
   - **Still open.** The note-or-fix choice stays round 33's item G.
   - **Node 6** is `audit-reader-char-boundary` (wave-1 A3 observation 1, S2): the audit reader's `plain_date` panics on a hand-edited audit log. The architect drafts its form read-only.
+- 2026-10-01T10:58Z - **Node 6's form is committed before any code (`kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md`, the node's gate), under full gating. Nothing needs the human.**
+  - **The architect's two drafts** are filed as `state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md`, with both fenced drafts elided.
+  - **The defect.** `plain_date` slices `&at[11..16]` after checking only the length and byte 10, so a hand-edited log with a multi-byte character across byte 16 panics `--audit-show`. A3 did not reproduce it; P0 will.
+  - **The fix.** `is_char_boundary(16)` in the guard, the same pattern as `normalize.rs`. A value cut there goes to the existing as-stored fallback, with no new string, code or exit code.
+  - **The misquotes, folded in at the custodian's request.** Five quoted doc passages in `reader.rs` do not match their sources. One credits ADR-017 condition 2's custodian wording to the human as verbatim; one names `mod.rs` where the words are in `record.rs`. They are corrected to attributed paraphrase (§2 item 6), because they sit in the file the form scopes. Each true source was checked by the custodian.
+  - **The rest of the form.** T1 to T3, with M1 and M2. The budget is 175 lines over 2 files. 29 span hashes at ee54158, each rechecked.
+  - **Routed.** The whole-log UTF-8 refusal the draft found is the proposed node `audit-show-invalid-utf8-whole-refusal`, for the next placement round.
