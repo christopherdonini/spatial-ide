@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `42607637a6e5defb8a5133f4a7ca7ed272bc1a43026992429f22037f39299ad0`) at `2026-10-01T05:13:29.631Z`.
+Generated from `PLAN.yaml` (sha256 `5a406909d152b04580ade68f888245119dec166039ced1358b331af9d888e0c7`) at `2026-10-01T05:15:58.461Z`.
 
 ## 1. Next
 
-- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (lane `kernel-protocol`, order 8, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -38,7 +38,7 @@ Generated from `PLAN.yaml` (sha256 `42607637a6e5defb8a5133f4a7ca7ed272bc1a430269
 
 ## 5. In progress
 
-- (none)
+- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) — evidence: branch `cut/catalog-replace-note`
 
 ## 6. Proposed / unscheduled
 

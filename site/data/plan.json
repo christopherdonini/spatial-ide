@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-01T05:13:29.737Z",
-  "plan_hash": "42607637a6e5defb8a5133f4a7ca7ed272bc1a43026992429f22037f39299ad0",
+  "generated_at": "2026-10-01T05:15:58.574Z",
+  "plan_hash": "5a406909d152b04580ade68f888245119dec166039ced1358b331af9d888e0c7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4275,7 +4275,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 8,
       "depends_on": [
         "kernel-close-dataset-unknown-keeps-openrecord"
@@ -4285,7 +4285,9 @@
         "minutes": 0
       },
       "gate": "kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/catalog-replace-note"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,

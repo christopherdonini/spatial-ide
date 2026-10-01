@@ -2603,12 +2603,12 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 8
     depends_on: [kernel-close-dataset-unknown-keeps-openrecord]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/catalog-replace-note}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
