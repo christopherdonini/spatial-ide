@@ -3,10 +3,10 @@
 
 //! A human-legible reader over the audit log's own `spatial-audit/1` JSONL.
 //!
-//! **ADR-017's Exposure review, 2026-08-17, condition 2** — the human's own words, verbatim: *"the
-//! audit record must be human-legible without a decoder in the loop ... the raw JSONL was honest
-//! but unreadable by its own audience"* (G6). This module is that reader; `publish-bundle
-//! --audit-show` (`kernel/src/bin/publish-bundle.rs`) is its one caller.
+//! **ADR-017's Exposure review, 2026-08-17, condition 2**, in paraphrase of the custodian's record
+//! of the human's ruling there: the audit record must be human-legible without a decoder in the
+//! loop; the raw JSONL was honest but unreadable by its own audience (G6). This module is that
+//! reader; `publish-bundle --audit-show` (`kernel/src/bin/publish-bundle.rs`) is its one caller.
 //!
 //! **Read-only.** Nothing here ever opens the log for write, rotates it, or otherwise touches it —
 //! [`render_audit_log`] takes the file's own text and returns sentences, nothing more. It also
@@ -18,18 +18,18 @@
 //!
 //! ## Corruption is visible, not silent
 //!
-//! The same doctrine `super::log`'s own module docs state for the write side — *"an interleaved
-//! line fails to parse and is visible as corrupt, rather than silently changing a valid record's
-//! meaning"* — governs the read side too. A line that does not parse as JSON, that does not carry
-//! the `spatial-audit/1` schema tag, or that is missing a field this reader needs to say anything
-//! about it, is reported as its own `CORRUPT` line in the output — **never dropped, never merged
-//! into a neighbour, never silently skipped.**
+//! The same doctrine `super::log`'s own module docs state for the write side (in paraphrase: an
+//! interleaved line fails to parse and is visible as corrupt, rather than silently changing a valid
+//! record's meaning) governs the read side too. A line that does not parse as JSON, that does not
+//! carry the `spatial-audit/1` schema tag, or that is missing a field this reader needs to say
+//! anything about it, is reported as its own `CORRUPT` line in the output — **never dropped, never
+//! merged into a neighbour, never silently skipped.**
 //!
 //! ## Two schema generations on one machine, and this reader tolerates both
 //!
-//! `super::mod`'s own module docs: *"the log is append-only, so generation N and generation N+1
-//! coexist in one file forever and a reader will meet both."* This is not hypothetical for
-//! `approval_route`: the field was named `approval` before it was renamed
+//! `super::record`'s doc on `AUDIT_SCHEMA`, in paraphrase: the log is append-only, so generation N
+//! and generation N+1 coexist in one file forever, and a reader will meet both. This is not
+//! hypothetical for `approval_route`: the field was named `approval` before it was renamed
 //! (`kernel/src/permission/audit/record.rs`'s own git history), and a real, still-live log on this
 //! project's own development machine carries lines from both spellings. Reading `approval` as a
 //! fallback when `approval_route` is absent is exactly the tolerance the schema's own append-only
@@ -214,11 +214,12 @@ fn plain_route(route: &str) -> String {
     }
 }
 
-/// `error_kind`'s stable variant name (`boundary.rs::error_kind`'s own doc comment: "a variant
-/// name, never a rendered message") turned into a plain-language fragment for a reader with no
-/// Rust source open beside them. Every arm here is a real variant this tree's own `error_kind`
-/// function can write (`kernel/src/permission/boundary.rs`); an unrecognized string — a future
-/// variant this reader has not been told about yet — is shown as itself rather than guessed at.
+/// `error_kind`'s stable variant name (`boundary.rs::error_kind`'s own doc comment, in paraphrase:
+/// a variant name, never a rendered message) turned into a plain-language fragment for a reader
+/// with no Rust source open beside them. Every arm here is a real variant this tree's own
+/// `error_kind` function can write (`kernel/src/permission/boundary.rs`); an unrecognized string —
+/// a future variant this reader has not been told about yet — is shown as itself rather than
+/// guessed at.
 fn plain_reason(kind: &str) -> String {
     match kind {
         "NoGrant" => "no grant authorized this publish".to_string(),
@@ -345,7 +346,7 @@ mod tests {
             // Attempt C: intent only -- interrupted, never reached an outcome.
             r#"{"schema":"spatial-audit/1","attempt":"ccc3","phase":"intent","at":"2026-08-17T09:15:00Z","operation":"publish-static-bundle","class":3,"reversibility":"irreversible","principal_kind":"os-user","principal_name":"someone","source_name":"parcels","source_content_hash":"sha256:aa","destination":"C:/dev/out/interrupted","style_hash":"sha256:bb","residual_classes":[]}"#,
             // An unparseable line -- truncated mid-object, as an interrupted write would leave one
-            // (`log.rs`'s own module docs: "an interleaved line fails to parse").
+            // (`log.rs`'s own module docs, in paraphrase: an interleaved line fails to parse).
             r#"{"schema":"spatial-audit/1","attempt":"ddd4","phase":"intent","at":"2026-08-17T09:2"#,
         ]
         .join("\n")
