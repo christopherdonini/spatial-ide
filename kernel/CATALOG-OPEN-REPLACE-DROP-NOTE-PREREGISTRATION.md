@@ -177,3 +177,15 @@ Written after correction round 1's head was seen (class 8). Budget overrun, §7 
 
 ### Superseded index (as of Amendment 2, the close of correction round 1) — read this amendment first
 - Amendment 1's figure (130 @ 53e1cf4) is superseded by Amendment 2's (133 @ 4941e47).
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #151 merged at 2026-10-01T10:43:14Z as merge commit 6e84e0a (parents 6a7f0d0 and 4941e47), not a squash. fcb1de9, c3e8e54, 3f16cb7, 53e1cf4 and 4941e47 (correction round 1) are reachable from main. The merge notice is `state/directives/2026-10-01-pr151-merged.md`.
+- **The gates:**
+  - gate 1 at 53e1cf4, architect FAIL and reviewer PASS: `state/consults/gates/2026-10-01-catalog-replace-note-gate1-architect.md` and `state/consults/gates/2026-10-01-catalog-replace-note-gate1-reviewer.md`;
+  - gate 2 at 4941e47, PASS/PASS: `state/consults/gates/2026-10-01-catalog-replace-note-gate2-architect.md` and `state/consults/gates/2026-10-01-catalog-replace-note-gate2-reviewer.md`.
+- **The observations of record:** T1 and T2 at the base, H1 and I5 at 53e1cf4, and M1 and M2 at 53e1cf4: the gate-1 reviewer's checks 3 and 2 and its mutation table. Its rustfmt counts over stdin replace the worker's file-copy zero (its N1). T1 and T2 are named at 6e84e0a on main: `replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_before_open_returns` and `replacing_a_name_through_open_cancellable_serves_the_new_dataset_and_drops_the_old_one_before_it_returns` in `kernel/tests/catalog_replace.rs`. The worker's own runs: `state/consults/2026-10-01-catalog-replace-note-worker-report-1.md` and `state/consults/2026-10-01-catalog-replace-note-worker-report-2.md`.
+- **Readings the gate made:** the note's "no product path replaces a name on purpose" rests on the gate-1 reviewer's H1 grep (the gate-2 architect's N1). §2 item 2's sentence lands without its final period, to join the kept continuation (the gate-1 architect's N2).
+- **Size:** 133 against §7's 120, over 2 files (Amendment 2, class 8). Record rounds: one.
+- **Not decided here:** the note-or-fix choice is question round 33's item G. If the fix is chosen, it is its own node (I3).

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-01T05:15:58.574Z",
-  "plan_hash": "5a406909d152b04580ade68f888245119dec166039ced1358b331af9d888e0c7",
+  "generated_at": "2026-10-01T10:44:04.956Z",
+  "plan_hash": "4c23f991e09b9b3c6ef9d3eef94aea72d4d6a28929ea1865a28d1ff38050b5fd",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4275,7 +4275,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 8,
       "depends_on": [
         "kernel-close-dataset-unknown-keeps-openrecord"
@@ -4286,16 +4286,16 @@
       },
       "gate": "kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/catalog-replace-note"
+        "pr": 151
       },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes. The full-form preregistration is committed as kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-catalog-open-replace-note-architect-draft.md), under full gating, NOTE ONLY: Catalog::open gains a replace note and Catalog::remove its corrected sentence (no stream holds an Arc<Dataset>), with two tests pinning the replace outcome. The ruling decides the note, not the fix: the note-or-fix choice is question round 33 item G (state/drafts/round-33-node5-fix-choice.md); if the fix is chosen it becomes its own node after this one (the form invalidator I3).",
+      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes. The full-form preregistration is committed as kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-catalog-open-replace-note-architect-draft.md), under full gating, NOTE ONLY: Catalog::open gains a replace note and Catalog::remove its corrected sentence (no stream holds an Arc<Dataset>), with two tests pinning the replace outcome. The ruling decides the note, not the fix: the note-or-fix choice is question round 33 item G (state/drafts/round-33-node5-fix-choice.md); if the fix is chosen it becomes its own node after this one (the form invalidator I3). DONE 2026-10-01, note only: PR #151 merged as merge commit 6e84e0a (the PR #151 merge notice, state/directives/2026-10-01-pr151-merged.md); gate 1 FAIL/PASS at 53e1cf4 (the note overclaimed past the Ok path and in the lease case), one correction round, gate 2 PASS/PASS at 4941e47; 133 against 120 (class 8); closing record the form Amendment 3. The note-or-fix choice stays round 33 item G.",
       "dates": {
         "opened": "2026-09-26",
-        "done": null
+        "done": "2026-10-01"
       }
     },
     {
@@ -4890,7 +4890,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 5,
       "depends_on": [
         "catalog-open-replace-drop-latency-note"

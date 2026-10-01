@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-01T05:15:58.461Z",
-  "plan_hash": "5a406909d152b04580ade68f888245119dec166039ced1358b331af9d888e0c7",
+  "generated_at": "2026-10-01T10:44:04.846Z",
+  "plan_hash": "4c23f991e09b9b3c6ef9d3eef94aea72d4d6a28929ea1865a28d1ff38050b5fd",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "audit-reader-char-boundary",
+    "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
+    "lane": "publish-viewer",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 5,
+    "budget_minutes": 30,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-26",
+      "done": null
+    },
+    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes."
+  },
+  "ready": [
+    {
+      "id": "audit-reader-char-boundary",
+      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 5,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -277,28 +315,6 @@
       ]
     },
     {
-      "id": "audit-reader-char-boundary",
-      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 5,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes.",
-      "blocked_by": [
-        "catalog-open-replace-drop-latency-note"
-      ]
-    },
-    {
       "id": "publish-attempt-lifecycle-src-tauri",
       "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
       "lane": "publish-viewer",
@@ -409,30 +425,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "catalog-open-replace-drop-latency-note",
-      "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 8,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/catalog-replace-note"
-      },
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes. The full-form preregistration is committed as kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-catalog-open-replace-note-architect-draft.md), under full gating, NOTE ONLY: Catalog::open gains a replace note and Catalog::remove its corrected sentence (no stream holds an Arc<Dataset>), with two tests pinning the replace outcome. The ruling decides the note, not the fix: the note-or-fix choice is question round 33 item G (state/drafts/round-33-node5-fix-choice.md); if the fix is chosen it becomes its own node after this one (the form invalidator I3).",
-      "evidence_label": "branch `cut/catalog-replace-note`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

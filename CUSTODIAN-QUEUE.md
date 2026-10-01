@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5a406909d152b04580ade68f888245119dec166039ced1358b331af9d888e0c7`) at `2026-10-01T05:15:58.461Z`.
+Generated from `PLAN.yaml` (sha256 `4c23f991e09b9b3c6ef9d3eef94aea72d4d6a28929ea1865a28d1ff38050b5fd`) at `2026-10-01T10:44:04.846Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (lane `publish-viewer`)
 
 ## 2. Ready
 
-- (none)
+- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) (lane `publish-viewer`, order 5, budget 30 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -29,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `5a406909d152b04580ade68f888245119dec166039ce
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
-- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) — blocked by: catalog-open-replace-drop-latency-note
 - **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — blocked by: skp-cancel-state-closed-set
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -38,7 +37,7 @@ Generated from `PLAN.yaml` (sha256 `5a406909d152b04580ade68f888245119dec166039ce
 
 ## 5. In progress
 
-- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) — evidence: branch `cut/catalog-replace-note`
+- (none)
 
 ## 6. Proposed / unscheduled
 
