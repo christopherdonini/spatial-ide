@@ -456,7 +456,7 @@ mod tests {
     /// a 2-byte character); the change was reverted.
     #[test]
     fn each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value() {
-        let at = r"2026-08-17T08:4é";
+        let at = r"2026-08-17T08:4\u00e9";
         let stored = "2026-08-17T08:4\u{e9}";
         let text = [
             format!(r#"{{"schema":"spatial-audit/1","attempt":"p1","phase":"intent","at":"{at}","destination":"out/pair"}}"#),
