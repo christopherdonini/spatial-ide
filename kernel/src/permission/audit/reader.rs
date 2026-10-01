@@ -440,7 +440,11 @@ mod tests {
     #[test]
     fn a_timestamp_cut_by_a_multibyte_character_at_byte_16_is_returned_verbatim_not_sliced() {
         // S1 first: a 2-byte character at bytes 15-16, so byte 16 is not a char boundary.
-        for cut in ["2026-08-17T08:4\u{e9}", "2026-08-17T08:\u{20ac}Z", "2026-08-17T08:4\u{1f600}"] {
+        for cut in [
+            "2026-08-17T08:4\u{e9}",
+            "2026-08-17T08:\u{20ac}Z",
+            "2026-08-17T08:4\u{1f600}",
+        ] {
             assert_eq!(plain_date(cut), cut);
         }
         // S4: byte 16 is a boundary, so the value is sliced as before.
