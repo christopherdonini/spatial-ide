@@ -158,6 +158,19 @@ impl Catalog {
     /// **Not cancellable.** Every product path that calls this today (`slice-host`, the test suite)
     /// opens its dataset before anything else can observe a cancel key. `open_cancellable` is the
     /// entry point SKP's `open_dataset` uses.
+    ///
+    /// **Replacing a name.** An `open` that returns `Ok` under a name already registered replaces
+    /// the entry, and the replaced `Arc<Dataset>` is dropped before the write guard is released.
+    /// When it is the last reference to that dataset and no lease is in flight, the pool's idle
+    /// DuckDB connections close there, in an external section this code does not bound (ADR-018
+    /// item 4, class (b)), and every other catalog caller waits on the guard. Otherwise a `get`
+    /// holder drops the dataset (and, when no lease is in flight, its pool) later, on its own
+    /// thread; a lease in flight releases the pool later, on its producer thread, while the
+    /// dataset itself is dropped under the guard when the catalog's `Arc` was its last reference.
+    /// Today `slice-host` opens once, and SKP opens under a fresh handle of random
+    /// bits, so a collision is not excluded but no product path replaces a name on purpose. If
+    /// replacement becomes reachable, the fix is the shape `SkpHost::close_dataset` uses for its
+    /// removed watch: bind the replaced value and drop it after the guard.
     pub fn open(
         &self,
         name: impl Into<String>,
@@ -177,6 +190,8 @@ impl Catalog {
     /// declaration of which column carries feature identity, admitted through the identical
     /// `Dataset::open_cancellable` path `assertion` already used — CRS admission still runs first,
     /// identity second, exactly as `Dataset::open_inner` orders them (I11).
+    ///
+    /// Replacing a name behaves as [`Self::open`]'s note describes.
     pub fn open_cancellable(
         &self,
         name: impl Into<String>,
@@ -195,9 +210,12 @@ impl Catalog {
         self.lock_read().get(name).cloned()
     }
 
-    /// Remove a dataset from the catalog. The `Arc<Dataset>` a live stream already holds keeps the
-    /// dataset alive until that stream ends regardless of removal order — nothing here waits for or
-    /// depends on streams being stopped first (`skp::SkpHost::close_dataset` cancels them
+    /// Remove a dataset from the catalog. A live stream holds no `Arc<Dataset>`: its producer
+    /// thread holds a lease on the dataset's connection pool, and the lease keeps that pool, and the
+    /// connection the stream reads, alive until it is released, whatever the removal order
+    /// (`engine/tests/connection_reuse.rs`'s
+    /// `a_lease_in_flight_keeps_the_pool_alive_after_the_dataset_is_dropped`) — nothing here waits
+    /// for or depends on streams being stopped first (`skp::SkpHost::close_dataset` cancels them
     /// separately, for a different reason: so they stop promptly, not so this is safe).
     pub fn remove(&self, name: &str) -> Option<Arc<Dataset>> {
         self.lock_write().remove(name)
