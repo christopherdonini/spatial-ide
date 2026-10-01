@@ -174,3 +174,6 @@ Budget overrun, §7 not edited. §7 declares at most 120 changed lines over at m
 ### Amendment 2 — budget overrun at correction round 1's head, §7 not edited (class 8)
 
 Written after correction round 1's head was seen (class 8). Budget overrun, §7 not edited. §7 declares at most 120 changed lines over at most 2 files. The final figure is 133 over 2 files at 4941e47, by §7's command with merge base d8544a0: `kernel/src/lib.rs` 21+3 and `kernel/tests/catalog_replace.rs` 109+0. The reason is correction round 1, the gate-1 architect's B1 and B2 (`state/consults/gates/2026-10-01-catalog-replace-note-gate1-architect.md`): the replace note's rewording adds three `///` lines. Amendment 1 (130 at 53e1cf4) was also written after its outcome was seen, though its first line does not say so (the gate-1 architect's N3).
+
+### Superseded index (as of Amendment 2, the close of correction round 1) — read this amendment first
+- Amendment 1's figure (130 @ 53e1cf4) is superseded by Amendment 2's (133 @ 4941e47).
