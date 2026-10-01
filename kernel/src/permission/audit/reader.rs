@@ -426,4 +426,39 @@ mod tests {
         let text = format!("{}\n\n\n", fixture());
         assert_eq!(render_audit_log(&text).len(), render_audit_log(&fixture()).len());
     }
+
+    #[test]
+    fn a_timestamp_cut_by_a_multibyte_character_at_byte_16_is_returned_verbatim_not_sliced() {
+        // S1 first: a 2-byte character at bytes 15-16, so byte 16 is not a char boundary.
+        for cut in ["2026-08-17T08:4\u{e9}", "2026-08-17T08:\u{20ac}Z", "2026-08-17T08:4\u{1f600}"] {
+            assert_eq!(plain_date(cut), cut);
+        }
+        // S4: byte 16 is a boundary, so the value is sliced as before.
+        assert_eq!(plain_date("2026-08-17T08:44\u{e9}"), "2026-08-17 08:44");
+    }
+
+    #[test]
+    fn each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value() {
+        let at = r"2026-08-17T08:4é";
+        let stored = "2026-08-17T08:4\u{e9}";
+        let text = [
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"p1","phase":"intent","at":"{at}","destination":"out/pair"}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"p1","phase":"outcome","at":"{at}","outcome":"success","approval_route":"flag","rows":1,"partitions":1}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"o2","phase":"outcome","at":"{at}","outcome":"failed"}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"i3","phase":"intent","at":"{at}","destination":"out/orphan"}}"#),
+        ]
+        .join("\n");
+        let lines = render_audit_log(&text);
+        assert_eq!(lines.len(), 3, "{lines:#?}");
+        let markers = [
+            "SUCCEEDED",
+            "outcome recorded with no matching intent",
+            "intent recorded, no outcome (interrupted?)",
+        ];
+        for (line, marker) in lines.iter().zip(markers) {
+            assert!(line.starts_with(stored), "{line}");
+            assert!(line.contains(marker), "{line}");
+            assert!(!line.contains("CORRUPT"), "{line}");
+        }
+    }
 }

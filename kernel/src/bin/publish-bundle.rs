@@ -740,4 +740,19 @@ mod audit_show_tests {
 
         std::env::remove_var(spatial_kernel::permission::AUDIT_LOG_ENV);
     }
+
+    #[test]
+    fn an_audit_log_whose_at_cuts_a_character_at_byte_16_is_shown_not_a_panic() {
+        let d = workspace("audit-show-cut-at-byte-16");
+        let log = d.join("publish.jsonl");
+        std::fs::write(
+            &log,
+            "{\"schema\":\"spatial-audit/1\",\"attempt\":\"a1\",\"phase\":\"intent\",\"at\":\"2026-08-17T08:4\u{e9}\",\"destination\":\"out/cut-cli\"}",
+        )
+        .unwrap();
+        let lines = audit_show_lines(Some(log)).expect("a cut value is shown, not an error");
+        assert_eq!(lines.len(), 2, "{lines:?}");
+        assert!(lines[1].starts_with("2026-08-17T08:4\u{e9}"), "{lines:?}");
+        assert!(lines[1].contains("interrupted?"), "{lines:?}");
+    }
 }
