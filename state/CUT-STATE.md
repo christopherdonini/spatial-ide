@@ -1436,3 +1436,4 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The architect passes.** B1 and B2 are discharged, and the whole note is within §1 and §8 items 3 and 4. Amendment 2 is right. N6: Amendment 1's figure (130) is stale without an index, so the line N6 gives is appended to §10 as the round's superseded index.
   - **The reviewer passes.** The change is doc lines only and true of the code: `Dataset` and `Lease` each hold the pool. T1, T2 and the kernel suite are green, rustfmt over stdin is 16 and 16, and the size is 133 over 2 files. Its N1 is the same index.
   - **Record rounds for PR #151: one.**
+- 2026-10-01T06:40Z - **PR #151's CI at 4941e47 is green (all 7 checks, 5 runs). The PR is ready for the human's merge click, as a merge commit.**
