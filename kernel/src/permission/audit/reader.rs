@@ -190,9 +190,15 @@ impl Outcome {
 /// `"2026-08-17T08:44:08Z"` → `"2026-08-17 08:44"` — `clock::rfc3339_utc`'s own fixed-width shape
 /// (`YYYY-MM-DDTHH:MM:SSZ`, 20 bytes, `T` at index 10), sliced rather than parsed with a date
 /// crate, the same "no date crate is pulled in for one string" reasoning `clock.rs` states for the
-/// write side. A value that does not match the shape is shown verbatim rather than mangled.
+/// write side.
+///
+/// The check is that byte 10 is `T` and byte 16 is a char boundary (which also means the value has
+/// at least 16 bytes). Only 16 needs the boundary check: the ASCII `T` at byte 10 makes bytes 10
+/// and 11 boundaries. A hand-edited or corrupted log can put a multi-byte character across byte 16.
+/// A value that passes the check is sliced whether or not its other bytes are digits. Any other
+/// value is returned unchanged.
 fn plain_date(at: &str) -> String {
-    if at.len() >= 16 && at.as_bytes().get(10) == Some(&b'T') {
+    if at.is_char_boundary(16) && at.as_bytes().get(10) == Some(&b'T') {
         format!("{} {}", &at[0..10], &at[11..16])
     } else {
         at.to_string()
