@@ -1412,3 +1412,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Cleanup.** The worktree and its D: target were removed after inspection. C: has about 51 GB free.
   - **Node 5** is `catalog-open-replace-drop-latency-note`. The architect drafts its form read-only, including the gating level.
   - **Round 33 is tomorrow (2026-10-02).**
+- 2026-10-01T05:13Z - **Node 5's form is committed before any code (`kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md`, the node's gate), under full gating and as note only. The note-or-fix choice goes to round 33 as item G.**
+  - **The architect's draft** is filed as `state/consults/2026-10-01-catalog-open-replace-note-architect-draft.md`, with the fenced DRAFT elided and the fix delta kept for I3.
+  - **The ruling decides the note, not the fix.** Round 25, item 1 (d) attaches the drop-after-guard fix to S1 only. The architect recommends note only: no deterministic test can show where the drop happens without timing or a hook, so a fix would land with no failing-first test.
+  - **The choice is the human's,** drafted as `state/drafts/round-33-node5-fix-choice.md`. The note-only piece proceeds now. If the fix is chosen, it becomes its own node after this one (I3).
+  - **The piece.** `Catalog::open`'s doc gains the replace note, and `Catalog::remove`'s false sentence is corrected (no stream holds an `Arc<Dataset>`). T1 and T2 pin the replace outcome and pass at the base, so there is no P0. Each has one mutation. The budget is 120 lines over 2 files.
+  - **Custodian's edits.** The 18 span hashes at f815eb5, each rechecked. The custodian's holder grep found the same false claim in SKP-V0's `close_dataset` paragraph: it is added to the form's intake and routed to node 15, `kernel-close-races-followups`, for the next SKP-V0 change.
