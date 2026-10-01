@@ -434,6 +434,9 @@ mod tests {
         assert_eq!(render_audit_log(&text).len(), render_audit_log(&fixture()).len());
     }
 
+    /// Mutation M1 observed at 256154c: with the condition restored to its base text, this test
+    /// panics at its first value (the standard library's char-boundary panic, byte index 16 inside
+    /// a 2-byte character); the change was reverted.
     #[test]
     fn a_timestamp_cut_by_a_multibyte_character_at_byte_16_is_returned_verbatim_not_sliced() {
         // S1 first: a 2-byte character at bytes 15-16, so byte 16 is not a char boundary.
@@ -444,6 +447,9 @@ mod tests {
         assert_eq!(plain_date("2026-08-17T08:44\u{e9}"), "2026-08-17 08:44");
     }
 
+    /// Mutation M2 observed at 256154c: with the new condition's index 16 changed to 15, this test
+    /// panics at its first record (the standard library's char-boundary panic, byte index 16 inside
+    /// a 2-byte character); the change was reverted.
     #[test]
     fn each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value() {
         let at = r"2026-08-17T08:4é";

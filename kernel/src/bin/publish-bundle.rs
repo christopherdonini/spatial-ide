@@ -741,6 +741,9 @@ mod audit_show_tests {
         std::env::remove_var(spatial_kernel::permission::AUDIT_LOG_ENV);
     }
 
+    /// Mutation M1 observed at 256154c: with `plain_date`'s condition restored to its base text, this
+    /// test panics (the standard library's char-boundary panic, byte index 16 inside a 2-byte
+    /// character); the change was reverted.
     #[test]
     fn an_audit_log_whose_at_cuts_a_character_at_byte_16_is_shown_not_a_panic() {
         let d = workspace("audit-show-cut-at-byte-16");
