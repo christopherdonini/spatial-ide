@@ -31,7 +31,8 @@ fn fixture(file: &str) -> PathBuf {
 /// T1 (S1). Mutation M1, `open`'s `insert` becoming `entry(name.into()).or_insert(Arc::new(ds))`,
 /// is observed in the commit named below: T1 fails on the assertion `get(N)'s path is B`.
 ///
-/// M1 observation: PENDING
+/// M1 observation, applied on the tree at commit c3e8e54 and reverted: this test failed on
+/// `assertion `left == right` failed: get(N)'s path is B`; its sibling passed.
 #[test]
 fn replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_before_open_returns() {
     let a = fixture("catalog-replace-t1-a.parquet");
@@ -56,7 +57,8 @@ fn replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_be
 /// T2 (S2), as T1 through `open_cancellable`. Mutation M2, the same change in `open_cancellable`,
 /// is observed in the commit named below: T2 fails on the assertion `get(N)'s path is B`.
 ///
-/// M2 observation: PENDING
+/// M2 observation, applied on the tree at commit c3e8e54 and reverted: this test failed on
+/// `assertion `left == right` failed: get(N)'s path is B`; its sibling passed.
 #[test]
 fn replacing_a_name_through_open_cancellable_serves_the_new_dataset_and_drops_the_old_one_before_it_returns(
 ) {
