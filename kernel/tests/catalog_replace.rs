@@ -22,7 +22,12 @@ fn fixture(file: &str) -> PathBuf {
     let path = dir.join(file);
     write_geoparquet(
         &path,
-        &FixtureSpec { features: 64, avg_vertices: 8, hole_every: 0, ..Default::default() },
+        &FixtureSpec {
+            features: 64,
+            avg_vertices: 8,
+            hole_every: 0,
+            ..Default::default()
+        },
     )
     .expect("write fixture");
     path
@@ -34,7 +39,8 @@ fn fixture(file: &str) -> PathBuf {
 /// M1 observation, applied on the tree at commit c3e8e54 and reverted: this test failed on
 /// `assertion `left == right` failed: get(N)'s path is B`; its sibling passed.
 #[test]
-fn replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_before_open_returns() {
+fn replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_before_open_returns()
+{
     let a = fixture("catalog-replace-t1-a.parquet");
     let b = fixture("catalog-replace-t1-b.parquet");
     let catalog = Catalog::new();
@@ -44,14 +50,22 @@ fn replacing_a_name_through_open_serves_the_new_dataset_and_drops_the_old_one_be
         let ds = catalog.get(NAME).expect("A registered");
         Arc::downgrade(ds.connections())
     };
-    assert_eq!(old_pool.strong_count(), 1, "A's pool is alive after the first open");
+    assert_eq!(
+        old_pool.strong_count(),
+        1,
+        "A's pool is alive after the first open"
+    );
 
     catalog.open(NAME, &b, None).expect("second open is Ok");
 
     let served = catalog.get(NAME).expect("N still registered");
     assert_eq!(served.path(), b.as_path(), "get(N)'s path is B");
     assert_eq!(catalog.names(), vec![NAME.to_string()], "names() is [N]");
-    assert_eq!(old_pool.strong_count(), 0, "A's pool is gone when open returns");
+    assert_eq!(
+        old_pool.strong_count(),
+        0,
+        "A's pool is gone when open returns"
+    );
 }
 
 /// T2 (S2), as T1 through `open_cancellable`. Mutation M2, the same change in `open_cancellable`,
@@ -67,17 +81,29 @@ fn replacing_a_name_through_open_cancellable_serves_the_new_dataset_and_drops_th
     let catalog = Catalog::new();
     let cancel = CancelToken::new();
 
-    catalog.open_cancellable(NAME, &a, None, None, &cancel).expect("first open");
+    catalog
+        .open_cancellable(NAME, &a, None, None, &cancel)
+        .expect("first open");
     let old_pool = {
         let ds = catalog.get(NAME).expect("A registered");
         Arc::downgrade(ds.connections())
     };
-    assert_eq!(old_pool.strong_count(), 1, "A's pool is alive after the first open");
+    assert_eq!(
+        old_pool.strong_count(),
+        1,
+        "A's pool is alive after the first open"
+    );
 
-    catalog.open_cancellable(NAME, &b, None, None, &cancel).expect("second open is Ok");
+    catalog
+        .open_cancellable(NAME, &b, None, None, &cancel)
+        .expect("second open is Ok");
 
     let served = catalog.get(NAME).expect("N still registered");
     assert_eq!(served.path(), b.as_path(), "get(N)'s path is B");
     assert_eq!(catalog.names(), vec![NAME.to_string()], "names() is [N]");
-    assert_eq!(old_pool.strong_count(), 0, "A's pool is gone when it returns");
+    assert_eq!(
+        old_pool.strong_count(),
+        0,
+        "A's pool is gone when it returns"
+    );
 }
