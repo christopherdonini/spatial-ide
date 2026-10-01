@@ -2603,7 +2603,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 8
     depends_on: [kernel-close-dataset-unknown-keeps-openrecord]
     needs_human: {kind: none, minutes: 0}
@@ -3241,18 +3241,18 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: in-progress
+    status: done
     order: 7
     depends_on: [publish-refusal-codes-and-attempt-lifecycle]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md
-    evidence: {branch: cut/close-dataset-unknown}
+    evidence: {pr: 150}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes. The full-form preregistration is committed as kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-close-dataset-unknown-architect-draft.md), under full gating (a stated guarantee: the watcher form's watch-lifetime line and its released-at-close row; the close-races order): the OpenRecord removal and its drop move above the catalog check, so a close releases the watch on every outcome, with the refusal unchanged and no wire change. The observation holds at 24224d5 and no product path reaches it."
-    dates: {opened: 2026-09-28, done: null}
+    summary: "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes. The full-form preregistration is committed as kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-close-dataset-unknown-architect-draft.md), under full gating (a stated guarantee: the watcher form's watch-lifetime line and its released-at-close row; the close-races order): the OpenRecord removal and its drop move above the catalog check, so a close releases the watch on every outcome, with the refusal unchanged and no wire change. The observation holds at 24224d5 and no product path reaches it. DONE 2026-10-01: PR #150 merged as merge commit 90f7004 (the PR #150 merge notice, state/directives/2026-10-01-pr150-merged.md); three gate rounds (gate 1 FAIL/PASS at e1c37b0 on the form overclaiming past check_version; gate 2 FAIL on record form/PASS at 094a21d; gate 3 PASS/PASS), two correction rounds (the record cap maximum), the architect reduction a superseded index; closing record the form Amendment 4."
+    dates: {opened: 2026-09-28, done: 2026-10-01}
 
   - id: covering-names-missing-column
     title: "A covering that names a column the file lacks is kept at open, and every bbox query then fails after the mint (A2-1 P0 k3)"

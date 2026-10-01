@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098fa647ee21c96d87e6a21`) at `2026-09-30T20:52:40.010Z`.
+Generated from `PLAN.yaml` (sha256 `c3807a582efc2c0cc3fdc453e30cabbaad392bfecfd117c0e777ada09608f2ef`) at `2026-10-01T05:00:12.479Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) (lane `kernel-protocol`, order 8, budget 30 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,6 @@ Generated from `PLAN.yaml` (sha256 `88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **catalog-open-replace-drop-latency-note** — Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2) — blocked by: kernel-close-dataset-unknown-keeps-openrecord
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: audit-reader-char-boundary
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
@@ -39,7 +38,7 @@ Generated from `PLAN.yaml` (sha256 `88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098
 
 ## 5. In progress
 
-- **kernel-close-dataset-unknown-keeps-openrecord** — close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2) — evidence: branch `cut/close-dataset-unknown`
+- (none)
 
 ## 6. Proposed / unscheduled
 

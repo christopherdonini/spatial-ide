@@ -193,3 +193,16 @@ Written after gate 2's results were seen (class 3, record fixes; no claim change
 - §4's M2 registration: supplemented by Amendment 2 item 3.
 - Amendment 1 item 2's "one comment line": superseded by Amendment 3 item 3.
 - §9's `cargo fmt --check`: read per Amendment 2 item 2.
+
+### Amendment 4 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #150 merged at 2026-10-01T04:58:38Z as merge commit 90f7004 (parents 2927bbc and 094a21d), not a squash. 4f045da (B), f4fb9ed (C), 7f80c8b, e1c37b0 and 094a21d (correction round 1) are reachable from main. The merge notice is `state/directives/2026-10-01-pr150-merged.md`.
+- **The gates:**
+  - gate 1 at e1c37b0, architect FAIL and reviewer PASS: `state/consults/gates/2026-09-30-close-dataset-unknown-gate1-architect.md` and `state/consults/gates/2026-09-30-close-dataset-unknown-gate1-reviewer.md`;
+  - gate 2 at 094a21d, architect FAIL on record form and reviewer PASS: `state/consults/gates/2026-09-30-close-dataset-unknown-gate2-architect.md` and `state/consults/gates/2026-09-30-close-dataset-unknown-gate2-reviewer.md`;
+  - gate 3 on Amendment 3, PASS/PASS: `state/consults/gates/2026-09-30-close-dataset-unknown-gate3-architect.md` and `state/consults/gates/2026-09-30-close-dataset-unknown-gate3-reviewer.md`.
+- **The observations of record:** P0 at 4f045da, H1's grep at e1c37b0 and M1 and M2 at e1c37b0: the gate-1 reviewer's checks 3 and 2 and its mutation table. Amendment 3's pin: the gate-3 reviewer's check 1. The worker's own runs: `state/consults/2026-09-30-close-dataset-unknown-worker-report-1.md` and `state/consults/2026-09-30-close-dataset-unknown-worker-report-2.md`.
+- **Readings the gate made:** Amendment 1 is class 5 (the gate-2 architect, item 1). Amendment 2's fmt reading stands without the human (the gate-2 architect, item 3). The superseded index is the gate-3 architect's reduction under the record cap.
+- **Merge hold:** both `cargo test --workspace` runs at 094a21d succeeded before the merge (the gate-3 reviewer's H1).
+- **Size:** 127 against §7's 150, in 1 file. No overrun. Record rounds: two.

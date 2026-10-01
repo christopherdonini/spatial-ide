@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-09-30T20:52:40.010Z",
-  "plan_hash": "88a30c0d164ed5273ea2e3f9315aa9e4fb6cd8590098fa647ee21c96d87e6a21",
+  "generated_at": "2026-10-01T05:00:12.479Z",
+  "plan_hash": "c3807a582efc2c0cc3fdc453e30cabbaad392bfecfd117c0e777ada09608f2ef",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "catalog-open-replace-drop-latency-note",
+    "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
+    "lane": "kernel-protocol",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 8,
+    "budget_minutes": 30,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-26",
+      "done": null
+    },
+    "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes."
+  },
+  "ready": [
+    {
+      "id": "catalog-open-replace-drop-latency-note",
+      "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 8,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -142,28 +180,6 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
-      ]
-    },
-    {
-      "id": "catalog-open-replace-drop-latency-note",
-      "title": "Catalog::open drops a replaced dataset under the write guard: a latency note, with Catalog::remove's doc drift (weekly window (d), S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 8,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 25, item 1 (d): S2 on the reproduction's outcome (state/consults/2026-09-26-catalog-open-drop-reproduction.md). No Drop reached from the replaced dataset acquires, or waits on a thread waiting for, the catalog lock. The replaced dataset's DuckDB teardown does run under the write guard: the replaced value is a temporary dropped before the guard (the report's probe (a)). No product path replaces a dataset today: SKP opens under a fresh handle and slice-host opens once. If taken, the fix is #116's shape, binding the replaced value and dropping it after the guard is released. Also: Catalog::remove's doc says a live stream's Arc<Dataset> keeps the dataset alive, and the report finds no stream that holds one (its section 3). Placed by question round 31, item 1 (RULED 2026-09-30): position 5 of 16 in the human's order, order 8 in its lane. It depends on kernel-close-dataset-unknown-keeps-openrecord, position 4, so that the order holds across lanes.",
-      "blocked_by": [
-        "kernel-close-dataset-unknown-keeps-openrecord"
       ]
     },
     {
@@ -431,30 +447,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "kernel-close-dataset-unknown-keeps-openrecord",
-      "title": "close_dataset returns unknown_dataset before removing the dataset's OpenRecord when the catalog entry is already gone (wave-2 W2-C observation 3, S2)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 7,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/close-dataset-unknown"
-      },
-      "dates": {
-        "opened": "2026-09-28",
-        "done": null
-      },
-      "summary": "Wave-2 S2 record (state/cloud/wave2/W2-C.md, unproven observation 3; recorded as filed, the 2026-09-28 S1 batch): the early unknown_dataset return precedes the OpenRecord removal, so a catalog entry removed some other way would keep the watch's threads and handles alive; no product path removes one that way today. In kernel-close-races-followups' territory. Placed by question round 31, item 1 (RULED 2026-09-30): position 4 of 16 in the human's order, order 7 in its lane. It depends on publish-refusal-codes-and-attempt-lifecycle, position 3, so that the order holds across lanes. The full-form preregistration is committed as kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-09-30-close-dataset-unknown-architect-draft.md), under full gating (a stated guarantee: the watcher form's watch-lifetime line and its released-at-close row; the close-races order): the OpenRecord removal and its drop move above the catalog check, so a close releases the watch on every outcome, with the refusal unchanged and no wire change. The observation holds at 24224d5 and no product path reaches it.",
-      "evidence_label": "branch `cut/close-dataset-unknown`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
