@@ -166,3 +166,7 @@ Assertions only:
 - **Operator:** none. Nothing user-visible changes.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — budget overrun, §7 not edited (class 8)
+
+Budget overrun, §7 not edited. §7 declares at most 120 changed lines over at most 2 files. The final figure is 130 over 2 files at 53e1cf4, by §7's command with merge base d8544a0: `kernel/src/lib.rs` 18+3 and `kernel/tests/catalog_replace.rs` 109+0. The reason is the worker's report (`state/consults/2026-10-01-catalog-replace-note-worker-report-1.md`): formatting the new test file to 0 rustfmt hunks, as §9 requires, took it from 83 lines to 109, and the worker did not trim it to fit. The figure stays inside AUTONOMY.md §21c's bound, so the gating is unchanged.
