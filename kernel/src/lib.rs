@@ -159,12 +159,15 @@ impl Catalog {
     /// opens its dataset before anything else can observe a cancel key. `open_cancellable` is the
     /// entry point SKP's `open_dataset` uses.
     ///
-    /// **Replacing a name.** Opening under a name already registered replaces the entry, and the
-    /// replaced `Arc<Dataset>` is dropped before the write guard is released. When it is the last
-    /// reference to that dataset and no lease is in flight, the pool's idle DuckDB connections close
-    /// there, in an external section this code does not bound (ADR-018 item 4, class (b)), and every
-    /// other catalog caller waits on the guard. Otherwise the last holder drops it
-    /// on its own thread. Today `slice-host` opens once, and SKP opens under a fresh handle of random
+    /// **Replacing a name.** An `open` that returns `Ok` under a name already registered replaces
+    /// the entry, and the replaced `Arc<Dataset>` is dropped before the write guard is released.
+    /// When it is the last reference to that dataset and no lease is in flight, the pool's idle
+    /// DuckDB connections close there, in an external section this code does not bound (ADR-018
+    /// item 4, class (b)), and every other catalog caller waits on the guard. Otherwise a `get`
+    /// holder drops the dataset (and, when no lease is in flight, its pool) later, on its own
+    /// thread; a lease in flight releases the pool later, on its producer thread, while the
+    /// dataset itself is dropped under the guard when the catalog's `Arc` was its last reference.
+    /// Today `slice-host` opens once, and SKP opens under a fresh handle of random
     /// bits, so a collision is not excluded but no product path replaces a name on purpose. If
     /// replacement becomes reachable, the fix is the shape `SkpHost::close_dataset` uses for its
     /// removed watch: bind the replaced value and drop it after the guard.
