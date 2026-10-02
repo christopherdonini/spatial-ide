@@ -10,15 +10,16 @@ name: Rust fmt
 #
 # ## What it does not mean
 #
-# See WORKSPACE-RUSTFMT-PREREGISTRATION.md, section 1, "May not claim". In short: not the excluded
+# See WORKSPACE-RUSTFMT-PREREGISTRATION.md, section 1, May not claim. In short: not the excluded
 # crates, not a later rustfmt, not clippy, not any behaviour or performance claim, not any
-# portability level. It reports drift; it does not prevent it, and it is not required for merge.
+# portability level. It reports drift; it does not prevent it, and this file claims nothing about
+# whether the check is required for merge.
 #
 # ## Why ubuntu-latest
 #
-# One formatter gives the same output on every platform for this tree (hypothesis H1 of that form,
-# tested by the first run of this workflow). Linux is the cheapest runner and needs no C++ build,
-# because `cargo fmt` does not compile anything.
+# Hypothesis H1 of that form takes rustfmt's output on ubuntu-latest to equal the Windows reference
+# profile's for this tree; its declared test, E1, is this piece's pull_request run. Linux is the
+# cheapest runner and needs no C++ build, because `cargo fmt` does not compile anything.
 #
 # ## Why the heavy suite's filter is not widened
 #
