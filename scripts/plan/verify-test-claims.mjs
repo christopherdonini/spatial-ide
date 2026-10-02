@@ -80,11 +80,21 @@
 // this tool adds on top of a grammar it otherwise matches exactly: the refused HEAD default, the
 // refused non-commit `<rev>`, and condition (e)'s ancestor-of-main requirement. See
 // `supersededSpans`/`findSupersededSpan`.
+//
+// SAME-PR SUPERSEDED PIN (TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md; question round 33,
+// item 2; question round 34, items 4 and 5): condition (e) alone refuses a superseded pin whose rev is
+// a commit of the scanned PR itself. That one refusal is accepted, advisory, when the claiming file is
+// the `gate` of a node that is not done and carries `merge: merge-commit` (`mergeCommitGateFiles`),
+// the pinned rev is reachable from the scanned HEAD, and the claiming line is introduced in
+// `origin/main..HEAD` (`git blame` of the working tree names a commit that is not an ancestor of
+// `origin/main`). Only the superseded path consults it; the withdrawn path and every other condition
+// are unchanged. After a squash or rebase merge the pinned rev is not on main and the same row is a
+// binding finding again.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
 
@@ -374,10 +384,13 @@ function isAncestorOfMain(root, rev) {
  * outside `line`'s range, an unresolvable rev/path, a hash mismatch, a claim line missing the claimed
  * name, or a rev shown NOT to be on main is not a match -- the claim stays a binding finding (or
  * planned), exactly as if no pin existed.
- * Returns `{ span, mainUnchecked }` (`span: null` when nothing matched); `mainUnchecked` is true when
- * condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
+ * `samePrAccept` (optional, `(rev) => boolean`): consulted only when (e) ran and refused; when it
+ * returns true the span is accepted and the result carries `samePr: true` (only the superseded path
+ * passes it).
+ * Returns `{ span, mainUnchecked, samePr }` (`span: null` when nothing matched); `mainUnchecked` is true
+ * when condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
  */
-function findMarkedSpan(root, relPath, line, name, spans, extra) {
+function findMarkedSpan(root, relPath, line, name, spans, extra, samePrAccept) {
   for (const span of spans) {
     if (line < span.startLine || line > span.endLine) continue;
     if (!revResolvesToCommit(root, span.rev)) continue;
@@ -389,15 +402,73 @@ function findMarkedSpan(root, relPath, line, name, spans, extra) {
     const claimLine = linesWithLF(content, line, line);
     if (claimLine === null || !claimLine.includes(name)) continue;
     const anc = isAncestorOfMain(root, span.rev);
-    if (anc.checked && !anc.ok) continue;
+    let samePr = false;
+    if (anc.checked && !anc.ok) {
+      if (!(samePrAccept && samePrAccept(span.rev))) continue;
+      samePr = true;
+    }
     if (extra && !extra(span)) continue;
-    return { span, mainUnchecked: !anc.checked };
+    return { span, mainUnchecked: !anc.checked, samePr };
   }
-  return { span: null, mainUnchecked: false };
+  return { span: null, mainUnchecked: false, samePr: false };
 }
 
-function findSupersededSpan(root, relPath, line, name, spans) {
-  return findMarkedSpan(root, relPath, line, name, spans);
+function gitSucceeds(root, args) {
+  try {
+    execFileSync('git', args, { cwd: root, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// The spawn's exit status, or null when it did not exit normally.
+function gitExitStatus(root, args) {
+  const r = spawnSync('git', args, { cwd: root, stdio: 'ignore' });
+  return r.status;
+}
+
+// (f2): `rev` is reachable from the scanned HEAD. Memoized by (root, rev). A git failure is false.
+const headAncestorCache = new Map();
+function revIsAncestorOfHead(root, rev) {
+  const key = JSON.stringify([root, rev]);
+  if (!headAncestorCache.has(key)) headAncestorCache.set(key, gitSucceeds(root, ['merge-base', '--is-ancestor', rev, 'HEAD']));
+  return headAncestorCache.get(key);
+}
+
+// (f3): the claiming line is introduced in `origin/main..HEAD`. `git blame --porcelain` is given no
+// revision, so it blames the working tree: an uncommitted line is the all-zero id, which is not in range.
+// The line is in range when its commit is not an ancestor of `origin/main`. Memoized by (root, file,
+// line). Any git failure is false.
+const lineIntroducedCache = new Map();
+function lineIsIntroducedInRange(root, relPath, line) {
+  const mainSha = originMainSha(root);
+  if (!mainSha) return false;
+  const key = JSON.stringify([root, relPath, line]);
+  if (lineIntroducedCache.has(key)) return lineIntroducedCache.get(key);
+  let result = false;
+  try {
+    const out = execFileSync('git', ['blame', '--porcelain', '-L', `${line},${line}`, '--', relPath], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const c = out.split(/\s/, 1)[0];
+    // In range only when the ancestry check exits with status 1 (not an ancestor); any other outcome,
+    // a git error included, is not accepted.
+    if (/^[0-9a-f]{40}$/.test(c) && !/^0+$/.test(c)) result = gitExitStatus(root, ['merge-base', '--is-ancestor', c, mainSha]) === 1;
+  } catch {
+    result = false;
+  }
+  lineIntroducedCache.set(key, result);
+  return result;
+}
+
+function findSupersededSpan(root, relPath, line, name, spans, mergeCommitGates) {
+  // (f1), (f2), (f3), in this order; only reached once condition (e) has run and refused.
+  const samePrAccept = (rev) =>
+    mergeCommitGates.has(relPath) && revIsAncestorOfHead(root, rev) && lineIsIntroducedInRange(root, relPath, line);
+  return findMarkedSpan(root, relPath, line, name, spans, undefined, samePrAccept);
 }
 
 // Rider (a)/(b), mechanically (round 20 item 1; consult §2/§3): resolved once against the CURRENT
@@ -710,6 +781,21 @@ export function plannedGateFiles(plan) {
 }
 
 /**
+ * The Set of `gate` paths of nodes whose `status` is not `done`, whose `merge` is exactly the string
+ * `merge-commit`, and whose `gate` is present and not `none`. Pure. Any other value, or no `merge` key,
+ * adds nothing (AUTONOMY.md's section 27; TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md).
+ */
+export function mergeCommitGateFiles(plan) {
+  const out = new Set();
+  for (const n of plan?.nodes ?? []) {
+    if (!n || typeof n !== 'object' || n.status === 'done' || n.merge !== 'merge-commit') continue;
+    if (!n.gate || n.gate === 'none') continue;
+    out.add(n.gate);
+  }
+  return out;
+}
+
+/**
  * Returns { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked,
  * withdrawnMainUnchecked }. A claim entry is { relPath, line, name, kind: 'claim' } (`superseded`/
  * `withdrawn` entries additionally carry `reference`, the matched pin text; `withdrawn` entries also
@@ -745,9 +831,10 @@ export function plannedGateFiles(plan) {
  * such suppression, since it was never capable of exempting anything to begin with (§2.1(c): a mention
  * is not a withdrawal attempt).
  */
-export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
+export function runVerifyTestClaims({ repoRoot, plannedGates, mergeCommitGates } = {}) {
   const root = repoRoot ?? REPO_ROOT;
   const exempt = plannedGates ?? new Set();
+  const samePrGates = mergeCommitGates ?? new Set();
   const files = gitList(root);
   const index = buildTestNameIndex(root);
   const targets = claimFiles(files);
@@ -783,12 +870,12 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
           continue;
         }
       }
-      const { span, mainUnchecked } = spans.length
-        ? findSupersededSpan(root, rel, c.line, c.name, spans)
-        : { span: null, mainUnchecked: false };
+      const { span, mainUnchecked, samePr } = spans.length
+        ? findSupersededSpan(root, rel, c.line, c.name, spans, samePrGates)
+        : { span: null, mainUnchecked: false, samePr: false };
       if (span) {
         if (mainUnchecked) supersededMainUnchecked = true;
-        superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference });
+        superseded.push({ relPath: rel, line: c.line, name: c.name, reference: span.reference, ...(samePr ? { samePr: true } : {}) });
         continue;
       }
       (isPlanned ? planned : findings).push({ relPath: rel, line: c.line, name: c.name, kind: 'claim' });
@@ -797,14 +884,19 @@ export function runVerifyTestClaims({ repoRoot, plannedGates } = {}) {
   return { findings, planned, superseded, withdrawn, scanned: targets.length, claims, supersededMainUnchecked, withdrawnMainUnchecked };
 }
 
+// The suffix on a superseded line accepted under the same-PR rule: the tool's own fact, no consequence.
+const SAME_PR_SUFFIX = ' — pin not yet on main; same-PR claim, merge-commit node';
+
 function main() {
   const quiet = process.argv.includes('--quiet');
   let plannedGates = new Set();
   let notes = new Map();
+  let mergeCommitGates = new Set();
   try {
     const plan = loadPlan(path.join(REPO_ROOT, 'PLAN.yaml'));
     notes = plannedGateNotes(plan);
     plannedGates = plannedGateFiles(plan);
+    mergeCommitGates = mergeCommitGateFiles(plan);
   } catch (e) {
     // Never silently exempt: a PLAN.yaml we could not read means nothing is planned, said out loud.
     console.error(`verify:test-claims — PLAN.yaml did not load (${e.message}); no claim treated as planned.`);
@@ -812,6 +904,7 @@ function main() {
   const { findings, planned, superseded, withdrawn, scanned, claims, supersededMainUnchecked, withdrawnMainUnchecked } = runVerifyTestClaims({
     repoRoot: REPO_ROOT,
     plannedGates,
+    mergeCommitGates,
   });
   if (planned.length > 0 && !quiet) {
     console.error(`verify:test-claims planned (advisory) — ${planned.length} claimed test(s) in a gate file whose node is not done:`);
@@ -822,7 +915,7 @@ function main() {
   if (superseded.length > 0 && !quiet) {
     console.error(`verify:test-claims superseded (advisory) — ${superseded.length} claimed test(s) pinned historical by a hash-checked reference:`);
     for (const s of superseded) {
-      console.error(`  - ${s.relPath}:${s.line} — claims test \`${s.name}\` — superseded — pinned by ${s.reference}`);
+      console.error(`  - ${s.relPath}:${s.line} — claims test \`${s.name}\` — superseded — pinned by ${s.reference}${s.samePr ? SAME_PR_SUFFIX : ''}`);
     }
     if (supersededMainUnchecked) {
       console.error('  note: origin/main did not resolve in this tree — condition (e) (the pinned rev must be shown to be an ancestor of main) was SKIPPED, not verified, for at least one claim above.');

@@ -256,3 +256,26 @@ Assertions only:
 - **Operator:** none.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — a test for a git error in (f3) (class 9, a scope addition before its code)
+
+Written after gate 1's results were seen (a post-result amendment), and before any code of correction round 1.
+
+1. **The finding.** Both gate-1 reports found it: `state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md` (S1-1) and the gate-1 reviewer's report (S1-1). The last ancestry check in (f3) reads any non-zero git exit as "not an ancestor", so a git error (exit 128) is accepted, against §2 item 3's last paragraph and §8 item 4. The fix treats a line as introduced in the range only when that check exits with status 1. Every other outcome is not accepted.
+2. **The scope addition.** One test is added to §4's table:
+   - **T10:** `a_git_error_in_the_range_check_does_not_exempt`.
+   - **Its scenario:** the S1 base shape, except that `origin/main` names an object the repository does not have, so that every ancestry check against it errors. The predicted outcome is 1 finding, with no `samePr` entry.
+   - **M10:** (f3)'s check reads any non-zero exit as "not an ancestor".
+3. **Unchanged.** §7's budget, the counted files and every other test. M3 and M7 are re-observed at the corrected commit, since both mutate the same function.
+
+### Amendment 2 — correction round 1: the (f3) fix, T1's test merge and T10 (classes 1 and 4)
+
+Written after gate 1's results were seen (a post-result amendment). References only.
+
+1. **The round.** Branch commits a758290, e9735d4 and 270bc75 answer gate 1: both S1-1s, the reviewer's S2-1 and N-3. The reports are `state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md` and `state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-reviewer.md`. The worker's report is `state/consults/2026-10-02-test-claims-same-pr-pin-worker-report-2.md`.
+2. **S1-1.** e9735d4 brings (f3) to §2 item 3's last paragraph, as Amendment 1 item 1 declares. T10 (Amendment 1 item 2) was observed failing at the test-only commit a758290, and M10 was observed at e9735d4.
+3. **Class 4, T1 (the reviewer's S2-1).** T1's name and §4 row are unchanged. Its test-merge half now scans from a distinct root, a detached worktree of the fixture, so (f2) and (f3) run at the merge HEAD. M1 was re-observed at e9735d4.
+4. **Re-observed, unchanged.** M3 and M7 were re-observed at e9735d4, as Amendment 1 item 3 declares; each first failing assertion is unchanged. M3's comment gains one line for its two further failures (T7, T10). The counts recorded on M2 to M9 describe 0e20437 and stand.
+5. **N-3.** `findMarkedSpan`'s doc comment names `samePrAccept` and the `samePr` field (e9735d4). It is a comment change only.
+6. **Not changed.** §7's budget (the worker's count: 391 changed lines over 3 files), every other test, and the gate-1 notes left to the closing record (the architect's N-3 and the reviewer's N-4 on rebase).
+7. **Superseded index.** None. No line of this form or of a recorded mutation comment is made false by this round. The T1 code replaced at a758290 is test code, not a record.

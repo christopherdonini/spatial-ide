@@ -16,6 +16,8 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { parseYamlSubset } from './yamlSubset.mjs';
+import * as claimsTool from './verify-test-claims.mjs';
 import {
   isTestShaped,
   extractClaimedTests,
@@ -1387,4 +1389,258 @@ test('a_valid_row_with_condition_e_skipped_sets_withdrawn_main_unchecked', () =>
   assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
   assert.equal(findings.length, 0, JSON.stringify(findings));
   assert.equal(withdrawnMainUnchecked, true);
+});
+
+// The same-PR superseded pin (TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md, section 2 item 3
+// and section 3's fixtures). Every fixture is a fresh temp repository with a bare `origin`: M0 on
+// origin/main holds the document, branch `pr` is cut from M0 (P1 adds the claim line, P2 appends a
+// superseded row pinning that line at P1), then main advances by M1, an unrelated file, pushed and
+// fetched. `claimOnMain` puts the claim on M0 and has P1 touch another file instead; `pinTo: 'q1'` pins
+// a commit on a sibling branch that `pr` does not contain. The checkout is left on `pr`.
+function sameprGit(dir, ...args) {
+  return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+}
+
+function sameprFixture({ claimOnMain = false, pinTo = 'p1' } = {}) {
+  const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-origin-'));
+  execFileSync('git', ['init', '-q', '--bare', bareDir]);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-'));
+  gitRepoAt(dir, SUPERSEDED_DOC, claimOnMain ? SUPERSEDED_V1 : '# Doc\n\n');
+  sameprGit(dir, 'branch', '-M', 'main');
+  sameprGit(dir, 'remote', 'add', 'origin', bareDir);
+  sameprGit(dir, 'push', '-q', 'origin', 'main');
+  sameprGit(dir, 'fetch', '-q', 'origin');
+  let q1 = null;
+  if (pinTo === 'q1') {
+    sameprGit(dir, 'checkout', '-q', '-b', 'sibling', 'main');
+    fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), SUPERSEDED_V1);
+    commitAll(dir, 'q1');
+    q1 = sameprGit(dir, 'rev-parse', 'HEAD');
+  }
+  sameprGit(dir, 'checkout', '-q', '-b', 'pr', 'main');
+  if (claimOnMain) fs.writeFileSync(path.join(dir, 'other.txt'), 'another file\n');
+  else fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), SUPERSEDED_V1);
+  commitAll(dir, 'p1');
+  const p1 = sameprGit(dir, 'rev-parse', 'HEAD');
+  const row = pinRow({
+    relPath: SUPERSEDED_DOC,
+    pinnedLine: SUPERSEDED_CLAIM_LINE,
+    rev: pinTo === 'q1' ? q1 : p1,
+    hash: sha256Hex(lineOfV1(SUPERSEDED_CLAIM_LINE)),
+    word: 'superseded',
+  });
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), `${SUPERSEDED_V1}\n${row}`);
+  commitAll(dir, 'p2');
+  sameprGit(dir, 'checkout', '-q', 'main');
+  fs.writeFileSync(path.join(dir, 'unrelated.txt'), 'main moved on\n');
+  commitAll(dir, 'm1');
+  sameprGit(dir, 'push', '-q', 'origin', 'main');
+  sameprGit(dir, 'fetch', '-q', 'origin');
+  sameprGit(dir, 'checkout', '-q', 'pr');
+  return { dir, p1, q1 };
+}
+
+const SAMEPR_GATES = new Set([SUPERSEDED_DOC]);
+
+// RECORDED MUTATION: M1 (`a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge`): in findSupersededSpan, pass `undefined` instead of `samePrAccept` to
+// findMarkedSpan -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`,
+// then reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion:
+// "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","kind":"claim"}]" then "1
+// !== 0" (the branch scan's findings). 63 of 64 pass, isolated to this test.
+test('a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge', () => {
+  const { dir } = sameprFixture();
+  const onBranch = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(onBranch.findings.length, 0, JSON.stringify(onBranch.findings));
+  assert.equal(onBranch.superseded.length, 1, JSON.stringify(onBranch.superseded));
+  assert.equal(onBranch.superseded[0].samePr, true, JSON.stringify(onBranch.superseded));
+  assert.equal(onBranch.superseded[0].name, SUPERSEDED_CLAIM_NAME);
+
+  // The shape a governance-ci pull_request run scans: a detached --no-ff merge of the PR into the base tip.
+  // Scanned from a distinct root (a linked worktree), so that (f2) and (f3) run there and do not read the
+  // module-level caches the branch scan above filled for `dir`.
+  const mergeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-merge-'));
+  sameprGit(dir, 'worktree', 'add', '-q', '--detach', mergeRoot, 'origin/main');
+  sameprGit(mergeRoot, 'merge', '-q', '--no-ff', '-m', 'test merge', 'pr');
+  const onMerge = runVerifyTestClaims({ repoRoot: mergeRoot, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(onMerge.findings.length, 0, JSON.stringify(onMerge.findings));
+  assert.equal(onMerge.superseded.length, 1, JSON.stringify(onMerge.superseded));
+  assert.equal(onMerge.superseded[0].samePr, true, JSON.stringify(onMerge.superseded));
+});
+
+// RECORDED MUTATION: M2 (`a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt`): in samePrAccept, drop the `revIsAncestorOfHead(root, rev)` term (f2) --
+// applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a pin to a
+// commit the scanned HEAD does not contain must not exempt: [{...,"samePr":true}]" then "1 !== 0". 63
+// of 64 pass, isolated to this test.
+test('a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt', () => {
+  const { dir } = sameprFixture({ pinTo: 'q1' });
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `a pin to a commit the scanned HEAD does not contain must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M3 (`a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt`): in samePrAccept, drop the `lineIsIntroducedInRange(root, relPath, line)` term
+// (f3) -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then
+// reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a
+// claiming line already on main must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not isolated:
+// it also fails `an_uncommitted_claiming_line_is_not_introduced_in_the_range` (62 of 64 pass).
+// Re-observed at e9735d4 (same first assertion): it now also fails `a_git_error_in_the_range_check_does_not_exempt` (62 of 65 pass).
+test('a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt', () => {
+  const { dir } = sameprFixture({ claimOnMain: true });
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `a claiming line already on main must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M4 (`a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding`): reduce samePrAccept to `mergeCommitGates.has(relPath)` alone (f1 only) --
+// applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "after a squash
+// the pinned commit is not on main and must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not
+// isolated: it also fails the (f2) test, the (f3) test and the uncommitted-line test (60 of 64 pass).
+test('a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding', () => {
+  const { dir } = sameprFixture();
+  sameprGit(dir, 'checkout', '-q', 'main');
+  sameprGit(dir, 'merge', '-q', '--squash', 'pr');
+  commitAll(dir, 'squash of pr');
+  sameprGit(dir, 'push', '-q', 'origin', 'main');
+  sameprGit(dir, 'fetch', '-q', 'origin');
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `after a squash the pinned commit is not on main and must not exempt: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M5 (`a_same_pr_pin_without_the_merge_commit_record_does_not_exempt`): in samePrAccept, drop the `mergeCommitGates.has(relPath)` term (f1) -- applied
+// for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
+// 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "no merge-commit record, no
+// exemption: [{...,"samePr":true}]" then "1 !== 0". Not isolated: it also fails
+// `a_pin_whose_rev_is_not_an_ancestor_of_origin_main_does_not_exempt`, whose fixture has no
+// merge-commit record but whose pin is accepted by (f2) and (f3) (62 of 64 pass).
+test('a_same_pr_pin_without_the_merge_commit_record_does_not_exempt', () => {
+  const { dir } = sameprFixture();
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(superseded.length, 0, `no merge-commit record, no exemption: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M6 (`the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value`): in mergeCommitGateFiles, drop the `n.status === 'done'` filter -- applied for
+// real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
+// 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "Expected values to be
+// strictly deep-equal:" with "+   'b/B-PREREGISTRATION.md'" as the extra element. 63 of 64 pass,
+// isolated to this test.
+test('the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value', () => {
+  const plan = parseYamlSubset(
+    [
+      'version: 1',
+      'nodes:',
+      '  - id: n-a',
+      '    status: in-progress',
+      '    gate: a/A-PREREGISTRATION.md',
+      '    merge: merge-commit',
+      '  - id: n-b',
+      '    status: done',
+      '    gate: b/B-PREREGISTRATION.md',
+      '    merge: merge-commit',
+      '  - id: n-c',
+      '    status: in-progress',
+      '    gate: c/C-PREREGISTRATION.md',
+      '    merge: squash',
+      '  - id: n-d',
+      '    status: ready',
+      '    gate: none',
+      '    merge: merge-commit',
+      '  - id: n-e',
+      '    status: in-progress',
+      '    gate: d/D-PREREGISTRATION.md',
+      '',
+    ].join('\n'),
+  );
+  assert.deepEqual([...claimsTool.mergeCommitGateFiles(plan)], ['a/A-PREREGISTRATION.md']);
+  assert.deepEqual([...claimsTool.mergeCommitGateFiles(undefined)], []);
+});
+
+// RECORDED MUTATION: M7 (`an_uncommitted_claiming_line_is_not_introduced_in_the_range`): in lineIsIntroducedInRange, give git blame the revision `HEAD` (the committed
+// text, not the working tree) -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
+// 2.49.0.windows.1). First failing assertion: "an uncommitted claiming line is in no commit's range:
+// [{...,"samePr":true}]" then "1 !== 0". 63 of 64 pass, isolated to this test.
+test('an_uncommitted_claiming_line_is_not_introduced_in_the_range', () => {
+  const { dir } = sameprFixture();
+  const current = fs.readFileSync(path.join(dir, SUPERSEDED_DOC), 'utf8');
+  const edited = current.replace(`Verified by test \`${SUPERSEDED_CLAIM_NAME}\`.`, `Verified, still, by test \`${SUPERSEDED_CLAIM_NAME}\`.`);
+  assert.notEqual(edited, current);
+  fs.writeFileSync(path.join(dir, SUPERSEDED_DOC), edited);
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `an uncommitted claiming line is in no commit's range: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M8 (`a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name`): in isAncestorOfMain, return `ok` from `git merge-base --is-ancestor <rev>
+// HEAD` in the refusal branch (the acceptance moved into condition (e), shared with the withdrawn path)
+// -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: the row is
+// accepted, "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_obsolete_test_name_here",...,"ruling":"round
+// 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0" (the withdrawn array). Not isolated: 7 of 64
+// fail, among them `a_withdrawn_test_row_whose_rev_is_not_on_main_fails_by_name` and
+// `a_pin_whose_rev_is_not_an_ancestor_of_origin_main_does_not_exempt`.
+test('a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name', () => {
+  const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-wdorigin-'));
+  execFileSync('git', ['init', '-q', '--bare', bareDir]);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-withdrawn-'));
+  gitRepoAt(dir, WITHDRAWN_DOC, '# Doc\n\n');
+  fs.writeFileSync(path.join(dir, 'DECISIONS-PENDING.md'), SYNTH_LEDGER);
+  commitAll(dir, 'ledger');
+  sameprGit(dir, 'branch', '-M', 'main');
+  sameprGit(dir, 'remote', 'add', 'origin', bareDir);
+  sameprGit(dir, 'push', '-q', 'origin', 'main');
+  sameprGit(dir, 'fetch', '-q', 'origin');
+  sameprGit(dir, 'checkout', '-q', '-b', 'pr', 'main');
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), WITHDRAWN_V1);
+  commitAll(dir, 'p1');
+  const p1 = sameprGit(dir, 'rev-parse', 'HEAD');
+  const hash = sha256Hex(nthLineOf(WITHDRAWN_V1, WITHDRAWN_CLAIM_LINE));
+  const row = `- withdrawn-test: \`${WITHDRAWN_DOC}:${WITHDRAWN_CLAIM_LINE}\` @ ${p1} sha256:${hash}; ruling: round 1, item 1; carrier: round 2, item 5\n`;
+  fs.writeFileSync(path.join(dir, WITHDRAWN_DOC), `${WITHDRAWN_V1}\n${row}`);
+  commitAll(dir, 'p2');
+  const { findings, withdrawn } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: new Set([WITHDRAWN_DOC]) });
+  assert.equal(withdrawn.length, 0, JSON.stringify(withdrawn));
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].kind, 'withdrawn-row', JSON.stringify(findings));
+  assert.equal(findings[0].message, 'refused: rev not on main', JSON.stringify(findings));
+});
+
+// RECORDED MUTATION: M9 (`a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record`): in isAncestorOfMain, return `{ checked: true, ok: false }` whenever
+// origin/main resolves -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
+// 2.49.0.windows.1). First failing assertion: "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","kind":"claim"}]" then "1
+// !== 0" (findings on main after the merge commit). Not isolated: it also fails the existing
+// condition-(e) test's on-main half (62 of 64 pass).
+test('a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record', () => {
+  const { dir } = sameprFixture();
+  sameprGit(dir, 'checkout', '-q', 'main');
+  sameprGit(dir, 'merge', '-q', '--no-ff', '-m', 'merge of pr', 'pr');
+  sameprGit(dir, 'push', '-q', 'origin', 'main');
+  sameprGit(dir, 'fetch', '-q', 'origin');
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
+  assert.equal(findings.length, 0, JSON.stringify(findings));
+  assert.equal(superseded.length, 1, JSON.stringify(superseded));
+  assert.equal(superseded[0].samePr, undefined, JSON.stringify(superseded));
+});
+
+// RECORDED MUTATION: M10 (`a_git_error_in_the_range_check_does_not_exempt`): in lineIsIntroducedInRange, read any
+// non-zero exit of the `merge-base --is-ancestor` check as "not an ancestor" (`=== 1` becomes `!== 0`) -- applied
+// for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at e9735d4
+// (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a git error is not a proof the line is
+// introduced in the range: [{...,"samePr":true}]" then "1 !== 0". 64 of 65 pass, isolated to this test. At the
+// test-only commit a758290 (before the fix) the same test failed with the same assertion.
+test('a_git_error_in_the_range_check_does_not_exempt', () => {
+  const { dir } = sameprFixture();
+  // A well-formed id for an object the repository does not have: every ancestry check against origin/main errors.
+  fs.writeFileSync(path.join(dir, '.git', 'refs', 'remotes', 'origin', 'main'), `${'0123456789abcdef'.repeat(2)}01234567
+`);
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `a git error is not a proof the line is introduced in the range: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
 });
