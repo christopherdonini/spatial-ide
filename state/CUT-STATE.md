@@ -1600,3 +1600,12 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Gate 1** (reviewer reproduction, architect) is dispatched. P1 is re-checked before the merge.
   - **PR #156's gate-1 architect** FAILed on S1-1: a git failure in (f3) reads as acceptance. The report is filed, and the gate-log holds 328 records. The correction waits for the gate-1 reviewer.
   - **Routed:** the template pointer for round 34 item 4's exception, as the proposed node `template-round15e-exception-pointer`.
+- 2026-10-02T12:40Z - **PR #156's gate 1 is FAIL on both sides, with the same S1-1.** The reviewer reproduced it without mocks: a git error in (f3) is read as acceptance.
+  - **Before the fix's code.** The form's Amendment 1 (class 9, branch 0ce47aa) adds T10 and M10.
+  - **Correction round 1 is with the worker:**
+    - the fix: accept only on exit status 1;
+    - T10;
+    - T1's merge half run from a distinct root (the reviewer's S2-1);
+    - the `findMarkedSpan` doc comment (N-3);
+    - M1, M3, M7 and M10 observed at the corrected commit.
+  - **PR #157's gate-1 architect** PASSed, with one S2 on the workflow header's H1 sentence. The report is filed, and the gate-log holds 330 records. Its reviewer is still running.
