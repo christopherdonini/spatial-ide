@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3827366311b073b1a553bf567c50079caaeeeebeb56e96d2ddca1eb252353325`) at `2026-10-02T11:47:09.264Z`.
+Generated from `PLAN.yaml` (sha256 `fae1905f3dbc5389c86be400e608fe04428ed2d98e14bd55fef244c574e02995`) at `2026-10-02T12:06:10.705Z`.
 
 ## 1. Next
 
@@ -8,7 +8,7 @@ Generated from `PLAN.yaml` (sha256 `3827366311b073b1a553bf567c50079caaeeeebeb56e
 
 ## 2. Ready
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`, order 9, budget 90 min)
+- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`, order 9, budget 120 min)
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
 
 ## 3. Waiting on the human (total: 20 min)

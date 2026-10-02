@@ -1558,3 +1558,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **Two notes for the record.** Commit 753dcaf's message miscites two lines; it is not rewritten. The worker ran as Sonnet 5.5 under an Opus trailer, so future briefs ask for a trailer naming the model that actually ran.
   - **Gate 1** (reviewer and architect) is dispatched.
 - 2026-10-02T11:58Z - **Correction, my error.** Commit 385b2ff was pushed with verify-cites red: my command printed the exit code without gating the commit on it, which the gate-commits memory rule forbids. The failure was a branch-only cite (line 164 of the hook script, which exists only on the branch) in the filed worker report for #154. The cites are de-rooted at filing, the filing note says so, and the checks are green again in this commit, which is gated on every exit code.
+- 2026-10-02T12:06Z - **`workspace-rustfmt`'s full-form preregistration is committed before any code** (`WORKSPACE-RUSTFMT-PREREGISTRATION.md`, the node's gate; the architect's draft is filed as `state/consults/2026-10-02-workspace-rustfmt-architect-draft.md`).
+  - **Measured before commit.** The pass on a scratch tree at e1e244a changed 133 `.rs` paths and nothing else (11,828 insertions and 3,428 deletions), and the result is idempotent. verify-cites and verify-quotes stay green on the formatted tree. The scratch worktree is removed.
+  - **The red-line screen.**
+    - No force-push: E2's probe branch is pushed once, then deleted.
+    - The one CI install is the stable toolchain's rustfmt component, on the runner only. It is the check that round 34 item 1 approves.
+  - **PLAN.** The budget is 120 minutes. `kernel-close-races-followups` gains a note about its `skp.rs` cites.
+  - **PR #154's gate 1.** The architect PASSed with notes only, and the report is filed (`state/consults/gates/2026-10-02-round-mirror-hook-gate1-architect.md`). The reviewer is still running.
