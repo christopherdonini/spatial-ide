@@ -297,3 +297,19 @@ Written before any code, and before any outcome was seen.
 1. **The gap.** Every question text the custodian asked in rounds 33 and 34 begins `Item <n>. `. This includes the fixture's red-line item, round 33's item 8 (§3). Under §2 item 7 as drafted, that item would not count as a red-line item, so the fixture's header would read `RED LINE items: none`.
 2. **The change.** A question counts as a red-line item when its text begins with `RED LINE`, or with `Item `, one or more decimal digits, `. ` and then `RED LINE`. Nothing else in §2 item 7 or §7 changes: the item line still copies the question text byte for byte, prefix included.
 3. **Tests.** T2 gains a second case: a question whose text begins `Item 2. RED LINE` is listed in the header. S1's expected header lists the fixture's item 8 by its position in the call, which is item 4. T2's name and M2 do not change. §7's budget does not change.
+
+### Amendment 2 — correction round 1: the fixture's envelope, and valid non-object JSON (class 2)
+
+Written after gate 1's results were seen (a post-result amendment). References only.
+
+1. **The round** (branch commit fa674a7) answers gate 1:
+   - the reviewer's S1-1 and S2-2;
+   - both gates' note on the worker's deviation 3.
+
+   The reports are `state/consults/gates/2026-10-02-round-mirror-hook-gate1-architect.md` and `state/consults/gates/2026-10-02-round-mirror-hook-gate1-reviewer.md`.
+2. **Class 2, §3's envelope.** The fixture gains `tool_name`, `prompt_id`, `tool_use_id` and `permission_mode`, each with an invented value, so the envelope carries the keys §2 item 3 names as present and unread. `tool_input` does not change.
+3. **Class 2, §2 item 5's reading.** Valid JSON that is not an object now takes §7's second line (no well-formed questions), not the first (not JSON). T10 gains three such cases.
+4. **README.** H4 is labelled a hypothesis, as §2 item 14 requires.
+5. **Observations.** M1, M9, M10 and M11 were re-observed at fa674a7, and their first failing assertions did not change. The worker's report on the round is `state/consults/2026-10-02-round-mirror-hook-worker-report-2.md`.
+6. **Superseded index.** None: no recorded observation and no record row is superseded.
+7. **Not in this round.** The reviewer's S2-1, §28's heading, is made true when main is merged into this branch after the AUTONOMY.md §27 piece lands.
