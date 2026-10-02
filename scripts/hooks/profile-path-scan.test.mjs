@@ -1163,8 +1163,9 @@ test('a_range_scan_refuses_a_profile_path_in_an_added_line', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M1 -- the range mode drops the added-line findings. Observed: this test's
-  // status assertion failed (0 !== 1, the added-line form was not found). Reverted.
+  // RECORDED MUTATION (a_range_scan_refuses_a_profile_path_in_an_added_line): M1 -- the range mode
+  // drops the added-line findings. Observed: this test's status assertion failed (0 !== 1, the
+  // added-line form was not found). Reverted.
 });
 
 test('a_range_scan_refuses_a_profile_path_in_an_added_path_name', () => {
