@@ -1,22 +1,22 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d296ef13e6b2ae72c19a21a36a5467e21ac5cb119ea7b065276395bc8c79eee8`) at `2026-10-02T07:12:42.767Z`.
+Generated from `PLAN.yaml` (sha256 `8c533828df641cf214c58f2f13dbb0c2d4dd28ee9dce2a80a4859d19793f6de3`) at `2026-10-02T11:18:02.598Z`.
 
 ## 1. Next
 
-- **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) (lane `governance`)
+- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`)
 
 ## 2. Ready
 
+- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`, order 10, budget 90 min)
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) (lane `governance`, order 11, budget 120 min)
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
 
-## 3. Waiting on the human (total: 30 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### ruling
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (20 min)
-- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (10 min)
 
 ## 4. Blocked on dependencies
 
