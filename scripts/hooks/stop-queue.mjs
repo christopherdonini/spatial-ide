@@ -57,8 +57,8 @@ export const HALT_CACHE_TTL_MS = 60 * 1000; // reviewer finding 17: cache the or
 export const TELEGRAM_DEDUPE_WINDOW_MS = 10 * 60 * 1000; // "deduped on a hash of the waiting set" within 10 minutes
 
 // The continuity step's declared values (the stale-continuity form's section 7). Module-local.
-const CONTINUITY_GIT_TIMEOUT_MS = 2000; // per git call; three calls plus HALT's 5 s fetch stay under the Stop entry's 20 s
-const CONTINUITY_GIT_MAX_BUFFER = 64 * 1024 * 1024; // bounds the ledger blob read; execFileSync's default of 1 MiB is below the ledger's size
+const CONTINUITY_GIT_TIMEOUT_MS = 2000; // per git call; the stale path makes four (the log, two shows, the rev-parse): 4 x 2 s plus HALT's 5 s fetch is 13 s, under the Stop entry's 20 s
+const CONTINUITY_GIT_MAX_BUFFER = 64 * 1024 * 1024; // bounds the ledger blob read; guards against the ledger growing past execFileSync's 1 MiB default (the form's I6)
 const LEDGER_PATHSPEC = 'state/CUT-STATE.md';
 
 function firstLineOf(text) {

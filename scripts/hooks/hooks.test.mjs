@@ -722,6 +722,37 @@ test('stop-queue: a ledger over 1 MiB is still judged', async (t) => {
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: judgeContinuity's null-flushed_at check (the F_c null check) returns a stale
+// verdict instead of not judged -> `stop-queue: a ledger commit whose block has no flushed_at is not judged`
+// fails, first failing assertion: the reason matches the stale text where /^next: two-nodes-ready/ is
+// expected. Observed at 2542233 with this change.
+test('stop-queue: a ledger commit whose block has no flushed_at is not judged', async (t) => {
+  const { dir, input } = stopFixture(t);
+  const noFlushedAt = '# CUT-STATE\n\n## SESSION-CONTINUITY\ntip: 0000000000000000000000000000000000000000\n\n## Ledger\n\n- entry 1\n';
+  fs.writeFileSync(path.join(dir, 'state', 'CUT-STATE.md'), noFlushedAt);
+  commitPaths(dir, [LEDGER_PATHSPEC], 'c1 a block with no flushed_at');
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.match(result.reason, /^next: two-nodes-ready/);
+  const line = `stop-queue: continuity not judged (no flushed_at in the block at ${headOf(dir)}); the stop continues to the next step.`;
+  assert.ok(result.stderr.split('\n').includes(line), `stderr carries the not-judged line: ${result.stderr}`);
+});
+
+// RECORDED MUTATION: judgeContinuity's null-blob check returns a stale verdict instead of not judged ->
+// `stop-queue: a ledger commit that removes the ledger is not judged` fails, first failing assertion:
+// the reason matches the stale text where /^next: two-nodes-ready/ is expected. Observed at 2542233
+// with this change.
+test('stop-queue: a ledger commit that removes the ledger is not judged', async (t) => {
+  const { dir, input } = stopFixture(t);
+  git(dir, ['rm', '-q', '--', LEDGER_PATHSPEC]);
+  git(dir, ['commit', '-q', '-m', 'c1 removes the ledger']);
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.match(result.reason, /^next: two-nodes-ready/);
+  const line = `stop-queue: continuity not judged (state/CUT-STATE.md unreadable at ${headOf(dir)}); the stop continues to the next step.`;
+  assert.ok(result.stderr.split('\n').includes(line), `stderr carries the not-judged line: ${result.stderr}`);
+});
+
 // RECORDED MUTATION: the continuity step removed from decide (judged as fresh) ->
 // `stop-queue CLI: a stale ledger blocks with the continuity reason through the shipped entry`
 // fails, first failing assertion: the CLI's reason is the queue reason where the stale reason is

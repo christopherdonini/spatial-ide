@@ -46,8 +46,8 @@ reason to allow — that is what a continuation looks like; the caps and the pro
 loop protection.")
 
 **Decision order** (AUTONOMY.md §3, with §18's HALT switch, §24's lease check and the
-stale-continuity step of `STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`; the continuity step and the
-background-tasks allow trade places with the earlier order):
+stale-continuity step of `STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`; continuity is a new step 3,
+and the background-tasks allow moved from step 1 to step 4):
 
 1. `CUSTODIAN_STOP_HOOK=off` (environment) → allow. Or `state/CUSTODIAN-HALT` exists, locally or
    on `origin/main` (`git fetch --quiet origin main` with a 5-second timeout; a fetch failure
