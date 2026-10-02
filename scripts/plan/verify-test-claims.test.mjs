@@ -1457,9 +1457,12 @@ test('a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge',
   assert.equal(onBranch.superseded[0].name, SUPERSEDED_CLAIM_NAME);
 
   // The shape a governance-ci pull_request run scans: a detached --no-ff merge of the PR into the base tip.
-  sameprGit(dir, 'checkout', '-q', '--detach', 'origin/main');
-  sameprGit(dir, 'merge', '-q', '--no-ff', '-m', 'test merge', 'pr');
-  const onMerge = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  // Scanned from a distinct root (a linked worktree), so that (f2) and (f3) run there and do not read the
+  // module-level caches the branch scan above filled for `dir`.
+  const mergeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-merge-'));
+  sameprGit(dir, 'worktree', 'add', '-q', '--detach', mergeRoot, 'origin/main');
+  sameprGit(mergeRoot, 'merge', '-q', '--no-ff', '-m', 'test merge', 'pr');
+  const onMerge = runVerifyTestClaims({ repoRoot: mergeRoot, mergeCommitGates: SAMEPR_GATES });
   assert.equal(onMerge.findings.length, 0, JSON.stringify(onMerge.findings));
   assert.equal(onMerge.superseded.length, 1, JSON.stringify(onMerge.superseded));
   assert.equal(onMerge.superseded[0].samePr, true, JSON.stringify(onMerge.superseded));
@@ -1623,4 +1626,15 @@ test('a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record', () =
   assert.equal(findings.length, 0, JSON.stringify(findings));
   assert.equal(superseded.length, 1, JSON.stringify(superseded));
   assert.equal(superseded[0].samePr, undefined, JSON.stringify(superseded));
+});
+
+// RECORDED MUTATION: (not yet observed)
+test('a_git_error_in_the_range_check_does_not_exempt', () => {
+  const { dir } = sameprFixture();
+  // A well-formed id for an object the repository does not have: every ancestry check against origin/main errors.
+  fs.writeFileSync(path.join(dir, '.git', 'refs', 'remotes', 'origin', 'main'), `${'0123456789abcdef'.repeat(2)}01234567
+`);
+  const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
+  assert.equal(superseded.length, 0, `a git error is not a proof the line is introduced in the range: ${JSON.stringify(superseded)}`);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
 });
