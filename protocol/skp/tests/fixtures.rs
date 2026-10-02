@@ -367,6 +367,8 @@ fn every_new_projection_error_fixture_round_trips() {
 fn cancel_fixtures_round_trip() {
     round_trip::<CancelRequest>("v0-cancel-request");
     round_trip::<CancelResponse>("v0-cancel-response");
+    round_trip::<CancelResponse>("v0-cancel-response-unknown");
+    round_trip::<CancelResponse>("v0-cancel-response-already_terminal");
 }
 
 #[test]

@@ -489,6 +489,21 @@ mod tests {
     use super::*;
     use crate::v0::SKP_VERSION;
 
+    /// T1 (`CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): SKP-V0.md §1 gives `cancel`'s `state`
+    /// exactly three values, and §4 item 13 refuses a tolerant reader, so every other string is
+    /// refused at deserialize — F4 (`"cancelled"`, the conformance harness's own fixture) and F5
+    /// (wrong case, a hyphenated spelling, empty).
+    #[test]
+    fn a_cancel_response_state_outside_the_closed_set_is_refused_at_deserialize() {
+        for bad in ["cancelled", "Requested", "already-terminal", ""] {
+            let v = serde_json::json!({ "state": bad });
+            assert!(
+                serde_json::from_value::<CancelResponse>(v).is_err(),
+                "{bad:?} must be refused at deserialize"
+            );
+        }
+    }
+
     #[test]
     fn every_request_and_response_round_trips_and_refuses_unknown_fields() {
         let req = OpenDatasetRequest {

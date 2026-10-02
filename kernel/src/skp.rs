@@ -2344,6 +2344,61 @@ mod tests {
         )
     }
 
+    /// T4 (`protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): the seam is the response
+    /// JSON the kernel writes and the shell and `protocol/skp` read. Each of `cancel`'s three
+    /// outcomes comes through the real `SkpHost::cancel` — an unminted `sh_` handle (`unknown`), a
+    /// minted ticket cancelled once (`requested`), a minted, redeemed ticket cancelled twice
+    /// (`already_terminal`) — is serialized, and is compared with the shared fixture both sides'
+    /// tests read; same real-shape discipline as
+    /// `the_real_describe_crs_shape_matches_the_shared_fixture`.
+    #[test]
+    fn the_real_cancel_responses_match_the_shared_fixtures() {
+        let tickets = StreamRegistry::new();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            tickets.clone(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let cancel = |handle: &str| {
+            serde_json::to_value(
+                host.cancel(CancelRequest {
+                    skp: SKP_VERSION.to_string(),
+                    handle: handle.to_string(),
+                })
+                .expect("cancel answers"),
+            )
+            .unwrap()
+        };
+        let fixture = |name: &str| -> serde_json::Value {
+            let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .expect("workspace root")
+                .join(format!("protocol/skp/tests/data/{name}.json"));
+            let raw = std::fs::read_to_string(&path).expect("read shared fixture");
+            serde_json::from_str(&raw).expect("shared fixture is valid JSON")
+        };
+
+        // F6, Unknown.
+        assert_eq!(
+            cancel("sh_00000000000000000000000000000000"),
+            fixture("v0-cancel-response-unknown")
+        );
+        // F6, Requested: a minted, never-redeemed ticket cancelled once.
+        let (s, c) = synthetic_source();
+        let pending = tickets.mint("d", s, c).unwrap();
+        assert_eq!(cancel(pending.as_str()), fixture("v0-cancel-response"));
+        // F6, AlreadyTerminal: minted, redeemed, cancelled twice.
+        let (s, c) = synthetic_source();
+        let redeemed = tickets.mint("d", s, c).unwrap();
+        tickets.redeem(redeemed.as_str()).unwrap();
+        assert_eq!(cancel(redeemed.as_str()), fixture("v0-cancel-response"));
+        assert_eq!(
+            cancel(redeemed.as_str()),
+            fixture("v0-cancel-response-already_terminal")
+        );
+    }
+
     #[test]
     fn a_ticket_redeems_exactly_once() {
         let reg = StreamRegistry::default();
