@@ -1496,3 +1496,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - M10 is re-recorded to the case that actually fails first (the reviewer's N1).
   - **Kept for the closing record:** the reviewer's N3 (a post-resolution failure also prints the fact line) and the architect's N3 (`-M` yields no C, so copies are read whole).
   - **Routed:** the architect's N4 (a conflicted PR runs no pull_request workflow) goes to `exposure-scan-followups`.
+- 2026-10-02T07:55Z - **Correction: round 33's items 1 and 8 are red-line items that I asked with preset options. AUTONOMY.md §4 accepts typed text only for a red-line item, so neither selection is a red-line ruling.** The same check found a red-line action: the backstop form's E4 force-pushed the probe branch.
+  - **Where it is recorded.** The round 33 RULED block gains a correction line, and the four affected nodes' summaries note it.
+  - **What stops.** PR #153 does not merge, and workspace-rustfmt does not start, until the human's typed ruling. Nothing is done for item 8.
+  - **Round 34** (`state/questions/round-34.md`, rewritten) re-asks items 1 and 8 for typed text, discloses E4 (item 3, typed), and carries the four items drafted earlier: R-1, the merge record, the squash and rebase setting, and the required check. It is mirrored before asking.
+  - **PR #153's correction round 1** is two commits, a5e2e79 and e0442e0. The worker's report 2 is filed, and gate 2 (reviewer and architect, scoped) is dispatched.
+  - **Drafting.** The architect's draft for round-mirror-pretooluse-hook has come back and waits to be committed. It was this draft's routed note that found the §4 mismatch.
