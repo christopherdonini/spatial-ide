@@ -1302,9 +1302,12 @@ test('a_staged_type_change_is_refused_by_the_pre_commit_hook', () => {
   // refusal assertion (assert.notEqual on the commit status) failed: the commit that stages the
   // type change was accepted. Reverted.
   // Re-observed after the finding assertion was added: M7 failed on the same notEqual (status 0).
-  // Abort mutation: '--bogus-option' appended to the staged content diff's arguments, so the staged
-  // scan aborts. Observed: the finding assertion failed (stderr carried git's usage text, not
-  // `link:1 unlisted-segment`), though the 'commit refused' assertion before it passed. Reverted.
+  // Abort mutation, scoped to the type-change commit: in stagedAddedLinesAgainst, '--bogus-option'
+  // is pushed onto the content diff's arguments only when `git rev-parse -q --verify HEAD` resolves,
+  // so the root init commit still scans. Observed: the init commit passed and the 'commit refused'
+  // assertion passed; the finding assertion failed (stderr carried git's usage text, not
+  // `link:1 unlisted-segment`). Unscoped, the init commit's own scan aborts and the test fails
+  // earlier, so only the scoped form proves the property. Reverted.
 });
 
 test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned', () => {
