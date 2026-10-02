@@ -289,3 +289,11 @@ Assertions only:
 - **Operator:** none. E2 is the custodian's record of a round the custodian raises anyway.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — the red-line test also reads an "Item <n>. " prefix (class 2, before any code)
+
+Written before any code, and before any outcome was seen.
+
+1. **The gap.** Every question text the custodian asked in rounds 33 and 34 begins `Item <n>. `. This includes the fixture's red-line item, round 33's item 8 (§3). Under §2 item 7 as drafted, that item would not count as a red-line item, so the fixture's header would read `RED LINE items: none`.
+2. **The change.** A question counts as a red-line item when its text begins with `RED LINE`, or with `Item `, one or more decimal digits, `. ` and then `RED LINE`. Nothing else in §2 item 7 or §7 changes: the item line still copies the question text byte for byte, prefix included.
+3. **Tests.** T2 gains a second case: a question whose text begins `Item 2. RED LINE` is listed in the header. S1's expected header lists the fixture's item 8 by its position in the call, which is item 4. T2's name and M2 do not change. §7's budget does not change.

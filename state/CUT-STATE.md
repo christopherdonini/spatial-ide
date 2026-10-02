@@ -1544,3 +1544,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - Under round 34 item 7, the check can now be made required.
     - Under round 34 item 6, squash and rebase merging are still enabled, read by `gh api` at this entry.
   - **Before this entry,** 28e8255 committed the forms of items C and D.
+- 2026-10-02T11:42Z - **`round-mirror-pretooluse-hook`'s form gains Amendment 1, before any code (class 2).**
+  - **The gap.** The red-line test also has to read an "Item <n>. " prefix. Every question text in rounds 33 and 34 carries one, the fixture's item 8 included, so as drafted the fixture's header would have read "none".
+  - **The change.** T2 gains a case, and S1's header lists item 4.
+  - **Next.** Branches for items C and D, their workers, and the architect's draft for `workspace-rustfmt`.
