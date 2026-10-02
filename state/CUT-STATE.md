@@ -1565,3 +1565,11 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The one CI install is the stable toolchain's rustfmt component, on the runner only. It is the check that round 34 item 1 approves.
   - **PLAN.** The budget is 120 minutes. `kernel-close-races-followups` gains a note about its `skp.rs` cites.
   - **PR #154's gate 1.** The architect PASSed with notes only, and the report is filed (`state/consults/gates/2026-10-02-round-mirror-hook-gate1-architect.md`). The reviewer is still running.
+- 2026-10-02T12:10Z - **PR #154's gate 1 is architect PASS and reviewer FAIL on one S1.** The fixture's envelope lacks the PreToolUse keys that §3 and §2 item 3 name. Both reports are filed, and the gate-log holds 325 records.
+  - **Correction round 1 is with the worker:**
+    - the envelope gains `tool_name`, `prompt_id`, `tool_use_id` and `permission_mode`;
+    - the README's H4 is labelled a hypothesis;
+    - valid non-object JSON is routed to the malformed line, which is the true one;
+    - M1, M9, M10 and M11 are re-observed.
+  - **Left for the merge.** §28's heading becomes "after §27" when main is merged into the branch after item C lands (the reviewer's S2-1).
+  - **The exposure scan's first PR run** (run 37003669891) is green.
