@@ -320,3 +320,25 @@ budget overrun, §7 not edited. Written after the results were seen (a post-resu
 3. **The section number.** §2 item 10's appended `AUTONOMY.md` section is §30, after main's §29. The merge commit 4b1f641 set it, and nothing above it changed.
 4. **Generation.** The node's generation bumps to 2 (`AUTONOMY.md` §15).
 5. **Superseded index.** None. §7 and §5 stand as registered; this amendment records the results.
+
+### Amendment 2 — correction round 1: T18 and T19, and the §7 figure (classes 4, 8 and 1)
+
+budget overrun, §7 not edited. Written after gate 1's results were seen (a post-result amendment). References only.
+
+1. **The round.** Branch commit 7383018 answers gate 1:
+   - the architect's S2-1 (`state/consults/gates/2026-10-02-stop-hook-stale-continuity-gate1-architect.md`);
+   - the reviewer's S2-1, S2-4, N1 and N2 (`state/consults/gates/2026-10-02-stop-hook-stale-continuity-gate1-reviewer.md`).
+2. **Class 4, two tests with their mutations, for §7's two not-judged causes that had no test:**
+   - **T18** `stop-queue: a ledger commit whose block has no flushed_at is not judged`. Its scenario: c1 commits a block with no `flushed_at:` line, and the step reports the queue reason plus §7's stderr line naming `no flushed_at in the block at` c1. **M18:** a `null` F_c read as stale.
+   - **T19** `stop-queue: a ledger commit that removes the ledger is not judged`. Its scenario: c1 removes `state/CUT-STATE.md`, and the step reports the queue reason plus §7's stderr line naming `state/CUT-STATE.md unreadable at` c1. **M19:** a `null` blob read as stale.
+   - M18 and M19 were each observed at 2542233 with the change, by name. Each test's RECORDED MUTATION comment records it.
+   - The suite at 7383018 runs 408 tests, 408 pass.
+3. **Comments only:**
+   - `CONTINUITY_GIT_MAX_BUFFER`'s comment states the guard against growth (I6);
+   - the timeout comment counts four calls on the stale path;
+   - the README's decision-order intro is reworded.
+
+   No product line changes, and §7 is not edited.
+4. **Class 8, the figure.** By §7's own command at 7383018, merge base fe1e6b7, the count is 734 lines over the same 5 files: `AUTONOMY.md` 9, `scripts/hooks/README.md` 66, `scripts/hooks/hooks.test.mjs` 466, `scripts/hooks/session-resume.mjs` 5 and `scripts/hooks/stop-queue.mjs` 188. The declared ceiling is 650. The reason is Amendment 1 item 1's, plus T18 and T19.
+5. **Generation.** The node's generation bumps to 3 (`AUTONOMY.md` §15).
+6. **Superseded index.** Amendment 1 item 1's final figure (703 at 78681ec) is superseded by item 4's (734 at 7383018). Nothing else is superseded.
