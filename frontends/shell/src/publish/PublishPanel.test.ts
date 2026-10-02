@@ -223,8 +223,9 @@ describe("FILTER_SCOPE_SENTENCE -- pinned against publish.rs's own copy", () => 
     const match = rustSource.match(re);
     expect(match).not.toBeNull();
     // In-memory variant: the literal on the next line after a CRLF must capture the same text.
-    // RECORDED MUTATION: with the regex's whitespace after `=` set back to one literal space, this test "FILTER_SCOPE_SENTENCE -- pinned against publish.rs's own copy > matches ... Rust line-continuation collapsed" fails at the in-memory expect (expected undefined to be the file's captured value); observed at base f5c87b0 plus this change.
-    const moved = rustSource.replace('FILTER_SCOPE_SENTENCE: &str = "', 'FILTER_SCOPE_SENTENCE: &str =\r\n    "');
+    // RECORDED MUTATION: with the regex's whitespace after `=` set back to one literal space, this test "FILTER_SCOPE_SENTENCE -- pinned against publish.rs's own copy > matches ... Rust line-continuation collapsed" fails at the in-memory expect (expected undefined to be the file's captured value); observed on the corrected tree, base a0aae0e plus this change.
+    const moved = rustSource.replace(/(FILTER_SCOPE_SENTENCE\s*:\s*&str\s*=)\s*"/, '$1 \t\r\n    "');
+    expect(moved).not.toBe(rustSource);
     expect(moved.match(re)?.[1]).toBe((match as RegExpMatchArray)[1]);
     // Rust string-literal line continuation: a trailing `\` followed by a newline and the next
     // line's leading whitespace collapses to nothing (no inserted space) -- the ONE escape this
@@ -471,8 +472,9 @@ describe("prepareCancelKey -- pinned against publish.rs::prepare_cancel_key's ow
     const match = rustSource.match(re);
     expect(match).not.toBeNull();
     // In-memory variant: the literal on the next line after a CRLF must capture the same text.
-    // RECORDED MUTATION: with the regex's whitespace after `=` set back to one literal space, this test "prepareCancelKey -- pinned against publish.rs::prepare_cancel_key's own prefix > PREPARE_CANCEL_KEY_PREFIX matches ... exactly" fails at the in-memory expect (expected undefined to be the file's captured value); observed at base f5c87b0 plus this change.
-    const moved = rustSource.replace('PREPARE_CANCEL_KEY_PREFIX: &str = "', 'PREPARE_CANCEL_KEY_PREFIX: &str =\r\n    "');
+    // RECORDED MUTATION: with the regex's whitespace after `=` set back to one literal space, this test "prepareCancelKey -- pinned against publish.rs::prepare_cancel_key's own prefix > PREPARE_CANCEL_KEY_PREFIX matches ... exactly" fails at the in-memory expect (expected undefined to be the file's captured value); observed on the corrected tree, base a0aae0e plus this change.
+    const moved = rustSource.replace(/(PREPARE_CANCEL_KEY_PREFIX\s*:\s*&str\s*=)\s*"/, '$1 \t\r\n    "');
+    expect(moved).not.toBe(rustSource);
     expect(moved.match(re)?.[1]).toBe((match as RegExpMatchArray)[1]);
     expect((match as RegExpMatchArray)[1]).toBe(PREPARE_CANCEL_KEY_PREFIX);
   });
