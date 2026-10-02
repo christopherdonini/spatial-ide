@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T12:11:00.722Z",
-  "plan_hash": "9614f4f2047e3a030d874f4093ac92e5d3abab97d67dd0ade226e83bb646504c",
+  "generated_at": "2026-10-02T12:13:43.539Z",
+  "plan_hash": "e8f1c2a28b5b033fb65a6087e240a6b85572c74e1249a122cd2f4c22849bec48",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5648,7 +5648,6 @@
         "minutes": 0
       },
       "gate": "scripts/plan/PROBE-SAMEPR-PREREGISTRATION.md",
-      "merge": "merge-commit",
       "evidence": null,
       "budget_minutes": 0,
       "generation": 1,
