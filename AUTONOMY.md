@@ -488,3 +488,14 @@ Round 33, item 5 adopted the weekly window's proposal F (`state/drafts/weekly-wi
 - `state/directives/` — the human's instructions, recorded verbatim, newest first.
 
 §0 is not edited in place, so that no line below it moves. The SessionStart hook prints its own copy of §0's list (`scripts/hooks/session-resume.mjs`, `READING_ORDER`). That copy gains the same step in PLAN node `stop-hook-stale-continuity`'s piece, under that piece's gating; until then, this section governs.
+
+## §28. The round mirror is a PreToolUse hook, one round per AskUserQuestion call (the human, 2026-10-02, round 33, item 3; appended after §26 so that no line a record cites above it moves)
+
+Round 33, item 3 adopted the custodian's proposal that the question-round Telegram mirror (§4, §16) be carried by a hook. The record is PLAN node `round-mirror-pretooluse-hook` and `scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`. §4 and §16 are not edited in place. From this section on:
+
+- From the merge, in the lease session, the hook (`scripts/hooks/questions-mirror.mjs --hook`, wired in `.claude/settings.json`) carries §4's round mirror for every `AskUserQuestion` call. The proof is the test `the_settings_command_mirrors_a_recorded_askuserquestion_payload`; the live record is the form's E2.
+- Each call is its own round. A batch of more than four questions is consecutive rounds, and the digest's question-set-n-of-m numbering stays.
+- The custodian writes no round file by hand for a call and runs no mirror CLI before one. Context goes in the question text, or in a `state/drafts/` file that the text names.
+- After each call the custodian checks that the new round file exists and reads the last line of `.claude/state/round-mirror.jsonl`. A missing file, or `ok: false`, is mirrored or re-sent by hand with the file-argument CLI, and the ledger records it.
+- A round answered without a call (round 32's shape) is still filed by hand.
+- The custodian commits each hook-written file with its RULED record.

@@ -163,7 +163,7 @@ const S1_HEADER = (date) =>
   `Question round 8 — ${date} (custodian → human; written by the round-mirror hook from the AskUserQuestion call). 4 items, asked in one call. RED LINE items: 4. AskUserQuestion is the answer channel; this mirror is read-and-copy.`;
 const S1_BODY = (date) => `${S1_HEADER(date)}\n\n---\n\n${S1_ITEMS.map((l) => l.join('\n')).join('\n\n---\n\n')}\n`;
 
-// RECORDED MUTATION: M1 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M1, observed at 753dcaf (applied, run, reverted): the option descriptions dropped from the render -> the_hook_writes_the_calls_own_questions_and_options_as_the_round_file fails at assert.equal(text, S1_BODY(date)): the written option lines lack the ' — <description>' tails the expected body carries.
 test('the_hook_writes_the_calls_own_questions_and_options_as_the_round_file', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, fixture);
@@ -176,7 +176,7 @@ test('the_hook_writes_the_calls_own_questions_and_options_as_the_round_file', (t
   assert.equal(countDry(r.stderr), 1);
 });
 
-// RECORDED MUTATION: M2 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M2, observed at 753dcaf (applied, run, reverted): the RED LINE test removed from the render -> the_header_lists_the_red_line_items_by_number fails at its first assert.match: the header reads 'RED LINE items: none.' where 'RED LINE items: 2.' is expected.
 test('the_header_lists_the_red_line_items_by_number', (t) => {
   const dir = hookProject(t);
   const plain = { question: 'First?', options: [{ label: 'a' }] };
@@ -191,14 +191,14 @@ test('the_header_lists_the_red_line_items_by_number', (t) => {
   assert.match(none, /1 item, asked in one call\. RED LINE items: none\. /);
 });
 
-// RECORDED MUTATION: M3 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M3, observed at 753dcaf (applied, run, reverted): the numbers compared as strings -> the_next_round_number_is_one_more_than_the_highest_round_file fails at assert.deepEqual(roundFiles(dir), ...): 'round-11.md' is missing, the string maximum being 9.
 test('the_next_round_number_is_one_more_than_the_highest_round_file', (t) => {
   const dir = hookProject(t, { rounds: ['round-2.md', 'round-9.md', 'round-10.md', 'round-3-draft.md', '.gitkeep'] });
   assertQuiet(runHook(dir, fixture));
   assert.deepEqual(roundFiles(dir), ['.gitkeep', 'round-10.md', 'round-11.md', 'round-2.md', 'round-3-draft.md', 'round-9.md']);
 });
 
-// RECORDED MUTATION: M4 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M4, observed at 753dcaf (applied, run, reverted): the send routed through sendTelegramDeduped keyed on session_id -> a_second_call_writes_a_second_round_and_sends_a_second_message fails at assert.equal(countDry(second.stderr), 1): 0 !== 1, the second send deduped.
 test('a_second_call_writes_a_second_round_and_sends_a_second_message', (t) => {
   const dir = hookProject(t);
   const first = runHook(dir, fixture);
@@ -210,7 +210,7 @@ test('a_second_call_writes_a_second_round_and_sends_a_second_message', (t) => {
   assert.equal(countDry(second.stderr), 1);
 });
 
-// RECORDED MUTATION: M5 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M5, observed at 753dcaf (applied, run, reverted): the agent_id case removed -> a_call_inside_a_subagent_writes_and_sends_nothing fails at the first assert.deepEqual: stderr carries the dry-run send where '' is expected.
 test('a_call_inside_a_subagent_writes_and_sends_nothing', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, { ...fixture, agent_id: 'a1' });
@@ -222,7 +222,7 @@ test('a_call_inside_a_subagent_writes_and_sends_nothing', (t) => {
   assert.deepEqual(roundFiles(dir), ['round-7.md', 'round-8.md', 'round-9.md']);
 });
 
-// RECORDED MUTATION: M6 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M6, observed at 753dcaf (applied, run, reverted): the lease case removed -> a_session_without_the_lease_writes_and_sends_nothing fails at assert.deepEqual on the first case (lease null): stderr carries the dry-run send where '' is expected.
 test('a_session_without_the_lease_writes_and_sends_nothing', (t) => {
   const cases = [
     null,
@@ -237,7 +237,7 @@ test('a_session_without_the_lease_writes_and_sends_nothing', (t) => {
   }
 });
 
-// RECORDED MUTATION: M7 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M7, observed at 753dcaf (applied, run, reverted): the cloud guard removed -> a_cloud_session_call_writes_and_sends_nothing fails at the first assert.deepEqual: stderr carries the dry-run send where '' is expected.
 test('a_cloud_session_call_writes_and_sends_nothing', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, fixture, childEnv({ extra: { CLAUDE_CODE_REMOTE: 'true' } }));
@@ -245,7 +245,7 @@ test('a_cloud_session_call_writes_and_sends_nothing', (t) => {
   assert.deepEqual(roundFiles(dir), ['round-7.md']);
 });
 
-// RECORDED MUTATION: M8 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M8, observed at 753dcaf (applied, run, reverted): the hook exits 1 when the outcome is not ok -> a_failed_send_still_exits_zero_with_empty_stdout fails at assertQuiet: status 1 where 0 is expected.
 test('a_failed_send_still_exits_zero_with_empty_stdout', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, fixture, childEnv({ dryRun: false }));
@@ -257,7 +257,7 @@ test('a_failed_send_still_exits_zero_with_empty_stdout', (t) => {
   assert.equal(lines[1], 'questions-mirror: round 8 send failed (mode=message); the round file is kept for a re-send.');
 });
 
-// RECORDED MUTATION: M9 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M9, observed at 753dcaf (applied, run, reverted): the parse error rethrown -> a_hook_input_that_is_not_json_exits_zero_and_writes_nothing fails at the stderr assert.equal: the 'hook error (Unexpected token ...)' line where the not-JSON fact line is expected.
 test('a_hook_input_that_is_not_json_exits_zero_and_writes_nothing', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, 'not json');
@@ -266,7 +266,7 @@ test('a_hook_input_that_is_not_json_exits_zero_and_writes_nothing', (t) => {
   assert.deepEqual(roundFiles(dir), ['round-7.md']);
 });
 
-// RECORDED MUTATION: M10 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M10, observed at 753dcaf (applied, run, reverted): validation removed -> a_call_with_a_malformed_question_writes_no_round_file fails at the stderr assert.equal on the first case ([]): a dry-run send of a 0-item round where the malformed fact line is expected.
 test('a_call_with_a_malformed_question_writes_no_round_file', (t) => {
   const dir = hookProject(t);
   const good = { question: 'Q?', options: [{ label: 'a' }] };
@@ -285,7 +285,7 @@ test('a_call_with_a_malformed_question_writes_no_round_file', (t) => {
   assert.deepEqual(roundFiles(dir), ['round-7.md']);
 });
 
-// RECORDED MUTATION: M11 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M11, observed at 753dcaf (applied, run, reverted): --hook dropped from the settings command -> the_settings_command_mirrors_a_recorded_askuserquestion_payload fails at assertQuiet: status 1 where 0 is expected.
 test('the_settings_command_mirrors_a_recorded_askuserquestion_payload', (t) => {
   const settings = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
   const entries = settings.hooks.PreToolUse;
@@ -318,7 +318,7 @@ test('the_settings_command_mirrors_a_recorded_askuserquestion_payload', (t) => {
   assert.equal(countDry(r.stderr), 1);
 });
 
-// RECORDED MUTATION: M12 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M12, observed at 753dcaf (applied, run, reverted): ok written as true regardless of the outcome -> the_outcome_line_records_the_round_the_mode_and_the_send_result fails at the final assert.deepEqual: round 8 reads ok: true where ok: false is expected.
 test('the_outcome_line_records_the_round_the_mode_and_the_send_result', (t) => {
   const dir = hookProject(t);
   assertQuiet(runHook(dir, fixture, childEnv({ dryRun: false })));
@@ -336,7 +336,7 @@ test('the_outcome_line_records_the_round_the_mode_and_the_send_result', (t) => {
   ]);
 });
 
-// RECORDED MUTATION: M13 pending (to be recorded when the hook mode lands)
+// RECORDED MUTATION: M13, observed at 753dcaf (applied, run, reverted): the hook calls sendMessage with the text directly -> a_round_over_4096_characters_is_sent_as_a_document_from_the_hook fails at assert.equal(lines.length, 2): 4 !== 2.
 test('a_round_over_4096_characters_is_sent_as_a_document_from_the_hook', (t) => {
   const dir = hookProject(t);
   const r = runHook(dir, callOf([{ question: 'Long?', options: [{ label: 'a', description: 'd'.repeat(4200) }] }]));

@@ -213,6 +213,31 @@ a stderr line) on a missing file, missing token/chat-id env, or an API error. Th
 `mirrorRound({ file, sendMessage, sendDocument, readFile })` takes its dependencies injected, so
 tests drive it with fakes and never touch the network.
 
+### Hook mode — `questions-mirror.mjs --hook` (PLAN node `round-mirror-pretooluse-hook`)
+
+A `PreToolUse` entry in `.claude/settings.json` (matcher `AskUserQuestion`, timeout 20) runs the script in hook
+mode on every `AskUserQuestion` call. Under the lease (§24), outside a subagent and outside a cloud
+session, each call writes exactly one new `state/questions/round-<n>.md` (n is one more than the highest
+existing round number) holding that call's own questions and options, and sends it once through
+`mirrorRound`. The form is `ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`.
+
+- **Fields read:** `session_id`, `agent_id` and `cwd` from the event, and `tool_input.questions[]` with each
+  question's `question` and each option's `label` and `description`. Nothing else. That the event
+  delivers this shape (H2), that its `session_id` equals the lease id (H3) and that the matcher fires
+  (H1) are hypotheses until the form's E2 is recorded; the fixture proves the hook against the shape the
+  session transcript recorded, not that Claude Code delivers it. `agent_id` inside a subagent (H4) is
+  unit-tested only.
+- **Silent cases** (exit 0, no output, no file, no send): a cloud session; a non-empty `agent_id`; a lease
+  not held by the event's `session_id`.
+- **Every path exits 0 with empty stdout.** Malformed input, a write failure, a failed send and an
+  unexpected error each print one stderr line and still exit 0. The hook never returns a decision.
+- **The outcome line:** each send appends one JSON line (`at`, `round`, `file`, `mode`, `ok`) to
+  `.claude/state/round-mirror.jsonl` (gitignored). It carries no question text and no session id.
+- **One writer per call:** in the lease session the hook is the only writer of a round file for an
+  `AskUserQuestion` call. It does not look for, adopt or skip on a hand-written file, and it does not
+  dedupe: each call is its own round. A round answered without a call is still filed by hand.
+- The file-argument CLI above is unchanged.
+
 ## State directory
 
 All of the above keep their own state under `<project root>/.claude/state/` (gitignored —
