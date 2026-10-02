@@ -230,3 +230,32 @@ Written after gate 1's results were seen (a post-result amendment). References o
 4. **The rustfmt versions.** CI ran rustfmt 1.10.0 and the local runs 1.9.0: the gate-1 reviewer's S2-3. E1 is green, so I6 does not fire. H1 is recorded as tested across those two versions and claims nothing more.
 5. **Generation.** The node's generation bumps (`AUTONOMY.md` §15).
 6. **Superseded index.** None. No line of this form is made false; the header lines C3 rewrites are not records.
+
+### Amendment 2 — the closing record; budget overrun, §7 not edited (classes 1 and 8, references and hashes only)
+
+budget overrun, §7 not edited. Written after the piece's results were seen and after its merge (a post-result amendment). References and hashes only.
+
+1. **Merged.** PR #157 merged on 2026-10-02 at 17:43:24Z as merge commit 51ed3b2, whose second parent is 275d305, the PR's final head. Branch commit 460c5a1 carried a draft of items 2 to 4. It was pushed after the merge, is not in main and is not a record. Its gate-3 architect report, `state/consults/gates/2026-10-02-workspace-rustfmt-gate3-architect.md`, is the reading that items 2 to 4 restate.
+2. **Class 8, the file count.**
+   - **Declared:** §7 declares at most 120 changed lines over at most 2 files.
+   - **Final:** by §7's own counting command at 275d305 (C1 6371d92), the figure is 93 lines over 3 files: `.git-blame-ignore-revs` 2, `.github/workflows/rust-fmt.yml` 80, and this form 11.
+   - **Reason:** the counting command does not exclude this form, so Amendment 1 brought the form into the count.
+   - §7 is not edited.
+   - The findings are both gate-2 S1-1s: `state/consults/gates/2026-10-02-workspace-rustfmt-gate2-architect.md` and `state/consults/gates/2026-10-02-workspace-rustfmt-gate2-reviewer.md`.
+3. **§8 item 3.** Question round 37 (RULED 2026-10-02), item 1: this form's own appended §10 amendments are read as outside §8 item 3 (the gate-2 architect's S1-2). The template-wide default is proposed for the 2026-10-09 window and is not applied.
+4. **Class 1, a withdrawal** (the gate-2 reviewer's S2-1).
+   - Amendment 1 item 6's "None" is withdrawn as to §0's statement that Governance CI does not trigger on this PR, `WORKSPACE-RUSTFMT-PREREGISTRATION.md:29` @ 7b45af8 sha256:0cfff784dfef00138681a6542490122410eb73b1e96ddf12e0eed72e28954a1f.
+   - Governance CI ran on the PR: run 37036923447 at 275d305, success.
+   - §9's reason that rests on that line is read with it: `WORKSPACE-RUSTFMT-PREREGISTRATION.md:217` @ 7b45af8 sha256:e4407a2f8d85cd16477648ece644298258e551d7e9a7f7524393cc49f1f859c4. §9's local runs still stand.
+5. **Evidence.**
+   - **E1:** `Rust fmt` pull_request run 37036923635 at 275d305; success; rustfmt 1.10.0, while the local runs used 1.9.0 (Amendment 1 item 4).
+   - **E2:** the probe push run 37005634673; red, as predicted.
+   - **E3:** `Rust fmt` push run 37042646367 on main at 51ed3b2; success.
+   - The product suites on the PR at 275d305: Product CI — Rust 37036923427 and Product CI — shell 37036924042, both success.
+6. **P1 at the merge.** No open branch changed a `.rs` file. The gate-2 reviewer read P1 at 275d305 (that report, item 6). At the merge, the only other branches in flight were `cut/questions-mirror-t11-copy-glob` (one test file under `scripts/hooks/`) and the local `cut/stop-hook-stale-continuity` (no `.rs` file).
+7. **Round 35, note 2.**
+   - The human's rule is `state/directives/2026-10-02-rustfmt-notes.md:15-18` @ f5c87b0 sha256:2db04e9793d79b48c681febca5cc6b23c5ed0fbfcafaaf83c93e64ea14128391. It is referenced, not reproduced.
+   - Its placeholder, the rustfmt merge commit, is 51ed3b2, and that commit's first parent is b598784. In the custodian's instantiation, this is not a quotation: an unpinned `path:line` reference dated before 51ed3b2 resolves against b598784.
+   - The same rule is appended to `AUTONOMY.md` as a dated section, §29.
+8. **Tools,** each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202.
+9. **Superseded index.** Amendment 1 item 6, as to §0's Governance CI line and §9's reason that rests on it (item 4). Nothing else is superseded.

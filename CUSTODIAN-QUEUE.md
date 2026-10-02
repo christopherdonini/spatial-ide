@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `65621224144f4adfd2e773b07c1c816d565f47a117b4a7f5e13c349b67e6653e`) at `2026-10-02T17:27:40.449Z`.
+Generated from `PLAN.yaml` (sha256 `1d6734648a224df636434d679fb64489b4a8afe05956d2cb0c3ad50f7d3d801e`) at `2026-10-02T17:55:22.217Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`, order 9, budget 45 min)
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +24,6 @@ Generated from `PLAN.yaml` (sha256 `65621224144f4adfd2e773b07c1c816d565f47a117b4
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: workspace-rustfmt
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
@@ -34,11 +34,9 @@ Generated from `PLAN.yaml` (sha256 `65621224144f4adfd2e773b07c1c816d565f47a117b4
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — blocked by: workspace-rustfmt
 
 ## 5. In progress
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
 - **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) — evidence: branch `cut/questions-mirror-t11-copy-glob`
 

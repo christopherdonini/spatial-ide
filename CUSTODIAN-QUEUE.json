@@ -1,9 +1,66 @@
 {
-  "generated_at": "2026-10-02T17:27:40.449Z",
-  "plan_hash": "65621224144f4adfd2e773b07c1c816d565f47a117b4a7f5e13c349b67e6653e",
+  "generated_at": "2026-10-02T17:55:22.217Z",
+  "plan_hash": "1d6734648a224df636434d679fb64489b4a8afe05956d2cb0c3ad50f7d3d801e",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "skp-cancel-state-closed-set",
+    "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+    "lane": "kernel-protocol",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 9,
+    "budget_minutes": 45,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-26",
+      "done": null
+    },
+    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs."
+  },
+  "ready": [
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs."
+    },
+    {
+      "id": "port-1-linux-l1",
+      "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 2,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -142,28 +199,6 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
-      ]
-    },
-    {
-      "id": "skp-cancel-state-closed-set",
-      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 9,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs.",
-      "blocked_by": [
-        "workspace-rustfmt"
       ]
     },
     {
@@ -385,53 +420,9 @@
       "blocked_by": [
         "governance-ci-built-site"
       ]
-    },
-    {
-      "id": "port-1-linux-l1",
-      "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 2,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1.",
-      "blocked_by": [
-        "workspace-rustfmt"
-      ]
     }
   ],
   "in_progress": [
-    {
-      "id": "workspace-rustfmt",
-      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 9,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/workspace-rustfmt"
-      },
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4). Question round 35 (the 2026-10-02 rustfmt notes): it merges after publish-panel-rs-regex-layout. At its merge (note 2), its closing record gains one line, and AUTONOMY.md one appended dated section: an unpinned path:line reference dated before the rustfmt merge commit resolves against that commit first parent.",
-      "evidence_label": "branch `cut/workspace-rustfmt`"
-    },
     {
       "id": "stop-hook-stale-continuity",
       "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
