@@ -1442,7 +1442,12 @@ function sameprFixture({ claimOnMain = false, pinTo = 'p1' } = {}) {
 
 const SAMEPR_GATES = new Set([SUPERSEDED_DOC]);
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M1: in findSupersededSpan, pass `undefined` instead of `samePrAccept` to
+// findMarkedSpan -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`,
+// then reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion:
+// "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","kind":"claim"}]" then "1
+// !== 0" (the branch scan's findings). 63 of 64 pass, isolated to this test.
 test('a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge', () => {
   const { dir } = sameprFixture();
   const onBranch = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
@@ -1460,7 +1465,11 @@ test('a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge',
   assert.equal(onMerge.superseded[0].samePr, true, JSON.stringify(onMerge.superseded));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M2: in samePrAccept, drop the `revIsAncestorOfHead(root, rev)` term (f2) --
+// applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a pin to a
+// commit the scanned HEAD does not contain must not exempt: [{...,"samePr":true}]" then "1 !== 0". 63
+// of 64 pass, isolated to this test.
 test('a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt', () => {
   const { dir } = sameprFixture({ pinTo: 'q1' });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
@@ -1468,7 +1477,11 @@ test('a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M3: in samePrAccept, drop the `lineIsIntroducedInRange(root, relPath, line)` term
+// (f3) -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then
+// reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a
+// claiming line already on main must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not isolated:
+// it also fails `an_uncommitted_claiming_line_is_not_introduced_in_the_range` (62 of 64 pass).
 test('a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt', () => {
   const { dir } = sameprFixture({ claimOnMain: true });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
@@ -1476,7 +1489,11 @@ test('a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt', () 
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M4: reduce samePrAccept to `mergeCommitGates.has(relPath)` alone (f1 only) --
+// applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "after a squash
+// the pinned commit is not on main and must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not
+// isolated: it also fails the (f2) test, the (f3) test and the uncommitted-line test (60 of 64 pass).
 test('a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding', () => {
   const { dir } = sameprFixture();
   sameprGit(dir, 'checkout', '-q', 'main');
@@ -1489,7 +1506,12 @@ test('a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M5: in samePrAccept, drop the `mergeCommitGates.has(relPath)` term (f1) -- applied
+// for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
+// 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "no merge-commit record, no
+// exemption: [{...,"samePr":true}]" then "1 !== 0". Not isolated: it also fails
+// `a_pin_whose_rev_is_not_an_ancestor_of_origin_main_does_not_exempt`, whose fixture has no
+// merge-commit record but whose pin is accepted by (f2) and (f3) (62 of 64 pass).
 test('a_same_pr_pin_without_the_merge_commit_record_does_not_exempt', () => {
   const { dir } = sameprFixture();
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir });
@@ -1497,7 +1519,11 @@ test('a_same_pr_pin_without_the_merge_commit_record_does_not_exempt', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M6: in mergeCommitGateFiles, drop the `n.status === 'done'` filter -- applied for
+// real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
+// 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "Expected values to be
+// strictly deep-equal:" with "+   'b/B-PREREGISTRATION.md'" as the extra element. 63 of 64 pass,
+// isolated to this test.
 test('the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value', () => {
   const plan = parseYamlSubset(
     [
@@ -1529,7 +1555,11 @@ test('the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value',
   assert.deepEqual([...claimsTool.mergeCommitGateFiles(undefined)], []);
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M7: in lineIsIntroducedInRange, give git blame the revision `HEAD` (the committed
+// text, not the working tree) -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
+// 2.49.0.windows.1). First failing assertion: "an uncommitted claiming line is in no commit's range:
+// [{...,"samePr":true}]" then "1 !== 0". 63 of 64 pass, isolated to this test.
 test('an_uncommitted_claiming_line_is_not_introduced_in_the_range', () => {
   const { dir } = sameprFixture();
   const current = fs.readFileSync(path.join(dir, SUPERSEDED_DOC), 'utf8');
@@ -1541,7 +1571,15 @@ test('an_uncommitted_claiming_line_is_not_introduced_in_the_range', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M8: in isAncestorOfMain, return `ok` from `git merge-base --is-ancestor <rev>
+// HEAD` in the refusal branch (the acceptance moved into condition (e), shared with the withdrawn path)
+// -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
+// observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: the row is
+// accepted, "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_obsolete_test_name_here",...,"ruling":"round
+// 1, item 1","carrier":"round 2, item 5"}]" then "1 !== 0" (the withdrawn array). Not isolated: 7 of 64
+// fail, among them `a_withdrawn_test_row_whose_rev_is_not_on_main_fails_by_name` and
+// `a_pin_whose_rev_is_not_an_ancestor_of_origin_main_does_not_exempt`.
 test('a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name', () => {
   const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-test-claims-samepr-wdorigin-'));
   execFileSync('git', ['init', '-q', '--bare', bareDir]);
@@ -1568,7 +1606,13 @@ test('a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name', () => {
   assert.equal(findings[0].message, 'refused: rev not on main', JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M9: in isAncestorOfMain, return `{ checked: true, ok: false }` whenever
+// origin/main resolves -- applied for real, run via `node --test
+// scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
+// 2.49.0.windows.1). First failing assertion: "AssertionError [ERR_ASSERTION]:
+// [{"relPath":"X-PREREGISTRATION.md","line":3,"name":"an_old_test_name_here","kind":"claim"}]" then "1
+// !== 0" (findings on main after the merge commit). Not isolated: it also fails the existing
+// condition-(e) test's on-main half (62 of 64 pass).
 test('a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record', () => {
   const { dir } = sameprFixture();
   sameprGit(dir, 'checkout', '-q', 'main');
