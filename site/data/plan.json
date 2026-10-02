@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T06:12:49.433Z",
-  "plan_hash": "50763e8f6037242310dd76734066559e1586e765d218df7a82fcec40f9b21a76",
+  "generated_at": "2026-10-02T06:34:14.366Z",
+  "plan_hash": "f8777f07339c22e8f3dffb7337a7c4f054526693394acadb971e80137529433b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -842,7 +842,7 @@
       "entries": [
         111
       ],
-      "summary": "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix).",
+      "summary": "Architect gate, governance-test-claims-superseded attempt 1, S2: once governance/verify-quotes lands on main, export its HASH_REF_RE/GAP grammar and import it here instead of the local derived copy -- consumers named: this piece's verify-test-claims.mjs and verify-quotes.mjs itself. Restored 2026-09-24 (PR #117 fresh-count attempt-1 architect S1: merge 6191a7c had dropped it); depends_on names the scanner node (the attempt-2 architect should-fix). Found 2026-10-02 while committing exposure-scan-ci-backstop's form: the grammar's path must begin with a letter, digit or underscore, so a span in .github/ or .githooks/ cannot be hash-pinned (verify-quotes reads it without its leading dot and fails to resolve it); that form references its six such spans in plain text.",
       "dates": {
         "opened": "2026-09-18",
         "done": null
@@ -4745,7 +4745,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window.",
+      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window. The type-change item is taken by exposure-scan-ci-backstop (its form, section 0's intake table) and leaves this node when that node is done; the two main-side hits and the punctuation-only segment stay here.",
       "dates": {
         "opened": "2026-09-27",
         "done": null
@@ -5489,13 +5489,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md",
       "evidence": null,
-      "budget_minutes": 120,
+      "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs.",
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5.",
       "dates": {
         "opened": "2026-10-02",
         "done": null
@@ -5522,7 +5522,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands.",
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2).",
       "dates": {
         "opened": "2026-10-02",
         "done": null
