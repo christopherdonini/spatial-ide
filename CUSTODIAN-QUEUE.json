@@ -1,45 +1,102 @@
 {
-  "generated_at": "2026-10-02T05:53:24.628Z",
-  "plan_hash": "b1999bb5a3221821d06b921a1481b637f568e7badebe90f8d9489a8c73323a53",
+  "generated_at": "2026-10-02T06:12:49.232Z",
+  "plan_hash": "50763e8f6037242310dd76734066559e1586e765d218df7a82fcec40f9b21a76",
   "priorities_approved": true,
   "next": {
-    "id": "skp-cancel-state-closed-set",
-    "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-    "lane": "kernel-protocol",
+    "id": "exposure-scan-ci-backstop",
+    "title": "The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B)",
+    "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 9,
-    "budget_minutes": 45,
+    "order": 8,
+    "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-26",
+      "opened": "2026-10-02",
       "done": null
     },
-    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes."
+    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs."
   },
   "ready": [
     {
-      "id": "skp-cancel-state-closed-set",
-      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-      "lane": "kernel-protocol",
+      "id": "exposure-scan-ci-backstop",
+      "title": "The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B)",
+      "lane": "governance",
       "phase": "prototype",
       "status": "ready",
-      "order": 9,
-      "budget_minutes": 45,
+      "order": 8,
+      "budget_minutes": 120,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-26",
+        "opened": "2026-10-02",
         "done": null
       },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes."
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs."
+    },
+    {
+      "id": "test-claims-same-pr-superseded-pin",
+      "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 10,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard."
+    },
+    {
+      "id": "round-mirror-pretooluse-hook",
+      "title": "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 11,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies."
+    },
+    {
+      "id": "stop-hook-stale-continuity",
+      "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 12,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
     }
   ],
   "waiting_on_human": {
@@ -180,6 +237,28 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
+      ]
+    },
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs.",
+      "blocked_by": [
+        "workspace-rustfmt"
       ]
     },
     {
@@ -401,6 +480,50 @@
       "blocked_by": [
         "governance-ci-built-site"
       ]
+    },
+    {
+      "id": "workspace-rustfmt",
+      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 9,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands.",
+      "blocked_by": [
+        "exposure-scan-ci-backstop"
+      ]
+    },
+    {
+      "id": "port-1-linux-l1",
+      "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 2,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1.",
+      "blocked_by": [
+        "workspace-rustfmt"
+      ]
     }
   ],
   "in_progress": [],
@@ -555,7 +678,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1)."
+      "summary": "Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's."
     },
     {
       "id": "briefb-b3-publish-v2",
@@ -746,25 +869,6 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 25, item 1, (f): ADR-023's section 2 widenings sit uneasily beside ADR-021's notes; an architect consult says whether a note is owed, and any ADR text stays the human's (a red line). Raised by PR #113's architect gate (b1-engine-kernel-half's summary). Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five)."
-    },
-    {
-      "id": "data-plane-crate-fmt",
-      "title": "spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a))",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md)."
     },
     {
       "id": "engine-cancel-before-execute-siblings",
@@ -1090,25 +1194,6 @@
       "summary": "Filed on the 2026-09-29 sightings (state/directives/2026-09-29-a2-1-and-b-1-sightings.md, Fable's B-1 point 4): same-type integer overflow (u8 + 1, or unary minus on a signed minimum) involves no conversion and no type rule can predict it, so it leaves B-1 for its own node, merged with W2-B's observation 2 (every engine.query terminal detail repeats a slice of the composed SQL; state/cloud/wave2/W2-B.md). The direction: an evaluation failure ends the stream with a fixed, engine-authored detail that carries no file values and no SQL; this node's strings go to the human; until it lands, the #139 campaign's leak assertion excludes exactly this class, named in the test. Fable's grading note: the overflow values come from rows in view, in a file the client can already query -- hygiene, not confidentiality. Evidence: state/drafts/b1-p0/ (2.5; 91 overflow leaks and 8 without a value in the generated cases)."
     },
     {
-      "id": "port-1-linux-l1",
-      "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3)."
-    },
-    {
       "id": "port-2-macos-l1-and-app-dirs",
       "title": "PORT-2 -- macOS L1 for the Cargo workspace: macos-latest in the same matrix, one application-directory boundary replacing the two resolvers, and a case-policy test on a case-insensitive volume",
       "lane": "platform",
@@ -1125,7 +1210,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2)."
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes once PORT-1 is green; item 7 adopts the support profiles (macOS 14 or later on Apple Silicon for CI). It stays proposed under the human's placement line above."
     },
     {
       "id": "port-3-shell-l1",
@@ -1144,7 +1229,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-3 waits for the shell migration's first merged milestone. Needs the CI system-packages decision for WebKitGTK in the Linux runner (section 7, item 3). Wave-3 intake (state/cloud/wave3/W3-B.md, custodian fields): src-tauri compiled and its 59 tests passed on Ubuntu 24.04 after four packages, in the order found: libgtk-3-dev, libsoup-3.0-dev, libjavascriptcoregtk-4.1-dev, libwebkit2gtk-4.1-dev; appindicator was not needed for check or test; the two debug targets took 26.8 GB and exhausted the container's disk once; Node 24 was not exercised."
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-3 waits for the shell migration's first merged milestone. Needs the CI system-packages decision for WebKitGTK in the Linux runner (section 7, item 3). Wave-3 intake (state/cloud/wave3/W3-B.md, custodian fields): src-tauri compiled and its 59 tests passed on Ubuntu 24.04 after four packages, in the order found: libgtk-3-dev, libsoup-3.0-dev, libjavascriptcoregtk-4.1-dev, libwebkit2gtk-4.1-dev; appindicator was not needed for check or test; the two debug targets took 26.8 GB and exhausted the container's disk once; Node 24 was not exercised. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 8 (RED LINE, what CI installs) approves WebKitGTK and its build dependencies, installed by the PORT-3 workflow in the runner only and never added to the repository's product dependencies; item 7 adopts the support profiles (Ubuntu 24.04 x64 with WebKitGTK 4.1). It stays proposed under the human's placement line above."
     },
     {
       "id": "port-4-l2-smoke",
@@ -1163,7 +1248,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-4 waits for the shell migration's first merged milestone. Needs the support profiles (section 7, item 2) and a Linux machine or VM (section 7, item 4). The macOS smoke is the human's, on the MacBook."
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Placement guidance, the human's line: port-4 waits for the shell migration's first merged milestone. Needs the support profiles (section 7, item 2) and a Linux machine or VM (section 7, item 4). The macOS smoke is the human's, on the MacBook. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 9 chooses a VM for the Linux L2 smoke, and L3 stays deferred; item 7 adopts the support profiles (the 2019 Intel MacBook for macOS L2 and L3). It stays proposed under the human's placement line above."
     }
   ],
   "unscheduled": [
@@ -1453,6 +1538,25 @@
         "done": null
       },
       "summary": "named last in docs/07's 1.0 list; never delays the analysis pillars"
+    },
+    {
+      "id": "data-plane-crate-fmt",
+      "title": "spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "unscheduled",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: SUPERSEDED by workspace-rustfmt, which formats the whole workspace and src-tauri and adds the CI check; this node is closed without work."
     }
   ]
 }
