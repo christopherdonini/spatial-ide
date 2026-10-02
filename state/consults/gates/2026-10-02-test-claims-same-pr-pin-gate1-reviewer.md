@@ -92,7 +92,7 @@ Each mutation was applied and the full file run (64 tests), then reverted with `
   - Other `verify-test-claims-*` leftovers in the OS temp directory come from other processes and predate this piece; the count moved while I watched.
 - **Item 4, E2 (run 37005296152):** a pull_request run on `probe/test-claims-same-pr-pin`, head a93090c, success.
   - Checkout: `HEAD is now at 76c6bfff Merge a93090c5d8cc5e3af61b6d4dd2b3dde3e7ce25fd into 4952b6fe9eaa28308e192303117dec604cc1aabc`. H1 holds.
-  - Listing: the probe form's line 3 (`PROBE-SAMEPR-PREREGISTRATION.md`, on the deleted probe branch) appears under superseded, pinned at 880a13a, with the suffix. I checked the suffix bytes with `od` against §7.
+  - Listing: `scripts/plan/PROBE-SAMEPR-PREREGISTRATION.md:3` appears under superseded, pinned at 880a13a, with the suffix. I checked the suffix bytes with `od` against §7.
   - Result: PASS with 464 claimed, 13 planned, 8 superseded, 17 withdrawn.
 - **Item 4, E3 (run 37005569762):** head 06ae5d2, success.
   - Checkout: `HEAD is now at ea1ce3bf Merge 06ae5d2a44e54ef1de1ab51c8be8fb9dcf93d975 into a0f0da77df77bef0c737cd835def556aaa882ce3`.

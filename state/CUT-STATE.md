@@ -1609,3 +1609,4 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - the `findMarkedSpan` doc comment (N-3);
     - M1, M3, M7 and M10 observed at the corrected commit.
   - **PR #157's gate-1 architect** PASSed, with one S2 on the workflow header's H1 sentence. The report is filed, and the gate-log holds 330 records. Its reviewer is still running.
+- 2026-10-02T12:41Z - **Correction, my filing error.** At 43a0fce I filed PR #156's gate-1 reviewer report with one line rewritten (a probe-branch cite de-rooted). §25(b) files gate reports byte-identical, and cites under `gates/` are advisory, so this commit restores the agent's text.
