@@ -8,6 +8,10 @@
 // file implements. Node standard library only.
 //
 // It never returns or prints a matched segment (§1, "may not claim" / §8 item 4).
+//
+// A `--range <base> <head>` mode reads a pull-request or push range (added lines, new path names
+// and commit messages) for the CI backstop; see
+// scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -435,7 +439,7 @@ function stagedAddedLinesAgainst(parent, cwd) {
   // resolve yet, and `git diff --cached` alone already compares the index to the empty tree in
   // that case. An explicit MERGE_HEAD is always passed (it only exists mid-merge, when HEAD
   // itself always resolves).
-  const args = ['diff', '--cached', '--no-color', '--no-ext-diff', '--text', '-U0', '--diff-filter=ACMR'];
+  const args = ['diff', '--cached', '--no-color', '--no-ext-diff', '--text', '-U0', '--diff-filter=ACMRT'];
   if (parent !== 'HEAD') args.push(parent);
   const diff = runGit(args, cwd);
   if (diff === null) return null;
@@ -479,6 +483,76 @@ function cmdStaged(localName) {
     }
   }
 
+  return findings;
+}
+
+// The range mode's git reads: stderr is captured and never forwarded, and a non-zero status or an
+// exceeded buffer returns null.
+function runGitCaptured(args, cwd) {
+  try {
+    return execFileSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024 * 64,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch {
+    return null;
+  }
+}
+
+const RANGE_FACT_LINE = 'profile-path-scan: range not computable';
+
+function abortRange() {
+  console.error(RANGE_FACT_LINE);
+  console.error('aborted');
+  process.exit(2);
+}
+
+function resolveCommit(rev, cwd) {
+  const out = runGitCaptured(['rev-parse', '--verify', `${rev}^{commit}`], cwd);
+  return out === null ? null : out.trim();
+}
+
+function cmdRange(rangeArgs, localName) {
+  if (rangeArgs.length !== 2 || rangeArgs.some((a) => a === '' || a.startsWith('-'))) abortRange();
+  const cwd = process.cwd();
+  const base = resolveCommit(rangeArgs[0], cwd);
+  const head = resolveCommit(rangeArgs[1], cwd);
+  if (!base || !head) abortRange();
+  if (runGitCaptured(['merge-base', base, head], cwd) === null) abortRange();
+
+  const diff = runGitCaptured(
+    ['diff', '--no-color', '--no-ext-diff', '--no-textconv', '--text', '-U0', '-M', '--diff-filter=ACMRT', `${base}...${head}`],
+    cwd,
+  );
+  const nameZ = runGitCaptured(['diff', '--name-only', '-z', '-M', '--diff-filter=ACR', `${base}...${head}`], cwd);
+  const logZ = runGitCaptured(['log', '-z', '--format=%H%n%B', `${base}..${head}`], cwd);
+  if (diff === null || nameZ === null || logZ === null) abortRange();
+
+  const addedLines = parseAddedLines(diff);
+  const findings = scanAddedLines(addedLines, localName);
+
+  const names = nameZ.split('\u0000').filter((s) => s.length > 0);
+  for (const name of names) {
+    for (const f of scanText(name, { localName })) {
+      findings.push({ file: name, line: 0, class: f.class });
+    }
+  }
+
+  const records = logZ.split('\u0000').filter((s) => s.length > 0);
+  for (const rec of records) {
+    const nl = rec.indexOf('\n');
+    const sha = nl === -1 ? rec : rec.slice(0, nl);
+    const message = nl === -1 ? '' : rec.slice(nl + 1);
+    for (const f of scanText(message, { localName })) {
+      findings.push({ file: `commit ${sha}`, line: f.line, class: f.class });
+    }
+  }
+
+  console.error(
+    `profile-path-scan: range read ${records.length} commits, ${addedLines.length} added lines, ${names.length} path names`,
+  );
   return findings;
 }
 
@@ -573,6 +647,16 @@ function main() {
     if (args[0] === '--message') {
       const file = args[1];
       const findings = cmdMessage(file, localName);
+      if (findings.length > 0) {
+        printFindings(findings, localName);
+        console.log(REFUSED_LINE);
+        process.exit(1);
+      }
+      console.log(CLEAN_LINE);
+      process.exit(0);
+    }
+    if (args[0] === '--range') {
+      const findings = cmdRange(args.slice(1), localName);
       if (findings.length > 0) {
         printFindings(findings, localName);
         console.log(REFUSED_LINE);

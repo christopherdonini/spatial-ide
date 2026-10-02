@@ -1,0 +1,94 @@
+name: Exposure scan
+
+# A CI backstop for the profile-path scan (scripts/hooks/profile-path-scan.mjs). The local hooks
+# (.githooks/pre-commit and .githooks/commit-msg) run only in an armed clone; this workflow runs the
+# scanner's range mode over the range an event carries, whatever made the commits.
+# Preregistration: scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md.
+#
+# ## What a green run means, stated narrowly
+#
+# On a pull_request event (opened, synchronize, reopened) or a push to main, the scanner's range
+# mode read every added line of the three-dot diff (type changes included, renames read so that only
+# their changed lines count), every new path name, and every commit message in the range (merge
+# commits included), and found no form the scanner's matcher refuses. The job is green only when
+# the scanner exits 0 and its stdout is exactly the declared clean line, the same rule the
+# pre-commit hook applies.
+#
+# ## What it does not mean
+#
+# It detects after publication; it does not withhold anything. Each run happens after the push is
+# already public. The preregistration's section 1 lists what is not claimed: pushes outside these
+# triggers, text outside commits, history outside a scanned range, a pull request that edits the
+# scanner or this file (that run executes the pull request's own code), that the check is required
+# for merge, and a person's flattened profile form: the scanner's local-profile rule keys on the
+# home of the machine that runs it, which on the runner is a machine account, so that form is not
+# refused here; it is caught, if at all, only by the hooks of an armed clone under that person's own
+# home.
+#
+# ## Why there is no paths filter and no concurrency block
+#
+# A paths filter filters events by changed path, so it could skip commits whose names or messages
+# carry a form; every event runs. A concurrency block could let a newer main run replace a pending
+# one and drop a pushed range, so none is declared.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  exposure-scan:
+    name: no profile path in the range
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # fetch-depth: 0 because the scanner reads a commit range; a shallow clone has no base to
+      # resolve, and the scanner exits 2 on an unresolvable base rather than reading nothing.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Scan the event's range
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+        run: |
+          set +e
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              base="$PR_BASE"
+              head="$PR_HEAD"
+              ;;
+            push)
+              base="$PUSH_BEFORE"
+              head="$PUSH_AFTER"
+              ;;
+            *)
+              echo "exposure-scan: no range for event $GITHUB_EVENT_NAME"
+              exit 2
+              ;;
+          esac
+
+          scan_output="$(node scripts/hooks/profile-path-scan.mjs --range "$base" "$head")"
+          scan_status=$?
+
+          if [ "$scan_status" -eq 0 ] && [ "$scan_output" = "profile-path-scan: clean" ]; then
+            exit 0
+          fi
+
+          echo "exposure-scan: the range is not accepted (scanner exit $scan_status)"
+          if [ "$scan_status" -eq 0 ]; then
+            exit 2
+          fi
+          exit "$scan_status"

@@ -285,3 +285,30 @@ Assertions only:
 - **Operator:** none.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — S3's rename built through the index, not with `git mv` (class 2, a deviation)
+
+Written after the worker's results were seen (class 2, a post-result amendment). §3 and §4 are not edited.
+
+1. **The deviation.** §3's S3 row names `git mv` for the rename. The worker built the rename through the index instead: `git rm --cached`, then the blob staged at the new name with `git update-index --add --cacheinfo`. This way no directory with an 8.3-shaped name is created on the Windows filesystem. T3 asserts that the range's name status is `R100` before it scans (branch commit 02bde66, `scripts/hooks/profile-path-scan.test.mjs`, the test `a_range_scan_refuses_a_profile_path_in_a_renamed_path_name`). S3's scenario, T3's name and assertions, and M3 do not change.
+2. **Why nothing else changes.** §2 item 9's R4 already builds type changes through git plumbing, and this uses the same means for S3. The worker's report is filed as `state/consults/2026-10-02-exposure-scan-ci-backstop-worker-report-1.md`.
+
+### Amendment 2 — correction rounds 1 and 2: T7's assertion and its observations, and M10's record (classes 4 and 3)
+
+Written after gate 1's and gate 2's results were seen (a post-result amendment). References only.
+
+1. **Correction round 1** (branch commits a5e2e79 and e0442e0) answers gate 1: the architect's S2, and the reviewer's N1, N2 and N4. The reports are `state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate1-architect.md` and `state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate1-reviewer.md`.
+   - **Class 4.** T7 (`a_staged_type_change_is_refused_by_the_pre_commit_hook`) gains an assertion on its finding line. M7 was re-observed at e0442e0.
+   - **Class 3, M10's record.** The superseded span is lines 1389-1391 of `scripts/hooks/profile-path-scan.test.mjs` at branch commit 5d3951f, which recorded case 1 as the first failure. The record at e0442e0 names the edit and case 4. It was observed at e0442e0 and confirmed there by gate 2's reviewer.
+   - The workflow header's two hunks change comments only.
+2. **Correction round 2** (branch commits c0277fc and 0e07e55) answers gate 2: the architect's S1, which this amendment discharges, and the reviewer's S2-1, N-1 and N-3. The reports are `state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate2-architect.md` and `state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate2-reviewer.md`.
+   - **Class 3, T7's abort observation.** The superseded span is lines 1305-1307 of the test file at branch commit e0442e0. It named an edit that also aborts the root commit's scan. The record at c0277fc names the edit scoped to a resolving HEAD, observed at e0442e0 with that edit applied.
+   - T8's comment carries its own name (0e07e55), so that verify-mutation's window finds it. T8's observation does not change.
+   - In the header, the flattened-form clause is tightened and the paths-filter paragraph is re-wrapped. These are comment changes only.
+3. **Pins.** Both superseded spans sit on branch commits. Their hash pins follow on main, after the merge, in the closing record.
+4. **Superseded index.**
+
+   | Superseded | Superseded by |
+   |---|---|
+   | M10's record: lines 1389-1391 of the test file at 5d3951f | the M10 comment at e0442e0 (item 1) |
+   | T7's abort sentence: lines 1305-1307 of the test file at e0442e0 | the T7 comment at c0277fc (item 2) |

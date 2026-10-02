@@ -1092,3 +1092,381 @@ test('the_pieces_own_files_pass_the_scan', () => {
   // word, an unlisted name, and a trailing filename, joined with backslashes). Observed: this
   // test failed (1 finding on that file instead of 0). Reverted; the line was never committed.
 });
+
+// ---------------------------------------------------------------------------
+// Range mode (scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md section 4)
+//
+// Every fixture repository is a fresh, unarmed os.tmpdir() repository (T7's is armed), removed in
+// `finally`. Type changes and renames are built through git plumbing (hash-object -w, update-index
+// --cacheinfo), never a filesystem symlink. A `verify-mutation` run is not an observation: each
+// mutation below was applied, its test run, the first failing assertion written into the comment,
+// and the mutation reverted.
+// ---------------------------------------------------------------------------
+
+const RANGE_CLEAN = 'profile-path-scan: clean\n';
+const RANGE_REFUSED = 'profile-path-scan: refused\n';
+const RANGE_FACT = 'profile-path-scan: range not computable\naborted\n';
+
+function initUnarmedRepo(dir) {
+  git(dir, ['init', '-q', '-b', 'main']);
+  git(dir, ['config', 'user.email', 'test@example.com']);
+  git(dir, ['config', 'user.name', 'Test']);
+  git(dir, ['config', 'core.autocrlf', 'false']);
+  git(dir, ['config', 'commit.gpgsign', 'false']);
+}
+
+function commitUnarmed(dir, ...messages) {
+  const args = ['commit', '-q', '--allow-empty'];
+  for (const m of messages) args.push('-m', m);
+  git(dir, args);
+  return git(dir, ['rev-parse', 'HEAD']).trim();
+}
+
+function writeAdd(dir, name, content) {
+  fs.writeFileSync(path.join(dir, name), content);
+  git(dir, ['add', name]);
+}
+
+function stageBlob(dir, mode, name, content) {
+  const blob = git(dir, ['hash-object', '-w', '--stdin'], { input: content }).trim();
+  git(dir, ['update-index', '--add', '--cacheinfo', `${mode},${blob},${name}`]);
+  return blob;
+}
+
+function rangeRun(dir, args, env = {}) {
+  return spawnSync(process.execPath, [scannerPath, '--range', ...args], {
+    cwd: dir,
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+  });
+}
+
+function countLineOf(stderr) {
+  return stderr.split('\n').find((l) => l.startsWith('profile-path-scan: range read')) ?? '';
+}
+
+test('a_range_scan_refuses_a_profile_path_in_an_added_line', () => {
+  const dir = makeTempDir('profile-scan-range-line-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const base = commitUnarmed(dir, 'base');
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'A');
+    writeAdd(dir, 'f.txt', `clean\n${windowsPath('\\', seg)}\n`);
+    const head = commitUnarmed(dir, 'head');
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes('f.txt:2 unlisted-segment'), r.stderr);
+    assert.equal(countLineOf(r.stderr), 'profile-path-scan: range read 1 commits, 2 added lines, 1 path names');
+    assert.ok(!r.stderr.includes(seg) && !r.stdout.includes(seg));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION (a_range_scan_refuses_a_profile_path_in_an_added_line): M1 -- the range mode
+  // drops the added-line findings. Observed: this test's status assertion failed (0 !== 1, the
+  // added-line form was not found). Reverted.
+});
+
+test('a_range_scan_refuses_a_profile_path_in_an_added_path_name', () => {
+  const dir = makeTempDir('profile-scan-range-name-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const base = commitUnarmed(dir, 'base');
+    const short = mk('Q', 'U', 'E', 'N', 'T', 'I') + '~1';
+    stageBlob(dir, '100644', `${mk('U', 's', 'e', 'r', 's')}/${short}/note.txt`, 'clean\n');
+    const head = commitUnarmed(dir, 'head');
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes('<redacted:profile>/note.txt:0 8.3'), r.stderr);
+    assert.ok(!r.stderr.toLowerCase().includes(short.toLowerCase()));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M2 -- the range mode skips the name scan. Observed: this test's status
+  // assertion failed (0 !== 1, the 8.3 path name was not found). Reverted.
+});
+
+test('a_range_scan_refuses_a_profile_path_in_a_renamed_path_name', () => {
+  const dir = makeTempDir('profile-scan-range-rename-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'clean.txt', 'one\ntwo\nthree\n');
+    const base = commitUnarmed(dir, 'base');
+    const short = mk('Q', 'U', 'E', 'N', 'T', 'I') + '~1';
+    git(dir, ['rm', '--cached', '-q', 'clean.txt']);
+    stageBlob(dir, '100644', `${mk('U', 's', 'e', 'r', 's')}/${short}/note.txt`, 'one\ntwo\nthree\n');
+    const head = commitUnarmed(dir, 'head');
+    assert.match(git(dir, ['diff', '--name-status', '-M', `${base}...${head}`]), /^R100\t/);
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes('<redacted:profile>/note.txt:0 8.3'), r.stderr);
+    assert.ok(!r.stderr.toLowerCase().includes(short.toLowerCase()));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M3 -- the name filter becomes --diff-filter=AC. Observed: this test's status
+  // assertion failed (0 !== 1, the renamed path name was not scanned). Reverted.
+});
+
+test('a_range_scan_refuses_a_profile_path_in_a_commit_message', () => {
+  const dir = makeTempDir('profile-scan-range-msg-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const base = commitUnarmed(dir, 'base');
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'B');
+    const marker = mk('z', 'q', 'm', 'a', 'r', 'k', 'w', 'd');
+    const head = commitUnarmed(dir, 'subject', `see /${mk('h', 'o', 'm', 'e')}/${seg}/x ${marker}`);
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes(`commit ${head}:3 unlisted-segment`), r.stderr);
+    assert.ok(!r.stderr.includes(seg) && !r.stderr.includes(marker));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M4 -- the range mode skips the message scan. Observed: this test's status
+  // assertion failed (0 !== 1, the commit message was not scanned). Reverted.
+});
+
+test('a_range_scan_reads_a_merge_commits_message', () => {
+  const dir = makeTempDir('profile-scan-range-merge-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const base = commitUnarmed(dir, 'base');
+    git(dir, ['checkout', '-q', '-b', 'side']);
+    writeAdd(dir, 'side.txt', 's\n');
+    commitUnarmed(dir, 'side work');
+    git(dir, ['checkout', '-q', 'main']);
+    writeAdd(dir, 'main.txt', 'm\n');
+    commitUnarmed(dir, 'main work');
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'C');
+    git(dir, ['merge', '--no-ff', '-q', '-m', `merge subject\n\nvia /${mk('h', 'o', 'm', 'e')}/${seg}/x`, 'side']);
+    const head = git(dir, ['rev-parse', 'HEAD']).trim();
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes(`commit ${head}:3 unlisted-segment`), r.stderr);
+    assert.equal(r.stderr.split('\n').filter((l) => l.includes('unlisted-segment')).length, 1);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M5 -- --no-merges added to the log read. Observed: this test's status
+  // assertion failed (0 !== 1, the merge commit's message was not read). Reverted.
+});
+
+test('a_range_scan_refuses_a_profile_path_brought_in_by_a_type_change', () => {
+  const dir = makeTempDir('profile-scan-range-typechange-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'link', 'plain\n');
+    const base = commitUnarmed(dir, 'base');
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'D');
+    stageBlob(dir, '120000', 'link', windowsPath('\\', seg));
+    const head = commitUnarmed(dir, 'type change');
+    assert.match(git(dir, ['diff', '--name-status', `${base}...${head}`]), /^T\tlink/);
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.ok(r.stderr.includes('link:1 unlisted-segment'), r.stderr);
+    assert.ok(!r.stderr.includes(seg));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M6 -- T dropped from the range content filter. Observed: this test's status
+  // assertion failed (0 !== 1, the type change's added line was not read). Reverted.
+});
+
+test('a_staged_type_change_is_refused_by_the_pre_commit_hook', () => {
+  const dir = makeTempDir('profile-scan-staged-typechange-');
+  try {
+    initRepo(dir);
+    writeAdd(dir, 'link', 'plain\n');
+    let r = commit(dir, ['-q', '-s', '-m', 'init']);
+    assert.equal(r.status, 0, r.stderr);
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'E');
+    stageBlob(dir, '120000', 'link', windowsPath('\\', seg));
+    r = commit(dir, ['-q', '-s', '-m', 'type change']);
+    assert.notEqual(r.status, 0, r.stderr);
+    assert.ok(r.stderr.includes('commit refused'), r.stderr);
+    assert.ok(r.stderr.includes('link:1 unlisted-segment'), r.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M7 -- the staged content filter restored to ACMR. Observed: this test's
+  // refusal assertion (assert.notEqual on the commit status) failed: the commit that stages the
+  // type change was accepted. Reverted.
+  // Re-observed after the finding assertion was added: M7 failed on the same notEqual (status 0).
+  // Abort mutation, scoped to the type-change commit: in stagedAddedLinesAgainst, '--bogus-option'
+  // is pushed onto the content diff's arguments only when `git rev-parse -q --verify HEAD` resolves,
+  // so the root init commit still scans. Observed: the init commit passed and the 'commit refused'
+  // assertion passed; the finding assertion failed (stderr carried git's usage text, not
+  // `link:1 unlisted-segment`). Unscoped, the init commit's own scan aborts and the test fails
+  // earlier, so only the scoped form proves the property. Reverted.
+});
+
+test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned', () => {
+  const dir = makeTempDir('profile-scan-range-clean-');
+  try {
+    initUnarmedRepo(dir);
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'F');
+    writeAdd(dir, 'old.txt', `${windowsPath('\\', seg)}\nkeep\n`);
+    writeAdd(dir, 'mv.txt', `${windowsPath('\\', seg)}\n`);
+    const base = commitUnarmed(dir, 'base');
+    git(dir, ['mv', 'mv.txt', 'mv2.txt']);
+    fs.appendFileSync(path.join(dir, 'old.txt'), 'a clean addition\n');
+    git(dir, ['add', 'old.txt']);
+    const head = commitUnarmed(dir, 'head');
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stdout, RANGE_CLEAN);
+    assert.match(countLineOf(r.stderr), /^profile-path-scan: range read 1 commits, 1 added lines, \d+ path names$/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION (a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned):
+  // M8 -- -M replaced by --no-renames in the content diff. Observed: this test's status assertion
+  // failed (1 !== 0, the pure rename's line was read as an added line). Reverted.
+});
+
+test('a_range_whose_base_is_not_an_ancestor_scans_from_the_merge_base', () => {
+  const dir = makeTempDir('profile-scan-range-nonancestor-');
+  try {
+    initUnarmedRepo(dir);
+    const seg = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'G');
+    writeAdd(dir, 'f.txt', `${windowsPath('\\', seg)}\nkeep\n`);
+    const m = commitUnarmed(dir, 'm');
+    git(dir, ['checkout', '-q', '-b', 'x']);
+    fs.writeFileSync(path.join(dir, 'f.txt'), 'keep\n');
+    git(dir, ['add', 'f.txt']);
+    const x = commitUnarmed(dir, 'x deletes the line');
+    git(dir, ['checkout', '-q', '-b', 'y', m]);
+    fs.writeFileSync(path.join(dir, 'f.txt'), `${windowsPath('\\', seg)}\nkeep\nclean\n`);
+    git(dir, ['add', 'f.txt']);
+    const y = commitUnarmed(dir, 'y adds a clean line');
+    let r = rangeRun(dir, [x, y]);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stdout, RANGE_CLEAN);
+    git(dir, ['checkout', '-q', '-b', 'y2', m]);
+    const seg2 = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'H');
+    fs.writeFileSync(path.join(dir, 'f.txt'), `${windowsPath('\\', seg)}\nkeep\n${windowsPath('\\', seg2)}\n`);
+    git(dir, ['add', 'f.txt']);
+    const y2 = commitUnarmed(dir, 'y2 adds a form');
+    r = rangeRun(dir, [x, y2]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.equal(r.stderr.split('\n').filter((l) => l.includes('unlisted-segment')).length, 1, r.stderr);
+    assert.ok(r.stderr.includes('f.txt:3 unlisted-segment'), r.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M9 -- the content diff made two-dot. Observed: this test's first status
+  // assertion failed (1 !== 0, the line the other side deleted was read as added). Reverted.
+});
+
+test('a_range_that_cannot_be_computed_aborts', () => {
+  const dir = makeTempDir('profile-scan-range-abort-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const head = commitUnarmed(dir, 'base');
+    git(dir, ['checkout', '-q', '--orphan', 'other']);
+    const root2 = commitUnarmed(dir, 'unrelated root');
+    const cases = [
+      ['0'.repeat(40), head],
+      ['deadbeef'.repeat(5), head],
+      [head, 'deadbeef'.repeat(5)],
+      [head, root2],
+      ['--foo', head],
+      [head],
+      [head, head, head],
+    ];
+    for (const args of cases) {
+      const r = rangeRun(dir, args);
+      assert.equal(r.status, 2, `${args.length} args: ${r.stderr}`);
+      assert.equal(r.stdout, '');
+      assert.equal(r.stderr, RANGE_FACT);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M10 -- in the range mode, every git failure read as an empty result: the
+  // catch in runGitCaptured returns '' instead of null. Observed: cases 1 to 3 still exit 2 through
+  // the unresolved-commit guard; the status assertion of case 4 (two unrelated roots) failed
+  // (0 !== 2, the range was read as clean). Reverted.
+});
+
+test('a_range_mode_git_failure_prints_only_declared_lines', () => {
+  const dir = makeTempDir('profile-scan-range-stderr-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const head = commitUnarmed(dir, 'base');
+    const r = rangeRun(dir, ['deadbeef'.repeat(5), head]);
+    assert.equal(r.status, 2);
+    assert.ok(!r.stderr.includes('fatal'), r.stderr);
+    assert.equal(r.stderr, RANGE_FACT);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M11 -- the range mode's git calls inherit stderr. Observed: this test's
+  // assertion that stderr carries no 'fatal' failed (git's own fatal line reached stderr).
+  // Reverted.
+});
+
+test('the_range_mode_prints_no_segment_and_no_commit_message_text', () => {
+  const dir = makeTempDir('profile-scan-range-noprint-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'clean.txt', 'one\ntwo\nthree\n');
+    const base = commitUnarmed(dir, 'base');
+    const seg1 = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'I');
+    writeAdd(dir, 'f.txt', `clean\n${windowsPath('\\', seg1)}\n`);
+    commitUnarmed(dir, 'first');
+    const short = mk('Q', 'U', 'E', 'N', 'T', 'J') + '~1';
+    git(dir, ['rm', '--cached', '-q', 'clean.txt']);
+    stageBlob(dir, '100644', `${mk('U', 's', 'e', 'r', 's')}/${short}/note.txt`, 'one\ntwo\nthree\n');
+    commitUnarmed(dir, 'second');
+    const seg3 = mk('q', 'u', 'e', 'n', 't', 'i', 'n', 'K');
+    const marker = mk('z', 'q', 'm', 'a', 'r', 'k', 'w', 'e');
+    const subject = mk('s', 'u', 'b', 'j', 'e', 'c', 't', 'w', 'o', 'r', 'd');
+    const head = commitUnarmed(dir, subject, `see /${mk('h', 'o', 'm', 'e')}/${seg3}/x ${marker}`);
+    const r = rangeRun(dir, [base, head]);
+    assert.equal(r.status, 1, r.stderr);
+    assert.equal(r.stdout, RANGE_REFUSED);
+    assert.equal(r.stderr.split('\n').filter((l) => /unlisted-segment|8\.3/.test(l)).length, 3, r.stderr);
+    assert.ok(r.stderr.includes(`commit ${head}:3 unlisted-segment`), r.stderr);
+    const all = `${r.stdout}${r.stderr}`.toLowerCase();
+    for (const secret of [seg1, short, seg3, marker, subject]) {
+      assert.ok(!all.includes(secret.toLowerCase()), 'a refused segment or message text was printed');
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M12 -- a commit finding prints the message's first line after its class.
+  // Observed: this test's no-text assertion failed (the message's first line was printed).
+  // Reverted.
+});
+
+test('a_range_scan_permits_machine_account_paths_under_a_runner_home', () => {
+  const dir = makeTempDir('profile-scan-range-runner-');
+  try {
+    initUnarmedRepo(dir);
+    writeAdd(dir, 'a.txt', 'x\n');
+    const base = commitUnarmed(dir, 'base');
+    writeAdd(dir, 'f.txt', `/${mk('h', 'o', 'm', 'e')}/runner/work\n${windowsPath('\\', 'runner')}\n`);
+    const head = commitUnarmed(dir, 'head');
+    const r = rangeRun(dir, [base, head], { HOME: '/home/runner', USERPROFILE: `C:\\${mk('U', 's', 'e', 'r', 's')}\\runner` });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stdout, RANGE_CLEAN);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+  // RECORDED MUTATION: M13 -- 'runner' removed from MACHINE_ACCOUNTS. Observed: this test's status
+  // assertion failed (1 !== 0, two local-profile findings under the runner home). Reverted.
+});
