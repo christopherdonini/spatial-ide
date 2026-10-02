@@ -1442,7 +1442,7 @@ function sameprFixture({ claimOnMain = false, pinTo = 'p1' } = {}) {
 
 const SAMEPR_GATES = new Set([SUPERSEDED_DOC]);
 
-// RECORDED MUTATION: M1: in findSupersededSpan, pass `undefined` instead of `samePrAccept` to
+// RECORDED MUTATION: M1 (`a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge`): in findSupersededSpan, pass `undefined` instead of `samePrAccept` to
 // findMarkedSpan -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`,
 // then reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion:
 // "AssertionError [ERR_ASSERTION]:
@@ -1465,7 +1465,7 @@ test('a_same_pr_superseded_pin_is_advisory_on_the_branch_and_on_its_test_merge',
   assert.equal(onMerge.superseded[0].samePr, true, JSON.stringify(onMerge.superseded));
 });
 
-// RECORDED MUTATION: M2: in samePrAccept, drop the `revIsAncestorOfHead(root, rev)` term (f2) --
+// RECORDED MUTATION: M2 (`a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt`): in samePrAccept, drop the `revIsAncestorOfHead(root, rev)` term (f2) --
 // applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
 // observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a pin to a
 // commit the scanned HEAD does not contain must not exempt: [{...,"samePr":true}]" then "1 !== 0". 63
@@ -1477,7 +1477,7 @@ test('a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M3: in samePrAccept, drop the `lineIsIntroducedInRange(root, relPath, line)` term
+// RECORDED MUTATION: M3 (`a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt`): in samePrAccept, drop the `lineIsIntroducedInRange(root, relPath, line)` term
 // (f3) -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then
 // reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a
 // claiming line already on main must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not isolated:
@@ -1489,7 +1489,7 @@ test('a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt', () 
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M4: reduce samePrAccept to `mergeCommitGates.has(relPath)` alone (f1 only) --
+// RECORDED MUTATION: M4 (`a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding`): reduce samePrAccept to `mergeCommitGates.has(relPath)` alone (f1 only) --
 // applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
 // observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "after a squash
 // the pinned commit is not on main and must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not
@@ -1506,7 +1506,7 @@ test('a_same_pr_pin_after_a_squash_merge_stays_a_binding_finding', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M5: in samePrAccept, drop the `mergeCommitGates.has(relPath)` term (f1) -- applied
+// RECORDED MUTATION: M5 (`a_same_pr_pin_without_the_merge_commit_record_does_not_exempt`): in samePrAccept, drop the `mergeCommitGates.has(relPath)` term (f1) -- applied
 // for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
 // 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "no merge-commit record, no
 // exemption: [{...,"samePr":true}]" then "1 !== 0". Not isolated: it also fails
@@ -1519,7 +1519,7 @@ test('a_same_pr_pin_without_the_merge_commit_record_does_not_exempt', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M6: in mergeCommitGateFiles, drop the `n.status === 'done'` filter -- applied for
+// RECORDED MUTATION: M6 (`the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value`): in mergeCommitGateFiles, drop the `n.status === 'done'` filter -- applied for
 // real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at
 // 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "Expected values to be
 // strictly deep-equal:" with "+   'b/B-PREREGISTRATION.md'" as the extra element. 63 of 64 pass,
@@ -1555,7 +1555,7 @@ test('the_merge_commit_gate_set_reads_only_not_done_nodes_with_the_exact_value',
   assert.deepEqual([...claimsTool.mergeCommitGateFiles(undefined)], []);
 });
 
-// RECORDED MUTATION: M7: in lineIsIntroducedInRange, give git blame the revision `HEAD` (the committed
+// RECORDED MUTATION: M7 (`an_uncommitted_claiming_line_is_not_introduced_in_the_range`): in lineIsIntroducedInRange, give git blame the revision `HEAD` (the committed
 // text, not the working tree) -- applied for real, run via `node --test
 // scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
 // 2.49.0.windows.1). First failing assertion: "an uncommitted claiming line is in no commit's range:
@@ -1571,7 +1571,7 @@ test('an_uncommitted_claiming_line_is_not_introduced_in_the_range', () => {
   assert.equal(findings.length, 1, JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M8: in isAncestorOfMain, return `ok` from `git merge-base --is-ancestor <rev>
+// RECORDED MUTATION: M8 (`a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name`): in isAncestorOfMain, return `ok` from `git merge-base --is-ancestor <rev>
 // HEAD` in the refusal branch (the acceptance moved into condition (e), shared with the withdrawn path)
 // -- applied for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted;
 // observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: the row is
@@ -1606,7 +1606,7 @@ test('a_withdrawn_test_row_at_a_same_pr_commit_still_fails_by_name', () => {
   assert.equal(findings[0].message, 'refused: rev not on main', JSON.stringify(findings));
 });
 
-// RECORDED MUTATION: M9: in isAncestorOfMain, return `{ checked: true, ok: false }` whenever
+// RECORDED MUTATION: M9 (`a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record`): in isAncestorOfMain, return `{ checked: true, ok: false }` whenever
 // origin/main resolves -- applied for real, run via `node --test
 // scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at 0e20437 (Node v24.18.1, git
 // 2.49.0.windows.1). First failing assertion: "AssertionError [ERR_ASSERTION]:
