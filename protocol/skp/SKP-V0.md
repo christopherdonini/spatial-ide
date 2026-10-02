@@ -970,8 +970,8 @@ and `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixt
 > round 38, item 1).** A sentence was added in place to §1's `cancel`, stating that `state` is a
 > closed set and that no tolerant reader accepts a value outside it. The literal stays `skp/0.8`:
 > no key, value, code or command is added or removed, and the kernel's serialized response for each
-> outcome is unchanged (the entry-30 addendum's rule: a new key forces a bump, a value-domain
-> widening does not, and this is neither). Two shared cancel-response fixtures
+> outcome is unchanged: no new key and no value-domain widening, per the entry-30 addendum's
+> versioning disposition (§8, entry 30). Two shared cancel-response fixtures
 > (`v0-cancel-response-unknown.json`, `v0-cancel-response-already_terminal.json`) landed with both
 > sides' tests in one commit. The conformance harness's one reported divergence (D1) is resolved.
 > `protocol/data-plane/` has an empty diff.
