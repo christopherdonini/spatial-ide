@@ -1553,3 +1553,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **AUTONOMY.md sections.** They are fixed in advance: C appends §27 and merges first, then D appends §28.
   - **D's fixture, and my slip.** D's brief first carried a placeholder instead of the fixture JSON. The worker stopped before any work, as it should have. The custodian's byte-copy of round 33's second call is `C:/dev/wt/round-mirror-hook-tool-input.json` (sha256 prefix fb91cef5), outside the repository, and the worker was resumed with it.
   - **workspace-rustfmt.** The architect is drafting its form, on fresh measurements at 01b5ba0 with rustfmt 1.9.0-stable: 2,029 hunks over 126 workspace files, and 105 over 7 src-tauri files.
+- 2026-10-02T11:55Z - **PR #154 (`round-mirror-pretooluse-hook`) is open at 948f126.** It merges after item C's PR.
+  - **The worker's report** is filed as `state/consults/2026-10-02-round-mirror-hook-worker-report-1.md`: 13 tests with M1 to M13 at 753dcaf, 379 tests passing, and 488 lines over 7 files.
+  - **Two notes for the record.** Commit 753dcaf's message miscites two lines; it is not rewritten. The worker ran as Sonnet 5.5 under an Opus trailer, so future briefs ask for a trailer naming the model that actually ran.
+  - **Gate 1** (reviewer and architect) is dispatched.
