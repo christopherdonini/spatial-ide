@@ -1573,3 +1573,8 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - M1, M9, M10 and M11 are re-observed.
   - **Left for the merge.** §28's heading becomes "after §27" when main is merged into the branch after item C lands (the reviewer's S2-1).
   - **The exposure scan's first PR run** (run 37003669891) is green.
+- 2026-10-02T12:12Z - **PR #154's correction round 1 is done.**
+  - **The round.** The worker's commit is fa674a7, and the form's Amendment 2 is 2e364d6 (class 2, references only, superseded index none). Worker report 2 is filed.
+  - **What changed.** The envelope keys are added, H4 is labelled, and non-object JSON now takes the malformed line. M1, M9, M10 and M11 were re-observed at fa674a7 and did not change.
+  - **Size.** 500 of 700 lines over 7 files.
+  - **Next.** Gate 2 (reviewer and architect, scoped to the round) is dispatched.
