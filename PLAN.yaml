@@ -3335,13 +3335,14 @@ nodes:
     order: 2
     depends_on: [filter-bind-admission-implicit-coercions, workspace-rustfmt]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: PORT-1-LINUX-L1-PREREGISTRATION.md
+    merge: merge-commit
     evidence: null
     budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1."
+    summary: "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1. Question round 39 (RULED 2026-10-02), item 1: the Linux entry is pinned to ubuntu-24.04. The full-form preregistration is PORT-1-LINUX-L1-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-port-1-linux-l1-architect-draft.md); it is dispatched after skp-cancel-state-closed-set (PR #160) merges."
     dates: {opened: 2026-09-30, done: null}
 
   - id: port-2-macos-l1-and-app-dirs
@@ -3584,4 +3585,38 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Routed by skp-cancel-state-closed-set drafting consult (state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md, point 8, first bullet): beyond cancel state, other closed-domain response fields are typed String on the reader (crs.source, identity.class, sanity.level and others). No finding names them yet. The same reader-side closure (a closed enum in protocol/skp, a closed union in the shell, no literal bump when the writer bytes are unchanged) would apply, under question round 38 item 1 reasoning, each field checked against SKP-V0. Not placed; its order is the human."
+    dates: {opened: 2026-10-02, done: null}
+  - id: publish-unix-quota-perm-errors
+    title: "EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish unix error tables (kernel/src/publish/error.rs, the OS error classification boundary) do not classify EDQUOT and EPERM as the Windows side classifies quota and permission failures (state/cloud/wave3/W3-A.md, observation 1). A user-visible error class change, so out of port-1; placement is the human."
+    dates: {opened: 2026-10-02, done: null}
+  - id: publish-bundle-sigterm
+    title: "SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish-bundle (kernel/src/bin/publish-bundle.rs) has no SIGTERM handling on unix (state/cloud/wave3/W3-A.md, observation 3). New cancellation behaviour under ADR-018, so out of port-1; placement is the human."
     dates: {opened: 2026-10-02, done: null}

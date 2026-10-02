@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `495a1f7b2ff187cb8cb204f2fb88cf767dd175790b3c52aa4423a0fe6cb08855`) at `2026-10-02T18:38:22.398Z`.
+Generated from `PLAN.yaml` (sha256 `0646fb7f6bc795076b7a03359d8fc31129e7cc410d8505aacd9664927083a557`) at `2026-10-02T21:51:01.986Z`.
 
 ## 1. Next
 
@@ -86,6 +86,8 @@ Generated from `PLAN.yaml` (sha256 `495a1f7b2ff187cb8cb204f2fb88cf767dd175790b3c
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
 - **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
 - **skp-closed-domain-response-strings** — Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others) (phase `prototype`) — never queued until placed
+- **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (phase `prototype`) — never queued until placed
+- **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
