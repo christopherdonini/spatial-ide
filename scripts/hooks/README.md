@@ -45,37 +45,55 @@ decision, per AUTONOMY.md §3, does not key off them — "`stop_hook_active: tru
 reason to allow — that is what a continuation looks like; the caps and the progress test are the
 loop protection.")
 
-**Decision order** (AUTONOMY.md §3, with §18's HALT switch as step 2 — the human's second
-directive — and §24's lease check as step 3):
+**Decision order** (AUTONOMY.md §3, with §18's HALT switch, §24's lease check and the
+stale-continuity step of `STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`; the continuity step and the
+background-tasks allow trade places with the earlier order):
 
-1. `background_tasks` non-empty → allow.
-2. `CUSTODIAN_STOP_HOOK=off` (environment) → allow. Or `state/CUSTODIAN-HALT` exists, locally or
+1. `CUSTODIAN_STOP_HOOK=off` (environment) → allow. Or `state/CUSTODIAN-HALT` exists, locally or
    on `origin/main` (`git fetch --quiet origin main` with a 5-second timeout; a fetch failure
    means "unknown", not halt) → allow, stderr `HALT: <the file's first line>`. This replaces the
    old `.claude/state/stop-hook.pause` file override. The `origin/main` probe result (only when it
    actually completed — never a fetch failure) is cached in `.claude/state/halt-probe-cache.json`
    for 60 seconds (`HALT_CACHE_TTL_MS`, reviewer finding 17), so a stop that keeps recurring
-   within a minute does not re-fetch every time; the local-file check is always live.
-3. Lease check (AUTONOMY.md §24): reads `CUSTODIAN-LEASE` at the project root. Unless its first
+   within a minute does not re-fetch every time; the local-file check is always live. The probe
+   now also runs on a stop with non-empty `background_tasks`.
+2. Lease check (AUTONOMY.md §24): reads `CUSTODIAN-LEASE` at the project root. Unless its first
    line is an active `lease: <id> ...` line whose `<id>` equals the stdin `session_id` → allow,
    stderr names which case applied (absent, relinquished, another session's lease, or no
    `session_id`). This session's own held lease continues to the steps below unchanged; a session
-   that allows here never reaches step 5, so it sends no human-blocked Telegram notice (HALT's own
-   notice at step 2 still fires for every session, lease or not).
-4. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
-5. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
+   that allows here never reaches step 6, so it sends no human-blocked Telegram notice (HALT's own
+   notice at step 1 still fires for every session, lease or not).
+3. Continuity: the block is stale when the newest commit on `HEAD` that touches
+   `state/CUT-STATE.md` leaves the block's `flushed_at` as its first parent had it. The hook reads
+   git only, never the working tree: `git log -1 --format=%H%x09%cI HEAD -- state/CUT-STATE.md`
+   (default history simplification, no `--first-parent`), then `git show` of that commit's blob and
+   of its first parent's. A flush-only commit, or an entry and a flush in one commit, reads fresh;
+   a commit with no first-parent copy of the block (a root commit, a shallow boundary, a missing
+   file or block) introduced it and reads fresh. Stale → the continuation accounting of step 7
+   (progress is a `HEAD` change since the last recorded block, and the stored plan hash is written
+   back unchanged); at either cap → allow; otherwise block with the continuity reason, which names
+   the commit, its time and the block's `flushed_at`, and the step to take (rewrite the block with
+   `scripts/hooks/flush.mjs`, commit it ledger-only, push, then stop). The plan is not read on this
+   path and the stale block takes no near-cap suffix. Every git call carries a 2-second timeout and
+   a 64 MiB buffer (module-local `CONTINUITY_GIT_TIMEOUT_MS`, `CONTINUITY_GIT_MAX_BUFFER`). When
+   git cannot be read, one stderr line (`stop-queue: continuity not judged (<cause>); ...`) is
+   written and the step passes (fail open). A committed but unpushed flush reads fresh: push stays
+   with the PreCompact hook, which is unchanged and remains the backstop.
+4. `background_tasks` non-empty → allow.
+5. Derive the ready set live from `PLAN.yaml` (never the committed queue file).
+6. Ready set empty, or only human-blocked nodes remain → allow, stderr names the waiting-on-human
    count; sends one Telegram message listing the waiting items (id, kind, minutes, total), deduped
    on a hash of the waiting set (item 16b).
-6. Continuation accounting: `.claude/state/stop-hook-<session_id>.json` and
-   `.claude/state/stop-hook-daily-<YYYY-MM-DD>.json` (gitignored). Consecutive resets to 0 on
-   progress (HEAD or the plan hash changed since the last block). Session cap `6` (declared
-   `SESSION_CONSECUTIVE_CAP` — under Claude Code's own 8-consecutive-block override quoted above;
-   `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` is never touched here). Daily cap `40` (declared
-   `DAILY_CONTINUATION_CAP`, §3: "daily cap `DAILY_CONTINUATION_CAP` = 40 across sessions"). At
-   either cap → allow.
-7. Otherwise → block, with the exact reason text AUTONOMY.md §3 specifies, reordered
-   `smallFirst` and spike/measurement-lane-deferred past 75% of the daily cap (declared
-   `NEAR_DAILY_CAP_RATIO`, §10).
+7. Continuation accounting, one routine for step 3's stale block and step 8's queue block:
+   `.claude/state/stop-hook-<session_id>.json` and `.claude/state/stop-hook-daily-<YYYY-MM-DD>.json`
+   (gitignored). Consecutive resets to 0 on progress (`HEAD` changed since the last block; on the
+   queue path also the plan hash). Session cap `6` (declared `SESSION_CONSECUTIVE_CAP` — under
+   Claude Code's own 8-consecutive-block override quoted above; `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`
+   is never touched here). Daily cap `40` (declared `DAILY_CONTINUATION_CAP`). At either cap →
+   allow.
+8. Otherwise → block, with the reason text AUTONOMY.md §3 specifies, reordered `smallFirst` and
+   spike/measurement-lane-deferred past 75% of the daily cap (declared `NEAR_DAILY_CAP_RATIO`,
+   §10).
 
 Never sends `reason` on an allow — only `Stop`'s documented `decision: "block"` path takes one; an
 allow prints its explanation to stderr only (goes to the debug log, matching "Exit code 0... Claude
@@ -127,7 +145,9 @@ This is the documented re-injection path this hook uses, for both the `compact` 
 matchers (the latter so a `--resume`/`/resume` session gets the same reading order, per AUTONOMY.md
 §0's own framing: "Reading order after a compaction **or a new session**").
 
-Prints §0's reading order, then `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block **verbatim**
+Prints §0's reading order (its steps, in order: the ledger, the generated queue,
+`DECISIONS-PENDING.md`, `state/directives/`, `PRECEDENTS.md`, then `AUTONOMY.md` and
+`AI_DEVELOPMENT.md`), then `state/CUT-STATE.md`'s `## SESSION-CONTINUITY` block **verbatim**
 (heading through the next `#`-heading or end of file) — nothing summarized or reformatted. Never
 throws: a missing or unparseable `state/CUT-STATE.md` still prints the reading order, with a note
 in place of the block.
@@ -265,7 +285,9 @@ on non-empty `background_tasks`; allow via the environment override; allow on a 
 `state/CUSTODIAN-HALT` file (its first line surfaced on stderr); allow at the session and daily
 continuation caps; the lease check (§24): allow when this session's lease is relinquished, allow
 when this session holds no lease (file absent, or another session's lease), and block as before
-when `CUSTODIAN-LEASE` holds this session's own lease. `checkFreshness`'s own git calls are injectable (`{ git: (args) => ... }`) so the
+when `CUSTODIAN-LEASE` holds this session's own lease. The continuity step runs against real temporary git
+repositories (stale and fresh ledger histories, merges, a root commit, a CRLF blob, a ledger over 1 MiB, the caps and
+the shipped CLI). `checkFreshness`'s own git calls are injectable (`{ git: (args) => ... }`) so the
 "fresh" branch can be tested deterministically — a real git commit's tracked content cannot state
 that same commit's own resulting hash (the hash is computed from the content), so the achievable,
 literal test of "fresh" uses an injected git rather than a self-referencing commit.

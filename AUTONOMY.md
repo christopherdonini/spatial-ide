@@ -509,3 +509,12 @@ Round 33, item 3 adopted the custodian's proposal that the question-round Telegr
 - After each call the custodian checks that the new round file exists and reads the last line of `.claude/state/round-mirror.jsonl`. A missing file, or `ok: false`, is mirrored or re-sent by hand with the file-argument CLI, and the ledger records it.
 - A round answered without a call (round 32's shape) is still filed by hand.
 - The custodian commits each hook-written file with its RULED record.
+
+## §29. The Stop hook refuses to stop on a stale SESSION-CONTINUITY block (the human, 2026-10-02, round 33, items 4 and 5; appended after §28 so that no line a record cites above it moves)
+
+Round 33, items 4 and 5 are cited by round and item and not reproduced. The record is PLAN node `stop-hook-stale-continuity`, and the governing form is `scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`. §3, §7, §24 and §26 are not edited in place. From the merge of that piece:
+
+- **§3's decision order is:** (1) the override or the halt switch (§18); (2) the lease check (§24); (3) continuity; (4) `background_tasks`; (5) onward, §3's steps 3 to 6 as before.
+- **Continuity.** The block is stale when the newest commit on `HEAD` that touches `state/CUT-STATE.md` leaves the block's `flushed_at` as its first parent had it. A stale block blocks the stop inside §3's continuation caps, with `HEAD` as its progress signal. Its reason names that commit, its time and the block's `flushed_at`, and the step: rewrite the block with `scripts/hooks/flush.mjs` from git and the ledger, commit it ledger-only, push, then stop. When git cannot be read, the step is skipped.
+- **§7.** The milestone refresh of the 2026-09-29 flush directive, item 5 (`state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`), is a ledger-only commit with no `chore(site): health refresh` before it. §7's health-refresh-first bullet holds for handoffs and the pre-compaction flush. The PreCompact hook is unchanged and remains the backstop.
+- **§26's tooling half is done:** `READING_ORDER` carries the step. Proof: the test `session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)`.

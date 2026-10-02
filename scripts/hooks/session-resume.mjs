@@ -23,8 +23,9 @@ export const READING_ORDER = `Reading order after a compaction or a new session 
 1. state/CUT-STATE.md — its SESSION-CONTINUITY block first (position, tip hash, half-made judgments, intended sequencing), then the ledger's last entries.
 2. CUSTODIAN-QUEUE.md — the generated ready set and the waiting-on-human list.
 3. DECISIONS-PENDING.md — the RULED blocks (newest first) and the open entries.
-4. PRECEDENTS.md — before raising any question.
-5. AUTONOMY.md for the mechanics; AI_DEVELOPMENT.md for the role, the red lines and the accumulated lessons.`;
+4. state/directives/ — the human's instructions, recorded verbatim, newest first.
+5. PRECEDENTS.md — before raising any question.
+6. AUTONOMY.md for the mechanics; AI_DEVELOPMENT.md for the role, the red lines and the accumulated lessons.`;
 
 function resolveProjectRoot(input) {
   return process.env.CLAUDE_PROJECT_DIR || input?.cwd || process.cwd();
