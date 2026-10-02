@@ -230,3 +230,21 @@ Written after gate 1's results were seen (a post-result amendment). References o
 4. **The rustfmt versions.** CI ran rustfmt 1.10.0 and the local runs 1.9.0: the gate-1 reviewer's S2-3. E1 is green, so I6 does not fire. H1 is recorded as tested across those two versions and claims nothing more.
 5. **Generation.** The node's generation bumps (`AUTONOMY.md` §15).
 6. **Superseded index.** None. No line of this form is made false; the header lines C3 rewrites are not records.
+
+### Amendment 2 — budget overrun, §7 not edited; question round 37; the superseded index (classes 8, 1 and 3)
+
+budget overrun, §7 not edited. Written after gate 2's results were seen (a post-result amendment). References only.
+
+1. **Class 8, the file count.**
+   - **Declared:** §7 declares at most 120 changed lines over at most 2 files.
+   - **Final:** by §7's own counting command at 275d305 (C1 6371d92), the head gate 2 reviewed, the figure is 93 lines over 3 files: `.git-blame-ignore-revs` 2, `.github/workflows/rust-fmt.yml` 80, and this form 11.
+   - **Reason:** the counting command does not exclude this form, so Amendment 1 (27a6c94) brought the form into the count.
+   - §7 is not edited. This amendment adds lines to the same third file and adds no fourth. The figure at the merged head goes in the closing record.
+   - The findings are both gate-2 S1-1s: `state/consults/gates/2026-10-02-workspace-rustfmt-gate2-architect.md` and `state/consults/gates/2026-10-02-workspace-rustfmt-gate2-reviewer.md`.
+2. **§8 item 3.** Question round 37 (RULED 2026-10-02), item 1, settles the gate-2 architect's S1-2: this form's own appended §10 amendments are read as outside §8 item 3.
+3. **Class 3, the superseded index** (the gate-2 reviewer's S2-1).
+   - Amendment 1 item 6's "None" misses one line: §0's statement that Governance CI does not trigger on this PR, `WORKSPACE-RUSTFMT-PREREGISTRATION.md:29` @ 7b45af8 sha256:0cfff784dfef00138681a6542490122410eb73b1e96ddf12e0eed72e28954a1f.
+   - Since 27a6c94 put this form in the diff, Governance CI has run on the PR: run 37036923447 at 275d305, success.
+   - §9's parenthetical reason, which rests on that line, is read with it: `WORKSPACE-RUSTFMT-PREREGISTRATION.md:217` @ 7b45af8 sha256:e4407a2f8d85cd16477648ece644298258e551d7e9a7f7524393cc49f1f859c4. §9's local runs still stand.
+4. **Generation.** The node's generation bumps to 3 (`AUTONOMY.md` §15).
+5. **Superseded index.** Amendment 1 item 6, as to §0's Governance CI line and §9's reason that rests on it (item 3). Nothing else is superseded.
