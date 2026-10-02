@@ -25,7 +25,10 @@ fn parse_kernel_minted(prefix: &str, s: &str) -> Result<(), String> {
     let hex_part = s.strip_prefix(&head).ok_or_else(|| {
         format!("not a valid {prefix} handle: {s:?} (expected `{head}` + 32 lowercase hex digits)")
     })?;
-    if hex_part.len() != 32 || !hex_part.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    if hex_part.len() != 32
+        || !hex_part
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
     {
         return Err(format!(
             "not a valid {prefix} handle: {s:?} (expected `{head}` + 32 lowercase hex digits)"
@@ -129,7 +132,10 @@ fn parse_cancel_key(s: &str) -> Result<(), String> {
             s.len()
         ));
     }
-    if !s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-') {
+    if !s
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    {
         return Err(format!(
             "not a valid cancel key: {s:?} (only [A-Za-z0-9_-] is admissible)"
         ));
@@ -203,8 +209,18 @@ mod tests {
     fn malformed_handles_are_rejected() {
         assert!("ds_".parse::<DatasetHandle>().is_err());
         assert!("ds_notHEX".parse::<DatasetHandle>().is_err());
-        assert!("DS_00000000000000000000000000000000".parse::<DatasetHandle>().is_err(), "case-sensitive");
-        assert!("ds_0000000000000000000000000000000".parse::<DatasetHandle>().is_err(), "31 hex chars");
+        assert!(
+            "DS_00000000000000000000000000000000"
+                .parse::<DatasetHandle>()
+                .is_err(),
+            "case-sensitive"
+        );
+        assert!(
+            "ds_0000000000000000000000000000000"
+                .parse::<DatasetHandle>()
+                .is_err(),
+            "31 hex chars"
+        );
     }
 
     #[test]

@@ -151,7 +151,9 @@ fn require_disk(phase: &str) -> u64 {
 }
 
 fn file_facts(p: &Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());
@@ -164,7 +166,9 @@ fn file_facts(p: &Path) -> (u64, String) {
 /// clause names.
 fn ids_in_file_order(path: &Path) -> Vec<u64> {
     let conn = configured_connection().expect("configured connection");
-    let mut stmt = conn.prepare("SELECT id FROM read_parquet(?)").expect("prepare");
+    let mut stmt = conn
+        .prepare("SELECT id FROM read_parquet(?)")
+        .expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
     let mut out = Vec::new();
     while let Some(r) = rows.next().expect("row") {
@@ -179,7 +183,9 @@ fn ids_in_file_order(path: &Path) -> Vec<u64> {
 fn row_groups_of(path: &Path) -> u64 {
     let conn = configured_connection().expect("configured connection");
     let path_sql = path.to_str().unwrap().replace('\'', "''");
-    spatial_engine::layout::row_group_row_counts(&conn, &path_sql).expect("row groups").len() as u64
+    spatial_engine::layout::row_group_row_counts(&conn, &path_sql)
+        .expect("row groups")
+        .len() as u64
 }
 
 /// A minimal rewrite watchdog: fires the declared cancel token if `ceiling` is exceeded, so a
@@ -217,7 +223,11 @@ impl RewriteWatchdog {
                 return;
             }
         });
-        Self { stop, fired, handle: Some(handle) }
+        Self {
+            stop,
+            fired,
+            handle: Some(handle),
+        }
     }
 
     fn finish(mut self) -> bool {
@@ -247,7 +257,10 @@ fn generate_the_145mb_fixture_matrix() {
     }
 
     let free_before = require_disk("import-layout-fixtures-start");
-    say!("free disk before: {:.2} GiB ({free_before} B)", free_before as f64 / (1u64 << 30) as f64);
+    say!(
+        "free disk before: {:.2} GiB ({free_before} B)",
+        free_before as f64 / (1u64 << 30) as f64
+    );
 
     // ---- the source, reused read-only if it is exactly the file this generator would produce ---
     let first_batch_s = first_batch_s_path();
@@ -267,14 +280,22 @@ fn generate_the_145mb_fixture_matrix() {
             );
             let p = dir.join("parcels-145mb-source.parquet");
             let facts = write_geoparquet(&p, &spec_s()).expect("generate source");
-            say!("generated source: {} features, {} bytes", facts.features, facts.bytes);
+            say!(
+                "generated source: {} features, {} bytes",
+                facts.features,
+                facts.bytes
+            );
             p
         }
     } else {
         say!("source: `first-batch`'s S fixture is absent; generating one under this phase's own directory");
         let p = dir.join("parcels-145mb-source.parquet");
         let facts = write_geoparquet(&p, &spec_s()).expect("generate source");
-        say!("generated source: {} features, {} bytes", facts.features, facts.bytes);
+        say!(
+            "generated source: {} features, {} bytes",
+            facts.features,
+            facts.bytes
+        );
         p
     };
     let (src_bytes, src_hash) = file_facts(&src_path);
@@ -295,8 +316,11 @@ fn generate_the_145mb_fixture_matrix() {
     let mut attempts_failed = 0u32;
 
     for &granularity in &GRANULARITIES {
-        for &order in &[ClusterOrder::SourceIdentity, ClusterOrder::Hilbert16, ClusterOrder::Shuffled]
-        {
+        for &order in &[
+            ClusterOrder::SourceIdentity,
+            ClusterOrder::Hilbert16,
+            ClusterOrder::Shuffled,
+        ] {
             let dst = dir.join(format!(
                 "parcels-145mb-duckdb-{}-g{}.parquet",
                 order.as_str(),
@@ -310,14 +334,25 @@ fn generate_the_145mb_fixture_matrix() {
                      row groups, sha256 {sha256}",
                     order.as_str()
                 );
-                written.push(Written { order, granularity, path: dst, bytes, sha256, row_groups });
+                written.push(Written {
+                    order,
+                    granularity,
+                    path: dst,
+                    bytes,
+                    sha256,
+                    row_groups,
+                });
                 continue;
             }
             require_disk("import-layout-rewrite");
             let cancel = CancelToken::new();
             let dog = RewriteWatchdog::start(REWRITE_CEILING, cancel.clone());
-            let spec =
-                VariantSpec { order, extent, row_group_rows: granularity, id_column: "id".into() };
+            let spec = VariantSpec {
+                order,
+                extent,
+                row_group_rows: granularity,
+                id_column: "id".into(),
+            };
             let started = Instant::now();
             let result = write_clustered_variant(&src_path, &dst, &spec, &cancel);
             let elapsed = started.elapsed();
@@ -337,7 +372,10 @@ fn generate_the_145mb_fixture_matrix() {
                         elapsed.as_secs_f64() * 1000.0,
                         sha256
                     );
-                    assert_eq!(bytes, facts.bytes, "reported bytes and stat'd bytes disagree");
+                    assert_eq!(
+                        bytes, facts.bytes,
+                        "reported bytes and stat'd bytes disagree"
+                    );
                     written.push(Written {
                         order,
                         granularity,
@@ -376,7 +414,12 @@ fn generate_the_145mb_fixture_matrix() {
             }
         }
     }
-    assert_eq!(written.len(), 9, "expected exactly the nine-file matrix, got {}", written.len());
+    assert_eq!(
+        written.len(),
+        9,
+        "expected exactly the nine-file matrix, got {}",
+        written.len()
+    );
 
     // ---- prediction 2's 145 MB half: H-from-C and H-from-R -------------------------------------
     //
@@ -396,9 +439,10 @@ fn generate_the_145mb_fixture_matrix() {
     let h_from_c_path = dir.join("parcels-145mb-duckdb-hilbert16-from-raster-g8192.parquet");
     let h_from_r_path = dir.join("parcels-145mb-duckdb-hilbert16-from-shuffled-g8192.parquet");
 
-    for (src, dst, label) in
-        [(&c.path, &h_from_c_path, "H-from-C"), (&r.path, &h_from_r_path, "H-from-R")]
-    {
+    for (src, dst, label) in [
+        (&c.path, &h_from_c_path, "H-from-C"),
+        (&r.path, &h_from_r_path, "H-from-R"),
+    ] {
         if dst.exists() {
             say!("{label} already present; not rewritten");
             continue;
@@ -461,7 +505,11 @@ fn generate_the_145mb_fixture_matrix() {
         );
         let order_c = ids_in_file_order(&h_from_c_path);
         let order_r = ids_in_file_order(&h_from_r_path);
-        assert_eq!(order_c.len(), order_r.len(), "H-from-C and H-from-R do not even have the same row count");
+        assert_eq!(
+            order_c.len(),
+            order_r.len(),
+            "H-from-C and H-from-R do not even have the same row count"
+        );
         if order_c == order_r {
             say!(
                 "PREDICTION 2 (145 MB half): CONFIRMED, by row-order digest only — the `id` \
@@ -506,5 +554,8 @@ fn generate_the_145mb_fixture_matrix() {
     say!("attempts failed (watchdog or refusal): {attempts_failed}");
 
     std::fs::write(dir.join("import-layout-fixtures.log"), &log).expect("write the phase log");
-    assert_eq!(attempts_failed, 0, "at least one rewrite failed; see the log above");
+    assert_eq!(
+        attempts_failed, 0,
+        "at least one rewrite failed; see the log above"
+    );
 }

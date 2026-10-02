@@ -36,7 +36,11 @@ fn coord_field() -> FieldRef {
 }
 
 fn vertices_field() -> FieldRef {
-    Arc::new(Field::new("vertices", DataType::FixedSizeList(coord_field(), 2), false))
+    Arc::new(Field::new(
+        "vertices",
+        DataType::FixedSizeList(coord_field(), 2),
+        false,
+    ))
 }
 
 fn rings_field() -> FieldRef {
@@ -52,7 +56,9 @@ pub fn polygon_storage_type() -> DataType {
 pub fn build_polygon_array(b: PolygonBuilder) -> Result<ArrayRef> {
     let n_coords = b.coords.len();
     if !n_coords.is_multiple_of(2) {
-        return Err(EngineError::Arrow(format!("coordinate buffer has odd length {n_coords}")));
+        return Err(EngineError::Arrow(format!(
+            "coordinate buffer has odd length {n_coords}"
+        )));
     }
 
     let flat = Float64Array::from(b.coords);
@@ -97,7 +103,10 @@ pub fn geometry_field(name: &str, crs: &DatasetCrs) -> FieldRef {
     let crs_meta = match crs.definition_json() {
         Some(def) => format!(r#"{{"crs":{def},"crs_type":"projjson"}}"#),
         None => {
-            format!(r#"{{"crs":{},"crs_type":"authority_code"}}"#, json_string(crs.identifier()))
+            format!(
+                r#"{{"crs":{},"crs_type":"authority_code"}}"#,
+                json_string(crs.identifier())
+            )
         }
     };
     md.insert(EXT_META_KEY.to_string(), crs_meta);
@@ -117,7 +126,9 @@ fn checked_offsets(v: Vec<i32>, what: &str) -> Result<OffsetBuffer<i32>> {
     match v.first() {
         None => return Err(EngineError::Arrow(format!("{what}: buffer is empty"))),
         Some(&first) if first != 0 => {
-            return Err(EngineError::Arrow(format!("{what}: start at {first}, not 0")))
+            return Err(EngineError::Arrow(format!(
+                "{what}: start at {first}, not 0"
+            )))
         }
         Some(_) => {}
     }
@@ -165,7 +176,10 @@ pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
     let vertex_lo = *ring_offsets.get(ring_lo)? as usize;
     let vertex_hi = *ring_offsets.get(ring_hi)? as usize;
 
-    let fsl = rings.values().as_any().downcast_ref::<FixedSizeListArray>()?;
+    let fsl = rings
+        .values()
+        .as_any()
+        .downcast_ref::<FixedSizeListArray>()?;
     let flat = fsl.values().as_any().downcast_ref::<Float64Array>()?;
     flat.values().get(vertex_lo * 2..vertex_hi * 2)
 }
@@ -235,7 +249,13 @@ mod tests {
     }
 
     fn square(x: f64, y: f64) -> Vec<Vec<[f64; 2]>> {
-        vec![vec![[x, y], [x + 1.0, y], [x + 1.0, y + 1.0], [x, y + 1.0], [x, y]]]
+        vec![vec![
+            [x, y],
+            [x + 1.0, y],
+            [x + 1.0, y + 1.0],
+            [x, y + 1.0],
+            [x, y],
+        ]]
     }
 
     #[test]
@@ -305,6 +325,9 @@ mod tests {
         assert_eq!(f.metadata().get(EXT_NAME_KEY).unwrap(), EXT_NAME_POLYGON);
         let meta = f.metadata().get(EXT_META_KEY).unwrap();
         assert!(meta.contains("\"crs_type\":\"projjson\""));
-        assert!(meta.contains("Bessel 1841"), "the definition travels, not just the code");
+        assert!(
+            meta.contains("Bessel 1841"),
+            "the definition travels, not just the code"
+        );
     }
 }

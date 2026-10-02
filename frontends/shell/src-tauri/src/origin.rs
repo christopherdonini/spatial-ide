@@ -126,9 +126,9 @@ impl std::error::Error for OriginError {}
 /// and directly by `lib.rs`'s `on_page_load` hook (the post-load self-check) — the same
 /// normalisation rule applies to both, deliberately: the self-check must compare like with like.
 pub fn expected_origin_from_url(url: &Url) -> Result<String, OriginError> {
-    let host = url
-        .host_str()
-        .ok_or_else(|| OriginError::NoHost { url: url.as_str().to_string() })?;
+    let host = url.host_str().ok_or_else(|| OriginError::NoHost {
+        url: url.as_str().to_string(),
+    })?;
     let scheme = url.scheme();
     Ok(match url.port() {
         Some(port) => format!("{scheme}://{host}:{port}"),
@@ -199,9 +199,8 @@ fn tauri_protocol_url(use_https: bool, platform: Platform) -> Url {
             Url::parse(&format!("{scheme}://tauri.localhost"))
                 .expect("a fixed, hand-written URL literal always parses")
         }
-        Platform::Other => {
-            Url::parse("tauri://localhost").expect("a fixed, hand-written URL literal always parses")
-        }
+        Platform::Other => Url::parse("tauri://localhost")
+            .expect("a fixed, hand-written URL literal always parses"),
     }
 }
 
@@ -249,19 +248,28 @@ mod tests {
     #[test]
     fn dev_server_url_normalises_to_scheme_host_port() {
         let url = Url::parse("http://localhost:5180/").unwrap();
-        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://localhost:5180");
+        assert_eq!(
+            expected_origin_from_url(&url).unwrap(),
+            "http://localhost:5180"
+        );
     }
 
     #[test]
     fn packaged_custom_protocol_url_drops_path_and_query_and_the_implicit_default_port() {
         let url = Url::parse("http://tauri.localhost/index.html?x=1").unwrap();
-        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://tauri.localhost");
+        assert_eq!(
+            expected_origin_from_url(&url).unwrap(),
+            "http://tauri.localhost"
+        );
     }
 
     #[test]
     fn an_explicit_non_default_port_is_kept() {
         let url = Url::parse("https://example.test:8443/a").unwrap();
-        assert_eq!(expected_origin_from_url(&url).unwrap(), "https://example.test:8443");
+        assert_eq!(
+            expected_origin_from_url(&url).unwrap(),
+            "https://example.test:8443"
+        );
     }
 
     #[test]
@@ -272,7 +280,9 @@ mod tests {
         let url = Url::parse("about:blank").unwrap();
         assert_eq!(
             expected_origin_from_url(&url),
-            Err(OriginError::NoHost { url: "about:blank".to_string() })
+            Err(OriginError::NoHost {
+                url: "about:blank".to_string()
+            })
         );
     }
 
@@ -281,7 +291,10 @@ mod tests {
         // `data:` is not a WHATWG "special" scheme, so it carries no authority/host at all --
         // exercises the same `NoHost` path via a scheme distinct from `about:blank` above.
         let url = Url::parse("data:text/plain,hello").unwrap();
-        assert!(matches!(expected_origin_from_url(&url), Err(OriginError::NoHost { .. })));
+        assert!(matches!(
+            expected_origin_from_url(&url),
+            Err(OriginError::NoHost { .. })
+        ));
     }
 
     #[test]
@@ -291,7 +304,10 @@ mod tests {
         // the pinned `url` 2.5.8, so this hits the same `NoHost` path, not a silently-accepted
         // empty-string host.
         let url = Url::parse("file:///C:/app/index.html").unwrap();
-        assert!(matches!(expected_origin_from_url(&url), Err(OriginError::NoHost { .. })));
+        assert!(matches!(
+            expected_origin_from_url(&url),
+            Err(OriginError::NoHost { .. })
+        ));
     }
 
     #[test]
@@ -307,7 +323,10 @@ mod tests {
     #[test]
     fn userinfo_and_fragment_are_dropped() {
         let url = Url::parse("http://user:pa55@localhost:5180/x#f").unwrap();
-        assert_eq!(expected_origin_from_url(&url).unwrap(), "http://localhost:5180");
+        assert_eq!(
+            expected_origin_from_url(&url).unwrap(),
+            "http://localhost:5180"
+        );
     }
 
     #[test]
@@ -324,7 +343,10 @@ mod tests {
         // `url::Url` itself lower-cases a domain host at parse time (verified empirically against
         // the pinned `url` 2.5.8) -- this function relies on that rather than lower-casing again.
         let url = Url::parse("https://LOCALHOST:5180/").unwrap();
-        assert_eq!(expected_origin_from_url(&url).unwrap(), "https://localhost:5180");
+        assert_eq!(
+            expected_origin_from_url(&url).unwrap(),
+            "https://localhost:5180"
+        );
     }
 
     #[test]
@@ -385,8 +407,9 @@ mod tests {
         // exist yet is unwriteable by construction; the three tests above cover every variant that
         // does, and this one records why that is sufficient rather than merely current.)
         let app = tauri::utils::config::WebviewUrl::App(std::path::PathBuf::from("index.html"));
-        let external =
-            tauri::utils::config::WebviewUrl::External(Url::parse("https://example.test/").unwrap());
+        let external = tauri::utils::config::WebviewUrl::External(
+            Url::parse("https://example.test/").unwrap(),
+        );
         let custom = tauri::utils::config::WebviewUrl::CustomProtocol(
             Url::parse("doom://index.html").unwrap(),
         );
@@ -394,7 +417,10 @@ mod tests {
             .into_iter()
             .filter(|u| main_window_url_is_app(u))
             .count();
-        assert_eq!(admitted, 1, "exactly one variant may take the guard's admitting arm");
+        assert_eq!(
+            admitted, 1,
+            "exactly one variant may take the guard's admitting arm"
+        );
     }
 
     // -- `expected_origin_from_config`: the config mirror's own branches (RELEASE-0.1.md Amendment

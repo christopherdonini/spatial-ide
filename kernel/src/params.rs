@@ -111,7 +111,10 @@ fn put_str(out: &mut Vec<u8>, s: &str) {
 
 fn take_str(b: &[u8], at: &mut usize) -> Result<String, String> {
     let len = u16::from_be_bytes(
-        b.get(*at..*at + 2).ok_or("truncated string length")?.try_into().map_err(|_| "bad length")?,
+        b.get(*at..*at + 2)
+            .ok_or("truncated string length")?
+            .try_into()
+            .map_err(|_| "bad length")?,
     ) as usize;
     *at += 2;
     let s = std::str::from_utf8(b.get(*at..*at + len).ok_or("truncated string")?)
@@ -135,7 +138,12 @@ mod tests {
         };
         assert_eq!(StreamParams::decode(&p.encode()).unwrap(), p);
 
-        let bare = StreamParams { dataset: "parcels".into(), bbox: None, bbox_crs: None, limit: None };
+        let bare = StreamParams {
+            dataset: "parcels".into(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+        };
         assert_eq!(StreamParams::decode(&bare.encode()).unwrap(), bare);
     }
 

@@ -47,10 +47,22 @@ fn the_product_planner_never_reaches_the_row_group_seam() {
 
     // An index that is built, cached and admissible right now — everything a planner would need if
     // it wanted one. The point is that the planner does not want one.
-    let report = ds.build_row_group_index(&CancelToken::new()).expect("build");
-    assert!(report.miss.is_some(), "the first build cannot be a cache hit");
-    assert_eq!(report.admissible, Ok(()), "this fixture's layout is admissible, so the seam *could* serve");
-    assert_eq!(report.row_groups, facts.features.div_ceil(spec.row_group_rows));
+    let report = ds
+        .build_row_group_index(&CancelToken::new())
+        .expect("build");
+    assert!(
+        report.miss.is_some(),
+        "the first build cannot be a cache hit"
+    );
+    assert_eq!(
+        report.admissible,
+        Ok(()),
+        "this fixture's layout is admissible, so the seam *could* serve"
+    );
+    assert_eq!(
+        report.row_groups,
+        facts.features.div_ceil(spec.row_group_rows)
+    );
 
     let before = row_group_consultations();
 
@@ -73,10 +85,15 @@ fn the_product_planner_never_reaches_the_row_group_seam() {
         rows += info.expect("batch").rows;
         buf.clear();
     }
-    assert!(rows > 0, "the viewport selected nothing, so this proves nothing");
+    assert!(
+        rows > 0,
+        "the viewport selected nothing, so this proves nothing"
+    );
 
     let projection = ds.resolve_projection(&[]).expect("empty projection");
-    let mut publish = ds.stream_for_publish(&q, &projection, CancelToken::new()).expect("publish");
+    let mut publish = ds
+        .stream_for_publish(&q, &projection, CancelToken::new())
+        .expect("publish");
     while let Some(info) = publish.next_into(&mut buf) {
         info.expect("publish batch");
         buf.clear();

@@ -38,8 +38,10 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use arrow::array::{Array, ArrayRef, BinaryArray, BinaryBuilder, Float64Builder, Int64Array,
-                   Int64Builder, LargeBinaryArray, StructArray, UInt64Array, UInt64Builder};
+use arrow::array::{
+    Array, ArrayRef, BinaryArray, BinaryBuilder, Float64Builder, Int64Array, Int64Builder,
+    LargeBinaryArray, StructArray, UInt64Array, UInt64Builder,
+};
 use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use geo::{SimplifyVwPreserve, Validation};
@@ -369,14 +371,22 @@ pub struct TierBatch {
 impl TierBatch {
     /// A batch from a tier that was admitted for the source's current key.
     pub fn from_admitted(admitted: &AdmittedTier, rows: u64) -> Self {
-        Self { tier: admitted.tier, rows, label: TierLabel::Resident(admitted.tier) }
+        Self {
+            tier: admitted.tier,
+            rows,
+            label: TierLabel::Resident(admitted.tier),
+        }
     }
 
     /// A batch from a tier that was found and rejected. **The label is not a parameter** — holding a
     /// [`StaleTier`] is what makes this constructor callable, and it always sets
     /// [`TierLabel::Stale`].
     pub fn from_stale(stale: &StaleTier, rows: u64) -> Self {
-        Self { tier: stale.tier, rows, label: TierLabel::Stale }
+        Self {
+            tier: stale.tier,
+            rows,
+            label: TierLabel::Stale,
+        }
     }
 
     pub fn tier(&self) -> u8 {
@@ -466,7 +476,10 @@ pub(crate) fn linear_unit_from_definition(
         ));
     };
     let value: Value = serde_json::from_str(definition).map_err(|e| {
-        refusal(LOD_CRS_UNIT_UNDECLARED, format!("the admitted CRS definition does not parse: {e}"))
+        refusal(
+            LOD_CRS_UNIT_UNDECLARED,
+            format!("the admitted CRS definition does not parse: {e}"),
+        )
     })?;
 
     let crs_type = value.get("type").and_then(Value::as_str).unwrap_or("");
@@ -552,9 +565,8 @@ fn axis_conversion_factor(crs: &Value) -> Option<f64> {
     if axes.len() < 2 {
         return None;
     }
-    let factor = |axis: &Value| -> Option<f64> {
-        axis.get("unit")?.get("conversion_factor")?.as_f64()
-    };
+    let factor =
+        |axis: &Value| -> Option<f64> { axis.get("unit")?.get("conversion_factor")?.as_f64() };
     match (factor(&axes[0]), factor(&axes[1])) {
         (Some(x), Some(y)) if x == y => Some(x),
         _ => None,
@@ -665,10 +677,16 @@ impl TierRecord {
         source_validity: Option<&ValidityHeuristic>,
     ) -> std::result::Result<AdmittedTier, StaleTier> {
         if &self.key != key {
-            return Err(StaleTier { tier: self.tier, miss: TierMiss::KeyMismatch });
+            return Err(StaleTier {
+                tier: self.tier,
+                miss: TierMiss::KeyMismatch,
+            });
         }
         if !ValidityHeuristic::fail_closed_matches(self.source_validity.as_ref(), source_validity) {
-            return Err(StaleTier { tier: self.tier, miss: TierMiss::SourceChanged });
+            return Err(StaleTier {
+                tier: self.tier,
+                miss: TierMiss::SourceChanged,
+            });
         }
         Ok(AdmittedTier { tier: self.tier })
     }
@@ -714,7 +732,10 @@ impl TierRecord {
                 .get("modified_nanos")
                 .and_then(Value::as_str)
                 .and_then(|s| s.parse::<u128>().ok());
-            Some(ValidityHeuristic { len, modified_nanos })
+            Some(ValidityHeuristic {
+                len,
+                modified_nanos,
+            })
         });
         Some(Self {
             key: LodTierKey {
@@ -860,7 +881,11 @@ impl TierSet {
     /// bound it was read against.
     pub fn disk_cost(&self) -> TierSetDiskCost {
         TierSetDiskCost {
-            per_tier_bytes: self.tiers.iter().map(|t| (t.record.tier, t.record.bytes)).collect(),
+            per_tier_bytes: self
+                .tiers
+                .iter()
+                .map(|t| (t.record.tier, t.record.bytes))
+                .collect(),
             total_bytes: self.total_bytes(),
             hard_bound_bytes: self.hard_bound_bytes(),
             source_bytes: self.source_bytes,
@@ -1149,14 +1174,22 @@ fn tier_directory(source_content_hash: &str) -> Result<PathBuf> {
                 .to_string(),
         )
     })?;
-    Ok(PathBuf::from(root).join(LOD_TIER_ROOT).join(source_content_hash))
+    Ok(PathBuf::from(root)
+        .join(LOD_TIER_ROOT)
+        .join(source_content_hash))
 }
 
 fn read_manifest(path: &Path) -> HashMap<u8, TierRecord> {
     let mut out = HashMap::new();
-    let Ok(text) = std::fs::read_to_string(path) else { return out };
-    let Ok(value) = serde_json::from_str::<Value>(&text) else { return out };
-    let Some(tiers) = value.get("tiers").and_then(Value::as_array) else { return out };
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return out;
+    };
+    let Ok(value) = serde_json::from_str::<Value>(&text) else {
+        return out;
+    };
+    let Some(tiers) = value.get("tiers").and_then(Value::as_array) else {
+        return out;
+    };
     for t in tiers {
         if let Some(record) = TierRecord::from_json(t) {
             out.insert(record.tier, record);
@@ -1348,10 +1381,7 @@ fn write_tier(
     let features_total = builder.metadata().file_metadata().num_rows().max(0) as u64;
     // Only the two columns this build reads are decompressed — the tier is identity and geometry,
     // and reading the rest would be work whose output is discarded.
-    let mask = ProjectionMask::roots(
-        builder.parquet_schema(),
-        [id_index, geometry_index],
-    );
+    let mask = ProjectionMask::roots(builder.parquet_schema(), [id_index, geometry_index]);
     let mut reader = builder
         .with_projection(mask)
         .with_batch_size(LOD_READ_BATCH_ROWS)
@@ -1389,8 +1419,16 @@ fn write_tier(
         let ids = read_ids(&batch, id_column, id_type)?;
         let wkb = read_wkb_column(&batch, &geometry_column)?;
 
-        let slice =
-            simplify_rows(&ids, &wkb, epsilon, tier, workers, cancel, progress, facts.features)?;
+        let slice = simplify_rows(
+            &ids,
+            &wkb,
+            epsilon,
+            tier,
+            workers,
+            cancel,
+            progress,
+            facts.features,
+        )?;
         if slice.max_simplify > facts.max_simplify {
             facts.max_simplify = slice.max_simplify;
         }
@@ -1434,7 +1472,15 @@ fn simplify_rows(
     if workers <= LOD_BUILD_WORKERS_ARM_S {
         // Arm S runs inline: spawning one thread would add a handoff the baseline is supposed to be
         // free of.
-        return simplify_slice(ids, wkb, epsilon, tier, cancel, progress, features_before_batch);
+        return simplify_slice(
+            ids,
+            wkb,
+            epsilon,
+            tier,
+            cancel,
+            progress,
+            features_before_batch,
+        );
     }
     let n = ids.len();
     let per = n.div_ceil(workers.max(1));
@@ -1453,9 +1499,10 @@ fn simplify_rows(
             start = end;
         }
         for h in handles {
-            results.push(h.join().unwrap_or_else(|_| {
-                Err(EngineError::Source("a tier worker panicked".into()))
-            }));
+            results.push(
+                h.join()
+                    .unwrap_or_else(|_| Err(EngineError::Source("a tier worker panicked".into()))),
+            );
         }
     });
 
@@ -1528,8 +1575,11 @@ fn simplify_slice(
         // O1's hard gate, per feature, at the moment the geometry exists — not a sampled check and
         // not a post-pass. An invalid output stops the build (§5, I2).
         if !simplified.is_valid() {
-            let errors: Vec<String> =
-                simplified.validation_errors().iter().map(|e| e.to_string()).collect();
+            let errors: Vec<String> = simplified
+                .validation_errors()
+                .iter()
+                .map(|e| e.to_string())
+                .collect();
             return Err(refusal(
                 LOD_INVALID_OUTPUT,
                 format!(
@@ -1549,13 +1599,24 @@ fn simplify_slice(
             &simplified,
             // **Declared, not defaulted**: little-endian ISO WKB, the same encoding
             // `crate::wkb::encode_polygon` writes and this engine's own decoder reads.
-            &wkb::writer::WriteOptions { endianness: wkb::Endianness::LittleEndian },
+            &wkb::writer::WriteOptions {
+                endianness: wkb::Endianness::LittleEndian,
+            },
         )
         .map_err(|e| EngineError::Wkb(format!("feature {id}: writing WKB: {e}")))?;
 
-        out.push(EmittedRow { id, wkb: bytes_out, bbox, vertices_before, vertices_after });
+        out.push(EmittedRow {
+            id,
+            wkb: bytes_out,
+            bbox,
+            vertices_before,
+            vertices_after,
+        });
     }
-    Ok(SliceOutput { rows: out, max_simplify })
+    Ok(SliceOutput {
+        rows: out,
+        max_simplify,
+    })
 }
 
 /// Every ring's vertices, exterior and interiors — the same counting the spike cross-checked
@@ -1569,7 +1630,12 @@ fn ring_vertices(p: &geo::Polygon<f64>) -> u64 {
 }
 
 fn polygon_bbox(p: &geo::Polygon<f64>) -> [f64; 4] {
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     let mut take = |c: &geo::Coord<f64>| {
         b[0] = b[0].min(c.x);
         b[1] = b[1].min(c.y);
@@ -1819,7 +1885,10 @@ fn remove_reporting(path: &Path) -> Result<()> {
 /// The identifier is the value; the detail says what convicted this source. Both travel to the
 /// caller — a refusal nobody can act on is a log line with a type attached.
 fn refusal(identifier: &'static str, detail: String) -> EngineError {
-    EngineError::LodRefused { refusal: identifier, detail }
+    EngineError::LodRefused {
+        refusal: identifier,
+        detail,
+    }
 }
 
 #[cfg(test)]
@@ -1889,20 +1958,32 @@ mod tests {
     #[test]
     fn the_preflight_fails_closed_when_free_space_is_unknown() {
         let required = set_hard_bound_bytes(1_000);
-        assert_eq!(required, 3_000, "the bound is tier count x the per-tier ceiling");
-        assert!(disk_preflight(required, Some(required)).is_ok(), "exactly enough is enough");
+        assert_eq!(
+            required, 3_000,
+            "the bound is tier count x the per-tier ceiling"
+        );
+        assert!(
+            disk_preflight(required, Some(required)).is_ok(),
+            "exactly enough is enough"
+        );
         assert!(disk_preflight(required, Some(required + 1)).is_ok());
 
         match disk_preflight(required, Some(required - 1)) {
             Err(EngineError::LodRefused { refusal, detail }) => {
                 assert_eq!(refusal, LOD_INSUFFICIENT_DISK);
-                assert!(detail.contains("3000") && detail.contains("2999"), "{detail}");
+                assert!(
+                    detail.contains("3000") && detail.contains("2999"),
+                    "{detail}"
+                );
             }
             other => panic!("too little free space must refuse: {other:?}"),
         }
         match disk_preflight(required, None) {
             Err(EngineError::LodRefused { refusal, .. }) => {
-                assert_eq!(refusal, LOD_INSUFFICIENT_DISK, "unknown free space is a refusal, not room")
+                assert_eq!(
+                    refusal, LOD_INSUFFICIENT_DISK,
+                    "unknown free space is a refusal, not room"
+                )
             }
             other => panic!("unknown free space is a refusal, not room: {other:?}"),
         }

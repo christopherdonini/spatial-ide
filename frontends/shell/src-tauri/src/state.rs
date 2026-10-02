@@ -34,8 +34,14 @@ impl SessionLog {
             .map(|d| d.as_secs())
             .unwrap_or(0);
         let path = dir.join(format!("session-{stamp}.log"));
-        let file = std::fs::OpenOptions::new().create(true).append(true).open(&path)?;
-        Ok(Self { file: Mutex::new(file), path })
+        let file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)?;
+        Ok(Self {
+            file: Mutex::new(file),
+            path,
+        })
     }
 
     /// Append one line: `<unix-ms> <level> <message>`. Never panics on a write failure — a log sink

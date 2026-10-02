@@ -130,8 +130,9 @@ fn parse_catalog() -> Vec<CatalogEntry> {
             let code = entry
                 .get("code")
                 .and_then(Value::as_u64)
-                .unwrap_or_else(|| panic!("engine/src/crs-catalog.json: entry {i} has no integer `code`"))
-                as u32;
+                .unwrap_or_else(|| {
+                    panic!("engine/src/crs-catalog.json: entry {i} has no integer `code`")
+                }) as u32;
             let name = field_str(entry, "name", i).to_string();
             let definition = field_str(entry, "definition", i).to_string();
             let hash = sha256_hex(&definition);
@@ -143,7 +144,15 @@ fn parse_catalog() -> Vec<CatalogEntry> {
                 terms_url: field_str(v, "terms_url", i).to_string(),
                 verified: field_str(v, "verified", i).to_string(),
             });
-            CatalogEntry { id, authority, code, name, definition, hash, attribution }
+            CatalogEntry {
+                id,
+                authority,
+                code,
+                name,
+                definition,
+                hash,
+                attribution,
+            }
         })
         .collect()
 }
@@ -198,8 +207,7 @@ mod tests {
     /// once from `engine/tests/data/epsg2056.projjson`'s own bytes — the fixture generators'
     /// proven in-tree EPSG:2056 definition (`engine/src/fixture.rs::LV95_PROJJSON`) — reused
     /// verbatim as this catalog's first entry, per this piece's brief.
-    const EPSG_2056_HASH: &str =
-        "254016888ff494a4099d72869206eaf4a8c1ef5a52fb94104540557c2f46d024";
+    const EPSG_2056_HASH: &str = "254016888ff494a4099d72869206eaf4a8c1ef5a52fb94104540557c2f46d024";
 
     /// Pinned literal (item-8 3857 piece, 2026-09-08): sha256 of `epsg-3857`'s `definition` exactly
     /// as stored, i.e. of `spikes/item8-crs-catalog-extension/epsg3857-projinfo-9.6.2.projjson`'s
@@ -207,8 +215,7 @@ mod tests {
     /// entry was ever added — the entry-51 protocol's "declared, never inferred" applied to the
     /// hash itself). A catalog edit to `epsg-3857` must consciously update this test, same as
     /// `EPSG_2056_HASH` above.
-    const EPSG_3857_HASH: &str =
-        "e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82";
+    const EPSG_3857_HASH: &str = "e14b8ded808e73d3925c3b7a16cc83c2273056a79c00d7ba86c0e5b3b475fd82";
 
     #[test]
     fn catalog_parses_and_is_not_empty() {
@@ -221,9 +228,8 @@ mod tests {
         // `coordinate_system.axis`. A catalog entry that could never establish an axis order
         // would be useless for the one thing this catalog exists to unblock.
         for e in entries() {
-            let v: serde_json::Value = serde_json::from_str(&e.definition).unwrap_or_else(|err| {
-                panic!("{}: definition is not valid JSON: {err}", e.id)
-            });
+            let v: serde_json::Value = serde_json::from_str(&e.definition)
+                .unwrap_or_else(|err| panic!("{}: definition is not valid JSON: {err}", e.id));
             let axis = v.get("coordinate_system").and_then(|cs| cs.get("axis"));
             assert!(
                 axis.is_some(),
@@ -244,7 +250,10 @@ mod tests {
     #[test]
     fn catalog_entries_establish_easting_northing_not_longitude_latitude() {
         for id in ["epsg-2056", "epsg-3857"] {
-            let e = entries().iter().find(|e| e.id == id).unwrap_or_else(|| panic!("{id} entry present"));
+            let e = entries()
+                .iter()
+                .find(|e| e.id == id)
+                .unwrap_or_else(|| panic!("{id} entry present"));
             let v: serde_json::Value = serde_json::from_str(&e.definition)
                 .unwrap_or_else(|err| panic!("{id}: definition is not valid JSON: {err}"));
             let axis_order = crate::geoparquet::axis_order_from_projjson(&v)
@@ -270,7 +279,10 @@ mod tests {
     #[cfg(feature = "fixture")]
     #[test]
     fn epsg_2056_catalog_entry_is_byte_identical_to_the_fixture_generators_own_definition() {
-        let e = entries().iter().find(|e| e.id == "epsg-2056").expect("epsg-2056 entry present");
+        let e = entries()
+            .iter()
+            .find(|e| e.id == "epsg-2056")
+            .expect("epsg-2056 entry present");
         assert_eq!(e.definition, crate::fixture::LV95_PROJJSON);
     }
 
@@ -284,16 +296,28 @@ mod tests {
     /// and the catalog entry fails here rather than only in the spike's own comparison.
     #[test]
     fn epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture() {
-        let e = entries().iter().find(|e| e.id == "epsg-3857").expect("epsg-3857 entry present");
-        assert_eq!(e.definition, include_str!("../tests/data/epsg3857.projjson"));
+        let e = entries()
+            .iter()
+            .find(|e| e.id == "epsg-3857")
+            .expect("epsg-3857 entry present");
+        assert_eq!(
+            e.definition,
+            include_str!("../tests/data/epsg3857.projjson")
+        );
     }
 
     #[test]
     fn epsg_2056_entry_hash_is_pinned() {
-        let e = entries().iter().find(|e| e.id == "epsg-2056").expect("epsg-2056 entry present");
+        let e = entries()
+            .iter()
+            .find(|e| e.id == "epsg-2056")
+            .expect("epsg-2056 entry present");
         assert_eq!(e.authority, "EPSG");
         assert_eq!(e.code, 2056);
-        assert_eq!(e.hash, EPSG_2056_HASH, "catalog entry hash drifted from the pinned literal");
+        assert_eq!(
+            e.hash, EPSG_2056_HASH,
+            "catalog entry hash drifted from the pinned literal"
+        );
     }
 
     /// Item-8 3857 piece (2026-09-08): the analogous pin for `epsg-3857`, added consciously beside
@@ -301,10 +325,16 @@ mod tests {
     /// must fail its own named test.
     #[test]
     fn epsg_3857_entry_hash_is_pinned() {
-        let e = entries().iter().find(|e| e.id == "epsg-3857").expect("epsg-3857 entry present");
+        let e = entries()
+            .iter()
+            .find(|e| e.id == "epsg-3857")
+            .expect("epsg-3857 entry present");
         assert_eq!(e.authority, "EPSG");
         assert_eq!(e.code, 3857);
-        assert_eq!(e.hash, EPSG_3857_HASH, "catalog entry hash drifted from the pinned literal");
+        assert_eq!(
+            e.hash, EPSG_3857_HASH,
+            "catalog entry hash drifted from the pinned literal"
+        );
     }
 
     /// Entry 51 (1): every entry whose source is EPSG's own dataset carries the acknowledgement
@@ -316,7 +346,10 @@ mod tests {
     fn every_epsg_authority_entry_carries_attribution_with_the_terms_url() {
         let epsg_entries: Vec<&CatalogEntry> =
             entries().iter().filter(|e| e.authority == "EPSG").collect();
-        assert!(!epsg_entries.is_empty(), "expected at least one EPSG-authority catalog entry");
+        assert!(
+            !epsg_entries.is_empty(),
+            "expected at least one EPSG-authority catalog entry"
+        );
         for e in epsg_entries {
             let attribution = e
                 .attribution
@@ -365,7 +398,9 @@ mod tests {
                 .len()
                 .checked_sub(2)
                 .and_then(|idx| segments.get(idx))
-                .unwrap_or_else(|| panic!("entry {i}: $schema value has no version segment: {schema_url}"));
+                .unwrap_or_else(|| {
+                    panic!("entry {i}: $schema value has no version segment: {schema_url}")
+                });
             assert_eq!(
                 &schema_field, version,
                 "entry {i}: `schema` ({schema_field}) does not match `definition.$schema`'s own version segment ({version}) in {schema_url}"
@@ -384,14 +419,25 @@ mod tests {
 
     #[test]
     fn a_catalog_supplied_definition_gets_catalog_provenance() {
-        let text = &entries().iter().find(|e| e.id == "epsg-2056").unwrap().definition;
+        let text = &entries()
+            .iter()
+            .find(|e| e.id == "epsg-2056")
+            .unwrap()
+            .definition;
         let provenance = definition_provenance(Some(text));
-        assert_eq!(provenance, format!("catalog:epsg-2056@sha256:{}", &EPSG_2056_HASH[..12]));
+        assert_eq!(
+            provenance,
+            format!("catalog:epsg-2056@sha256:{}", &EPSG_2056_HASH[..12])
+        );
     }
 
     #[test]
     fn one_whitespace_change_loses_catalog_provenance_no_normalization() {
-        let text = &entries().iter().find(|e| e.id == "epsg-2056").unwrap().definition;
+        let text = &entries()
+            .iter()
+            .find(|e| e.id == "epsg-2056")
+            .unwrap()
+            .definition;
         // A single extra trailing space -- proves the comparison is exact-byte, not JSON-value
         // equivalence and not whitespace-insensitive.
         let mutated = format!("{text} ");

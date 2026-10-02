@@ -210,7 +210,10 @@ impl ValidityHeuristic {
             .ok()
             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
             .map(|d| d.as_nanos());
-        Some(Self { len: md.len(), modified_nanos: modified })
+        Some(Self {
+            len: md.len(),
+            modified_nanos: modified,
+        })
     }
 
     /// **Fail closed.** An absent or unreadable heuristic is treated as "cannot confirm", which
@@ -360,7 +363,12 @@ impl SpatialIndex {
         }
 
         observe(observer, IndexPhase::ComputeExtent);
-        let mut extent = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut extent = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for (i, b) in bboxes.iter().enumerate() {
             if i % CANCEL_POLL_INTERVAL == 0 && cancel.is_cancelled() {
                 return Err(EngineError::Cancelled);
@@ -537,7 +545,9 @@ impl SpatialIndex {
         }
         for c in c0..=c1 {
             for r in r0..=r1 {
-                let Some(slots) = self.cells.get(&(c, r)) else { continue };
+                let Some(slots) = self.cells.get(&(c, r)) else {
+                    continue;
+                };
                 for &slot in slots {
                     let s = slot as usize;
                     if seen[s] {
@@ -546,7 +556,10 @@ impl SpatialIndex {
                     seen[s] = true;
                     let b = &self.bboxes[s];
                     // The exact predicate named in the key — bbox intersection, nothing stronger.
-                    if b[0] <= view.xmax && b[2] >= view.xmin && b[1] <= view.ymax && b[3] >= view.ymin
+                    if b[0] <= view.xmax
+                        && b[2] >= view.xmin
+                        && b[1] <= view.ymax
+                        && b[3] >= view.ymin
                     {
                         out.push(self.ids[s]);
                     }
@@ -561,7 +574,11 @@ impl SpatialIndex {
     ///
     /// A caller cannot get a stale answer by forgetting to check: the only way to a candidate list
     /// is through the index, and the only way to an index is through the cache, which calls this.
-    pub fn admits(&self, key: &IndexKey, validity: Option<&ValidityHeuristic>) -> std::result::Result<(), IndexMiss> {
+    pub fn admits(
+        &self,
+        key: &IndexKey,
+        validity: Option<&ValidityHeuristic>,
+    ) -> std::result::Result<(), IndexMiss> {
         if &self.key != key {
             return Err(IndexMiss::KeyMismatch);
         }
@@ -621,7 +638,9 @@ pub fn content_hash_observed(
         if cancel.is_cancelled() {
             return Err(EngineError::Cancelled);
         }
-        let n = f.read(&mut buf).map_err(|e| EngineError::Source(format!("read for hashing: {e}")))?;
+        let n = f
+            .read(&mut buf)
+            .map_err(|e| EngineError::Source(format!("read for hashing: {e}")))?;
         if n == 0 {
             break;
         }
@@ -631,7 +650,10 @@ pub fn content_hash_observed(
             cb(done, total);
         }
     }
-    Ok((hex(&hasher.finalize()), started.elapsed().as_secs_f64() * 1000.0))
+    Ok((
+        hex(&hasher.finalize()),
+        started.elapsed().as_secs_f64() * 1000.0,
+    ))
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -673,7 +695,10 @@ impl IndexCache {
     }
 
     pub fn insert(&self, path: std::path::PathBuf, index: Arc<SpatialIndex>) {
-        self.entries.lock().unwrap_or_else(|e| e.into_inner()).insert(path, index);
+        self.entries
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(path, index);
     }
 
     /// The content hash an entry for `path` was built from, if any. Lets a caller reconstruct the
@@ -770,7 +795,10 @@ mod tests {
     #[test]
     fn ranges_compress_contiguous_ids_and_refuse_to_explode() {
         assert_eq!(compress_to_ranges(&[], 10), Some(vec![]));
-        assert_eq!(compress_to_ranges(&[1, 2, 3, 7, 8], 10), Some(vec![(1, 3), (7, 8)]));
+        assert_eq!(
+            compress_to_ranges(&[1, 2, 3, 7, 8], 10),
+            Some(vec![(1, 3), (7, 8)])
+        );
         assert_eq!(compress_to_ranges(&[5], 10), Some(vec![(5, 5)]));
         // Scattered ids do not compress, and the answer is None — "fall back and say so" —
         // rather than a statement with thousands of predicates in it.
@@ -780,7 +808,10 @@ mod tests {
 
     #[test]
     fn the_validity_heuristic_fails_closed_on_anything_it_cannot_confirm() {
-        let a = ValidityHeuristic { len: 10, modified_nanos: Some(5) };
+        let a = ValidityHeuristic {
+            len: 10,
+            modified_nanos: Some(5),
+        };
         assert!(ValidityHeuristic::fail_closed_matches(Some(&a), Some(&a)));
 
         // Unknown is never "unchanged".
@@ -789,11 +820,23 @@ mod tests {
         assert!(!ValidityHeuristic::fail_closed_matches(None, None));
 
         // A filesystem with no mtime cannot confirm anything, even against itself.
-        let no_mtime = ValidityHeuristic { len: 10, modified_nanos: None };
-        assert!(!ValidityHeuristic::fail_closed_matches(Some(&no_mtime), Some(&no_mtime)));
+        let no_mtime = ValidityHeuristic {
+            len: 10,
+            modified_nanos: None,
+        };
+        assert!(!ValidityHeuristic::fail_closed_matches(
+            Some(&no_mtime),
+            Some(&no_mtime)
+        ));
 
-        let bigger = ValidityHeuristic { len: 11, modified_nanos: Some(5) };
-        assert!(!ValidityHeuristic::fail_closed_matches(Some(&a), Some(&bigger)));
+        let bigger = ValidityHeuristic {
+            len: 11,
+            modified_nanos: Some(5),
+        };
+        assert!(!ValidityHeuristic::fail_closed_matches(
+            Some(&a),
+            Some(&bigger)
+        ));
     }
 
     /// RELEASE-0.1 item 10: the pin phase's own progress report. Three-plus chunks of the same
@@ -808,19 +851,32 @@ mod tests {
         std::fs::write(&p, vec![9u8; 3 * (1 << 20) + 12]).unwrap();
 
         let mut seen: Vec<(u64, u64)> = Vec::new();
-        let (_, _) =
-            content_hash_observed(&p, &CancelToken::new(), Some(&mut |done, total| seen.push((done, total))))
-                .unwrap();
+        let (_, _) = content_hash_observed(
+            &p,
+            &CancelToken::new(),
+            Some(&mut |done, total| seen.push((done, total))),
+        )
+        .unwrap();
 
-        assert!(seen.len() >= 2, "a >1 MiB file must report more than one chunk: {seen:?}");
+        assert!(
+            seen.len() >= 2,
+            "a >1 MiB file must report more than one chunk: {seen:?}"
+        );
         let total = seen[0].1;
         assert_eq!(total, 3 * (1 << 20) + 12);
-        assert!(seen.iter().all(|(_, t)| *t == total), "the total must not change mid-hash: {seen:?}");
+        assert!(
+            seen.iter().all(|(_, t)| *t == total),
+            "the total must not change mid-hash: {seen:?}"
+        );
         assert!(
             seen.windows(2).all(|w| w[0].0 <= w[1].0),
             "bytes_done must be monotone non-decreasing: {seen:?}"
         );
-        assert_eq!(seen.last().unwrap().0, total, "the last report must end exactly at the total: {seen:?}");
+        assert_eq!(
+            seen.last().unwrap().0,
+            total,
+            "the last report must end exactly at the total: {seen:?}"
+        );
 
         let _ = std::fs::remove_file(&p);
     }
@@ -840,7 +896,10 @@ mod tests {
         let mut calls = 0u32;
         let result = content_hash_observed(&p, &c, Some(&mut |_, _| calls += 1));
         assert!(matches!(result, Err(EngineError::Cancelled)));
-        assert_eq!(calls, 0, "a pre-cancelled token must produce zero progress calls");
+        assert_eq!(
+            calls, 0,
+            "a pre-cancelled token must produce zero progress calls"
+        );
 
         let _ = std::fs::remove_file(&p);
     }

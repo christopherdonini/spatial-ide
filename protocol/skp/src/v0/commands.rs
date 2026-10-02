@@ -390,7 +390,10 @@ impl Filter {
                 "unsupported filter dialect `{dialect}`; this host speaks `{FILTER_DIALECT_DUCKDB_EXPR_0}`"
             ));
         }
-        Ok(Self { predicate: predicate.into(), dialect })
+        Ok(Self {
+            predicate: predicate.into(),
+            dialect,
+        })
     }
 }
 
@@ -499,7 +502,9 @@ mod tests {
         let _back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
 
         let mut v: serde_json::Value = serde_json::from_str(&json).unwrap();
-        v.as_object_mut().unwrap().insert("extra".into(), serde_json::Value::Bool(true));
+        v.as_object_mut()
+            .unwrap()
+            .insert("extra".into(), serde_json::Value::Bool(true));
         assert!(serde_json::from_value::<OpenDatasetRequest>(v).is_err());
     }
 
@@ -514,9 +519,13 @@ mod tests {
             crs_assertion: None,
             identity: None,
         };
-        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        let v: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
         let obj = v.as_object().unwrap();
-        assert!(obj.contains_key("crs_assertion"), "crs_assertion key must be present");
+        assert!(
+            obj.contains_key("crs_assertion"),
+            "crs_assertion key must be present"
+        );
         assert!(obj.contains_key("identity"), "identity key must be present");
         assert_eq!(v["crs_assertion"], serde_json::Value::Null);
         assert_eq!(v["identity"], serde_json::Value::Null);
@@ -532,7 +541,9 @@ mod tests {
                 identifier: "EPSG:2056".into(),
                 definition_json: "{\"type\":\"GeographicCRS\"}".into(),
             }),
-            identity: Some(IdentityDeclaration { column: "parcel_key".into() }),
+            identity: Some(IdentityDeclaration {
+                column: "parcel_key".into(),
+            }),
         };
         let json = serde_json::to_string(&req).unwrap();
         let back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
@@ -542,7 +553,10 @@ mod tests {
 
     #[test]
     fn extent_is_always_not_established_shaped_but_typed_for_a_future_basis() {
-        let e = Extent { basis: "not-established-at-open".into(), value: None };
+        let e = Extent {
+            basis: "not-established-at-open".into(),
+            value: None,
+        };
         let json = serde_json::to_string(&e).unwrap();
         let back: Extent = serde_json::from_str(&json).unwrap();
         assert!(back.value.is_none());
@@ -556,9 +570,17 @@ mod tests {
             xmax: HexF64(1.0),
             ymax: HexF64(1.0),
         };
-        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&b).unwrap()).unwrap();
-        assert_eq!(v["xmin"], serde_json::json!("0000000000000000"), "0.0's bit pattern, quoted");
-        assert!(v["xmin"].is_string(), "a bbox edge must never be a JSON number");
+        let v: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&b).unwrap()).unwrap();
+        assert_eq!(
+            v["xmin"],
+            serde_json::json!("0000000000000000"),
+            "0.0's bit pattern, quoted"
+        );
+        assert!(
+            v["xmin"].is_string(),
+            "a bbox edge must never be a JSON number"
+        );
     }
 
     #[test]
@@ -599,9 +621,17 @@ mod tests {
             filter: None,
             columns: None,
         };
-        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
-        assert!(v.as_object().unwrap().contains_key("filter"), "filter key must be present");
-        assert_eq!(v["filter"], serde_json::Value::Null, "absent filter is `null`, never omitted");
+        let v: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        assert!(
+            v.as_object().unwrap().contains_key("filter"),
+            "filter key must be present"
+        );
+        assert_eq!(
+            v["filter"],
+            serde_json::Value::Null,
+            "absent filter is `null`, never omitted"
+        );
     }
 
     /// **P-1.** `columns` follows the exact `bbox_crs`/`filter` discipline: `null` on the wire is a
@@ -618,9 +648,17 @@ mod tests {
             filter: None,
             columns: None,
         };
-        let v: serde_json::Value = serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
-        assert!(v.as_object().unwrap().contains_key("columns"), "columns key must be present");
-        assert_eq!(v["columns"], serde_json::Value::Null, "absent columns is `null`, never omitted");
+        let v: serde_json::Value =
+            serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
+        assert!(
+            v.as_object().unwrap().contains_key("columns"),
+            "columns key must be present"
+        );
+        assert_eq!(
+            v["columns"],
+            serde_json::Value::Null,
+            "absent columns is `null`, never omitted"
+        );
     }
 
     #[test]
@@ -631,7 +669,9 @@ mod tests {
             bbox: None,
             bbox_crs: None,
             limit: None,
-            filter: Some(Filter::new("zone = 3 AND area > 100", FILTER_DIALECT_DUCKDB_EXPR_0).unwrap()),
+            filter: Some(
+                Filter::new("zone = 3 AND area > 100", FILTER_DIALECT_DUCKDB_EXPR_0).unwrap(),
+            ),
             columns: None,
         };
         let json = serde_json::to_string(&req).unwrap();

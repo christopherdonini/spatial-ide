@@ -510,7 +510,15 @@ Round 33, item 3 adopted the custodian's proposal that the question-round Telegr
 - A round answered without a call (round 32's shape) is still filed by hand.
 - The custodian commits each hook-written file with its RULED record.
 
-## §29. The Stop hook refuses to stop on a stale SESSION-CONTINUITY block (the human, 2026-10-02, round 33, items 4 and 5; appended after §28 so that no line a record cites above it moves)
+## §29. Unpinned `path:line` references across the rustfmt pass (the human, 2026-10-02, question round 35, the 2026-10-02 rustfmt notes, note 2; appended after §28 so that no line a record cites above it moves)
+
+The human's rule is `state/directives/2026-10-02-rustfmt-notes.md:15-18` @ f5c87b0 sha256:2db04e9793d79b48c681febca5cc6b23c5ed0fbfcafaaf83c93e64ea14128391, referenced and not reproduced. §15 and §25 are not edited in place.
+
+- **The merge commit.** The rule's placeholder, the rustfmt merge commit, is 51ed3b2. That is PR #157, PLAN node `workspace-rustfmt`, merged 2026-10-02 at 17:43:24Z. Its first parent is b598784.
+- **The custodian's instantiation, not a quotation.** An unpinned `path:line` reference in a record dated before 51ed3b2 resolves against b598784. A pinned reference resolves at its pin, as before. No record is edited.
+- **The closing record** is `WORKSPACE-RUSTFMT-PREREGISTRATION.md`, Amendment 2.
+
+## §30. The Stop hook refuses to stop on a stale SESSION-CONTINUITY block (the human, 2026-10-02, round 33, items 4 and 5; appended after §29 so that no line a record cites above it moves)
 
 Round 33, items 4 and 5 are cited by round and item and not reproduced. The record is PLAN node `stop-hook-stale-continuity`, and the governing form is `scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`. §3, §7, §24 and §26 are not edited in place. From the merge of that piece:
 

@@ -96,7 +96,9 @@ fn logs_dir() -> PathBuf {
 }
 
 fn file_facts(p: &std::path::Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());
@@ -148,7 +150,12 @@ enum ViewId {
 }
 
 impl ViewId {
-    const ALL: [ViewId; 4] = [Self::Whole, Self::NearQuarter, Self::FarQuarter, Self::Sixty4th];
+    const ALL: [ViewId; 4] = [
+        Self::Whole,
+        Self::NearQuarter,
+        Self::FarQuarter,
+        Self::Sixty4th,
+    ];
 
     fn as_str(self) -> &'static str {
         match self {
@@ -210,7 +217,13 @@ fn predicted_rows(v: ViewId) -> u64 {
     };
     let mut rows = 0u64;
     for j in y_lo..=y_hi {
-        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        let in_row = if j < full_rows {
+            cols
+        } else if j == full_rows {
+            partial
+        } else {
+            0
+        };
         rows += in_row.min(x_cols);
     }
     rows
@@ -253,9 +266,15 @@ fn per_feature_digest_set(
 fn coordinate_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
     use arrow::array::Array;
     use sha2::{Digest, Sha256};
-    let list = col.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<rings>");
+    let list = col
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<rings>");
     let rings = list.value(row);
-    let rings = rings.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<vertices>");
+    let rings = rings
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<vertices>");
     let mut h = Sha256::new();
     for r in 0..rings.len() {
         let verts = rings.value(r);
@@ -264,7 +283,10 @@ fn coordinate_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
             .downcast_ref::<arrow::array::FixedSizeListArray>()
             .expect("FixedSizeList<xy>");
         let xy = verts.values();
-        let xy = xy.as_any().downcast_ref::<arrow::array::Float64Array>().expect("f64 xy");
+        let xy = xy
+            .as_any()
+            .downcast_ref::<arrow::array::Float64Array>()
+            .expect("f64 xy");
         h.update((xy.len() as u64).to_le_bytes());
         for v in xy.values() {
             h.update(v.to_bits().to_le_bytes());
@@ -337,7 +359,12 @@ impl DigestWatchdog {
             eprintln!("[watchdog] did not return inside the grace; aborting");
             std::process::abort();
         });
-        Self { fired, stop, beat, handle: Some(handle) }
+        Self {
+            fired,
+            stop,
+            beat,
+            handle: Some(handle),
+        }
     }
 
     fn beat(&self) {
@@ -377,7 +404,9 @@ fn the_5gb_cross_file_digest_correctness_pass() {
         ($($a:tt)*) => {{ let s = format!($($a)*); println!("{s}"); log.push_str(&s); log.push('\n'); }};
     }
 
-    say!("kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 7 — 5 GB cross-file digest correctness pass");
+    say!(
+        "kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 7 — 5 GB cross-file digest correctness pass"
+    );
     say!(
         "canonicalization: identical to phase 3's (engine/tests/import_layout_digest.rs's header): \
          sha256 over each ring's vertex count (u64 LE) then each vertex's x,y (f64::to_bits, LE), \
@@ -390,12 +419,18 @@ fn the_5gb_cross_file_digest_correctness_pass() {
         let path = order.path();
         let (bytes, hash) = file_facts(&path);
         assert_eq!(
-            hash, want_hash,
+            hash,
+            want_hash,
             "{}: fixture hash does not match the phase-5 pin ({want_hash}) — the fixture moved \
              underneath this phase; refusing to read it",
             order.as_str()
         );
-        assert_eq!(bytes, want_bytes, "{}: fixture size does not match the phase-5 pin", order.as_str());
+        assert_eq!(
+            bytes,
+            want_bytes,
+            "{}: fixture size does not match the phase-5 pin",
+            order.as_str()
+        );
         say!("verified {}: {bytes} B, sha256:{hash}", order.as_str());
     }
 
@@ -430,7 +465,13 @@ fn the_5gb_cross_file_digest_correctness_pass() {
                 order.as_str(),
                 view.as_str()
             );
-            cells.push(Cell { order, view, set, digest, rows });
+            cells.push(Cell {
+                order,
+                view,
+                set,
+                digest,
+                rows,
+            });
         }
         let fired = dog.finish();
         say!(
@@ -441,11 +482,18 @@ fn the_5gb_cross_file_digest_correctness_pass() {
         );
         assert!(!fired, "the digest watchdog fired for {}", order.as_str());
     }
-    assert_eq!(cells.len(), 3 * 4, "expected the full 3-file x 4-viewport matrix");
+    assert_eq!(
+        cells.len(),
+        3 * 4,
+        "expected the full 3-file x 4-viewport matrix"
+    );
 
     // ---- cross-file comparison at every viewport ---------------------------------------------------
     let find = |order: FileId5gb, view: ViewId| -> &Cell {
-        cells.iter().find(|c| c.order == order && c.view == view).expect("every cell was computed above")
+        cells
+            .iter()
+            .find(|c| c.order == order && c.view == view)
+            .expect("every cell was computed above")
     };
 
     let mut matrix = String::new();
@@ -456,9 +504,8 @@ fn the_5gb_cross_file_digest_correctness_pass() {
         let h = find(FileId5gb::H5, view);
         let r = find(FileId5gb::R5, view);
         let predicted = predicted_rows(view);
-        let rows_ok = c.rows as u64 == predicted
-            && h.rows as u64 == predicted
-            && r.rows as u64 == predicted;
+        let rows_ok =
+            c.rows as u64 == predicted && h.rows as u64 == predicted && r.rows as u64 == predicted;
         let sets_ok = c.set == h.set && h.set == r.set;
         let pass = rows_ok && sets_ok;
         any_fail |= !pass;

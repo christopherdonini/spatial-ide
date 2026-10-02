@@ -36,12 +36,19 @@ fn write(name: &str, spec: &FixtureSpec) -> PathBuf {
 
 /// The metre-domain base every existing fixture is drawn in: **outside** ±180/±90.
 fn metres() -> FixtureSpec {
-    FixtureSpec { features: 256, avg_vertices: 12, ..Default::default() }
+    FixtureSpec {
+        features: 256,
+        avg_vertices: 12,
+        ..Default::default()
+    }
 }
 
 /// The same fixture in degrees: **inside** ±180/±90.
 fn degrees() -> FixtureSpec {
-    FixtureSpec { domain: CoordinateDomain::Wgs84Degrees, ..metres() }
+    FixtureSpec {
+        domain: CoordinateDomain::Wgs84Degrees,
+        ..metres()
+    }
 }
 
 fn envelope_metadata(ds: &Dataset) -> HashMap<String, String> {
@@ -68,7 +75,11 @@ fn lv95_assertion() -> CrsAssertion {
 fn f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance() {
     let path = write(
         "f1-absent-key-in-domain",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            with_geo_bbox: true,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("F-1 opens under the format's absent-key rule");
     let md = envelope_metadata(&ds);
@@ -106,7 +117,10 @@ fn f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance()
     // Every field the envelope carried before this cut still carries the same value.
     assert_eq!(md.get("axis_normalization").unwrap(), "none-performed");
     assert_eq!(md.get("axis_order").unwrap(), "longitude,latitude");
-    assert_eq!(md.get("frame").unwrap(), spatial_engine::FRAME_AUTHORITATIVE);
+    assert_eq!(
+        md.get("frame").unwrap(),
+        spatial_engine::FRAME_AUTHORITATIVE
+    );
 }
 
 /// R-S1's second `metadata` source: no `geo` `bbox` member, but the covering columns carry parquet
@@ -115,13 +129,18 @@ fn f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance()
 fn the_metadata_level_is_also_reached_from_covering_column_statistics() {
     let path = write(
         "metadata-from-statistics",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("opens");
     let md = envelope_metadata(&ds);
     assert_eq!(md.get("sanity_level").unwrap(), "metadata");
     assert!(
-        md.get("sanity_reason").unwrap().contains("parquet statistics"),
+        md.get("sanity_reason")
+            .unwrap()
+            .contains("parquet statistics"),
         "reason: {:?}",
         md.get("sanity_reason")
     );
@@ -133,11 +152,18 @@ fn the_metadata_level_is_also_reached_from_covering_column_statistics() {
 fn f2_coordinates_outside_the_domain_convict_the_format_default() {
     let path = write(
         "f2-absent-key-out-of-domain",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..metres() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            with_geo_bbox: true,
+            ..metres()
+        },
     );
     match Dataset::open(&path) {
         Err(EngineError::FormatDefaultContradicted { detail }) => {
-            assert!(detail.contains("metadata"), "the level convicted at is named: {detail}");
+            assert!(
+                detail.contains("metadata"),
+                "the level convicted at is named: {detail}"
+            );
             assert!(detail.contains("180"), "the domain left is named: {detail}");
         }
         other => panic!("expected FormatDefaultContradicted, got {:?}", other.err()),
@@ -150,7 +176,11 @@ fn f2_coordinates_outside_the_domain_convict_the_format_default() {
 fn a_contradicted_file_still_opens_under_a_caller_assertion() {
     let path = write(
         "f2-asserted",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..metres() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            with_geo_bbox: true,
+            ..metres()
+        },
     );
     let ds = Dataset::open_with_asserted_crs(&path, lv95_assertion()).expect("assertion admits");
     let md = envelope_metadata(&ds);
@@ -164,15 +194,23 @@ fn a_contradicted_file_still_opens_under_a_caller_assertion() {
 /// **F-3** — explicit `crs: null`, polygons. Expected: `crs_undeclared`, unchanged from today.
 #[test]
 fn f3_an_explicit_null_crs_is_unchanged_and_still_needs_an_assertion() {
-    let path =
-        write("f3-explicit-null", &FixtureSpec { crs_mode: CrsMode::ExplicitNull, ..degrees() });
+    let path = write(
+        "f3-explicit-null",
+        &FixtureSpec {
+            crs_mode: CrsMode::ExplicitNull,
+            ..degrees()
+        },
+    );
     assert!(
         matches!(Dataset::open(&path), Err(EngineError::CrsUndeclared { .. })),
         "an explicit null says the CRS is undefined or unknown, and no format rule answers for it"
     );
 
     let ds = Dataset::open_with_asserted_crs(&path, lv95_assertion()).expect("assertion admits");
-    assert_eq!(envelope_metadata(&ds).get("crs_provenance").unwrap(), "crs:asserted");
+    assert_eq!(
+        envelope_metadata(&ds).get("crs_provenance").unwrap(),
+        "crs:asserted"
+    );
 }
 
 /// **F-4** — declared lat-first geographic CRS, polygons, degrees.
@@ -181,7 +219,10 @@ fn f3_an_explicit_null_crs_is_unchanged_and_still_needs_an_assertion() {
 fn f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_order_retained() {
     let path = write(
         "f4-declared-lat-first",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredLatLonFirst, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredLatLonFirst,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("F-4 opens under the format's WKB axis rule");
     let md = envelope_metadata(&ds);
@@ -215,7 +256,9 @@ fn f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_o
          it (R-S2): the CRS is the file's own, and only the data's axis order came from the format"
     );
     assert!(
-        md.get("sanity_reason").unwrap().contains("no range check applies"),
+        md.get("sanity_reason")
+            .unwrap()
+            .contains("no range check applies"),
         "the CRS is the file's own declaration, so there is nothing assumed to convict: {:?}",
         md.get("sanity_reason")
     );
@@ -227,7 +270,11 @@ fn f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_o
 fn f5_with_neither_bbox_nor_covering_the_level_is_none_and_says_not_checked() {
     let path = write(
         "f5-no-bbox-no-covering",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_covering_bbox: false, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            with_covering_bbox: false,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("F-5 opens; a missing level is not a refusal");
     let md = envelope_metadata(&ds);
@@ -235,7 +282,10 @@ fn f5_with_neither_bbox_nor_covering_the_level_is_none_and_says_not_checked() {
     assert_eq!(md.get("sanity_level").unwrap(), "none");
     let reason = md.get("sanity_reason").unwrap();
     assert!(reason.contains("Not checked"), "reason: {reason}");
-    assert!(!reason.contains("passed"), "a level is never a verdict: {reason}");
+    assert!(
+        !reason.contains("passed"),
+        "a level is never a verdict: {reason}"
+    );
 }
 
 /// **F-6** — as F-1 but covering present, no statistics, ≥2 row groups.
@@ -321,13 +371,19 @@ fn an_unpinned_spec_version_takes_no_format_rule_and_the_refusal_names_the_versi
     );
     match Dataset::open(&path) {
         Err(EngineError::CrsUndeclared { detail }) => {
-            assert!(detail.contains("2.0.0"), "the unpinned version is named: {detail}");
+            assert!(
+                detail.contains("2.0.0"),
+                "the unpinned version is named: {detail}"
+            );
             assert!(
                 detail.contains("pinned"),
                 "and why no rule was taken from it: {detail}"
             );
         }
-        other => panic!("expected CrsUndeclared naming the version, got {:?}", other.err()),
+        other => panic!(
+            "expected CrsUndeclared naming the version, got {:?}",
+            other.err()
+        ),
     }
     assert!(
         !spatial_engine::PINNED_SPEC_VERSIONS.contains(&"2.0.0"),
@@ -375,7 +431,9 @@ fn a_declared_x_first_crs_records_crs_declared_and_axis_declared() {
     assert!(!md.contains_key("format_rule_reference"));
     assert_eq!(md.get("sanity_level").unwrap(), "none");
     assert!(
-        md.get("sanity_reason").unwrap().contains("no format rule was applied"),
+        md.get("sanity_reason")
+            .unwrap()
+            .contains("no format rule was applied"),
         "reason: {:?}",
         md.get("sanity_reason")
     );
@@ -398,7 +456,10 @@ fn a_covering_naming_an_absent_column_records_none_and_the_open_still_succeeds()
     let md = envelope_metadata(&ds);
     assert_eq!(md.get("sanity_level").unwrap(), "none");
     let reason = md.get("sanity_reason").unwrap();
-    assert!(reason.contains("no_such_bbox_column"), "the column named is quoted: {reason}");
+    assert!(
+        reason.contains("no_such_bbox_column"),
+        "the column named is quoted: {reason}"
+    );
     assert!(reason.contains("Not checked"), "reason: {reason}");
 }
 
@@ -409,16 +470,25 @@ fn a_covering_naming_an_absent_column_records_none_and_the_open_still_succeeds()
 fn the_two_format_rule_routes_are_distinguishable_on_the_envelope() {
     let default_path = write(
         "route-format-default",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            ..degrees()
+        },
     );
     let override_path = write(
         "route-axis-override",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredLatLonFirst, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredLatLonFirst,
+            ..degrees()
+        },
     );
     let by_default = envelope_metadata(&Dataset::open(&default_path).expect("opens"));
     let by_override = envelope_metadata(&Dataset::open(&override_path).expect("opens"));
 
-    assert_ne!(by_default.get("crs_provenance"), by_override.get("crs_provenance"));
+    assert_ne!(
+        by_default.get("crs_provenance"),
+        by_override.get("crs_provenance")
+    );
     assert_ne!(
         by_default.get("format_rule_reference"),
         by_override.get("format_rule_reference")
@@ -442,7 +512,10 @@ fn the_two_format_rule_routes_are_distinguishable_on_the_envelope() {
 fn a_declared_crs84_definition_in_degrees_records_the_degree_unit_and_is_the_instance() {
     let path = write(
         "p2-declared-crs84-degrees",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84Degrees,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("a declared x-first CRS84 file opens as it always did");
     let md = envelope_metadata(&ds);
@@ -499,19 +572,35 @@ fn the_degrees_on_epsg2056s_conversion_parameters_do_not_leak_into_the_recorded_
 fn the_object_form_of_a_unit_records_what_the_string_form_records() {
     let degrees_path = write(
         "p2-crs84-degrees-object-unit",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84DegreesObjectUnit, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84DegreesObjectUnit,
+            ..degrees()
+        },
     );
     let metres_path = write(
         "p2-lv95-metre-object-unit",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredLv95ObjectUnit, ..metres() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredLv95ObjectUnit,
+            ..metres()
+        },
     );
 
     let in_degrees = Dataset::open(&degrees_path).expect("opens");
     let in_metres = Dataset::open(&metres_path).expect("opens");
 
-    assert_eq!(envelope_metadata(&in_degrees).get("coordinate_unit").unwrap(), "degree");
+    assert_eq!(
+        envelope_metadata(&in_degrees)
+            .get("coordinate_unit")
+            .unwrap(),
+        "degree"
+    );
     assert!(in_degrees.is_geographic_degrees_instance());
-    assert_eq!(envelope_metadata(&in_metres).get("coordinate_unit").unwrap(), "metre");
+    assert_eq!(
+        envelope_metadata(&in_metres)
+            .get("coordinate_unit")
+            .unwrap(),
+        "metre"
+    );
     assert!(!in_metres.is_geographic_degrees_instance());
 }
 
@@ -521,7 +610,10 @@ fn the_object_form_of_a_unit_records_what_the_string_form_records() {
 fn axes_declaring_different_units_record_unestablished_and_the_open_still_succeeds() {
     let path = write(
         "p2-axis-units-disagree",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredAxisUnitsDisagree, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredAxisUnitsDisagree,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("an unestablished unit is not a refusal");
     let md = envelope_metadata(&ds);
@@ -540,7 +632,10 @@ fn axes_declaring_different_units_record_unestablished_and_the_open_still_succee
 fn a_missing_unit_member_records_unestablished_and_is_never_defaulted() {
     let path = write(
         "p2-axis-unit-absent",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredAxisUnitAbsent, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredAxisUnitAbsent,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("opens");
     let md = envelope_metadata(&ds);
@@ -564,7 +659,11 @@ fn a_missing_unit_member_records_unestablished_and_is_never_defaulted() {
 fn the_format_default_admission_records_degrees_sourced_from_the_pinned_rule() {
     let path = write(
         "p2-format-default-unit",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, with_geo_bbox: true, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            with_geo_bbox: true,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("F-1's shape opens under the format's absent-key rule");
     let md = envelope_metadata(&ds);
@@ -603,29 +702,47 @@ fn the_format_default_admission_records_degrees_sourced_from_the_pinned_rule() {
 fn an_identifier_only_change_does_not_flip_the_instance_predicate() {
     let as_crs84 = write(
         "p2-identifier-crs84",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84Degrees,
+            ..degrees()
+        },
     );
     let relabelled = write(
         "p2-identifier-relabelled",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84DegreesWithLv95Identifier, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84DegreesWithLv95Identifier,
+            ..degrees()
+        },
     );
     let named_crs84 = Dataset::open(&as_crs84).expect("opens");
     let named_lv95 = Dataset::open(&relabelled).expect("opens");
 
-    let crs84_definition = named_crs84.crs().definition_json().expect("a declared definition");
-    let relabelled_definition =
-        named_lv95.crs().definition_json().expect("a declared definition");
+    let crs84_definition = named_crs84
+        .crs()
+        .definition_json()
+        .expect("a declared definition");
+    let relabelled_definition = named_lv95
+        .crs()
+        .definition_json()
+        .expect("a declared definition");
     assert_eq!(
         crs84_definition.split(",\"id\":").next(),
         relabelled_definition.split(",\"id\":").next(),
         "the two definitions must differ in their `id` member and in nothing else"
     );
-    assert_ne!(named_crs84.crs().identifier(), named_lv95.crs().identifier());
+    assert_ne!(
+        named_crs84.crs().identifier(),
+        named_lv95.crs().identifier()
+    );
     assert_eq!(named_lv95.crs().identifier(), "EPSG:2056");
 
     assert_eq!(
-        envelope_metadata(&named_crs84).get("coordinate_unit").unwrap(),
-        envelope_metadata(&named_lv95).get("coordinate_unit").unwrap()
+        envelope_metadata(&named_crs84)
+            .get("coordinate_unit")
+            .unwrap(),
+        envelope_metadata(&named_lv95)
+            .get("coordinate_unit")
+            .unwrap()
     );
     assert!(named_crs84.is_geographic_degrees_instance());
     assert!(
@@ -650,7 +767,10 @@ fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
     // where the unit came from, because that is what happened.
     let declared = write(
         "p2-declared-crs84-unit-source",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84Degrees,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&declared).expect("opens");
     let md = envelope_metadata(&ds);
@@ -678,10 +798,16 @@ fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
     // for it, and there is therefore no rule to take a unit from either.
     let null_path = write(
         "p2-explicit-null-unit-source",
-        &FixtureSpec { crs_mode: CrsMode::ExplicitNull, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::ExplicitNull,
+            ..degrees()
+        },
     );
     assert!(
-        matches!(Dataset::open(&null_path), Err(EngineError::CrsUndeclared { .. })),
+        matches!(
+            Dataset::open(&null_path),
+            Err(EngineError::CrsUndeclared { .. })
+        ),
         "entry 81 added a source to an admission that happens; it did not add an admission"
     );
 
@@ -698,9 +824,15 @@ fn a_declared_definition_records_the_definition_source_and_never_the_rule() {
     );
     match Dataset::open(&unpinned) {
         Err(EngineError::CrsUndeclared { detail }) => {
-            assert!(detail.contains("2.0.0"), "the unpinned version is named: {detail}");
+            assert!(
+                detail.contains("2.0.0"),
+                "the unpinned version is named: {detail}"
+            );
         }
-        other => panic!("expected CrsUndeclared naming the version, got {:?}", other.err()),
+        other => panic!(
+            "expected CrsUndeclared naming the version, got {:?}",
+            other.err()
+        ),
     }
 }
 
@@ -720,13 +852,17 @@ fn the_display_convention_sentence_is_carried_verbatim_and_no_surface_here_consu
 
     let path = write(
         "p2-display-convention",
-        &FixtureSpec { crs_mode: CrsMode::DeclaredCrs84Degrees, ..degrees() },
+        &FixtureSpec {
+            crs_mode: CrsMode::DeclaredCrs84Degrees,
+            ..degrees()
+        },
     );
     let ds = Dataset::open(&path).expect("opens");
     assert!(ds.is_geographic_degrees_instance());
     let md = envelope_metadata(&ds);
     assert!(
-        !md.values().any(|v| v.contains(spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION)),
+        !md.values()
+            .any(|v| v.contains(spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION)),
         "the surfaces that carry the statement are P3's and the cut's, not this envelope's"
     );
     assert_eq!(md.get("axis_normalization").unwrap(), "none-performed");

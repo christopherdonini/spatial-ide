@@ -30,7 +30,9 @@ use std::sync::Arc;
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES;
-use spatial_kernel::{Catalog, EngineSourceFactory, StreamConnectionRecord, StreamParams, OPERATION};
+use spatial_kernel::{
+    Catalog, EngineSourceFactory, StreamConnectionRecord, StreamParams, OPERATION,
+};
 
 const DATASET: &str = "parcels";
 
@@ -40,7 +42,12 @@ fn fixture() -> std::path::PathBuf {
     let path = dir.join("post-check-cost-report.parquet");
     write_geoparquet(
         &path,
-        &FixtureSpec { features: 20_000, avg_vertices: 24, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features: 20_000,
+            avg_vertices: 24,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("write fixture");
     path
@@ -69,12 +76,20 @@ fn a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost() {
         bbox_crs: None,
         limit: None,
     };
-    let request = OpenRequest { operation: OPERATION.to_string(), params: params.encode() };
-    let (mut source, cancel) = factory.create(&request).expect("the factory creates the stream");
+    let request = OpenRequest {
+        operation: OPERATION.to_string(),
+        params: params.encode(),
+    };
+    let (mut source, cancel) = factory
+        .create(&request)
+        .expect("the factory creates the stream");
 
     // One batch, then the product's own cancel — the call the data-plane binding makes.
     let mut buf = Vec::new();
-    source.next_into(&mut buf).expect("a first batch").expect("the first batch is not an error");
+    source
+        .next_into(&mut buf)
+        .expect("a first batch")
+        .expect("the first batch is not an error");
     buf.clear();
     cancel.cancel();
 
@@ -95,7 +110,9 @@ fn a_cancelled_stream_s_connection_record_carries_the_post_check_s_cost() {
     drop(source);
     drop(factory);
 
-    let record = incoming.recv().expect("the connection record arrives on the product's channel");
+    let record = incoming
+        .recv()
+        .expect("the connection record arrives on the product's channel");
     assert_eq!(record.dataset, DATASET);
     assert!(
         record.post_check_bytes_read > 0,

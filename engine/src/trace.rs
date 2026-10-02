@@ -156,7 +156,12 @@ impl Trace {
             self.dropped.fetch_add(1, Ordering::Relaxed);
             return;
         }
-        events.push(Event { name, offset_nanos, rows, bytes });
+        events.push(Event {
+            name,
+            offset_nanos,
+            rows,
+            bytes,
+        });
     }
 
     /// How many records the ceiling refused. **Print this beside every figure derived from a
@@ -182,7 +187,11 @@ impl Trace {
     /// Sorting is stable, so two events sharing a nanosecond keep their push order — the only
     /// tie-break available, and better than an arbitrary one.
     pub fn events(&self) -> Vec<Event> {
-        let mut v = self.events.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        let mut v = self
+            .events
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone();
         v.sort_by_key(|e| e.offset_nanos);
         v
     }
@@ -218,7 +227,10 @@ impl Trace {
     /// from "this span took no time" by presence, which is the distinction the whole instrument
     /// exists to preserve.
     pub fn spans(&self) -> Vec<(&'static str, f64)> {
-        SPANS.iter().filter_map(|(name, from, to)| self.segment_ms(from, to).map(|ms| (*name, ms))).collect()
+        SPANS
+            .iter()
+            .filter_map(|(name, from, to)| self.segment_ms(from, to).map(|ms| (*name, ms)))
+            .collect()
     }
 
     /// One JSON object per line: the key once, then every **event**, then every derived **span**.
@@ -525,7 +537,11 @@ pub const SPAN_LEASE_TO_FIRST_ROW: &str = "lease_to_first_row";
 /// on the commit that emits the event, not before.
 pub const SPANS: &[(&str, &str, &str)] = &[
     (SPAN_QUERY, SQL_PREPARED, FIRST_SOURCE_ROW),
-    (SPAN_SOURCE_TO_FIRST_BATCH, FIRST_SOURCE_ROW, FIRST_BATCH_FULL),
+    (
+        SPAN_SOURCE_TO_FIRST_BATCH,
+        FIRST_SOURCE_ROW,
+        FIRST_BATCH_FULL,
+    ),
     (SPAN_LEASE_BIND, SQL_BUILT, LEASE_ACQUIRED),
     (SPAN_PRODUCER_HANDOFF, LEASE_ACQUIRED, PRODUCER_STARTED),
     (SPAN_STATEMENT_PREPARE, PRODUCER_STARTED, SQL_PREPARED),
@@ -555,7 +571,11 @@ mod tests {
         let mut pairs: Vec<(&str, &str)> = SPANS.iter().map(|(_, from, to)| (*from, *to)).collect();
         pairs.sort_unstable();
         pairs.dedup();
-        assert_eq!(pairs.len(), SPANS.len(), "two spans share the same (from, to) event pair");
+        assert_eq!(
+            pairs.len(),
+            SPANS.len(),
+            "two spans share the same (from, to) event pair"
+        );
     }
 
     /// **Additivity of `SPANS` itself, checked structurally — this is the test that catches a
@@ -575,9 +595,12 @@ mod tests {
     #[test]
     fn the_spans_table_telescopes_by_construction() {
         fn pair(name: &str) -> (&'static str, &'static str) {
-            let (_, from, to) = SPANS.iter().find(|(n, _, _)| *n == name).unwrap_or_else(|| {
-                panic!("{name} must be a span in SPANS for this chain to be checkable")
-            });
+            let (_, from, to) = SPANS
+                .iter()
+                .find(|(n, _, _)| *n == name)
+                .unwrap_or_else(|| {
+                    panic!("{name} must be a span in SPANS for this chain to be checkable")
+                });
             (from, to)
         }
 
@@ -610,9 +633,19 @@ mod tests {
 
         let three_leg = [SPAN_PARAM_ASSEMBLY, SPAN_BIND_AND_EXECUTE, SPAN_FIRST_FETCH];
         for w in three_leg.windows(2) {
-            assert_eq!(pair(w[0]).1, pair(w[1]).0, "{} must close where {} opens, for query", w[0], w[1]);
+            assert_eq!(
+                pair(w[0]).1,
+                pair(w[1]).0,
+                "{} must close where {} opens, for query",
+                w[0],
+                w[1]
+            );
         }
-        assert_eq!(pair(three_leg[0]).0, pair(SPAN_QUERY).0, "the three-leg chain must open where query opens");
+        assert_eq!(
+            pair(three_leg[0]).0,
+            pair(SPAN_QUERY).0,
+            "the three-leg chain must open where query opens"
+        );
         assert_eq!(
             pair(*three_leg.last().unwrap()).1,
             pair(SPAN_QUERY).1,
@@ -659,12 +692,20 @@ mod tests {
             + leg(SQL_PREPARED, EXECUTE_CALLED)
             + leg(EXECUTE_CALLED, EXECUTE_RETURNED)
             + leg(EXECUTE_RETURNED, FIRST_SOURCE_ROW);
-        assert_eq!(five_leg_nanos, leg(LEASE_ACQUIRED, FIRST_SOURCE_ROW), "lease_to_first_row, in nanos");
+        assert_eq!(
+            five_leg_nanos,
+            leg(LEASE_ACQUIRED, FIRST_SOURCE_ROW),
+            "lease_to_first_row, in nanos"
+        );
 
         let three_leg_nanos = leg(SQL_PREPARED, EXECUTE_CALLED)
             + leg(EXECUTE_CALLED, EXECUTE_RETURNED)
             + leg(EXECUTE_RETURNED, FIRST_SOURCE_ROW);
-        assert_eq!(three_leg_nanos, leg(SQL_PREPARED, FIRST_SOURCE_ROW), "query, in nanos");
+        assert_eq!(
+            three_leg_nanos,
+            leg(SQL_PREPARED, FIRST_SOURCE_ROW),
+            "query, in nanos"
+        );
 
         // The millisecond API every summarizer actually calls — within a tolerance, because f64
         // division does not guarantee the sum of parts equals the whole to the last bit.
@@ -724,7 +765,10 @@ mod tests {
     fn a_second_trace_is_refused_rather_than_replacing_the_first() {
         let _serial = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let a = start(TraceKey::default()).expect("first starts");
-        assert!(start(TraceKey::default()).is_none(), "a second trace must be refused");
+        assert!(
+            start(TraceKey::default()).is_none(),
+            "a second trace must be refused"
+        );
         drop(a);
         // And the refusal is not permanent.
         assert!(start(TraceKey::default()).is_some());
@@ -744,7 +788,11 @@ mod tests {
         let jsonl = guard.trace().to_jsonl();
         let lines: Vec<_> = jsonl.lines().collect();
         assert_eq!(lines.len(), 2, "one key line plus one span line");
-        assert!(lines[0].contains(r#"\\a\\\"b"#), "backslashes and quotes are escaped: {}", lines[0]);
+        assert!(
+            lines[0].contains(r#"\\a\\\"b"#),
+            "backslashes and quotes are escaped: {}",
+            lines[0]
+        );
         assert!(lines[1].contains(r#""rows":10"#));
         assert!(lines.iter().all(|l| l.starts_with('{') && l.ends_with('}')));
     }

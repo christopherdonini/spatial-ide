@@ -20,7 +20,9 @@ pub struct NoWatchArm;
 
 impl SourceWatchArm for NoWatchArm {
     fn arm(&self, _path: &Path, _sink: WatchSink) -> ArmOutcome {
-        ArmOutcome::ChecksOnly { reason: "test fixture: no watch armed".to_string() }
+        ArmOutcome::ChecksOnly {
+            reason: "test fixture: no watch armed".to_string(),
+        }
     }
 }
 

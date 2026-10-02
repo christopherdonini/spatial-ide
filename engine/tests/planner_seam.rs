@@ -34,14 +34,21 @@ fn the_product_planner_never_reaches_the_index_seam() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/index");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join("planner-seam.parquet");
-    let spec = FixtureSpec { features: 2_000, avg_vertices: 16, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 2_000,
+        avg_vertices: 16,
+        ..Default::default()
+    };
     let facts = write_geoparquet(&path, &spec).expect("write fixture");
 
     let ds = Dataset::open(&path).expect("open");
 
     // An index that is built, cached, and admissible right now. Everything the old planner needed.
     let report = ds.build_index(&CancelToken::new()).expect("build index");
-    assert!(report.miss.is_some(), "the first build cannot be a cache hit");
+    assert!(
+        report.miss.is_some(),
+        "the first build cannot be a cache hit"
+    );
     assert_eq!(report.indexed_features, facts.features);
 
     let e = facts.extent;
@@ -56,21 +63,32 @@ fn the_product_planner_never_reaches_the_index_seam() {
     // ---- the product path -------------------------------------------------------------------
     let before = index_consultations();
     let mut product = ds.stream(&q).expect("product stream");
-    assert_eq!(product.filter_plan(), FilterPlan::ScanOnly, "the shipped plan is the scan");
+    assert_eq!(
+        product.filter_plan(),
+        FilterPlan::ScanOnly,
+        "the shipped plan is the scan"
+    );
     let product_ids = drain(&mut product);
     assert_eq!(
         index_consultations(),
         before,
         "the ordinary planner consulted the index seam; it must not reach it at all"
     );
-    assert!(!product_ids.is_empty(), "the viewport must select something for this to mean anything");
+    assert!(
+        !product_ids.is_empty(),
+        "the viewport must select something for this to mean anything"
+    );
 
     // A whole-file query does not reach it either — it never had a viewport to narrow.
     let before_whole = index_consultations();
     let mut whole = ds.stream(&ViewportQuery::all()).expect("whole-file stream");
     assert_eq!(whole.filter_plan(), FilterPlan::WholeFile);
     let whole_ids = drain(&mut whole);
-    assert_eq!(whole_ids.len(), facts.features, "the whole file is still the whole file");
+    assert_eq!(
+        whole_ids.len(),
+        facts.features,
+        "the whole file is still the whole file"
+    );
     assert_eq!(index_consultations(), before_whole);
 
     // ---- the experimental path, so the counter is shown to be able to move at all -----------
@@ -94,7 +112,10 @@ fn the_product_planner_never_reaches_the_index_seam() {
 
     // And the two planners agree about the rows, which is why removing the index from the default
     // path is a cost decision rather than a correctness one.
-    assert_eq!(experimental_ids, product_ids, "both planners must select exactly the same rows");
+    assert_eq!(
+        experimental_ids, product_ids,
+        "both planners must select exactly the same rows"
+    );
 }
 
 fn drain(s: &mut spatial_engine::BatchStream) -> Vec<u64> {
@@ -105,7 +126,11 @@ fn drain(s: &mut spatial_engine::BatchStream) -> Vec<u64> {
         let mut rdr =
             arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
         let batch = rdr.next().unwrap().unwrap();
-        let col = batch.column(0).as_any().downcast_ref::<arrow::array::UInt64Array>().unwrap();
+        let col = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::UInt64Array>()
+            .unwrap();
         ids.extend(col.values().iter().copied());
         buf.clear();
     }

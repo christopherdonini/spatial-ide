@@ -96,7 +96,11 @@ impl Rgb {
             return None;
         }
         let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).ok();
-        Some(Self { r: byte(0)?, g: byte(2)?, b: byte(4)? })
+        Some(Self {
+            r: byte(0)?,
+            g: byte(2)?,
+            b: byte(4)?,
+        })
     }
 }
 
@@ -144,30 +148,74 @@ pub struct StyleDocument {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyleError {
     /// The bytes are not JSON at all.
-    NotJson { detail: String },
+    NotJson {
+        detail: String,
+    },
     /// A version this build does not implement. **Refused, never read best-effort** — a reader that
     /// guesses at a future version's meaning is the silent-conversion failure one level up.
-    UnsupportedVersion { found: i64, supported: i64 },
-    MissingKey { at: String, key: String },
+    UnsupportedVersion {
+        found: i64,
+        supported: i64,
+    },
+    MissingKey {
+        at: String,
+        key: String,
+    },
     /// A key the schema does not define. `excluded_construct` is set when the key names something
     /// v0 deliberately does not have, so the refusal says *why* rather than only *that*.
-    UnknownKey { at: String, key: String, excluded_construct: Option<&'static str> },
-    TypeMismatch { at: String, expected: &'static str },
-    BadColor { at: String, found: String },
-    OutOfRange { at: String, value: f64, min: f64, max: f64 },
+    UnknownKey {
+        at: String,
+        key: String,
+        excluded_construct: Option<&'static str>,
+    },
+    TypeMismatch {
+        at: String,
+        expected: &'static str,
+    },
+    BadColor {
+        at: String,
+        found: String,
+    },
+    OutOfRange {
+        at: String,
+        value: f64,
+        min: f64,
+        max: f64,
+    },
     /// Two `match` constructs. v0's value vocabulary is "literals plus one match"; a second one is
     /// refused rather than resolved by position.
-    MoreThanOneMatch { first_at: String, second_at: String },
-    DuplicateCase { at: String, value: String },
-    MatchHasNoCases { at: String },
-    TooManyCases { at: String, cases: usize, limit: usize },
+    MoreThanOneMatch {
+        first_at: String,
+        second_at: String,
+    },
+    DuplicateCase {
+        at: String,
+        value: String,
+    },
+    MatchHasNoCases {
+        at: String,
+    },
+    TooManyCases {
+        at: String,
+        cases: usize,
+        limit: usize,
+    },
     /// The match names a column the dataset does not have.
-    MatchColumnMissing { column: String, available: Vec<String> },
+    MatchColumnMissing {
+        column: String,
+        available: Vec<String>,
+    },
     /// The match names a column whose type cannot be a categorical key.
-    MatchColumnTypeInadmissible { column: String, found: String },
+    MatchColumnTypeInadmissible {
+        column: String,
+        found: String,
+    },
     /// The match column exists in the dataset but is not in the published projection, so a viewer
     /// would have nothing to bind the style to. Caught at compile, not at view time.
-    MatchColumnNotPublished { column: String, published: Vec<String> },
+    MatchColumnNotPublished {
+        column: String,
+        published: Vec<String>,
+    },
     Canonical(canonical::CanonicalError),
 }
 
@@ -253,35 +301,53 @@ impl From<canonical::CanonicalError> for StyleError {
 
 /// Parse and validate a style document. Schema validation against a dataset is [`crate::compiled`].
 pub fn parse(src: &str) -> Result<StyleDocument, StyleError> {
-    let root: serde_json::Value =
-        serde_json::from_str(src).map_err(|e| StyleError::NotJson { detail: e.to_string() })?;
+    let root: serde_json::Value = serde_json::from_str(src).map_err(|e| StyleError::NotJson {
+        detail: e.to_string(),
+    })?;
     let root = obj(&root, "$")?;
 
     known_keys(root, "$", &["style_version", "layer"])?;
 
     let version = root
         .get("style_version")
-        .ok_or_else(|| StyleError::MissingKey { at: "$".into(), key: "style_version".into() })?;
-    let version = version
-        .as_i64()
-        .ok_or(StyleError::TypeMismatch { at: "$.style_version".into(), expected: "an integer" })?;
+        .ok_or_else(|| StyleError::MissingKey {
+            at: "$".into(),
+            key: "style_version".into(),
+        })?;
+    let version = version.as_i64().ok_or(StyleError::TypeMismatch {
+        at: "$.style_version".into(),
+        expected: "an integer",
+    })?;
     if version != STYLE_VERSION {
-        return Err(StyleError::UnsupportedVersion { found: version, supported: STYLE_VERSION });
+        return Err(StyleError::UnsupportedVersion {
+            found: version,
+            supported: STYLE_VERSION,
+        });
     }
 
-    let layer = root
-        .get("layer")
-        .ok_or_else(|| StyleError::MissingKey { at: "$".into(), key: "layer".into() })?;
+    let layer = root.get("layer").ok_or_else(|| StyleError::MissingKey {
+        at: "$".into(),
+        key: "layer".into(),
+    })?;
     let layer = obj(layer, "$.layer")?;
     known_keys(
         layer,
         "$.layer",
-        &["geometry", "fill_color", "fill_opacity", "outline_color", "outline_width"],
+        &[
+            "geometry",
+            "fill_color",
+            "fill_opacity",
+            "outline_color",
+            "outline_width",
+        ],
     )?;
 
     let geometry = layer
         .get("geometry")
-        .ok_or_else(|| StyleError::MissingKey { at: "$.layer".into(), key: "geometry".into() })?
+        .ok_or_else(|| StyleError::MissingKey {
+            at: "$.layer".into(),
+            key: "geometry".into(),
+        })?
         .as_str()
         .ok_or(StyleError::TypeMismatch {
             at: "$.layer.geometry".into(),
@@ -299,14 +365,34 @@ pub fn parse(src: &str) -> Result<StyleDocument, StyleError> {
     let mut match_site: Option<String> = None;
 
     let fill_color = value(layer, "$.layer", "fill_color", &mut match_site, parse_color)?;
-    let fill_opacity =
-        value(layer, "$.layer", "fill_opacity", &mut match_site, |v, at| number(v, at, 0.0, 1.0))?;
-    let outline_color = value(layer, "$.layer", "outline_color", &mut match_site, parse_color)?;
-    let outline_width = value(layer, "$.layer", "outline_width", &mut match_site, |v, at| {
-        number(v, at, 0.0, MAX_OUTLINE_WIDTH)
-    })?;
+    let fill_opacity = value(
+        layer,
+        "$.layer",
+        "fill_opacity",
+        &mut match_site,
+        |v, at| number(v, at, 0.0, 1.0),
+    )?;
+    let outline_color = value(
+        layer,
+        "$.layer",
+        "outline_color",
+        &mut match_site,
+        parse_color,
+    )?;
+    let outline_width = value(
+        layer,
+        "$.layer",
+        "outline_width",
+        &mut match_site,
+        |v, at| number(v, at, 0.0, MAX_OUTLINE_WIDTH),
+    )?;
 
-    Ok(StyleDocument { fill_color, fill_opacity, outline_color, outline_width })
+    Ok(StyleDocument {
+        fill_color,
+        fill_opacity,
+        outline_color,
+        outline_width,
+    })
 }
 
 /// The document's single match column, if it declares one.
@@ -343,9 +429,15 @@ impl StyleDocument {
                 Json::obj([
                     ("geometry", Json::str(GEOMETRY_POLYGON)),
                     ("fill_color", value_json(&self.fill_color, color_json)),
-                    ("fill_opacity", value_json(&self.fill_opacity, |o| Json::Double(*o))),
+                    (
+                        "fill_opacity",
+                        value_json(&self.fill_opacity, |o| Json::Double(*o)),
+                    ),
                     ("outline_color", value_json(&self.outline_color, color_json)),
-                    ("outline_width", value_json(&self.outline_width, |w| Json::Double(*w))),
+                    (
+                        "outline_width",
+                        value_json(&self.outline_width, |w| Json::Double(*w)),
+                    ),
                 ]),
             ),
         ])
@@ -393,7 +485,10 @@ fn value_json<T>(v: &Value<T>, leaf: impl Fn(&T) -> Json) -> Json {
 type ObjMap = serde_json::Map<String, serde_json::Value>;
 
 fn obj<'a>(v: &'a serde_json::Value, at: &str) -> Result<&'a ObjMap, StyleError> {
-    v.as_object().ok_or(StyleError::TypeMismatch { at: at.to_string(), expected: "an object" })
+    v.as_object().ok_or(StyleError::TypeMismatch {
+        at: at.to_string(),
+        expected: "an object",
+    })
 }
 
 /// Refuse any key the schema does not define, and say why when the key names an excluded construct.
@@ -415,18 +510,28 @@ fn known_keys(map: &ObjMap, at: &str, allowed: &[&str]) -> Result<(), StyleError
 }
 
 fn parse_color(v: &serde_json::Value, at: &str) -> Result<Rgb, StyleError> {
-    let s = v
-        .as_str()
-        .ok_or(StyleError::TypeMismatch { at: at.to_string(), expected: "a `#rrggbb` string" })?;
-    Rgb::parse(s).ok_or_else(|| StyleError::BadColor { at: at.to_string(), found: s.to_string() })
+    let s = v.as_str().ok_or(StyleError::TypeMismatch {
+        at: at.to_string(),
+        expected: "a `#rrggbb` string",
+    })?;
+    Rgb::parse(s).ok_or_else(|| StyleError::BadColor {
+        at: at.to_string(),
+        found: s.to_string(),
+    })
 }
 
 fn number(v: &serde_json::Value, at: &str, min: f64, max: f64) -> Result<f64, StyleError> {
-    let n = v
-        .as_f64()
-        .ok_or(StyleError::TypeMismatch { at: at.to_string(), expected: "a number" })?;
+    let n = v.as_f64().ok_or(StyleError::TypeMismatch {
+        at: at.to_string(),
+        expected: "a number",
+    })?;
     if !n.is_finite() || n < min || n > max {
-        return Err(StyleError::OutOfRange { at: at.to_string(), value: n, min, max });
+        return Err(StyleError::OutOfRange {
+            at: at.to_string(),
+            value: n,
+            min,
+            max,
+        });
     }
     Ok(n)
 }
@@ -440,9 +545,10 @@ fn value<T>(
     leaf: impl Fn(&serde_json::Value, &str) -> Result<T, StyleError> + Copy,
 ) -> Result<Value<T>, StyleError> {
     let at = format!("{layer_at}.{key}");
-    let v = layer
-        .get(key)
-        .ok_or_else(|| StyleError::MissingKey { at: layer_at.to_string(), key: key.to_string() })?;
+    let v = layer.get(key).ok_or_else(|| StyleError::MissingKey {
+        at: layer_at.to_string(),
+        key: key.to_string(),
+    })?;
     let map = obj(v, &at)?;
     known_keys(map, &at, &["literal", "match"])?;
 
@@ -463,7 +569,10 @@ fn value<T>(
             *match_site = Some(m_at.clone());
             Ok(Value::Match(parse_match(m, &m_at, leaf)?))
         }
-        (None, None) => Err(StyleError::MissingKey { at, key: "literal` or `match".into() }),
+        (None, None) => Err(StyleError::MissingKey {
+            at,
+            key: "literal` or `match".into(),
+        }),
     }
 }
 
@@ -477,7 +586,10 @@ fn parse_match<T>(
 
     let column = map
         .get("column")
-        .ok_or_else(|| StyleError::MissingKey { at: at.to_string(), key: "column".into() })?
+        .ok_or_else(|| StyleError::MissingKey {
+            at: at.to_string(),
+            key: "column".into(),
+        })?
         .as_str()
         .ok_or(StyleError::TypeMismatch {
             at: format!("{at}.column"),
@@ -491,9 +603,10 @@ fn parse_match<T>(
         });
     }
 
-    let cases_v = map
-        .get("cases")
-        .ok_or_else(|| StyleError::MissingKey { at: at.to_string(), key: "cases".into() })?;
+    let cases_v = map.get("cases").ok_or_else(|| StyleError::MissingKey {
+        at: at.to_string(),
+        key: "cases".into(),
+    })?;
     let cases_arr = cases_v.as_array().ok_or(StyleError::TypeMismatch {
         at: format!("{at}.cases"),
         expected: "an array of {when, then} objects",
@@ -517,7 +630,10 @@ fn parse_match<T>(
         known_keys(cm, &c_at, &["when", "then"])?;
         let when = cm
             .get("when")
-            .ok_or_else(|| StyleError::MissingKey { at: c_at.clone(), key: "when".into() })?
+            .ok_or_else(|| StyleError::MissingKey {
+                at: c_at.clone(),
+                key: "when".into(),
+            })?
             .as_str()
             .ok_or(StyleError::TypeMismatch {
                 at: format!("{c_at}.when"),
@@ -525,30 +641,42 @@ fn parse_match<T>(
             })?
             .to_string();
         if !seen.insert(when.clone()) {
-            return Err(StyleError::DuplicateCase { at: at.to_string(), value: when });
+            return Err(StyleError::DuplicateCase {
+                at: at.to_string(),
+                value: when,
+            });
         }
-        let then = cm
-            .get("then")
-            .ok_or_else(|| StyleError::MissingKey { at: c_at.clone(), key: "then".into() })?;
+        let then = cm.get("then").ok_or_else(|| StyleError::MissingKey {
+            at: c_at.clone(),
+            key: "then".into(),
+        })?;
         cases.push((when, leaf(then, &format!("{c_at}.then"))?));
     }
 
     // Both fallbacks are required. This is the clause that makes NULL and unmatched behaviour a
     // declaration rather than a default.
     let on_null = leaf(
-        map.get("on_null")
-            .ok_or_else(|| StyleError::MissingKey { at: at.to_string(), key: "on_null".into() })?,
+        map.get("on_null").ok_or_else(|| StyleError::MissingKey {
+            at: at.to_string(),
+            key: "on_null".into(),
+        })?,
         &format!("{at}.on_null"),
     )?;
     let on_unmatched = leaf(
-        map.get("on_unmatched").ok_or_else(|| StyleError::MissingKey {
-            at: at.to_string(),
-            key: "on_unmatched".into(),
-        })?,
+        map.get("on_unmatched")
+            .ok_or_else(|| StyleError::MissingKey {
+                at: at.to_string(),
+                key: "on_unmatched".into(),
+            })?,
         &format!("{at}.on_unmatched"),
     )?;
 
-    Ok(CategoricalMatch { column, cases, on_null, on_unmatched })
+    Ok(CategoricalMatch {
+        column,
+        cases,
+        on_null,
+        on_unmatched,
+    })
 }
 
 #[cfg(test)]
@@ -612,7 +740,10 @@ mod tests {
                "on_null":"#111111","on_unmatched":"#222222"}}"##,
         );
         match parse(&two).unwrap_err() {
-            StyleError::MoreThanOneMatch { first_at, second_at } => {
+            StyleError::MoreThanOneMatch {
+                first_at,
+                second_at,
+            } => {
                 assert_eq!(first_at, "$.layer.fill_color.match");
                 assert_eq!(second_at, "$.layer.outline_color.match");
             }
@@ -640,7 +771,10 @@ mod tests {
             // It surfaces as the unknown key first, which is the same refusal: v0 has no defaults
             // and no ignored keys, so neither spelling of the mistake can pass.
             assert!(
-                matches!(e, StyleError::UnknownKey { .. } | StyleError::MissingKey { .. }),
+                matches!(
+                    e,
+                    StyleError::UnknownKey { .. } | StyleError::MissingKey { .. }
+                ),
                 "{missing} produced {e:?}"
             );
         }
@@ -656,13 +790,21 @@ mod tests {
 
     #[test]
     fn v0_excluded_constructs_are_refused_and_the_refusal_says_which_construct() {
-        for (key, construct) in
-            [("label", "labels"), ("icon", "icons"), ("min_zoom", "scale-dependent rules")]
-        {
-            let src = CATEGORICAL
-                .replace("\"geometry\": \"polygon\",", &format!("\"geometry\":\"polygon\",\"{key}\":\"x\","));
+        for (key, construct) in [
+            ("label", "labels"),
+            ("icon", "icons"),
+            ("min_zoom", "scale-dependent rules"),
+        ] {
+            let src = CATEGORICAL.replace(
+                "\"geometry\": \"polygon\",",
+                &format!("\"geometry\":\"polygon\",\"{key}\":\"x\","),
+            );
             match parse(&src).unwrap_err() {
-                StyleError::UnknownKey { key: k, excluded_construct: Some(c), .. } => {
+                StyleError::UnknownKey {
+                    key: k,
+                    excluded_construct: Some(c),
+                    ..
+                } => {
                     assert_eq!(k, key);
                     assert_eq!(c, construct);
                 }
@@ -676,32 +818,53 @@ mod tests {
         let src = CATEGORICAL.replace("\"style_version\": 1", "\"style_version\": 2");
         assert!(matches!(
             parse(&src).unwrap_err(),
-            StyleError::UnsupportedVersion { found: 2, supported: 1 }
+            StyleError::UnsupportedVersion {
+                found: 2,
+                supported: 1
+            }
         ));
     }
 
     #[test]
     fn a_duplicate_case_is_refused_rather_than_resolved_by_position() {
         let src = CATEGORICAL.replace("\"industrial\"", "\"residential\"");
-        assert!(matches!(parse(&src).unwrap_err(), StyleError::DuplicateCase { .. }));
+        assert!(matches!(
+            parse(&src).unwrap_err(),
+            StyleError::DuplicateCase { .. }
+        ));
     }
 
     #[test]
     fn ranges_and_colour_spelling_are_enforced() {
         let over = CATEGORICAL.replace("\"literal\": 0.8", "\"literal\": 1.2");
-        assert!(matches!(parse(&over).unwrap_err(), StyleError::OutOfRange { .. }));
+        assert!(matches!(
+            parse(&over).unwrap_err(),
+            StyleError::OutOfRange { .. }
+        ));
         let wide = CATEGORICAL.replace("\"literal\": 1.0", "\"literal\": 1000.0");
-        assert!(matches!(parse(&wide).unwrap_err(), StyleError::OutOfRange { .. }));
+        assert!(matches!(
+            parse(&wide).unwrap_err(),
+            StyleError::OutOfRange { .. }
+        ));
         let bad = CATEGORICAL.replace("\"#202020\"", "\"rebeccapurple\"");
-        assert!(matches!(parse(&bad).unwrap_err(), StyleError::BadColor { .. }));
+        assert!(matches!(
+            parse(&bad).unwrap_err(),
+            StyleError::BadColor { .. }
+        ));
         let short = CATEGORICAL.replace("\"#202020\"", "\"#202\"");
-        assert!(matches!(parse(&short).unwrap_err(), StyleError::BadColor { .. }));
+        assert!(matches!(
+            parse(&short).unwrap_err(),
+            StyleError::BadColor { .. }
+        ));
     }
 
     #[test]
     fn a_non_string_case_key_is_refused_because_v0_matches_text_only() {
         let src = CATEGORICAL.replace("\"when\": \"residential\"", "\"when\": 3");
-        assert!(matches!(parse(&src).unwrap_err(), StyleError::TypeMismatch { .. }));
+        assert!(matches!(
+            parse(&src).unwrap_err(),
+            StyleError::TypeMismatch { .. }
+        ));
     }
 
     #[test]
@@ -711,12 +874,18 @@ mod tests {
             "\"fill_opacity\": {\"literal\": 0.8, \"match\": {\"column\":\"z\",\"cases\":[],\
              \"on_null\":0.1,\"on_unmatched\":0.2}}",
         );
-        assert!(matches!(parse(&src).unwrap_err(), StyleError::TypeMismatch { .. }));
+        assert!(matches!(
+            parse(&src).unwrap_err(),
+            StyleError::TypeMismatch { .. }
+        ));
     }
 
     #[test]
     fn non_polygon_geometry_is_refused() {
         let src = CATEGORICAL.replace("\"polygon\"", "\"line\"");
-        assert!(matches!(parse(&src).unwrap_err(), StyleError::TypeMismatch { .. }));
+        assert!(matches!(
+            parse(&src).unwrap_err(),
+            StyleError::TypeMismatch { .. }
+        ));
     }
 }

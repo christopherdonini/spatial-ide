@@ -36,7 +36,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
+};
 use spatial_engine::{CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::permission::{
     boundary, ApprovalSource, AuditError, AuditLog, BoundaryError, DestinationScope, GrantSet,
@@ -66,11 +68,15 @@ const STYLE: &str = r##"{
 /// Serializes the set-var → run → read window. See the module docs.
 fn env_lock() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
 }
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-permission-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-permission-tests")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     std::fs::canonicalize(&d).unwrap()
@@ -100,8 +106,14 @@ fn pinned(path: &Path) -> Dataset {
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -124,15 +136,16 @@ fn clock() -> String {
     FIXED_CLOCK.to_string()
 }
 
-fn request<'a>(
-    ds: &'a Dataset,
-    v: &'a ViewerAssets,
-    destination: PathBuf,
-) -> PublishRequest<'a> {
+fn request<'a>(ds: &'a Dataset, v: &'a ViewerAssets, destination: PathBuf) -> PublishRequest<'a> {
     PublishRequest {
         dataset: ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
+        query: ViewportQuery {
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        },
         attributes: vec!["zone".to_string()],
         style_source: STYLE,
         viewer: v,
@@ -145,7 +158,10 @@ fn request<'a>(
 }
 
 fn principal() -> Principal {
-    Principal { kind: PrincipalKind::OsUser, id: "test-operator".into() }
+    Principal {
+        kind: PrincipalKind::OsUser,
+        id: "test-operator".into(),
+    }
 }
 
 /// A grant covering exactly this dataset and destination.
@@ -198,10 +214,23 @@ impl Log {
     fn intent_and_outcome(&self) -> (serde_json::Value, serde_json::Value) {
         let i = self.phase("intent");
         let o = self.phase("outcome");
-        assert_eq!(i.len(), 1, "expected exactly one intent record, log is {:#?}", self.0);
-        assert_eq!(o.len(), 1, "expected exactly one outcome record, log is {:#?}", self.0);
+        assert_eq!(
+            i.len(),
+            1,
+            "expected exactly one intent record, log is {:#?}",
+            self.0
+        );
+        assert_eq!(
+            o.len(),
+            1,
+            "expected exactly one outcome record, log is {:#?}",
+            self.0
+        );
         // Correlated: an outcome that did not name its intent's attempt would be unreadable.
-        assert_eq!(i[0]["attempt"], o[0]["attempt"], "intent and outcome are not correlated");
+        assert_eq!(
+            i[0]["attempt"], o[0]["attempt"],
+            "intent and outcome are not correlated"
+        );
         (i[0].clone(), o[0].clone())
     }
 }
@@ -237,14 +266,21 @@ fn run_attempt(
 /// disk — checking only that the destination is absent would miss a leftover staging directory,
 /// which is the more likely failure.
 fn no_side_effect(dir: &Path, destination: &Path) {
-    assert!(!destination.exists(), "a destination was created: {}", destination.display());
+    assert!(
+        !destination.exists(),
+        "a destination was created: {}",
+        destination.display()
+    );
     let leftovers: Vec<String> = std::fs::read_dir(dir)
         .unwrap()
         .filter_map(|e| e.ok())
         .map(|e| e.file_name().to_string_lossy().to_string())
         .filter(|n| n.contains(".staging-"))
         .collect();
-    assert!(leftovers.is_empty(), "staging directories survived: {leftovers:?}");
+    assert!(
+        leftovers.is_empty(),
+        "staging directories survived: {leftovers:?}"
+    );
 }
 
 // ---- 1. no grant --------------------------------------------------------------------------------
@@ -270,7 +306,10 @@ fn without_a_grant_the_publish_is_refused_audited_and_leaves_nothing_behind() {
     .unwrap_err();
 
     assert!(
-        matches!(e, BoundaryError::Permission(PermissionError::NoGrant { .. })),
+        matches!(
+            e,
+            BoundaryError::Permission(PermissionError::NoGrant { .. })
+        ),
         "expected a typed NoGrant refusal, got {e:?}"
     );
     no_side_effect(&d, &dest);
@@ -310,7 +349,9 @@ fn a_grant_scoped_to_another_source_or_another_destination_is_refused_and_audite
                 OperationKind::Publish,
                 SourceScope {
                     dataset_name: "parcels".into(),
-                    content_hash: "sha256:0000000000000000000000000000000000000000000000000000000000000000".into(),
+                    content_hash:
+                        "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+                            .into(),
                 },
                 DestinationScope::exact(&dest).unwrap(),
                 principal(),
@@ -388,7 +429,10 @@ fn an_expired_grant_is_refused_as_expired_and_audited() {
     .unwrap_err();
 
     assert!(
-        matches!(e, BoundaryError::Permission(PermissionError::GrantExpired { .. })),
+        matches!(
+            e,
+            BoundaryError::Permission(PermissionError::GrantExpired { .. })
+        ),
         "expected GrantExpired, got {e:?}"
     );
     no_side_effect(&d, &dest);
@@ -434,7 +478,11 @@ fn approval_refused_wrong_name_or_eof_each_refuse_audited_and_without_side_effec
         // A bare `y` is the reflex the named confirmation exists to defeat.
         ("bare-yes", Scripted(Some("y")), RefusalReason::NotMatched),
         // The right shape, the wrong destination — a stale script.
-        ("wrong-name", Scripted(Some("some-other-bundle")), RefusalReason::NotMatched),
+        (
+            "wrong-name",
+            Scripted(Some("some-other-bundle")),
+            RefusalReason::NotMatched,
+        ),
         // Nothing at all.
         ("eof", Scripted(None), RefusalReason::Eof),
     ] {
@@ -628,7 +676,10 @@ fn an_audit_log_inside_the_destination_is_refused() {
     .unwrap_err();
 
     assert!(
-        matches!(e, BoundaryError::Audit(AuditError::LogInsideDestination { .. })),
+        matches!(
+            e,
+            BoundaryError::Audit(AuditError::LogInsideDestination { .. })
+        ),
         "expected LogInsideDestination, got {e:?}"
     );
     no_side_effect(&d, &dest);
@@ -665,8 +716,14 @@ fn a_destination_under_a_user_profile_path_is_normalized_in_the_record() {
     let (intent, _) = l.intent_and_outcome();
     let recorded = intent["destination"].as_str().unwrap();
 
-    assert!(!recorded.contains('\\'), "a backslash survived normalization: {recorded}");
-    assert!(recorded.ends_with("/out"), "the destination is unidentifiable: {recorded}");
+    assert!(
+        !recorded.contains('\\'),
+        "a backslash survived normalization: {recorded}"
+    );
+    assert!(
+        recorded.ends_with("/out"),
+        "the destination is unidentifiable: {recorded}"
+    );
 
     // **The token assertion is conditional on a root actually matching, and that is not evasion.**
     // `std::env::temp_dir()` is under a user-profile root on Windows (`%LOCALAPPDATA%\Temp`) and on
@@ -736,7 +793,10 @@ fn a_credential_in_the_recorded_destination_refuses_before_the_record_is_written
     .unwrap_err();
 
     assert!(
-        matches!(e, BoundaryError::Audit(AuditError::CredentialInRecord { .. })),
+        matches!(
+            e,
+            BoundaryError::Audit(AuditError::CredentialInRecord { .. })
+        ),
         "expected CredentialInRecord, got {e:?}"
     );
     no_side_effect(&d, &dest);
@@ -748,7 +808,10 @@ fn a_credential_in_the_recorded_destination_refuses_before_the_record_is_written
         !raw.contains("SUPERSECRETVALUE"),
         "the credential reached the audit log: {raw}"
     );
-    assert!(raw.trim().is_empty(), "a record was written despite the refusal: {raw}");
+    assert!(
+        raw.trim().is_empty(),
+        "a record was written despite the refusal: {raw}"
+    );
 }
 
 // ---- 9. the structural sole-caller proof --------------------------------------------------------------
@@ -790,7 +853,11 @@ fn the_permission_boundary_is_the_only_caller_of_the_publish_operation_in_this_c
             if path.extension().and_then(|e| e.to_str()) != Some("rs") {
                 continue;
             }
-            let rel = path.strip_prefix(&src).unwrap().to_string_lossy().replace('\\', "/");
+            let rel = path
+                .strip_prefix(&src)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
             // `publish/mod.rs` *is* the operation and necessarily names its own functions.
             //
             // **The exclusion is that one file, not the directory.** `starts_with("publish/")`
@@ -865,11 +932,17 @@ fn the_log_rotates_at_its_declared_ceiling_and_keeps_exactly_the_declared_genera
         std::fs::write(&log, vec![b'x'; MAX_AUDIT_LOG_BYTES as usize]).unwrap();
         // Mark this generation so the shifting can be followed rather than assumed.
         std::fs::write(&log, format!("round-{round}\n")).unwrap();
-        let padded = format!("round-{round}\n{}", "x".repeat(MAX_AUDIT_LOG_BYTES as usize));
+        let padded = format!(
+            "round-{round}\n{}",
+            "x".repeat(MAX_AUDIT_LOG_BYTES as usize)
+        );
         std::fs::write(&log, padded).unwrap();
 
         AuditLog::open_for(&dest).expect("rotation succeeds and the log reopens");
-        assert!(log.exists(), "the live log was not recreated after rotation");
+        assert!(
+            log.exists(),
+            "the live log was not recreated after rotation"
+        );
         assert!(
             std::fs::metadata(&log).unwrap().len() < MAX_AUDIT_LOG_BYTES,
             "the live log is still at the ceiling, so nothing rotated"
@@ -908,8 +981,14 @@ fn a_log_below_the_ceiling_is_not_rotated() {
     std::fs::write(&log, b"a small existing log\n").unwrap();
 
     AuditLog::open_for(&dest).unwrap();
-    assert!(!d.join("audit.jsonl.1").exists(), "a log below the ceiling was rotated");
-    assert_eq!(std::fs::read_to_string(&log).unwrap(), "a small existing log\n");
+    assert!(
+        !d.join("audit.jsonl.1").exists(),
+        "a log below the ceiling was rotated"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&log).unwrap(),
+        "a small existing log\n"
+    );
 }
 
 /// The two-phase shape's whole reason for existing: an interrupted attempt leaves an intent with no

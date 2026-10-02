@@ -165,7 +165,10 @@ impl AuditLog {
     }
 
     pub fn append_intent(&self, r: &IntentRecord) -> Result<(), AuditError> {
-        self.append(|residual| r.to_json(residual), &[("principal_name", r.principal_name.clone())])
+        self.append(
+            |residual| r.to_json(residual),
+            &[("principal_name", r.principal_name.clone())],
+        )
     }
 
     pub fn append_outcome(&self, r: &OutcomeRecord) -> Result<(), AuditError> {
@@ -217,7 +220,8 @@ impl AuditLog {
             .append(true)
             .open(&self.path)
             .map_err(|e| self.unwritable(e))?;
-        f.write_all(line.as_bytes()).map_err(|e| self.unwritable(e))?;
+        f.write_all(line.as_bytes())
+            .map_err(|e| self.unwritable(e))?;
         f.write_all(b"\n").map_err(|e| self.unwritable(e))?;
         f.flush().map_err(|e| self.unwritable(e))?;
         // Synced per record: an interrupted publish must still show its intent, and an intent
@@ -384,7 +388,12 @@ fn data_dir() -> Option<PathBuf> {
 /// catch is the case that actually occurs: an operator pointing `SPATIAL_IDE_AUDIT_LOG` somewhere
 /// under `--out`.
 pub(crate) fn is_inside(path: &Path, root: &Path) -> bool {
-    let norm = |p: &Path| p.to_string_lossy().replace('\\', "/").trim_end_matches('/').to_string();
+    let norm = |p: &Path| {
+        p.to_string_lossy()
+            .replace('\\', "/")
+            .trim_end_matches('/')
+            .to_string()
+    };
     let (p, r) = (norm(path), norm(root));
     #[cfg(windows)]
     let (p, r) = (p.to_ascii_lowercase(), r.to_ascii_lowercase());
@@ -396,7 +405,9 @@ pub(crate) fn is_inside(path: &Path, root: &Path) -> bool {
 /// `publish.jsonl` → `.1` → `.2` → `.3` → `.4`, and `.4` is **deleted**. A failure here is fatal:
 /// growing past a declared ceiling in silence would make the declaration untrue (ADR-010 rule 6).
 fn rotate_if_needed(path: &Path) -> Result<(), AuditError> {
-    let Ok(meta) = std::fs::metadata(path) else { return Ok(()) };
+    let Ok(meta) = std::fs::metadata(path) else {
+        return Ok(());
+    };
     if meta.len() < MAX_AUDIT_LOG_BYTES {
         return Ok(());
     }
@@ -428,11 +439,20 @@ mod tests {
 
     #[test]
     fn a_log_resolving_inside_the_destination_is_refused() {
-        assert!(is_inside(Path::new("/a/b/out/audit.jsonl"), Path::new("/a/b/out")));
+        assert!(is_inside(
+            Path::new("/a/b/out/audit.jsonl"),
+            Path::new("/a/b/out")
+        ));
         assert!(is_inside(Path::new("/a/b/out"), Path::new("/a/b/out")));
         // A sibling whose name merely starts with the destination's is not inside it.
-        assert!(!is_inside(Path::new("/a/b/output.jsonl"), Path::new("/a/b/out")));
-        assert!(!is_inside(Path::new("/a/b/audit.jsonl"), Path::new("/a/b/out")));
+        assert!(!is_inside(
+            Path::new("/a/b/output.jsonl"),
+            Path::new("/a/b/out")
+        ));
+        assert!(!is_inside(
+            Path::new("/a/b/audit.jsonl"),
+            Path::new("/a/b/out")
+        ));
     }
 
     /// The declared occurrence is the rendered member, which is what clears the length floor that
@@ -482,7 +502,9 @@ mod tests {
     /// var, but a future one might not be, and the lock costs nothing when uncontended).
     fn env_lock() -> std::sync::MutexGuard<'static, ()> {
         static LOCK: std::sync::OnceLock<Mutex<()>> = std::sync::OnceLock::new();
-        LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+        LOCK.get_or_init(|| Mutex::new(()))
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
     }
 
     /// **The regression this cut's own reviewer gate exists to prove**: before [`AUDIT_LOG_GATE`]

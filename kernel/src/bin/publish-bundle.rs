@@ -80,8 +80,9 @@ use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use spatial_kernel::bundle::Redistribution;
 use spatial_kernel::permission::audit::rfc3339_utc_now;
 use spatial_kernel::permission::{
-    boundary, ApprovalSource, AuditLog, DestinationScope, GrantSet, OperationKind, PreNamedApproval,
-    Principal, PublishAttempt, PublishGrant, SourceScope, StdinApproval, MAX_GRANT_LIFETIME,
+    boundary, ApprovalSource, AuditLog, DestinationScope, GrantSet, OperationKind,
+    PreNamedApproval, Principal, PublishAttempt, PublishGrant, SourceScope, StdinApproval,
+    MAX_GRANT_LIFETIME,
 };
 use spatial_kernel::publish::{
     CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishPhase, PublishProgress,
@@ -193,9 +194,10 @@ fn audit_show_lines(path_arg: Option<PathBuf>) -> Result<Vec<String>, String> {
              own location has never been written to",
             path.display()
         )]),
-        Err(e) => {
-            Err(format!("could not read the audit log at {} ({e})", path.display()))
-        }
+        Err(e) => Err(format!(
+            "could not read the audit log at {} ({e})",
+            path.display()
+        )),
     }
 }
 
@@ -281,11 +283,19 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                         .parse()
                         .map_err(|_| format!("--bbox component `{field}` is not a number"))?;
                 }
-                bbox = Some(Bbox { xmin: v[0], ymin: v[1], xmax: v[2], ymax: v[3] });
+                bbox = Some(Bbox {
+                    xmin: v[0],
+                    ymin: v[1],
+                    xmax: v[2],
+                    ymax: v[3],
+                });
             }
             "--limit" => {
                 let raw = args.next().ok_or("--limit needs a value")?;
-                limit = Some(raw.parse().map_err(|_| format!("--limit `{raw}` is not a number"))?);
+                limit = Some(
+                    raw.parse()
+                        .map_err(|_| format!("--limit `{raw}` is not a number"))?,
+                );
             }
             // **Non-empty, checked here.** `declared-by-operator` types `license` as a string and
             // never `null` (ADR-017 §5, Corrigendum 1), and that is only true if an operator cannot
@@ -294,9 +304,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "--license" => {
                 let raw = args.next().ok_or("--license needs a value")?;
                 if raw.trim().is_empty() {
-                    return Err("--license needs a non-empty value; omit the flag to declare \
+                    return Err(
+                        "--license needs a non-empty value; omit the flag to declare \
                                 nothing rather than declaring a blank"
-                        .into());
+                            .into(),
+                    );
                 }
                 license = Some(raw);
             }
@@ -317,7 +329,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             // ground §10 gives for the license string itself: this operation parses no license
             // metadata. Non-empty is checked; RFC-3339 conformance is the caller's to state.
             "--license-at" => {
-                let raw = args.next().ok_or("--license-at needs an RFC-3339 UTC instant")?;
+                let raw = args
+                    .next()
+                    .ok_or("--license-at needs an RFC-3339 UTC instant")?;
                 if raw.trim().is_empty() {
                     return Err("--license-at needs a non-empty value".into());
                 }
@@ -326,9 +340,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             "--license-by" => {
                 let raw = args.next().ok_or("--license-by needs a value")?;
                 if raw.trim().is_empty() {
-                    return Err("--license-by needs a non-empty value; omit the flag to accept \
+                    return Err(
+                        "--license-by needs a non-empty value; omit the flag to accept \
                                 the default"
-                        .into());
+                            .into(),
+                    );
                 }
                 license_by = raw;
             }
@@ -358,16 +374,20 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 if corresponding_source.is_some() {
                     return Err(CORRESPONDING_SOURCE_TWICE.into());
                 }
-                corresponding_source =
-                    Some(CorrespondingSource { kind: CorrespondingSourceKind::Url, at });
+                corresponding_source = Some(CorrespondingSource {
+                    kind: CorrespondingSourceKind::Url,
+                    at,
+                });
             }
             "--corresponding-source-offer" => {
                 let at = nonempty(&mut args, "--corresponding-source-offer")?;
                 if corresponding_source.is_some() {
                     return Err(CORRESPONDING_SOURCE_TWICE.into());
                 }
-                corresponding_source =
-                    Some(CorrespondingSource { kind: CorrespondingSourceKind::WrittenOffer, at });
+                corresponding_source = Some(CorrespondingSource {
+                    kind: CorrespondingSourceKind::WrittenOffer,
+                    at,
+                });
             }
             // ---- the class-3 gate (ADR-006; docs/09) --------------------------------------------
             //
@@ -389,9 +409,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     .parse()
                     .map_err(|_| format!("--grant-ttl `{raw}` is not a number of seconds"))?;
                 if secs == 0 {
-                    return Err("--grant-ttl must be at least 1 second; a grant that has already \
+                    return Err(
+                        "--grant-ttl must be at least 1 second; a grant that has already \
                                 expired when it is issued is not an authorization"
-                        .into());
+                            .into(),
+                    );
                 }
                 grant_ttl = Duration::from_secs(secs);
             }
@@ -450,18 +472,22 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let license_at = match (&license, license_at) {
         (Some(_), Some(at)) => Some(at),
         (Some(_), None) => {
-            return Err("--license requires --license-at <RFC-3339 instant>: `license.at` is when \
+            return Err(
+                "--license requires --license-at <RFC-3339 instant>: `license.at` is when \
                         the operator made the declaration (ADR-017 §10), a semantic input inside \
                         the manifest's determinism surface. This tool will not substitute its own \
                         build clock for it — that is execution timing, it belongs in \
                         build-info.json, and it would make two publishes of one request differ"
-                .into())
+                    .into(),
+            )
         }
         (None, Some(_)) => {
-            return Err("--license-at was given without --license. An operator declaration is \
+            return Err(
+                "--license-at was given without --license. An operator declaration is \
                         all-or-nothing; there is no manifest state that records when somebody \
                         declared nothing"
-                .into())
+                    .into(),
+            )
         }
         (None, None) => None,
     };
@@ -513,8 +539,18 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         // admissible value is the one string that matches, so the flag's whole reachable effect
         // would be letting an operator opt into a refusal. When a caller genuinely needs to assert
         // a viewport CRS, the assertion arrives through SKP.
-        Some(b) => ViewportQuery { bbox: Some(b), bbox_crs: None, limit, filter: None },
-        None => ViewportQuery { bbox: None, bbox_crs: None, limit, filter: None },
+        Some(b) => ViewportQuery {
+            bbox: Some(b),
+            bbox_crs: None,
+            limit,
+            filter: None,
+        },
+        None => ViewportQuery {
+            bbox: None,
+            bbox_crs: None,
+            limit,
+            filter: None,
+        },
     };
 
     // **A dropped flag is said out loud rather than dropped quietly.** An operator declaration is
@@ -641,7 +677,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 /// into an async context to get one signal.
 fn ctrlc_handler(on_signal: impl FnOnce() + Send + 'static) {
     std::thread::spawn(move || {
-        let rt = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+        let rt = match tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        {
             Ok(rt) => rt,
             // A publish that cannot install a signal handler still publishes; it is simply not
             // interruptible from the console, and saying so is better than failing the run.
@@ -663,7 +702,9 @@ mod audit_show_tests {
     use super::*;
 
     fn workspace(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join("spatial-kernel-publish-bundle-audit-show-tests").join(name);
+        let d = std::env::temp_dir()
+            .join("spatial-kernel-publish-bundle-audit-show-tests")
+            .join(name);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -690,7 +731,9 @@ mod audit_show_tests {
         let lines = audit_show_lines(Some(log.clone())).expect("reads");
         assert!(lines[0].contains(&log.display().to_string()), "{lines:?}");
         assert!(
-            lines.iter().any(|l| l.contains("SUCCEEDED") && l.contains("C:/dev/out/x")),
+            lines
+                .iter()
+                .any(|l| l.contains("SUCCEEDED") && l.contains("C:/dev/out/x")),
             "{lines:?}"
         );
     }
@@ -724,7 +767,10 @@ mod audit_show_tests {
     fn no_path_argument_falls_back_to_the_env_override() {
         // Serializes the same env-var hazard `publish.rs`'s and `log.rs`'s own test suites document.
         static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
-        let _guard = LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
 
         let d = workspace("env-fallback");
         let log = d.join("publish.jsonl");
@@ -736,7 +782,12 @@ mod audit_show_tests {
         std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
 
         let lines = audit_show_lines(None).expect("reads via the env override");
-        assert!(lines.iter().any(|l| l.contains("interrupted?") && l.contains("env-case")), "{lines:?}");
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.contains("interrupted?") && l.contains("env-case")),
+            "{lines:?}"
+        );
 
         std::env::remove_var(spatial_kernel::permission::AUDIT_LOG_ENV);
     }

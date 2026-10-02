@@ -50,13 +50,21 @@ const USER: &str = "<user>";
 /// 4. Any remaining **whole component** equal to a known username becomes `<user>`. Applied after
 ///    step 3 rather than instead of it, so `C:/Users/x/backup/x/out` loses both occurrences.
 pub fn normalize_destination(resolved: &Path) -> String {
-    normalize_with(resolved, &roots_from_environment(), &usernames_from_environment())
+    normalize_with(
+        resolved,
+        &roots_from_environment(),
+        &usernames_from_environment(),
+    )
 }
 
 /// The testable core: normalization against supplied roots and usernames rather than the
 /// environment's, so a test can drive it with known values instead of depending on who is running
 /// it — the same reason `MachineIdentifiers` takes its identifiers rather than discovering them.
-pub fn normalize_with(resolved: &Path, roots: &[(String, &'static str)], usernames: &[String]) -> String {
+pub fn normalize_with(
+    resolved: &Path,
+    roots: &[(String, &'static str)],
+    usernames: &[String],
+) -> String {
     let raw = resolved.to_string_lossy().to_string();
 
     // 1 — verbatim prefixes.
@@ -235,7 +243,10 @@ mod tests {
     /// A username elsewhere in the path is normalized too — step 3 does not end the job.
     #[test]
     fn a_username_component_after_the_root_is_also_normalized() {
-        assert_eq!(norm(r"C:\Users\someone\backup\someone\out"), "<user-home>/backup/<user>/out");
+        assert_eq!(
+            norm(r"C:\Users\someone\backup\someone\out"),
+            "<user-home>/backup/<user>/out"
+        );
         assert_eq!(norm(r"D:\archive\someone\out"), "D:/archive/<user>/out");
     }
 

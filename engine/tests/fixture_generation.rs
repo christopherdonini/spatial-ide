@@ -22,7 +22,9 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-engine-fixture-generation").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-engine-fixture-generation")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -70,7 +72,10 @@ impl FixtureProgress for CancelAfter {
 #[test]
 fn the_default_spec_produces_byte_identical_files_through_both_entry_points() {
     let d = workspace("byte-identity");
-    let spec = FixtureSpec { features: 3_000, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 3_000,
+        ..Default::default()
+    };
     assert_eq!(
         spec.row_group_rows, 1_048_576,
         "the default row-group size must remain the writer's own, or existing fixtures move"
@@ -81,7 +86,11 @@ fn the_default_spec_produces_byte_identical_files_through_both_entry_points() {
     let fa = write_geoparquet(&a, &spec).unwrap();
     let fb = write_geoparquet_cancellable(&b, &spec, &CancelToken::new(), None).unwrap();
 
-    assert_eq!(std::fs::read(&a).unwrap(), std::fs::read(&b).unwrap(), "the two files differ");
+    assert_eq!(
+        std::fs::read(&a).unwrap(),
+        std::fs::read(&b).unwrap(),
+        "the two files differ"
+    );
     assert_eq!(fa.bytes, fb.bytes);
     assert_eq!(fa.vertices, fb.vertices);
     assert_eq!(fa.coord_bits_xor, fb.coord_bits_xor);
@@ -92,8 +101,15 @@ fn the_default_spec_produces_byte_identical_files_through_both_entry_points() {
 #[test]
 fn changing_the_row_group_size_changes_the_file_and_is_therefore_part_of_the_spec() {
     let d = workspace("row-groups");
-    let base = FixtureSpec { features: 3_000, chunk: 512, ..Default::default() };
-    let small = FixtureSpec { row_group_rows: 512, ..base.clone() };
+    let base = FixtureSpec {
+        features: 3_000,
+        chunk: 512,
+        ..Default::default()
+    };
+    let small = FixtureSpec {
+        row_group_rows: 512,
+        ..base.clone()
+    };
 
     let a = d.join("default.parquet");
     let b = d.join("small.parquet");
@@ -117,17 +133,21 @@ fn changing_the_row_group_size_changes_the_file_and_is_therefore_part_of_the_spe
 #[test]
 fn generation_reports_progress_once_per_chunk_with_monotonic_counts() {
     let d = workspace("progress");
-    let spec = FixtureSpec { features: 2_048, chunk: 256, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 2_048,
+        chunk: 256,
+        ..Default::default()
+    };
     let rec = Recorder::default();
-    let facts = write_geoparquet_cancellable(
-        &d.join("f.parquet"),
-        &spec,
-        &CancelToken::new(),
-        Some(&rec),
-    )
-    .unwrap();
+    let facts =
+        write_geoparquet_cancellable(&d.join("f.parquet"), &spec, &CancelToken::new(), Some(&rec))
+            .unwrap();
 
-    assert_eq!(rec.chunks.load(Ordering::SeqCst), 8, "2048 features / 256 per chunk");
+    assert_eq!(
+        rec.chunks.load(Ordering::SeqCst),
+        8,
+        "2048 features / 256 per chunk"
+    );
     assert_eq!(
         rec.last_written.load(Ordering::SeqCst),
         2_048,
@@ -154,13 +174,28 @@ fn a_cancelled_generation_returns_cancelled_and_removes_the_partial_file() {
     let d = workspace("cancel-mid");
     let path = d.join("f.parquet");
     let cancel = CancelToken::new();
-    let obs = CancelAfter { after: 2, seen: AtomicUsize::new(0), cancel: cancel.clone() };
+    let obs = CancelAfter {
+        after: 2,
+        seen: AtomicUsize::new(0),
+        cancel: cancel.clone(),
+    };
 
-    let spec = FixtureSpec { features: 8_192, chunk: 256, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 8_192,
+        chunk: 256,
+        ..Default::default()
+    };
     let e = write_geoparquet_cancellable(&path, &spec, &cancel, Some(&obs)).unwrap_err();
 
-    assert!(matches!(e, EngineError::Cancelled), "expected Cancelled, got {e:?}");
-    assert!(!path.exists(), "a partial fixture survived cancellation: {}", path.display());
+    assert!(
+        matches!(e, EngineError::Cancelled),
+        "expected Cancelled, got {e:?}"
+    );
+    assert!(
+        !path.exists(),
+        "a partial fixture survived cancellation: {}",
+        path.display()
+    );
 }
 
 /// Cancelled **before the first chunk** — the case a flag polled only between chunks would miss,
@@ -172,11 +207,22 @@ fn a_generation_cancelled_before_it_starts_writes_nothing_and_leaves_nothing() {
     let cancel = CancelToken::new();
     cancel.cancel();
 
-    let spec = FixtureSpec { features: 8_192, chunk: 256, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 8_192,
+        chunk: 256,
+        ..Default::default()
+    };
     let e = write_geoparquet_cancellable(&path, &spec, &cancel, None).unwrap_err();
 
-    assert!(matches!(e, EngineError::Cancelled), "expected Cancelled, got {e:?}");
-    assert!(!path.exists(), "an empty partial file survived: {}", path.display());
+    assert!(
+        matches!(e, EngineError::Cancelled),
+        "expected Cancelled, got {e:?}"
+    );
+    assert!(
+        !path.exists(),
+        "an empty partial file survived: {}",
+        path.display()
+    );
 }
 
 /// **A cancel arriving during the last chunk must not produce a complete, valid file.**
@@ -191,11 +237,26 @@ fn a_cancel_during_the_final_chunk_still_refuses_rather_than_closing_a_valid_fil
     let path = d.join("f.parquet");
     let cancel = CancelToken::new();
     // 4 chunks of 256; cancel on the last one, so the loop is about to exit anyway.
-    let obs = CancelAfter { after: 4, seen: AtomicUsize::new(0), cancel: cancel.clone() };
+    let obs = CancelAfter {
+        after: 4,
+        seen: AtomicUsize::new(0),
+        cancel: cancel.clone(),
+    };
 
-    let spec = FixtureSpec { features: 1_024, chunk: 256, ..Default::default() };
+    let spec = FixtureSpec {
+        features: 1_024,
+        chunk: 256,
+        ..Default::default()
+    };
     let e = write_geoparquet_cancellable(&path, &spec, &cancel, Some(&obs)).unwrap_err();
 
-    assert!(matches!(e, EngineError::Cancelled), "expected Cancelled, got {e:?}");
-    assert!(!path.exists(), "a cancelled run produced a closed file: {}", path.display());
+    assert!(
+        matches!(e, EngineError::Cancelled),
+        "expected Cancelled, got {e:?}"
+    );
+    assert!(
+        !path.exists(),
+        "a cancelled run produced a closed file: {}",
+        path.display()
+    );
 }

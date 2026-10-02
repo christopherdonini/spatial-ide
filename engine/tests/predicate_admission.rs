@@ -103,7 +103,12 @@ fn the_adversarial_corpus_each_row_refused_with_its_specific_code() {
             FilterError::Unparsable { .. },
             "Unparsable"
         ),
-        refusal!("bare block comment, nothing else", "/* */", FilterError::Unparsable { .. }, "Unparsable"),
+        refusal!(
+            "bare block comment, nothing else",
+            "/* */",
+            FilterError::Unparsable { .. },
+            "Unparsable"
+        ),
         refusal!(
             "scalar subquery",
             "(SELECT 1)",
@@ -263,7 +268,10 @@ fn the_adversarial_corpus_each_row_refused_with_its_specific_code() {
 
     for row in &rows {
         match AdmittedPredicate::admit(row.predicate.clone(), &ds) {
-            Ok(_) => panic!("[{}] predicate `{}` was admitted; expected a refusal", row.label, row.predicate),
+            Ok(_) => panic!(
+                "[{}] predicate `{}` was admitted; expected a refusal",
+                row.label, row.predicate
+            ),
             Err(PredicateAdmitError::Filter(e)) => {
                 if let Some(msg) = (row.check)(&e) {
                     panic!("[{}] predicate `{}`: {msg}", row.label, row.predicate);
@@ -301,11 +309,14 @@ fn dollar_quoting_and_a_positive_control_both_admit() {
 /// keeps the original, more conservative discard, because stage 3 actually prepares and executes
 /// a statement built from the predicate text.
 #[test]
-fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_refusal_still_discards()
-{
+fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_refusal_still_discards(
+) {
     let ds = dataset();
     let created_after_open = ds.connections().physical_connections_created();
-    assert_eq!(created_after_open, 1, "Dataset::open leaves exactly one connection behind it");
+    assert_eq!(
+        created_after_open, 1,
+        "Dataset::open leaves exactly one connection behind it"
+    );
 
     // A stage-1 refusal (a subquery — never reaches namespace or bind admission at all).
     match AdmittedPredicate::admit("(SELECT 1)", &ds) {
@@ -317,7 +328,11 @@ fn a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_
         created_after_open,
         "a stage-1 refusal must not have discarded (and so recreated) the connection"
     );
-    assert_eq!(ds.connections().idle_connections(), 1, "the connection must be back in the pool");
+    assert_eq!(
+        ds.connections().idle_connections(),
+        1,
+        "the connection must be back in the pool"
+    );
 
     // A stage-2 refusal (an unknown column — structurally fine, only namespace admission refuses).
     match AdmittedPredicate::admit("nonexistent_column_xyz = 1", &ds) {
@@ -415,11 +430,15 @@ fn n_concurrent_admit_calls_at_the_declared_ceiling_all_succeed() {
 /// `PredicateAdmitError::Filter(FilterError::RejectedByBinder { .. })`. Nothing about
 /// `"zone = 'residential'"` is refused here; the predicate's own text is never even reached.
 #[test]
-fn a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder()
-{
+fn a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder(
+) {
     let ds = dataset();
     let held: Vec<_> = (0..MAX_ADMISSION_CONNECTIONS)
-        .map(|_| ds.connections().acquire(LeaseClass::Admission).expect("admission lease"))
+        .map(|_| {
+            ds.connections()
+                .acquire(LeaseClass::Admission)
+                .expect("admission lease")
+        })
         .collect();
 
     match AdmittedPredicate::admit("zone = 'residential'", &ds) {

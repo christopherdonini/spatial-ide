@@ -77,13 +77,19 @@ use support::*;
 // produced records exactly which bytes it published with, independently checkable, without
 // asserting a value that this workspace's own build system cannot hold still.
 fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .to_path_buf()
 }
 
 fn pinned_publish_bundle_exe() -> (PathBuf, u64, String) {
     let exe = repo_root().join("target/release/publish-bundle.exe");
     let (bytes, hash) = file_facts(&exe);
-    assert!(bytes > 0, "target/release/publish-bundle.exe is absent or empty; build it first");
+    assert!(
+        bytes > 0,
+        "target/release/publish-bundle.exe is absent or empty; build it first"
+    );
     (exe, bytes, hash)
 }
 
@@ -155,21 +161,38 @@ fn write_viewer(dir: &Path) -> PathBuf {
 
 /// Publishes `data` (whole file, no `--bbox`, no `--attributes`, default `--name parcels`) through
 /// the pinned binary, returning the destination on success.
-fn publish(exe: &Path, data: &Path, style: &Path, viewer: &Path, out: &Path, audit_log: &Path) -> String {
+fn publish(
+    exe: &Path,
+    data: &Path,
+    style: &Path,
+    viewer: &Path,
+    out: &Path,
+    audit_log: &Path,
+) -> String {
     let approve = out.file_name().unwrap().to_string_lossy().to_string();
     let output = Command::new(exe)
         .env(spatial_kernel::permission::AUDIT_LOG_ENV, audit_log)
         .args([
-            "--data", data.to_str().unwrap(),
-            "--style", style.to_str().unwrap(),
-            "--viewer", viewer.to_str().unwrap(),
-            "--out", out.to_str().unwrap(),
-            "--viewer-program", "Spatial IDE bundle viewer",
-            "--viewer-copyright", "Copyright (C) 2026 the Spatial IDE contributors",
-            "--viewer-license", "AGPL-3.0-or-later",
-            "--viewer-notice", "NOTICE.txt",
-            "--corresponding-source-url", "https://example.invalid/spatial-ide",
-            "--approve", &approve,
+            "--data",
+            data.to_str().unwrap(),
+            "--style",
+            style.to_str().unwrap(),
+            "--viewer",
+            viewer.to_str().unwrap(),
+            "--out",
+            out.to_str().unwrap(),
+            "--viewer-program",
+            "Spatial IDE bundle viewer",
+            "--viewer-copyright",
+            "Copyright (C) 2026 the Spatial IDE contributors",
+            "--viewer-license",
+            "AGPL-3.0-or-later",
+            "--viewer-notice",
+            "NOTICE.txt",
+            "--corresponding-source-url",
+            "https://example.invalid/spatial-ide",
+            "--approve",
+            &approve,
         ])
         .output()
         .expect("run the pinned publish-bundle");
@@ -178,7 +201,11 @@ fn publish(exe: &Path, data: &Path, style: &Path, viewer: &Path, out: &Path, aud
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
-    assert!(output.status.success(), "publish of {} failed:\n{text}", data.display());
+    assert!(
+        output.status.success(),
+        "publish of {} failed:\n{text}",
+        data.display()
+    );
     text
 }
 
@@ -191,7 +218,11 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     let list = |d: &Path| -> Result<std::collections::BTreeSet<String>, String> {
         std::fs::read_dir(d)
             .map_err(|e| format!("{}: {e}", d.display()))
-            .map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect())
+            .map(|rd| {
+                rd.filter_map(|e| e.ok())
+                    .map(|e| e.file_name().to_string_lossy().to_string())
+                    .collect()
+            })
     };
     let (na, nb) = match (list(&da), list(&db)) {
         (Ok(a), Ok(b)) => (a, b),
@@ -200,17 +231,35 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     if na != nb {
         let only_a: Vec<_> = na.difference(&nb).cloned().collect();
         let only_b: Vec<_> = nb.difference(&na).cloned().collect();
-        return (0, false, Some(format!("partition sets differ: only in A {only_a:?}, only in B {only_b:?}")));
+        return (
+            0,
+            false,
+            Some(format!(
+                "partition sets differ: only in A {only_a:?}, only in B {only_b:?}"
+            )),
+        );
     }
     let mut compared = 0usize;
     for name in &na {
         let pa = match std::fs::read(da.join(name)) {
             Ok(v) => v,
-            Err(e) => return (compared, false, Some(format!("{name}: unreadable in A ({e})"))),
+            Err(e) => {
+                return (
+                    compared,
+                    false,
+                    Some(format!("{name}: unreadable in A ({e})")),
+                )
+            }
         };
         let pb = match std::fs::read(db.join(name)) {
             Ok(v) => v,
-            Err(e) => return (compared, false, Some(format!("{name}: absent from B ({e})"))),
+            Err(e) => {
+                return (
+                    compared,
+                    false,
+                    Some(format!("{name}: absent from B ({e})")),
+                )
+            }
         };
         if pa != pb {
             return (compared, false, Some(format!("{name}: bytes differ")));
@@ -228,8 +277,10 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
 /// (see this file's header) rather than assumed — any path this run finds outside this set is a
 /// layout leak.
 fn is_expected_source_hash_difference(path: &str) -> bool {
-    matches!(path, "source.content_hash" | "operation.source_content_hash" | "operation.digest")
-        || path.starts_with("reproducibility.basis[")
+    matches!(
+        path,
+        "source.content_hash" | "operation.source_content_hash" | "operation.digest"
+    ) || path.starts_with("reproducibility.basis[")
 }
 
 /// Every member path at which two manifest JSON trees disagree — `Value::Object`s recurse key by
@@ -244,7 +295,11 @@ fn diff_paths(a: &serde_json::Value, b: &serde_json::Value, prefix: &str, out: &
             keys.sort();
             keys.dedup();
             for k in keys {
-                let path = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+                let path = if prefix.is_empty() {
+                    k.clone()
+                } else {
+                    format!("{prefix}.{k}")
+                };
                 match (ma.get(k), mb.get(k)) {
                     (Some(va), Some(vb)) => diff_paths(va, vb, &path, out),
                     _ => out.push(format!("{path} (present in only one side)")),
@@ -296,8 +351,14 @@ fn adr017_publish_determinism_across_layouts_at_145mb() {
         exe.display()
     );
 
-    let c = verified_fixture("parcels-145mb-duckdb-source-identity-g8192.parquet", C_8192_SHA256);
-    let h = verified_fixture("parcels-145mb-duckdb-hilbert16-g8192.parquet", H_8192_SHA256);
+    let c = verified_fixture(
+        "parcels-145mb-duckdb-source-identity-g8192.parquet",
+        C_8192_SHA256,
+    );
+    let h = verified_fixture(
+        "parcels-145mb-duckdb-hilbert16-g8192.parquet",
+        H_8192_SHA256,
+    );
     let r = verified_fixture("parcels-145mb-duckdb-shuffled-g8192.parquet", R_8192_SHA256);
     say!("fixtures verified: C={C_8192_SHA256} H={H_8192_SHA256} R={R_8192_SHA256}");
 
@@ -329,7 +390,10 @@ fn adr017_publish_determinism_across_layouts_at_145mb() {
         let (compared, identical, first_difference) = compare_partitions(&bundle_c, other_bundle);
         say!(
             "partitions C vs {label}: {compared} compared, identical={identical}{}",
-            first_difference.as_deref().map(|d| format!(" ({d})")).unwrap_or_default()
+            first_difference
+                .as_deref()
+                .map(|d| format!(" ({d})"))
+                .unwrap_or_default()
         );
         if !identical {
             any_fail = true;
@@ -344,8 +408,10 @@ fn adr017_publish_determinism_across_layouts_at_145mb() {
         // ---- manifest: field-level diff, filtered by the known source-hash-derived set -------
         let mut diffs = Vec::new();
         diff_paths(&manifest_c, other_manifest, "", &mut diffs);
-        let unexpected: Vec<&String> =
-            diffs.iter().filter(|p| !is_expected_source_hash_difference(p)).collect();
+        let unexpected: Vec<&String> = diffs
+            .iter()
+            .filter(|p| !is_expected_source_hash_difference(p))
+            .collect();
         say!(
             "manifest C vs {label}: {} total differing member path(s), {} outside the known \
              source-hash-derived set: {:?}",

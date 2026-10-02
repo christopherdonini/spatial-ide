@@ -28,7 +28,8 @@ use spatial_engine::lod::{
 mod common;
 use common::polygons_100k;
 
-const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
+const PARCELS_5GB: &str =
+    r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
 
 fn tier_directory(source: &Dataset) -> PathBuf {
     let (hash, _ms) =
@@ -128,7 +129,10 @@ fn cancel_from_another_thread<'a>(
 // than the end of the row group already in flight, and the assertion reports an interval outside
 // LOD_CANCEL_OBSERVED_CEILING_MS.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn cancel_observed_within_the_declared_ceiling() {
     let path = polygons_100k();
     let source = Dataset::open(&path).expect("open polygons-100k");
@@ -147,9 +151,20 @@ fn cancel_observed_within_the_declared_ceiling() {
         "a cancelled build is a typed refusal, not a partial ladder: {outcome:?}"
     );
 
-    let requested = watcher.requested.lock().expect("lock").expect("cancel_requested was stamped");
-    let observed = watcher.observed.lock().expect("lock").expect("cancel_observed was stamped");
-    assert!(observed >= requested, "cancel_observed cannot precede cancel_requested");
+    let requested = watcher
+        .requested
+        .lock()
+        .expect("lock")
+        .expect("cancel_requested was stamped");
+    let observed = watcher
+        .observed
+        .lock()
+        .expect("lock")
+        .expect("cancel_observed was stamped");
+    assert!(
+        observed >= requested,
+        "cancel_observed cannot precede cancel_requested"
+    );
     let interval = observed - requested;
     assert!(
         interval <= Duration::from_millis(LOD_CANCEL_OBSERVED_CEILING_MS),
@@ -161,7 +176,10 @@ fn cancel_observed_within_the_declared_ceiling() {
     // Nothing partial is left behind: the tier that was being written when the cancel landed is
     // removed, and the removal's outcome is the build's to report.
     let leftovers = parquet_files(&directory);
-    assert!(leftovers.is_empty(), "a cancelled build left a partial tier on disk: {leftovers:?}");
+    assert!(
+        leftovers.is_empty(),
+        "a cancelled build left a partial tier on disk: {leftovers:?}"
+    );
     let _ = std::fs::remove_dir_all(&directory);
 }
 
@@ -189,10 +207,21 @@ fn cancel_observed_within_the_declared_ceiling_at_5gb() {
         cancel_from_another_thread(&watcher, &cancel, scope);
         build_tiers(&source, LOD_BUILD_WORKERS, &cancel, Some(&watcher))
     });
-    assert!(matches!(outcome, Err(EngineError::Cancelled)), "{outcome:?}");
+    assert!(
+        matches!(outcome, Err(EngineError::Cancelled)),
+        "{outcome:?}"
+    );
 
-    let requested = watcher.requested.lock().expect("lock").expect("cancel_requested");
-    let observed = watcher.observed.lock().expect("lock").expect("cancel_observed");
+    let requested = watcher
+        .requested
+        .lock()
+        .expect("lock")
+        .expect("cancel_requested");
+    let observed = watcher
+        .observed
+        .lock()
+        .expect("lock")
+        .expect("cancel_observed");
     let interval = observed - requested;
     println!("cancel_requested -> cancel_observed: {interval:?} (one sample, not a p50/p95)");
     assert!(
@@ -200,6 +229,9 @@ fn cancel_observed_within_the_declared_ceiling_at_5gb() {
         "outside the declared ceiling: {interval:?}"
     );
     let leftovers = parquet_files(&directory);
-    assert!(leftovers.is_empty(), "a cancelled build left a partial tier on disk: {leftovers:?}");
+    assert!(
+        leftovers.is_empty(),
+        "a cancelled build left a partial tier on disk: {leftovers:?}"
+    );
     let _ = std::fs::remove_dir_all(&directory);
 }

@@ -54,13 +54,19 @@ impl InjectedArm {
     /// Arm `path` as `ChecksOnly { reason }` instead of `Watching`, on the next (and every
     /// subsequent) `arm()` call for it.
     pub fn mark_checks_only(&self, path: &Path, reason: &str) {
-        self.checks_only.lock().unwrap().insert(path.to_path_buf(), reason.to_string());
+        self.checks_only
+            .lock()
+            .unwrap()
+            .insert(path.to_path_buf(), reason.to_string());
     }
 
     /// Queue `signal` to fire synchronously inside the *next* `arm()` call for `path`, before that
     /// call returns — simulating a signal that arrived between arming and admission.
     pub fn fire_on_next_arm(&self, path: &Path, signal: WatchSignal) {
-        self.fire_on_next_arm.lock().unwrap().insert(path.to_path_buf(), signal);
+        self.fire_on_next_arm
+            .lock()
+            .unwrap()
+            .insert(path.to_path_buf(), signal);
     }
 
     /// Fire `signal` for `path` now — `path` must already be armed (a prior `arm()` call for it
@@ -78,14 +84,22 @@ impl InjectedArm {
 impl SourceWatchArm for InjectedArm {
     fn arm(&self, path: &Path, sink: WatchSink) -> ArmOutcome {
         if let Some(reason) = self.checks_only.lock().unwrap().get(path) {
-            return ArmOutcome::ChecksOnly { reason: reason.clone() };
+            return ArmOutcome::ChecksOnly {
+                reason: reason.clone(),
+            };
         }
         let fired = Arc::new(AtomicBool::new(false));
         if let Some(signal) = self.fire_on_next_arm.lock().unwrap().remove(path) {
             fired.store(true, Ordering::SeqCst);
             sink(signal);
         }
-        self.armed.lock().unwrap().insert(path.to_path_buf(), Armed { sink, fired: fired.clone() });
+        self.armed.lock().unwrap().insert(
+            path.to_path_buf(),
+            Armed {
+                sink,
+                fired: fired.clone(),
+            },
+        );
         ArmOutcome::Watching(Box::new(InjectedWatch { fired }))
     }
 }

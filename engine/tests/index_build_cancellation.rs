@@ -42,7 +42,11 @@ fn write(name: &str, spec: &FixtureSpec) -> (PathBuf, FixtureFacts) {
 /// Large enough that each post-scan phase runs long enough to contain a poll, and that a build
 /// which ignored cancellation would visibly complete.
 fn spec() -> FixtureSpec {
-    FixtureSpec { features: 60_000, avg_vertices: 16, ..Default::default() }
+    FixtureSpec {
+        features: 60_000,
+        avg_vertices: 16,
+        ..Default::default()
+    }
 }
 
 /// Cancels the build the moment it enters a chosen phase, and records the order of phases seen.
@@ -55,7 +59,12 @@ struct CancelAtPhase {
 
 impl CancelAtPhase {
     fn new(target: IndexPhase, cancel: CancelToken) -> Self {
-        Self { target, cancel, seen: Mutex::new(Vec::new()), fired: AtomicBool::new(false) }
+        Self {
+            target,
+            cancel,
+            seen: Mutex::new(Vec::new()),
+            fired: AtomicBool::new(false),
+        }
     }
     fn phases(&self) -> Vec<IndexPhase> {
         self.seen.lock().unwrap_or_else(|e| e.into_inner()).clone()
@@ -64,7 +73,10 @@ impl CancelAtPhase {
 
 impl IndexPhaseObserver for CancelAtPhase {
     fn phase(&self, phase: IndexPhase) {
-        self.seen.lock().unwrap_or_else(|e| e.into_inner()).push(phase);
+        self.seen
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(phase);
         if phase == self.target {
             self.fired.store(true, Ordering::SeqCst);
             self.cancel.cancel();
@@ -82,7 +94,10 @@ struct RecordPhases {
 impl IndexPhaseObserver for RecordPhases {
     fn phase(&self, phase: IndexPhase) {
         self.calls.fetch_add(1, Ordering::SeqCst);
-        self.seen.lock().unwrap_or_else(|e| e.into_inner()).push(phase);
+        self.seen
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(phase);
     }
 }
 
@@ -172,7 +187,12 @@ fn the_inner_cell_insertion_loop_polls_too() {
     // by the same constant.
     let (path, facts) = write(
         "wide-features",
-        &FixtureSpec { features: 20_000, avg_vertices: 64, hole_every: 3, ..Default::default() },
+        &FixtureSpec {
+            features: 20_000,
+            avg_vertices: 64,
+            hole_every: 3,
+            ..Default::default()
+        },
     );
     assert!(facts.features > 0);
     let ds = Dataset::open(&path).expect("open");
@@ -197,7 +217,14 @@ fn a_cancel_after_the_last_poll_still_refuses_and_caches_nothing() {
     // and is inserted into the cache. A cancelled operation that succeeds is worse than a slow one.
     //
     // Cancelled at the *last* phase transition, so every in-loop poll has already run.
-    let (path, _) = write("tail", &FixtureSpec { features: 64, avg_vertices: 8, ..Default::default() });
+    let (path, _) = write(
+        "tail",
+        &FixtureSpec {
+            features: 64,
+            avg_vertices: 8,
+            ..Default::default()
+        },
+    );
     let ds = Dataset::open(&path).expect("open");
     let cancel = CancelToken::new();
     let observer = CancelAtPhase::new(IndexPhase::PopulateGrid, cancel.clone());
@@ -215,7 +242,10 @@ fn a_cancel_after_the_last_poll_still_refuses_and_caches_nothing() {
     // And nothing reached the cache: the rebuild is a miss, not a hit.
     let after = Dataset::open(&path).expect("reopen");
     let report = after.build_index(&CancelToken::new()).expect("rebuild");
-    assert!(report.miss.is_some(), "a cancelled build left an entry in the cache");
+    assert!(
+        report.miss.is_some(),
+        "a cancelled build left an entry in the cache"
+    );
 }
 
 #[test]
@@ -227,8 +257,9 @@ fn an_uncancelled_build_passes_every_phase_in_order_and_still_produces_the_same_
     let ds = Dataset::open(&path).expect("open");
 
     let observer = RecordPhases::default();
-    let report =
-        ds.build_index_observed(&CancelToken::new(), Some(&observer)).expect("build must succeed");
+    let report = ds
+        .build_index_observed(&CancelToken::new(), Some(&observer))
+        .expect("build must succeed");
 
     assert_eq!(
         observer.seen.lock().unwrap().as_slice(),
@@ -258,10 +289,14 @@ fn an_uncancelled_build_passes_every_phase_in_order_and_still_produces_the_same_
     let q = ViewportQuery::viewport(view, "EPSG:2056");
     let scan = drain(ds.stream(&q).expect("scan stream"));
     let indexed = drain(
-        ds.stream_indexed_experimental(&q, CancelToken::new()).expect("indexed stream"),
+        ds.stream_indexed_experimental(&q, CancelToken::new())
+            .expect("indexed stream"),
     );
     assert!(!scan.is_empty(), "the viewport must select something");
-    assert_eq!(scan, indexed, "cancellation points must not change what the index answers");
+    assert_eq!(
+        scan, indexed,
+        "cancellation points must not change what the index answers"
+    );
 }
 
 #[test]
@@ -273,17 +308,29 @@ fn a_cancelled_build_frees_the_maintenance_lease_it_held() {
     let (path, _) = write("lease-freed", &spec());
     let ds = Dataset::open(&path).expect("open");
 
-    for phase in [IndexPhase::DuckDbScan, IndexPhase::ValidateBboxes, IndexPhase::PopulateGrid] {
+    for phase in [
+        IndexPhase::DuckDbScan,
+        IndexPhase::ValidateBboxes,
+        IndexPhase::PopulateGrid,
+    ] {
         let cancel = CancelToken::new();
         let observer = CancelAtPhase::new(phase, cancel.clone());
         match ds.build_index_observed(&cancel, Some(&observer)) {
             Err(EngineError::Cancelled) => {}
-            other => panic!("expected Cancelled at {phase:?}, got {:?}", other.map(|_| ())),
+            other => panic!(
+                "expected Cancelled at {phase:?}, got {:?}",
+                other.map(|_| ())
+            ),
         }
-        assert_eq!(ds.connections().active_leases(), 0, "the lease must be released at {phase:?}");
+        assert_eq!(
+            ds.connections().active_leases(),
+            0,
+            "the lease must be released at {phase:?}"
+        );
     }
 
-    ds.build_index(&CancelToken::new()).expect("a build after three cancelled ones must succeed");
+    ds.build_index(&CancelToken::new())
+        .expect("a build after three cancelled ones must succeed");
 }
 
 fn drain(mut s: spatial_engine::BatchStream) -> Vec<u64> {
@@ -294,7 +341,11 @@ fn drain(mut s: spatial_engine::BatchStream) -> Vec<u64> {
         let mut rdr =
             arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
         let batch = rdr.next().unwrap().unwrap();
-        let col = batch.column(0).as_any().downcast_ref::<arrow::array::UInt64Array>().unwrap();
+        let col = batch
+            .column(0)
+            .as_any()
+            .downcast_ref::<arrow::array::UInt64Array>()
+            .unwrap();
         ids.extend(col.values().iter().copied());
         buf.clear();
     }

@@ -165,7 +165,13 @@ fn predicted_rows(file: FileId, v: ViewId) -> u64 {
     };
     let mut rows = 0u64;
     for j in y_lo..=y_hi {
-        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        let in_row = if j < full_rows {
+            cols
+        } else if j == full_rows {
+            partial
+        } else {
+            0
+        };
         rows += in_row.min(x_cols);
     }
     rows
@@ -380,15 +386,31 @@ fn cells() -> Vec<Cell> {
     let mut out = Vec::new();
     for traced in [false, true] {
         for &batch in &[BatchId::SizeOnly, BatchId::Budgeted] {
-            for &view in &[ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th]
-            {
+            for &view in &[
+                ViewId::Whole,
+                ViewId::NearQuarter,
+                ViewId::FarQuarter,
+                ViewId::Sixty4th,
+            ] {
                 // ScanOnly on all three files: S and H are the layout arms, C is the writer control.
                 for &file in &[FileId::S, FileId::C, FileId::H] {
-                    out.push(Cell { file, plan: PlanId::ScanOnly, batch, view, traced });
+                    out.push(Cell {
+                        file,
+                        plan: PlanId::ScanOnly,
+                        batch,
+                        view,
+                        traced,
+                    });
                 }
                 // RowGroups on S only. §3's declared exclusions: H refuses structurally, and C is a
                 // writer control rather than a lever.
-                out.push(Cell { file: FileId::S, plan: PlanId::RowGroups, batch, view, traced });
+                out.push(Cell {
+                    file: FileId::S,
+                    plan: PlanId::RowGroups,
+                    batch,
+                    view,
+                    traced,
+                });
             }
         }
     }
@@ -428,7 +450,8 @@ fn night_trial_child() {
     let cell = Cell::parse(&spec).expect("the driver passed an unparseable cell");
     let json = run_one_trial(&cell);
     let mut f = std::fs::File::create(&out).expect("create the trial's result file");
-    f.write_all(json.as_bytes()).expect("write the trial result");
+    f.write_all(json.as_bytes())
+        .expect("write the trial result");
     f.sync_all().expect("flush the trial result");
     // Still echoed, because a console is what an operator reads when something goes wrong.
     println!("trial {} -> {}", cell.label(), json);
@@ -598,17 +621,26 @@ fn run_one_trial(cell: &Cell) -> String {
         row_groups,
         filter_plan,
         cut_policy,
-        opt_f64(if first_batch_ms.is_nan() { None } else { Some(first_batch_ms) }),
+        opt_f64(if first_batch_ms.is_nan() {
+            None
+        } else {
+            Some(first_batch_ms)
+        }),
         total_ms,
         rows,
         payload,
         wire_fold,
         opt_u64(io_after.zip(io_before).map(|(a, b)| a.saturating_sub(b))),
-        opt_u64(io_after.zip(io_before_query).map(|(a, b)| a.saturating_sub(b))),
+        opt_u64(
+            io_after
+                .zip(io_before_query)
+                .map(|(a, b)| a.saturating_sub(b))
+        ),
         cut_json,
         retain,
         trace_json,
-        err.map(|e| format!("\"{}\"", json_escape(&e))).unwrap_or_else(|| "null".into()),
+        err.map(|e| format!("\"{}\"", json_escape(&e)))
+            .unwrap_or_else(|| "null".into()),
     )
 }
 
@@ -625,7 +657,11 @@ fn trial_error(cell: &Cell, phase: &str, detail: &str) -> String {
 
 fn plan_json(p: FilterPlan) -> String {
     let extra = match p {
-        FilterPlan::RowGroupsPruned { total, kept, ranges } => {
+        FilterPlan::RowGroupsPruned {
+            total,
+            kept,
+            ranges,
+        } => {
             format!(",\"total\":{total},\"kept\":{kept},\"ranges\":{ranges}")
         }
         FilterPlan::RowGroupsKeptAll { total } | FilterPlan::RowGroupsExcludeAll { total } => {
@@ -718,7 +754,8 @@ impl WireFold {
 }
 
 fn opt_f64(v: Option<f64>) -> String {
-    v.map(|x| format!("{x:.3}")).unwrap_or_else(|| "null".into())
+    v.map(|x| format!("{x:.3}"))
+        .unwrap_or_else(|| "null".into())
 }
 fn opt_u64(v: Option<u64>) -> String {
     v.map(|x| x.to_string()).unwrap_or_else(|| "null".into())
@@ -746,10 +783,19 @@ fn the_factorial_first_batch_pass() {
     let s_path = FileId::S.path();
     if !s_path.exists() {
         let cancel = CancelToken::new();
-        let dog = Watchdog::start("generate-S", CEIL_GENERATE, Some(SILENCE_GENERATE), cancel.clone());
+        let dog = Watchdog::start(
+            "generate-S",
+            CEIL_GENERATE,
+            Some(SILENCE_GENERATE),
+            cancel.clone(),
+        );
         let facts = write_geoparquet(&s_path, &spec_s()).expect("generate S");
         dog.finish();
-        say!("generated S: {} features, {} bytes", facts.features, facts.bytes);
+        say!(
+            "generated S: {} features, {} bytes",
+            facts.features,
+            facts.bytes
+        );
     }
     let extent = DeclaredExtent {
         xmin: E_LO,
@@ -757,8 +803,10 @@ fn the_factorial_first_batch_pass() {
         xmax: E_LO + FileId::S.grid_cols() * CELL_M,
         ymax: N_LO + FileId::S.grid_cols() * CELL_M,
     };
-    for (id, order) in [(FileId::C, ClusterOrder::SourceIdentity), (FileId::H, ClusterOrder::Hilbert16)]
-    {
+    for (id, order) in [
+        (FileId::C, ClusterOrder::SourceIdentity),
+        (FileId::H, ClusterOrder::Hilbert16),
+    ] {
         let p = id.path();
         if p.exists() {
             continue;
@@ -833,9 +881,18 @@ fn the_factorial_first_batch_pass() {
 
     // ---- the predicted row counts, asserted (§3) --------------------------------------------
     let mut predicted = Vec::new();
-    for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th] {
+    for v in [
+        ViewId::Whole,
+        ViewId::NearQuarter,
+        ViewId::FarQuarter,
+        ViewId::Sixty4th,
+    ] {
         let n = reference_rows(FileId::S, v);
-        predicted.push(format!("{{\"viewport\":\"{}\",\"rows\":{}}}", v.as_str(), n));
+        predicted.push(format!(
+            "{{\"viewport\":\"{}\",\"rows\":{}}}",
+            v.as_str(),
+            n
+        ));
         say!("viewport {} selects {} rows", v.as_str(), n);
     }
 
@@ -875,7 +932,10 @@ fn the_factorial_first_batch_pass() {
 
     // ---- the trial loop -----------------------------------------------------------------------
     let all = cells();
-    say!("{} cells; n = 7 untraced, 7 traced at the gate viewports, 3 elsewhere", all.len());
+    say!(
+        "{} cells; n = 7 untraced, 7 traced at the gate viewports, 3 elsewhere",
+        all.len()
+    );
     let mut trials: Vec<String> = Vec::new();
     let max_r = all.iter().map(Cell::n).max().unwrap_or(N);
 
@@ -909,7 +969,11 @@ fn the_factorial_first_batch_pass() {
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     let artifact = format!(
@@ -920,7 +984,11 @@ fn the_factorial_first_batch_pass() {
         json_escape(&media_type()),
         fixture_json.join(","),
         predicted.join(","),
-        canaries.iter().map(|c| c.json()).collect::<Vec<_>>().join(","),
+        canaries
+            .iter()
+            .map(|c| c.json())
+            .collect::<Vec<_>>()
+            .join(","),
         spreads
             .iter()
             .map(|(l, s, ok)| format!(
@@ -956,7 +1024,12 @@ fn the_predicted_row_counts_match_the_numbers_registered_before_this_harness() {
     assert_eq!(predicted_rows(FileId::S, ViewId::Sixty4th), 1_600);
     // A rewrite is the same features in a new order, so its counts are its source's.
     for f in [FileId::C5, FileId::H5] {
-        for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th] {
+        for v in [
+            ViewId::Whole,
+            ViewId::NearQuarter,
+            ViewId::FarQuarter,
+            ViewId::Sixty4th,
+        ] {
             assert_eq!(predicted_rows(f, v), predicted_rows(FileId::G5, v));
         }
     }
@@ -985,7 +1058,10 @@ fn the_5gb_clustered_cell() {
 
     let src = FileId::G5.path();
     if !src.exists() {
-        say!("UNMEASURED — the 5 GB fixture is absent at {}", src.display());
+        say!(
+            "UNMEASURED — the 5 GB fixture is absent at {}",
+            src.display()
+        );
         std::fs::write(out_dir.join("first-batch-5gb-clustered.log"), log).ok();
         return;
     }
@@ -999,9 +1075,10 @@ fn the_5gb_clustered_cell() {
         xmax: E_LO + FileId::G5.grid_cols() * CELL_M,
         ymax: N_LO + FileId::G5.grid_cols() * CELL_M,
     };
-    for (id, order) in
-        [(FileId::C5, ClusterOrder::SourceIdentity), (FileId::H5, ClusterOrder::Hilbert16)]
-    {
+    for (id, order) in [
+        (FileId::C5, ClusterOrder::SourceIdentity),
+        (FileId::H5, ClusterOrder::Hilbert16),
+    ] {
         let dst = id.path();
         if dst.exists() {
             say!("{} already present; not rewritten", id.as_str());
@@ -1044,7 +1121,10 @@ fn the_5gb_clustered_cell() {
     for id in [FileId::G5, FileId::C5, FileId::H5] {
         let p = id.path();
         if !p.exists() {
-            say!("UNMEASURED — {} was not produced; its cells do not run", id.as_str());
+            say!(
+                "UNMEASURED — {} was not produced; its cells do not run",
+                id.as_str()
+            );
             continue;
         }
         present.push(id);
@@ -1071,11 +1151,19 @@ fn the_5gb_clustered_cell() {
             row_groups,
             json_escape(&admissible),
         ));
-        say!("fixture {} — {bytes} bytes, {row_groups} row groups, B2 {admissible}", id.as_str());
+        say!(
+            "fixture {} — {bytes} bytes, {row_groups} row groups, B2 {admissible}",
+            id.as_str()
+        );
     }
 
     // ---- A1: row counts predicted by arithmetic, asserted against the scan ---------------------
-    let views = [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter, ViewId::Sixty4th];
+    let views = [
+        ViewId::Whole,
+        ViewId::NearQuarter,
+        ViewId::FarQuarter,
+        ViewId::Sixty4th,
+    ];
     let mut predicted = Vec::new();
     for v in views {
         let want = predicted_rows(FileId::G5, v);
@@ -1141,12 +1229,18 @@ fn the_5gb_clustered_cell() {
     // The source is re-hashed after the last trial, not only before the first.
     let (src_bytes_after, src_hash_after) = file_facts(&src);
     if src_hash_after != src_hash || src_bytes_after != src_bytes {
-        say!("INVALIDATED — the 5 GB source changed during the pass: {src_hash} -> {src_hash_after}");
+        say!(
+            "INVALIDATED — the 5 GB source changed during the pass: {src_hash} -> {src_hash_after}"
+        );
     }
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     let artifact = format!(
@@ -1161,7 +1255,11 @@ fn the_5gb_clustered_cell() {
         src_hash_after,
         fixture_json.join(","),
         predicted.join(","),
-        canaries.iter().map(|c| c.json()).collect::<Vec<_>>().join(","),
+        canaries
+            .iter()
+            .map(|c| c.json())
+            .collect::<Vec<_>>()
+            .join(","),
         spreads
             .iter()
             .map(|(l, s, ok)| format!(
@@ -1174,7 +1272,10 @@ fn the_5gb_clustered_cell() {
     );
     std::fs::write(out_dir.join("first-batch-5gb-clustered.json"), artifact).expect("write");
     std::fs::write(out_dir.join("first-batch-5gb-clustered.log"), log).expect("write log");
-    println!("→ {}", out_dir.join("first-batch-5gb-clustered.json").display());
+    println!(
+        "→ {}",
+        out_dir.join("first-batch-5gb-clustered.json").display()
+    );
 }
 
 /// **Cancellation, re-asserted with row-group pruning in the path.**
@@ -1201,14 +1302,18 @@ fn cancellation_holds_with_pruning_in_the_path() {
     refuse_debug("first_batch_factorial::cancel");
     let out_dir = evidence_dir();
     let path = FileId::S.path();
-    assert!(path.exists(), "run the factorial pass first; this cell reuses its fixture");
+    assert!(
+        path.exists(),
+        "run the factorial pass first; this cell reuses its fixture"
+    );
 
     let mut observed = Vec::new();
     let mut terminal = Vec::new();
     let mut plans = Vec::new();
     for trial in 0..N {
         let ds = Dataset::open(&path).expect("open");
-        ds.build_row_group_index(&CancelToken::new()).expect("build row-group index");
+        ds.build_row_group_index(&CancelToken::new())
+            .expect("build row-group index");
         let q = ViewportQuery::viewport(
             ViewId::NearQuarter.bbox(FileId::S.grid_cols()).unwrap(),
             ds.crs().identifier(),
@@ -1281,7 +1386,10 @@ fn cancellation_holds_with_pruning_in_the_path() {
 
     // The property, asserted. Reported above whatever the verdict, so a miss is a recorded number
     // rather than a lost run.
-    assert!(!got.is_empty(), "no trial produced a `cancel_requested -> cancel_observed` span");
+    assert!(
+        !got.is_empty(),
+        "no trial produced a `cancel_requested -> cancel_observed` span"
+    );
     let worst = sorted(&got).last().copied().unwrap();
     assert!(
         worst < 100.0,
@@ -1338,7 +1446,8 @@ fn cancellation_holds_with_pruning_in_the_path_on_h5() {
     let mut plans = Vec::new();
     for trial in 0..N {
         let ds = Dataset::open(&path).expect("open");
-        ds.build_row_group_index(&CancelToken::new()).expect("build row-group index");
+        ds.build_row_group_index(&CancelToken::new())
+            .expect("build row-group index");
         let q = ViewportQuery::viewport(
             ViewId::NearQuarter.bbox(FileId::H5.grid_cols()).unwrap(),
             ds.crs().identifier(),
@@ -1413,7 +1522,10 @@ fn cancellation_holds_with_pruning_in_the_path_on_h5() {
 
     // The property, asserted. Reported above whatever the verdict, so a miss is a recorded number
     // rather than a lost run.
-    assert!(!got.is_empty(), "no trial produced a `cancel_requested -> cancel_observed` span");
+    assert!(
+        !got.is_empty(),
+        "no trial produced a `cancel_requested -> cancel_observed` span"
+    );
     let worst = sorted(&got).last().copied().unwrap();
     assert!(
         worst < 100.0,
@@ -1462,7 +1574,10 @@ fn the_5gb_spot_cells() {
     if !path.exists() {
         // Record and proceed — this phase refuses to generate a 5 GB fixture, so an absent one is
         // an `unmeasured` phase rather than a 30-minute improvisation.
-        say!("UNMEASURED — the 5 GB fixture is absent at {}", path.display());
+        say!(
+            "UNMEASURED — the 5 GB fixture is absent at {}",
+            path.display()
+        );
         std::fs::write(out_dir.join("first-batch-5gb.log"), log).ok();
         return;
     }
@@ -1489,7 +1604,11 @@ fn the_5gb_spot_cells() {
     let mut predicted = Vec::new();
     for v in [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter] {
         let n = reference_rows(FileId::G5, v);
-        predicted.push(format!("{{\"viewport\":\"{}\",\"rows\":{}}}", v.as_str(), n));
+        predicted.push(format!(
+            "{{\"viewport\":\"{}\",\"rows\":{}}}",
+            v.as_str(),
+            n
+        ));
         say!("viewport {} selects {} rows", v.as_str(), n);
     }
 
@@ -1500,13 +1619,15 @@ fn the_5gb_spot_cells() {
     let cells: Vec<Cell> = [BatchId::SizeOnly, BatchId::Budgeted]
         .iter()
         .flat_map(|&batch| {
-            [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter].iter().map(move |&view| Cell {
-                file: FileId::G5,
-                plan: PlanId::ScanOnly,
-                batch,
-                view,
-                traced: false,
-            })
+            [ViewId::Whole, ViewId::NearQuarter, ViewId::FarQuarter]
+                .iter()
+                .map(move |&view| Cell {
+                    file: FileId::G5,
+                    plan: PlanId::ScanOnly,
+                    batch,
+                    view,
+                    traced: false,
+                })
         })
         .collect();
     say!("{} cells at 5 GB, n = {N}", cells.len());
@@ -1542,7 +1663,11 @@ fn the_5gb_spot_cells() {
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     let artifact = format!(
@@ -1594,17 +1719,29 @@ fn spawn_trial(exe: &Path, cell: &Cell, slot: &Path) -> std::result::Result<Stri
     };
     let started = Instant::now();
     let out = Command::new(exe)
-        .args(["night_trial_child", "--exact", "--nocapture", "--test-threads=1"])
+        .args([
+            "night_trial_child",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+        ])
         .env(CELL_VAR, cell.label())
         .env(OUT_VAR, slot)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
     if started.elapsed() > ceiling {
-        return Err(format!("exceeded the declared {} s trial ceiling", ceiling.as_secs()));
+        return Err(format!(
+            "exceeded the declared {} s trial ceiling",
+            ceiling.as_secs()
+        ));
     }
     if !out.status.success() {
-        let tail: String =
-            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        let tail: String = String::from_utf8_lossy(&out.stderr)
+            .lines()
+            .rev()
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(" / ");
         return Err(format!("child exited {:?}: {tail}", out.status.code()));
     }
     std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
@@ -1630,10 +1767,11 @@ fn reference_rows(file: FileId, v: ViewId) -> u64 {
 }
 
 fn file_facts(p: &Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());
     (md.len(), hash)
 }
-

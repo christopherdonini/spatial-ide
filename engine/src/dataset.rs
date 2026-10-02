@@ -18,12 +18,12 @@ use crate::addressability::{not_addressable, not_addressable_for_field, render_v
 use crate::cancel::CancelToken;
 use crate::crs::{self, CrsAssertion, DatasetCrs};
 use crate::envelope::{BatchEnvelope, ID_COLUMN};
-use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
-use crate::index;
-use crate::rowgroup;
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, GeoMeta};
+use crate::identity::{self, DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration};
+use crate::index;
 use crate::pool::{ConnectionPool, Lease, LeaseClass, PoolConfig};
+use crate::rowgroup;
 
 /// Process-wide, in-memory index cache. Not persisted — persisting is the trigger
 /// `kernel/README.md` names for `docs/11`'s ResourceRef model and ADR-005's grades, and that needs
@@ -219,7 +219,13 @@ impl SourceLicense {
 impl Dataset {
     /// Open a GeoParquet file whose CRS the file itself declares.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        Self::open_inner(path.as_ref(), None, None, &CancelToken::new(), PoolConfig::default())
+        Self::open_inner(
+            path.as_ref(),
+            None,
+            None,
+            &CancelToken::new(),
+            PoolConfig::default(),
+        )
     }
 
     /// Open a GeoParquet file, supplying a CRS for the case where the file declares none.
@@ -248,7 +254,13 @@ impl Dataset {
         identity: IdentityDeclaration,
         cancel: &CancelToken,
     ) -> Result<Self> {
-        Self::open_inner(path.as_ref(), None, Some(identity), cancel, PoolConfig::default())
+        Self::open_inner(
+            path.as_ref(),
+            None,
+            Some(identity),
+            cancel,
+            PoolConfig::default(),
+        )
     }
 
     /// Open with an explicit connection configuration.
@@ -263,7 +275,13 @@ impl Dataset {
         assertion: Option<CrsAssertion>,
         connections: PoolConfig,
     ) -> Result<Self> {
-        Self::open_inner(path.as_ref(), assertion, None, &CancelToken::new(), connections)
+        Self::open_inner(
+            path.as_ref(),
+            assertion,
+            None,
+            &CancelToken::new(),
+            connections,
+        )
     }
 
     /// Open with every admission parameter exposed, and a caller-held cancel token.
@@ -281,7 +299,13 @@ impl Dataset {
         cancel: &CancelToken,
         connections: PoolConfig,
     ) -> Result<Self> {
-        Self::open_inner(path.as_ref(), assertion, declared_identity, cancel, connections)
+        Self::open_inner(
+            path.as_ref(),
+            assertion,
+            declared_identity,
+            cancel,
+            connections,
+        )
     }
 
     fn open_inner(
@@ -301,7 +325,10 @@ impl Dataset {
             return Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail });
         }
         if !path.is_file() {
-            return Err(EngineError::Source(format!("{} is not a readable file", path.display())));
+            return Err(EngineError::Source(format!(
+                "{} is not a readable file",
+                path.display()
+            )));
         }
         let path_str = path
             .to_str()
@@ -335,7 +362,10 @@ impl Dataset {
             )));
         }
         if !geo.geometry_types.is_empty()
-            && !geo.geometry_types.iter().all(|t| t.eq_ignore_ascii_case("Polygon"))
+            && !geo
+                .geometry_types
+                .iter()
+                .all(|t| t.eq_ignore_ascii_case("Polygon"))
         {
             return Err(EngineError::GeoMetadata(format!(
                 "geometry_types {:?} include non-polygon types; this slice reads polygons only",
@@ -352,7 +382,10 @@ impl Dataset {
 
         // The asserted axis order comes from the caller's own definition when it supplied one.
         // This engine never supplies an axis order it did not read somewhere.
-        let asserted_axis = match assertion.as_ref().and_then(|a| a.definition_json.as_deref()) {
+        let asserted_axis = match assertion
+            .as_ref()
+            .and_then(|a| a.definition_json.as_deref())
+        {
             Some(def) => {
                 let v: serde_json::Value = serde_json::from_str(def)
                     .map_err(|e| EngineError::GeoMetadata(format!("asserted definition: {e}")))?;
@@ -422,7 +455,10 @@ impl Dataset {
                 // bookkeeping. This cut already owns the variant for exactly that condition, and
                 // using it keeps one inconsistency one dataset's problem (P3 attempt-2 should-fix).
                 crs::CrsSource::FormatRule => {
-                    debug_assert!(false, "`FormatRule` is stamped below this match, not above it");
+                    debug_assert!(
+                        false,
+                        "`FormatRule` is stamped below this match, not above it"
+                    );
                     return Err(EngineError::InternalInconsistency {
                         detail: format!(
                             "{} reached the provenance match already recorded as `crs_source = \
@@ -483,8 +519,15 @@ impl Dataset {
 
         // The sanity check (R-S1…R-S3), before the identity scan: a file the format's own default
         // is contradicted by is refused on that ground, which is the first outcome it reaches.
-        let (sanity_level, sanity_reason) =
-            sanity_check(conn, &path_str, &geo, &file_schema, crs_provenance, &semantics, cancel)?;
+        let (sanity_level, sanity_reason) = sanity_check(
+            conn,
+            &path_str,
+            &geo,
+            &file_schema,
+            crs_provenance,
+            &semantics,
+            cancel,
+        )?;
 
         // **The coordinate unit comes from one of the two sources this admission has, or from
         // neither.** `crs.definition_json()` is the PROJJSON that was admitted — the file's, or the
@@ -597,7 +640,9 @@ impl Dataset {
     pub fn duckdb_version(&self) -> Result<String> {
         let lease = self.pool.acquire(LeaseClass::Maintenance)?;
         let version: std::result::Result<String, _> =
-            lease.connection().query_row("SELECT version()", [], |r| r.get(0));
+            lease
+                .connection()
+                .query_row("SELECT version()", [], |r| r.get(0));
         match version {
             Ok(v) => {
                 lease.release_healthy();
@@ -633,7 +678,8 @@ impl Dataset {
         cancel: &CancelToken,
         on_progress: Option<&mut dyn FnMut(u64, u64)>,
     ) -> Result<(crate::pin::ContentPin, f64)> {
-        let (pin, millis) = crate::pin::ContentPin::take_with_progress(self.path(), cancel, on_progress)?;
+        let (pin, millis) =
+            crate::pin::ContentPin::take_with_progress(self.path(), cancel, on_progress)?;
         *self.pin.lock().unwrap_or_else(|e| e.into_inner()) = Some(pin.clone());
         Ok((pin, millis))
     }
@@ -771,7 +817,13 @@ impl Dataset {
         INDEX_CONSULTATIONS.fetch_add(1, Ordering::SeqCst);
         let hash = INDEX_CACHE.hash_for(self.path())?;
         let key = index::IndexKey::new(hash, self.identity().source().source_column());
-        INDEX_CACHE.get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref()).ok()
+        INDEX_CACHE
+            .get(
+                self.path(),
+                &key,
+                index::ValidityHeuristic::of(self.path()).as_ref(),
+            )
+            .ok()
     }
 
     /// Build (or reuse) this dataset's **row-group** index — lever B2 of the first-batch cut.
@@ -796,12 +848,14 @@ impl Dataset {
         observer: Option<&dyn index::IndexPhaseObserver>,
     ) -> Result<RowGroupReport> {
         let covering = self.covering().ok_or_else(|| EngineError::NoCoveringBbox {
-            detail: self.no_covering_bbox_detail(", so a row group has no envelope to reason about"),
+            detail: self
+                .no_covering_bbox_detail(", so a row group has no envelope to reason about"),
         })?;
 
         index::observe(observer, index::IndexPhase::ContentHash);
         let (content_hash, hash_millis) = index::content_hash(self.path(), cancel)?;
-        let key = rowgroup::RowGroupKey::new(content_hash, self.identity().source().source_column());
+        let key =
+            rowgroup::RowGroupKey::new(content_hash, self.identity().source().source_column());
         let validity = index::ValidityHeuristic::of(self.path());
 
         match ROW_GROUP_CACHE.get(self.path(), &key, validity.as_ref()) {
@@ -877,7 +931,11 @@ impl Dataset {
         let hash = ROW_GROUP_CACHE.hash_for(self.path())?;
         let key = rowgroup::RowGroupKey::new(hash, self.identity().source().source_column());
         ROW_GROUP_CACHE
-            .get(self.path(), &key, index::ValidityHeuristic::of(self.path()).as_ref())
+            .get(
+                self.path(),
+                &key,
+                index::ValidityHeuristic::of(self.path()).as_ref(),
+            )
             .ok()
     }
 
@@ -1072,7 +1130,10 @@ fn probe_schema(conn: &Connection, path: &str) -> Result<SchemaRef> {
             }
         })
         .collect();
-    Ok(Arc::new(Schema::new_with_metadata(fields, exported.metadata().clone())))
+    Ok(Arc::new(Schema::new_with_metadata(
+        fields,
+        exported.metadata().clone(),
+    )))
 }
 
 /// The range check — **R-S1…R-S3** (`engine/ADMISSION-PREREGISTRATION.md` §2c), and **a sanity
@@ -1168,7 +1229,12 @@ fn sanity_check(
     // fails later at query; this cut leaves that behaviour alone and records the level as `none`
     // with the reason, rather than making open refuse — that would be a user-visible behaviour
     // change, and it is on the preregistration's human list (§12d), not taken here.
-    let paths = [&covering.xmin, &covering.ymin, &covering.xmax, &covering.ymax];
+    let paths = [
+        &covering.xmin,
+        &covering.ymin,
+        &covering.xmax,
+        &covering.ymax,
+    ];
     if let Some(missing) = paths.iter().find(|p| !field_path_exists(schema, p)) {
         return Ok((
             SanityLevel::NotChecked,
@@ -1204,9 +1270,7 @@ fn sanity_check(
         // where N came from is a separate fact and is recorded as one.
         Some(rows) if rows > cap => (
             format!("the first {limit} row(s), N capped at the declared ceiling"),
-            format!(
-                ", the first row group carrying {rows} rows and the ceiling being {cap} rows"
-            ),
+            format!(", the first row group carrying {rows} rows and the ceiling being {cap} rows"),
         ),
         Some(rows) => (
             format!("the first {limit} row(s), N = the first row group's row count ({rows})"),
@@ -1305,11 +1369,17 @@ fn covering_not_addressable_reason(covering: &CoveringBbox) -> Option<String> {
 /// Whether a covering path resolves to a real field, walking struct children.
 fn field_path_exists(schema: &SchemaRef, path: &crate::geoparquet::FieldPath) -> bool {
     let mut segments = path.0.iter();
-    let Some(first) = segments.next() else { return false };
-    let Some(field) = schema.fields().iter().find(|f| f.name() == first) else { return false };
+    let Some(first) = segments.next() else {
+        return false;
+    };
+    let Some(field) = schema.fields().iter().find(|f| f.name() == first) else {
+        return false;
+    };
     let mut current = field.clone();
     for segment in segments {
-        let DataType::Struct(children) = current.data_type() else { return false };
+        let DataType::Struct(children) = current.data_type() else {
+            return false;
+        };
         match children.iter().find(|f| f.name() == segment) {
             Some(child) => current = child.clone(),
             None => return false,
@@ -1386,7 +1456,11 @@ fn covering_statistics(
             )
             .map_err(|e| EngineError::Source(format!("prepare parquet metadata: {e}")))?;
         stmt.query_map([path], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, Option<String>>(2)?))
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, Option<String>>(1)?,
+                row.get::<_, Option<String>>(2)?,
+            ))
         })
         .map_err(|e| EngineError::Source(format!("read parquet metadata: {e}")))?
         .collect::<std::result::Result<Vec<_>, _>>()
@@ -1455,10 +1529,12 @@ fn covering_sample(
         let mut stmt = conn
             .prepare(&sql)
             .map_err(|e| EngineError::Query(format!("prepare covering sample: {e}")))?;
-        let mut rows =
-            stmt.query([]).map_err(|e| EngineError::Query(format!("covering sample: {e}")))?;
-        let Some(row) =
-            rows.next().map_err(|e| EngineError::Query(format!("covering sample: {e}")))?
+        let mut rows = stmt
+            .query([])
+            .map_err(|e| EngineError::Query(format!("covering sample: {e}")))?;
+        let Some(row) = rows
+            .next()
+            .map_err(|e| EngineError::Query(format!("covering sample: {e}")))?
         else {
             return Ok(None);
         };
@@ -1555,7 +1631,15 @@ fn admit_identity(
     let (source, column, skip) = match declared {
         Some(d) => {
             let col = d.column.clone();
-            (IdSource::Mapped { column: col.clone(), by: d.by, at: d.at }, col, d.skip_uniqueness_check)
+            (
+                IdSource::Mapped {
+                    column: col.clone(),
+                    by: d.by,
+                    at: d.at,
+                },
+                col,
+                d.skip_uniqueness_check,
+            )
         }
         None => (IdSource::File, ID_COLUMN.to_string(), false),
     };
@@ -1609,7 +1693,12 @@ fn admit_identity(
     if skip {
         // Recorded, not hidden. A caller may take responsibility for uniqueness; it may not make
         // that invisible to the consumer downstream of it.
-        return Ok(DatasetIdentity::new(source, IdUniqueness::DeclaredNotVerified, None, None));
+        return Ok(DatasetIdentity::new(
+            source,
+            IdUniqueness::DeclaredNotVerified,
+            None,
+            None,
+        ));
     }
 
     // **One pass, three questions.** Row count, distinct count and the extreme values come from a
@@ -1687,8 +1776,12 @@ fn run_identity_scan(
         .next()
         .map_err(|e| EngineError::Query(format!("identity scan: {e}")))?
         .ok_or_else(|| EngineError::Query("identity scan returned no row".into()))?;
-    let count: i64 = row.get(0).map_err(|e| EngineError::Query(format!("count: {e}")))?;
-    let distinct: i64 = row.get(1).map_err(|e| EngineError::Query(format!("distinct: {e}")))?;
+    let count: i64 = row
+        .get(0)
+        .map_err(|e| EngineError::Query(format!("count: {e}")))?;
+    let distinct: i64 = row
+        .get(1)
+        .map_err(|e| EngineError::Query(format!("distinct: {e}")))?;
     // **NULL and "did not convert" are different answers and must not share a branch.**
     //
     // `Option<i64>` distinguishes them: MIN/MAX are NULL for an empty file, which is zero features
@@ -1737,7 +1830,10 @@ fn check_geometry_column(schema: &SchemaRef, geometry_column: &str) -> Result<()
             fact.render()
         )));
     }
-    if !matches!(geom.data_type(), DataType::Binary | DataType::LargeBinary | DataType::BinaryView) {
+    if !matches!(
+        geom.data_type(),
+        DataType::Binary | DataType::LargeBinary | DataType::BinaryView
+    ) {
         return Err(EngineError::Source(format!(
             "geometry column `{geometry_column}` is {}; WKB must be a binary column",
             geom.data_type()

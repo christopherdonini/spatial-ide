@@ -31,7 +31,9 @@ use spatial_engine::fixture::{
 use spatial_engine::trace::{self, TraceKey};
 use spatial_kernel::skp::{session_end_channel, GenerationRegistry, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, StreamParams, OPERATION};
-use spatial_skp::v0::{DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION};
+use spatial_skp::v0::{
+    DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION,
+};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 
@@ -53,8 +55,16 @@ fn fixture(name: &str, features: usize) -> std::path::PathBuf {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join(format!("skp-admission-{name}.parquet"));
-    write_geoparquet(&path, &FixtureSpec { features, avg_vertices: 12, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features,
+            avg_vertices: 12,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -89,20 +99,31 @@ fn duckdb_filter(predicate: &str) -> Filter {
 /// to prove a filtered stream's shape, not the fuller per-row decode `end_to_end.rs`'s `Collected`
 /// performs.
 fn batch_row_count(payload: &[u8]) -> usize {
-    let mut rdr =
-        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None)
+        .expect("ipc");
     rdr.next().expect("one batch").expect("decode").num_rows()
 }
 
 async fn connect(dp: &RunningDataPlane) -> Client {
-    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -110,10 +131,18 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
     let path = fixture("basic", 12_000);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -128,7 +157,11 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
         .expect("viewport_query");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -136,12 +169,18 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
     .expect("serve");
 
     let mut c = connect(&dp).await;
-    let start_frame =
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()));
-    c.send(Message::Binary(start_frame.into())).await.expect("start");
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
+    let start_frame = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()),
+    );
+    c.send(Message::Binary(start_frame.into()))
         .await
-        .expect("credit");
+        .expect("start");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     let mut saw_batch = false;
     loop {
@@ -159,9 +198,13 @@ async fn a_ticket_redeemed_stream_is_json_free_and_leaks_no_handle_text() {
         }
     }
 
-    assert!(saw_batch, "a ticket-redeemed stream must still deliver batches");
+    assert!(
+        saw_batch,
+        "a ticket-redeemed stream must still deliver batches"
+    );
     assert_eq!(
-        dp.json_frames_seen.load(std::sync::atomic::Ordering::SeqCst),
+        dp.json_frames_seen
+            .load(std::sync::atomic::Ordering::SeqCst),
         0,
         "no JSON may appear on the data path for a ticket-redeemed stream either (ADR-004)"
     );
@@ -175,11 +218,17 @@ async fn a_raw_stream_params_start_is_refused_in_ticket_only_mode() {
     let path = fixture("refuse-raw", 1_000);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            GenerationRegistry::new(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -187,22 +236,42 @@ async fn a_raw_stream_params_start_is_refused_in_ticket_only_mode() {
     .expect("serve");
 
     let mut c = connect(&dp).await;
-    let raw = StreamParams { dataset: handle.as_str().to_string(), bbox: None, bbox_crs: None, limit: None };
-    let start_frame = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &raw.encode()));
-    c.send(Message::Binary(start_frame.into())).await.expect("start");
+    let raw = StreamParams {
+        dataset: handle.as_str().to_string(),
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+    };
+    let start_frame = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &raw.encode()),
+    );
+    c.send(Message::Binary(start_frame.into()))
+        .await
+        .expect("start");
 
     let msg = tokio::time::timeout(RECV_DEADLINE, c.next())
         .await
         .expect("no timeout")
         .expect("a frame")
         .expect("not a transport error");
-    let Message::Binary(b) = msg else { panic!("expected a binary frame") };
-    assert_eq!(b.first(), Some(&wire::TAG_TERMINAL), "a raw StreamParams START must be refused, not silently accepted");
-    assert_eq!(b.get(wire::FRAME_PREFIX_LEN), Some(&wire::TERM_PRODUCER_FAILED));
+    let Message::Binary(b) = msg else {
+        panic!("expected a binary frame")
+    };
+    assert_eq!(
+        b.first(),
+        Some(&wire::TAG_TERMINAL),
+        "a raw StreamParams START must be refused, not silently accepted"
+    );
+    assert_eq!(
+        b.get(wire::FRAME_PREFIX_LEN),
+        Some(&wire::TERM_PRODUCER_FAILED)
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_longer_authenticates_it() {
+async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_longer_authenticates_it(
+) {
     // ADR-020: `frontends/shell`'s Tauri webview origin (`http://localhost:5180` under `tauri
     // dev`) has nothing to do with the data plane's own OS-assigned port, so `Session::new`'s
     // derivation (`http://127.0.0.1:<port>`) could never match it -- every stream this shell ever
@@ -212,11 +281,17 @@ async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_l
     let path = fixture("webview-origin", 1_000);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            GenerationRegistry::new(),
+        )),
         static_dir: None,
         expected_origin: Some("http://localhost:5180".to_string()),
     })
@@ -224,23 +299,38 @@ async fn a_declared_webview_origin_is_admitted_and_the_port_derived_default_no_l
     .expect("serve");
 
     // The shell's real dev-mode origin: admitted.
-    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut().insert("origin", "http://localhost:5180".parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut()
+        .insert("origin", "http://localhost:5180".parse().unwrap());
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("the shell's declared webview origin must be admitted");
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("the shell's declared webview origin must be admitted");
 
     // The port-derived origin `Session::new` would have used -- no longer authoritative once
     // `expected_origin` is declared. This is the exact request shape the pre-fix code accepted and
     // the post-fix code must reject.
-    let mut wrong = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    wrong.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut wrong = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    wrong.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     wrong.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
     assert!(
         tokio_tungstenite::connect_async(wrong).await.is_err(),
@@ -266,23 +356,36 @@ async fn a_declared_origin_with_a_wrong_token_is_refused_as_a_credential_rejecti
     let path = fixture("wrong-token", 1_000);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, GenerationRegistry::new())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            GenerationRegistry::new(),
+        )),
         static_dir: None,
         expected_origin: Some("http://localhost:5180".to_string()),
     })
     .await
     .expect("serve");
 
-    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut().insert("origin", "http://localhost:5180".parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut()
+        .insert("origin", "http://localhost:5180".parse().unwrap());
     // A well-formed but wrong token -- same shape `Session::token_matches` expects, differing
     // credential.
-    req.headers_mut()
-        .insert("sec-websocket-protocol", format!("{SUBPROTOCOL}, tok.{}", "0".repeat(64)).parse().unwrap());
+    req.headers_mut().insert(
+        "sec-websocket-protocol",
+        format!("{SUBPROTOCOL}, tok.{}", "0".repeat(64))
+            .parse()
+            .unwrap(),
+    );
 
     let err = tokio_tungstenite::connect_async(req)
         .await
@@ -303,10 +406,18 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
     let path = fixture("crs-mismatch", 100);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog, tickets, watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog,
+        tickets,
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let bbox = spatial_skp::v0::Bbox {
         xmin: spatial_skp::v0::HexF64(0.0),
@@ -330,7 +441,11 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
     // the exact prose the cut brief requires the shell to show.
     assert_eq!(err.code, "engine.viewport_crs_mismatch");
     assert!(err.message.contains("EPSG:4326"), "{}", err.message);
-    assert!(err.message.contains("performs no reprojection"), "{}", err.message);
+    assert!(
+        err.message.contains("performs no reprojection"),
+        "{}",
+        err.message
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -342,8 +457,8 @@ async fn viewport_query_refuses_synchronously_on_a_crs_mismatch_before_minting_a
 /// count for that zone — not merely "some nonzero subset", which a vacuous or off-by-everything
 /// filter could also produce.
 #[tokio::test(flavor = "multi_thread")]
-async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_subset_stream_over_the_wire()
-{
+async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_subset_stream_over_the_wire(
+) {
     let (path, facts) = fixture_zoned("filter-valid", 4_000);
     assert!(
         facts.zone_counts.iter().all(|&n| n > 0),
@@ -354,10 +469,18 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
 
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -372,7 +495,11 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
         .expect("a real, admitted predicate must not be refused");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -380,12 +507,18 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
     .expect("serve");
 
     let mut c = connect(&dp).await;
-    let start_frame =
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()));
-    c.send(Message::Binary(start_frame.into())).await.expect("start");
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
+    let start_frame = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()),
+    );
+    c.send(Message::Binary(start_frame.into()))
         .await
-        .expect("credit");
+        .expect("start");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     let mut rows = 0usize;
     let mut terminal = None;
@@ -396,7 +529,9 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
             Err(_) => panic!("timed out waiting for a frame"),
         };
         let Message::Binary(b) = msg else { continue };
-        let Some(len) = wire::payload_len(&b) else { continue };
+        let Some(len) = wire::payload_len(&b) else {
+            continue;
+        };
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
         match b.first() {
             Some(&wire::TAG_BATCH) => rows += batch_row_count(payload),
@@ -426,15 +561,23 @@ async fn a_filtered_viewport_query_with_a_valid_predicate_delivers_a_correctly_s
 /// `kernel::skp`): zero tickets exist for this dataset, because `AdmittedPredicate::admit` refused
 /// before `SkpHost::viewport_query` ever reached `open_engine_stream`'s lease or `tickets.mint`.
 #[tokio::test(flavor = "multi_thread")]
-async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronously_and_mints_no_ticket()
-{
+async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronously_and_mints_no_ticket(
+) {
     let (path, _facts) = fixture_zoned("filter-invalid", 500);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog, tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog,
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let err = host
         .viewport_query(ViewportQueryRequest {
@@ -449,7 +592,10 @@ async fn a_filtered_viewport_query_with_an_invalid_predicate_refuses_synchronous
         .expect_err("a predicate naming a column this dataset does not carry must be refused");
 
     assert_eq!(err.code, "skp.filter_unknown_column");
-    assert_eq!(err.fields.get("column").map(String::as_str), Some("nonexistent_column_xyz"));
+    assert_eq!(
+        err.fields.get("column").map(String::as_str),
+        Some("nonexistent_column_xyz")
+    );
 
     assert_eq!(
         tickets.cancel_all_for_dataset(handle.as_str()),
@@ -570,10 +716,14 @@ async fn opening_a_source_with_no_crs_key_is_admitted_under_the_format_default()
         .open(handle.as_str(), &path, None)
         .expect("an absent `crs` key is admitted under the format's own published rule");
 
-    let ds = catalog.get(handle.as_str()).expect("the admitted dataset is in the catalog");
+    let ds = catalog
+        .get(handle.as_str())
+        .expect("the admitted dataset is in the catalog");
     assert_eq!(ds.crs().identifier(), "OGC:CRS84");
 
-    let admission = ds.admission().expect("an admitted dataset carries its admission record");
+    let admission = ds
+        .admission()
+        .expect("an admitted dataset carries its admission record");
     assert_eq!(admission.crs_provenance.as_str(), "crs:format-default");
     assert_eq!(
         admission.format_rule_reference.as_deref(),
@@ -654,12 +804,23 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     let path = fixture("cancel", 200_000);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
-    assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+    assert!(
+        !trace::is_enabled(),
+        "tracing is off unless a trace is started"
+    );
     let guard = trace::start(TraceKey {
         dataset: handle.as_str().to_string(),
         physical_id: 0,
@@ -682,7 +843,11 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     let stream_handle = ticket.stream.clone();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -690,14 +855,20 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     .expect("serve");
 
     let mut c = connect(&dp).await;
-    let start_frame =
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, stream_handle.as_str().as_bytes()));
-    c.send(Message::Binary(start_frame.into())).await.expect("start");
+    let start_frame = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, stream_handle.as_str().as_bytes()),
+    );
+    c.send(Message::Binary(start_frame.into()))
+        .await
+        .expect("start");
     // Scarce credit: enough to let the producer actually start moving rows, not enough to let a
     // 200,000-feature fixture finish before the cancel below has a chance to land.
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &2u32.to_be_bytes()).into()))
-        .await
-        .expect("credit");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &2u32.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     // Wait for the stream to be genuinely producing before cancelling — cancelling an operation
     // that has not started anything yet would prove nothing about mid-flight observation. The loop
@@ -714,8 +885,10 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
         }
     }
 
-    let outcome =
-        host.cancel(spatial_skp::v0::CancelRequest { skp: SKP_VERSION.to_string(), handle: stream_handle.as_str().to_string() });
+    let outcome = host.cancel(spatial_skp::v0::CancelRequest {
+        skp: SKP_VERSION.to_string(),
+        handle: stream_handle.as_str().to_string(),
+    });
     assert_eq!(outcome.unwrap().state, "requested");
 
     // Drain to a terminal. `SkpHost::cancel` interrupts the engine directly (ADR-019's Consequences); the
@@ -747,7 +920,8 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
     let observed = trace.first(trace::PRODUCER_CANCELLED);
     drop(guard);
 
-    let requested = requested.expect("cancel_requested must be stamped — CancelToken::cancel() ran");
+    let requested =
+        requested.expect("cancel_requested must be stamped — CancelToken::cancel() ran");
     let observed = observed.expect(
         "cancel_observed must be stamped — the producer must notice the interrupt and stop \
          advancing, per ADR-018 item 1",

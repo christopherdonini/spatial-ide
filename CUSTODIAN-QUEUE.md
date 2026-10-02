@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e332bd6e44f50f8933d3525`) at `2026-10-02T16:43:41.868Z`.
+Generated from `PLAN.yaml` (sha256 `cba887dd844679fea39834af35141fcdf54eba7971eeb7f791a7735118007c7b`) at `2026-10-02T21:53:38.554Z`.
 
 ## 1. Next
 
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`)
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`)
 
 ## 2. Ready
 
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 180 min)
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,6 @@ Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e33
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: workspace-rustfmt
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
@@ -34,12 +33,11 @@ Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e33
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — blocked by: workspace-rustfmt
 
 ## 5. In progress
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
-- **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — evidence: branch `cut/skp-cancel-state-closed-set`
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
 
 ## 6. Proposed / unscheduled
 
@@ -86,6 +84,9 @@ Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e33
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
 - **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
+- **skp-closed-domain-response-strings** — Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others) (phase `prototype`) — never queued until placed
+- **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (phase `prototype`) — never queued until placed
+- **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

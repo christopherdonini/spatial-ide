@@ -33,8 +33,8 @@ use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use parquet::arrow::ArrowWriter;
 use parquet::basic::Compression;
-use parquet::file::properties::{EnabledStatistics, WriterProperties};
 use parquet::file::metadata::KeyValue;
+use parquet::file::properties::{EnabledStatistics, WriterProperties};
 
 use duckdb::Connection;
 
@@ -56,8 +56,9 @@ pub const LV95_PROJJSON: &str = include_str!("../tests/data/epsg2056.projjson");
 /// such a connection; every `engine/tests/*.rs` site routes through it instead of repeating
 /// `Connection::open_in_memory()` and the configuration call separately.
 pub fn configured_connection() -> Result<Connection> {
-    let conn = Connection::open_in_memory()
-        .map_err(|e| EngineError::ConnectionSetup { detail: format!("open: {e}") })?;
+    let conn = Connection::open_in_memory().map_err(|e| EngineError::ConnectionSetup {
+        detail: format!("open: {e}"),
+    })?;
     crate::pool::configure_connection(&conn)?;
     Ok(conn)
 }
@@ -589,7 +590,11 @@ fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) ->
     };
     let mut fields = vec![Arc::new(id_field)];
     if with_bbox {
-        fields.push(Arc::new(Field::new("bbox", DataType::Struct(bbox_fields()), false)));
+        fields.push(Arc::new(Field::new(
+            "bbox",
+            DataType::Struct(bbox_fields()),
+            false,
+        )));
     }
     // Column order is declared, and geometry stays last. File bytes depend on it, so it is a
     // decision rather than an accident of where the code was edited.
@@ -880,18 +885,39 @@ fn generate(
     match spec.license {
         LicenseMode::NotDeclared => {}
         LicenseMode::DeclaredBySource => {
-            kv.push(KeyValue::new("license".to_string(), "CC-BY-4.0".to_string()));
-            kv.push(KeyValue::new("attribution".to_string(), "(c) Example Cadastre".to_string()));
-            kv.push(KeyValue::new("redistribution".to_string(), "permitted".to_string()));
+            kv.push(KeyValue::new(
+                "license".to_string(),
+                "CC-BY-4.0".to_string(),
+            ));
+            kv.push(KeyValue::new(
+                "attribution".to_string(),
+                "(c) Example Cadastre".to_string(),
+            ));
+            kv.push(KeyValue::new(
+                "redistribution".to_string(),
+                "permitted".to_string(),
+            ));
         }
         LicenseMode::AttributionWithoutLicenseName => {
             // No `license` key. The publisher must carry the absence rather than name it.
-            kv.push(KeyValue::new("attribution".to_string(), "(c) Example Cadastre".to_string()));
-            kv.push(KeyValue::new("redistribution".to_string(), "permitted".to_string()));
+            kv.push(KeyValue::new(
+                "attribution".to_string(),
+                "(c) Example Cadastre".to_string(),
+            ));
+            kv.push(KeyValue::new(
+                "redistribution".to_string(),
+                "permitted".to_string(),
+            ));
         }
         LicenseMode::ForbidsRedistribution => {
-            kv.push(KeyValue::new("license".to_string(), "internal-only".to_string()));
-            kv.push(KeyValue::new("redistribution".to_string(), "forbidden".to_string()));
+            kv.push(KeyValue::new(
+                "license".to_string(),
+                "internal-only".to_string(),
+            ));
+            kv.push(KeyValue::new(
+                "redistribution".to_string(),
+                "forbidden".to_string(),
+            ));
         }
     }
     let builder = WriterProperties::builder()
@@ -913,7 +939,12 @@ fn generate(
     let mut rng = SplitMix64(spec.seed);
     let mut facts = FixtureFacts {
         min_vertices_per_feature: usize::MAX,
-        extent: [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY],
+        extent: [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ],
         ..Default::default()
     };
 
@@ -962,8 +993,12 @@ fn generate(
             let id = (written + i) as u64;
             let rings = parcel(&mut rng, spec, id);
 
-            let (mut xmin, mut ymin, mut xmax, mut ymax) =
-                (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            let (mut xmin, mut ymin, mut xmax, mut ymax) = (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            );
             for ring in &rings {
                 facts.rings += 1;
                 for p in ring {
@@ -994,13 +1029,18 @@ fn generate(
                 IdentityMode::StringIds => string_ids.append_value(format!("key-{id}")),
                 _ => ids.append_value(id),
             }
-            if spec.attributes == AttributeMode::CategoricalZone || spec.attributes == AttributeMode::MultiType {
+            if spec.attributes == AttributeMode::CategoricalZone
+                || spec.attributes == AttributeMode::MultiType
+            {
                 // Derived from `(seed, id)` and **not** from `rng`, so the geometry above is
                 // untouched by this column's existence.
                 match zone_for(spec.seed, id) {
                     Some(v) => {
                         zones.append_value(v);
-                        let k = ZONE_VALUES.iter().position(|z| *z == v).expect("declared value");
+                        let k = ZONE_VALUES
+                            .iter()
+                            .position(|z| *z == v)
+                            .expect("declared value");
                         facts.zone_counts[k] += 1;
                     }
                     None => {
@@ -1067,7 +1107,9 @@ fn generate(
             );
             cols.push(Arc::new(bbox));
         }
-        if spec.attributes == AttributeMode::CategoricalZone || spec.attributes == AttributeMode::MultiType {
+        if spec.attributes == AttributeMode::CategoricalZone
+            || spec.attributes == AttributeMode::MultiType
+        {
             cols.push(Arc::new(zones.finish()) as ArrayRef);
         }
         if spec.attributes == AttributeMode::MultiType {
@@ -1096,13 +1138,20 @@ fn generate(
 
         let batch = RecordBatch::try_new(schema.clone(), cols)
             .map_err(|e| EngineError::Arrow(format!("fixture batch: {e}")))?;
-        writer.write(&batch).map_err(|e| EngineError::Source(format!("parquet write: {e}")))?;
+        writer
+            .write(&batch)
+            .map_err(|e| EngineError::Source(format!("parquet write: {e}")))?;
 
         written += n;
         facts.features += n;
         // The writer's own count, not a `metadata()` syscall — an instrument that stat'ed the file
         // once per chunk would be touching the filesystem it is measuring.
-        progress.chunk_written(chunk_index, written, spec.features, writer.bytes_written() as u64);
+        progress.chunk_written(
+            chunk_index,
+            written,
+            spec.features,
+            writer.bytes_written() as u64,
+        );
         chunk_index += 1;
 
         // Observed on both sides of the write, which is what makes the uninterruptible window "one
@@ -1119,7 +1168,9 @@ fn generate(
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
     }
-    writer.close().map_err(|e| EngineError::Source(format!("parquet close: {e}")))?;
+    writer
+        .close()
+        .map_err(|e| EngineError::Source(format!("parquet close: {e}")))?;
     facts.bytes = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
     Ok(facts)
 }
@@ -1141,8 +1192,7 @@ fn parcel(rng: &mut SplitMix64, spec: &FixtureSpec, id: u64) -> Vec<Vec<[f64; 2]
 
     // Vertex count varies per feature: half the average to 1.5x it, minimum 4 (closed triangle).
     let spread = (spec.avg_vertices / 2).max(2);
-    let n = (spec.avg_vertices.saturating_sub(spread)
-        + (rng.next() as usize % (2 * spread + 1)))
+    let n = (spec.avg_vertices.saturating_sub(spread) + (rng.next() as usize % (2 * spread + 1)))
         .max(4);
 
     let outer = ring(rng, cx, cy, cell * 0.42, n);

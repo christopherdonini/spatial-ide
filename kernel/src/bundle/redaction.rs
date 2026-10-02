@@ -134,7 +134,11 @@ impl MachineIdentifiers {
         // **Nothing declared**, deliberately: the environment knows what this machine is called and
         // cannot know what the operator meant to publish. A caller that has declarations supplies
         // them (`..MachineIdentifiers::from_environment()`); one that does not gets the strict scan.
-        Self { usernames, hostnames, declared: Vec::new() }
+        Self {
+            usernames,
+            hostnames,
+            declared: Vec::new(),
+        }
     }
 }
 
@@ -227,7 +231,9 @@ pub fn scan(file: &str, bytes: &[u8], machine: &MachineIdentifiers) -> Vec<Findi
     //   - the declared string must have cleared the length floor in `declared_ranges`.
     let class_for = |class: &'static str, offset: usize, len: usize| -> &'static str {
         if ATTRIBUTABLE_CLASSES.contains(&class)
-            && declared.iter().any(|&(lo, hi)| offset >= lo && offset + len <= hi)
+            && declared
+                .iter()
+                .any(|&(lo, hi)| offset >= lo && offset + len <= hi)
         {
             OPERATOR_DECLARED
         } else {
@@ -256,7 +262,8 @@ pub fn scan(file: &str, bytes: &[u8], machine: &MachineIdentifiers) -> Vec<Findi
         if a.is_ascii_alphabetic() && b == b':' && (c == b'\\' || c == b'/') {
             // Anchored: the drive letter must not be part of a longer word, or `https://` after a
             // scheme-like token would match.
-            let preceded_by_word = i > 0 && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'_');
+            let preceded_by_word =
+                i > 0 && (bytes[i - 1].is_ascii_alphanumeric() || bytes[i - 1] == b'_');
             if !preceded_by_word && in_printable_run(bytes, i, 3) {
                 findings.push(finding(
                     file,
@@ -401,7 +408,10 @@ mod tests {
 
         // And a declared string is only an explanation in a file it actually appears in.
         let elsewhere = scan("data/part-00000.arrows", b"...... someuser ......", &m);
-        assert!(elsewhere.iter().any(|f| f.class == "username"), "{elsewhere:#?}");
+        assert!(
+            elsewhere.iter().any(|f| f.class == "username"),
+            "{elsewhere:#?}"
+        );
     }
 
     /// **A declaration explains an identity, never a secret and never a path.**
@@ -421,7 +431,11 @@ mod tests {
         };
 
         // The credential sits inside the declared route and is still reported as a credential.
-        let f = scan("manifest.json", format!(r#"{{"at":"{route}"}}"#).as_bytes(), &m);
+        let f = scan(
+            "manifest.json",
+            format!(r#"{{"at":"{route}"}}"#).as_bytes(),
+            &m,
+        );
         assert!(
             f.iter().any(|f| f.class == "credential"),
             "a declared route excused a credential: {f:#?}"
@@ -433,7 +447,11 @@ mod tests {
 
         // Same for a filesystem path inside a written offer — and the username in that same offer
         // *is* attributed, so the two behaviours are shown side by side rather than assumed.
-        let f = scan("manifest.json", format!(r#"{{"at":"{offer}"}}"#).as_bytes(), &m);
+        let f = scan(
+            "manifest.json",
+            format!(r#"{{"at":"{offer}"}}"#).as_bytes(),
+            &m,
+        );
         assert!(
             f.iter().any(|f| f.class == "local-filesystem-path"),
             "a declared offer excused a filesystem path: {f:#?}"
@@ -507,7 +525,8 @@ mod tests {
             buf[64..64 + run_len].copy_from_slice(&run);
             let found = !scan("x", &buf, &machine()).is_empty();
             assert_eq!(
-                found, expected,
+                found,
+                expected,
                 "a printable run of {run_len} bytes should {}be reported",
                 if expected { "" } else { "not " }
             );
@@ -550,10 +569,21 @@ mod tests {
     fn a_finding_carries_enough_context_to_act_on() {
         // "there is a path in your bundle" without the path is not actionable, and a scan whose
         // output cannot be acted on gets ignored, which is worse than not running it.
-        let f = scan("manifest.json", b"........ opened C:\\dev\\parcels.parquet ........", &machine());
-        let hit = f.iter().find(|f| f.class == "local-filesystem-path").expect("found");
+        let f = scan(
+            "manifest.json",
+            b"........ opened C:\\dev\\parcels.parquet ........",
+            &machine(),
+        );
+        let hit = f
+            .iter()
+            .find(|f| f.class == "local-filesystem-path")
+            .expect("found");
         assert_eq!(hit.file, "manifest.json");
-        assert!(hit.excerpt.contains("C:\\dev\\parcels"), "excerpt was {:?}", hit.excerpt);
+        assert!(
+            hit.excerpt.contains("C:\\dev\\parcels"),
+            "excerpt was {:?}",
+            hit.excerpt
+        );
         assert!(hit.byte_offset > 0);
     }
 }

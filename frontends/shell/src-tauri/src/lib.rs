@@ -230,8 +230,10 @@ pub fn run() {
 
             match actual {
                 Ok(actual) if actual == pinned.origin => {
-                    session_log
-                        .append("info", &format!("origin-self-check ok pinned={}", pinned.origin));
+                    session_log.append(
+                        "info",
+                        &format!("origin-self-check ok pinned={}", pinned.origin),
+                    );
                 }
                 Ok(actual) => {
                     let line = format!(
@@ -242,7 +244,10 @@ pub fn run() {
                     eprintln!("[spatial-ide-shell] {line}");
                     let _ = webview.app_handle().emit(
                         ORIGIN_SELF_CHECK_MISMATCH_EVENT,
-                        OriginSelfCheckOutcome::Mismatch { pinned: pinned.origin.clone(), actual },
+                        OriginSelfCheckOutcome::Mismatch {
+                            pinned: pinned.origin.clone(),
+                            actual,
+                        },
                     );
                 }
                 Err(e) => {
@@ -252,13 +257,18 @@ pub fn run() {
                     // origin does NOT mean the pinned one is wrong: this check simply could not
                     // confirm it either way, and the data plane's admission still runs against the
                     // pinned origin exactly as pinned, unaffected.
-                    let line =
-                        format!("origin-self-check UNVERIFIABLE pinned={} error={e}", pinned.origin);
+                    let line = format!(
+                        "origin-self-check UNVERIFIABLE pinned={} error={e}",
+                        pinned.origin
+                    );
                     session_log.append("error", &line);
                     eprintln!("[spatial-ide-shell] {line}");
                     let _ = webview.app_handle().emit(
                         ORIGIN_SELF_CHECK_MISMATCH_EVENT,
-                        OriginSelfCheckOutcome::Unverifiable { pinned: pinned.origin.clone(), error: e },
+                        OriginSelfCheckOutcome::Unverifiable {
+                            pinned: pinned.origin.clone(),
+                            error: e,
+                        },
                     );
                 }
             }
@@ -275,7 +285,12 @@ pub fn run() {
             let watch_arm: Arc<dyn spatial_engine::SourceWatchArm> =
                 Arc::new(spatial_engine::PlatformWatch::new());
             let (session_end_tx, session_end_rx) = spatial_kernel::skp::session_end_channel();
-            let host = Arc::new(SkpHost::new(catalog.clone(), tickets.clone(), watch_arm, session_end_tx));
+            let host = Arc::new(SkpHost::new(
+                catalog.clone(),
+                tickets.clone(),
+                watch_arm,
+                session_end_tx,
+            ));
 
             // §2b: one emitter thread, draining the bounded receiver and calling the Tauri emit for
             // each ended dataset-session generation. **Never logs a payload** (rider (b)) — the
@@ -289,7 +304,9 @@ pub fn run() {
                     while let Ok(event) = session_end_rx.recv() {
                         // Advisory 5a (architect gate-1): logged on failure, never silently
                         // dropped — the error only, never `event` itself (rider (b) still holds).
-                        if let Err(e) = app_handle.emit(spatial_skp::v0::DATASET_SESSION_ENDED_EVENT, &event) {
+                        if let Err(e) =
+                            app_handle.emit(spatial_skp::v0::DATASET_SESSION_ENDED_EVENT, &event)
+                        {
                             eprintln!("[spatial-ide-shell] dataset-session-ended emit failed: {e}");
                         }
                     }
@@ -313,7 +330,10 @@ pub fn run() {
                     &format!("could not open a session log at {}: {e}", log_dir.display()),
                 )
             });
-            eprintln!("[spatial-ide-shell] session log: {}", session_log.path.display());
+            eprintln!(
+                "[spatial-ide-shell] session log: {}",
+                session_log.path.display()
+            );
 
             // ADR-020 Amendment 1 (rewritten 2026-09-08, entry 55 = "(b)"): the config mirror.
             // `expected_origin` is no longer read off a live webview at all -- there is no `unsafe`,
@@ -329,15 +349,21 @@ pub fn run() {
             let frontend_dist = app.config().build.frontend_dist.clone();
             // Gathered once (rather than a separate `.first()` per field) so the fail-closed guard
             // just below and `window_label`/`use_https_scheme` all read the SAME configured window.
-            let main_window_config = app.config().app.windows.first().cloned().unwrap_or_else(|| {
-                refuse_to_start(
+            let main_window_config =
+                app.config()
+                    .app
+                    .windows
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| {
+                        refuse_to_start(
                     app,
                     &session_log,
                     "ADR-020 Amendment 1: tauri.conf.json declares no app.windows[0] -- there \
                      is no configured window for the origin mirror's useHttpsScheme/label/url \
                      guard, or for the post-load self-check to scope itself to",
                 )
-            });
+                    });
             // Architect review A2: this mirror reproduces `AppManager::get_app_url`'s resolution of
             // a `WebviewUrl::App` window only (`origin.rs`'s own module doc has the verified line
             // citations and the `WebviewUrl::External`/`CustomProtocol` divergence this guards
@@ -362,7 +388,9 @@ pub fn run() {
             let window_label = main_window_config.label.clone();
 
             let frontend_dist_origin = match &frontend_dist {
-                Some(tauri::utils::config::FrontendDist::Url(u)) => origin::FrontendDistOrigin::Url(u),
+                Some(tauri::utils::config::FrontendDist::Url(u)) => {
+                    origin::FrontendDistOrigin::Url(u)
+                }
                 _ => origin::FrontendDistOrigin::Other,
             };
 
@@ -383,7 +411,8 @@ pub fn run() {
                     ),
                 )
             });
-            let origin_line = format!("data-plane expected origin (config mirror): {webview_origin}");
+            let origin_line =
+                format!("data-plane expected origin (config mirror): {webview_origin}");
             session_log.append("info", &origin_line);
             eprintln!("[spatial-ide-shell] {origin_line}");
 
@@ -421,7 +450,10 @@ pub fn run() {
             // ADR-020 Amendment 1 (rewritten): managed so `on_page_load` above can assert the
             // webview's actual origin against exactly what was pinned into `DataPlaneConfig` a few
             // lines above -- never read back into anything that could change that pinned value.
-            app.manage(PinnedOrigin { origin: webview_origin, window_label });
+            app.manage(PinnedOrigin {
+                origin: webview_origin,
+                window_label,
+            });
             // Entry-40 pass: one abort handle per currently-open dataset's pool-poll task
             // (`pool_poll.rs`'s own doc comment) -- managed here so `commands::open_dataset`/
             // `close_dataset` can start/stop it via `AppHandle::try_state`.
@@ -473,16 +505,10 @@ pub fn run() {
             // process's own open port), defaulting to `9223` -- `CDP_PORT`'s own default.
             #[cfg(feature = "measure-build")]
             {
-                let window_config = app
-                    .config()
-                    .app
-                    .windows
-                    .first()
-                    .cloned()
-                    .expect(
-                        "measure-build: tauri.conf.json (as merged with the measure build's own \
+                let window_config = app.config().app.windows.first().cloned().expect(
+                    "measure-build: tauri.conf.json (as merged with the measure build's own \
                          config overlay) has no app.windows[0] to build the measure window from",
-                    );
+                );
                 let cdp_port =
                     std::env::var("SPATIAL_E2E_CDP_PORT").unwrap_or_else(|_| "9223".to_string());
                 let browser_args = format!(

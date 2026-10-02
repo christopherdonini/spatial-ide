@@ -25,10 +25,14 @@ where
     T: serde::Serialize + serde::de::DeserializeOwned,
 {
     let original = fixture(name);
-    let parsed: T = serde_json::from_value(original.clone())
-        .unwrap_or_else(|e| panic!("{name}: fixture does not deserialize as the declared type: {e}"));
+    let parsed: T = serde_json::from_value(original.clone()).unwrap_or_else(|e| {
+        panic!("{name}: fixture does not deserialize as the declared type: {e}")
+    });
     let reserialized = serde_json::to_value(&parsed).unwrap();
-    assert_eq!(reserialized, original, "{name}: round trip changed the JSON shape");
+    assert_eq!(
+        reserialized, original,
+        "{name}: round trip changed the JSON shape"
+    );
 }
 
 #[test]
@@ -45,11 +49,21 @@ fn open_dataset_request_with_crs_assertion_and_identity_round_trips() {
     let v = fixture("v0-open_dataset-request-with-crs_assertion-and-identity");
     let parsed: OpenDatasetRequest = serde_json::from_value(v.clone())
         .unwrap_or_else(|e| panic!("fixture does not deserialize as OpenDatasetRequest: {e}"));
-    let crs = parsed.crs_assertion.as_ref().expect("this fixture's point is a present crs_assertion");
+    let crs = parsed
+        .crs_assertion
+        .as_ref()
+        .expect("this fixture's point is a present crs_assertion");
     assert_eq!(crs.identifier, "EPSG:2056");
-    let identity = parsed.identity.as_ref().expect("this fixture's point is a present identity");
+    let identity = parsed
+        .identity
+        .as_ref()
+        .expect("this fixture's point is a present identity");
     assert_eq!(identity.column, "parcel_key");
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// **Known gap, not introduced by this piece.** `SKP-V0.md` §7.2 describes `bbox_crs`/`filter`'s
@@ -73,8 +87,9 @@ fn omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused() {
         "identity": null,
         // crs_assertion key omitted entirely
     });
-    let parsed: OpenDatasetRequest = serde_json::from_value(v)
-        .expect("documents current behavior: an omitted Option<T> key deserializes as None, not a failure");
+    let parsed: OpenDatasetRequest = serde_json::from_value(v).expect(
+        "documents current behavior: an omitted Option<T> key deserializes as None, not a failure",
+    );
     assert!(parsed.crs_assertion.is_none());
 }
 
@@ -97,12 +112,19 @@ fn describe_response_with_a_caller_asserted_crs_round_trips() {
         .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
     assert_eq!(parsed.crs.source, "caller_asserted");
     assert_eq!(parsed.crs.asserted_by.as_deref(), Some("os-user chris"));
-    assert_eq!(parsed.crs.asserted_at.as_deref(), Some("2026-08-18T00:00:00Z"));
+    assert_eq!(
+        parsed.crs.asserted_at.as_deref(),
+        Some("2026-08-18T00:00:00Z")
+    );
     assert_eq!(
         parsed.crs.definition_provenance.as_deref(),
         Some("catalog:epsg-2056@sha256:254016888ff4")
     );
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// **`skp/0.3`, Brief A P3** — boundary 9's four `describe` additions, exercised in their populated
@@ -122,7 +144,10 @@ fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_ge
         .unwrap_or_else(|e| panic!("fixture does not deserialize as DescribeResponse: {e}"));
     assert_eq!(parsed.identity.class, "session-ordinal");
     assert_eq!(parsed.identity.source, "session-ordinal:file_row_number");
-    assert_eq!(parsed.identity.uniqueness, "by-construction-within-generation");
+    assert_eq!(
+        parsed.identity.uniqueness,
+        "by-construction-within-generation"
+    );
     // Never counted, so never claimed — `None` is the honest answer and not a gap.
     assert_eq!(parsed.identity.verified_rows, None);
     assert_eq!(parsed.identity.js_exact, None);
@@ -156,7 +181,11 @@ fn describe_response_for_a_session_ordinal_dataset_round_trips_and_carries_no_ge
         !text.to_lowercase().contains("snapshot"),
         "no snapshot-consistency claim may appear in any wire string (A1): {text}"
     );
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// **`skp/0.3`** — the two typed refusals boundary 9 names, plus the retyped internal-inconsistency
@@ -179,19 +208,37 @@ fn the_new_typed_refusal_fixtures_round_trip_with_their_detail_fields() {
     // previous form of this line was a tautology — it could not fail — and is replaced by the two
     // assertions that actually bite: the word appears only inside boundary 4's own denial, and the
     // affirmative phrasing appears nowhere.
-    assert!(!parsed.message.contains("reads one snapshot"), "{}", parsed.message);
-    assert!(parsed.message.contains("does not establish snapshot consistency"));
+    assert!(
+        !parsed.message.contains("reads one snapshot"),
+        "{}",
+        parsed.message
+    );
+    assert!(parsed
+        .message
+        .contains("does not establish snapshot consistency"));
     assert_eq!(serde_json::to_value(&parsed).unwrap(), changed);
 
-    for name in
-        ["v0-error-identity_ordinal_partitioned_unsupported", "v0-error-internal_inconsistency"]
-    {
+    for name in [
+        "v0-error-identity_ordinal_partitioned_unsupported",
+        "v0-error-internal_inconsistency",
+    ] {
         let v = fixture(name);
         let parsed: SkpError = serde_json::from_value(v.clone())
             .unwrap_or_else(|e| panic!("{name} does not deserialize as SkpError: {e}"));
-        assert!(parsed.code.starts_with("engine."), "{name}: {}", parsed.code);
-        assert!(parsed.fields.contains_key("detail"), "{name} must carry a detail field");
-        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name} round trip changed the shape");
+        assert!(
+            parsed.code.starts_with("engine."),
+            "{name}: {}",
+            parsed.code
+        );
+        assert!(
+            parsed.fields.contains_key("detail"),
+            "{name} must carry a detail field"
+        );
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            v,
+            "{name} round trip changed the shape"
+        );
     }
 }
 
@@ -208,10 +255,17 @@ fn viewport_query_request_with_a_filter_round_trips() {
     let v = fixture("v0-viewport_query-request-with-filter");
     let parsed: ViewportQueryRequest = serde_json::from_value(v.clone())
         .unwrap_or_else(|e| panic!("fixture does not deserialize as ViewportQueryRequest: {e}"));
-    let filter = parsed.filter.as_ref().expect("this fixture's whole point is a present filter");
+    let filter = parsed
+        .filter
+        .as_ref()
+        .expect("this fixture's whole point is a present filter");
     assert_eq!(filter.predicate, "zone = 3 AND area > 100");
     assert_eq!(filter.dialect, "duckdb-expr/0");
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// **P-2.** `columns`'s declared order survives the round trip byte for byte — this fixture's own
@@ -225,8 +279,15 @@ fn viewport_query_request_with_columns_fixture_reads_in_declared_order() {
     let v = fixture("v0-viewport_query-request-with-columns");
     let parsed: ViewportQueryRequest = serde_json::from_value(v.clone())
         .unwrap_or_else(|e| panic!("fixture does not deserialize as ViewportQueryRequest: {e}"));
-    assert_eq!(parsed.columns.as_deref(), Some(&["area".to_string(), "zone".to_string()][..]));
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        parsed.columns.as_deref(),
+        Some(&["area".to_string(), "zone".to_string()][..])
+    );
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// **P-3.** Every schema row of every `describe` response fixture carries `projectable`.
@@ -242,19 +303,27 @@ fn describe_fixtures_carry_projectable_on_every_schema_row() {
         let v = fixture(name);
         let parsed: DescribeResponse = serde_json::from_value(v.clone())
             .unwrap_or_else(|e| panic!("{name} does not deserialize as DescribeResponse: {e}"));
-        assert!(!parsed.schema.is_empty(), "{name}: fixture carries no schema rows to check");
+        assert!(
+            !parsed.schema.is_empty(),
+            "{name}: fixture carries no schema rows to check"
+        );
         for row in &parsed.schema {
             assert!(
                 v["schema"]
                     .as_array()
                     .unwrap()
                     .iter()
-                    .any(|r| r["name"] == row.name && r.as_object().unwrap().contains_key("projectable")),
+                    .any(|r| r["name"] == row.name
+                        && r.as_object().unwrap().contains_key("projectable")),
                 "{name}: schema row `{}` is missing `projectable`",
                 row.name
             );
         }
-        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            v,
+            "{name}: round trip changed the JSON shape"
+        );
     }
 }
 
@@ -281,8 +350,16 @@ fn every_new_projection_error_fixture_round_trips() {
         let v = fixture(name);
         let parsed: SkpError = serde_json::from_value(v.clone())
             .unwrap_or_else(|e| panic!("{name} does not deserialize as SkpError: {e}"));
-        assert!(parsed.code.starts_with("skp.projection"), "{name}: {}", parsed.code);
-        assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "{name}: round trip changed the JSON shape");
+        assert!(
+            parsed.code.starts_with("skp.projection"),
+            "{name}: {}",
+            parsed.code
+        );
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            v,
+            "{name}: round trip changed the JSON shape"
+        );
     }
 }
 
@@ -317,7 +394,11 @@ fn identity_unusable_error_fixture_carries_candidate_columns() {
         parsed.fields.get("candidate_columns").map(String::as_str),
         Some("parcel_key,tax_lot_number")
     );
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// Every request fixture actually carries the version string a real host would check.
@@ -415,7 +496,11 @@ fn open_dataset_response_carries_a_session_reference() {
         .unwrap_or_else(|e| panic!("fixture does not deserialize as OpenDatasetResponse: {e}"));
     assert!(parsed.session.as_str().starts_with("sr_"));
     assert_eq!(parsed.session.as_str().len(), 3 + 32);
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// `skp/0.5`. `coverage`, `checks` and `session_end` are three independent facts: none rewrites
@@ -442,7 +527,11 @@ fn describe_carries_coverage_checks_and_session_end_as_independent_members() {
     assert_eq!(parsed_plain.coverage.state, CoverageState::Watching);
     assert!(parsed_plain.checks.components.is_empty());
     assert_eq!(parsed_plain.session_end, None);
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), v, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        v,
+        "round trip changed the JSON shape"
+    );
 }
 
 /// `skp/0.5`. `DatasetSessionEnded` is `deny_unknown_fields` with exactly two members.
@@ -451,17 +540,30 @@ fn describe_carries_coverage_checks_and_session_end_as_independent_members() {
 #[test]
 fn the_session_ended_event_fixture_decodes_with_exactly_two_members() {
     let v = fixture("v0-dataset_session_ended-event");
-    assert_eq!(v.get("event").and_then(|e| e.as_str()), Some(DATASET_SESSION_ENDED_EVENT));
-    let payload = v.get("payload").cloned().expect("fixture carries a payload member");
+    assert_eq!(
+        v.get("event").and_then(|e| e.as_str()),
+        Some(DATASET_SESSION_ENDED_EVENT)
+    );
+    let payload = v
+        .get("payload")
+        .cloned()
+        .expect("fixture carries a payload member");
     let parsed: DatasetSessionEnded = serde_json::from_value(payload.clone())
         .unwrap_or_else(|e| panic!("payload does not deserialize as DatasetSessionEnded: {e}"));
     assert!(parsed.session.as_str().starts_with("sr_"));
     assert_eq!(parsed.reason, EndReason::ObservedChange);
-    assert_eq!(serde_json::to_value(&parsed).unwrap(), payload, "round trip changed the JSON shape");
+    assert_eq!(
+        serde_json::to_value(&parsed).unwrap(),
+        payload,
+        "round trip changed the JSON shape"
+    );
 
     // A third member is refused, never tolerated (deny_unknown_fields).
     let mut mutated = payload;
-    mutated.as_object_mut().unwrap().insert("dataset".into(), serde_json::json!("ds_x"));
+    mutated
+        .as_object_mut()
+        .unwrap()
+        .insert("dataset".into(), serde_json::json!("ds_x"));
     assert!(
         serde_json::from_value::<DatasetSessionEnded>(mutated).is_err(),
         "a third member on the event payload must be refused, not tolerated"

@@ -29,6 +29,49 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-02 — question round 39 (AskUserQuestion, one item, answered at 21:49:45Z by the transcript. Mirrored to Telegram by the round-mirror hook as `state/questions/round-39.md` at 20:32:45Z; the hook's log reads `ok: true`. By option label, verbatim):**
+- *Item 1 — the runner label for port-1-linux-l1's Linux entry:* **"Pin ubuntu-24.04 (Recommended)"**. Applied:
+  - the full-form preregistration, drafted by the architect, is committed before any code as `PORT-1-LINUX-L1-PREREGISTRATION.md`;
+  - its Linux entry runs on `ubuntu-24.04`;
+  - its header lists the edits the ruling made;
+  - the node gains `merge: merge-commit`;
+  - dispatch waits for PR #160.
+
+**RULED 2026-10-02 — question round 38 (AskUserQuestion, one item, answered at 18:32:48Z by the transcript. Mirrored to Telegram by the round-mirror hook as `state/questions/round-38.md` at 18:09:45Z; the hook's log reads `ok: true`. By option label, verbatim):**
+- *Item 1 — node 7, `skp-cancel-state-closed-set`, which side is wrong:* **"Reader wrong, no bump (Recommended)"**. Applied:
+  - the full-form preregistration, drafted by the architect, is committed before any code as `protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md`. In it:
+    - `protocol/skp` gets a closed enum that refuses any other value at deserialize;
+    - the shell gets a closed union type, checked at compile time only;
+    - SKP-V0 §1 gains one sentence and §8 a dated note;
+    - the literal stays `skp/0.8`;
+  - the node's budget is 120 minutes, with `merge: merge-commit`;
+  - full gating applies: wire, and a property under test.
+
+**DIRECTIVE 2026-10-02 — a proposal for the 2026-10-09 window (the human, mid-turn, received at 17:42:58Z by the transcript; recorded verbatim at `state/directives/2026-10-02-window-amendment-exemption.md`, lines 9-11 (their sha256 2ace55f6110f311c96cecc94310171944c1d3330478be5f203cd4014238b500e at the commit that adds it)):**
+- **The proposal.** A one-line template change for the 2026-10-09 window, proposed and not applied: block-on-sight path rules exempt a form's own appended §10 amendments by default.
+- **Applied.** It is drafted as `state/drafts/weekly-window-2026-10-09.md`, item A. Nothing is changed in the template now.
+
+**RULED 2026-10-02 — question round 37 (AskUserQuestion, one item, answered at 17:42:55Z by the transcript. Mirrored to Telegram by the round-mirror hook as `state/questions/round-37.md` at 17:31:06Z; the hook's log reads `ok: true`. By option label, verbatim):**
+- *Item 1 — #157's §8 item 3 against the form's own appended amendment:* **"Amendments exempt (Recommended)"**. Applied:
+  - #157's appended §10 amendments are read as outside §8 item 3, as the sibling forms read;
+  - the custodian appends Amendment 2 on the branch, which holds:
+    - class 8, `budget overrun, §7 not edited`: 93 lines over 3 files at 275d305, against 120 over 2 declared;
+    - the gate-2 reviewer's superseded-index row;
+    - this ruling, by reference;
+  - the generation goes to 3, then a scoped gate 3, then the human's click.
+  - **In fact,** the human merged #157 at 17:43:24Z as 51ed3b2, at head 275d305, before the branch amendment 460c5a1 reached origin. Its content is restated in the closing record on main, the form's Amendment 2, so 460c5a1 is not a record. The generation stays at 2, because a closing record does not bump it.
+  - The template-wide default is the 2026-10-02 window note's proposal, above, and is not applied.
+
+**DIRECTIVE 2026-10-02 — standing delegation for test-only prerequisite nodes (the human, mid-turn, received at 17:22:15Z by the transcript; recorded verbatim at `state/directives/2026-10-02-test-prerequisite-delegation.md`, lines 7-12 (their sha256 0644f4b1c9b85cdc3b974ad6aa7c39e23d04f5fb62138dd4ac97aac2fcff6618 at the commit that adds it)):**
+- **The delegation.** The custodian may place a test-only prerequisite node ahead of an already-placed piece without a question round, within the directive's limits. Each use is reported in the next round or report, and anything outside the limits comes to the human.
+- **Applied.** It is recorded as `PRECEDENTS.md` P-034. It has not been used yet: round 36's node, below, was placed by the human's answer before the directive.
+
+**RULED 2026-10-02 — question round 36 (AskUserQuestion, one item, answered at 17:22:12Z by the transcript. Mirrored to Telegram by the round-mirror hook, the first round it carried live, as `state/questions/round-36.md` at 17:14:43Z; `.claude/state/round-mirror.jsonl` reads `ok: true`. By option label, verbatim):**
+- *Item 1 — placing `questions-mirror-t11-copy-glob` ahead of `stop-hook-stale-continuity`:* **"Place it ahead of E (Recommended)"**. Applied:
+  - the node is placed: governance, ready, order 14;
+  - its five-line form is committed before any code, and the worker follows;
+  - E merges main after it lands, then observes its mutations and opens its PR.
+
 **RULED 2026-10-02 — question round 35 (AskUserQuestion, one item, mirrored to Telegram first as `state/questions/round-35.md` at 12:46:52Z; typed in Other and continued in mid-turn messages; verbatim in `state/directives/2026-10-02-rustfmt-notes.md`, the 2026-10-02 rustfmt notes):**
 
 - *Item 1 — placing the test fix ahead of the rustfmt PR (typed; the directive's text, not reproduced here):* Applied:

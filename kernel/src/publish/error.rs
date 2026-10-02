@@ -22,21 +22,35 @@ pub enum PublishError {
     /// effect of re-running a command is what that gate exists to prevent. A `--replace` capability
     /// is deliberately **not** in v0; adding one needs an approval gate and a declared reversibility
     /// class, not a convenience flag.
-    DestinationExists { path: String },
+    DestinationExists {
+        path: String,
+    },
 
     /// The destination cannot be written to. Raised **before the query runs** where possible, so a
     /// long stream is not spent discovering it.
-    DestinationNotWritable { path: String, raw_os_error: Option<i32>, detail: String },
+    DestinationNotWritable {
+        path: String,
+        raw_os_error: Option<i32>,
+        detail: String,
+    },
 
     /// The filesystem ran out of room, **detected at write time**.
     ///
     /// No pre-flight prediction is made and none is claimed: the final size is not known before the
     /// stream is read, and a prediction that could be wrong is worse than a detection that cannot.
-    InsufficientSpace { path: String, raw_os_error: Option<i32>, detail: String },
+    InsufficientSpace {
+        path: String,
+        raw_os_error: Option<i32>,
+        detail: String,
+    },
 
     /// An IO failure this operation could not classify. The raw OS code stays visible rather than
     /// being flattened into prose, because the code is what makes an unfamiliar failure diagnosable.
-    Io { context: String, raw_os_error: Option<i32>, detail: String },
+    Io {
+        context: String,
+        raw_os_error: Option<i32>,
+        detail: String,
+    },
 
     /// The dataset was never pinned, so "did the source change" has no answer.
     ///
@@ -46,14 +60,20 @@ pub enum PublishError {
     SourceNotPinned,
 
     /// The source's redistribution term forbids what publishing does.
-    LicenseNotCarryable { declared_by: &'static str, redistribution: String },
+    LicenseNotCarryable {
+        declared_by: &'static str,
+        redistribution: String,
+    },
 
     /// Both the source and the operator declare license terms.
     ///
     /// Refused rather than resolved, on ADR-015 §4's precedent exactly: an assertion is admissible
     /// only over a source that declares nothing, and deciding which of two declarations wins is a
     /// judgement this operation is not equipped to make.
-    LicenseDeclaredTwice { source: String, operator: String },
+    LicenseDeclaredTwice {
+        source: String,
+        operator: String,
+    },
 
     /// An operator declared a license that is empty or only whitespace.
     ///
@@ -65,7 +85,10 @@ pub enum PublishError {
     OperatorLicenseEmpty,
 
     /// A viewer asset's path is not a safe bundle-relative path.
-    ViewerAssetPathRejected { path: String, detail: String },
+    ViewerAssetPathRejected {
+        path: String,
+        detail: String,
+    },
 
     /// A required `viewer_license` member is empty or only whitespace.
     ///
@@ -74,7 +97,9 @@ pub enum PublishError {
     /// non-empty. That is a property of the operation only if the blank one is refused — a bundle
     /// declaring a program with no name, or a route with no destination, would satisfy the schema's
     /// shape while carrying nothing a recipient can act on.
-    ViewerLicenseIncomplete { member: &'static str },
+    ViewerLicenseIncomplete {
+        member: &'static str,
+    },
 
     /// `viewer_license.notice_path` names no viewer asset.
     ///
@@ -82,19 +107,28 @@ pub enum PublishError {
     /// or the declaration points at nothing. **Both namespaces are reported** because they are the
     /// trap: the caller supplies a viewer-relative path (`NOTICE.txt`) and the manifest carries the
     /// bundle-relative one (`viewer/NOTICE.txt`).
-    ViewerLicenseNoticeMissing { notice_path: String, bundle_relative: String, available: Vec<String> },
+    ViewerLicenseNoticeMissing {
+        notice_path: String,
+        bundle_relative: String,
+        available: Vec<String>,
+    },
 
     /// A `url` corresponding-source route whose scheme is not `http` or `https`.
     ///
     /// A `file:///C:/…` route is a `docs/09` redaction leak *and* is not durable in ADR-009 item 7's
     /// sense — it names a location on the publisher's own machine, which no recipient can follow.
-    CorrespondingSourceNotDurable { at: String },
+    CorrespondingSourceNotDurable {
+        at: String,
+    },
 
     /// The dataset name cannot become a logical URI.
     ///
     /// A name carrying a path separator, a drive letter or `..` would put a filesystem path in the
     /// manifest through the URI (`docs/09`), which is why this is checked rather than escaped.
-    DatasetNameRejected { name: String, detail: String },
+    DatasetNameRejected {
+        name: String,
+        detail: String,
+    },
 
     /// The query carries a row predicate (`query.filter`), and a `bundle_version` 1 manifest cannot
     /// record one.
@@ -126,10 +160,17 @@ pub enum PublishError {
     /// condition is written in. Nothing about this refusal claims a transform exists or is planned:
     /// `axis_normalization` stays `none-performed` everywhere and no coordinate value is
     /// transformed by anything in this tree.
-    GeographicCrsNotPublishable { crs_identifier: String, unit_source: String },
+    GeographicCrsNotPublishable {
+        crs_identifier: String,
+        unit_source: String,
+    },
 
     /// A declared ceiling was reached (ADR-010 rule 6).
-    CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
+    CeilingExceeded {
+        ceiling: &'static str,
+        limit: u64,
+        saw: u64,
+    },
 
     /// A **reader's** declared ceiling — not this operation's own — was predicted to be exceeded,
     /// at preflight, before any write.
@@ -163,7 +204,11 @@ pub enum PublishError {
     /// would lose the thing that actually went wrong — and reporting only the original would leave
     /// a directory on disk that nobody was told about (ADR-010 rule 7: an operation may not
     /// terminate silently).
-    StagingNotRemoved { after: Box<PublishError>, path: String, detail: String },
+    StagingNotRemoved {
+        after: Box<PublishError>,
+        path: String,
+        detail: String,
+    },
 
     Engine(EngineError),
     Style(StyleError),
@@ -194,7 +239,9 @@ impl PublishError {
             Self::ViewerAssetPathRejected { .. } => "publish.viewer_asset_path_rejected",
             Self::ViewerLicenseIncomplete { .. } => "publish.viewer_license_incomplete",
             Self::ViewerLicenseNoticeMissing { .. } => "publish.viewer_license_notice_missing",
-            Self::CorrespondingSourceNotDurable { .. } => "publish.corresponding_source_not_durable",
+            Self::CorrespondingSourceNotDurable { .. } => {
+                "publish.corresponding_source_not_durable"
+            }
             Self::DatasetNameRejected { .. } => "publish.dataset_name_rejected",
             Self::RowFilterNotRecordable => "publish.row_filter_not_recordable",
             // Brief A settled boundary 8, held at P2 and closed at P3.
@@ -409,18 +456,30 @@ pub(crate) fn classify_io(path: &str, context: &str, e: std::io::Error) -> Publi
     const NOT_WRITABLE: &[i32] = &[];
 
     match code {
-        Some(c) if DISK_FULL.contains(&c) => {
-            PublishError::InsufficientSpace { path: path.into(), raw_os_error: code, detail }
-        }
-        Some(c) if NOT_WRITABLE.contains(&c) => {
-            PublishError::DestinationNotWritable { path: path.into(), raw_os_error: code, detail }
-        }
+        Some(c) if DISK_FULL.contains(&c) => PublishError::InsufficientSpace {
+            path: path.into(),
+            raw_os_error: code,
+            detail,
+        },
+        Some(c) if NOT_WRITABLE.contains(&c) => PublishError::DestinationNotWritable {
+            path: path.into(),
+            raw_os_error: code,
+            detail,
+        },
         // Kind-based fallbacks, so a platform whose code this build does not know still classifies
         // the two cases the brief names rather than flattening them into `Io`.
         _ if e.kind() == std::io::ErrorKind::PermissionDenied => {
-            PublishError::DestinationNotWritable { path: path.into(), raw_os_error: code, detail }
+            PublishError::DestinationNotWritable {
+                path: path.into(),
+                raw_os_error: code,
+                detail,
+            }
         }
-        _ => PublishError::Io { context: context.into(), raw_os_error: code, detail },
+        _ => PublishError::Io {
+            context: context.into(),
+            raw_os_error: code,
+            detail,
+        },
     }
 }
 
@@ -441,7 +500,11 @@ mod tests {
     fn an_unclassified_io_error_keeps_its_raw_code_visible() {
         let e = std::io::Error::from_raw_os_error(4242);
         match classify_io("/x", "writing a partition", e) {
-            PublishError::Io { raw_os_error, context, .. } => {
+            PublishError::Io {
+                raw_os_error,
+                context,
+                ..
+            } => {
                 assert_eq!(raw_os_error, Some(4242));
                 assert!(context.contains("partition"));
             }

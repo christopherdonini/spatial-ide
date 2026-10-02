@@ -49,7 +49,10 @@ use crate::state::{DataPlaneHandle, SessionLog};
 /// **Entry-40 pass:** on success, starts the dev/measure-build-gated pool-lease poll
 /// (`pool_poll.rs`) for the newly-opened dataset. `app` is unused (and would warn as such) in a
 /// plain release build, where `pool_poll` is not compiled in at all — see the `cfg_attr` below.
-#[cfg_attr(not(any(debug_assertions, feature = "measure-build")), allow(unused_variables))]
+#[cfg_attr(
+    not(any(debug_assertions, feature = "measure-build")),
+    allow(unused_variables)
+)]
 #[tauri::command]
 pub async fn open_dataset(
     app: tauri::AppHandle,
@@ -106,7 +109,10 @@ pub fn cancel(
 /// unconditionally (regardless of whether the close itself succeeded), so the poll's last tick(s)
 /// can still observe the dataset's own teardown (e.g. leases dropping as its tickets are cancelled)
 /// rather than being cut off the moment `close_dataset` is called.
-#[cfg_attr(not(any(debug_assertions, feature = "measure-build")), allow(unused_variables))]
+#[cfg_attr(
+    not(any(debug_assertions, feature = "measure-build")),
+    allow(unused_variables)
+)]
 #[tauri::command]
 pub fn close_dataset(
     app: tauri::AppHandle,
@@ -213,7 +219,9 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
         .pick_file(move |picked| {
             let _ = tx.send(picked);
         });
-    let picked = rx.await.map_err(|e| format!("file picker channel closed: {e}"))?;
+    let picked = rx
+        .await
+        .map_err(|e| format!("file picker channel closed: {e}"))?;
     Ok(picked.map(|p| p.to_string()))
 }
 
@@ -272,10 +280,15 @@ pub async fn binding_publish_prepare(
 
     let default_name = dataset_name.clone();
     let (tx, rx) = tokio::sync::oneshot::channel();
-    app.dialog().file().set_file_name(&default_name).save_file(move |picked| {
-        let _ = tx.send(picked);
-    });
-    let picked = rx.await.map_err(|e| format!("destination picker channel closed: {e}"))?;
+    app.dialog()
+        .file()
+        .set_file_name(&default_name)
+        .save_file(move |picked| {
+            let _ = tx.send(picked);
+        });
+    let picked = rx
+        .await
+        .map_err(|e| format!("destination picker channel closed: {e}"))?;
     let Some(destination) = picked.and_then(|p| p.into_path().ok()) else {
         return Ok(PrepareOutcome::PickerCancelled);
     };
@@ -285,10 +298,11 @@ pub async fn binding_publish_prepare(
     // itself never crosses into `publish.rs`. `.ok()` rather than `?`: a `resource_dir()` failure
     // (e.g. under `tauri dev`, where nothing is packaged) is not this command's own error — it
     // just means `bundled_viewer` falls through to the dev-tree path, same as `None` would.
-    let (viewer, viewer_license) = match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
-        Ok(v) => v,
-        Err(message) => return Ok(PrepareOutcome::Refused { message }),
-    };
+    let (viewer, viewer_license) =
+        match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
+            Ok(v) => v,
+            Err(message) => return Ok(PrepareOutcome::Refused { message }),
+        };
 
     let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
     let grants = grants.inner().clone();
@@ -406,7 +420,14 @@ pub async fn binding_publish_execute(
 
     let exec_attempt_id = attempt_id.clone();
     let result = tokio::task::spawn_blocking(move || {
-        publish::execute_with_progress(&grants, &attempts, &exec_attempt_id, &typed_phrase, &cancel, Some(&progress))
+        publish::execute_with_progress(
+            &grants,
+            &attempts,
+            &exec_attempt_id,
+            &typed_phrase,
+            &cancel,
+            Some(&progress),
+        )
     })
     .await;
 
@@ -423,7 +444,10 @@ pub async fn binding_publish_execute(
 /// cancelled; `false` is not an error (already finished, or an id this registry never held —
 /// `RunningPublishes::cancel`'s own doc comment).
 #[tauri::command]
-pub fn binding_publish_cancel(running: State<'_, Arc<RunningPublishes>>, attempt_id: String) -> bool {
+pub fn binding_publish_cancel(
+    running: State<'_, Arc<RunningPublishes>>,
+    attempt_id: String,
+) -> bool {
     running.cancel(&attempt_id)
 }
 
@@ -504,10 +528,11 @@ pub async fn binding_publish_prepare_e2e_destination(
     let dataset_name = publish::dataset_name_for(&dataset);
 
     // Same resolution order as the real `binding_publish_prepare`, above.
-    let (viewer, viewer_license) = match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
-        Ok(v) => v,
-        Err(message) => return Ok(PrepareOutcome::Refused { message }),
-    };
+    let (viewer, viewer_license) =
+        match publish::bundled_viewer(app.path().resource_dir().ok().as_deref()) {
+            Ok(v) => v,
+            Err(message) => return Ok(PrepareOutcome::Refused { message }),
+        };
 
     let started_at = spatial_kernel::permission::audit::rfc3339_utc_now();
     let grants = grants.inner().clone();

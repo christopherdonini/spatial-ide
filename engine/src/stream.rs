@@ -24,8 +24,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use arrow::array::{
-    make_array, Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray, MutableArrayData,
-    UInt64Array,
+    make_array, Array, ArrayRef, BinaryArray, BinaryViewArray, Int64Array, LargeBinaryArray,
+    MutableArrayData, UInt64Array,
 };
 use arrow::datatypes::DataType;
 use duckdb::ToSql;
@@ -250,11 +250,21 @@ pub struct ViewportQuery {
 
 impl ViewportQuery {
     pub fn all() -> Self {
-        Self { bbox: None, bbox_crs: None, limit: None, filter: None }
+        Self {
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        }
     }
 
     pub fn viewport(bbox: Bbox, crs_identifier: impl Into<String>) -> Self {
-        Self { bbox: Some(bbox), bbox_crs: Some(crs_identifier.into()), limit: None, filter: None }
+        Self {
+            bbox: Some(bbox),
+            bbox_crs: Some(crs_identifier.into()),
+            limit: None,
+            filter: None,
+        }
     }
 
     pub fn with_limit(mut self, n: u64) -> Self {
@@ -421,7 +431,10 @@ impl BatchSizePolicy {
     /// trigger, never a replacement for the ladder — so a cell that differs between the two differs
     /// by the budget and by nothing else.
     pub fn time_budgeted() -> Self {
-        Self { cut: BatchCutPolicy::TimeBudgetedFirstBatch, ..Self::default() }
+        Self {
+            cut: BatchCutPolicy::TimeBudgetedFirstBatch,
+            ..Self::default()
+        }
     }
 }
 
@@ -463,13 +476,20 @@ pub enum FilterPlan {
     // `RowGroupsKeptAll` is the cell most likely to look like a regression — the plan ran, the
     // statement grew, nothing was excluded — and it has to be nameable for that to be reportable.
     /// Row-group envelopes excluded at least one group's IO.
-    RowGroupsPruned { total: usize, kept: usize, ranges: usize },
+    RowGroupsPruned {
+        total: usize,
+        kept: usize,
+        ranges: usize,
+    },
     /// The index was admissible and every group survived: the predicate is in the statement and
     /// **no IO was excluded**. Correct, and worth nothing.
     RowGroupsKeptAll { total: usize },
     /// The file's own statistics cannot support an id-range injection. The named refusal travels
     /// with the plan, because "no index" and "this file's layout refuses one" are different facts.
-    RowGroupsNotPrunable { total: usize, reason: crate::rowgroup::RowGroupRefusal },
+    RowGroupsNotPrunable {
+        total: usize,
+        reason: crate::rowgroup::RowGroupRefusal,
+    },
     /// Surviving groups produced more ranges than one statement will carry.
     RowGroupsTooFragmented { total: usize, kept: usize },
     /// **No** row group's envelope intersects the viewport.
@@ -684,14 +704,19 @@ impl StreamStats {
     }
 
     fn record_source_changed(&self, detail: &str) {
-        *self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()) =
-            Some(detail.to_string());
+        *self
+            .source_changed_detail
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(detail.to_string());
     }
 
     /// The post-check's finding for this stream, or `None` if it found no change. Meaningful only
     /// once the stream has reached its terminal — before that the post-check has not run.
     pub fn source_changed_detail(&self) -> Option<String> {
-        self.source_changed_detail.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        self.source_changed_detail
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     fn add_resident(&self, n: usize) {
@@ -869,7 +894,11 @@ impl Dataset {
 
     /// As `stream`, with a caller-held token — the shape a binding needs, because the thing that
     /// observes a cancellation is not the thing that started the stream.
-    pub fn stream_with_cancel(&self, q: &ViewportQuery, cancel: CancelToken) -> Result<BatchStream> {
+    pub fn stream_with_cancel(
+        &self,
+        q: &ViewportQuery,
+        cancel: CancelToken,
+    ) -> Result<BatchStream> {
         self.stream_inner(
             q,
             cancel,
@@ -937,8 +966,10 @@ impl Dataset {
     pub fn admit_projection(
         &self,
         names: &[String],
-    ) -> std::result::Result<crate::attributes::AdmittedProjection, crate::attributes::ProjectionError>
-    {
+    ) -> std::result::Result<
+        crate::attributes::AdmittedProjection,
+        crate::attributes::ProjectionError,
+    > {
         crate::attributes::admit_projection(
             names,
             self.file_schema().fields(),
@@ -1101,8 +1132,14 @@ impl Dataset {
         cancel: CancelToken,
         plan: StreamPlan,
     ) -> Result<BatchStream> {
-        let StreamPlan { index_use, ordering, policy, envelope, report_bounds, compact_attribute_retention } =
-            plan;
+        let StreamPlan {
+            index_use,
+            ordering,
+            policy,
+            envelope,
+            report_bounds,
+            compact_attribute_retention,
+        } = plan;
 
         // **The ADR-017 §12 protection, and it is structural rather than conventional.**
         //
@@ -1628,7 +1665,11 @@ impl Dataset {
                     // Too many disjoint ranges to express. Falling back is correct — and it is
                     // *recorded*, because an index that silently stopped being used would surface
                     // only as a performance mystery (principle 8: signalled, never absorbed).
-                    None => plan = FilterPlan::IndexTooFragmented { candidates: candidates.len() },
+                    None => {
+                        plan = FilterPlan::IndexTooFragmented {
+                            candidates: candidates.len(),
+                        }
+                    }
                 }
             }
             if plan == FilterPlan::WholeFile {
@@ -1996,12 +2037,17 @@ fn produce(
                 rows_since_budget_check += 1;
                 if rows_since_budget_check >= BUDGET_CHECK_ROW_STRIDE {
                     rows_since_budget_check = 0;
-                    budget_reached = first_row_at
-                        .is_some_and(|t| t.elapsed() >= FIRST_BATCH_TIME_BUDGET);
+                    budget_reached =
+                        first_row_at.is_some_and(|t| t.elapsed() >= FIRST_BATCH_TIME_BUDGET);
                 }
             }
-            let cut_by =
-                cut_reason(pending.est_bytes, pending.ids.len(), target, policy.max_rows, budget_reached);
+            let cut_by = cut_reason(
+                pending.est_bytes,
+                pending.ids.len(),
+                target,
+                policy.max_rows,
+                budget_reached,
+            );
             if let Some(cut_by) = cut_by {
                 pending.push_attr_run(&chunk_attrs, run_start, row + 1);
                 run_start = row + 1;
@@ -2400,7 +2446,9 @@ fn flush(
     let xy_bounds = report_bounds.then(|| batch.xy_bounds()).flatten();
 
     stats.batches_generated.fetch_add(1, Ordering::SeqCst);
-    stats.rows_generated.fetch_add(rows as u64, Ordering::SeqCst);
+    stats
+        .rows_generated
+        .fetch_add(rows as u64, Ordering::SeqCst);
     if cancel.is_cancelled() {
         // H2 allows at most one batch after the producer observes cancellation. Counted, and then
         // dropped rather than sent: the stream is over.
@@ -2412,7 +2460,11 @@ fn flush(
     // Per batch, not per row — the rule this module's tracing keeps. `batch_index` 0 also gets its
     // own name so a summarizer can find time-to-first-batch without scanning for a minimum.
     if batch_index == 0 {
-        crate::trace::mark(crate::trace::FIRST_BATCH_FULL, rows as u64, p.est_bytes as u64);
+        crate::trace::mark(
+            crate::trace::FIRST_BATCH_FULL,
+            rows as u64,
+            p.est_bytes as u64,
+        );
     }
     crate::trace::mark(crate::trace::BATCH_FULL, rows as u64, p.est_bytes as u64);
 
@@ -2468,7 +2520,10 @@ fn column_u64(chunk: &arrow::array::RecordBatch, name: &str) -> Result<Vec<u64>>
             })
             .collect();
     }
-    Err(EngineError::Query(format!("`{name}` is {}; expected a 64-bit integer", col.data_type())))
+    Err(EngineError::Query(format!(
+        "`{name}` is {}; expected a 64-bit integer",
+        col.data_type()
+    )))
 }
 
 fn binary_value(col: &ArrayRef, row: usize) -> Result<&[u8]> {
@@ -2484,7 +2539,10 @@ fn binary_value(col: &ArrayRef, row: usize) -> Result<&[u8]> {
     if let Some(a) = col.as_any().downcast_ref::<BinaryViewArray>() {
         return Ok(a.value(row));
     }
-    Err(EngineError::Query(format!("geometry column is {}; expected binary", col.data_type())))
+    Err(EngineError::Query(format!(
+        "geometry column is {}; expected binary",
+        col.data_type()
+    )))
 }
 
 #[cfg(test)]
@@ -2517,15 +2575,16 @@ mod tests {
     /// `col.clone()` unconditionally) — the test then observes the still-dictionary-typed array
     /// rather than the value-typed one, and the assertion on `data_type()` fails by name.
     #[test]
-    fn a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope()
-    {
+    fn a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope(
+    ) {
         use arrow::array::{DictionaryArray, StringArray};
         use arrow::datatypes::Int32Type;
 
         let keys = arrow::array::Int32Array::from(vec![1, 0, 1]);
         let values = StringArray::from(vec!["industrial", "residential"]);
-        let dict: ArrayRef =
-            std::sync::Arc::new(DictionaryArray::<Int32Type>::try_new(keys, Arc::new(values)).unwrap());
+        let dict: ArrayRef = std::sync::Arc::new(
+            DictionaryArray::<Int32Type>::try_new(keys, Arc::new(values)).unwrap(),
+        );
         assert!(matches!(dict.data_type(), DataType::Dictionary(_, _)));
 
         let decoded = decode_dictionary_chunk_column(&dict, &DataType::Utf8).unwrap();
@@ -2584,7 +2643,9 @@ mod tests {
         // The large-run case (unchanged from before X7): 10 rows out of 20 000 retains far more
         // than even the widened allowance.
         let big = arrow::array::StringArray::from(
-            (0..20_000).map(|i| format!("row-{i:06}")).collect::<Vec<_>>(),
+            (0..20_000)
+                .map(|i| format!("row-{i:06}"))
+                .collect::<Vec<_>>(),
         );
         let source: ArrayRef = Arc::new(big);
         let tail: ArrayRef = source.slice(19_990, 10);
@@ -2605,7 +2666,10 @@ mod tests {
             after.get_buffer_memory_size(),
             allowance(&after)
         );
-        let kept = kept.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        let kept = kept
+            .as_any()
+            .downcast_ref::<arrow::array::StringArray>()
+            .unwrap();
         for i in 0..10 {
             assert_eq!(kept.value(i), format!("row-{:06}", 19_990 + i));
         }
@@ -2629,11 +2693,22 @@ mod tests {
             .add_buffer(Buffer::from(one_row_buf))
             .build()
             .expect("1-row Int64 ArrayData");
-        assert_eq!(one_row_data.get_buffer_memory_size(), 64, "R-E2's own observed figure");
-        assert_eq!(one_row_data.get_slice_memory_size().unwrap(), 8, "R-E2's own observed figure");
+        assert_eq!(
+            one_row_data.get_buffer_memory_size(),
+            64,
+            "R-E2's own observed figure"
+        );
+        assert_eq!(
+            one_row_data.get_slice_memory_size().unwrap(),
+            8,
+            "R-E2's own observed figure"
+        );
         let one_row: ArrayRef = make_array(one_row_data);
         let kept = retain_or_compact_single_run(&one_row).expect("retention decision");
-        assert!(Arc::ptr_eq(&kept, &one_row), "a 1-row Int64 run must be kept uncopied");
+        assert!(
+            Arc::ptr_eq(&kept, &one_row),
+            "a 1-row Int64 run must be kept uncopied"
+        );
         assert!(
             kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
             "a 1-row Int64 run must not be reported as needing compaction"
@@ -2656,11 +2731,22 @@ mod tests {
             .add_buffer(Buffer::from(hundred_rows_buf))
             .build()
             .expect("100-row Boolean ArrayData");
-        assert_eq!(hundred_rows_data.get_buffer_memory_size(), 64, "R-E2's own observed figure");
-        assert_eq!(hundred_rows_data.get_slice_memory_size().unwrap(), 13, "R-E2's own observed figure");
+        assert_eq!(
+            hundred_rows_data.get_buffer_memory_size(),
+            64,
+            "R-E2's own observed figure"
+        );
+        assert_eq!(
+            hundred_rows_data.get_slice_memory_size().unwrap(),
+            13,
+            "R-E2's own observed figure"
+        );
         let hundred_rows: ArrayRef = make_array(hundred_rows_data);
         let kept = retain_or_compact_single_run(&hundred_rows).expect("retention decision");
-        assert!(Arc::ptr_eq(&kept, &hundred_rows), "a 100-row Boolean run must be kept uncopied");
+        assert!(
+            Arc::ptr_eq(&kept, &hundred_rows),
+            "a 100-row Boolean run must be kept uncopied"
+        );
         assert!(
             kept.to_data().get_buffer_memory_size() <= allowance(&kept.to_data()),
             "a 100-row Boolean run must not be reported as needing compaction"
@@ -2679,24 +2765,29 @@ mod tests {
     /// row count (and therefore its IPC bytes) would no longer match the 20-row run it replaces.
     #[test]
     fn a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes() {
-        let source: ArrayRef = Arc::new(arrow::array::Int64Array::from((0..5_000i64).collect::<Vec<_>>()));
+        let source: ArrayRef = Arc::new(arrow::array::Int64Array::from(
+            (0..5_000i64).collect::<Vec<_>>(),
+        ));
         let run: ArrayRef = source.slice(4_980, 20);
 
         let compacted = compact_attribute_slice(&run);
-        assert_eq!(compacted.len(), 20, "the whole chunk was compacted, not just the retained run");
+        assert_eq!(
+            compacted.len(),
+            20,
+            "the whole chunk was compacted, not just the retained run"
+        );
 
         let ipc_bytes = |a: &ArrayRef| -> Vec<u8> {
-            let schema =
-                Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
-                    "v",
-                    DataType::Int64,
-                    false,
-                )]));
-            let batch = arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
-                .expect("record batch");
+            let schema = Arc::new(arrow::datatypes::Schema::new(vec![
+                arrow::datatypes::Field::new("v", DataType::Int64, false),
+            ]));
+            let batch =
+                arrow::record_batch::RecordBatch::try_new(schema.clone(), vec![Arc::clone(a)])
+                    .expect("record batch");
             let mut buf = Vec::new();
             {
-                let mut w = arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
+                let mut w =
+                    arrow::ipc::writer::StreamWriter::try_new(&mut buf, &schema).expect("writer");
                 w.write(&batch).expect("write");
                 w.finish().expect("finish");
             }
@@ -2775,11 +2866,18 @@ mod tests {
     fn publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes() {
         let utf8_source: ArrayRef = Arc::new(arrow::array::StringArray::from(
             (0..20_000)
-                .map(|i| if [5, 9, 22, 41].contains(&i) { None } else { Some(format!("v{i}")) })
+                .map(|i| {
+                    if [5, 9, 22, 41].contains(&i) {
+                        None
+                    } else {
+                        Some(format!("v{i}"))
+                    }
+                })
                 .collect::<Vec<_>>(),
         ));
-        let bool_source: ArrayRef =
-            Arc::new(arrow::array::BooleanArray::from((0..20_000).map(|i| i % 2 == 0).collect::<Vec<_>>()));
+        let bool_source: ArrayRef = Arc::new(arrow::array::BooleanArray::from(
+            (0..20_000).map(|i| i % 2 == 0).collect::<Vec<_>>(),
+        ));
 
         // (label, source, offset, length, whether compaction changes the IPC bytes)
         let cases: [(&str, &ArrayRef, usize, usize, bool); 7] = [
@@ -2794,7 +2892,10 @@ mod tests {
         for (label, source, offset, len, changes) in cases {
             let run = source.slice(offset, len);
             if label.starts_with("nullable") {
-                assert!(run.null_count() > 0, "{label} {offset}/{len}: the window must carry a NULL");
+                assert!(
+                    run.null_count() > 0,
+                    "{label} {offset}/{len}: the window must carry a NULL"
+                );
             }
             let plan = StreamPlan::for_publish(one_attribute_envelope(source.data_type().clone()));
             let uncompacted = assembled_ipc_bytes(&plan.envelope, Arc::clone(&run));
@@ -2811,7 +2912,8 @@ mod tests {
                 "{label} {offset}/{len}: whether compaction changes the IPC bytes"
             );
 
-            let kept = single_run_retention(&run, plan.compact_attribute_retention).expect("retention decision");
+            let kept = single_run_retention(&run, plan.compact_attribute_retention)
+                .expect("retention decision");
             assert_eq!(
                 assembled_ipc_bytes(&plan.envelope, kept),
                 uncompacted,
@@ -2839,15 +2941,27 @@ mod tests {
     fn a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included() {
         let source: ArrayRef = Arc::new(arrow::array::StringArray::from(
             (0..64)
-                .map(|i| if i == 5 || i == 22 || i == 41 { None } else { Some(format!("v{i}")) })
+                .map(|i| {
+                    if i == 5 || i == 22 || i == 41 {
+                        None
+                    } else {
+                        Some(format!("v{i}"))
+                    }
+                })
                 .collect::<Vec<_>>(),
         ));
         let run = source.slice(0, 10); // covers source index 5, a NULL.
         let compacted = compact_attribute_slice(&run);
 
         assert_eq!(compacted.len(), run.len());
-        let run_strings = run.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
-        let compacted_strings = compacted.as_any().downcast_ref::<arrow::array::StringArray>().unwrap();
+        let run_strings = run
+            .as_any()
+            .downcast_ref::<arrow::array::StringArray>()
+            .unwrap();
+        let compacted_strings = compacted
+            .as_any()
+            .downcast_ref::<arrow::array::StringArray>()
+            .unwrap();
         for i in 0..run.len() {
             assert_eq!(
                 run_strings.is_null(i),
@@ -2856,14 +2970,21 @@ mod tests {
                 i
             );
             if !run_strings.is_null(i) {
-                assert_eq!(run_strings.value(i), compacted_strings.value(i), "index {i}: value must match");
+                assert_eq!(
+                    run_strings.value(i),
+                    compacted_strings.value(i),
+                    "index {i}: value must match"
+                );
             }
         }
     }
 
     #[test]
     fn identifiers_are_quoted_not_interpolated() {
-        assert_eq!(quote_ident("geom\"; DROP TABLE t; --"), "\"geom\"\"; DROP TABLE t; --\"");
+        assert_eq!(
+            quote_ident("geom\"; DROP TABLE t; --"),
+            "\"geom\"\"; DROP TABLE t; --\""
+        );
     }
 
     /// X7 (Amendment 5, row 5.6): `a_live_projected_text_stream_emits_every_attribute_column_
@@ -2883,8 +3004,8 @@ mod tests {
     // chunk retains far more than the declared bound once compaction never runs). Reverted.
     #[cfg(feature = "fixture")]
     #[test]
-    fn a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound()
-    {
+    fn a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound(
+    ) {
         use crate::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec};
 
         let dir = std::env::temp_dir().join("spatial-engine-x7-retention-tests");
@@ -2912,7 +3033,9 @@ mod tests {
 
         let ds = Dataset::open(&path).expect("open");
 
-        let projection = ds.resolve_projection(&["text".to_string()]).expect("admitted projection");
+        let projection = ds
+            .resolve_projection(&["text".to_string()])
+            .expect("admitted projection");
         let stream = ds
             .stream_projected_with_cancel(&ViewportQuery::all(), &projection, CancelToken::new())
             .expect("stream");
@@ -2943,7 +3066,10 @@ mod tests {
             }
         }
         assert_eq!(rows_seen, 4_000, "every row must be seen exactly once");
-        assert!(checked_any, "must have checked at least one attribute column");
+        assert!(
+            checked_any,
+            "must have checked at least one attribute column"
+        );
 
         drop(stream);
         let fixture_sha_after = {
@@ -2953,7 +3079,10 @@ mod tests {
             h.update(&bytes);
             format!("{:x}", h.finalize())
         };
-        assert_eq!(fixture_sha_after, fixture_sha_before, "the fixture file must be unchanged by this run");
+        assert_eq!(
+            fixture_sha_after, fixture_sha_before,
+            "the fixture file must be unchanged by this run"
+        );
     }
 
     // ---- lever A ------------------------------------------------------------------------------
@@ -2972,8 +3101,20 @@ mod tests {
         let (d, b) = (BatchSizePolicy::default(), BatchSizePolicy::time_budgeted());
         assert_eq!(b.cut, BatchCutPolicy::TimeBudgetedFirstBatch);
         assert_eq!(
-            (d.first_target_bytes, d.growth_factor, d.target_bytes, d.min_bytes, d.max_rows),
-            (b.first_target_bytes, b.growth_factor, b.target_bytes, b.min_bytes, b.max_rows),
+            (
+                d.first_target_bytes,
+                d.growth_factor,
+                d.target_bytes,
+                d.min_bytes,
+                d.max_rows
+            ),
+            (
+                b.first_target_bytes,
+                b.growth_factor,
+                b.target_bytes,
+                b.min_bytes,
+                b.max_rows
+            ),
         );
     }
 
@@ -2986,20 +3127,35 @@ mod tests {
         assert!(!is_timing_dependent(Unordered, SizeOnly));
         assert!(!is_timing_dependent(Unordered, TimeBudgetedFirstBatch));
         assert!(!is_timing_dependent(ByIdentityAscending, SizeOnly));
-        assert!(is_timing_dependent(ByIdentityAscending, TimeBudgetedFirstBatch));
+        assert!(is_timing_dependent(
+            ByIdentityAscending,
+            TimeBudgetedFirstBatch
+        ));
     }
 
     #[test]
     fn the_cut_precedence_makes_a_time_budget_count_mean_what_it_says() {
         let (target, max_rows) = (1000usize, 10usize);
         // Size wins over everything: a batch that reached its target was going to be cut anyway.
-        assert_eq!(cut_reason(1000, 1, target, max_rows, true), Some(BatchCut::SizeTarget));
-        assert_eq!(cut_reason(1001, 20, target, max_rows, true), Some(BatchCut::SizeTarget));
+        assert_eq!(
+            cut_reason(1000, 1, target, max_rows, true),
+            Some(BatchCut::SizeTarget)
+        );
+        assert_eq!(
+            cut_reason(1001, 20, target, max_rows, true),
+            Some(BatchCut::SizeTarget)
+        );
         // Rows win over the budget, for the same reason.
-        assert_eq!(cut_reason(10, 10, target, max_rows, true), Some(BatchCut::RowCeiling));
+        assert_eq!(
+            cut_reason(10, 10, target, max_rows, true),
+            Some(BatchCut::RowCeiling)
+        );
         // The budget is reported only where nothing else would have cut — which is what makes it
         // countable as "this batch exists because of lever A".
-        assert_eq!(cut_reason(10, 1, target, max_rows, true), Some(BatchCut::TimeBudget));
+        assert_eq!(
+            cut_reason(10, 1, target, max_rows, true),
+            Some(BatchCut::TimeBudget)
+        );
         // Disarmed, the same state cuts nothing at all.
         assert_eq!(cut_reason(10, 1, target, max_rows, false), None);
     }
@@ -3015,7 +3171,10 @@ mod tests {
             cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, true),
             Some(BatchCut::TimeBudget)
         );
-        assert_eq!(cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, false), None);
+        assert_eq!(
+            cut_reason(tiny, 1, TARGET_BATCH_BYTES, MAX_ROWS_PER_BATCH, false),
+            None
+        );
     }
 
     // ---- filter composition (`cut/sql-filter` P2) --------------------------------------------
@@ -3033,12 +3192,18 @@ mod tests {
         // Carries a `zone` column so E-17's projected cases have a real admitted column to name —
         // `build_sql` never reads the file, so the unprojected cases below are unaffected by it.
         fn test_dataset(name: &str) -> Dataset {
-            let dir = std::env::temp_dir().join("spatial-engine-build-sql-tests").join(name);
+            let dir = std::env::temp_dir()
+                .join("spatial-engine-build-sql-tests")
+                .join(name);
             std::fs::create_dir_all(&dir).unwrap();
             let path = dir.join("fixture.parquet");
             write_geoparquet(
                 &path,
-                &FixtureSpec { features: 8, attributes: AttributeMode::CategoricalZone, ..Default::default() },
+                &FixtureSpec {
+                    features: 8,
+                    attributes: AttributeMode::CategoricalZone,
+                    ..Default::default()
+                },
             )
             .expect("fixture");
             Dataset::open(&path).expect("open")
@@ -3054,7 +3219,12 @@ mod tests {
         #[test]
         fn the_where_composition_matrix_matches_the_declared_rule_exactly() {
             let ds = test_dataset("composition_matrix");
-            let bbox = Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 };
+            let bbox = Bbox {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            };
             let predicate =
                 || AdmittedPredicate::unchecked_for_composition_test("zone = 'residential'".into());
             let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
@@ -3072,8 +3242,18 @@ mod tests {
                 (None, None, None, String::new()),
                 (None, None, Some(7), " LIMIT 7".to_string()),
                 (None, Some(bbox), None, format!(" WHERE {BBOX_COND}")),
-                (None, Some(bbox), Some(7), format!(" WHERE {BBOX_COND} LIMIT 7")),
-                (Some(predicate()), None, None, " WHERE (zone = 'residential')".to_string()),
+                (
+                    None,
+                    Some(bbox),
+                    Some(7),
+                    format!(" WHERE {BBOX_COND} LIMIT 7"),
+                ),
+                (
+                    Some(predicate()),
+                    None,
+                    None,
+                    " WHERE (zone = 'residential')".to_string(),
+                ),
                 (
                     Some(predicate()),
                     None,
@@ -3096,10 +3276,17 @@ mod tests {
 
             for (filter, bbox, limit, suffix) in cases {
                 let had_filter = filter.is_some();
-                let projections: [(&[arrow::datatypes::Field], &str); 2] =
-                    [(&[], PREFIX), (std::slice::from_ref(&zone_field), PROJECTED_PREFIX)];
+                let projections: [(&[arrow::datatypes::Field], &str); 2] = [
+                    (&[], PREFIX),
+                    (std::slice::from_ref(&zone_field), PROJECTED_PREFIX),
+                ];
                 for (attributes, prefix) in projections {
-                    let q = ViewportQuery { bbox, bbox_crs: None, limit, filter: filter.clone() };
+                    let q = ViewportQuery {
+                        bbox,
+                        bbox_crs: None,
+                        limit,
+                        filter: filter.clone(),
+                    };
                     let (sql, _plan) = ds
                         .build_sql(&q, IndexUse::Off, attributes, RowOrdering::Unordered)
                         .expect("build_sql");
@@ -3120,8 +3307,9 @@ mod tests {
         fn the_predicate_text_rides_verbatim_never_rewritten_or_case_folded() {
             let ds = test_dataset("verbatim");
             let odd = "  Zone = 'Residential'  ";
-            let q = ViewportQuery::all()
-                .with_filter(AdmittedPredicate::unchecked_for_composition_test(odd.to_string()));
+            let q = ViewportQuery::all().with_filter(
+                AdmittedPredicate::unchecked_for_composition_test(odd.to_string()),
+            );
             let (sql, _) = ds
                 .build_sql(&q, IndexUse::Off, &[], RowOrdering::Unordered)
                 .expect("build_sql");
@@ -3140,10 +3328,16 @@ mod tests {
             let ds = test_dataset("projected_verbatim");
             let odd = "  Zone = 'Residential'  ";
             let zone_field = arrow::datatypes::Field::new("zone", DataType::Utf8, true);
-            let q = ViewportQuery::all()
-                .with_filter(AdmittedPredicate::unchecked_for_composition_test(odd.to_string()));
+            let q = ViewportQuery::all().with_filter(
+                AdmittedPredicate::unchecked_for_composition_test(odd.to_string()),
+            );
             let (sql, _) = ds
-                .build_sql(&q, IndexUse::Off, std::slice::from_ref(&zone_field), RowOrdering::Unordered)
+                .build_sql(
+                    &q,
+                    IndexUse::Off,
+                    std::slice::from_ref(&zone_field),
+                    RowOrdering::Unordered,
+                )
                 .expect("build_sql");
             assert_eq!(
                 sql,

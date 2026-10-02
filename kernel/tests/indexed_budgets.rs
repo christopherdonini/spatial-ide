@@ -132,11 +132,19 @@ impl Canary {
         std::hint::black_box(canary_ms(CANARY_WARMUP_ITERS));
         let short: Vec<f64> = (0..5).map(|_| canary_ms(CANARY_ITERS_SHORT)).collect();
         let long: Vec<f64> = (0..3).map(|_| canary_ms(CANARY_ITERS_LONG)).collect();
-        let c = Self { label: label.into(), short, long };
+        let c = Self {
+            label: label.into(),
+            short,
+            long,
+        };
         println!(
             "canary [{label}] long min {:.1} ms  raw {}",
             c.long_min(),
-            c.long.iter().map(|v| format!("{v:.1}")).collect::<Vec<_>>().join(", ")
+            c.long
+                .iter()
+                .map(|v| format!("{v:.1}"))
+                .collect::<Vec<_>>()
+                .join(", ")
         );
         c
     }
@@ -179,9 +187,16 @@ mod procmem {
     }
 
     pub fn sample() -> Option<Counters> {
-        let mut c = Counters { cb: std::mem::size_of::<Counters>() as u32, ..Default::default() };
+        let mut c = Counters {
+            cb: std::mem::size_of::<Counters>() as u32,
+            ..Default::default()
+        };
         let ok = unsafe {
-            K32GetProcessMemoryInfo(GetCurrentProcess(), &mut c, std::mem::size_of::<Counters>() as u32)
+            K32GetProcessMemoryInfo(
+                GetCurrentProcess(),
+                &mut c,
+                std::mem::size_of::<Counters>() as u32,
+            )
         };
         (ok != 0).then_some(c)
     }
@@ -215,8 +230,12 @@ impl MemorySampler {
         let peak_working_set = Arc::new(AtomicUsize::new(0));
         let samples = Arc::new(AtomicUsize::new(0));
         let join = {
-            let (stop, pp, pw, n) =
-                (stop.clone(), peak_private.clone(), peak_working_set.clone(), samples.clone());
+            let (stop, pp, pw, n) = (
+                stop.clone(),
+                peak_private.clone(),
+                peak_working_set.clone(),
+                samples.clone(),
+            );
             std::thread::spawn(move || {
                 while !stop.load(Ordering::SeqCst) {
                     if let Some(c) = procmem::sample() {
@@ -228,7 +247,13 @@ impl MemorySampler {
                 }
             })
         };
-        Self { stop, peak_private, peak_working_set, samples, join: Some(join) }
+        Self {
+            stop,
+            peak_private,
+            peak_working_set,
+            samples,
+            join: Some(join),
+        }
     }
 
     fn finish(mut self) -> (usize, usize, usize) {
@@ -290,13 +315,19 @@ impl ScanPhaseWatch {
     }
 
     fn seen(&self) -> Vec<&'static str> {
-        self.phases.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        self.phases
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 }
 
 impl IndexPhaseObserver for ScanPhaseWatch {
     fn phase(&self, phase: IndexPhase) {
-        self.phases.lock().unwrap_or_else(|e| e.into_inner()).push(phase.as_str());
+        self.phases
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(phase.as_str());
         if phase == IndexPhase::DuckDbScan {
             *self.entered_scan.lock().unwrap_or_else(|e| e.into_inner()) = Some(Instant::now());
             self.signal.notify_all();
@@ -320,15 +351,33 @@ fn sorted(v: &[f64]) -> Vec<f64> {
 }
 
 fn json_f64s(v: &[f64]) -> String {
-    format!("[{}]", v.iter().map(|x| format!("{x:.3}")).collect::<Vec<_>>().join(", "))
+    format!(
+        "[{}]",
+        v.iter()
+            .map(|x| format!("{x:.3}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 fn json_strs(v: &[&str]) -> String {
-    format!("[{}]", v.iter().map(|s| format!("\"{}\"", json_escape(s))).collect::<Vec<_>>().join(", "))
+    format!(
+        "[{}]",
+        v.iter()
+            .map(|s| format!("\"{}\"", json_escape(s)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 fn json_u64s(v: &[u64]) -> String {
-    format!("[{}]", v.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "))
+    format!(
+        "[{}]",
+        v.iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 /// p50/p95 plus every raw sample. The samples travel with the summary always: a percentile over
@@ -351,15 +400,25 @@ fn summary_json(label: &str, v: &[f64]) -> String {
 // ---------------------------------------------------------------------------------------------
 
 async fn connect(dp: &RunningDataPlane) -> Client {
-    let mut req =
-        format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 fn params(bbox: Option<[f64; 4]>) -> StreamParams {
@@ -372,7 +431,10 @@ fn params(bbox: Option<[f64; 4]>) -> StreamParams {
 }
 
 async fn start(c: &mut Client, p: StreamParams) {
-    let f = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &p.encode()));
+    let f = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &p.encode()),
+    );
     c.send(Message::Binary(f.into())).await.expect("start");
 }
 
@@ -414,7 +476,9 @@ async fn drain(c: &mut Client, col: &mut Collected, t0: Instant, stop_after: Opt
             ),
         };
         let Message::Binary(b) = msg else { continue };
-        let Some(len) = wire::payload_len(&b) else { continue };
+        let Some(len) = wire::payload_len(&b) else {
+            continue;
+        };
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
         match b[0] {
             wire::TAG_BATCH => {
@@ -438,8 +502,8 @@ async fn drain(c: &mut Client, col: &mut Collected, t0: Instant, stop_after: Opt
 }
 
 fn rows_in(payload: &[u8]) -> usize {
-    let mut rdr =
-        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None)
+        .expect("ipc");
     rdr.next().expect("batch").expect("decode").num_rows()
 }
 
@@ -544,10 +608,19 @@ impl Point {
             self.batches,
             self.payload_bytes,
             self.first_batch_bytes,
-            summary_json("wire: query start -> first batch on the client", &self.wire_first),
+            summary_json(
+                "wire: query start -> first batch on the client",
+                &self.wire_first
+            ),
             summary_json("wire: query start -> terminal", &self.wire_total),
-            summary_json("engine-direct: stream() -> first batch returned", &self.engine_first),
-            summary_json("engine-direct: stream() -> end of stream", &self.engine_total),
+            summary_json(
+                "engine-direct: stream() -> first batch returned",
+                &self.engine_first
+            ),
+            summary_json(
+                "engine-direct: stream() -> end of stream",
+                &self.engine_total
+            ),
             json_u64s(&self.peak_resident),
         )
     }
@@ -580,7 +653,14 @@ fn engine_direct(ds: &Dataset, q: &ViewportQuery) -> (f64, f64, u64, u64, u64, u
         bytes += info.payload_bytes as u64;
         buf.clear();
     }
-    (first_ms.unwrap_or(f64::NAN), t0.elapsed().as_secs_f64() * 1000.0, rows, batches, bytes, first_bytes)
+    (
+        first_ms.unwrap_or(f64::NAN),
+        t0.elapsed().as_secs_f64() * 1000.0,
+        rows,
+        batches,
+        bytes,
+        first_bytes,
+    )
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -605,8 +685,8 @@ async fn measure_the_indexed_slice_against_docs_08() {
     // B: a byte-identical second copy used **only** for index-build cancellation. The index cache
     // is keyed by path, so trials on B cannot disturb A's cache entry — and a cancelled build on A
     // would otherwise be indistinguishable, in the cache, from one that never ran.
-    let dir =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/slice-budgets");
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../target/fixtures/slice-budgets");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path_a = dir.join("polygons-100k.parquet");
     let path_b = dir.join("polygons-100k-cancel-b.parquet");
@@ -618,7 +698,10 @@ async fn measure_the_indexed_slice_against_docs_08() {
     };
     let facts: FixtureFacts = write_geoparquet(&path_a, &spec).expect("fixture A");
     let facts_b: FixtureFacts = write_geoparquet(&path_b, &spec).expect("fixture B");
-    assert_eq!(facts.coord_bits_xor, facts_b.coord_bits_xor, "B must be the same bytes as A");
+    assert_eq!(
+        facts.coord_bits_xor, facts_b.coord_bits_xor,
+        "B must be the same bytes as A"
+    );
     println!(
         "fixture: {} features, {} vertices, {} rings, {} bytes",
         facts.features, facts.vertices, facts.rings, facts.bytes
@@ -688,7 +771,8 @@ async fn measure_the_indexed_slice_against_docs_08() {
                 // The cancel arrived after the scan had already finished. Counted and reported,
                 // never dropped silently and never counted as a latency sample.
                 ident_completed += 1;
-            } else if err.as_deref() == Some("cancelled") || err.iter().any(|e| e.contains("ancel")) {
+            } else if err.as_deref() == Some("cancelled") || err.iter().any(|e| e.contains("ancel"))
+            {
                 ident_latency.push(observed.duration_since(sent).as_secs_f64() * 1000.0);
                 ident_delays.push(delay);
             } else {
@@ -711,7 +795,10 @@ async fn measure_the_indexed_slice_against_docs_08() {
     // phase is over, because disk headroom is itself an invalidator here.
     let path_c = dir.join("polygons-100k-scan-c.parquet");
     let facts_c: FixtureFacts = write_geoparquet(&path_c, &spec).expect("fixture C");
-    assert_eq!(facts.coord_bits_xor, facts_c.coord_bits_xor, "C must be the same bytes as A");
+    assert_eq!(
+        facts.coord_bits_xor, facts_c.coord_bits_xor,
+        "C must be the same bytes as A"
+    );
     let ds_c = Arc::new(Dataset::open(&path_c).expect("open C"));
 
     let mut scan_latency = Vec::new();
@@ -732,7 +819,12 @@ async fn measure_the_indexed_slice_against_docs_08() {
                 let r = ds.build_index_observed(&c2, Some(&*observer));
                 // Stamped **inside the thread doing the work**, the moment it has observed the
                 // cancel — never after a handoff back to the caller.
-                (Instant::now(), r.is_ok(), observer.last_phase(), observer.seen())
+                (
+                    Instant::now(),
+                    r.is_ok(),
+                    observer.last_phase(),
+                    observer.seen(),
+                )
             });
 
             if watch.wait_for_scan(Duration::from_secs(30)).is_none() {
@@ -797,7 +889,9 @@ async fn measure_the_indexed_slice_against_docs_08() {
             let (observed, ok) = worker.join().expect("index worker");
             if ok {
                 idx_completed_at = Some(delay);
-                println!("index-build cancel ladder: a build completed at delay {delay} ms — stopping");
+                println!(
+                    "index-build cancel ladder: a build completed at delay {delay} ms — stopping"
+                );
                 break 'ladder;
             }
             idx_latency.push(observed.duration_since(sent).as_secs_f64() * 1000.0);
@@ -825,15 +919,26 @@ async fn measure_the_indexed_slice_against_docs_08() {
     let n_lo = spatial_engine::fixture::N_LO;
     let viewports: Vec<(&str, Option<[f64; 4]>)> = vec![
         ("full", None),
-        ("quarter-extent", Some([e_lo, n_lo, e_lo + span * 0.5, n_lo + span * 0.5])),
-        ("one-sixty-fourth-extent", Some([e_lo, n_lo, e_lo + span * 0.125, n_lo + span * 0.125])),
+        (
+            "quarter-extent",
+            Some([e_lo, n_lo, e_lo + span * 0.5, n_lo + span * 0.5]),
+        ),
+        (
+            "one-sixty-fourth-extent",
+            Some([e_lo, n_lo, e_lo + span * 0.125, n_lo + span * 0.125]),
+        ),
     ];
     println!("viewports: {viewports:?}");
 
     let ds_a = Dataset::open(&path_a).expect("open A");
     let query_for = |bbox: Option<[f64; 4]>| match bbox {
         Some(b) => ViewportQuery::viewport(
-            Bbox { xmin: b[0], ymin: b[1], xmax: b[2], ymax: b[3] },
+            Bbox {
+                xmin: b[0],
+                ymin: b[1],
+                xmax: b[2],
+                ymax: b[3],
+            },
             "EPSG:2056",
         ),
         None => ViewportQuery::all(),
@@ -872,7 +977,12 @@ async fn measure_the_indexed_slice_against_docs_08() {
     for _ in 0..3 {
         let t = Instant::now();
         let r = ds_a.build_index(&CancelToken::new()).expect("reuse A");
-        reuse_reports.push((t.elapsed().as_secs_f64() * 1000.0, r.content_hash_millis, r.build_millis, r.miss.is_none()));
+        reuse_reports.push((
+            t.elapsed().as_secs_f64() * 1000.0,
+            r.content_hash_millis,
+            r.build_millis,
+            r.miss.is_none(),
+        ));
     }
     println!(
         "index on A: hash {:.1} ms, build {:.1} ms, wall {:.1} ms, {} features, {} B declared, {} rows scanned",
@@ -906,7 +1016,11 @@ async fn measure_the_indexed_slice_against_docs_08() {
     // become the system of record, which ADR-006 says a pure transformation's cached output is not
     // — and every timing above would be describing two different questions.
     for (u, i) in unindexed.iter().zip(indexed.iter()) {
-        assert_eq!(u.rows, i.rows, "{}: indexed and unindexed row counts must agree", u.label);
+        assert_eq!(
+            u.rows, i.rows,
+            "{}: indexed and unindexed row counts must agree",
+            u.label
+        );
         assert_eq!(
             u.payload_bytes, i.payload_bytes,
             "{}: indexed and unindexed payloads must be identical",
@@ -928,7 +1042,10 @@ async fn measure_the_indexed_slice_against_docs_08() {
         let t0 = Instant::now();
         let mut col = Collected::default();
         drain(&mut c, &mut col, t0, Some(2)).await;
-        assert_eq!(col.batches, 2, "trial {trial}: the stream was under way before the cancel");
+        assert_eq!(
+            col.batches, 2,
+            "trial {trial}: the stream was under way before the cancel"
+        );
         let sent_at = Instant::now();
         cancel_frame(&mut c).await;
         drain(&mut c, &mut col, t0, None).await;
@@ -1002,10 +1119,16 @@ async fn measure_the_indexed_slice_against_docs_08() {
 
     let mut misses: Vec<String> = Vec::new();
     if pct(&mid_sorted, 0.95) >= 100.0 {
-        misses.push(format!("mid-stream cancel p95 {:.3} ms >= 100 ms", pct(&mid_sorted, 0.95)));
+        misses.push(format!(
+            "mid-stream cancel p95 {:.3} ms >= 100 ms",
+            pct(&mid_sorted, 0.95)
+        ));
     }
     if pct(&early_sorted, 0.95) >= 100.0 {
-        misses.push(format!("cancel-before-first p95 {:.3} ms >= 100 ms", pct(&early_sorted, 0.95)));
+        misses.push(format!(
+            "cancel-before-first p95 {:.3} ms >= 100 ms",
+            pct(&early_sorted, 0.95)
+        ));
     }
     if !ident_latency.is_empty() && pct(&sorted(&ident_latency), 0.95) >= 100.0 {
         misses.push(format!(
@@ -1210,24 +1333,46 @@ async fn measure_the_indexed_slice_against_docs_08() {
         early_summary = summary_json("cancel observed, before the first batch", &early_latency),
         early_after = json_u64s(&early_after),
         idx_delays = json_u64s(&idx_delays),
-        idx_stop = idx_completed_at.map(|v| v.to_string()).unwrap_or("null".into()),
+        idx_stop = idx_completed_at
+            .map(|v| v.to_string())
+            .unwrap_or("null".into()),
         idx_summary = summary_json("cancel observed, during an index build", &idx_latency),
         scan_delays = json_u64s(&scan_delays),
-        scan_stop = scan_stopped_at.map(|v| v.to_string()).unwrap_or("null".into()),
-        scan_summary = summary_json("cancel observed, inside the DuckDB scan phase", &scan_latency),
+        scan_stop = scan_stopped_at
+            .map(|v| v.to_string())
+            .unwrap_or("null".into()),
+        scan_summary = summary_json(
+            "cancel observed, inside the DuckDB scan phase",
+            &scan_latency
+        ),
         scan_issued = json_strs(&scan_issued_in),
         scan_observed = json_strs(&scan_observed_in),
         scan_completed = scan_completed_first,
         scan_never = scan_never_started,
         ident_delays = json_u64s(&ident_delays),
-        ident_summary = summary_json("cancel observed, during the identity uniqueness scan", &ident_latency),
+        ident_summary = summary_json(
+            "cancel observed, during the identity uniqueness scan",
+            &ident_latency
+        ),
         ident_completed = ident_completed,
         ident_other = ident_other_error,
         runs = SELECTIVITY_RUNS,
-        unindexed = unindexed.iter().map(|p| p.json()).collect::<Vec<_>>().join(",\n    "),
-        indexed = indexed.iter().map(|p| p.json()).collect::<Vec<_>>().join(",\n    "),
-        baseline_private = baseline_mem.map(|m| m.0.to_string()).unwrap_or("null".into()),
-        baseline_ws = baseline_mem.map(|m| m.1.to_string()).unwrap_or("null".into()),
+        unindexed = unindexed
+            .iter()
+            .map(|p| p.json())
+            .collect::<Vec<_>>()
+            .join(",\n    "),
+        indexed = indexed
+            .iter()
+            .map(|p| p.json())
+            .collect::<Vec<_>>()
+            .join(",\n    "),
+        baseline_private = baseline_mem
+            .map(|m| m.0.to_string())
+            .unwrap_or("null".into()),
+        baseline_ws = baseline_mem
+            .map(|m| m.1.to_string())
+            .unwrap_or("null".into()),
         peak_private = peak_private,
         peak_ws = peak_ws,
         sample_ms = MEMORY_SAMPLE_MS,
@@ -1280,7 +1425,11 @@ async fn measure_the_indexed_slice_against_docs_08() {
             idx_latency.len()
         );
     }
-    println!("canary spread: minima {:.2}% · all raw {:.2}%", canary_spread_minima * 100.0, canary_spread_all * 100.0);
+    println!(
+        "canary spread: minima {:.2}% · all raw {:.2}%",
+        canary_spread_minima * 100.0,
+        canary_spread_all * 100.0
+    );
     if !misses.is_empty() {
         println!("HARD GATES MISSED: {}", misses.join("; "));
     }
@@ -1332,21 +1481,34 @@ async fn measure_point(
         grant(&mut c, 100_000).await;
         let mut col = Collected::default();
         drain(&mut c, &mut col, t0, None).await;
-        assert_eq!(col.terminal, Some(wire::TERM_COMPLETED), "{label}: the stream must complete");
+        assert_eq!(
+            col.terminal,
+            Some(wire::TERM_COMPLETED),
+            "{label}: the stream must complete"
+        );
         wire_first.push(col.first_batch_ms.expect("a first batch"));
         wire_total.push(col.total_ms);
         rows = col.rows as u64;
         batches = col.batches as u64;
         bytes = col.payload_bytes as u64;
         first_bytes = col.first_batch_bytes as u64;
-        peak_resident.push(dp.registry.snapshot().last().expect("stream").peak_resident_bytes() as u64);
+        peak_resident.push(
+            dp.registry
+                .snapshot()
+                .last()
+                .expect("stream")
+                .peak_resident_bytes() as u64,
+        );
         c.close(None).await.ok();
     }
 
     let (mut engine_first, mut engine_total) = (Vec::new(), Vec::new());
     for _ in 0..SELECTIVITY_RUNS {
         let (f, t, r, _b, _by, _fb) = engine_direct(ds, &q);
-        assert_eq!(r, rows, "{label}: engine-direct and wire row counts must agree");
+        assert_eq!(
+            r, rows,
+            "{label}: engine-direct and wire row counts must agree"
+        );
         engine_first.push(f);
         engine_total.push(t);
     }

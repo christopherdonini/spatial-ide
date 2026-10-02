@@ -36,11 +36,11 @@ use std::time::{Duration, Instant};
 
 use spatial_engine::trace::{self, TraceKey};
 use spatial_engine::{CancelToken, Dataset, ViewportQuery};
+use spatial_kernel::permission::boundary::BoundaryError;
 use spatial_kernel::permission::{
     boundary, AuditLog, DestinationScope, GrantSet, OperationKind, PreNamedApproval, Principal,
     PrincipalKind, PublishAttempt, PublishGrant, SourceScope,
 };
-use spatial_kernel::permission::boundary::BoundaryError;
 use spatial_kernel::publish::{
     CorrespondingSource, CorrespondingSourceKind, PublishError, PublishPhase, PublishProgress,
     PublishRequest, ViewerAsset, ViewerAssets, ViewerLicenseInput,
@@ -106,14 +106,26 @@ fn clock() -> String {
 static CLOCK: fn() -> String = clock;
 
 fn principal() -> Principal {
-    Principal { kind: PrincipalKind::OsUser, id: "cancel-rescore-operator".into() }
+    Principal {
+        kind: PrincipalKind::OsUser,
+        id: "cancel-rescore-operator".into(),
+    }
 }
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "app.js".into(), bytes: b"export const ok = 1;\n".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "app.js".into(),
+            bytes: b"export const ok = 1;\n".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -142,11 +154,7 @@ const STYLE: &str = r##"{
   }
 }"##;
 
-fn request<'a>(
-    ds: &'a Dataset,
-    v: &'a ViewerAssets,
-    destination: PathBuf,
-) -> PublishRequest<'a> {
+fn request<'a>(ds: &'a Dataset, v: &'a ViewerAssets, destination: PathBuf) -> PublishRequest<'a> {
     PublishRequest {
         dataset: ds,
         dataset_name: "parcels",
@@ -169,7 +177,9 @@ fn request<'a>(
 }
 
 fn grant_for(ds: &Dataset, destination: &Path) -> GrantSet {
-    let pin = ds.content_pin().expect("the source is pinned before the boundary runs");
+    let pin = ds
+        .content_pin()
+        .expect("the source is pinned before the boundary runs");
     let mut set = GrantSet::new();
     set.add(
         PublishGrant::new(
@@ -392,13 +402,7 @@ impl PublishProgress for Obs {
 }
 
 /// Run one trial and return what it produced.
-fn run_trial(
-    ds: &Dataset,
-    v: &ViewerAssets,
-    dir: &Path,
-    cell: Cell,
-    index: usize,
-) -> Trial {
+fn run_trial(ds: &Dataset, v: &ViewerAssets, dir: &Path, cell: Cell, index: usize) -> Trial {
     let label = format!("{}-{index}", cell.label());
     let destination = dir.join(&label);
     let _ = std::fs::remove_dir_all(&destination);
@@ -447,7 +451,9 @@ fn run_trial(
     // **`checked_duration_since`, not subtraction.** `Instant` arithmetic saturates, so a fire that
     // landed after the return would silently produce 0.000 ms — a fabricated perfect score.
     let observed_ms = match (requested_at, observed_at) {
-        (Some(a), Some(b)) => b.checked_duration_since(a).map(|d| d.as_secs_f64() * 1000.0),
+        (Some(a), Some(b)) => b
+            .checked_duration_since(a)
+            .map(|d| d.as_secs_f64() * 1000.0),
         _ => None,
     };
     let acknowledged_ms = requested_at
@@ -458,7 +464,13 @@ fn run_trial(
     let (on_target, off_target_why) = match cell {
         Cell::InsideSort => {
             if !saw_qr {
-                (false, Some("QueryRunning never fired: the sort finished inside one poll interval".into()))
+                (
+                    false,
+                    Some(
+                        "QueryRunning never fired: the sort finished inside one poll interval"
+                            .into(),
+                    ),
+                )
             } else if partitions_at_fire != 0 {
                 (
                     false,
@@ -549,11 +561,16 @@ fn measure_the_cancellation_rescore() {
          create its own input could measure a different file from the one it names."
     );
     let control = control_path();
-    assert!(control.exists(), "the 145 MB control is missing and is not generated here either");
+    assert!(
+        control.exists(),
+        "the 145 MB control is missing and is not generated here either"
+    );
 
     println!("verifying the fixture against its recorded hash (this reads 5 GB)…");
     let ds = Dataset::open(&fixture).expect("open the 5 GB fixture");
-    let (pin, hash_millis) = ds.pin_content(&CancelToken::new()).expect("pin the fixture");
+    let (pin, hash_millis) = ds
+        .pin_content(&CancelToken::new())
+        .expect("pin the fixture");
     let observed_hash = format!("sha256:{}", pin.hash());
     println!("whole-file rehash took {hash_millis:.1} ms");
     assert_eq!(
@@ -575,14 +592,22 @@ fn measure_the_cancellation_rescore() {
 
     // Every later reading is preceded by `CANARY_SETTLE` (amendment A1).
     fn settled_canary(label: &str) -> Canary {
-        println!("settling {}s before the [{label}] canary…", CANARY_SETTLE.as_secs());
+        println!(
+            "settling {}s before the [{label}] canary…",
+            CANARY_SETTLE.as_secs()
+        );
         std::thread::sleep(CANARY_SETTLE);
         Canary::take(label)
     }
 
     // ---- C1–C4 ------------------------------------------------------------------------------
     let mut trials: Vec<Trial> = Vec::new();
-    for cell in [Cell::InsideSort, Cell::MidWrite, Cell::PreSync, Cell::A6Continuity] {
+    for cell in [
+        Cell::InsideSort,
+        Cell::MidWrite,
+        Cell::PreSync,
+        Cell::A6Continuity,
+    ] {
         println!("\n=== {} ===", cell.label());
         for i in 0..TRIALS {
             let t = run_trial(&ds, &v, &dir, cell, i);
@@ -633,11 +658,20 @@ fn measure_the_cancellation_rescore() {
     // ---- Verdicts ---------------------------------------------------------------------------
     let spreads = phase_spreads(&canaries);
     for (phase, spread, ok) in &spreads {
-        println!("canary [{phase}]: spread {:.2}% {}", spread * 100.0, if *ok { "OK" } else { "EXCEEDED" });
+        println!(
+            "canary [{phase}]: spread {:.2}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "EXCEEDED" }
+        );
     }
 
     let mut cells_json = Vec::new();
-    for cell in [Cell::InsideSort, Cell::MidWrite, Cell::PreSync, Cell::A6Continuity] {
+    for cell in [
+        Cell::InsideSort,
+        Cell::MidWrite,
+        Cell::PreSync,
+        Cell::A6Continuity,
+    ] {
         let mine: Vec<&Trial> = trials.iter().filter(|t| t.cell == cell).collect();
         let samples: Vec<&&Trial> = mine.iter().filter(|t| t.is_sample()).collect();
         let obs: Vec<f64> = samples.iter().filter_map(|t| t.observed_ms).collect();
@@ -700,15 +734,25 @@ fn measure_the_cancellation_rescore() {
         json_f64s(&off_first),
         json_f64s(&on_first),
         consistency,
-        canaries.iter().map(Canary::json).collect::<Vec<_>>().join(",\n    "),
+        canaries
+            .iter()
+            .map(Canary::json)
+            .collect::<Vec<_>>()
+            .join(",\n    "),
         spreads
             .iter()
-            .map(|(p, s, ok)| format!(r#"{{"phase": {p:?}, "spread": {s:.4}, "within_declared": {ok}}}"#))
+            .map(|(p, s, ok)| format!(
+                r#"{{"phase": {p:?}, "spread": {s:.4}, "within_declared": {ok}}}"#
+            ))
             .collect::<Vec<_>>()
             .join(",\n    "),
         free_before.map(|b| b.to_string()).unwrap_or("null".into()),
         free_after.map(|b| b.to_string()).unwrap_or("null".into()),
-        trials.iter().map(Trial::json).collect::<Vec<_>>().join(",\n    ")
+        trials
+            .iter()
+            .map(Trial::json)
+            .collect::<Vec<_>>()
+            .join(",\n    ")
     );
 
     let path = out_dir().join("cancel-rescore.json");
@@ -798,9 +842,15 @@ fn consistency_cell(ds: &Dataset) -> String {
     let t = guard.trace();
     let events = t.events();
     let dropped = t.dropped();
-    let traced_batches = events.iter().filter(|e| e.name == trace::BATCH_FULL).count() as u64;
-    let traced_rows: u64 =
-        events.iter().filter(|e| e.name == trace::BATCH_FULL).map(|e| e.rows).sum();
+    let traced_batches = events
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .count() as u64;
+    let traced_rows: u64 = events
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .map(|e| e.rows)
+        .sum();
     let traced_ttfb = t.segment_ms(trace::LEASE_ACQUIRED, trace::FIRST_BATCH_FULL);
     let sql_to_exec = t.segment_ms(trace::SQL_PREPARED, trace::EXECUTE_RETURNED);
     let exec_to_row = t.segment_ms(trace::EXECUTE_RETURNED, trace::FIRST_SOURCE_ROW);

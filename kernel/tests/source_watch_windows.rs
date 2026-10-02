@@ -28,7 +28,9 @@ use spatial_skp::v0::{
 const WAIT: Duration = Duration::from_secs(10);
 
 fn dir(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-source-watch-windows-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-source-watch-windows-tests")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).expect("scratch dir");
     d
@@ -36,8 +38,16 @@ fn dir(name: &str) -> PathBuf {
 
 fn fixture(parent: &std::path::Path) -> PathBuf {
     let path = parent.join("source.parquet");
-    write_geoparquet(&path, &FixtureSpec { features: 30, avg_vertices: 6, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 30,
+            avg_vertices: 6,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -102,12 +112,19 @@ fn a_real_write_to_the_open_source_ends_its_generation_through_the_host() {
     // call, since the descriptor already differs), proving nothing about the watcher at all. The
     // event arriving is what isolates the watcher's own contribution; the mutation breaks
     // exactly that.
-    let event = rx.recv_timeout(WAIT).expect("the real watch signals within the wait");
+    let event = rx
+        .recv_timeout(WAIT)
+        .expect("the real watch signals within the wait");
     assert_eq!(event.session, open.session);
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("refused");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("refused");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 }
 
@@ -133,15 +150,20 @@ fn renaming_the_watched_directory_ends_the_generation() {
     );
     let open = host.open_dataset(open_req(&path, "w2")).expect("open");
 
-    std::fs::rename(&parent, d.join("watched-parent-renamed")).expect("rename the watched directory");
+    std::fs::rename(&parent, d.join("watched-parent-renamed"))
+        .expect("rename the watched directory");
 
     // Wait for the real watcher's own event first — a stale absolute path after `parent`'s own
     // rename would ALSO fail the pre-check's re-read on the next query issue regardless of the
     // watcher, so a `viewport_query` retry loop here would not isolate this seam at all.
-    let event = rx.recv_timeout(WAIT).expect("the real watch signals within the wait (via G)");
+    let event = rx
+        .recv_timeout(WAIT)
+        .expect("the real watch signals within the wait (via G)");
     assert_eq!(event.session, open.session);
 
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("refused");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("refused");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 }
 
@@ -170,12 +192,19 @@ fn deleting_the_watched_directory_ends_the_generation() {
 
     // As W2: wait for the real event first — a deleted file also fails the pre-check's own re-read
     // regardless of the watcher, so a retry loop would not isolate this seam.
-    let event = rx.recv_timeout(WAIT).expect("the real watch signals within the wait");
+    let event = rx
+        .recv_timeout(WAIT)
+        .expect("the real watch signals within the wait");
     assert_eq!(event.session, open.session);
 
-    let refused = host.viewport_query(viewport_req(open.dataset.clone())).expect_err("refused");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect_err("refused");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 
     // Cleanup, matching the product's own close-then-forget order.
-    let _ = host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset });
+    let _ = host.close_dataset(CloseDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: open.dataset,
+    });
 }

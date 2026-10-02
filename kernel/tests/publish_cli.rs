@@ -63,7 +63,9 @@ const FEATURES: usize = 2_000;
 const WINDOW: f64 = 600.0;
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-publish-cli-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-publish-cli-tests")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -146,7 +148,9 @@ fn publish_bundle(args: &[&str]) -> Output {
 /// The final path component of this invocation's `--out`, which is what `--approve` must name.
 fn out_basename(args: &[&str]) -> Option<String> {
     let i = args.iter().position(|a| *a == "--out")?;
-    Path::new(args.get(i + 1)?).file_name().map(|n| n.to_string_lossy().to_string())
+    Path::new(args.get(i + 1)?)
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
 }
 
 /// Run the binary with **exactly** these arguments and nothing added.
@@ -156,7 +160,10 @@ fn out_basename(args: &[&str]) -> Option<String> {
 /// in `%LOCALAPPDATA%`, which is somebody's real record of real publishes and not a scratch file.
 fn publish_bundle_raw(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
-        .env(spatial_kernel::permission::AUDIT_LOG_ENV, audit_log_for(args))
+        .env(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            audit_log_for(args),
+        )
         .args(args)
         .output()
         .expect("run publish-bundle")
@@ -172,7 +179,11 @@ fn publish_bundle_raw(args: &[&str]) -> Output {
 /// test with a message about log rotation. `log.rs` declares that cross-process case uncoordinated
 /// rather than closed, so the harness must not create it.
 fn audit_log_for(args: &[&str]) -> PathBuf {
-    match args.iter().position(|a| *a == "--out").and_then(|i| args.get(i + 1)) {
+    match args
+        .iter()
+        .position(|a| *a == "--out")
+        .and_then(|i| args.get(i + 1))
+    {
         Some(out) => Path::new(out).with_extension("audit.jsonl"),
         // A run with no `--out` refuses during argument parsing and never opens a log; the path is
         // still set so an unexpected one cannot reach the operator's own file.
@@ -226,9 +237,12 @@ fn assert_bbox_filter_carries_no_caller_assertion(bundle: &Path) {
     // defect this file covers was in argument handling, and `--bbox` parsing is where a component
     // can go missing — see `a_bbox_with_an_unparseable_component_is_refused_rather_than_dropped`.
     let (e, n) = (spatial_engine::fixture::E_LO, spatial_engine::fixture::N_LO);
-    for (member, want) in
-        [("xmin", e), ("ymin", n), ("xmax", e + WINDOW), ("ymax", n + WINDOW)]
-    {
+    for (member, want) in [
+        ("xmin", e),
+        ("ymin", n),
+        ("xmax", e + WINDOW),
+        ("ymax", n + WINDOW),
+    ] {
         assert_eq!(
             filter[member].as_f64().unwrap(),
             want,
@@ -239,7 +253,10 @@ fn assert_bbox_filter_carries_no_caller_assertion(bundle: &Path) {
     // The filter really ran: some rows were excluded, and some survived. Without both halves a
     // `bbox_crs` of `null` could be true of a publish that quietly ignored `--bbox` entirely.
     let rows = m["data"]["rows"].as_u64().unwrap();
-    assert!(rows > 0, "the viewport selected nothing, so the publish proves nothing");
+    assert!(
+        rows > 0,
+        "the viewport selected nothing, so the publish proves nothing"
+    );
     assert!(
         rows < FEATURES as u64,
         "the viewport selected all {FEATURES} features, so no filtering is demonstrated"
@@ -271,7 +288,10 @@ fn a_bbox_publish_on_an_authority_identified_source_records_no_caller_assertion(
 
     // The fixture really is the source kind this test names — otherwise the two tests below could
     // both be running against the same file and one of them would be decorative.
-    assert_eq!(manifest(&dest)["crs"]["source"].as_str().unwrap(), "EPSG:2056");
+    assert_eq!(
+        manifest(&dest)["crs"]["source"].as_str().unwrap(),
+        "EPSG:2056"
+    );
     assert_bbox_filter_carries_no_caller_assertion(&dest);
 }
 
@@ -351,7 +371,10 @@ fn a_bbox_with_an_unparseable_component_is_refused_rather_than_dropped() {
             "`--bbox {bad}` was accepted; stdout:\n{}",
             String::from_utf8_lossy(&out.stdout)
         );
-        assert!(!dest.exists(), "`--bbox {bad}` wrote a bundle before failing");
+        assert!(
+            !dest.exists(),
+            "`--bbox {bad}` wrote a bundle before failing"
+        );
     }
 }
 
@@ -382,15 +405,17 @@ fn an_operator_license_requires_its_declaration_instant_and_never_borrows_the_bu
             "zone".into(),
         ]
     };
-    let run = |args: Vec<String>| {
-        publish_bundle(&args.iter().map(String::as_str).collect::<Vec<_>>())
-    };
+    let run =
+        |args: Vec<String>| publish_bundle(&args.iter().map(String::as_str).collect::<Vec<_>>());
 
     // Refused, and nothing is written.
     let mut without = base("no-at");
     without.extend(["--license".into(), "CC-BY-4.0".into()]);
     let out = run(without);
-    assert!(!out.status.success(), "--license without --license-at published anyway");
+    assert!(
+        !out.status.success(),
+        "--license without --license-at published anyway"
+    );
     assert!(
         String::from_utf8_lossy(&out.stderr).contains("--license-at"),
         "the refusal does not name the missing flag"
@@ -400,7 +425,10 @@ fn an_operator_license_requires_its_declaration_instant_and_never_borrows_the_bu
     // The reverse is refused too: there is no manifest state for "declared nothing, at 09:00".
     let mut orphan = base("orphan-at");
     orphan.extend(["--license-at".into(), "2026-08-06T09:00:00Z".into()]);
-    assert!(!run(orphan).status.success(), "--license-at without --license published anyway");
+    assert!(
+        !run(orphan).status.success(),
+        "--license-at without --license published anyway"
+    );
 
     // A blank license is refused at the library choke point as well as here.
     let mut blank = base("blank");
@@ -410,7 +438,10 @@ fn an_operator_license_requires_its_declaration_instant_and_never_borrows_the_bu
         "--license-at".into(),
         "2026-08-06T09:00:00Z".into(),
     ]);
-    assert!(!run(blank).status.success(), "a blank --license published anyway");
+    assert!(
+        !run(blank).status.success(),
+        "a blank --license published anyway"
+    );
 
     // …and a complete declaration publishes, carrying **the declared instant**, not the build's.
     let mut ok = base("declared");
@@ -427,7 +458,10 @@ fn an_operator_license_requires_its_declaration_instant_and_never_borrows_the_bu
     let out = run(ok);
     assert_ok(&out, "a complete operator declaration");
     let m = manifest(&d.join("declared"));
-    assert_eq!(m["license"]["state"].as_str().unwrap(), "declared-by-operator");
+    assert_eq!(
+        m["license"]["state"].as_str().unwrap(),
+        "declared-by-operator"
+    );
     assert_eq!(m["license"]["license"].as_str().unwrap(), "CC-BY-4.0");
     assert_eq!(
         m["license"]["at"].as_str().unwrap(),
@@ -469,7 +503,10 @@ fn a_publish_without_a_bbox_still_records_the_whole_file_filter() {
     assert_ok(&out, "a whole-file publish");
 
     let m = manifest(&dest);
-    assert_eq!(m["operation"]["filter"]["kind"].as_str().unwrap(), "whole-file");
+    assert_eq!(
+        m["operation"]["filter"]["kind"].as_str().unwrap(),
+        "whole-file"
+    );
     // §8 gives `whole-file` exactly one member; a `bbox_crs` here would be a key the format does not
     // define in that shape, and every conforming reader would refuse the bundle.
     assert!(m["operation"]["filter"].get("bbox_crs").is_none());
@@ -512,7 +549,10 @@ fn the_binary_refuses_to_publish_without_the_distributed_codes_terms() {
         ("--viewer-copyright", "--viewer-copyright is required"),
         ("--viewer-license", "--viewer-license is required"),
         ("--viewer-notice", "--viewer-notice is required"),
-        ("--corresponding-source-url", "--corresponding-source-url or"),
+        (
+            "--corresponding-source-url",
+            "--corresponding-source-url or",
+        ),
     ]
     .into_iter()
     .enumerate()
@@ -553,7 +593,10 @@ fn the_binary_refuses_to_publish_without_the_distributed_codes_terms() {
     args.push("Write to the address in the notice file.".into());
     let refs: Vec<&str> = args.iter().map(String::as_str).collect();
     let out = publish_bundle_raw(&refs);
-    assert!(!out.status.success(), "both route flags together were accepted");
+    assert!(
+        !out.status.success(),
+        "both route flags together were accepted"
+    );
     assert!(String::from_utf8_lossy(&out.stderr).contains("mutually exclusive"));
     assert!(!dest.exists());
 }
@@ -573,7 +616,10 @@ fn publish_bundle_with_stdin(args: &[&str], stdin: &str) -> Output {
     all.extend_from_slice(VIEWER_LICENSE_ARGS);
 
     let mut child = Command::new(env!("CARGO_BIN_EXE_publish-bundle"))
-        .env(spatial_kernel::permission::AUDIT_LOG_ENV, audit_log_for(args))
+        .env(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            audit_log_for(args),
+        )
         .args(&all)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -607,16 +653,25 @@ fn the_interactive_approval_requires_the_destination_name_and_refuses_everything
 
     let args = |dest: &Path| -> Vec<String> {
         vec![
-            "--data".into(), src.to_str().unwrap().into(),
-            "--style".into(), style.to_str().unwrap().into(),
-            "--viewer".into(), viewer.to_str().unwrap().into(),
-            "--out".into(), dest.to_str().unwrap().into(),
-            "--attributes".into(), "zone".into(),
+            "--data".into(),
+            src.to_str().unwrap().into(),
+            "--style".into(),
+            style.to_str().unwrap().into(),
+            "--viewer".into(),
+            viewer.to_str().unwrap().into(),
+            "--out".into(),
+            dest.to_str().unwrap().into(),
+            "--attributes".into(),
+            "zone".into(),
         ]
     };
 
     // ---- the refusals ----
-    for (case, typed) in [("bare-yes", "y\n"), ("wrong-name", "some-other-bundle\n"), ("eof", "")] {
+    for (case, typed) in [
+        ("bare-yes", "y\n"),
+        ("wrong-name", "some-other-bundle\n"),
+        ("eof", ""),
+    ] {
         let dest = d.join(format!("refused-{case}"));
         let a = args(&dest);
         let refs: Vec<&str> = a.iter().map(String::as_str).collect();
@@ -631,7 +686,10 @@ fn the_interactive_approval_requires_the_destination_name_and_refuses_everything
             stderr.contains("refused"),
             "{case}: the refusal is not reported as one: {stderr}"
         );
-        assert!(!dest.exists(), "{case}: a bundle exists despite the refusal");
+        assert!(
+            !dest.exists(),
+            "{case}: a bundle exists despite the refusal"
+        );
         // The prompt showed the operator what they were being asked about, before they answered.
         assert!(
             stderr.contains("irreversible") && stderr.contains("approval required"),
@@ -644,8 +702,14 @@ fn the_interactive_approval_requires_the_destination_name_and_refuses_everything
     let a = args(&dest);
     let refs: Vec<&str> = a.iter().map(String::as_str).collect();
     let out = publish_bundle_with_stdin(&refs, "approved-bundle\n");
-    assert_ok(&out, "an interactive publish approved by naming the destination");
-    assert!(dest.join("manifest.json").exists(), "the approved publish produced no bundle");
+    assert_ok(
+        &out,
+        "an interactive publish approved by naming the destination",
+    );
+    assert!(
+        dest.join("manifest.json").exists(),
+        "the approved publish produced no bundle"
+    );
 }
 
 /// `--approve` must name **this** destination, so a script that outlived an `--out` change is
@@ -657,13 +721,19 @@ fn an_approve_flag_naming_a_different_destination_is_refused() {
     let dest = d.join("bundle");
 
     let mut args: Vec<String> = vec![
-        "--data".into(), src.to_str().unwrap().into(),
-        "--style".into(), style_file(&d).to_str().unwrap().into(),
-        "--viewer".into(), viewer_dir(&d).to_str().unwrap().into(),
-        "--out".into(), dest.to_str().unwrap().into(),
-        "--attributes".into(), "zone".into(),
+        "--data".into(),
+        src.to_str().unwrap().into(),
+        "--style".into(),
+        style_file(&d).to_str().unwrap().into(),
+        "--viewer".into(),
+        viewer_dir(&d).to_str().unwrap().into(),
+        "--out".into(),
+        dest.to_str().unwrap().into(),
+        "--attributes".into(),
+        "zone".into(),
         // The name of a destination this run is not publishing to.
-        "--approve".into(), "yesterdays-bundle".into(),
+        "--approve".into(),
+        "yesterdays-bundle".into(),
     ];
     for a in VIEWER_LICENSE_ARGS {
         args.push((*a).to_string());
@@ -673,8 +743,14 @@ fn an_approve_flag_naming_a_different_destination_is_refused() {
 
     assert!(!out.status.success(), "a stale --approve was accepted");
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("bundle"), "the refusal does not name what was expected: {stderr}");
-    assert!(!dest.exists(), "a bundle exists despite a mismatched --approve");
+    assert!(
+        stderr.contains("bundle"),
+        "the refusal does not name what was expected: {stderr}"
+    );
+    assert!(
+        !dest.exists(),
+        "a bundle exists despite a mismatched --approve"
+    );
 }
 
 /// A grant scoped to a **directory** covers a publish into it, which is the one part of the
@@ -688,12 +764,18 @@ fn a_directory_scoped_grant_covers_a_publish_into_that_directory() {
     let dest = target_dir.join("bundle");
 
     let out = publish_bundle(&[
-        "--data", src.to_str().unwrap(),
-        "--style", style_file(&d).to_str().unwrap(),
-        "--viewer", viewer_dir(&d).to_str().unwrap(),
-        "--out", dest.to_str().unwrap(),
-        "--attributes", "zone",
-        "--grant-destination", target_dir.to_str().unwrap(),
+        "--data",
+        src.to_str().unwrap(),
+        "--style",
+        style_file(&d).to_str().unwrap(),
+        "--viewer",
+        viewer_dir(&d).to_str().unwrap(),
+        "--out",
+        dest.to_str().unwrap(),
+        "--attributes",
+        "zone",
+        "--grant-destination",
+        target_dir.to_str().unwrap(),
     ]);
     assert_ok(&out, "a publish into a directory-scoped grant's directory");
     assert!(dest.join("manifest.json").exists());
@@ -702,14 +784,23 @@ fn a_directory_scoped_grant_covers_a_publish_into_that_directory() {
     // this `--out` is a sibling of it, so the scope check refuses before anything is created.
     let elsewhere = d.join("elsewhere");
     let out = publish_bundle(&[
-        "--data", src.to_str().unwrap(),
-        "--style", style_file(&d).to_str().unwrap(),
-        "--viewer", viewer_dir(&d).to_str().unwrap(),
-        "--out", elsewhere.to_str().unwrap(),
-        "--attributes", "zone",
-        "--grant-destination", target_dir.to_str().unwrap(),
+        "--data",
+        src.to_str().unwrap(),
+        "--style",
+        style_file(&d).to_str().unwrap(),
+        "--viewer",
+        viewer_dir(&d).to_str().unwrap(),
+        "--out",
+        elsewhere.to_str().unwrap(),
+        "--attributes",
+        "zone",
+        "--grant-destination",
+        target_dir.to_str().unwrap(),
     ]);
-    assert!(!out.status.success(), "a directory-scoped grant covered a publish outside it");
+    assert!(
+        !out.status.success(),
+        "a directory-scoped grant covered a publish outside it"
+    );
     assert!(
         String::from_utf8_lossy(&out.stderr).contains("does not cover"),
         "the refusal is not the scope one: {}",

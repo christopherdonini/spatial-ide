@@ -17,10 +17,10 @@ use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
 use arrow::ipc::writer::{IpcWriteOptions, StreamWriter};
 
 use crate::crs::{CrsSource, DatasetCrs};
-use crate::identity::DatasetIdentity;
 use crate::error::{EngineError, Result};
 use crate::geoarrow;
 use crate::geoparquet::AdmissionRecord;
+use crate::identity::DatasetIdentity;
 
 /// ADR-010 rule 1, row 1. The only coordinate a caller outside the renderer may treat as ground
 /// truth, and the only frame this engine emits.
@@ -48,11 +48,7 @@ impl BatchEnvelope {
     /// admission-less envelope without a projection (`stream_for_publish` uses
     /// [`Self::with_attributes`]).
     #[cfg(test)]
-    pub(crate) fn new(
-        crs: DatasetCrs,
-        geometry_column: String,
-        identity: DatasetIdentity,
-    ) -> Self {
+    pub(crate) fn new(crs: DatasetCrs, geometry_column: String, identity: DatasetIdentity) -> Self {
         Self::with_attributes(crs, geometry_column, identity, Vec::new())
     }
 
@@ -118,8 +114,14 @@ impl BatchEnvelope {
         }
         // … the axis order established from the definition, and the fact that nothing was
         // normalized to get there (docs/05: the normalization performed is recorded).
-        md.insert("axis_order".to_string(), crs.axis_order().as_str().to_string());
-        md.insert("axis_normalization".to_string(), "none-performed".to_string());
+        md.insert(
+            "axis_order".to_string(),
+            crs.axis_order().as_str().to_string(),
+        );
+        md.insert(
+            "axis_normalization".to_string(),
+            "none-performed".to_string(),
+        );
         // … and, since Brief A P1, **how** each of those two facts was established, as recorded
         // facts and never as judgements (the proposed ADR-015 Amendment 1, item 5).
         //
@@ -129,10 +131,19 @@ impl BatchEnvelope {
         // (boundary 1). Where the two differ, both are here, and the rule that established the
         // data's order is named by `format_rule_reference`.
         if let Some(a) = admission.as_ref() {
-            md.insert("crs_provenance".to_string(), a.crs_provenance.as_str().to_string());
-            md.insert("axis_provenance".to_string(), a.axis_provenance.as_str().to_string());
+            md.insert(
+                "crs_provenance".to_string(),
+                a.crs_provenance.as_str().to_string(),
+            );
+            md.insert(
+                "axis_provenance".to_string(),
+                a.axis_provenance.as_str().to_string(),
+            );
             if let Some(declared) = a.declared_axis_order {
-                md.insert("declared_axis_order".to_string(), declared.as_str().to_string());
+                md.insert(
+                    "declared_axis_order".to_string(),
+                    declared.as_str().to_string(),
+                );
             }
             if let Some(reference) = a.format_rule_reference.as_ref() {
                 md.insert("format_rule_reference".to_string(), reference.clone());
@@ -147,13 +158,22 @@ impl BatchEnvelope {
             // "no unit in the definition" from "no definition" and both from a rule-defaulted
             // admission (`ADMISSION-PREREGISTRATION.md` §14 items I and V; the proposed ADR-013
             // Amendment 1 §2 with its clarification of 2026-09-11).
-            md.insert("coordinate_unit".to_string(), a.coordinate_unit.as_str().to_string());
+            md.insert(
+                "coordinate_unit".to_string(),
+                a.coordinate_unit.as_str().to_string(),
+            );
             if let Some(source) = a.coordinate_unit_source {
-                md.insert("coordinate_unit_source".to_string(), source.as_str().to_string());
+                md.insert(
+                    "coordinate_unit_source".to_string(),
+                    source.as_str().to_string(),
+                );
             }
             // The assurance level of the range check, and what it was decided from. A level is
             // never a verdict: `none` means not checked, and no value here says a file passed.
-            md.insert("sanity_level".to_string(), a.sanity_level.as_str().to_string());
+            md.insert(
+                "sanity_level".to_string(),
+                a.sanity_level.as_str().to_string(),
+            );
             md.insert("sanity_reason".to_string(), a.sanity_reason.clone());
         }
         // … where the feature identity came from, and **what was actually checked about it**.
@@ -163,8 +183,14 @@ impl BatchEnvelope {
         // coordinate space. The *form* follows `crs_source` above: a caller's declaration and a
         // file fact stay distinguishable, and the record says what was verified rather than
         // asserting the word "unique".
-        md.insert("id_source".to_string(), identity.source().as_envelope_value());
-        md.insert("id_uniqueness".to_string(), identity.uniqueness().as_str().to_string());
+        md.insert(
+            "id_source".to_string(),
+            identity.source().as_envelope_value(),
+        );
+        md.insert(
+            "id_uniqueness".to_string(),
+            identity.uniqueness().as_str().to_string(),
+        );
         if let Some(rows) = identity.verified_rows() {
             md.insert("id_verified_rows".to_string(), rows.to_string());
         }
@@ -181,8 +207,14 @@ impl BatchEnvelope {
         }
 
         md.insert("geometry_column".to_string(), geometry_column.clone());
-        md.insert("geometry_encoding".to_string(), geoarrow::EXT_NAME_POLYGON.to_string());
-        md.insert("coordinate_layout".to_string(), "interleaved-xy".to_string());
+        md.insert(
+            "geometry_encoding".to_string(),
+            geoarrow::EXT_NAME_POLYGON.to_string(),
+        );
+        md.insert(
+            "coordinate_layout".to_string(),
+            "interleaved-xy".to_string(),
+        );
 
         // The declared projection, in declared order, as a JSON array of names. JSON is admissible
         // *here* and nowhere near the payload: this is schema metadata, which is already a string
@@ -190,7 +222,10 @@ impl BatchEnvelope {
         md.insert(
             "attribute_columns".to_string(),
             serde_json::Value::Array(
-                attributes.iter().map(|f| serde_json::Value::String(f.name().clone())).collect(),
+                attributes
+                    .iter()
+                    .map(|f| serde_json::Value::String(f.name().clone()))
+                    .collect(),
             )
             .to_string(),
         );
@@ -202,7 +237,14 @@ impl BatchEnvelope {
 
         let schema = Arc::new(Schema::new_with_metadata(fields, md));
 
-        Self { crs, geometry_column, identity, attributes, admission, schema }
+        Self {
+            crs,
+            geometry_column,
+            identity,
+            attributes,
+            admission,
+            schema,
+        }
     }
 
     /// The declared attribute projection, in declared order. Empty on the streaming query path.
@@ -310,7 +352,12 @@ impl TaggedBatch {
         if coords.is_empty() {
             return None;
         }
-        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut b = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for pair in coords.chunks_exact(2) {
             b[0] = b[0].min(pair[0]);
             b[1] = b[1].min(pair[1]);
@@ -349,8 +396,10 @@ impl TaggedBatch {
         let opts = IpcWriteOptions::default();
         let mut w = StreamWriter::try_new_with_options(out, &self.batch.schema(), opts)
             .map_err(|e| EngineError::Arrow(format!("ipc writer: {e}")))?;
-        w.write(&self.batch).map_err(|e| EngineError::Arrow(format!("ipc write: {e}")))?;
-        w.finish().map_err(|e| EngineError::Arrow(format!("ipc finish: {e}")))?;
+        w.write(&self.batch)
+            .map_err(|e| EngineError::Arrow(format!("ipc write: {e}")))?;
+        w.finish()
+            .map_err(|e| EngineError::Arrow(format!("ipc finish: {e}")))?;
         Ok(())
     }
 }
@@ -409,8 +458,13 @@ mod tests {
     #[test]
     fn every_batch_carries_frame_crs_and_axis_order() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon(), Vec::new())
-            .unwrap();
+        let b = TaggedBatch::assemble(
+            &env,
+            Arc::new(UInt64Array::from(vec![1u64])),
+            one_polygon(),
+            Vec::new(),
+        )
+        .unwrap();
         let md = b.schema().metadata().clone();
         assert_eq!(md.get("frame").unwrap(), FRAME_AUTHORITATIVE);
         assert_eq!(md.get("crs").unwrap(), "EPSG:2056");
@@ -463,23 +517,38 @@ mod tests {
             b.write_ipc_into(&mut buf).unwrap();
             buf
         };
-        assert_eq!(bytes(&one), bytes(&two), "envelope serialization is not deterministic");
+        assert_eq!(
+            bytes(&one),
+            bytes(&two),
+            "envelope serialization is not deterministic"
+        );
     }
 
     #[test]
     fn the_tag_survives_ipc_serialization() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![7u64])), one_polygon(), Vec::new())
-            .unwrap();
+        let b = TaggedBatch::assemble(
+            &env,
+            Arc::new(UInt64Array::from(vec![7u64])),
+            one_polygon(),
+            Vec::new(),
+        )
+        .unwrap();
 
         let mut buf = Vec::new();
         b.write_ipc_into(&mut buf).unwrap();
 
-        let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+        let mut rdr =
+            arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
         let round = rdr.next().unwrap().unwrap();
         assert_eq!(round.schema().metadata().get("crs").unwrap(), "EPSG:2056");
         assert_eq!(
-            round.schema().field(1).metadata().get(crate::geoarrow::EXT_NAME_KEY).unwrap(),
+            round
+                .schema()
+                .field(1)
+                .metadata()
+                .get(crate::geoarrow::EXT_NAME_KEY)
+                .unwrap(),
             crate::geoarrow::EXT_NAME_POLYGON
         );
     }
@@ -487,8 +556,13 @@ mod tests {
     #[test]
     fn ipc_bytes_are_appended_so_a_caller_may_reserve_a_prefix() {
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
-        let b = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), one_polygon(), Vec::new())
-            .unwrap();
+        let b = TaggedBatch::assemble(
+            &env,
+            Arc::new(UInt64Array::from(vec![1u64])),
+            one_polygon(),
+            Vec::new(),
+        )
+        .unwrap();
         let mut buf = vec![0xAAu8; 8];
         b.write_ipc_into(&mut buf).unwrap();
         assert_eq!(&buf[..8], &[0xAA; 8], "pre-existing bytes are untouched");
@@ -501,7 +575,13 @@ mod tests {
         use arrow::array::Float64Array;
         let env = BatchEnvelope::new(file_crs(), "geometry".into(), test_identity());
         let wrong: ArrayRef = Arc::new(Float64Array::from(vec![1.0]));
-        let e = TaggedBatch::assemble(&env, Arc::new(UInt64Array::from(vec![1u64])), wrong, Vec::new()).unwrap_err();
+        let e = TaggedBatch::assemble(
+            &env,
+            Arc::new(UInt64Array::from(vec![1u64])),
+            wrong,
+            Vec::new(),
+        )
+        .unwrap_err();
         assert!(matches!(e, EngineError::EncodingMismatch { .. }));
     }
 }

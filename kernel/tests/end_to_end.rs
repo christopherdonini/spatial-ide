@@ -40,7 +40,12 @@ fn fixture(name: &str, features: usize) -> (std::path::PathBuf, FixtureFacts) {
     let path = dir.join(format!("e2e-{name}.parquet"));
     let facts = write_geoparquet(
         &path,
-        &FixtureSpec { features, avg_vertices: 24, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features,
+            avg_vertices: 24,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("write fixture");
     (path, facts)
@@ -65,17 +70,29 @@ async fn connect(dp: &RunningDataPlane) -> Client {
     let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
         .into_client_request()
         .unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 async fn start(c: &mut Client, params: StreamParams) {
-    let f = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &params.encode()));
+    let f = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &params.encode()),
+    );
     c.send(Message::Binary(f.into())).await.expect("start");
 }
 
@@ -148,8 +165,8 @@ struct Collected {
 
 /// Decode one BATCH frame's payload and fold it into the collection.
 fn absorb(c: &mut Collected, payload: &[u8]) {
-    let mut rdr =
-        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None)
+        .expect("ipc");
     let batch = rdr.next().expect("one batch").expect("decode");
 
     let md = batch.schema().metadata().clone();
@@ -159,20 +176,35 @@ fn absorb(c: &mut Collected, payload: &[u8]) {
         md.get("axis_order").cloned().unwrap_or_default(),
     ));
 
-    let ids = batch.column(0).as_any().downcast_ref::<UInt64Array>().expect("ids");
+    let ids = batch
+        .column(0)
+        .as_any()
+        .downcast_ref::<UInt64Array>()
+        .expect("ids");
     c.ids.extend(ids.values().iter().copied());
     c.rows += batch.num_rows();
 
-    let polys = batch.column(1).as_any().downcast_ref::<ListArray>().expect("polygons");
+    let polys = batch
+        .column(1)
+        .as_any()
+        .downcast_ref::<ListArray>()
+        .expect("polygons");
     for p in 0..polys.len() {
         let rings = polys.value(p);
         let rings = rings.as_any().downcast_ref::<ListArray>().expect("rings");
         c.ring_counts.insert(rings.len());
         for r in 0..rings.len() {
             let verts = rings.value(r);
-            let verts = verts.as_any().downcast_ref::<FixedSizeListArray>().expect("vertices");
+            let verts = verts
+                .as_any()
+                .downcast_ref::<FixedSizeListArray>()
+                .expect("vertices");
             c.vertex_counts.insert(verts.len());
-            let flat = verts.values().as_any().downcast_ref::<Float64Array>().expect("xy");
+            let flat = verts
+                .values()
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("xy");
             for v in 0..verts.len() {
                 let x = flat.value(v * 2);
                 let y = flat.value(v * 2 + 1);
@@ -226,7 +258,10 @@ async fn drain(client: &mut Client, c: &mut Collected) {
                 c.progress.push((g(0), g(8), g(16)));
             }
             wire::TAG_TERMINAL => {
-                c.terminal = Some((payload[0], String::from_utf8_lossy(&payload[1..]).to_string()));
+                c.terminal = Some((
+                    payload[0],
+                    String::from_utf8_lossy(&payload[1..]).to_string(),
+                ));
                 break;
             }
             other => panic!("unknown tag {other}"),
@@ -280,8 +315,14 @@ async fn h1_the_payload_that_arrives_is_the_payload_the_file_holds() {
         }
 
         // Real GeoArrow shape: holes exist and rings differ in length.
-        assert!(c.ring_counts.contains(&2), "some features carry an interior ring");
-        assert!(c.vertex_counts.len() > 1, "ring vertex counts vary — this is not fixed-width");
+        assert!(
+            c.ring_counts.contains(&2),
+            "some features carry an interior ring"
+        );
+        assert!(
+            c.vertex_counts.len() > 1,
+            "ring vertex counts vary — this is not fixed-width"
+        );
 
         // 8-byte payload framing, carried forward: one frame per message is what puts the payload
         // at a fixed, 8-byte aligned offset in the consumer's buffer. Asserted against the delivered
@@ -293,7 +334,10 @@ async fn h1_the_payload_that_arrives_is_the_payload_the_file_holds() {
         assert_eq!(wire::FRAME_PREFIX_LEN % 8, 0);
     }
 
-    assert_eq!(runs[0].coord_bits, runs[1].coord_bits, "identical across runs");
+    assert_eq!(
+        runs[0].coord_bits, runs[1].coord_bits,
+        "identical across runs"
+    );
     assert_eq!(runs[0].rows, runs[1].rows);
     dp.shutdown().await;
 }
@@ -319,7 +363,12 @@ async fn h1_a_viewport_filter_selects_a_subset_and_it_still_decodes() {
     drain(&mut client, &mut c).await;
 
     assert_eq!(c.terminal.as_ref().unwrap().0, wire::TERM_COMPLETED);
-    assert!(c.rows > 0 && c.rows < facts.features, "a strict subset: {} of {}", c.rows, facts.features);
+    assert!(
+        c.rows > 0 && c.rows < facts.features,
+        "a strict subset: {} of {}",
+        c.rows,
+        facts.features
+    );
     client.close(None).await.ok();
     dp.shutdown().await;
 }
@@ -359,7 +408,10 @@ async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
 
     let states = dp.registry.snapshot();
     let state = states.last().expect("one stream");
-    let latency = state.observed_at().expect("producer observed the cancel").duration_since(sent_at);
+    let latency = state
+        .observed_at()
+        .expect("producer observed the cancel")
+        .duration_since(sent_at);
     assert!(
         latency < Duration::from_millis(100),
         "producer observed cancellation after {latency:?}; docs/08 budget is 100 ms"
@@ -368,7 +420,10 @@ async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
         state.batches_after_cancel() <= 1,
         "at most one batch may be generated after cancellation is observed"
     );
-    assert!(to_terminal < Duration::from_secs(5), "the stream ended in {to_terminal:?}");
+    assert!(
+        to_terminal < Duration::from_secs(5),
+        "the stream ended in {to_terminal:?}"
+    );
     client.close(None).await.ok();
     dp.shutdown().await;
 }
@@ -395,8 +450,14 @@ async fn h2_a_cancel_before_the_first_batch_still_stops_the_query() {
 
     let states = dp.registry.snapshot();
     let state = states.last().expect("one stream");
-    let latency = state.observed_at().expect("observed").duration_since(sent_at);
-    assert!(latency < Duration::from_millis(100), "observed after {latency:?}");
+    let latency = state
+        .observed_at()
+        .expect("observed")
+        .duration_since(sent_at);
+    assert!(
+        latency < Duration::from_millis(100),
+        "observed after {latency:?}"
+    );
     client.close(None).await.ok();
     dp.shutdown().await;
 }
@@ -416,7 +477,11 @@ async fn h3_a_consumer_that_withholds_credit_bounds_producer_memory() {
     // Wait for the producer to work ahead into its window and stop, rather than guessing how long
     // that takes.
     let plateau = wait_for_plateau(Duration::from_secs(20), 25, || {
-        dp.registry.snapshot().last().map(|s| s.batches_generated()).unwrap_or(0)
+        dp.registry
+            .snapshot()
+            .last()
+            .map(|s| s.batches_generated())
+            .unwrap_or(0)
     })
     .await
     .expect("a backpressured producer stops; this one never did");
@@ -426,9 +491,16 @@ async fn h3_a_consumer_that_withholds_credit_bounds_producer_memory() {
     assert_eq!(state.bytes_emitted(), 0, "no credit, no bytes");
 
     let peak = state.peak_resident_bytes();
-    let bound = (spatial_data_plane::MAX_INFLIGHT_BATCHES + 1) * spatial_data_plane::MAX_FRAME_BYTES;
-    assert!(peak > 0, "the producer worked ahead into its declared window");
-    assert!(peak <= bound, "producer-resident {peak} exceeded the declared bound {bound}");
+    let bound =
+        (spatial_data_plane::MAX_INFLIGHT_BATCHES + 1) * spatial_data_plane::MAX_FRAME_BYTES;
+    assert!(
+        peak > 0,
+        "the producer worked ahead into its declared window"
+    );
+    assert!(
+        peak <= bound,
+        "producer-resident {peak} exceeded the declared bound {bound}"
+    );
 
     // **The assertion that can actually fail.** The byte bound above is 80 MB and this fixture's
     // whole payload is smaller than that, so a producer with backpressure entirely removed would
@@ -454,14 +526,22 @@ async fn h5_and_h7_no_json_on_the_data_path_and_progress_is_honest() {
     let mut c = Collected::default();
     drain(&mut client, &mut c).await;
 
-    assert_eq!(dp.json_frames_seen.load(Ordering::SeqCst), 0, "H5: zero JSON on the data path");
+    assert_eq!(
+        dp.json_frames_seen.load(Ordering::SeqCst),
+        0,
+        "H5: zero JSON on the data path"
+    );
     assert!(!c.progress.is_empty(), "H7: progress is reported");
     assert!(
-        c.progress.windows(2).all(|w| w[0].0 < w[1].0 && w[0].1 <= w[1].1),
+        c.progress
+            .windows(2)
+            .all(|w| w[0].0 < w[1].0 && w[0].1 <= w[1].1),
         "progress counters are monotonic"
     );
     assert!(
-        c.progress.iter().all(|p| p.2 == spatial_data_plane::UNKNOWN_TOTAL),
+        c.progress
+            .iter()
+            .all(|p| p.2 == spatial_data_plane::UNKNOWN_TOTAL),
         "a streaming filter reports its total as unknown rather than inventing a denominator"
     );
     assert_eq!(c.terminal.as_ref().unwrap().0, wire::TERM_COMPLETED);
@@ -479,7 +559,12 @@ async fn h7_an_engine_refusal_arrives_as_a_typed_terminal_with_its_own_words() {
 
     start(
         &mut client,
-        StreamParams { dataset: "not-open".into(), bbox: None, bbox_crs: None, limit: None },
+        StreamParams {
+            dataset: "not-open".into(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+        },
     )
     .await;
     let mut c = Collected::default();
@@ -514,8 +599,14 @@ async fn a_viewport_in_the_wrong_crs_is_refused_end_to_end() {
 
     let (code, detail) = c.terminal.expect("terminal frame");
     assert_eq!(code, wire::TERM_PRODUCER_FAILED);
-    assert!(detail.contains("EPSG:4326"), "the refusal names both CRSs: {detail}");
-    assert_eq!(c.batches, 0, "nothing is drawn in the wrong CRS, not even provisionally");
+    assert!(
+        detail.contains("EPSG:4326"),
+        "the refusal names both CRSs: {detail}"
+    );
+    assert_eq!(
+        c.batches, 0,
+        "nothing is drawn in the wrong CRS, not even provisionally"
+    );
     client.close(None).await.ok();
     dp.shutdown().await;
 }
@@ -578,6 +669,12 @@ fn the_engine_does_not_depend_on_the_data_plane_or_the_other_way_round() {
     )
     .expect("protocol manifest");
 
-    assert!(!engine.contains("spatial-data-plane"), "engine must not depend on the binding");
-    assert!(!protocol.contains("spatial-engine"), "the binding must not depend on the engine");
+    assert!(
+        !engine.contains("spatial-data-plane"),
+        "engine must not depend on the binding"
+    );
+    assert!(
+        !protocol.contains("spatial-engine"),
+        "the binding must not depend on the engine"
+    );
 }

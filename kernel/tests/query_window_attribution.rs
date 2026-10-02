@@ -128,12 +128,20 @@ const N: usize = 7;
 /// the sibling file.
 #[test]
 fn the_restated_geometry_constants_match_the_registered_fixture() {
-    assert_eq!(grid_cols(), 317.0, "317 is 100_000.sqrt().ceil() — a features/CELL_M drift");
+    assert_eq!(
+        grid_cols(),
+        317.0,
+        "317 is 100_000.sqrt().ceil() — a features/CELL_M drift"
+    );
     assert_eq!(edge(317.0, 2), 6_340.0, "near-quarter's edge");
     assert_eq!(edge(317.0, 8), 1_580.0, "1/64's edge");
     assert_eq!(ViewId::Whole.predicted_rows(), FEATURES as u64);
     assert_eq!(ViewId::NearQuarter.predicted_rows(), 159 * 159, "columns 0..=158, rows 0..=158 — all 159 rows are full-width at this depth (315 of 317 grid rows are full), so no partial-row term applies");
-    assert_eq!(ViewId::Sixty4th.predicted_rows(), 40 * 40, "40x40, no partial row at this depth");
+    assert_eq!(
+        ViewId::Sixty4th.predicted_rows(),
+        40 * 40,
+        "40x40, no partial row at this depth"
+    );
 }
 
 fn interleaved(len: usize, r: usize) -> Vec<usize> {
@@ -171,7 +179,8 @@ fn qwa_trial_child() {
     let view = ViewId::parse(&view).expect("the driver passed an unparseable viewport");
     let json = run_one_trial(view);
     let mut f = std::fs::File::create(&out).expect("create the trial's result file");
-    f.write_all(json.as_bytes()).expect("write the trial result");
+    f.write_all(json.as_bytes())
+        .expect("write the trial result");
     f.sync_all().expect("flush the trial result");
     println!("trial {} -> {}", view.as_str(), json);
 }
@@ -262,9 +271,15 @@ fn run_one_trial(view: ViewId) -> String {
     // A missing or reversed pair (`Trace::segment_ms`/`first` return `None` for either) is an
     // instrument failure, not a data point — checked *before* the additivity arithmetic below, which
     // would otherwise silently skip a `None` leg rather than refuse the trial.
-    if leaf_nanos.iter().any(Option::is_none) || query_nanos.is_none() || lease_to_first_row_nanos.is_none()
+    if leaf_nanos.iter().any(Option::is_none)
+        || query_nanos.is_none()
+        || lease_to_first_row_nanos.is_none()
     {
-        return trial_error(view, "additivity", "a required segment could not be derived (missing or reversed event pair)");
+        return trial_error(
+            view,
+            "additivity",
+            "a required segment could not be derived (missing or reversed event pair)",
+        );
     }
     let leaf_nanos: Vec<i128> = leaf_nanos.into_iter().map(Option::unwrap).collect();
     let query_nanos = query_nanos.unwrap();
@@ -309,14 +324,22 @@ fn run_one_trial(view: ViewId) -> String {
         dropped,
         opt_i128_ms(lease_bind_nanos),
         opt_i128(lease_bind_nanos),
-        ns_to_ms(leaf_nanos[0]), leaf_nanos[0],
-        ns_to_ms(leaf_nanos[1]), leaf_nanos[1],
-        ns_to_ms(leaf_nanos[2]), leaf_nanos[2],
-        ns_to_ms(leaf_nanos[3]), leaf_nanos[3],
-        ns_to_ms(leaf_nanos[4]), leaf_nanos[4],
-        ns_to_ms(query_nanos), query_nanos,
-        ns_to_ms(lease_to_first_row_nanos), lease_to_first_row_nanos,
-        err.map(|e| format!("\"{}\"", json_escape(&e))).unwrap_or_else(|| "null".into()),
+        ns_to_ms(leaf_nanos[0]),
+        leaf_nanos[0],
+        ns_to_ms(leaf_nanos[1]),
+        leaf_nanos[1],
+        ns_to_ms(leaf_nanos[2]),
+        leaf_nanos[2],
+        ns_to_ms(leaf_nanos[3]),
+        leaf_nanos[3],
+        ns_to_ms(leaf_nanos[4]),
+        leaf_nanos[4],
+        ns_to_ms(query_nanos),
+        query_nanos,
+        ns_to_ms(lease_to_first_row_nanos),
+        lease_to_first_row_nanos,
+        err.map(|e| format!("\"{}\"", json_escape(&e)))
+            .unwrap_or_else(|| "null".into()),
     )
 }
 
@@ -344,7 +367,8 @@ fn opt_i128(v: Option<i128>) -> String {
 }
 
 fn opt_i128_ms(v: Option<i128>) -> String {
-    v.map(|x| format!("{:.3}", ns_to_ms(x))).unwrap_or_else(|| "null".into())
+    v.map(|x| format!("{:.3}", ns_to_ms(x)))
+        .unwrap_or_else(|| "null".into())
 }
 
 fn trial_error(view: ViewId, phase: &str, detail: &str) -> String {
@@ -356,21 +380,37 @@ fn trial_error(view: ViewId, phase: &str, detail: &str) -> String {
     )
 }
 
-fn spawn_trial(exe: &std::path::Path, view: ViewId, slot: &std::path::Path) -> Result<String, String> {
+fn spawn_trial(
+    exe: &std::path::Path,
+    view: ViewId,
+    slot: &std::path::Path,
+) -> Result<String, String> {
     let _ = std::fs::remove_file(slot);
     let started = Instant::now();
     let out = Command::new(exe)
-        .args(["qwa_trial_child", "--exact", "--nocapture", "--test-threads=1"])
+        .args([
+            "qwa_trial_child",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+        ])
         .env(VIEW_VAR, view.as_str())
         .env(OUT_VAR, slot)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
     if started.elapsed() > CEIL_TRIAL {
-        return Err(format!("exceeded the declared {} s trial ceiling", CEIL_TRIAL.as_secs()));
+        return Err(format!(
+            "exceeded the declared {} s trial ceiling",
+            CEIL_TRIAL.as_secs()
+        ));
     }
     if !out.status.success() {
-        let tail: String =
-            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        let tail: String = String::from_utf8_lossy(&out.stderr)
+            .lines()
+            .rev()
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(" / ");
         return Err(format!("child exited {:?}: {tail}", out.status.code()));
     }
     std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
@@ -403,7 +443,12 @@ fn the_query_window_attribution_pass() {
         path.display()
     );
     let (bytes, hash) = file_facts(&path);
-    assert_ne!(hash, "unreadable", "fixture at {} could not be hashed", path.display());
+    assert_ne!(
+        hash,
+        "unreadable",
+        "fixture at {} could not be hashed",
+        path.display()
+    );
     say!("fixture: {} bytes, sha256 {}", bytes, hash);
 
     // ---- the mechanism self-check, before the settle and before any measurement --------------
@@ -433,7 +478,10 @@ fn the_query_window_attribution_pass() {
         Ok(line)
             if line.contains("\"error\":null")
                 && line.contains("\"dropped_records\":0")
-                && line.contains(&format!("\"rows\":{}", ViewId::NearQuarter.predicted_rows())) =>
+                && line.contains(&format!(
+                    "\"rows\":{}",
+                    ViewId::NearQuarter.predicted_rows()
+                )) =>
         {
             say!("mechanism check OK — a child trial round-trips, additivity holds, dropped_records is 0");
         }
@@ -468,7 +516,11 @@ fn the_query_window_attribution_pass() {
             v.as_str(),
             v.predicted_rows()
         );
-        say!("viewport {} selects {} rows (matches registered prediction)", v.as_str(), rows);
+        say!(
+            "viewport {} selects {} rows (matches registered prediction)",
+            v.as_str(),
+            rows
+        );
         predicted_json.push(format!("{{\"view\":\"{}\",\"rows\":{}}}", v.as_str(), rows));
     }
 
@@ -534,7 +586,11 @@ fn the_query_window_attribution_pass() {
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     let artifact = format!(
@@ -562,7 +618,11 @@ fn the_query_window_attribution_pass() {
             .join(","),
         trials.join(","),
     );
-    std::fs::write(out_dir.join("query-window-attribution.json"), artifact).expect("write artifact");
+    std::fs::write(out_dir.join("query-window-attribution.json"), artifact)
+        .expect("write artifact");
     std::fs::write(out_dir.join("query-window-attribution.log"), log).expect("write log");
-    println!("→ {}", out_dir.join("query-window-attribution.json").display());
+    println!(
+        "→ {}",
+        out_dir.join("query-window-attribution.json").display()
+    );
 }

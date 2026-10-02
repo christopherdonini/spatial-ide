@@ -39,7 +39,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use spatial_engine::fixture::{write_geoparquet_cancellable, FixtureFacts, FixtureProgress, FixtureSpec};
+use spatial_engine::fixture::{
+    write_geoparquet_cancellable, FixtureFacts, FixtureProgress, FixtureSpec,
+};
 use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 use support::*;
@@ -101,8 +103,16 @@ fn viewport_rows(divisor: usize) -> u64 {
 /// in the 1/64 edge.
 #[test]
 fn the_viewports_match_the_preregistered_row_counts() {
-    assert_eq!(viewport_rows(2), QUARTER_ROWS, "the quarter viewport no longer matches §1b");
-    assert_eq!(viewport_rows(8), SIXTY_FOURTH_ROWS, "the 1/64 viewport no longer matches §1b");
+    assert_eq!(
+        viewport_rows(2),
+        QUARTER_ROWS,
+        "the quarter viewport no longer matches §1b"
+    );
+    assert_eq!(
+        viewport_rows(8),
+        SIXTY_FOURTH_ROWS,
+        "the 1/64 viewport no longer matches §1b"
+    );
     // Both edges land on a cell centre, which is what makes the counts robust rather than lucky.
     for divisor in [2usize, 8] {
         let offset = viewport_edge(divisor);
@@ -162,7 +172,10 @@ fn control_path() -> PathBuf {
 }
 
 fn spec_control() -> FixtureSpec {
-    FixtureSpec { features: CONTROL_FEATURES, ..spec_5gb() }
+    FixtureSpec {
+        features: CONTROL_FEATURES,
+        ..spec_5gb()
+    }
 }
 
 /// Progress that feeds the watchdog's silence clock and counts chunks.
@@ -252,7 +265,9 @@ fn measure_the_five_gigabyte_scale_pass() {
     let media = json_escape(&media_type());
     println!("hardware: {hardware}");
     println!("media:    {media}");
-    json.push_str(&format!("  \"hardware\": \"{hardware}\",\n  \"media_type\": \"{media}\",\n"));
+    json.push_str(&format!(
+        "  \"hardware\": \"{hardware}\",\n  \"media_type\": \"{media}\",\n"
+    ));
     json.push_str(&format!(
         "  \"preregistration\": \"kernel/SCALE-PASS-PREREGISTRATION.md\",\n  \"cadence_short_ms\": {CADENCE_SHORT_MS},\n  \"cadence_long_ms\": {CADENCE_LONG_MS},\n"
     ));
@@ -272,11 +287,17 @@ fn measure_the_five_gigabyte_scale_pass() {
     // drift in one. Recording it anyway is what stops this being a way to dodge the invalidator —
     // the artifact shows how far the machine was from settled, in the same units.
     let pre_settle = Canary::take("pre-settle");
-    println!("  settling for {} s before the first measured phase...", SETTLE_SECONDS);
+    println!(
+        "  settling for {} s before the first measured phase...",
+        SETTLE_SECONDS
+    );
     std::thread::sleep(Duration::from_secs(SETTLE_SECONDS));
     canaries.push(Canary::take("start"));
-    json.push_str(&format!("  \"pre_settle_canary\": {}, \"settle_seconds\": {SETTLE_SECONDS},
-", pre_settle.json()));
+    json.push_str(&format!(
+        "  \"pre_settle_canary\": {}, \"settle_seconds\": {SETTLE_SECONDS},
+",
+        pre_settle.json()
+    ));
 
     // ---- Phase 1: the fixtures -----------------------------------------------------------------
     let free_before = require_disk("generate");
@@ -292,8 +313,14 @@ fn measure_the_five_gigabyte_scale_pass() {
 
     // **Predictions asserted, not recomputed.** A mismatch here is an instrument failure and stops
     // the pass; it is not a machine fact to be reported as a result.
-    assert_eq!(facts.features, FIVE_GB_FEATURES, "the generator wrote a different feature count");
-    assert_eq!(facts.rings, PREDICTED_RINGS, "ring count differs from the pre-registered prediction");
+    assert_eq!(
+        facts.features, FIVE_GB_FEATURES,
+        "the generator wrote a different feature count"
+    );
+    assert_eq!(
+        facts.rings, PREDICTED_RINGS,
+        "ring count differs from the pre-registered prediction"
+    );
     assert!(
         (4.0e9..=6.5e9).contains(&(facts.bytes as f64)),
         "fixture is {} B, outside the pre-registered 4.0–6.5 GB regeneration band",
@@ -310,9 +337,18 @@ fn measure_the_five_gigabyte_scale_pass() {
          \"extent\": [{:.3}, {:.3}, {:.3}, {:.3}], \"wall_ms\": {:.1}, \
          \"predicted_vertices\": 345414000, \"predicted_rings\": {PREDICTED_RINGS}, \
          \"predicted_bytes\": 5009600000, \"predicted_row_groups\": {PREDICTED_ROW_GROUPS}}},\n",
-        facts.features, facts.vertices, facts.rings, facts.bytes,
-        facts.min_vertices_per_feature, facts.max_vertices_per_feature, facts.coord_bits_xor,
-        facts.extent[0], facts.extent[1], facts.extent[2], facts.extent[3], gen_ms
+        facts.features,
+        facts.vertices,
+        facts.rings,
+        facts.bytes,
+        facts.min_vertices_per_feature,
+        facts.max_vertices_per_feature,
+        facts.coord_bits_xor,
+        facts.extent[0],
+        facts.extent[1],
+        facts.extent[2],
+        facts.extent[3],
+        gen_ms
     ));
     json.push_str(&format!(
         "  \"control_fixture\": {{\"features\": {}, \"vertices\": {}, \"bytes\": {}, \"wall_ms\": {:.1}}},\n",
@@ -346,10 +382,18 @@ fn measure_the_five_gigabyte_scale_pass() {
     require_disk("stream");
     let ds = Dataset::open(fixture_path()).expect("open the 5 GB fixture");
 
-    let whole = ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None };
+    let whole = ViewportQuery {
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+        filter: None,
+    };
     let (whole_first, whole_total, whole_rows, whole_batches, whole_mem, whole_plan) =
         stream_phase(&ds, &whole, WHOLE_FILE_RUNS, CEIL_WHOLE_FILE, "whole-file");
-    assert_eq!(whole_rows, FIVE_GB_FEATURES as u64, "the whole-file stream did not return every row");
+    assert_eq!(
+        whole_rows, FIVE_GB_FEATURES as u64,
+        "the whole-file stream did not return every row"
+    );
 
     let e_lo = spatial_engine::fixture::E_LO;
     let n_lo = spatial_engine::fixture::N_LO;
@@ -375,8 +419,13 @@ fn measure_the_five_gigabyte_scale_pass() {
         stream_phase(&ds, &quarter, VIEWPORT_RUNS, CEIL_VIEWPORT, "quarter");
 
     let sixty_fourth = viewport(8);
-    let (s_first, s_total, s_rows, s_batches, _, s_plan) =
-        stream_phase(&ds, &sixty_fourth, VIEWPORT_RUNS, CEIL_VIEWPORT, "sixty-fourth");
+    let (s_first, s_total, s_rows, s_batches, _, s_plan) = stream_phase(
+        &ds,
+        &sixty_fourth,
+        VIEWPORT_RUNS,
+        CEIL_VIEWPORT,
+        "sixty-fourth",
+    );
 
     // **The strongest instrument check in the pass, and it is ASSERTED.**
     //
@@ -461,8 +510,13 @@ fn measure_the_five_gigabyte_scale_pass() {
     let baseline_after_drop = procmem::sample().map(|c| c.private_usage).unwrap_or(0);
 
     let control_ds = Dataset::open(control_path()).expect("open the control fixture");
-    let (_, _, _, _, control_mem, _) =
-        stream_phase(&control_ds, &whole, 1, CEIL_WHOLE_FILE, "control-whole-file");
+    let (_, _, _, _, control_mem, _) = stream_phase(
+        &control_ds,
+        &whole,
+        1,
+        CEIL_WHOLE_FILE,
+        "control-whole-file",
+    );
     let peak_control = control_mem.iter().copied().max().unwrap_or(0);
     drop(control_ds);
 
@@ -566,17 +620,26 @@ fn generate(
 
     let cancel = CancelToken::new();
     let dog = Watchdog::start(phase, ceiling, Some(SILENCE_GENERATE), cancel.clone());
-    let progress = GenProgress { dog: &dog, chunks: AtomicUsize::new(0) };
+    let progress = GenProgress {
+        dog: &dog,
+        chunks: AtomicUsize::new(0),
+    };
 
     let t0 = Instant::now();
     let facts = write_geoparquet_cancellable(path, spec, &cancel, Some(&progress))
         .expect("fixture generation");
     let ms = t0.elapsed().as_secs_f64() * 1000.0;
     let fired = dog.finish();
-    assert!(!fired, "the {phase} watchdog fired; this phase is unmeasured and is not re-run");
+    assert!(
+        !fired,
+        "the {phase} watchdog fired; this phase is unmeasured and is not re-run"
+    );
 
     // Wall time and bytes side by side, deliberately not divided.
-    println!("[{phase}] {} features, {} B, {ms:.0} ms", facts.features, facts.bytes);
+    println!(
+        "[{phase}] {} features, {} B, {ms:.0} ms",
+        facts.features, facts.bytes
+    );
     (facts, ms)
 }
 
@@ -642,10 +705,16 @@ fn open_ab(path: &Path) -> (Vec<f64>, Vec<f64>, f64, f64) {
         full.push(a2);
         prelude.push(b1);
         prelude.push(b2);
-        println!("  [open-ab] pair {}/{AB_PAIRS}: A {a1:.1} B {b1:.1} | B {b2:.1} A {a2:.1}", i + 1);
+        println!(
+            "  [open-ab] pair {}/{AB_PAIRS}: A {a1:.1} B {b1:.1} | B {b2:.1} A {a2:.1}",
+            i + 1
+        );
     }
 
-    assert!(!dog.finish(), "the open watchdog fired; this phase is unmeasured");
+    assert!(
+        !dog.finish(),
+        "the open watchdog fired; this phase is unmeasured"
+    );
     let a_first = pct(&sorted(&a_first_deltas), 0.5);
     let b_first = pct(&sorted(&b_first_deltas), 0.5);
     (full, prelude, a_first, b_first)
@@ -680,7 +749,11 @@ fn stream_phase(
         let dog = Watchdog::start(phase, ceiling, Some(SILENCE_STREAM), cancel.clone());
         let r = stream_once(ds, q, &dog, cancel);
         let fired = dog.finish();
-        assert!(!fired, "the {phase} watchdog fired on run {}; this phase is unmeasured", i + 1);
+        assert!(
+            !fired,
+            "the {phase} watchdog fired on run {}; this phase is unmeasured",
+            i + 1
+        );
 
         println!(
             "  [{phase}] run {}/{runs}: first batch {:.1} ms, total {:.1} ms, {} rows, {} batches",
@@ -699,7 +772,12 @@ fn stream_phase(
             batches = r.batches;
             plan = r.filter_plan;
         } else {
-            assert_eq!(r.rows, rows, "{phase} run {} returned a different row count", i + 1);
+            assert_eq!(
+                r.rows,
+                rows,
+                "{phase} run {} returned a different row count",
+                i + 1
+            );
         }
     }
 
@@ -740,7 +818,9 @@ fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> CancelPhase {
         let dog = Watchdog::start("cancel", CEIL_CANCEL, None, cancel.clone());
         let sampler = MemorySampler::start(CADENCE_SHORT_MS);
 
-        let mut stream = ds.stream_with_cancel(q, cancel.clone()).expect("stream opens");
+        let mut stream = ds
+            .stream_with_cancel(q, cancel.clone())
+            .expect("stream opens");
         let mut payload = Vec::new();
 
         // Reach steady state first — a cancel before the first batch measures a different thing and
@@ -773,7 +853,10 @@ fn cancel_phase(ds: &Dataset, q: &ViewportQuery) -> CancelPhase {
             }
         }
         let drain_ms = t.elapsed().as_secs_f64() * 1000.0;
-        let after = stream.stats().batches_after_cancel.load(std::sync::atomic::Ordering::SeqCst) as usize;
+        let after = stream
+            .stats()
+            .batches_after_cancel
+            .load(std::sync::atomic::Ordering::SeqCst) as usize;
 
         println!(
             "  [cancel] trial {}/{CANCEL_TRIALS}: ack {ack_ms:.2} ms, drain {drain_ms:.2} ms, {after} batches after cancel",
@@ -839,7 +922,10 @@ fn measure_publish_at_five_gigabytes() {
     let _ = std::fs::remove_dir_all(&audit_dir);
     std::fs::create_dir_all(&audit_dir).unwrap();
     let audit_log = audit_dir.join("publish.jsonl");
-    assert!(!audit_log.exists(), "the audit log must start absent for the record-count assertions");
+    assert!(
+        !audit_log.exists(),
+        "the audit log must start absent for the record-count assertions"
+    );
 
     // A destination that cannot trip F-3's bare-word credential needles. Checked before the run,
     // because a destination containing `secret`/`password`/`apikey`/`credential` refuses the
@@ -847,7 +933,14 @@ fn measure_publish_at_five_gigabytes() {
     let bundle_dir = dir.join("bundles");
     std::fs::create_dir_all(&bundle_dir).unwrap();
     let dest_lower = bundle_dir.to_string_lossy().to_ascii_lowercase();
-    for needle in ["credential", "password", "passwd", "secret", "api_key", "apikey"] {
+    for needle in [
+        "credential",
+        "password",
+        "passwd",
+        "secret",
+        "api_key",
+        "apikey",
+    ] {
         assert!(
             !dest_lower.contains(needle),
             "the bundle destination contains `{needle}`, which the audit record's docs/09 scan \
@@ -859,7 +952,11 @@ fn measure_publish_at_five_gigabytes() {
     std::fs::write(&style_path, SCALE_STYLE).unwrap();
     let viewer_dir = dir.join("viewer");
     std::fs::create_dir_all(&viewer_dir).unwrap();
-    std::fs::write(viewer_dir.join("index.html"), b"<!doctype html><title>scale</title>").unwrap();
+    std::fs::write(
+        viewer_dir.join("index.html"),
+        b"<!doctype html><title>scale</title>",
+    )
+    .unwrap();
     std::fs::write(viewer_dir.join("NOTICE.txt"), b"stub notice\n").unwrap();
 
     // ---- Publish A -------------------------------------------------------------------------------
@@ -912,7 +1009,10 @@ fn measure_publish_at_five_gigabytes() {
 
     // ---- The audit record ------------------------------------------------------------------------------
     let audit_text = std::fs::read_to_string(&audit_log).expect("the audit log exists");
-    let lines: Vec<&str> = audit_text.lines().filter(|l| !l.trim().is_empty()).collect();
+    let lines: Vec<&str> = audit_text
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .collect();
     let mut intents = 0usize;
     let mut outcomes = 0usize;
     let mut manifest_hashes: Vec<String> = Vec::new();
@@ -930,10 +1030,17 @@ fn measure_publish_at_five_gigabytes() {
             other => panic!("unexpected audit phase {other:?}"),
         }
     }
-    println!("[audit] {} lines, {intents} intent, {outcomes} outcome", lines.len());
+    println!(
+        "[audit] {} lines, {intents} intent, {outcomes} outcome",
+        lines.len()
+    );
     assert_eq!(intents, outcomes, "every attempt must have both records");
     assert_eq!(intents, 2, "two publishes reached the gate");
-    assert_eq!(manifest_hashes.len(), 2, "both successes record a manifest hash");
+    assert_eq!(
+        manifest_hashes.len(),
+        2,
+        "both successes record a manifest hash"
+    );
     assert_eq!(
         manifest_hashes[0], manifest_hashes[1],
         "the audit's two manifest hashes differ, so determinism fails at the record level"
@@ -994,10 +1101,18 @@ fn measure_publish_at_five_gigabytes() {
     std::fs::write(dir.join("scale-publish.json"), &json).unwrap();
 
     // Asserted after the artifact is written, so a failure is still evidenced.
-    assert!(manifests_identical, "ADR-017 determinism FAILED at 5 GB: the two manifests differ");
-    assert!(partitions_identical, "partitions differ between two publishes of one request");
-    assert!(v_ok, "the strict reader refused the bundle this pass published");
-
+    assert!(
+        manifests_identical,
+        "ADR-017 determinism FAILED at 5 GB: the two manifests differ"
+    );
+    assert!(
+        partitions_identical,
+        "partitions differ between two publishes of one request"
+    );
+    assert!(
+        v_ok,
+        "the strict reader refused the bundle this pass published"
+    );
 }
 
 const SCALE_STYLE: &str = r##"{
@@ -1027,20 +1142,32 @@ fn publish_via_cli(
     let output = std::process::Command::new(exe)
         .env("SPATIAL_IDE_AUDIT_LOG", audit_log)
         .args([
-            "--data", data.to_str().unwrap(),
-            "--style", style.to_str().unwrap(),
-            "--viewer", viewer.to_str().unwrap(),
-            "--out", out.to_str().unwrap(),
-            "--approve", &approve,
+            "--data",
+            data.to_str().unwrap(),
+            "--style",
+            style.to_str().unwrap(),
+            "--viewer",
+            viewer.to_str().unwrap(),
+            "--out",
+            out.to_str().unwrap(),
+            "--approve",
+            &approve,
             // The one part of a self-minted grant that is not a tautology.
-            "--grant-destination", grant_dir.to_str().unwrap(),
+            "--grant-destination",
+            grant_dir.to_str().unwrap(),
             // The CLI pins a 5 GB source before the boundary runs; the 300 s default would be tight.
-            "--grant-ttl", "900",
-            "--viewer-program", "Spatial IDE bundle viewer",
-            "--viewer-copyright", "Copyright (C) 2026 the Spatial IDE contributors",
-            "--viewer-license", "AGPL-3.0-or-later",
-            "--viewer-notice", "NOTICE.txt",
-            "--corresponding-source-url", "https://example.invalid/spatial-ide",
+            "--grant-ttl",
+            "900",
+            "--viewer-program",
+            "Spatial IDE bundle viewer",
+            "--viewer-copyright",
+            "Copyright (C) 2026 the Spatial IDE contributors",
+            "--viewer-license",
+            "AGPL-3.0-or-later",
+            "--viewer-notice",
+            "NOTICE.txt",
+            "--corresponding-source-url",
+            "https://example.invalid/spatial-ide",
         ])
         .output()
         .expect("run publish-bundle");
@@ -1056,8 +1183,10 @@ fn verify_bundle(bundle: &Path) -> (bool, f64, String) {
     let t = Instant::now();
     let out = std::process::Command::new(exe)
         .args([
-            "--bundle", bundle.to_str().unwrap(),
-            "--json", summary_path.to_str().unwrap(),
+            "--bundle",
+            bundle.to_str().unwrap(),
+            "--json",
+            summary_path.to_str().unwrap(),
             "--quiet",
         ])
         .output()
@@ -1078,7 +1207,11 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     let list = |d: &Path| -> Result<std::collections::BTreeSet<String>, String> {
         std::fs::read_dir(d)
             .map_err(|e| format!("{}: {e}", d.display()))
-            .map(|rd| rd.filter_map(|e| e.ok()).map(|e| e.file_name().to_string_lossy().to_string()).collect())
+            .map(|rd| {
+                rd.filter_map(|e| e.ok())
+                    .map(|e| e.file_name().to_string_lossy().to_string())
+                    .collect()
+            })
     };
     // **Name SETS, not A's listing.** Enumerating only A would miss a partition present in B and
     // absent from A -- a difference the determinism row exists to catch.
@@ -1089,7 +1222,13 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     if na != nb {
         let only_a: Vec<_> = na.difference(&nb).cloned().collect();
         let only_b: Vec<_> = nb.difference(&na).cloned().collect();
-        return (0, false, Some(format!("partition sets differ: only in A {only_a:?}, only in B {only_b:?}")));
+        return (
+            0,
+            false,
+            Some(format!(
+                "partition sets differ: only in A {only_a:?}, only in B {only_b:?}"
+            )),
+        );
     }
     let names: Vec<String> = na.into_iter().collect();
 
@@ -1097,11 +1236,23 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
     for name in &names {
         let pa = match std::fs::read(da.join(name)) {
             Ok(v) => v,
-            Err(e) => return (compared, false, Some(format!("{name}: unreadable in A ({e})"))),
+            Err(e) => {
+                return (
+                    compared,
+                    false,
+                    Some(format!("{name}: unreadable in A ({e})")),
+                )
+            }
         };
         let pb = match std::fs::read(db.join(name)) {
             Ok(v) => v,
-            Err(e) => return (compared, false, Some(format!("{name}: absent from B ({e})"))),
+            Err(e) => {
+                return (
+                    compared,
+                    false,
+                    Some(format!("{name}: absent from B ({e})")),
+                )
+            }
         };
         if pa != pb {
             return (compared, false, Some(format!("{name}: bytes differ")));
@@ -1118,8 +1269,15 @@ fn compare_partitions(a: &Path, b: &Path) -> (usize, bool, Option<String>) {
 /// exists to catch one level up.
 fn binary_beside_me(name: &str) -> PathBuf {
     let me = std::env::current_exe().expect("the test binary knows where it is");
-    let profile = me.parent().and_then(|d| d.parent()).expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) { format!("{name}.exe") } else { name.to_string() };
+    let profile = me
+        .parent()
+        .and_then(|d| d.parent())
+        .expect("target/<profile>/deps/<test>");
+    let exe = if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    };
     let path = profile.join(&exe);
     assert!(path.exists(), "{name} is not built at {}", path.display());
     path
@@ -1127,9 +1285,20 @@ fn binary_beside_me(name: &str) -> PathBuf {
 
 fn example_beside_me(name: &str) -> PathBuf {
     let me = std::env::current_exe().expect("the test binary knows where it is");
-    let profile = me.parent().and_then(|d| d.parent()).expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) { format!("{name}.exe") } else { name.to_string() };
+    let profile = me
+        .parent()
+        .and_then(|d| d.parent())
+        .expect("target/<profile>/deps/<test>");
+    let exe = if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    };
     let path = profile.join("examples").join(&exe);
-    assert!(path.exists(), "the {name} example is not built at {}", path.display());
+    assert!(
+        path.exists(),
+        "the {name} example is not built at {}",
+        path.display()
+    );
     path
 }
