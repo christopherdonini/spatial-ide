@@ -20,12 +20,14 @@ name: Exposure scan
 # already public. The preregistration's section 1 lists what is not claimed: pushes outside these
 # triggers, text outside commits, history outside a scanned range, a pull request that edits the
 # scanner or this file (that run executes the pull request's own code), that the check is required
-# for merge, and the machine-local profile form of the runner itself.
+# for merge, and a person's flattened profile form: the scanner's local-profile rule keys on the
+# home of the machine that runs it, which on the runner is a machine account, so that form is not
+# refused here and is caught only by an armed clone's local hooks.
 #
 # ## Why there is no paths filter and no concurrency block
 #
-# A paths filter would skip exactly the commits whose names or messages carry a form, so every
-# event runs. A concurrency block could let a newer main run replace a pending one and drop a
+# A paths filter filters events by changed path, so it could skip commits whose names or messages
+# carry a form; every event runs. A concurrency block could let a newer main run replace a pending one and drop a
 # pushed range, so none is declared.
 
 on:
