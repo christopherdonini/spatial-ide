@@ -1,0 +1,7 @@
+Question round 35 — 2026-10-02 (custodian → human). One item, asked in one call. It is not a red line. AskUserQuestion is the answer channel; this mirror is read-and-copy.
+
+---
+
+1. Placing a small test fix ahead of the rustfmt PR (#157). The pass stopped on its own invalidator I4. It moved publish.rs's FILTER_SCOPE_SENTENCE literal onto its own line, and frontends/shell/src/publish/PublishPanel.test.ts reads that constant with a regex that expects the literal right after the equals sign, so the shell CI went red. The pass itself is exact: the reviewer rebuilt the same tree independently, and the Rust suite is green. The architect ruled against folding the fix into #157, because that would change the shape you approved as a red line, and against a redo. Instead, a new test-only node, publish-panel-rs-regex-layout, makes the test's two regexes tolerate the layout. It is one file and at most 6 lines, with a reviewer gate. It lands on main first; then #157 gets a comment-only fix and gate 2. Disclosure: after the pass, 994 of the 1,241 rooted path:line cites into the reformatted files point at moved text; another 32 are hash-pinned and unaffected, and every check stays green. If you would rather fold the fix into #157, type that in Other: it changes the approved shape of a red-line ruling, so it needs your own words.
+  (1) Place it now, ahead of #157's merge (Recommended). The fix is dispatched next under its short form; #157 waits for it.
+  (2) Hold. #157 stays unmerged and the node stays proposed.

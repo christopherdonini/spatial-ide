@@ -1614,3 +1614,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The cause.** product-ci-shell is red: `PublishPanel.test.ts` reads `publish.rs` by a regex that C1's re-layout broke. F4 reproduced C1's tree exactly, and Product CI — Rust is green.
   - **The decision.** Since I4 is a stop, the choice between a class 9 amendment (a one-line regex fix plus the header fixes) and a redo is put to the gate-1 architect before any code. The reviewer's report is filed, and the gate-log holds 331 records.
   - **Also corrected:** fb0cd0e restored #156's gate-1 reviewer report byte-identical, after I had edited one line at filing.
+- 2026-10-02T15:39Z - **Question round 35 is answered.** The answer came typed in Other and continued in mid-turn messages, and it is filed verbatim as `state/directives/2026-10-02-rustfmt-notes.md`. One RULED block records it.
+  - **Note 1:** `publish-panel-rs-regex-layout`'s two regexes tolerate any whitespace, line breaks and CRLF included (R1), with no dependence on any rustfmt layout.
+  - **Note 2:** at #157's merge, the closing record gains the human's resolution rule for unpinned `path:line` references dated before the merge, and so does an appended AUTONOMY.md section.
+  - **The reading.** The node is read as placed ahead of #157's merge (ready, governance order 13), and the RULED block says so.
+  - **The node's five-line form** is committed before any code (`frontends/shell/PUBLISH-PANEL-RS-REGEX-LAYOUT-PREREGISTRATION.md`, the node's gate). It adds an in-memory CRLF-and-next-line variant to each test, so the tolerance is tested whatever layout publish.rs has.
+  - **Next.** Item C's correction round (270bc75) is back; its filing and gate 2 follow.

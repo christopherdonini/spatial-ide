@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c9f6ebea90fac9c09b29ea0087cdc0de6b8ffcd2abf8c40d9b96bf38c1968c8c`) at `2026-10-02T12:27:05.110Z`.
+Generated from `PLAN.yaml` (sha256 `978e243bc91c0e97ea27797a1d1a286c9497fb1b4963d07a214c974ffa4759a3`) at `2026-10-02T15:39:37.530Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `c9f6ebea90fac9c09b29ea0087cdc0de6b8ffcd2abf8
 ## 2. Ready
 
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
+- **publish-panel-rs-regex-layout** — PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges) (lane `governance`, order 13, budget 30 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
