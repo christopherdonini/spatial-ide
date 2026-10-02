@@ -3555,15 +3555,15 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
-    order: null
+    status: ready
+    order: 14
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/hooks/QUESTIONS-MIRROR-T11-COPY-GLOB-PREREGISTRATION.md
     evidence: null
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Found by stop-hook-stale-continuity invalidator I1 (state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md): that piece makes stop-queue.mjs import precompact-flush.mjs, and the T11 test of scripts/hooks/questions-mirror.test.mjs (the_settings_command_mirrors_a_recorded_askuserquestion_payload, from PR #154) hand-copies a fixed list of six scripts into a temp project, so its hook exits 1. Routed by the form architect (state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md): a test-only node on main, merged before E; five-line form, reviewer only; Scope questions-mirror.test.mjs only, at most 10 changed lines; T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ (not recursive); its name, assertions and recorded M11 unchanged; mutation: drop scripts/plan/ from the copy, T11 fails at assertQuiet; seam proof: the changed T11 green against main stop-queue.mjs and against E commit. Its order is the human."
+    summary: "Found by stop-hook-stale-continuity invalidator I1 (state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md): that piece makes stop-queue.mjs import precompact-flush.mjs, and the T11 test of scripts/hooks/questions-mirror.test.mjs (the_settings_command_mirrors_a_recorded_askuserquestion_payload, from PR #154) hand-copies a fixed list of six scripts into a temp project, so its hook exits 1. Routed by the form architect (state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md): a test-only node on main, merged before E; five-line form, reviewer only; Scope questions-mirror.test.mjs only, at most 10 changed lines; T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ (not recursive); its name, assertions and recorded M11 unchanged; mutation: drop scripts/plan/ from the copy, T11 fails at assertQuiet; seam proof: the changed T11 green against main stop-queue.mjs and against E commit. Its order is the human. Question round 36 (RULED 2026-10-02), item 1: placed ahead of stop-hook-stale-continuity (governance order 14)."
     dates: {opened: 2026-10-02, done: null}

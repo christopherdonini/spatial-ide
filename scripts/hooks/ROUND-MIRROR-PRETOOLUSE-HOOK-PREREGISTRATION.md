@@ -334,3 +334,16 @@ Written after the piece's results were seen and after its merge (a post-result a
    - **E2**, the live record, follows the merge. It is recorded at the next AskUserQuestion call in the lease session, as its own class 1 row, with §6 item 5's versions.
 8. **Tools** (§6 item 6), each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202.
 9. **Superseded index.** None.
+
+### Amendment 4 — E2, the live record (class 1, references only)
+
+Written after the result was seen (a post-result amendment).
+
+1. **The call.** Question round 36 was the first AskUserQuestion call in the lease session after the merge (session e12d1b11, holding the lease). It was asked as one call with one item, which was not a red line.
+2. **The result.**
+   - The hook wrote `state/questions/round-36.md` at 17:14:43Z. The file's whole-file sha256 at the commit that adds it is eb7d7586f0278b1b977d393b53d18f46d45f92710cb66b2189056aa9a1f367d5. Its header reads "RED LINE items: none".
+   - The last line of `.claude/state/round-mirror.jsonl` is round 36, `mode: message`, `ok: true`.
+   - The call went through unaltered, and the human's answer arrived at 17:22:12Z.
+   - So the outcome line precedes the answer. H1, H2, H3, H5 and H6 hold as observed, and I1 did not fire.
+3. **Versions** (§6 item 5): Claude Code 2.1.286, `git version 2.49.0.windows.1`, Node v24.18.1.
+4. **Not observed.** The Telegram message's arrival on the human's side is not observed here. `ok: true` is the hook's own reading of the send.

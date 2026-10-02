@@ -474,3 +474,33 @@ than treated as settled, and no dependency bump should be merged under it withou
 **Boundary rider — the human, 2026-09-19 (`DECISIONS-PENDING.md` RULED entry 115 (c)) and 2026-09-20 (the sitting-day ruling), verbatim from the first:** *"npm audit's severity is an input, not the ruling — reachability decides urgency."* And from the second: *"reachability-not-severity recorded as the P-033 boundary's precedent."* **Generalisation:** whether a vulnerable package is dev-only/build-only or ships (by the notice generators' own shipped-set definition) decides how urgently a fix is pursued; the advisory's severity label never does. A shipped advisory is fixed first at any severity; a dev-only one follows in the same piece; patch-level bumps land under this precedent, anything minor or major or introducing a new package comes to the human with the lockfile diff and the licence check.
 
 **Applied to:** the shell's five npm advisories and the viewer's one, 2026-09-19 (entries 115-116): all six dev-only or build-only, no patch-level fix available, every fix major — routed to the human, ruled 2026-09-20 as one gated dependency piece (PR #97).
+
+### P-034 — A test-only prerequisite node placed ahead of an already-placed piece
+
+**Ruling (verbatim, byte-copied by script from `state/directives/2026-10-02-test-prerequisite-delegation.md`, lines 7-12; the 2026-10-02 test-prerequisite delegation; `DECISIONS-PENDING.md`, DIRECTIVE 2026-10-02):**
+
+> Standing delegation (record it in PRECEDENTS.md): the custodian may place a test-only prerequisite node
+> ahead of an already-placed piece, without a question round, when all of these hold:
+> - one file, at most 10 lines, test code only, and no product, workflow or record-rule change;
+> - a reviewer gate;
+> - it only unblocks the placed piece and widens nothing.
+> Report each use in the next round or report. Anything outside these limits still comes to me.
+
+**Generalisation:** The custodian may place, without a question round, a test-only prerequisite node ahead of a piece the human has already placed, when that node changes one file by at most 10 lines of test code, has a reviewer gate, and only unblocks the placed piece.
+
+**Scope and limits:**
+- These are the directive's own limits, all required together:
+  - one file, at most 10 lines;
+  - test code only;
+  - no product, workflow or record-rule change;
+  - a reviewer gate;
+  - it only unblocks the placed piece and widens nothing.
+- Placing means setting the node's `order`, which is otherwise the human's (`AUTONOMY.md` §1).
+- Each use is reported in the next question round or report.
+- Anything outside these limits still goes to the human as a question, including:
+  - a second file;
+  - a non-test line;
+  - a change to a workflow or a record rule;
+  - a node that does more than unblock.
+
+**Applied to:** none yet. `questions-mirror-t11-copy-glob`, the first case of this shape, was placed by the human in question round 36, before the directive.
