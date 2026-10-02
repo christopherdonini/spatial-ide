@@ -1591,3 +1591,6 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The probe branch** was deleted after reading. It needed a merge of main to get a pull_request run (worker deviation 1).
   - **Gate 1** (reviewer and architect) is dispatched.
   - **PR #154's gate-2 architect** PASSed with notes, and its report is filed. The gate-log holds 326 records.
+- 2026-10-02T12:22Z - **PR #154 is PASS/PASS at 2e364d6** (gate 2, scoped; the reviewer's report is filed, and the gate-log holds 327 records).
+  - **Before your click.** It waits for #156 to merge. I then merge main into the branch and fix §28's heading and number, and a scoped reviewer pass reads that hunk.
+  - **The closing record** carries the reviewer's gate-2 N-1, a reading of where the non-object check sits, and the architect's gate-2 N1, the amendment's class.
