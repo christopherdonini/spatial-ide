@@ -1,4 +1,4 @@
-# Worker report 2 — stop-hook-stale-continuity (2026-10-03)
+# Worker report 2 — stop-hook-stale-continuity (2026-10-02)
 
 *Custodian's filing note: the worker's hand-back after PR #159 merged, recorded verbatim below with the harness's report indentation removed. In it the worker merges main, renumbers its `AUTONOMY.md` section, observes M1 to M17 and pushes. No rooted `path:line` cite needed de-rooting; nothing in the text is changed.*
 
