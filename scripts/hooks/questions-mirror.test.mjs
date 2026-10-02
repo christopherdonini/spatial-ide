@@ -291,6 +291,7 @@ test('a_call_with_a_malformed_question_writes_no_round_file', (t) => {
   assert.deepEqual(roundFiles(dir), ['round-7.md']);
 });
 
+// RECORDED MUTATION: M14, observed at a660a93 with this change (applied, run, reverted): scripts/plan/ dropped from the copy -> the_settings_command_mirrors_a_recorded_askuserquestion_payload fails at assertQuiet: status 1 where 0 is expected.
 // RECORDED MUTATION: M11, observed at 753dcaf (applied, run, reverted): --hook dropped from the settings command -> the_settings_command_mirrors_a_recorded_askuserquestion_payload fails at assertQuiet: status 1 where 0 is expected.
 test('the_settings_command_mirrors_a_recorded_askuserquestion_payload', (t) => {
   const settings = JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
@@ -304,9 +305,9 @@ test('the_settings_command_mirrors_a_recorded_askuserquestion_payload', (t) => {
   // The command locates the script under $CLAUDE_PROJECT_DIR, so the test project carries the
   // scripts the hook imports, copied from the repository.
   const dir = hookProject(t);
-  for (const rel of ['hooks/questions-mirror.mjs', 'hooks/telegram.mjs', 'hooks/cloud.mjs', 'hooks/stop-queue.mjs', 'plan/plan.mjs', 'plan/yamlSubset.mjs']) {
-    fs.mkdirSync(path.dirname(path.join(dir, 'scripts', rel)), { recursive: true });
-    fs.copyFileSync(path.join(repoRoot, 'scripts', rel), path.join(dir, 'scripts', rel));
+  for (const sub of ['hooks', 'plan']) {
+    fs.mkdirSync(path.join(dir, 'scripts', sub), { recursive: true });
+    for (const f of fs.readdirSync(path.join(repoRoot, 'scripts', sub)).filter((n) => n.endsWith('.mjs'))) fs.copyFileSync(path.join(repoRoot, 'scripts', sub, f), path.join(dir, 'scripts', sub, f));
   }
   const shell = process.platform === 'win32'
     ? path.resolve(execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim(), '..', '..', '..', 'bin', 'bash.exe')
