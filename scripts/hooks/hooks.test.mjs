@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { decide, checkHalt, SESSION_CONSECUTIVE_CAP } from './stop-queue.mjs';
+import { decide, checkHalt, SESSION_CONSECUTIVE_CAP, DAILY_CONTINUATION_CAP } from './stop-queue.mjs';
 import { decidePrecompact, checkFreshness, BLOCK_REASON } from './precompact-flush.mjs';
 import { buildOutput, extractSessionContinuityBlock, READING_ORDER } from './session-resume.mjs';
 import { buildMessage } from './notify-telegram.mjs';
@@ -60,6 +60,117 @@ function baseStopInput(overrides = {}) {
 // lease check unchanged.
 function writeHeldLease(projectRoot, sessionId) {
   fs.writeFileSync(path.join(projectRoot, 'CUSTODIAN-LEASE'), `lease: ${sessionId} refreshed: ${new Date().toISOString()}\n`);
+}
+
+// ---------------------------------------------------------------------------
+// Continuity fixtures (STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md §3): real git in a fresh
+// os.tmpdir() repository, local identity, core.autocrlf false, argument arrays, no shell.
+// ---------------------------------------------------------------------------
+
+const FLUSH_A = '2026-10-01T00:00:00Z';
+const FLUSH_B = '2026-10-01T01:00:00Z';
+const LEDGER_PATHSPEC = 'state/CUT-STATE.md';
+
+function ledgerText({ flushedAt = FLUSH_A, entries = 1, eol = '\n', padLines = 0 } = {}) {
+  const lines = [
+    '# CUT-STATE',
+    '',
+    '## SESSION-CONTINUITY',
+    `flushed_at: ${flushedAt}`,
+    'tip: 0000000000000000000000000000000000000000',
+    '',
+    '## Ledger',
+    '',
+  ];
+  for (let i = 0; i < padLines; i++) lines.push('x'.repeat(63)); // 64 bytes with its newline
+  for (let i = 1; i <= entries; i++) lines.push(`- entry ${i}`);
+  return lines.join('\n').replace(/\n/g, eol) + eol;
+}
+
+function writeLedger(dir, opts) {
+  fs.mkdirSync(path.join(dir, 'state'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'state', 'CUT-STATE.md'), ledgerText(opts));
+}
+
+function commitPaths(dir, paths, message) {
+  git(dir, ['add', '--', ...paths]);
+  git(dir, ['commit', '-q', '-m', message]);
+}
+
+function commitLedger(dir, opts, message) {
+  writeLedger(dir, opts);
+  commitPaths(dir, [LEDGER_PATHSPEC], message);
+}
+
+// A repository removed with t.after. `ledger: false` makes the one commit README-only (S4b).
+function makeLedgerRepo(t, { ledger = true, ledgerOpts = {} } = {}) {
+  const dir = makeTempDir('stop-continuity-');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }));
+  git(dir, ['init', '-q']);
+  git(dir, ['config', 'user.email', 'test@example.com']);
+  git(dir, ['config', 'user.name', 'Test']);
+  git(dir, ['config', 'core.autocrlf', 'false']);
+  git(dir, ['config', 'commit.gpgsign', 'false']);
+  // Line endings are the fixture's own: no attributes file at any level may rewrite a blob.
+  fs.writeFileSync(path.join(dir, '.git', 'info', 'attributes'), '* -text\n');
+  fs.writeFileSync(path.join(dir, 'README.md'), '# test\n');
+  const paths = ['README.md'];
+  if (ledger) {
+    writeLedger(dir, ledgerOpts);
+    paths.push(LEDGER_PATHSPEC);
+  }
+  commitPaths(dir, paths, 'c0');
+  return dir;
+}
+
+function headOf(dir, rev = 'HEAD') {
+  return git(dir, ['rev-parse', rev]).trim();
+}
+
+// A stop fixture: the plan is the two-node fixture, and this session holds the lease (untracked).
+function stopFixture(t, repoOpts) {
+  const dir = makeLedgerRepo(t, repoOpts);
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
+  t.after(() => {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  });
+  const input = baseStopInput();
+  writeHeldLease(dir, input.session_id);
+  return { dir, input };
+}
+
+// S1: c0, then c1 entry-only.
+function stopFixtureS1(t) {
+  const fx = stopFixture(t);
+  commitLedger(fx.dir, { flushedAt: FLUSH_A, entries: 2 }, 'c1 entry only');
+  return fx;
+}
+
+// §7's reason, written out here and not imported: the test pins the declared text.
+function staleReason(dir, rev, flushedAt) {
+  const [sha, committedAt] = git(dir, ['log', '-1', '--format=%H%x09%cI', rev]).trim().split('\t');
+  return (
+    `stale SESSION-CONTINUITY: the newest commit touching state/CUT-STATE.md is ${sha} (${committedAt}), ` +
+    `and it does not rewrite the block's flushed_at (${flushedAt}). ` +
+    'Rewrite the block with scripts/hooks/flush.mjs from git and the ledger, commit it ledger-only, push, then stop.'
+  );
+}
+
+function stopStatePaths(dir, sessionId, now) {
+  const stateDir = path.join(dir, '.claude', 'state');
+  return {
+    session: path.join(stateDir, `stop-hook-${sessionId}.json`),
+    daily: path.join(stateDir, `stop-hook-daily-${now.toISOString().slice(0, 10)}.json`),
+  };
+}
+
+function readJsonFile(p) {
+  return JSON.parse(fs.readFileSync(p, 'utf8'));
+}
+
+function writeJsonFile(p, obj) {
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(obj));
 }
 
 // ---------------------------------------------------------------------------
@@ -153,9 +264,12 @@ test('stop-queue: allows when only the human-blocked node remains', async () => 
 
 test('stop-queue: allows on non-empty background_tasks, before even reading the plan', async () => {
   const projectRoot = makeTempDir('stop-allow-bg-');
-  // No CUSTODIAN_PLAN_PATH set and no PLAN.yaml in projectRoot -- if this reached step 4 it would
-  // still allow (missing plan), but we assert the earlier, more specific reason fires first.
+  // No CUSTODIAN_PLAN_PATH set and no PLAN.yaml in projectRoot -- if this reached step 5 it would
+  // still allow (missing plan), but we assert the earlier, more specific reason fires first. The
+  // session holds the lease, so the lease check (step 2) passes; projectRoot is not a repository,
+  // so the continuity step (step 3) is not judged and passes.
   const input = baseStopInput({ background_tasks: [{ id: 'bg-1' }] });
+  writeHeldLease(projectRoot, input.session_id);
   const result = await decide(input, { projectRoot });
   assert.equal(result.decision, 'allow');
   assert.match(result.stderr, /background_tasks is non-empty/);
@@ -327,6 +441,238 @@ test('stop-queue: never throws to the shell on a missing plan file (allows)', as
   } finally {
     delete process.env.CUSTODIAN_PLAN_PATH;
   }
+});
+
+// ---------------------------------------------------------------------------
+// stop-queue.mjs — the continuity step (STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md §4).
+// ---------------------------------------------------------------------------
+
+test('stop-queue: blocks on a stale continuity block after an entry-only ledger commit', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
+});
+
+test('stop-queue: a flush-only ledger commit reads fresh', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 'c2 flush only');
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.match(result.reason, /^next: two-nodes-ready/);
+});
+
+test('stop-queue: an entry and a flush in one ledger commit read fresh', async (t) => {
+  const { dir, input } = stopFixture(t);
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 'c1 entry plus flush');
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.match(result.reason, /^next: two-nodes-ready/);
+});
+
+test('stop-queue: the continuity check runs before the background-tasks allow', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  const result = await decide({ ...input, background_tasks: [{ id: 'bg-1' }] }, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
+});
+
+test('stop-queue: the override and HALT still allow over a stale block', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  process.env.CUSTODIAN_STOP_HOOK = 'off';
+  try {
+    const overridden = await decide(input, { projectRoot: dir });
+    assert.equal(overridden.decision, 'allow');
+    assert.match(overridden.stderr, /CUSTODIAN_STOP_HOOK=off/);
+  } finally {
+    delete process.env.CUSTODIAN_STOP_HOOK;
+  }
+  fs.writeFileSync(path.join(dir, 'state', 'CUSTODIAN-HALT'), 'halted for the drill\n'); // untracked
+  const halted = await decide(input, { projectRoot: dir });
+  assert.equal(halted.decision, 'allow');
+  assert.match(halted.stderr, /^HALT: halted for the drill/);
+});
+
+test('stop-queue: a session without the lease allows over a stale block', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  fs.rmSync(path.join(dir, 'CUSTODIAN-LEASE'));
+  const absent = await decide(input, { projectRoot: dir });
+  assert.equal(absent.decision, 'allow');
+  assert.match(absent.stderr, /CUSTODIAN-LEASE absent/);
+
+  writeHeldLease(dir, 'some-other-session');
+  const other = await decide(input, { projectRoot: dir });
+  assert.equal(other.decision, 'allow');
+  assert.match(other.stderr, /another session's lease/);
+});
+
+test('stop-queue: the caps end the turn on a stale block', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  const now = new Date();
+  const files = stopStatePaths(dir, input.session_id, now);
+  const below = { consecutive: SESSION_CONSECUTIVE_CAP - 1, lastHead: null, lastPlanHash: null };
+
+  writeJsonFile(files.session, below);
+  const underCap = await decide(input, { projectRoot: dir, now });
+  assert.equal(underCap.decision, 'block');
+  assert.equal(underCap.reason, staleReason(dir, 'HEAD', FLUSH_A));
+  assert.equal(readJsonFile(files.session).consecutive, SESSION_CONSECUTIVE_CAP);
+
+  fs.rmSync(files.daily);
+  const atSession = await decide(input, { projectRoot: dir, now });
+  assert.equal(atSession.decision, 'allow');
+  assert.match(atSession.stderr, /session continuation cap/);
+  assert.equal(fs.existsSync(files.daily), false, 'a capped stop records nothing');
+
+  writeJsonFile(files.session, below);
+  writeJsonFile(files.daily, { count: DAILY_CONTINUATION_CAP });
+  const atDaily = await decide(input, { projectRoot: dir, now });
+  assert.equal(atDaily.decision, 'allow');
+  assert.match(atDaily.stderr, /daily continuation cap/);
+  assert.deepEqual(readJsonFile(files.daily), { count: DAILY_CONTINUATION_CAP });
+});
+
+test('stop-queue: a stale block counts as a continuation and a new HEAD resets the count', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  const now = new Date();
+  const files = stopStatePaths(dir, input.session_id, now);
+  const expectStale = async () => {
+    const r = await decide(input, { projectRoot: dir, now });
+    assert.equal(r.decision, 'block');
+    assert.equal(r.reason, staleReason(dir, 'HEAD', FLUSH_A));
+  };
+
+  await expectStale();
+  assert.ok(fs.existsSync(files.session), 'a stale block records its continuation');
+  await expectStale();
+  const head1 = headOf(dir);
+  assert.deepEqual(readJsonFile(files.session), { consecutive: 2, lastHead: head1, lastPlanHash: null });
+  assert.deepEqual(readJsonFile(files.daily), { count: 2 });
+
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 'c2 flush only');
+  const queued = await decide(input, { projectRoot: dir, now });
+  assert.match(queued.reason, /^next: two-nodes-ready/);
+  const afterQueue = readJsonFile(files.session);
+  assert.equal(afterQueue.consecutive, 1);
+  assert.equal(afterQueue.lastHead, headOf(dir));
+  assert.equal(typeof afterQueue.lastPlanHash, 'string');
+  assert.deepEqual(readJsonFile(files.daily), { count: 3 });
+
+  // A stale block again: the new HEAD resets the count, and the stored plan hash is written back.
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 3 }, 'c3 entry only');
+  const again = await decide(input, { projectRoot: dir, now });
+  assert.equal(again.reason, staleReason(dir, 'HEAD', FLUSH_B));
+  assert.deepEqual(readJsonFile(files.session), { consecutive: 1, lastHead: headOf(dir), lastPlanHash: afterQueue.lastPlanHash });
+  assert.deepEqual(readJsonFile(files.daily), { count: 4 });
+});
+
+test('stop-queue: the continuity check fails open when git cannot read the ledger history', async (t) => {
+  // S4a: a directory that is not a repository, holding the ledger file.
+  const bare = makeTempDir('stop-continuity-norepo-');
+  t.after(() => fs.rmSync(bare, { recursive: true, force: true, maxRetries: 3 }));
+  writeLedger(bare, {});
+  process.env.CUSTODIAN_PLAN_PATH = twoNodesPlan;
+  t.after(() => {
+    delete process.env.CUSTODIAN_PLAN_PATH;
+  });
+  const input = baseStopInput();
+  writeHeldLease(bare, input.session_id);
+  const prevCeiling = process.env.GIT_CEILING_DIRECTORIES;
+  process.env.GIT_CEILING_DIRECTORIES = path.dirname(bare); // no enclosing repository is discovered
+  try {
+    const notRepo = await decide(input, { projectRoot: bare });
+    assert.equal(notRepo.decision, 'block');
+    assert.match(notRepo.reason, /^next: two-nodes-ready/);
+    assert.match(notRepo.stderr, /stop-queue: continuity not judged \(git log failed\); the stop continues to the next step\./);
+  } finally {
+    if (prevCeiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+    else process.env.GIT_CEILING_DIRECTORIES = prevCeiling;
+  }
+
+  // S4b: a repository whose only commit lacks the ledger -- no ledger commit, nothing to judge, no line.
+  const { dir, input: input2 } = stopFixture(t, { ledger: false });
+  const noLedger = await decide(input2, { projectRoot: dir });
+  assert.equal(noLedger.decision, 'block');
+  assert.match(noLedger.reason, /^next: two-nodes-ready/);
+  assert.doesNotMatch(noLedger.stderr, /continuity not judged/);
+});
+
+test('stop-queue: a merge is judged against its first parent', async (t) => {
+  // S5: the merge differs from both parents, so it is the newest ledger commit; its first parent
+  // already carries flushed_at B.
+  const { dir, input } = stopFixture(t);
+  const mainBranch = git(dir, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+  git(dir, ['checkout', '-q', '-b', 'side']);
+  commitLedger(dir, { flushedAt: FLUSH_A, entries: 2 }, 's1 entry only');
+  git(dir, ['checkout', '-q', mainBranch]);
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 1 }, 'm1 flush only');
+  git(dir, ['merge', '-q', '--no-ff', '-m', 'merge side', 'side']);
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_B));
+});
+
+test("stop-queue: a merge that takes the side's ledger is judged at the side's newest ledger commit", async (t) => {
+  // S6: the merge's ledger equals its second parent's, so the walk follows that side to s2.
+  const { dir, input } = stopFixture(t);
+  const mainBranch = git(dir, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+  git(dir, ['checkout', '-q', '-b', 'side']);
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 1 }, 's1 flush only');
+  commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 's2 entry only');
+  git(dir, ['checkout', '-q', mainBranch]);
+  fs.appendFileSync(path.join(dir, 'README.md'), 'more\n');
+  commitPaths(dir, ['README.md'], 'm1 README only');
+  git(dir, ['merge', '-q', '--no-ff', '-m', 'merge side', 'side']);
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, headOf(dir, 'side'), FLUSH_B));
+});
+
+test('stop-queue: a ledger commit with no first-parent copy reads fresh', async (t) => {
+  const { dir, input } = stopFixture(t); // S7: c0 only, a root commit
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.match(result.reason, /^next: two-nodes-ready/);
+});
+
+test('stop-queue: an uncommitted flush does not clear a stale block', async (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  writeLedger(dir, { flushedAt: FLUSH_B, entries: 2 }); // S8: rewritten in the working tree, never committed
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
+});
+
+test('stop-queue: a CRLF ledger blob with an unchanged flushed_at reads stale', async (t) => {
+  const { dir, input } = stopFixture(t);
+  commitLedger(dir, { flushedAt: FLUSH_A, entries: 2, eol: '\r\n' }, 'c1 CRLF plus an entry');
+  assert.ok(git(dir, ['show', `HEAD:${LEDGER_PATHSPEC}`]).includes('\r\n'), 'the fixture blob keeps its CRLF');
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
+});
+
+test('stop-queue: a ledger over 1 MiB is still judged', async (t) => {
+  const { dir, input } = stopFixture(t, { ledgerOpts: { padLines: 32768 } }); // 2 MiB
+  commitLedger(dir, { flushedAt: FLUSH_A, entries: 2, padLines: 32768 }, 'c1 entry only');
+  assert.ok(Number(git(dir, ['cat-file', '-s', `HEAD:${LEDGER_PATHSPEC}`])) > 1024 * 1024, 'the fixture blob is over 1 MiB');
+  const result = await decide(input, { projectRoot: dir });
+  assert.equal(result.decision, 'block');
+  assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
+});
+
+test('stop-queue CLI: a stale ledger blocks with the continuity reason through the shipped entry', (t) => {
+  const { dir, input } = stopFixtureS1(t);
+  const scriptPath = path.join(here, 'stop-queue.mjs');
+  const result = spawnSync(process.execPath, [scriptPath], {
+    input: JSON.stringify(input),
+    encoding: 'utf8',
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, CUSTODIAN_PLAN_PATH: twoNodesPlan },
+  });
+  assert.equal(result.status, 0);
+  const parsed = JSON.parse(result.stdout);
+  assert.equal(parsed.decision, 'block');
+  assert.equal(parsed.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
 // ---------------------------------------------------------------------------
@@ -640,6 +986,19 @@ test('session-resume: never throws when state/CUT-STATE.md is missing', () => {
   const output = buildOutput(dir);
   assert.ok(output.includes(READING_ORDER));
   assert.match(output, /could not be read|no SESSION-CONTINUITY block/);
+});
+
+test('session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)', () => {
+  const lines = READING_ORDER.split('\n');
+  const at = (needle) => lines.findIndex((l) => l.includes(needle));
+  const pending = at('DECISIONS-PENDING.md');
+  const directives = at('state/directives/');
+  const precedents = at('PRECEDENTS.md');
+  assert.ok(pending >= 0 && precedents >= 0, 'the neighbouring steps exist');
+  assert.equal(directives, pending + 1, 'directly after DECISIONS-PENDING.md');
+  assert.equal(precedents, directives + 1, 'directly before PRECEDENTS.md');
+  assert.equal(lines[directives], "4. state/directives/ — the human's instructions, recorded verbatim, newest first.");
+  assert.match(lines[precedents], /^5\. PRECEDENTS\.md/);
 });
 
 // ---------------------------------------------------------------------------
