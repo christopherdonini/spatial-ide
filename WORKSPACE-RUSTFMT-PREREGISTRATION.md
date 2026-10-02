@@ -219,3 +219,14 @@ Assertions only:
 - **Operator:** none.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — invalidator I4 and its resolution, and the records gate 1 asked for (classes 1 and 2)
+
+Written after gate 1's results were seen (a post-result amendment). References only.
+
+1. **Class 2, F6 and I4.** Product CI — shell was red at c6d1414 (run 37006671393, pull_request), against F6's prediction, and I4 fired. The failing reader is `frontends/shell/src/publish/PublishPanel.test.ts:222` @ a0f0da7 sha256:5085eb8f7e98fb63694f53793288104094ddb34fe6074b0d1478c051abe6c2e3 (this branch's merge base with main; the file is unchanged by this piece); C1 moved the literal it reads. F6 is not edited.
+2. **The resolution.** The architect's ruling `state/consults/gates/2026-10-02-workspace-rustfmt-i4-architect-ruling.md` routed the fix out of this piece: PLAN node `publish-panel-rs-regex-layout`, PR #158, merged as merge commit e4e864e, placed by question round 35. C1 and C2 are unchanged, and C3 touches `.github/workflows/rust-fmt.yml` only.
+3. **§0's list of text readers** also omits `PublishPanel.test.ts` (both tests) and `surfaceCompleteness.test.ts`: the gate-1 reviewer's S2-1 and the I4 ruling's list of text readers. §0 is not edited.
+4. **The rustfmt versions.** CI ran rustfmt 1.10.0 and the local runs 1.9.0: the gate-1 reviewer's S2-3. E1 is green, so I6 does not fire. H1 is recorded as tested across those two versions and claims nothing more.
+5. **Generation.** The node's generation bumps (`AUTONOMY.md` §15).
+6. **Superseded index.** None. No line of this form is made false; the header lines C3 rewrites are not records.
