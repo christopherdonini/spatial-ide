@@ -1329,8 +1329,9 @@ test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unsca
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M8 -- -M replaced by --no-renames in the content diff. Observed: this test's
-  // status assertion failed (1 !== 0, the pure rename's line was read as an added line). Reverted.
+  // RECORDED MUTATION (a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned):
+  // M8 -- -M replaced by --no-renames in the content diff. Observed: this test's status assertion
+  // failed (1 !== 0, the pure rename's line was read as an added line). Reverted.
 });
 
 test('a_range_whose_base_is_not_an_ancestor_scans_from_the_merge_base', () => {
