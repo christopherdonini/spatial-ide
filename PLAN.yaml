@@ -3043,13 +3043,13 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 9
     depends_on: [audit-reader-char-boundary, workspace-rustfmt]
     needs_human: {kind: none, minutes: 0}
     gate: protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/skp-cancel-state-closed-set}
     budget_minutes: 120
     generation: 1
     felt_verdict: false

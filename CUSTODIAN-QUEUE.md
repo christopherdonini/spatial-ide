@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b441f5a801d7a666cc9681bfda538376838a265fca4731c7aed30570b6b5c1b7`) at `2026-10-02T18:34:00.820Z`.
+Generated from `PLAN.yaml` (sha256 `495a1f7b2ff187cb8cb204f2fb88cf767dd175790b3c52aa4423a0fe6cb08855`) at `2026-10-02T18:38:22.398Z`.
 
 ## 1. Next
 
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`)
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`)
 
 ## 2. Ready
 
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`, order 9, budget 120 min)
 - **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -37,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `b441f5a801d7a666cc9681bfda538376838a265fca47
 
 ## 5. In progress
 
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — evidence: branch `cut/skp-cancel-state-closed-set`
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
 - **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) — evidence: branch `cut/questions-mirror-t11-copy-glob`
 

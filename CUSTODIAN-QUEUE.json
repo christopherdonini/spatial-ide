@@ -1,46 +1,27 @@
 {
-  "generated_at": "2026-10-02T18:34:00.820Z",
-  "plan_hash": "b441f5a801d7a666cc9681bfda538376838a265fca4731c7aed30570b6b5c1b7",
+  "generated_at": "2026-10-02T18:38:22.398Z",
+  "plan_hash": "495a1f7b2ff187cb8cb204f2fb88cf767dd175790b3c52aa4423a0fe6cb08855",
   "priorities_approved": true,
   "next": {
-    "id": "skp-cancel-state-closed-set",
-    "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-    "lane": "kernel-protocol",
+    "id": "port-1-linux-l1",
+    "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
+    "lane": "platform",
     "phase": "prototype",
     "status": "ready",
-    "order": 9,
-    "budget_minutes": 120,
+    "order": 2,
+    "budget_minutes": 180,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-26",
+      "opened": "2026-09-30",
       "done": null
     },
-    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs. Question round 38 (RULED 2026-10-02), item 1: the reader is wrong, no literal bump; the full-form preregistration is protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md), full gating (wire; a property under test)."
+    "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1."
   },
   "ready": [
-    {
-      "id": "skp-cancel-state-closed-set",
-      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs. Question round 38 (RULED 2026-10-02), item 1: the reader is wrong, no literal bump; the full-form preregistration is protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md), full gating (wire; a property under test)."
-    },
     {
       "id": "port-1-linux-l1",
       "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
@@ -423,6 +404,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/skp-cancel-state-closed-set"
+      },
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs. Question round 38 (RULED 2026-10-02), item 1: the reader is wrong, no literal bump; the full-form preregistration is protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md), full gating (wire; a property under test).",
+      "evidence_label": "branch `cut/skp-cancel-state-closed-set`"
+    },
     {
       "id": "stop-hook-stale-continuity",
       "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",

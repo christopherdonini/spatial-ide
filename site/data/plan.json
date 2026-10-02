@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T18:34:00.968Z",
-  "plan_hash": "b441f5a801d7a666cc9681bfda538376838a265fca4731c7aed30570b6b5c1b7",
+  "generated_at": "2026-10-02T18:38:22.529Z",
+  "plan_hash": "495a1f7b2ff187cb8cb204f2fb88cf767dd175790b3c52aa4423a0fe6cb08855",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4944,7 +4944,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 9,
       "depends_on": [
         "audit-reader-char-boundary",
@@ -4956,7 +4956,9 @@
       },
       "gate": "protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/skp-cancel-state-closed-set"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
