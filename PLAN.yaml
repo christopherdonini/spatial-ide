@@ -3520,12 +3520,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 13
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/PUBLISH-PANEL-RS-REGEX-LAYOUT-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/publish-panel-rs-regex-layout}
     budget_minutes: 30
     generation: 1
     felt_verdict: false

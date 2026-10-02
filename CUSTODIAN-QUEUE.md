@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `978e243bc91c0e97ea27797a1d1a286c9497fb1b4963d07a214c974ffa4759a3`) at `2026-10-02T15:39:37.530Z`.
+Generated from `PLAN.yaml` (sha256 `91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4f7b1d2b2e168ae780726`) at `2026-10-02T15:45:13.633Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `978e243bc91c0e97ea27797a1d1a286c9497fb1b4963
 ## 2. Ready
 
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
-- **publish-panel-rs-regex-layout** — PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges) (lane `governance`, order 13, budget 30 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -42,6 +41,7 @@ Generated from `PLAN.yaml` (sha256 `978e243bc91c0e97ea27797a1d1a286c9497fb1b4963
 - **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
 - **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) — evidence: branch `cut/test-claims-same-pr-pin`
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
+- **publish-panel-rs-regex-layout** — PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges) — evidence: branch `cut/publish-panel-rs-regex-layout`
 
 ## 6. Proposed / unscheduled
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T15:39:37.645Z",
-  "plan_hash": "978e243bc91c0e97ea27797a1d1a286c9497fb1b4963d07a214c974ffa4759a3",
+  "generated_at": "2026-10-02T15:45:13.786Z",
+  "plan_hash": "91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4f7b1d2b2e168ae780726",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5669,7 +5669,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 13,
       "depends_on": [],
       "needs_human": {
@@ -5677,7 +5677,9 @@
         "minutes": 0
       },
       "gate": "frontends/shell/PUBLISH-PANEL-RS-REGEX-LAYOUT-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/publish-panel-rs-regex-layout"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
