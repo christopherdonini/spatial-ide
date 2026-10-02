@@ -3498,3 +3498,22 @@ nodes:
     entries: []
     summary: "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged."
     dates: {opened: 2026-10-02, done: null}
+
+  - id: probe-test-claims-same-pr
+    title: "Probe node for the same-PR superseded pin (never merged)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: scripts/plan/PROBE-SAMEPR-PREREGISTRATION.md
+    merge: merge-commit
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Probe only: E2 and E3 of the same-PR superseded pin form. Never merged."
+    dates: {opened: 2026-10-02, done: null}

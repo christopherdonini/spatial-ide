@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `81347da4c7a908439aec182a681c775615978b2c07a451ae8f21b87d92c9b288`) at `2026-10-02T11:42:18.126Z`.
+Generated from `PLAN.yaml` (sha256 `e59bc354fd798412ed51c96f9799b375d608770fc9a11f37ef16286a386dbfc5`) at `2026-10-02T12:06:58.319Z`.
 
 ## 1. Next
 
@@ -86,6 +86,7 @@ Generated from `PLAN.yaml` (sha256 `81347da4c7a908439aec182a681c775615978b2c07a4
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
+- **probe-test-claims-same-pr** — Probe node for the same-PR superseded pin (never merged) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

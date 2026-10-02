@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T11:42:18.126Z",
-  "plan_hash": "81347da4c7a908439aec182a681c775615978b2c07a451ae8f21b87d92c9b288",
+  "generated_at": "2026-10-02T12:06:58.319Z",
+  "plan_hash": "e59bc354fd798412ed51c96f9799b375d608770fc9a11f37ef16286a386dbfc5",
   "priorities_approved": true,
   "next": {
     "id": "workspace-rustfmt",
@@ -1246,6 +1246,25 @@
         "done": null
       },
       "summary": "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged."
+    },
+    {
+      "id": "probe-test-claims-same-pr",
+      "title": "Probe node for the same-PR superseded pin (never merged)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Probe only: E2 and E3 of the same-PR superseded pin form. Never merged."
     }
   ],
   "unscheduled": [
