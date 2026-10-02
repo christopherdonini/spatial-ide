@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T11:34:26.348Z",
-  "plan_hash": "827433355e3a53e12d1fd978bed98b71d00daeee259615dc813175774dad05fb",
+  "generated_at": "2026-10-02T11:39:27.217Z",
+  "plan_hash": "16a1e051346288ae7fea71aa108448264e529f3f22388854c1e9107527805794",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5482,7 +5482,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 8,
       "depends_on": [],
       "needs_human": {
@@ -5491,16 +5491,16 @@
       },
       "gate": "scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/exposure-scan-ci-backstop"
+        "pr": 153
       },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5. CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. PR #153 does not merge until that typed ruling; its work stops at the branch and gates. The form's E4 force-pushed the probe branch, a red-line action disclosed in round 34, item 3. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved; PR #153 may merge once its gates pass, so the correction's stop is lifted. Item 3, typed: E4's force-push is accepted after the fact, not as a precedent. Item 7: after a green E5, the human makes the check required on main.",
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5. CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. PR #153 does not merge until that typed ruling; its work stops at the branch and gates. The form's E4 force-pushed the probe branch, a red-line action disclosed in round 34, item 3. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved; PR #153 may merge once its gates pass, so the correction's stop is lifted. Item 3, typed: E4's force-push is accepted after the fact, not as a precedent. Item 7: after a green E5, the human makes the check required on main. DONE 2026-10-02: PR #153 merged at 11:30:49Z as merge commit cdf147f (observed on GitHub; no merge notice was typed); E5 green (run 37001418969); closing record the form Amendment 3 (references and hashes only); record rounds two, closed by the architect reduction. Round 34 item 7: the human is told E5 is green, to make the check required on main.",
       "dates": {
         "opened": "2026-10-02",
-        "done": null
+        "done": "2026-10-02"
       }
     },
     {
@@ -5509,7 +5509,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 9,
       "depends_on": [
         "exposure-scan-ci-backstop"
@@ -5524,7 +5524,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it).",
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open.",
       "dates": {
         "opened": "2026-10-02",
         "done": null

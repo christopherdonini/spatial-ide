@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `827433355e3a53e12d1fd978bed98b71d00daeee259615dc813175774dad05fb`) at `2026-10-02T11:34:26.179Z`.
+Generated from `PLAN.yaml` (sha256 `16a1e051346288ae7fea71aa108448264e529f3f22388854c1e9107527805794`) at `2026-10-02T11:39:26.982Z`.
 
 ## 1. Next
 
-- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`)
+- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`)
 
 ## 2. Ready
 
+- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`, order 9, budget 90 min)
 - **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`, order 10, budget 180 min)
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) (lane `governance`, order 11, budget 150 min)
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
@@ -36,12 +37,11 @@ Generated from `PLAN.yaml` (sha256 `827433355e3a53e12d1fd978bed98b71d00daeee2596
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — blocked by: exposure-scan-ci-backstop
 - **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — blocked by: workspace-rustfmt
 
 ## 5. In progress
 
-- **exposure-scan-ci-backstop** — The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B) — evidence: branch `cut/exposure-scan-ci-backstop`
+- (none)
 
 ## 6. Proposed / unscheduled
 

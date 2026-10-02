@@ -312,3 +312,34 @@ Written after gate 1's and gate 2's results were seen (a post-result amendment).
    |---|---|
    | M10's record: lines 1389-1391 of the test file at 5d3951f | the M10 comment at e0442e0 (item 1) |
    | T7's abort sentence: lines 1305-1307 of the test file at e0442e0 | the T7 comment at c0277fc (item 2) |
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the merge (a post-result amendment).
+
+1. **Merge.** PR #153 merged at 2026-10-02T11:30:49Z as merge commit cdf147f (parents 7e51f8f and 65793d6).
+2. **Gates.** Three gate rounds, of which two were record rounds. Gate-log node `exposure-scan-ci-backstop`, attempts 1 to 4. The record-cap reduction (`state/directives/2026-09-18-record-cap.md`, item (3)): `state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate3-architect-reduction.md`.
+3. **Observations of record.**
+   - M1 to M13 at 7680dc9: `state/consults/2026-10-02-exposure-scan-ci-backstop-worker-report-1.md`.
+   - M7's re-observation and M10 at e0442e0: `state/consults/2026-10-02-exposure-scan-ci-backstop-worker-report-2.md`.
+   - The scoped abort, at e0442e0 with that edit applied: `state/consults/2026-10-02-exposure-scan-ci-backstop-worker-report-3.md`.
+4. **Superseded spans, pinned on main (Amendment 2, item 3):**
+   - `scripts/hooks/profile-path-scan.test.mjs:1389-1391` @ 5d3951f sha256:220aeb0188c1453df06f82e9b58c2f6b32457886a83898f351f05970b6be8169;
+   - `scripts/hooks/profile-path-scan.test.mjs:1305-1307` @ e0442e0 sha256:feb2836c334007121d98136a7ed3371be27fad02a0daf7618994637d60eddc66.
+5. **Tools, each at its last change before 65793d6:**
+   - verify-cites at 522e448;
+   - verify-quotes at f9444a4;
+   - verify-test-claims at 57c626f;
+   - verify-mutation at 7d24ed1;
+   - verify:plan at 2607202.
+
+   Amendment 2, item 2, second bullet reads as verify-mutation at 7d24ed1. Its discharge clause is proved by Amendment 2, items 1 and 4.
+6. **End-to-end runs.**
+   - E1: run 36975569067.
+   - E2 to E4: runs 36975271367, 36975323133 and 36975368380 (worker report 1). E4 was accepted after the fact in question round 34, item 3.
+   - E5: run 37001418969, green. It read 12 commits, 584 added lines and 1 path name over 7e51f8f..cdf147f, which equal `git rev-list --count` and the numstat over that range.
+7. **Size.** 558 of 800 changed lines over 3 files at 65793d6 (the gate-3 reviewer's recount).
+8. **Notes of record:**
+   - the gate-1 reviewer's N3;
+   - the gate-2 reviewer's N-2;
+   - the gate-1 architect's N2, which T7's finding assertion answers.
