@@ -294,3 +294,29 @@ Assertions only:
 - **Operator:** none. E2 is the custodian's record of a ledger commit made anyway.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — budget overrun, §7 not edited; invalidator I1 and its resolution (classes 8 and 1)
+
+budget overrun, §7 not edited. Written after the results were seen (a post-result amendment), before either gate. References only.
+
+1. **Class 8.**
+   - **Declared:** §7 declares at most 650 changed lines over at most 5 files.
+   - **Final,** by §7's own counting command at 78681ec, merge base fe1e6b7: 703 lines over the same 5 files.
+     - `AUTONOMY.md` 9
+     - `scripts/hooks/README.md` 66
+     - `scripts/hooks/hooks.test.mjs` 435
+     - `scripts/hooks/session-resume.mjs` 5
+     - `scripts/hooks/stop-queue.mjs` 188
+   - **Reason:**
+     - the continuation accounting moved into one routine that the queue block and the stale block share, about 60 lines;
+     - T1 to T17's fixture repositories;
+     - the 17 RECORDED MUTATION comments.
+   - §7 is not edited, and no test or comment was trimmed to fit.
+2. **Class 1, I1 fired before the first code commit.**
+   - The failing test was `the_settings_command_mirrors_a_recorded_askuserquestion_payload`. Its fixed copy list is at `scripts/hooks/questions-mirror.test.mjs:307` @ 629d969 sha256:6ac977f4bdd0c3d43af18ebaa955e3391902e4b563f5d35654fb3dedfad33d13.
+   - The architect's ruling is `state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md`. The worker's report is `state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md`.
+   - The fix is PLAN node `questions-mirror-t11-copy-glob`, PR #159, merge commit ec74652, placed by question round 36, item 1.
+   - At the merged head 78681ec the scripts suite runs 406 tests, 406 pass. I5 did not fire, because `questions-mirror.test.mjs` is not in this piece's diff.
+3. **The section number.** §2 item 10's appended `AUTONOMY.md` section is §30, after main's §29. The merge commit 4b1f641 set it, and nothing above it changed.
+4. **Generation.** The node's generation bumps to 2 (`AUTONOMY.md` §15).
+5. **Superseded index.** None. §7 and §5 stand as registered; this amendment records the results.
