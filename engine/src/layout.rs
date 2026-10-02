@@ -252,13 +252,16 @@ fn rewrite(
         )));
     }
     if spec.row_group_rows == 0 {
-        return Err(EngineError::Source("row_group_rows must be at least 1".into()));
+        return Err(EngineError::Source(
+            "row_group_rows must be at least 1".into(),
+        ));
     }
     let s = sql_string(src)?;
     let d = sql_string(dst)?;
 
-    let conn = duckdb::Connection::open_in_memory()
-        .map_err(|e| EngineError::ConnectionSetup { detail: e.to_string() })?;
+    let conn = duckdb::Connection::open_in_memory().map_err(|e| EngineError::ConnectionSetup {
+        detail: e.to_string(),
+    })?;
     // **The same configuration the pooled dataset connections get, through the same function** —
     // `pool::configure_connection` (`pool.rs`'s `CONFIGURE_SQL`), not a copy of it. It turns
     // extension autoload and autoinstall off, so this connection cannot implicitly load or install
@@ -311,7 +314,8 @@ fn rewrite(
             app.append_row(duckdb::params![*id, *key])
                 .map_err(|e| EngineError::Query(format!("append ordering row: {e}")))?;
         }
-        app.flush().map_err(|e| EngineError::Query(format!("flush ordering rows: {e}")))?;
+        app.flush()
+            .map_err(|e| EngineError::Query(format!("flush ordering rows: {e}")))?;
     }
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
@@ -371,8 +375,13 @@ fn rewrite(
     //     wave through;
     //   - a file DuckDB collapsed into a single group, where "exempt the last" checks nothing at
     //     all — which is the original failure exactly, in the shape that hides from the guard.
-    let uneven: Vec<u64> =
-        group_rows.iter().rev().skip(1).copied().filter(|n| *n != want).collect();
+    let uneven: Vec<u64> = group_rows
+        .iter()
+        .rev()
+        .skip(1)
+        .copied()
+        .filter(|n| *n != want)
+        .collect();
     let last_too_big = group_rows.last().is_some_and(|n| *n > want);
     let collapsed = group_rows.len() == 1 && features > want;
     if !uneven.is_empty() || last_too_big || collapsed {
@@ -463,7 +472,10 @@ fn curve_keys(
             // and then join to whatever row genuinely carries id 0, silently duplicating one feature
             // and losing another. `column_u64` refuses nulls on the streaming path for exactly this
             // reason and says why; this module does not get to opt out of that on the same data.
-            for (i, col) in [ids as &dyn Array, xmin, ymin, xmax, ymax].iter().enumerate() {
+            for (i, col) in [ids as &dyn Array, xmin, ymin, xmax, ymax]
+                .iter()
+                .enumerate()
+            {
                 if col.null_count() > 0 {
                     return Err(EngineError::Source(format!(
                         "column {i} of the curve-key scan holds {} null value(s); a clustered \
@@ -583,8 +595,13 @@ pub fn row_group_row_counts(conn: &duckdb::Connection, path_sql: &str) -> Result
         .query([])
         .map_err(|e| EngineError::Query(format!("row-group counts: {e}")))?;
     let mut out = Vec::new();
-    while let Some(r) = rows.next().map_err(|e| EngineError::Query(format!("row: {e}")))? {
-        let n: i64 = r.get(1).map_err(|e| EngineError::Query(format!("count: {e}")))?;
+    while let Some(r) = rows
+        .next()
+        .map_err(|e| EngineError::Query(format!("row: {e}")))?
+    {
+        let n: i64 = r
+            .get(1)
+            .map_err(|e| EngineError::Query(format!("count: {e}")))?;
         out.push(n.max(0) as u64);
     }
     Ok(out)
@@ -593,20 +610,30 @@ pub fn row_group_row_counts(conn: &duckdb::Connection, path_sql: &str) -> Result
 /// The footer's key/value metadata, as strings.
 fn read_kv_metadata(conn: &duckdb::Connection, src_sql: &str) -> Result<Vec<(String, String)>> {
     let mut stmt = conn
-        .prepare(&format!("SELECT key, value FROM parquet_kv_metadata('{src_sql}')"))
+        .prepare(&format!(
+            "SELECT key, value FROM parquet_kv_metadata('{src_sql}')"
+        ))
         .map_err(|e| EngineError::Query(format!("kv metadata prepare: {e}")))?;
     let mut rows = stmt
         .query([])
         .map_err(|e| EngineError::Query(format!("kv metadata: {e}")))?;
     let mut out = Vec::new();
-    while let Some(r) = rows.next().map_err(|e| EngineError::Query(format!("kv row: {e}")))? {
+    while let Some(r) = rows
+        .next()
+        .map_err(|e| EngineError::Query(format!("kv row: {e}")))?
+    {
         // DuckDB reports both as BLOB. Carried verbatim; nothing here interprets a value.
-        let k: Vec<u8> = r.get(0).map_err(|e| EngineError::Query(format!("kv key: {e}")))?;
-        let v: Vec<u8> = r.get(1).map_err(|e| EngineError::Query(format!("kv value: {e}")))?;
+        let k: Vec<u8> = r
+            .get(0)
+            .map_err(|e| EngineError::Query(format!("kv key: {e}")))?;
+        let v: Vec<u8> = r
+            .get(1)
+            .map_err(|e| EngineError::Query(format!("kv value: {e}")))?;
         let k = String::from_utf8(k)
             .map_err(|_| EngineError::GeoMetadata("a footer key is not UTF-8".into()))?;
-        let v = String::from_utf8(v)
-            .map_err(|_| EngineError::GeoMetadata(format!("footer value for `{k}` is not UTF-8")))?;
+        let v = String::from_utf8(v).map_err(|_| {
+            EngineError::GeoMetadata(format!("footer value for `{k}` is not UTF-8"))
+        })?;
         out.push((k, v));
     }
     Ok(out)
@@ -620,11 +647,13 @@ fn covering_of(conn: &duckdb::Connection, src_sql: &str) -> Result<CoveringBbox>
         .find(|(k, _)| k == "geo")
         .map(|(_, v)| v)
         .ok_or_else(|| EngineError::GeoMetadata("no `geo` key".into()))?;
-    crate::geoparquet::GeoMeta::parse(&geo)?.covering.ok_or_else(|| EngineError::NoCoveringBbox {
-        detail: "the source declares no covering.bbox, so a centroid cannot be read without \
+    crate::geoparquet::GeoMeta::parse(&geo)?
+        .covering
+        .ok_or_else(|| EngineError::NoCoveringBbox {
+            detail: "the source declares no covering.bbox, so a centroid cannot be read without \
                  decoding every geometry — which this rewrite deliberately does not do"
-            .into(),
-    })
+                .into(),
+        })
 }
 
 fn sql_string(p: &Path) -> Result<String> {
@@ -645,9 +674,24 @@ mod tests {
     fn the_curve_is_a_bijection_over_the_grid() {
         // Checked against its own inverse rather than against a table of expected values, which
         // would only prove that two transcriptions of the same source agree.
-        for d in [0u64, 1, 2, 3, 4, 12345, 65535, 65536, 1 << 20, (AXIS_CELLS * AXIS_CELLS) - 1] {
+        for d in [
+            0u64,
+            1,
+            2,
+            3,
+            4,
+            12345,
+            65535,
+            65536,
+            1 << 20,
+            (AXIS_CELLS * AXIS_CELLS) - 1,
+        ] {
             let (x, y) = hilbert_d2xy(d);
-            assert_eq!(hilbert_xy2d(x, y), d, "d={d} -> ({x},{y}) did not round-trip");
+            assert_eq!(
+                hilbert_xy2d(x, y),
+                d,
+                "d={d} -> ({x},{y}) did not round-trip"
+            );
         }
     }
 
@@ -680,9 +724,24 @@ mod tests {
     #[test]
     fn a_degenerate_declared_extent_is_refused_rather_than_divided_by() {
         for e in [
-            DeclaredExtent { xmin: 0.0, ymin: 0.0, xmax: 0.0, ymax: 1.0 },
-            DeclaredExtent { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 0.0 },
-            DeclaredExtent { xmin: f64::NAN, ymin: 0.0, xmax: 1.0, ymax: 1.0 },
+            DeclaredExtent {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 0.0,
+                ymax: 1.0,
+            },
+            DeclaredExtent {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 0.0,
+            },
+            DeclaredExtent {
+                xmin: f64::NAN,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            },
         ] {
             assert!(!e.valid(), "{e:?} should not be a usable grid");
         }

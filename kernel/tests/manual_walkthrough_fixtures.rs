@@ -17,7 +17,9 @@
 
 use std::path::PathBuf;
 
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
+};
 
 fn dir() -> PathBuf {
     let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/manual-walkthrough");
@@ -42,7 +44,12 @@ fn generate_the_100k_happy_path_fixture() {
     let path = dir().join("100k-happy-path.parquet");
     let facts = write_geoparquet(
         &path,
-        &FixtureSpec { features: 100_000, avg_vertices: 18, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features: 100_000,
+            avg_vertices: 18,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("write the 100k happy-path fixture");
     println!(
@@ -107,7 +114,12 @@ fn generate_the_over_ceiling_refusing_fixture() {
     let path = dir().join("over-ceiling-refused.parquet");
     let facts = write_geoparquet(
         &path,
-        &FixtureSpec { features: 100_000, avg_vertices: 24, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features: 100_000,
+            avg_vertices: 24,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("write the over-ceiling refusing fixture");
     println!(
@@ -148,7 +160,12 @@ fn generate_the_no_crs_refusing_fixture() {
     let path = dir().join("no-crs-refused.parquet");
     let facts = write_geoparquet(
         &path,
-        &FixtureSpec { features: 100, avg_vertices: 12, crs_mode: CrsMode::ExplicitNull, ..Default::default() },
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            crs_mode: CrsMode::ExplicitNull,
+            ..Default::default()
+        },
     )
     .expect("write the no-CRS refusing fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
@@ -321,7 +338,10 @@ fn generate_the_filter_fixture() {
         "every ZONE_VALUES entry must appear at least once (got {:?})",
         facts.zone_counts
     );
-    assert!(facts.zone_nulls > 0, "at least one NULL zone must appear (got 0)");
+    assert!(
+        facts.zone_nulls > 0,
+        "at least one NULL zone must appear (got 0)"
+    );
     assert!(
         facts.zone_counts[0] > 0 && facts.zone_counts[0] < facts.features,
         "the 'residential' predicate must admit some rows but exclude others (admits {} of {})",

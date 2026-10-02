@@ -203,13 +203,23 @@ pub fn compile(
             },
         };
         for value in document.case_values() {
-            legend.push(entry(LegendKind::Case(value.clone()), Branch::Value(&value), &document));
+            legend.push(entry(
+                LegendKind::Case(value.clone()),
+                Branch::Value(&value),
+                &document,
+            ));
         }
         legend.push(entry(LegendKind::Null, Branch::Null, &document));
         legend.push(entry(LegendKind::Unmatched, Branch::Unmatched, &document));
     }
 
-    Ok(CompiledStyle { document, canonical_json, style_hash, match_column, legend })
+    Ok(CompiledStyle {
+        document,
+        canonical_json,
+        style_hash,
+        match_column,
+        legend,
+    })
 }
 
 /// The categorical-key type test — **text only**, and the refusals name why.
@@ -267,12 +277,21 @@ mod tests {
     #[test]
     fn the_categorical_path_resolves_every_branch_it_declares() {
         let c = compile(ZONE, &schema(), &published()).unwrap();
-        assert_eq!(c.resolve(Some("residential")).fill_color, rgb(0xaa, 0x33, 0x33));
-        assert_eq!(c.resolve(Some("industrial")).fill_color, rgb(0x33, 0x33, 0x88));
+        assert_eq!(
+            c.resolve(Some("residential")).fill_color,
+            rgb(0xaa, 0x33, 0x33)
+        );
+        assert_eq!(
+            c.resolve(Some("industrial")).fill_color,
+            rgb(0x33, 0x33, 0x88)
+        );
         // NULL is a value the source carries, and takes the declared branch.
         assert_eq!(c.resolve(None).fill_color, rgb(0x88, 0x88, 0x88));
         // A value nobody declared takes the other declared branch — never a built-in default.
-        assert_eq!(c.resolve(Some("agricultural")).fill_color, rgb(0xcc, 0xcc, 0xcc));
+        assert_eq!(
+            c.resolve(Some("agricultural")).fill_color,
+            rgb(0xcc, 0xcc, 0xcc)
+        );
         // Literal properties are unaffected by the key.
         for key in [Some("residential"), Some("nope"), None] {
             assert_eq!(c.resolve(key).fill_opacity, 0.8);
@@ -384,7 +403,11 @@ mod tests {
                     let v = next();
                     (
                         format!("cat-{trial}-{i}"),
-                        Rgb { r: (v & 0xff) as u8, g: (v >> 8 & 0xff) as u8, b: (v >> 16 & 0xff) as u8 },
+                        Rgb {
+                            r: (v & 0xff) as u8,
+                            g: (v >> 8 & 0xff) as u8,
+                            b: (v >> 16 & 0xff) as u8,
+                        },
                     )
                 })
                 .collect();
@@ -408,7 +431,11 @@ mod tests {
 
             let a = compile(&src, &schema(), &published()).unwrap();
             let b = compile(&src, &schema(), &published()).unwrap();
-            assert_eq!(a.canonical_json(), b.canonical_json(), "compile is not deterministic");
+            assert_eq!(
+                a.canonical_json(),
+                b.canonical_json(),
+                "compile is not deterministic"
+            );
             assert_eq!(a.style_hash(), b.style_hash());
 
             // Every declared case resolves to its own declared colour — so a lookup by value, not
@@ -417,7 +444,10 @@ mod tests {
                 assert_eq!(a.resolve(Some(w)).fill_color, *c, "case `{w}`");
             }
             assert_eq!(a.resolve(None).fill_color, null_c);
-            assert_eq!(a.resolve(Some("definitely-not-declared")).fill_color, unmatched_c);
+            assert_eq!(
+                a.resolve(Some("definitely-not-declared")).fill_color,
+                unmatched_c
+            );
 
             // …and the legend has exactly one row per declared case plus the two fallbacks.
             assert_eq!(a.legend().len(), cases.len() + 2);

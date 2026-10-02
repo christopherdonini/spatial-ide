@@ -84,7 +84,10 @@ pub enum PermissionError {
     /// Carries the phrase that was expected, because a refusal that does not say what would have
     /// worked trains operators to paste from scrollback — and a pasted confirmation confirms
     /// nothing.
-    ApprovalRefused { reason: RefusalReason, expected: String },
+    ApprovalRefused {
+        reason: RefusalReason,
+        expected: String,
+    },
 
     /// The approval channel itself failed — stdin could not be read.
     ///
@@ -170,26 +173,37 @@ pub enum AuditError {
     /// **This is the refusal that cannot itself be audited**, and that is stated rather than
     /// papered over: the log cannot record its own unavailability. Claiming otherwise would be an
     /// audit claim the mechanism cannot honor, which `docs/01` principle 3 forbids.
-    Unwritable { path: String, detail: String },
+    Unwritable {
+        path: String,
+        detail: String,
+    },
 
     /// The audit log resolves to a path inside the bundle being published.
     ///
     /// Refused structurally rather than by convention. The log audits the operator's **machine**;
     /// a copy of it inside a redistributable bundle would ship the operator's publish history to
     /// every recipient, and ADR-017 §13's own scan would then find it.
-    LogInsideDestination { log: String, destination: String },
+    LogInsideDestination {
+        log: String,
+        destination: String,
+    },
 
     /// A generation could not be rotated, so the declared ceiling cannot be honored.
     ///
     /// Fatal rather than ignored: silently exceeding a declared ceiling (ADR-010 rule 6) would make
     /// the number in the docs a wish.
-    RotationFailed { path: String, detail: String },
+    RotationFailed {
+        path: String,
+        detail: String,
+    },
 
     /// A field carries a control character, which would break the one-record-per-line framing.
     ///
     /// Refused before serialization rather than escaped, so line framing does not depend on the
     /// escaper's behaviour for bytes no legitimate field contains.
-    ControlCharacterInField { field: &'static str },
+    ControlCharacterInField {
+        field: &'static str,
+    },
 
     /// The `docs/09` scan found a credential in the record about to be written.
     ///
@@ -197,7 +211,10 @@ pub enum AuditError {
     /// `bundle::redaction` already refuses to let an operator declaration excuse a credential, and
     /// the same rule governs here. The record is not written and the operation does not run — an
     /// operation whose audit record would leak a secret is not made safe by running it unlogged.
-    CredentialInRecord { class: &'static str, byte_offset: usize },
+    CredentialInRecord {
+        class: &'static str,
+        byte_offset: usize,
+    },
 
     Canonical(CanonicalError),
 }

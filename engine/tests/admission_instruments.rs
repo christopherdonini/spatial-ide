@@ -39,7 +39,8 @@ use spatial_engine::identity::{IdSource, IdUniqueness, IdentityDeclaration};
 use spatial_engine::{CancelToken, Dataset};
 
 fn write(name: &str, spec: &FixtureSpec) -> PathBuf {
-    let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/admission-instruments");
+    let d =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/admission-instruments");
     std::fs::create_dir_all(&d).expect("fixture dir");
     let path = d.join(format!("{name}.parquet"));
     write_geoparquet(&path, spec).expect("write fixture");
@@ -47,7 +48,11 @@ fn write(name: &str, spec: &FixtureSpec) -> PathBuf {
 }
 
 fn small() -> FixtureSpec {
-    FixtureSpec { features: 500, avg_vertices: 12, ..Default::default() }
+    FixtureSpec {
+        features: 500,
+        avg_vertices: 12,
+        ..Default::default()
+    }
 }
 
 /// RECORDED MUTATION: remove the `IDENTITY_VERIFICATION_SCANS.fetch_add(1, ..)` line
@@ -61,14 +66,23 @@ fn session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_
     // identity and no declaration -- the same fixture shape `identity.rs`'s
     // `a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared` already opens both
     // ways, reused here for the read-accounting claim that test does not make.
-    let foreign_key_path =
-        write("foreign-key", &FixtureSpec { identity: IdentityMode::ForeignKeyColumn, ..small() });
+    let foreign_key_path = write(
+        "foreign-key",
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small()
+        },
+    );
 
     // ---- session-ordinal: the SAME file, opened plain --------------------------------------
     let before_ordinal = identity_verification_scans();
-    let ordinal = Dataset::open(&foreign_key_path).expect("R-I3: a single-file keyless source admits");
+    let ordinal =
+        Dataset::open(&foreign_key_path).expect("R-I3: a single-file keyless source admits");
     assert_eq!(*ordinal.identity().source(), IdSource::SessionOrdinal);
-    assert_eq!(ordinal.identity().uniqueness(), IdUniqueness::ByConstructionWithinGeneration);
+    assert_eq!(
+        ordinal.identity().uniqueness(),
+        IdUniqueness::ByConstructionWithinGeneration
+    );
     assert_eq!(
         identity_verification_scans(),
         before_ordinal,
@@ -80,19 +94,33 @@ fn session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_
     let before_mapped = identity_verification_scans();
     let mapped = Dataset::open_with_declared_identity(
         &foreign_key_path,
-        IdentityDeclaration::new("parcel_key", "admission-instruments-test", "2026-09-18T00:00:00Z"),
+        IdentityDeclaration::new(
+            "parcel_key",
+            "admission-instruments-test",
+            "2026-09-18T00:00:00Z",
+        ),
         &CancelToken::new(),
     )
     .expect("a declared mapping admits the file");
-    assert!(matches!(*mapped.identity().source(), IdSource::Mapped { .. }));
-    assert_eq!(mapped.identity().uniqueness(), IdUniqueness::VerifiedAtOpenFullFile);
+    assert!(matches!(
+        *mapped.identity().source(),
+        IdSource::Mapped { .. }
+    ));
+    assert_eq!(
+        mapped.identity().uniqueness(),
+        IdUniqueness::VerifiedAtOpenFullFile
+    );
     let after_mapped = identity_verification_scans();
     assert!(
         after_mapped > before_mapped,
         "a mapped open must run the verification scan; the counter did not move \
          (before={before_mapped}, after={after_mapped})"
     );
-    assert_eq!(after_mapped, before_mapped + 1, "exactly one scan for one open -- not zero, not more than one");
+    assert_eq!(
+        after_mapped,
+        before_mapped + 1,
+        "exactly one scan for one open -- not zero, not more than one"
+    );
     drop(mapped);
 
     // ---- native: a SEPARATE file with an admissible `id` column (F-8-class, R-I1) ----------
@@ -102,12 +130,19 @@ fn session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_
     let before_native = identity_verification_scans();
     let native = Dataset::open(&native_path).expect("open");
     assert_eq!(*native.identity().source(), IdSource::File);
-    assert_eq!(native.identity().uniqueness(), IdUniqueness::VerifiedAtOpenFullFile);
+    assert_eq!(
+        native.identity().uniqueness(),
+        IdUniqueness::VerifiedAtOpenFullFile
+    );
     let after_native = identity_verification_scans();
     assert!(
         after_native > before_native,
         "a native-identity open must run the verification scan; the counter did not move \
          (before={before_native}, after={after_native})"
     );
-    assert_eq!(after_native, before_native + 1, "exactly one scan for one open");
+    assert_eq!(
+        after_native,
+        before_native + 1,
+        "exactly one scan for one open"
+    );
 }

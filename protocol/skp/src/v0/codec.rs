@@ -43,10 +43,15 @@ impl HexF64 {
     }
 
     pub fn from_hex(s: &str) -> Result<Self, HexF64ParseError> {
-        if s.len() != 16 || !s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) {
+        if s.len() != 16
+            || !s
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
             return Err(HexF64ParseError::Malformed(s.to_string()));
         }
-        let bits = u64::from_str_radix(s, 16).map_err(|_| HexF64ParseError::Malformed(s.to_string()))?;
+        let bits =
+            u64::from_str_radix(s, 16).map_err(|_| HexF64ParseError::Malformed(s.to_string()))?;
         let v = f64::from_bits(bits);
         if !v.is_finite() {
             return Err(HexF64ParseError::NonFinite(s.to_string()));
@@ -90,7 +95,9 @@ impl DecU64 {
         if s.len() > 1 && s.starts_with('0') {
             return Err(format!("not a valid DecU64 (leading zero): {s:?}"));
         }
-        s.parse::<u64>().map(DecU64).map_err(|e| format!("DecU64 out of range: {s:?} ({e})"))
+        s.parse::<u64>()
+            .map(DecU64)
+            .map_err(|e| format!("DecU64 out of range: {s:?} ({e})"))
     }
 }
 
@@ -124,8 +131,14 @@ mod tests {
 
     #[test]
     fn hex_f64_rejects_wrong_length_case_and_prefix() {
-        assert!(matches!(HexF64::from_hex("0"), Err(HexF64ParseError::Malformed(_))));
-        assert!(matches!(HexF64::from_hex(&"0".repeat(17)), Err(HexF64ParseError::Malformed(_))));
+        assert!(matches!(
+            HexF64::from_hex("0"),
+            Err(HexF64ParseError::Malformed(_))
+        ));
+        assert!(matches!(
+            HexF64::from_hex(&"0".repeat(17)),
+            Err(HexF64ParseError::Malformed(_))
+        ));
         assert!(matches!(
             HexF64::from_hex("00000000000000AA"),
             Err(HexF64ParseError::Malformed(_))
@@ -153,12 +166,18 @@ mod tests {
     #[test]
     fn dec_u64_round_trips_and_rejects_malformed() {
         assert_eq!(DecU64::from_dec("0").unwrap().0, 0);
-        assert_eq!(DecU64::from_dec("18446744073709551615").unwrap().0, u64::MAX);
+        assert_eq!(
+            DecU64::from_dec("18446744073709551615").unwrap().0,
+            u64::MAX
+        );
         assert!(DecU64::from_dec("").is_err());
         assert!(DecU64::from_dec("-1").is_err());
         assert!(DecU64::from_dec("01").is_err());
         assert!(DecU64::from_dec("1.0").is_err());
-        assert!(DecU64::from_dec("18446744073709551616").is_err(), "overflow");
+        assert!(
+            DecU64::from_dec("18446744073709551616").is_err(),
+            "overflow"
+        );
     }
 
     #[test]

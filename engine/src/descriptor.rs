@@ -138,8 +138,7 @@ impl SourceDescriptor {
                 path.display()
             )));
         }
-        let footer_length =
-            u64::from(u32::from_le_bytes([tail[0], tail[1], tail[2], tail[3]]));
+        let footer_length = u64::from(u32::from_le_bytes([tail[0], tail[1], tail[2], tail[3]]));
 
         // Over the ceiling: degrade, say so, do not refuse (§13 A).
         if footer_length > FOOTER_DESCRIPTOR_MAX_BYTES {
@@ -303,7 +302,9 @@ impl SourceDescriptor {
         if differing.is_empty() {
             return Ok(());
         }
-        Err(EngineError::SourceChanged { detail: format!("{{{}}}", differing.join(", ")) })
+        Err(EngineError::SourceChanged {
+            detail: format!("{{{}}}", differing.join(", ")),
+        })
     }
 
     /// Re-read `path` and compare, mapping a **failure to read it at all** onto the same typed
@@ -331,7 +332,12 @@ impl SourceDescriptor {
 mod tests {
     use super::*;
 
-    fn descriptor(size: u64, mtime: Option<u128>, len: u64, hash: Option<&str>) -> SourceDescriptor {
+    fn descriptor(
+        size: u64,
+        mtime: Option<u128>,
+        len: u64,
+        hash: Option<&str>,
+    ) -> SourceDescriptor {
         SourceDescriptor {
             byte_size: size,
             modified_nanos: mtime,
@@ -377,7 +383,10 @@ mod tests {
         let mtime_only = descriptor(100, Some(2), 10, Some("aa"));
         assert_eq!(opened.components_differing_from(&mtime_only), vec!["mtime"]);
         let hash_only = descriptor(100, Some(1), 10, Some("bb"));
-        assert_eq!(opened.components_differing_from(&hash_only), vec!["footer-hash"]);
+        assert_eq!(
+            opened.components_differing_from(&hash_only),
+            vec!["footer-hash"]
+        );
     }
 
     /// **Corrected at P3 gate attempt 1 (correction 13).** This test used to assert that an absent
@@ -401,7 +410,9 @@ mod tests {
 
         // Unobservable on both sides: nothing was seen to change, and claiming otherwise is the
         // fabrication `docs/01` principle 8 forbids just as much as silent staleness is.
-        assert!(unknown.components_differing_from(&unknown.clone()).is_empty());
+        assert!(unknown
+            .components_differing_from(&unknown.clone())
+            .is_empty());
         assert!(unknown.refuse_if_changed(&unknown.clone()).is_ok());
     }
 
@@ -415,7 +426,9 @@ mod tests {
         // detected change, and reporting it as one would refuse every query on a large-footer file.
         let degraded_open = descriptor(100, Some(1), 10, None);
         let degraded_now = descriptor(100, Some(1), 10, None);
-        assert!(degraded_open.components_differing_from(&degraded_now).is_empty());
+        assert!(degraded_open
+            .components_differing_from(&degraded_now)
+            .is_empty());
     }
 
     /// RECORDED MUTATION: `unestablished_components` returns an empty list unconditionally.
@@ -490,7 +503,11 @@ mod tests {
 
         // The shipped read, over a real file.
         let real = SourceDescriptor::of(&path).expect("reads");
-        assert_eq!(real.degradation(), None, "this filesystem does report a modification time");
+        assert_eq!(
+            real.degradation(),
+            None,
+            "this filesystem does report a modification time"
+        );
 
         // The shape `of` produces on a filesystem that reports none — built by `of`'s own branch
         // logic, not by a second copy of it.
@@ -501,10 +518,14 @@ mod tests {
         // Neither side has one: NOT a difference. The file did not change; one component is
         // unavailable, and saying otherwise refuses every query on such a filesystem forever.
         assert!(
-            without_mtime.components_differing_from(&without_mtime.clone()).is_empty(),
+            without_mtime
+                .components_differing_from(&without_mtime.clone())
+                .is_empty(),
             "an unavailable component is a degradation, not a detected change"
         );
-        assert!(without_mtime.refuse_if_changed(&without_mtime.clone()).is_ok());
+        assert!(without_mtime
+            .refuse_if_changed(&without_mtime.clone())
+            .is_ok());
 
         // The words are the shipped const's, recorded and reachable — shown to nobody in P3a.
         assert_eq!(
@@ -514,6 +535,9 @@ mod tests {
 
         // One side present and the other not IS a difference: that is observable, and fail-closed
         // still governs it.
-        assert_eq!(real.components_differing_from(&without_mtime), vec!["mtime"]);
+        assert_eq!(
+            real.components_differing_from(&without_mtime),
+            vec!["mtime"]
+        );
     }
 }

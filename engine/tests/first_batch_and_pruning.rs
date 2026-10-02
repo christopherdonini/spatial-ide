@@ -96,7 +96,12 @@ fn far_quarter(spec: &FixtureSpec) -> Bbox {
     let (cols, cell) = grid(spec);
     let edge = ((cols as usize / 2) as f64) * cell + cell / 2.0;
     let top = 1_200_000.0 + (cols - 1.0) * cell + cell / 2.0;
-    Bbox { xmin: 2_600_000.0, ymin: top - edge, xmax: 2_600_000.0 + edge, ymax: top }
+    Bbox {
+        xmin: 2_600_000.0,
+        ymin: top - edge,
+        xmax: 2_600_000.0 + edge,
+        ymax: top,
+    }
 }
 
 /// `{(id, sha256(wkb))}` for a stream — the comparison this file's header describes.
@@ -142,7 +147,10 @@ fn geometry_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
         .downcast_ref::<arrow::array::ListArray>()
         .expect("geometry is List<rings>");
     let rings = list.value(row);
-    let rings = rings.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<vertices>");
+    let rings = rings
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<vertices>");
     let mut h = Sha256::new();
     for r in 0..rings.len() {
         let verts = rings.value(r);
@@ -151,7 +159,10 @@ fn geometry_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
             .downcast_ref::<arrow::array::FixedSizeListArray>()
             .expect("FixedSizeList<xy>");
         let xy = verts.values();
-        let xy = xy.as_any().downcast_ref::<arrow::array::Float64Array>().expect("f64 xy");
+        let xy = xy
+            .as_any()
+            .downcast_ref::<arrow::array::Float64Array>()
+            .expect("f64 xy");
         h.update((xy.len() as u64).to_le_bytes());
         for v in xy.values() {
             h.update(v.to_bits().to_le_bytes());
@@ -171,18 +182,28 @@ fn the_budgeted_stream_returns_exactly_what_the_size_only_stream_returns() {
 
     let (plain, _) = digest_set(ds.stream(&q).expect("plain stream"));
     let (budgeted, cuts) = digest_set(
-        ds.stream_budgeted_experimental(&q, CancelToken::new()).expect("budgeted stream"),
+        ds.stream_budgeted_experimental(&q, CancelToken::new())
+            .expect("budgeted stream"),
     );
 
-    assert!(!plain.is_empty(), "the viewport must select something or this test proves nothing");
-    assert_eq!(plain, budgeted, "the time budget changed which rows a query returns");
+    assert!(
+        !plain.is_empty(),
+        "the viewport must select something or this test proves nothing"
+    );
+    assert_eq!(
+        plain, budgeted,
+        "the time budget changed which rows a query returns"
+    );
 
     // **The invariant that is deterministic even though the budget's firing is not.** The budget is
     // armed for batch 0 only; a `TimeBudget` cut anywhere else would mean the guard on `emitted`
     // had been lost, and no timing would reveal it.
     for (i, cut) in cuts.iter().enumerate() {
         if *cut == BatchCut::TimeBudget {
-            assert_eq!(i, 0, "the time budget cut batch {i}; it is armed for batch 0 only");
+            assert_eq!(
+                i, 0,
+                "the time budget cut batch {i}; it is armed for batch 0 only"
+            );
         }
     }
 }
@@ -209,7 +230,10 @@ fn the_publish_path_refuses_a_time_budget_rather_than_ignoring_it() {
     // budgeted policy — that is the point — so what is asserted here is the other half: the policy
     // it does use is size-only, and the refusal predicate that guards the combination is exercised
     // by `stream.rs`'s own truth-table unit test.
-    assert_eq!(BatchSizePolicy::publish().cut, spatial_engine::BatchCutPolicy::SizeOnly);
+    assert_eq!(
+        BatchSizePolicy::publish().cut,
+        spatial_engine::BatchCutPolicy::SizeOnly
+    );
 }
 
 // ---- lever B2 ----------------------------------------------------------------------------------
@@ -220,9 +244,18 @@ fn the_row_group_index_returns_exactly_what_the_scan_returns() {
     let (path, facts) = write("lever-b2", &spec);
     let ds = Dataset::open(&path).expect("open");
 
-    let report = ds.build_row_group_index(&CancelToken::new()).expect("build row-group index");
-    assert!(report.miss.is_some(), "the first build cannot be a cache hit");
-    assert_eq!(report.admissible, Ok(()), "the generator's ids are dense and ordered per row group");
+    let report = ds
+        .build_row_group_index(&CancelToken::new())
+        .expect("build row-group index");
+    assert!(
+        report.miss.is_some(),
+        "the first build cannot be a cache hit"
+    );
+    assert_eq!(
+        report.admissible,
+        Ok(()),
+        "the generator's ids are dense and ordered per row group"
+    );
     assert_eq!(
         report.row_groups,
         facts.features.div_ceil(spec.row_group_rows),
@@ -238,8 +271,13 @@ fn the_row_group_index_returns_exactly_what_the_scan_returns() {
     );
 
     // A cached build is a hit, and it is *reported* as one rather than inferred from being fast.
-    let again = ds.build_row_group_index(&CancelToken::new()).expect("rebuild");
-    assert!(again.miss.is_none(), "the second build should have been served from the cache");
+    let again = ds
+        .build_row_group_index(&CancelToken::new())
+        .expect("rebuild");
+    assert!(
+        again.miss.is_none(),
+        "the second build should have been served from the cache"
+    );
 
     for (label, view) in [("near", quarter(&spec)), ("far", far_quarter(&spec))] {
         let q = ViewportQuery::viewport(view, ds.crs().identifier());
@@ -247,13 +285,20 @@ fn the_row_group_index_returns_exactly_what_the_scan_returns() {
         assert_eq!(scan.filter_plan(), FilterPlan::ScanOnly);
         let (scan_rows, _) = digest_set(scan);
 
-        let pruned =
-            ds.stream_rowgroup_pruned_experimental(&q, CancelToken::new()).expect("pruned");
+        let pruned = ds
+            .stream_rowgroup_pruned_experimental(&q, CancelToken::new())
+            .expect("pruned");
         let plan = pruned.filter_plan();
         let (pruned_rows, _) = digest_set(pruned);
 
-        assert!(!scan_rows.is_empty(), "{label}: the viewport selected nothing");
-        assert_eq!(scan_rows, pruned_rows, "{label}: pruning changed the result set");
+        assert!(
+            !scan_rows.is_empty(),
+            "{label}: the viewport selected nothing"
+        );
+        assert_eq!(
+            scan_rows, pruned_rows,
+            "{label}: pruning changed the result set"
+        );
 
         // **`RowGroupsPruned` with `kept < total`, not "one of the plausible plans".**
         //
@@ -263,8 +308,15 @@ fn the_row_group_index_returns_exactly_what_the_scan_returns() {
         // reports a flawless null. This fixture's quarter viewport demonstrably excludes groups —
         // so requiring that is what makes the envelope logic load-bearing for the suite.
         match plan {
-            FilterPlan::RowGroupsPruned { total, kept, ranges } => {
-                assert!(kept < total, "{label}: plan claims pruning but kept {kept} of {total}");
+            FilterPlan::RowGroupsPruned {
+                total,
+                kept,
+                ranges,
+            } => {
+                assert!(
+                    kept < total,
+                    "{label}: plan claims pruning but kept {kept} of {total}"
+                );
                 assert!(ranges >= 1);
                 assert!(plan.claims_io_exclusion());
             }
@@ -282,17 +334,28 @@ fn a_viewport_outside_the_extent_excludes_every_group_and_still_injects_nothing(
     let spec = multi_row_group();
     let (path, _) = write("lever-b2-empty", &spec);
     let ds = Dataset::open(&path).expect("open");
-    ds.build_row_group_index(&CancelToken::new()).expect("build");
+    ds.build_row_group_index(&CancelToken::new())
+        .expect("build");
 
-    let far_away = Bbox { xmin: 2_900_000.0, ymin: 1_500_000.0, xmax: 2_900_100.0, ymax: 1_500_100.0 };
+    let far_away = Bbox {
+        xmin: 2_900_000.0,
+        ymin: 1_500_000.0,
+        xmax: 2_900_100.0,
+        ymax: 1_500_100.0,
+    };
     let q = ViewportQuery::viewport(far_away, ds.crs().identifier());
 
     let (scan_rows, _) = digest_set(ds.stream(&q).expect("scan"));
-    let pruned = ds.stream_rowgroup_pruned_experimental(&q, CancelToken::new()).expect("pruned");
+    let pruned = ds
+        .stream_rowgroup_pruned_experimental(&q, CancelToken::new())
+        .expect("pruned");
     let plan = pruned.filter_plan();
     let (pruned_rows, _) = digest_set(pruned);
 
-    assert!(scan_rows.is_empty(), "this viewport is outside the fixture's extent");
+    assert!(
+        scan_rows.is_empty(),
+        "this viewport is outside the fixture's extent"
+    );
     assert_eq!(scan_rows, pruned_rows);
     assert!(
         matches!(plan, FilterPlan::RowGroupsExcludeAll { total } if total > 0),
@@ -313,7 +376,8 @@ fn a_whole_file_query_does_no_metadata_work_at_all() {
     let spec = multi_row_group();
     let (path, facts) = write("lever-b2-whole", &spec);
     let ds = Dataset::open(&path).expect("open");
-    ds.build_row_group_index(&CancelToken::new()).expect("build");
+    ds.build_row_group_index(&CancelToken::new())
+        .expect("build");
 
     let stream = ds
         .stream_rowgroup_pruned_experimental(&ViewportQuery::all(), CancelToken::new())
@@ -355,21 +419,31 @@ fn an_inadmissible_file_still_returns_the_scan_s_rows_through_the_pruned_planner
     .expect("variant");
 
     let ds = Dataset::open(&dst).expect("open variant");
-    let report = ds.build_row_group_index(&CancelToken::new()).expect("build");
+    let report = ds
+        .build_row_group_index(&CancelToken::new())
+        .expect("build");
     assert_eq!(report.admissible, Err(RowGroupRefusal::IdRangesOverlap));
 
     let q = ViewportQuery::viewport(quarter(&spec), ds.crs().identifier());
     let (scan_rows, _) = digest_set(ds.stream(&q).expect("scan"));
-    let pruned = ds.stream_rowgroup_pruned_experimental(&q, CancelToken::new()).expect("pruned");
+    let pruned = ds
+        .stream_rowgroup_pruned_experimental(&q, CancelToken::new())
+        .expect("pruned");
     let plan = pruned.filter_plan();
     let (pruned_rows, _) = digest_set(pruned);
 
     assert!(!scan_rows.is_empty());
-    assert_eq!(scan_rows, pruned_rows, "a refused file must still return the scan's rows");
+    assert_eq!(
+        scan_rows, pruned_rows,
+        "a refused file must still return the scan's rows"
+    );
     assert!(
         matches!(
             plan,
-            FilterPlan::RowGroupsNotPrunable { reason: RowGroupRefusal::IdRangesOverlap, .. }
+            FilterPlan::RowGroupsNotPrunable {
+                reason: RowGroupRefusal::IdRangesOverlap,
+                ..
+            }
         ),
         "the refusal must reach the plan by name, got {plan:?}"
     );
@@ -428,10 +502,19 @@ fn the_control_layout_differs_from_a_clustered_one_only_in_the_row_order() {
     );
 
     // Same features in both, and the same features as the source.
-    let (sa, _) = digest_set(Dataset::open(&src).expect("src").stream(&ViewportQuery::all()).expect("s"));
+    let (sa, _) = digest_set(
+        Dataset::open(&src)
+            .expect("src")
+            .stream(&ViewportQuery::all())
+            .expect("s"),
+    );
     for (order, p) in &written {
-        let (sb, _) =
-            digest_set(Dataset::open(p).expect("variant").stream(&ViewportQuery::all()).expect("v"));
+        let (sb, _) = digest_set(
+            Dataset::open(p)
+                .expect("variant")
+                .stream(&ViewportQuery::all())
+                .expect("v"),
+        );
         assert_eq!(sa, sb, "{} lost or changed a feature", order.as_str());
     }
 }
@@ -443,12 +526,14 @@ fn both_levers_at_once_still_return_the_scan_s_rows() {
     let spec = multi_row_group();
     let (path, _) = write("lever-ab", &spec);
     let ds = Dataset::open(&path).expect("open");
-    ds.build_row_group_index(&CancelToken::new()).expect("build");
+    ds.build_row_group_index(&CancelToken::new())
+        .expect("build");
     let q = ViewportQuery::viewport(quarter(&spec), ds.crs().identifier());
 
     let (scan, _) = digest_set(ds.stream(&q).expect("scan"));
     let (both, cuts) = digest_set(
-        ds.stream_rowgroup_pruned_budgeted_experimental(&q, CancelToken::new()).expect("both"),
+        ds.stream_rowgroup_pruned_budgeted_experimental(&q, CancelToken::new())
+            .expect("both"),
     );
     assert_eq!(scan, both);
     for (i, cut) in cuts.iter().enumerate() {
@@ -513,7 +598,10 @@ fn metadata_paths_match_what_duckdb_reports_for_a_struct_child() {
         seen.insert(r.get::<_, String>(0).expect("path"));
     }
     for want in ["bbox, xmin", "bbox, ymin", "bbox, xmax", "bbox, ymax", "id"] {
-        assert!(seen.contains(want), "duckdb no longer reports `{want}`; it reports {seen:?}");
+        assert!(
+            seen.contains(want),
+            "duckdb no longer reports `{want}`; it reports {seen:?}"
+        );
     }
 }
 
@@ -549,15 +637,25 @@ fn a_clustered_variant_carries_the_same_features_and_the_same_geo_metadata() {
     let out = write_clustered_variant(&src, &dst, &variant, &CancelToken::new()).expect("variant");
 
     assert_eq!(out.features, facts.features as u64);
-    assert_eq!(out.clamped_features, 0, "every centroid should be inside the declared extent");
+    assert_eq!(
+        out.clamped_features, 0,
+        "every centroid should be inside the declared extent"
+    );
     assert!(out.carried_metadata_keys.contains(&"geo".to_string()));
-    assert_eq!(out.row_groups, facts.features.div_ceil(spec.row_group_rows) as u64);
+    assert_eq!(
+        out.row_groups,
+        facts.features.div_ceil(spec.row_group_rows) as u64
+    );
 
     // **Same features, byte for byte.** Both files opened as datasets, both streamed whole, digest
     // sets compared. This is what makes a B1 timing a statement about layout and nothing else.
     let a = Dataset::open(&src).expect("open source");
     let b = Dataset::open(&dst).expect("open variant");
-    assert_eq!(a.crs().identifier(), b.crs().identifier(), "the variant lost its CRS");
+    assert_eq!(
+        a.crs().identifier(),
+        b.crs().identifier(),
+        "the variant lost its CRS"
+    );
     let (sa, _) = digest_set(a.stream(&ViewportQuery::all()).expect("stream source"));
     let (sb, _) = digest_set(b.stream(&ViewportQuery::all()).expect("stream variant"));
     assert_eq!(sa, sb, "the variant is not the same features as its source");
@@ -598,14 +696,24 @@ fn a_shuffled_variant_carries_the_same_features_and_the_same_geo_metadata() {
 
     assert_eq!(out.features, facts.features as u64);
     assert!(out.carried_metadata_keys.contains(&"geo".to_string()));
-    assert_eq!(out.row_groups, facts.features.div_ceil(spec.row_group_rows) as u64);
+    assert_eq!(
+        out.row_groups,
+        facts.features.div_ceil(spec.row_group_rows) as u64
+    );
 
     let a = Dataset::open(&src).expect("open source");
     let b = Dataset::open(&dst).expect("open variant");
-    assert_eq!(a.crs().identifier(), b.crs().identifier(), "the variant lost its CRS");
+    assert_eq!(
+        a.crs().identifier(),
+        b.crs().identifier(),
+        "the variant lost its CRS"
+    );
     let (sa, _) = digest_set(a.stream(&ViewportQuery::all()).expect("stream source"));
     let (sb, _) = digest_set(b.stream(&ViewportQuery::all()).expect("stream variant"));
-    assert_eq!(sa, sb, "the shuffled variant is not the same features as its source");
+    assert_eq!(
+        sa, sb,
+        "the shuffled variant is not the same features as its source"
+    );
 
     // Structural evidence the shuffle actually reordered rows, on the same B2-admissibility check
     // the Hilbert test uses: `hash(id)` has no relationship to the source's raster order, so a
@@ -702,7 +810,9 @@ fn the_shuffled_order_is_exactly_hash_id_then_id_in_file_order() {
 /// whatever a parallel scan's scheduling happened to produce.
 fn ids_in_file_order(path: &std::path::Path) -> Vec<u64> {
     let conn = configured_connection().expect("configured connection");
-    let mut stmt = conn.prepare("SELECT id FROM read_parquet(?)").expect("prepare");
+    let mut stmt = conn
+        .prepare("SELECT id FROM read_parquet(?)")
+        .expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
     let mut out = Vec::new();
     while let Some(r) = rows.next().expect("row") {
@@ -715,8 +825,9 @@ fn ids_in_file_order(path: &std::path::Path) -> Vec<u64> {
 /// [`spatial_engine::layout::write_clustered_variant`]'s own SQL.
 fn ids_in_hash_id_order(path: &std::path::Path) -> Vec<u64> {
     let conn = configured_connection().expect("configured connection");
-    let mut stmt =
-        conn.prepare("SELECT id FROM read_parquet(?) ORDER BY hash(id), id").expect("prepare");
+    let mut stmt = conn
+        .prepare("SELECT id FROM read_parquet(?) ORDER BY hash(id), id")
+        .expect("prepare");
     let mut rows = stmt.query([path.to_str().unwrap()]).expect("query");
     let mut out = Vec::new();
     while let Some(r) = rows.next().expect("row") {
@@ -775,7 +886,10 @@ fn clustering_reorders_the_file_and_that_costs_it_lever_b2() {
 
     // The source is row-group-ordered in its identity; the variant is not. Both halves asserted,
     // because only the pair says "the rewrite happened AND it cost the property".
-    assert!(id_ranges_are_disjoint_and_ordered(&src), "the source should be raster-ordered");
+    assert!(
+        id_ranges_are_disjoint_and_ordered(&src),
+        "the source should be raster-ordered"
+    );
     assert!(
         !id_ranges_are_disjoint_and_ordered(&dst),
         "the clustered variant's identity is still row-group-ordered, so nothing was reordered"
@@ -841,7 +955,10 @@ fn the_curve_orders_the_plane_and_not_the_row_number() {
     let d_far = hilbert_xy2d(1000, 1000).abs_diff(hilbert_xy2d(50_000, 50_000));
     assert!(d_near < d_far);
     // And the grid the keys are drawn on is the declared one.
-    assert_eq!(hilbert_d2xy(hilbert_xy2d(AXIS_CELLS - 1, 0)), (AXIS_CELLS - 1, 0));
+    assert_eq!(
+        hilbert_d2xy(hilbert_xy2d(AXIS_CELLS - 1, 0)),
+        (AXIS_CELLS - 1, 0)
+    );
 }
 
 /// The `geo` footer key of a file, read through DuckDB.

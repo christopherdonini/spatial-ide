@@ -78,8 +78,6 @@ pub mod attributes;
 pub mod cancel;
 pub mod crs;
 pub mod crs_catalog;
-pub mod identity;
-pub mod index;
 pub mod dataset;
 pub mod descriptor;
 pub mod envelope;
@@ -88,15 +86,17 @@ pub mod error;
 pub mod fixture;
 pub mod geoarrow;
 pub mod geoparquet;
-/// LOD tier construction — route B, per `engine/LOD-PREREGISTRATION.md`. **Builds tiers; selects
-/// none**: which tier a viewport draws is renderer/shell work under its own gate, and nothing here
-/// is served to a shell by this cut.
-pub mod lod;
+pub mod identity;
+pub mod index;
 /// Spatially-clustered layout variants — lever B1. Test/measurement support, gated with the
 /// generator for the same reason: rewriting a file is not one of the things `docs/02` scopes to
 /// this module.
 #[cfg(feature = "fixture")]
 pub mod layout;
+/// LOD tier construction — route B, per `engine/LOD-PREREGISTRATION.md`. **Builds tiers; selects
+/// none**: which tier a viewport draws is renderer/shell work under its own gate, and nothing here
+/// is served to a shell by this cut.
+pub mod lod;
 pub mod pin;
 pub mod pool;
 pub mod predicate;
@@ -109,15 +109,15 @@ pub mod wkb;
 
 pub use attributes::{AdmittedProjection, ProjectionError, MAX_PROJECTED_ATTRIBUTES};
 pub use cancel::CancelToken;
-pub use pin::ContentPin;
 pub use crs::{
     AxisOrder, CrsAssertion, CrsSource, DatasetCrs, GEOGRAPHIC_DISPLAY_CONVENTION,
     MAX_CRS_DEFINITION_BYTES,
 };
 pub use crs_catalog::{definition_provenance, CatalogEntry};
 pub use dataset::Dataset;
-pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use descriptor::{SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
+pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
+pub use error::{EngineError, Result};
 pub use geoparquet::{
     AdmissionRecord, AxisProvenance, CoordinateUnit, CoordinateUnitSource, CrsProvenance,
     SanityLevel, MAX_UNIT_NAME_BYTES, PINNED_SPEC_VERSIONS, SANITY_SAMPLE_MAX_ROWS,
@@ -126,21 +126,21 @@ pub use identity::{
     DatasetIdentity, IdSource, IdUniqueness, IdentityDeclaration, FILE_ROW_NUMBER_COLUMN,
     SESSION_IDENTITY_STATEMENT,
 };
-pub use error::{EngineError, Result};
-pub use predicate::{
-    AdmittedPredicate, FilterError, PredicateAdmitError, TypeRefusalReason, MAX_PREDICATE_BYTES,
-    MAX_PREDICATE_DEPTH,
-};
+pub use pin::ContentPin;
 pub use pool::{
     ConnectionPool, LeaseClass, PoolConfig, MAX_ADMISSION_CONNECTIONS, MAX_MAINTENANCE_CONNECTIONS,
     MAX_PHYSICAL_CONNECTIONS, MAX_STREAM_CONNECTIONS,
 };
+pub use predicate::{
+    AdmittedPredicate, FilterError, PredicateAdmitError, TypeRefusalReason, MAX_PREDICATE_BYTES,
+    MAX_PREDICATE_DEPTH,
+};
 pub use rowgroup::{RowGroupIndex, RowGroupRefusal, RowGroupSelection};
-pub use watch::{ArmOutcome, ArmedWatch, PlatformWatch, SourceWatchArm, WatchSignal, WatchSink};
 pub use stream::{
     BatchCut, BatchCutPolicy, BatchInfo, BatchPoll, BatchSizePolicy, BatchStream, Bbox,
-    ConnectionFacts, FilterPlan, RowOrdering, StreamStats, ViewportQuery,
-    BUDGET_CHECK_ROW_STRIDE, FIRST_BATCH_TIME_BUDGET, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS,
-    MAX_QUEUED_BATCHES, MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS,
-    PUBLISH_PARTITION_TARGET_BYTES, PUBLISH_STREAM_POLL_INTERVAL, TARGET_BATCH_BYTES,
+    ConnectionFacts, FilterPlan, RowOrdering, StreamStats, ViewportQuery, BUDGET_CHECK_ROW_STRIDE,
+    FIRST_BATCH_TIME_BUDGET, MAX_BATCH_BYTES, MAX_PUBLISH_PARTITIONS, MAX_QUEUED_BATCHES,
+    MAX_ROWS_PER_BATCH, PUBLISH_PARTITION_ROWS, PUBLISH_PARTITION_TARGET_BYTES,
+    PUBLISH_STREAM_POLL_INTERVAL, TARGET_BATCH_BYTES,
 };
+pub use watch::{ArmOutcome, ArmedWatch, PlatformWatch, SourceWatchArm, WatchSignal, WatchSink};

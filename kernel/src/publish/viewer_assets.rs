@@ -268,32 +268,59 @@ mod tests {
             // over-refuse: the rule is about how a path begins.
             "assets/report-12:30.txt",
         ] {
-            assert!(validate_relative_path(good).is_ok(), "`{good}` should be admissible");
+            assert!(
+                validate_relative_path(good).is_ok(),
+                "`{good}` should be admissible"
+            );
         }
     }
 
     #[test]
     fn assets_are_sorted_so_the_manifest_does_not_depend_on_directory_order() {
         let a = ViewerAssets::new(vec![
-            ViewerAsset { path: "z.js".into(), bytes: vec![1] },
-            ViewerAsset { path: "a.html".into(), bytes: vec![2] },
+            ViewerAsset {
+                path: "z.js".into(),
+                bytes: vec![1],
+            },
+            ViewerAsset {
+                path: "a.html".into(),
+                bytes: vec![2],
+            },
         ])
         .unwrap();
         let b = ViewerAssets::new(vec![
-            ViewerAsset { path: "a.html".into(), bytes: vec![2] },
-            ViewerAsset { path: "z.js".into(), bytes: vec![1] },
+            ViewerAsset {
+                path: "a.html".into(),
+                bytes: vec![2],
+            },
+            ViewerAsset {
+                path: "z.js".into(),
+                bytes: vec![1],
+            },
         ])
         .unwrap();
-        assert_eq!(a, b, "two orders of the same assets must produce the same bundle");
+        assert_eq!(
+            a, b,
+            "two orders of the same assets must produce the same bundle"
+        );
         assert_eq!(a.iter().next().unwrap().path, "a.html");
     }
 
     #[test]
     fn a_duplicate_asset_path_is_refused_rather_than_last_one_wins() {
         let e = ViewerAssets::new(vec![
-            ViewerAsset { path: "app.js".into(), bytes: vec![1] },
-            ViewerAsset { path: "app.js".into(), bytes: vec![2] },
+            ViewerAsset {
+                path: "app.js".into(),
+                bytes: vec![1],
+            },
+            ViewerAsset {
+                path: "app.js".into(),
+                bytes: vec![2],
+            },
         ]);
-        assert!(matches!(e, Err(PublishError::ViewerAssetPathRejected { .. })));
+        assert!(matches!(
+            e,
+            Err(PublishError::ViewerAssetPathRejected { .. })
+        ));
     }
 }

@@ -32,7 +32,11 @@ fn write(name: &str, spec: &FixtureSpec) -> (PathBuf, FixtureFacts) {
 }
 
 fn medium() -> FixtureSpec {
-    FixtureSpec { features: 20_000, avg_vertices: 24, ..Default::default() }
+    FixtureSpec {
+        features: 20_000,
+        avg_vertices: 24,
+        ..Default::default()
+    }
 }
 
 #[test]
@@ -44,25 +48,47 @@ fn the_policy_stays_inside_its_ceiling_in_every_state_it_can_reach() {
     let mut previous = 0usize;
     for i in 0..1_000u64 {
         let t = p.target_for(i);
-        assert!(t >= MIN_BATCH_BYTES, "batch {i} target {t} is below the declared floor");
-        assert!(t <= TARGET_BATCH_BYTES, "batch {i} target {t} exceeded the steady-state target");
-        assert!(t < MAX_BATCH_BYTES, "batch {i} target {t} reached the hard ceiling");
-        assert!(t >= previous, "targets must be monotone non-decreasing; {t} followed {previous}");
+        assert!(
+            t >= MIN_BATCH_BYTES,
+            "batch {i} target {t} is below the declared floor"
+        );
+        assert!(
+            t <= TARGET_BATCH_BYTES,
+            "batch {i} target {t} exceeded the steady-state target"
+        );
+        assert!(
+            t < MAX_BATCH_BYTES,
+            "batch {i} target {t} reached the hard ceiling"
+        );
+        assert!(
+            t >= previous,
+            "targets must be monotone non-decreasing; {t} followed {previous}"
+        );
         previous = t;
     }
     // And it does settle rather than creeping forever.
     assert_eq!(p.target_for(64), TARGET_BATCH_BYTES);
-    assert_eq!(p.target_for(u64::MAX), TARGET_BATCH_BYTES, "saturating, not wrapping");
+    assert_eq!(
+        p.target_for(u64::MAX),
+        TARGET_BATCH_BYTES,
+        "saturating, not wrapping"
+    );
 }
 
 #[test]
 fn the_first_target_is_the_declared_first_target_and_growth_is_the_declared_factor() {
     let p = BatchSizePolicy::default();
     assert_eq!(p.target_for(0), FIRST_TARGET_BATCH_BYTES);
-    assert_eq!(p.target_for(1), FIRST_TARGET_BATCH_BYTES * BATCH_GROWTH_FACTOR);
+    assert_eq!(
+        p.target_for(1),
+        FIRST_TARGET_BATCH_BYTES * BATCH_GROWTH_FACTOR
+    );
     // A degenerate policy — no growth — is still bounded, which is what makes the bound structural
     // rather than a property of the chosen constants.
-    let flat = BatchSizePolicy { growth_factor: 1, ..BatchSizePolicy::default() };
+    let flat = BatchSizePolicy {
+        growth_factor: 1,
+        ..BatchSizePolicy::default()
+    };
     assert_eq!(flat.target_for(50), FIRST_TARGET_BATCH_BYTES);
 }
 
@@ -81,7 +107,11 @@ fn the_first_batch_is_smaller_than_the_steady_state_and_the_stream_grows_into_it
     let mut buf = Vec::new();
     while let Some(info) = s.next_into(&mut buf) {
         let info = info.expect("batch");
-        assert_eq!(info.batch_index as usize, sizes.len(), "batch_index counts the stream");
+        assert_eq!(
+            info.batch_index as usize,
+            sizes.len(),
+            "batch_index counts the stream"
+        );
         assert_eq!(info.target_bytes, policy.target_for(info.batch_index));
         sizes.push(info.payload_bytes);
         targets.push(info.target_bytes);
@@ -89,8 +119,14 @@ fn the_first_batch_is_smaller_than_the_steady_state_and_the_stream_grows_into_it
         buf.clear();
     }
 
-    assert_eq!(rows, facts.features, "sizing must not change what is delivered");
-    assert!(sizes.len() > 3, "the fixture must produce enough batches to see growth");
+    assert_eq!(
+        rows, facts.features,
+        "sizing must not change what is delivered"
+    );
+    assert!(
+        sizes.len() > 3,
+        "the fixture must produce enough batches to see growth"
+    );
     // The property, stated as a comparison rather than as an absolute size: the first batch is
     // smaller than the steady state it grows into.
     assert!(
@@ -102,7 +138,10 @@ fn the_first_batch_is_smaller_than_the_steady_state_and_the_stream_grows_into_it
     assert!(targets[0] < *targets.last().unwrap(), "targets must grow");
     // Every batch honours the hard ceiling regardless of where in the ramp it sits.
     for (i, b) in sizes.iter().enumerate() {
-        assert!(*b <= MAX_BATCH_BYTES, "batch {i} of {b} B exceeded MAX_BATCH_BYTES");
+        assert!(
+            *b <= MAX_BATCH_BYTES,
+            "batch {i} of {b} B exceeded MAX_BATCH_BYTES"
+        );
     }
 }
 
@@ -150,7 +189,13 @@ fn the_floor_is_above_the_per_batch_envelope_so_a_small_batch_is_not_mostly_meta
     // because that is what puts the ADR-010 rule 1 tag on *every* batch. The cost is that the whole
     // envelope repeats per batch, so the floor has to sit above it or the extra round trip buys
     // nothing. Measured against a real envelope rather than assumed.
-    let (path, _) = write("floor", &FixtureSpec { features: 1, ..medium() });
+    let (path, _) = write(
+        "floor",
+        &FixtureSpec {
+            features: 1,
+            ..medium()
+        },
+    );
     let ds = Dataset::open(&path).expect("open");
     let mut s = ds.stream(&ViewportQuery::all()).expect("stream");
     let mut buf = Vec::new();

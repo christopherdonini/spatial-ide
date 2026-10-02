@@ -164,9 +164,16 @@ mod procmem {
     }
 
     pub fn sample() -> Option<Counters> {
-        let mut c = Counters { cb: std::mem::size_of::<Counters>() as u32, ..Default::default() };
+        let mut c = Counters {
+            cb: std::mem::size_of::<Counters>() as u32,
+            ..Default::default()
+        };
         let ok = unsafe {
-            K32GetProcessMemoryInfo(GetCurrentProcess(), &mut c, std::mem::size_of::<Counters>() as u32)
+            K32GetProcessMemoryInfo(
+                GetCurrentProcess(),
+                &mut c,
+                std::mem::size_of::<Counters>() as u32,
+            )
         };
         (ok != 0).then_some(c)
     }
@@ -201,8 +208,12 @@ impl MemorySampler {
         let peak_working_set = Arc::new(AtomicUsize::new(0));
         let samples = Arc::new(AtomicUsize::new(0));
         let join = {
-            let (stop, pp, pw, n) =
-                (stop.clone(), peak_private.clone(), peak_working_set.clone(), samples.clone());
+            let (stop, pp, pw, n) = (
+                stop.clone(),
+                peak_private.clone(),
+                peak_working_set.clone(),
+                samples.clone(),
+            );
             std::thread::spawn(move || {
                 while !stop.load(Ordering::SeqCst) {
                     if let Some(c) = procmem::sample() {
@@ -214,7 +225,13 @@ impl MemorySampler {
                 }
             })
         };
-        Self { stop, peak_private, peak_working_set, samples, join: Some(join) }
+        Self {
+            stop,
+            peak_private,
+            peak_working_set,
+            samples,
+            join: Some(join),
+        }
     }
 
     fn finish(mut self) -> (usize, usize, usize) {
@@ -262,15 +279,25 @@ fn json_u64s(v: &[u64]) -> String {
 // ---------------------------------------------------------------------------------------------
 
 async fn connect(dp: &RunningDataPlane) -> Client {
-    let mut req =
-        format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 fn params(bbox: Option<[f64; 4]>) -> StreamParams {
@@ -283,7 +310,10 @@ fn params(bbox: Option<[f64; 4]>) -> StreamParams {
 }
 
 async fn start(c: &mut Client, p: StreamParams) {
-    let f = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &p.encode()));
+    let f = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &p.encode()),
+    );
     c.send(Message::Binary(f.into())).await.expect("start");
 }
 
@@ -330,7 +360,9 @@ async fn drain(c: &mut Client, col: &mut Collected, t0: Instant, stop_after: Opt
             ),
         };
         let Message::Binary(b) = msg else { continue };
-        let Some(len) = wire::payload_len(&b) else { continue };
+        let Some(len) = wire::payload_len(&b) else {
+            continue;
+        };
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
         match b[0] {
             wire::TAG_BATCH => {
@@ -355,8 +387,8 @@ async fn drain(c: &mut Client, col: &mut Collected, t0: Instant, stop_after: Opt
 /// Decode the batch far enough to count its rows. The full bit-identity check is H1's job in
 /// `end_to_end.rs`; repeating it here would make this harness measure the decoder.
 fn rows_in(payload: &[u8]) -> usize {
-    let mut rdr =
-        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None)
+        .expect("ipc");
     rdr.next().expect("batch").expect("decode").num_rows()
 }
 
@@ -420,11 +452,7 @@ fn hardware_profile() -> String {
 
 fn free_bytes_on_c() -> Option<u64> {
     let out = std::process::Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-Command",
-            "(Get-PSDrive C).Free",
-        ])
+        .args(["-NoProfile", "-Command", "(Get-PSDrive C).Free"])
         .output()
         .ok()?;
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
@@ -466,8 +494,8 @@ async fn measure_the_slice_against_docs_08() {
     // "File too small to be a Parquet file" in whichever one reads mid-write. In a document whose
     // own finding #2 is "the source tree moved underneath the measurement", the measurement sharing
     // a fixture directory with the test suite is the same hazard one level down.
-    let dir =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/slice-budgets");
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../target/fixtures/slice-budgets");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join("polygons-100k.parquet");
     let t = Instant::now();
@@ -525,7 +553,10 @@ async fn measure_the_slice_against_docs_08() {
         let t0 = Instant::now();
         let mut col = Collected::default();
         drain(&mut c, &mut col, t0, Some(2)).await;
-        assert_eq!(col.batches, 2, "trial {trial}: the stream was under way before the cancel");
+        assert_eq!(
+            col.batches, 2,
+            "trial {trial}: the stream was under way before the cancel"
+        );
 
         let sent_at = Instant::now();
         cancel(&mut c).await;
@@ -623,9 +654,11 @@ async fn measure_the_slice_against_docs_08() {
     let e_lo = spatial_engine::fixture::E_LO;
     let n_lo = spatial_engine::fixture::N_LO;
     let mut selectivity: Vec<(String, Vec<f64>, Vec<f64>, u64)> = Vec::new();
-    for (label, frac) in [("quarter-extent", 0.5_f64), ("one-sixty-fourth-extent", 0.125)] {
-        let bbox =
-            [e_lo, n_lo, e_lo + extent * frac, n_lo + extent * frac];
+    for (label, frac) in [
+        ("quarter-extent", 0.5_f64),
+        ("one-sixty-fourth-extent", 0.125),
+    ] {
+        let bbox = [e_lo, n_lo, e_lo + extent * frac, n_lo + extent * frac];
         let mut firsts = Vec::new();
         let mut totals = Vec::new();
         let mut rows = 0u64;
@@ -860,7 +893,10 @@ async fn measure_the_slice_against_docs_08() {
     // is the kind of evidence this project spent three bake-off phases learning to distrust.
     let mut misses: Vec<String> = Vec::new();
     if pct(&mid_sorted, 0.95) >= 100.0 {
-        misses.push(format!("mid-stream cancel p95 {:.3} ms >= 100 ms", pct(&mid_sorted, 0.95)));
+        misses.push(format!(
+            "mid-stream cancel p95 {:.3} ms >= 100 ms",
+            pct(&mid_sorted, 0.95)
+        ));
     }
     if pct(&early_sorted, 0.95) >= 100.0 {
         misses.push(format!(

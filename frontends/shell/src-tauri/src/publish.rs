@@ -67,7 +67,8 @@ pub const PENDING_ATTEMPT_TTL: Duration = Duration::from_secs(120);
 
 /// The filter-scope sentence, from `NEXT-CUT.md`'s conditional block item 3 — **verbatim**, never
 /// silently dropped when the shell's active SQL filter would have applied to this publish.
-pub const FILTER_SCOPE_SENTENCE: &str = "this bundle format cannot record a row predicate (ADR-017 \
+pub const FILTER_SCOPE_SENTENCE: &str =
+    "this bundle format cannot record a row predicate (ADR-017 \
      §8, bundle_version 1); publishing publishes the viewport extent, not your filter";
 
 // -------------------------------------------------------------------------------------------
@@ -100,7 +101,12 @@ impl PublishScope {
         match self {
             Self::WholeFile => ViewportQuery::all(),
             Self::ViewportBbox { bbox } => ViewportQuery {
-                bbox: Some(Bbox { xmin: bbox.xmin, ymin: bbox.ymin, xmax: bbox.xmax, ymax: bbox.ymax }),
+                bbox: Some(Bbox {
+                    xmin: bbox.xmin,
+                    ymin: bbox.ymin,
+                    xmax: bbox.xmax,
+                    ymax: bbox.ymax,
+                }),
                 // No CRS assertion crosses from JS in this cut, on the same ground
                 // `publish-bundle --bbox` declares: the shell performs no reprojection, so an
                 // omitted `bbox_crs` states the coordinates are the dataset's own (ADR-015 §7.3).
@@ -115,7 +121,9 @@ impl PublishScope {
 
     fn row_scope_sentence(&self) -> String {
         match self {
-            Self::WholeFile => "row scope: the whole file — every row the dataset contains".to_string(),
+            Self::WholeFile => {
+                "row scope: the whole file — every row the dataset contains".to_string()
+            }
             Self::ViewportBbox { bbox } => format!(
                 "row scope: the current viewport extent only (xmin {}, ymin {}, xmax {}, ymax {}) \
                  — not the whole file",
@@ -301,7 +309,10 @@ fn compose_outcome_summary(resolved_destination: &std::path::Path) -> String {
 #[derive(serde::Serialize, Debug)]
 #[serde(tag = "status", rename_all = "kebab-case")]
 pub enum PrepareOutcome {
-    Prompt { attempt_id: String, prompt: PublishPromptData },
+    Prompt {
+        attempt_id: String,
+        prompt: PublishPromptData,
+    },
     /// The operator dismissed the native picker. **Not an error** (`NEXT-CUT.md` P1 item 4) — no
     /// typed refusal, no grant minted, no pending attempt stashed: nothing was attempted.
     PickerCancelled,
@@ -333,8 +344,13 @@ pub enum ExecuteOutcome {
     /// written (`BoundaryError::OutcomeNotAudited`). Reported distinctly from `Success` — the same
     /// posture `publish-bundle` takes (non-zero exit, bundle on disk): an unaudited class-3 side
     /// effect is not a success.
-    SucceededUnaudited { bundle_path: String, detail: String },
-    Refused { message: String },
+    SucceededUnaudited {
+        bundle_path: String,
+        detail: String,
+    },
+    Refused {
+        message: String,
+    },
     /// The attempt id names nothing the host still holds — already executed, expired, or never
     /// issued. Not `Refused`: nothing was authorized or denied, there was simply no pending attempt
     /// to act on.
@@ -407,7 +423,9 @@ pub fn prepare_with_progress(
         // is the one refusal site whose codes the shell renders code-specific guidance for —
         // `publish.geographic_crs_not_publishable` among them — and a `Display` string alone gave
         // it nothing to match on but wording the human has not yet sighted.
-        return PrepareOutcome::Refused { message: e.refusal_detail() };
+        return PrepareOutcome::Refused {
+            message: e.refusal_detail(),
+        };
     }
 
     // The pin phase: cancellable and progress-reporting (`docs/01` principle 7). A cancel here
@@ -420,8 +438,18 @@ pub fn prepare_with_progress(
     }
 
     prepare_with_query(
-        grants, store, dataset, dataset_name, style_source, query, row_scope, filter_active, viewer,
-        viewer_license, destination, started_at,
+        grants,
+        store,
+        dataset,
+        dataset_name,
+        style_source,
+        query,
+        row_scope,
+        filter_active,
+        viewer,
+        viewer_license,
+        destination,
+        started_at,
     )
 }
 
@@ -460,8 +488,19 @@ pub fn prepare(
     started_at: String,
 ) -> PrepareOutcome {
     prepare_with_progress(
-        grants, store, dataset, dataset_name, style_source, scope, filter_active, viewer,
-        viewer_license, destination, started_at, &CancelToken::new(), None,
+        grants,
+        store,
+        dataset,
+        dataset_name,
+        style_source,
+        scope,
+        filter_active,
+        viewer,
+        viewer_license,
+        destination,
+        started_at,
+        &CancelToken::new(),
+        None,
     )
 }
 
@@ -511,12 +550,20 @@ fn prepare_with_query(
         // shell's `formatPublishRefusal` parses one convention and not two. Without this, SKP-V0.md's
         // sentence about publish refusals carrying their code would have been true of one of the two
         // preflight sites and false of the other.
-        Err(e) => return PrepareOutcome::Refused { message: e.refusal_detail() },
+        Err(e) => {
+            return PrepareOutcome::Refused {
+                message: e.refusal_detail(),
+            }
+        }
     };
 
     let resolved_destination = match permission::grant::resolve_destination(&destination) {
         Ok(d) => d,
-        Err(e) => return PrepareOutcome::Refused { message: e.to_string() },
+        Err(e) => {
+            return PrepareOutcome::Refused {
+                message: e.to_string(),
+            }
+        }
     };
 
     let principal = Principal::from_environment();
@@ -529,11 +576,18 @@ fn prepare_with_query(
     // *becomes* the manifest's logical URI (`kernel/src/permission/grant.rs`).
     let destination_scope = match DestinationScope::exact(&destination) {
         Ok(d) => d,
-        Err(e) => return PrepareOutcome::Refused { message: e.to_string() },
+        Err(e) => {
+            return PrepareOutcome::Refused {
+                message: e.to_string(),
+            }
+        }
     };
     let grant = match PublishGrant::new(
         OperationKind::Publish,
-        SourceScope { dataset_name: dataset_name.clone(), content_hash: pre.source_content_hash() },
+        SourceScope {
+            dataset_name: dataset_name.clone(),
+            content_hash: pre.source_content_hash(),
+        },
         destination_scope,
         principal.clone(),
         // The pending attempt's own TTL, not the 20-minute ceiling: the two expire together (module
@@ -541,7 +595,11 @@ fn prepare_with_query(
         PENDING_ATTEMPT_TTL,
     ) {
         Ok(g) => g,
-        Err(e) => return PrepareOutcome::Refused { message: e.to_string() },
+        Err(e) => {
+            return PrepareOutcome::Refused {
+                message: e.to_string(),
+            }
+        }
     };
     let grant_remaining_s = grant.remaining(Instant::now()).as_secs();
 
@@ -554,7 +612,9 @@ fn prepare_with_query(
         // Mirrors `PendingAttempts::insert`'s own prune-on-insert precedent (this file, above).
         held.prune_expired(Instant::now());
         if let Err(e) = held.add(grant) {
-            return PrepareOutcome::Refused { message: e.to_string() };
+            return PrepareOutcome::Refused {
+                message: e.to_string(),
+            };
         }
     }
 
@@ -620,7 +680,14 @@ pub fn execute(
     attempt_id: &str,
     typed_phrase: &str,
 ) -> ExecuteOutcome {
-    execute_with_progress(grants, store, attempt_id, typed_phrase, &CancelToken::new(), None)
+    execute_with_progress(
+        grants,
+        store,
+        attempt_id,
+        typed_phrase,
+        &CancelToken::new(),
+        None,
+    )
 }
 
 /// [`execute`]'s own body, generalized over the cancel token and progress observer the Tauri
@@ -660,7 +727,11 @@ pub fn execute_with_progress(
     // closes F-9: the shell never holds a log across attempts by construction, not by convention.
     let resolved_destination = match permission::grant::resolve_destination(&request.destination) {
         Ok(d) => d,
-        Err(e) => return ExecuteOutcome::Refused { message: e.to_string() },
+        Err(e) => {
+            return ExecuteOutcome::Refused {
+                message: e.to_string(),
+            }
+        }
     };
 
     // **S1's "consumed" half, captured before anything below can early-return.** The SAME facts
@@ -681,14 +752,19 @@ pub fn execute_with_progress(
         destination: resolved_destination.clone(),
     };
     let consume_grant = || {
-        grants.lock().unwrap_or_else(|e| e.into_inner()).remove_matching(&facts);
+        grants
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove_matching(&facts);
     };
 
     let audit = match AuditLog::open_for(&resolved_destination) {
         Ok(a) => a,
         Err(e) => {
             consume_grant();
-            return ExecuteOutcome::Refused { message: e.to_string() };
+            return ExecuteOutcome::Refused {
+                message: e.to_string(),
+            };
         }
     };
 
@@ -726,16 +802,22 @@ pub fn execute_with_progress(
             operation_digest: outcome.operation_digest,
             build_millis: outcome.build_millis,
         },
-        Err(BoundaryError::OutcomeNotAudited { outcome, path, detail }) => {
-            ExecuteOutcome::SucceededUnaudited {
-                bundle_path: outcome.bundle_path.display().to_string(),
-                detail: format!("{path}: {detail}"),
-            }
-        }
+        Err(BoundaryError::OutcomeNotAudited {
+            outcome,
+            path,
+            detail,
+        }) => ExecuteOutcome::SucceededUnaudited {
+            bundle_path: outcome.bundle_path.display().to_string(),
+            detail: format!("{path}: {detail}"),
+        },
         // A `PublishError` keeps its typed code, as at the preflight sites (SKP-V0's typed-refusal
         // bullet); `Permission` and `Audit` refusals stay plain Display text below.
-        Err(BoundaryError::Publish(e)) => ExecuteOutcome::Refused { message: e.refusal_detail() },
-        Err(e) => ExecuteOutcome::Refused { message: e.to_string() },
+        Err(BoundaryError::Publish(e)) => ExecuteOutcome::Refused {
+            message: e.refusal_detail(),
+        },
+        Err(e) => ExecuteOutcome::Refused {
+            message: e.to_string(),
+        },
     }
 }
 
@@ -993,7 +1075,10 @@ where
 /// re-validates the same document immediately afterward — its refusal is the real one.
 fn style_attributes(style_source: &str) -> Vec<String> {
     match spatial_renderer::style::parse(style_source) {
-        Ok(doc) => doc.match_column().map(|c| vec![c.to_string()]).unwrap_or_default(),
+        Ok(doc) => doc
+            .match_column()
+            .map(|c| vec![c.to_string()])
+            .unwrap_or_default(),
         Err(_) => Vec::new(),
     }
 }
@@ -1088,12 +1173,26 @@ pub fn ensure_pinned_with_progress(
 /// validator, and a case it does not anticipate surfaces as the legitimate typed refusal
 /// `PublishError::DatasetNameRejected`.
 pub fn dataset_name_for(ds: &Dataset) -> String {
-    let stem = ds.path().file_stem().and_then(|s| s.to_str()).unwrap_or("dataset");
+    let stem = ds
+        .path()
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("dataset");
     let sanitized: String = stem
         .chars()
-        .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' { c } else { '-' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect();
-    if sanitized.is_empty() { "dataset".to_string() } else { sanitized }
+    if sanitized.is_empty() {
+        "dataset".to_string()
+    } else {
+        sanitized
+    }
 }
 
 /// The reference bundle viewer this repository ships (`renderer/bundle-viewer/dist`) and the
@@ -1194,7 +1293,9 @@ fn resolve_viewer_dir(
     } else {
         "run `npm run build` in renderer/bundle-viewer first"
     };
-    Err(format!("the reference bundle viewer is not built at {tried} — {remedy}"))
+    Err(format!(
+        "the reference bundle viewer is not built at {tried} — {remedy}"
+    ))
 }
 
 #[cfg(test)]
@@ -1235,14 +1336,20 @@ mod resolver_tests {
         let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
         assert!(err.contains("the packaged resource directory"), "{err}");
         assert!(err.contains("the dev-tree checkout path"), "{err}");
-        assert!(err.contains(&resource.join("bundle-viewer").display().to_string()), "{err}");
+        assert!(
+            err.contains(&resource.join("bundle-viewer").display().to_string()),
+            "{err}"
+        );
         // SHOULD-FIX (release-cut fix batch): the dev-tree path's own VALUE — the build machine's
         // `CARGO_MANIFEST_DIR` — must NOT appear in a refusal a packaged binary can emit.
         assert!(
             !err.contains(&dev_tree_viewer_dir().display().to_string()),
             "the build machine's own dev-tree path leaked into a packaged-context refusal: {err}"
         );
-        assert!(err.contains("not applicable to a packaged installation"), "{err}");
+        assert!(
+            err.contains("not applicable to a packaged installation"),
+            "{err}"
+        );
         // Reviewer nit, release-cut fix batch: a packaged context (resource_dir Some) gets a
         // packaged-context remedy, never the developer instruction to run an npm build.
         assert!(err.contains("reinstall Spatial IDE"), "{err}");
@@ -1257,7 +1364,10 @@ mod resolver_tests {
         let err = resolve_viewer_dir(None, |_| false).unwrap_err();
         assert!(err.contains("the dev-tree checkout path"), "{err}");
         assert!(!err.contains("the packaged resource directory"), "{err}");
-        assert!(err.contains("run `npm run build` in renderer/bundle-viewer first"), "{err}");
+        assert!(
+            err.contains("run `npm run build` in renderer/bundle-viewer first"),
+            "{err}"
+        );
         assert!(!err.contains("reinstall Spatial IDE"), "{err}");
     }
 
@@ -1284,8 +1394,12 @@ mod resolver_tests {
     fn the_packaged_labels_index_precedes_the_dev_tree_labels_index_in_the_refusal_string() {
         let resource = std::path::Path::new("Z:/pretend/resources");
         let err = resolve_viewer_dir(Some(resource), |_| false).unwrap_err();
-        let packaged_at = err.find("the packaged resource directory").expect("packaged label present");
-        let dev_tree_at = err.find("the dev-tree checkout path").expect("dev-tree label present");
+        let packaged_at = err
+            .find("the packaged resource directory")
+            .expect("packaged label present");
+        let dev_tree_at = err
+            .find("the dev-tree checkout path")
+            .expect("dev-tree label present");
         assert!(
             packaged_at < dev_tree_at,
             "packaged label must precede the dev-tree label in the refusal string: {err}"
@@ -1320,7 +1434,9 @@ pub fn bundled_viewer_license() -> ViewerLicenseInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+    use spatial_engine::fixture::{
+        write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
+    };
     use spatial_kernel::publish::ViewerAsset;
     use std::path::Path;
     use std::sync::{Mutex as StdMutex, MutexGuard as StdMutexGuard, OnceLock};
@@ -1344,11 +1460,15 @@ mod tests {
     /// `kernel/tests/permission_boundary.rs` documents for the identical hazard.
     fn env_lock() -> StdMutexGuard<'static, ()> {
         static LOCK: OnceLock<StdMutex<()>> = OnceLock::new();
-        LOCK.get_or_init(|| StdMutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+        LOCK.get_or_init(|| StdMutex::new(()))
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
     }
 
     fn workspace(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join("spatial-ide-shell-publish-tests").join(name);
+        let d = std::env::temp_dir()
+            .join("spatial-ide-shell-publish-tests")
+            .join(name);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::canonicalize(&d).unwrap()
@@ -1376,8 +1496,14 @@ mod tests {
         // Synthetic, deliberately (`kernel/tests/publish.rs`'s own convention): a Rust test must not
         // need Node or a built `renderer/bundle-viewer/dist` to run.
         ViewerAssets::new(vec![
-            ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-            ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+            ViewerAsset {
+                path: "index.html".into(),
+                bytes: b"<!doctype html><title>t</title>".to_vec(),
+            },
+            ViewerAsset {
+                path: "NOTICE.txt".into(),
+                bytes: b"stub notice\n".to_vec(),
+            },
         ])
         .unwrap()
     }
@@ -1408,7 +1534,10 @@ mod tests {
     #[test]
     fn the_bundle_license_notice_names_the_public_repository_not_a_written_offer() {
         let license = bundled_viewer_license();
-        assert_eq!(license.corresponding_source.kind, CorrespondingSourceKind::Url);
+        assert_eq!(
+            license.corresponding_source.kind,
+            CorrespondingSourceKind::Url
+        );
         assert_eq!(
             license.corresponding_source.at,
             "https://github.com/christopherdonini/spatial-ide"
@@ -1420,10 +1549,7 @@ mod tests {
 
     /// Runs `prepare` end to end and unwraps the prompt, panicking with the outcome otherwise — most
     /// tests below want a granted, prompted attempt as their starting point.
-    fn prepared(
-        d: &Path,
-        name: &str,
-    ) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
+    fn prepared(d: &Path, name: &str) -> (Mutex<GrantSet>, PendingAttempts, String, String) {
         let ds = fixture(d, 50);
         let dest = d.join(format!("out-{name}"));
         let grants = Mutex::new(GrantSet::new());
@@ -1467,12 +1593,18 @@ mod tests {
         let (grants, store, attempt_id, phrase) = prepared(&d, "single-use");
 
         let first = execute(&grants, &store, &attempt_id, &phrase);
-        assert!(matches!(first, ExecuteOutcome::Success { .. }), "got {first:?}");
+        assert!(
+            matches!(first, ExecuteOutcome::Success { .. }),
+            "got {first:?}"
+        );
 
         // The **same, correct** phrase again — this is not testing that a wrong phrase refuses (that
         // is `approval::check`'s own suite); it is testing that the attempt itself is gone.
         let second = execute(&grants, &store, &attempt_id, &phrase);
-        assert!(matches!(second, ExecuteOutcome::UnknownAttempt), "got {second:?}");
+        assert!(
+            matches!(second, ExecuteOutcome::UnknownAttempt),
+            "got {second:?}"
+        );
     }
 
     #[test]
@@ -1515,7 +1647,10 @@ mod tests {
         std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log_a);
         let (grants_a, store_a, id_a, phrase_a) = prepared(&d, "a");
         let out_a = execute(&grants_a, &store_a, &id_a, &phrase_a);
-        assert!(matches!(out_a, ExecuteOutcome::Success { .. }), "got {out_a:?}");
+        assert!(
+            matches!(out_a, ExecuteOutcome::Success { .. }),
+            "got {out_a:?}"
+        );
 
         // Attempt B, pointed at a **different** log path before it prepares or executes — proving
         // `execute` re-resolves and re-opens `AuditLog::open_for` on *this* call rather than holding
@@ -1524,14 +1659,31 @@ mod tests {
         std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log_b);
         let (grants_b, store_b, id_b, phrase_b) = prepared(&d, "b");
         let out_b = execute(&grants_b, &store_b, &id_b, &phrase_b);
-        assert!(matches!(out_b, ExecuteOutcome::Success { .. }), "got {out_b:?}");
+        assert!(
+            matches!(out_b, ExecuteOutcome::Success { .. }),
+            "got {out_b:?}"
+        );
 
         let raw_a = std::fs::read_to_string(&log_a).unwrap();
         let raw_b = std::fs::read_to_string(&log_b).unwrap();
-        assert_eq!(raw_a.lines().count(), 2, "attempt a's own log should hold exactly its own pair: {raw_a}");
-        assert_eq!(raw_b.lines().count(), 2, "attempt b's own log should hold exactly its own pair: {raw_b}");
-        assert!(!raw_a.contains("out-b"), "attempt b's destination leaked into attempt a's log");
-        assert!(!raw_b.contains("out-a"), "attempt a's destination leaked into attempt b's log");
+        assert_eq!(
+            raw_a.lines().count(),
+            2,
+            "attempt a's own log should hold exactly its own pair: {raw_a}"
+        );
+        assert_eq!(
+            raw_b.lines().count(),
+            2,
+            "attempt b's own log should hold exactly its own pair: {raw_b}"
+        );
+        assert!(
+            !raw_a.contains("out-b"),
+            "attempt b's destination leaked into attempt a's log"
+        );
+        assert!(
+            !raw_b.contains("out-a"),
+            "attempt a's destination leaked into attempt b's log"
+        );
 
         for line in raw_a.lines().chain(raw_b.lines()) {
             let v: serde_json::Value = serde_json::from_str(line).unwrap();
@@ -1572,7 +1724,11 @@ mod tests {
             }
             other => panic!("expected a refusal, got {other:?}"),
         }
-        assert_eq!(store.len(), 0, "a refused prepare must not stash a pending attempt");
+        assert_eq!(
+            store.len(),
+            0,
+            "a refused prepare must not stash a pending attempt"
+        );
     }
 
     #[test]
@@ -1583,17 +1739,42 @@ mod tests {
         let store = PendingAttempts::new();
 
         let without = prepare(
-            &grants, &store, ds.clone(), "parcels".into(), STYLE.into(), PublishScope::WholeFile,
-            false, viewer(), viewer_license(), d.join("out-no-filter"), "2026-08-16T10:00:00Z".into(),
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out-no-filter"),
+            "2026-08-16T10:00:00Z".into(),
         );
-        let PrepareOutcome::Prompt { prompt, .. } = without else { panic!("expected a prompt") };
-        assert!(prompt.filter_scope.is_none(), "no active filter must mean no sentence");
+        let PrepareOutcome::Prompt { prompt, .. } = without else {
+            panic!("expected a prompt")
+        };
+        assert!(
+            prompt.filter_scope.is_none(),
+            "no active filter must mean no sentence"
+        );
 
         let with = prepare(
-            &grants, &store, ds, "parcels".into(), STYLE.into(), PublishScope::WholeFile,
-            true, viewer(), viewer_license(), d.join("out-with-filter"), "2026-08-16T10:00:00Z".into(),
+            &grants,
+            &store,
+            ds,
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            true,
+            viewer(),
+            viewer_license(),
+            d.join("out-with-filter"),
+            "2026-08-16T10:00:00Z".into(),
         );
-        let PrepareOutcome::Prompt { prompt, .. } = with else { panic!("expected a prompt") };
+        let PrepareOutcome::Prompt { prompt, .. } = with else {
+            panic!("expected a prompt")
+        };
         assert_eq!(prompt.filter_scope.as_deref(), Some(FILTER_SCOPE_SENTENCE));
     }
 
@@ -1615,10 +1796,21 @@ mod tests {
         let dest = d.join("my-parcels");
 
         let outcome = prepare(
-            &grants, &store, ds, "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
-            viewer(), viewer_license(), dest.clone(), "2026-08-16T10:00:00Z".into(),
+            &grants,
+            &store,
+            ds,
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            dest.clone(),
+            "2026-08-16T10:00:00Z".into(),
         );
-        let PrepareOutcome::Prompt { prompt, .. } = outcome else { panic!("expected a prompt") };
+        let PrepareOutcome::Prompt { prompt, .. } = outcome else {
+            panic!("expected a prompt")
+        };
 
         assert!(
             prompt.outcome_summary.contains("my-parcels"),
@@ -1657,7 +1849,11 @@ mod tests {
     /// above, wants "the selected rows" to pass and "10 rows" to fail).
     fn has_counted_word(text: &str, word: &str) -> bool {
         text.match_indices(word).any(|(i, _)| {
-            text[..i].trim_end().chars().next_back().is_some_and(|c| c.is_ascii_digit())
+            text[..i]
+                .trim_end()
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_ascii_digit())
         })
     }
 
@@ -1679,7 +1875,8 @@ mod tests {
         let ds = Dataset::open(&path).unwrap();
         let name = dataset_name_for(&ds);
         assert!(
-            name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.'),
+            name.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.'),
             "{name}"
         );
         assert!(!name.contains(' '), "{name}");
@@ -1699,15 +1896,30 @@ mod tests {
         let (grants, store, attempt_id, phrase) = prepared(&d, "progress");
         let phases: StdMutex<Vec<(String, &'static str)>> = StdMutex::new(Vec::new());
         let progress = EventProgress::new(attempt_id.clone(), |event: PublishProgressEvent| {
-            phases.lock().unwrap_or_else(|e| e.into_inner()).push((event.attempt_id, event.phase));
+            phases
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .push((event.attempt_id, event.phase));
         });
 
-        let outcome =
-            execute_with_progress(&grants, &store, &attempt_id, &phrase, &CancelToken::new(), Some(&progress));
-        assert!(matches!(outcome, ExecuteOutcome::Success { .. }), "got {outcome:?}");
+        let outcome = execute_with_progress(
+            &grants,
+            &store,
+            &attempt_id,
+            &phrase,
+            &CancelToken::new(),
+            Some(&progress),
+        );
+        assert!(
+            matches!(outcome, ExecuteOutcome::Success { .. }),
+            "got {outcome:?}"
+        );
 
         let recorded = phases.into_inner().unwrap_or_else(|e| e.into_inner());
-        assert!(!recorded.is_empty(), "expected at least one phase event on a real successful publish");
+        assert!(
+            !recorded.is_empty(),
+            "expected at least one phase event on a real successful publish"
+        );
         assert!(
             recorded.iter().all(|(id, _)| id == &attempt_id),
             "every event must be stamped with THIS attempt's own id, never another's: {recorded:?}"
@@ -1723,19 +1935,31 @@ mod tests {
     #[test]
     fn running_publishes_cancel_is_a_lookup_not_an_error_on_a_miss() {
         let running = RunningPublishes::new();
-        assert!(!running.cancel("nope"), "cancelling an id never inserted must not be an error, just false");
+        assert!(
+            !running.cancel("nope"),
+            "cancelling an id never inserted must not be an error, just false"
+        );
 
         let token = CancelToken::new();
         running.insert("a".into(), token.clone());
         assert_eq!(running.len(), 1);
         assert!(!token.is_cancelled());
 
-        assert!(running.cancel("a"), "a known id must be found and cancelled");
-        assert!(token.is_cancelled(), "cancel() on the registry's own clone must flip the SAME token's flag");
+        assert!(
+            running.cancel("a"),
+            "a known id must be found and cancelled"
+        );
+        assert!(
+            token.is_cancelled(),
+            "cancel() on the registry's own clone must flip the SAME token's flag"
+        );
 
         running.remove("a");
         assert_eq!(running.len(), 0);
-        assert!(!running.cancel("a"), "after remove, the same id is a miss again");
+        assert!(
+            !running.cancel("a"),
+            "after remove, the same id is a miss again"
+        );
     }
 
     // ---------------------------------------------------------------------------------------
@@ -1766,10 +1990,17 @@ mod tests {
     fn ensure_pinned_pins_an_unpinned_dataset_and_is_idempotent_on_an_already_pinned_one() {
         let d = workspace("ensure-pinned");
         let ds = unpinned_fixture(&d);
-        assert!(ds.content_pin().is_none(), "a freshly opened dataset starts unpinned");
+        assert!(
+            ds.content_pin().is_none(),
+            "a freshly opened dataset starts unpinned"
+        );
 
         ensure_pinned(&ds, &CancelToken::new()).expect("pins successfully");
-        let first_hash = ds.content_pin().expect("a pin now exists").hash().to_string();
+        let first_hash = ds
+            .content_pin()
+            .expect("a pin now exists")
+            .hash()
+            .to_string();
         assert!(!first_hash.is_empty());
 
         // A second call on an already-pinned dataset must not replace the pin (real IO/CPU cost;
@@ -1802,28 +2033,54 @@ mod tests {
 
         // The pin-free tail, unchanged: no pin, `SourceNotPinned`.
         let refused = prepare_with_query(
-            &grants, &store, ds.clone(), "parcels".into(), STYLE.into(), PublishScope::WholeFile.to_query(),
-            PublishScope::WholeFile.row_scope_sentence(), false, viewer(), viewer_license(),
-            d.join("out-pinless"), "2026-08-16T10:00:00Z".into(),
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile.to_query(),
+            PublishScope::WholeFile.row_scope_sentence(),
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out-pinless"),
+            "2026-08-16T10:00:00Z".into(),
         );
         match refused {
             PrepareOutcome::Refused { message } => {
                 assert!(message.contains("pin"), "{message}");
             }
-            other => panic!("expected SourceNotPinned refusal on an unpinned dataset, got {other:?}"),
+            other => {
+                panic!("expected SourceNotPinned refusal on an unpinned dataset, got {other:?}")
+            }
         }
-        assert!(ds.content_pin().is_none(), "the refusing path must not have pinned anything");
+        assert!(
+            ds.content_pin().is_none(),
+            "the refusing path must not have pinned anything"
+        );
 
         // `prepare`, since SF3: the same shipped path the command takes -- it pins, then prompts.
         let prompted = prepare(
-            &grants, &store, ds.clone(), "parcels".into(), STYLE.into(), PublishScope::WholeFile, false,
-            viewer(), viewer_license(), d.join("out"), "2026-08-16T10:00:00Z".into(),
+            &grants,
+            &store,
+            ds.clone(),
+            "parcels".into(),
+            STYLE.into(),
+            PublishScope::WholeFile,
+            false,
+            viewer(),
+            viewer_license(),
+            d.join("out"),
+            "2026-08-16T10:00:00Z".into(),
         );
         assert!(
             matches!(prompted, PrepareOutcome::Prompt { .. }),
             "prepare must pin an unpinned dataset itself now, got {prompted:?}"
         );
-        assert!(ds.content_pin().is_some(), "...and the pin it took must actually be held");
+        assert!(
+            ds.content_pin().is_some(),
+            "...and the pin it took must actually be held"
+        );
     }
 
     // ---------------------------------------------------------------------------------------
@@ -1890,11 +2147,23 @@ mod tests {
     fn the_pin_progress_gate_holds_back_everything_inside_one_interval() {
         // Every case here is AFTER something has already been emitted (`last_emitted != 0`); the
         // first observation's own always-crosses rule is the test below this one.
-        assert!(!pin_progress_should_emit(2 << 20, 5_000_000_000, 1 << 20), "1 MiB past the first event");
-        assert!(!pin_progress_should_emit(64 << 20, 5_000_000_000, 1 << 20), "one MiB short of the interval");
-        assert!(pin_progress_should_emit(65 << 20, 5_000_000_000, 1 << 20), "exactly the interval");
+        assert!(
+            !pin_progress_should_emit(2 << 20, 5_000_000_000, 1 << 20),
+            "1 MiB past the first event"
+        );
+        assert!(
+            !pin_progress_should_emit(64 << 20, 5_000_000_000, 1 << 20),
+            "one MiB short of the interval"
+        );
+        assert!(
+            pin_progress_should_emit(65 << 20, 5_000_000_000, 1 << 20),
+            "exactly the interval"
+        );
         // A short final read lands nowhere near an interval boundary and must still cross.
-        assert!(pin_progress_should_emit(100, 100, 50), "the tail of a file smaller than one read buffer");
+        assert!(
+            pin_progress_should_emit(100, 100, 50),
+            "the tail of a file smaller than one read buffer"
+        );
         assert!(
             pin_progress_should_emit(5_004_376_705, 5_004_376_705, 5_003_804_672),
             "the last MiB of the hero fixture, well inside the interval since the previous event"
@@ -1924,7 +2193,10 @@ mod tests {
             "one 1 MiB chunk into the 5 GB hero fixture, nothing emitted yet"
         );
         // The same, for a source whose length could not be read at all.
-        assert!(pin_progress_should_emit(CHUNK, 0, 0), "unreadable metadata does not suppress the first event");
+        assert!(
+            pin_progress_should_emit(CHUNK, 0, 0),
+            "unreadable metadata does not suppress the first event"
+        );
         // And it is the FIRST one only: the chunk after it is back under the step rule.
         assert!(!pin_progress_should_emit(2 * CHUNK, 5_004_376_705, CHUNK));
     }
@@ -1977,8 +2249,13 @@ mod tests {
     #[tokio::test]
     async fn a_registered_cancel_key_is_gone_from_running_publishes_after_any_outcome() {
         for outcome in [
-            PrepareOutcome::Prompt { attempt_id: "att_1".into(), prompt: prompt_stub() },
-            PrepareOutcome::Refused { message: "refused".into() },
+            PrepareOutcome::Prompt {
+                attempt_id: "att_1".into(),
+                prompt: prompt_stub(),
+            },
+            PrepareOutcome::Refused {
+                message: "refused".into(),
+            },
             PrepareOutcome::Cancelled,
         ] {
             let running = RunningPublishes::new();
@@ -1989,12 +2266,20 @@ mod tests {
                     registry.cancel(lookup),
                     "the token must be reachable under its own key while the body runs"
                 );
-                assert!(cancel.is_cancelled(), "...and that lookup must reach THIS token, not a copy");
+                assert!(
+                    cancel.is_cancelled(),
+                    "...and that lookup must reach THIS token, not a copy"
+                );
                 outcome
             })
             .await;
             assert!(
-                matches!(returned, PrepareOutcome::Prompt { .. } | PrepareOutcome::Refused { .. } | PrepareOutcome::Cancelled),
+                matches!(
+                    returned,
+                    PrepareOutcome::Prompt { .. }
+                        | PrepareOutcome::Refused { .. }
+                        | PrepareOutcome::Cancelled
+                ),
                 "the body's own value is returned unchanged"
             );
             assert_eq!(
@@ -2003,7 +2288,10 @@ mod tests {
                 "a finished prepare must leave no entry behind -- a later cancel under the same key \
                  would otherwise 'cancel' something already over"
             );
-            assert!(!running.cancel(&key), "and the key must no longer resolve to anything");
+            assert!(
+                !running.cancel(&key),
+                "and the key must no longer resolve to anything"
+            );
         }
     }
 
@@ -2074,7 +2362,10 @@ mod tests {
                 .to_string_lossy()
                 .to_string();
             let exec = execute(&grants, &store, &attempt_id, &phrase);
-            assert!(matches!(exec, ExecuteOutcome::Success { .. }), "execute #{i} did not succeed: {exec:?}");
+            assert!(
+                matches!(exec, ExecuteOutcome::Success { .. }),
+                "execute #{i} did not succeed: {exec:?}"
+            );
         }
     }
 
@@ -2121,12 +2412,19 @@ mod tests {
             &cancel,
             None,
         );
-        assert!(matches!(outcome, PrepareOutcome::Cancelled), "got {outcome:?}");
+        assert!(
+            matches!(outcome, PrepareOutcome::Cancelled),
+            "got {outcome:?}"
+        );
         assert!(
             ds.content_pin().is_none(),
             "a cancelled pin must leave content_pin() None -- nothing was written or hashed to completion"
         );
-        assert_eq!(store.len(), 0, "no pending attempt may be stashed for a cancelled prepare");
+        assert_eq!(
+            store.len(),
+            0,
+            "no pending attempt may be stashed for a cancelled prepare"
+        );
     }
 
     /// The pin phase's own progress report, wired end to end through `prepare_with_progress` (the
@@ -2158,8 +2456,14 @@ mod tests {
             &CancelToken::new(),
             Some(&mut |done, total| seen.push((done, total))),
         );
-        assert!(matches!(outcome, PrepareOutcome::Prompt { .. }), "got {outcome:?}");
-        assert!(!seen.is_empty(), "the pin phase must report at least one progress callback");
+        assert!(
+            matches!(outcome, PrepareOutcome::Prompt { .. }),
+            "got {outcome:?}"
+        );
+        assert!(
+            !seen.is_empty(),
+            "the pin phase must report at least one progress callback"
+        );
         assert_eq!(
             seen.last().unwrap().0,
             seen.last().unwrap().1,
@@ -2227,7 +2531,11 @@ mod tests {
             ds.content_pin().is_none(),
             "the whole point: a pin-free refusal must never take a pin as a side effect"
         );
-        assert_eq!(store.len(), 0, "no pending attempt may be stashed for a refused prepare");
+        assert_eq!(
+            store.len(),
+            0,
+            "no pending attempt may be stashed for a refused prepare"
+        );
     }
 
     #[test]

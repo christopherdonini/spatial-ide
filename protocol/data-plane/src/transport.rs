@@ -241,10 +241,16 @@ pub struct Checkpoints {
 
 impl Checkpoints {
     pub fn begin(&self, phase: &str) {
-        self.entries.lock().unwrap_or_else(|e| e.into_inner()).push((phase.to_string(), true));
+        self.entries
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push((phase.to_string(), true));
     }
     pub fn end(&self, phase: &str) {
-        self.entries.lock().unwrap_or_else(|e| e.into_inner()).push((phase.to_string(), false));
+        self.entries
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push((phase.to_string(), false));
     }
     /// The last BEGIN with no matching END. `None` means every phase closed cleanly.
     pub fn dangling(&self) -> Option<String> {

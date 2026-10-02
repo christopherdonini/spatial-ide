@@ -59,15 +59,13 @@ pub struct ReaderCeilings {
 /// shipped. The comment below is this function's own build-time-defect framing; this note is what
 /// that framing means for the one caller that reaches it through an async command.
 fn field_u64(root: &Value, field: &'static str) -> u64 {
-    root.get(field)
-        .and_then(Value::as_u64)
-        .unwrap_or_else(|| {
-            panic!(
-                "renderer/bundle-viewer/ceilings.json has no integer `{field}` -- this is a \
+    root.get(field).and_then(Value::as_u64).unwrap_or_else(|| {
+        panic!(
+            "renderer/bundle-viewer/ceilings.json has no integer `{field}` -- this is a \
                  compiled-in constant, not caller input, so a missing/malformed field here is a \
                  build-time defect"
-            )
-        })
+        )
+    })
 }
 
 fn parse_ceilings() -> ReaderCeilings {
@@ -197,18 +195,29 @@ mod tests {
     fn a_feature_count_at_or_below_the_ceiling_is_not_refused() {
         let c = reader_ceilings();
         assert!(check_reader_ceilings(Some(c.max_features), 1, &c).is_ok());
-        assert!(check_reader_ceilings(None, 1, &c).is_ok(), "unpredictable feature count must not refuse");
+        assert!(
+            check_reader_ceilings(None, 1, &c).is_ok(),
+            "unpredictable feature count must not refuse"
+        );
     }
 
     #[test]
     fn a_feature_count_above_the_ceiling_refuses_typed_and_names_the_viewport_bbox_alternative() {
         let c = reader_ceilings();
         match check_reader_ceilings(Some(c.max_features + 1), 1, &c) {
-            Err(PublishError::ReaderCeilingExceeded { ceiling, limit, predicted, alternative }) => {
+            Err(PublishError::ReaderCeilingExceeded {
+                ceiling,
+                limit,
+                predicted,
+                alternative,
+            }) => {
                 assert_eq!(ceiling, "MAX_FEATURES");
                 assert_eq!(limit, c.max_features);
                 assert_eq!(predicted, c.max_features + 1);
-                assert!(alternative.contains("viewport"), "must name the viewport-bbox alternative");
+                assert!(
+                    alternative.contains("viewport"),
+                    "must name the viewport-bbox alternative"
+                );
             }
             other => panic!("expected ReaderCeilingExceeded, got {other:?}"),
         }

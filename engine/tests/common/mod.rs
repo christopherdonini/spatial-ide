@@ -23,8 +23,10 @@ pub const POLYGONS_100K: &str =
 /// Off Windows, the same fixture under this workspace's own target directory, never a file whose
 /// name is the Windows path above.
 #[cfg(not(windows))]
-pub const POLYGONS_100K: &str =
-    concat!(env!("CARGO_MANIFEST_DIR"), "/../target/fixtures/slice-budgets/polygons-100k.parquet");
+pub const POLYGONS_100K: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../target/fixtures/slice-budgets/polygons-100k.parquet"
+);
 
 /// The spec `polygons-100k` was written from (`kernel/tests/slice_budgets.rs:472-486`), restated so
 /// an absent fixture is regenerated as the same bytes rather than as a different dataset.
@@ -78,7 +80,12 @@ pub fn polygons_100k() -> PathBuf {
         let tmp = PathBuf::from(format!("{}.{}.tmp", path.display(), std::process::id()));
         write_geoparquet(
             &tmp,
-            &FixtureSpec { features: 100_000, avg_vertices: 100, hole_every: 7, ..Default::default() },
+            &FixtureSpec {
+                features: 100_000,
+                avg_vertices: 100,
+                hole_every: 7,
+                ..Default::default()
+            },
         )
         .expect("regenerate polygons-100k");
         std::fs::rename(&tmp, &path).expect("publish polygons-100k atomically");

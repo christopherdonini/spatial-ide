@@ -123,7 +123,11 @@ pub enum EngineError {
     Cancelled,
 
     /// A declared ceiling was reached (ADR-010 rule 6: declared, not discovered).
-    CeilingExceeded { ceiling: &'static str, limit: u64, saw: u64 },
+    CeilingExceeded {
+        ceiling: &'static str,
+        limit: u64,
+        saw: u64,
+    },
 
     /// An LOD tier build refused, naming **which** refusal fired.
     ///
@@ -138,7 +142,10 @@ pub enum EngineError {
     /// The two *size* ceilings are deliberately NOT here: they are `CeilingExceeded`, which already
     /// carries a declared ceiling's name with the limit and the observed value, and a second shape
     /// for the same fact would make a consumer learn two.
-    LodRefused { refusal: &'static str, detail: String },
+    LodRefused {
+        refusal: &'static str,
+        detail: String,
+    },
 
     /// The declared or native identity column cannot serve as stable feature identity.
     ///
@@ -152,7 +159,11 @@ pub enum EngineError {
     /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
     /// not recommend one. Carried only in this structured field — `Display` below does not mention
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
-    IdentityUnusable { column: String, detail: String, candidate_columns: Vec<String> },
+    IdentityUnusable {
+        column: String,
+        detail: String,
+        candidate_columns: Vec<String>,
+    },
 
     /// The source is not the file this dataset opened against — the **structural descriptor**
     /// differs (R-D1/R-D2, `engine/ADMISSION-PREREGISTRATION.md` §2e).
@@ -219,7 +230,11 @@ pub enum EngineError {
     /// `detected_by` names **which check found it**, because the two checks establish different
     /// things: a content-hash re-read is a statement about the bytes, and the length/modification
     /// heuristic is a fail-closed guard that is not a content hash and must never be read as one.
-    SourceChangedUnderPublish { pinned: String, observed: String, detected_by: &'static str },
+    SourceChangedUnderPublish {
+        pinned: String,
+        observed: String,
+        detected_by: &'static str,
+    },
 
     /// A dataset's bounded connection capacity is fully leased.
     ///
@@ -227,7 +242,10 @@ pub enum EngineError {
     /// a pool's clothes, and `protocol/data-plane/README.md` reserves the queue-versus-refuse
     /// question for **ADR-014**. This ceiling is provisional and reversible, exactly as that
     /// crate's own N+1 refusal is, and nothing here may be cited as evidence about ADR-014.
-    ConnectionsExhausted { class: &'static str, capacity: usize },
+    ConnectionsExhausted {
+        class: &'static str,
+        capacity: usize,
+    },
 
     /// The advisory source-change watcher lost coverage of this source — an overflowed or aborted
     /// OS notification stream, never a detected content change (`engine::watch`,
@@ -251,7 +269,10 @@ pub enum EngineError {
     /// the same inputs would publish differently on a loaded machine. Making the combination
     /// unrepresentable is what keeps that a property of the code rather than a convention nobody
     /// can see at a call site (the reason `BatchCutPolicy` has no `Default`).
-    TimingDependentOrdering { ordering: &'static str, cut: &'static str },
+    TimingDependentOrdering {
+        ordering: &'static str,
+        cut: &'static str,
+    },
 }
 
 impl fmt::Display for EngineError {

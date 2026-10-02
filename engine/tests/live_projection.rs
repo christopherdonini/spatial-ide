@@ -74,11 +74,20 @@ fn drain(mut stream: BatchStream) -> (Vec<RecordBatch>, SchemaRef) {
         }
         buf.clear();
     }
-    (out, schema.expect("a fully-drained stream produced at least one batch"))
+    (
+        out,
+        schema.expect("a fully-drained stream produced at least one batch"),
+    )
 }
 
 fn column_u64(batch: &RecordBatch, name: &str) -> UInt64Array {
-    batch.column_by_name(name).unwrap().as_any().downcast_ref::<UInt64Array>().unwrap().clone()
+    batch
+        .column_by_name(name)
+        .unwrap()
+        .as_any()
+        .downcast_ref::<UInt64Array>()
+        .unwrap()
+        .clone()
 }
 
 /// X12 (Amendment 5, row 5.6): SHA-256 of a file, on `kernel/tests/scale_pass.rs`'s own
@@ -127,20 +136,45 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
     assert_eq!(field_names, vec!["id", "geometry", "area", "zone", "f32"]);
     assert!(!schema.field(0).is_nullable(), "id must stay non-nullable");
     for f in schema.fields().iter().skip(2) {
-        assert!(f.is_nullable(), "`{}` must come back nullable regardless of the source", f.name());
+        assert!(
+            f.is_nullable(),
+            "`{}` must come back nullable regardless of the source",
+            f.name()
+        );
     }
-    assert_eq!(schema.field(4).data_type(), &arrow::datatypes::DataType::Float32, "f32 must not widen");
+    assert_eq!(
+        schema.field(4).data_type(),
+        &arrow::datatypes::DataType::Float32,
+        "f32 must not widen"
+    );
 
     // Oracle: an independent DuckDB read of the same file, never the fixture's own `area_for`.
     let conn = spatial_engine::fixture::configured_connection().expect("conn");
     let path_str = fixture_path().to_string_lossy().to_string();
-    let mut stmt = conn.prepare("SELECT id, area, zone, f32 FROM read_parquet(?)").expect("prepare");
+    let mut stmt = conn
+        .prepare("SELECT id, area, zone, f32 FROM read_parquet(?)")
+        .expect("prepare");
     let mut oracle: BTreeMap<u64, (f64, Option<String>, f32)> = BTreeMap::new();
     for batch in stmt.query_arrow([path_str.as_str()]).expect("query") {
         let ids = column_u64(&batch, "id");
-        let areas = batch.column_by_name("area").unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
-        let zones = batch.column_by_name("zone").unwrap().as_any().downcast_ref::<StringArray>().unwrap();
-        let f32s = batch.column_by_name("f32").unwrap().as_any().downcast_ref::<Float32Array>().unwrap();
+        let areas = batch
+            .column_by_name("area")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        let zones = batch
+            .column_by_name("zone")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let f32s = batch
+            .column_by_name("f32")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Float32Array>()
+            .unwrap();
         for r in 0..batch.num_rows() {
             let zone = (!zones.is_null(r)).then(|| zones.value(r).to_string());
             oracle.insert(ids.value(r), (areas.value(r), zone, f32s.value(r)));
@@ -152,13 +186,29 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
     let mut saw_null_zone = false;
     for batch in &batches {
         let ids = column_u64(batch, ID_COLUMN);
-        let areas = batch.column_by_name("area").unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
-        let zones = batch.column_by_name("zone").unwrap().as_any().downcast_ref::<StringArray>().unwrap();
-        let f32s = batch.column_by_name("f32").unwrap().as_any().downcast_ref::<Float32Array>().unwrap();
+        let areas = batch
+            .column_by_name("area")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .unwrap();
+        let zones = batch
+            .column_by_name("zone")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let f32s = batch
+            .column_by_name("f32")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Float32Array>()
+            .unwrap();
         for r in 0..batch.num_rows() {
             let id = ids.value(r);
-            let (expected_area, expected_zone, expected_f32) =
-                oracle.get(&id).unwrap_or_else(|| panic!("id {id} in oracle"));
+            let (expected_area, expected_zone, expected_f32) = oracle
+                .get(&id)
+                .unwrap_or_else(|| panic!("id {id} in oracle"));
             assert_eq!(areas.value(r), *expected_area, "area mismatch at id {id}");
             let zone = (!zones.is_null(r)).then(|| zones.value(r).to_string());
             assert_eq!(&zone, expected_zone, "zone mismatch at id {id}");
@@ -172,7 +222,10 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
         }
     }
     assert_eq!(seen, FEATURES, "every row must be seen exactly once");
-    assert!(saw_null_zone, "the fixture must exercise a NULL zone, or the NULL claim above is vacuous");
+    assert!(
+        saw_null_zone,
+        "the fixture must exercise a NULL zone, or the NULL claim above is vacuous"
+    );
 
     assert_eq!(
         sha256_file(&fixture_path()),
@@ -195,9 +248,13 @@ fn a_live_projected_stream_emits_id_geometry_then_the_declared_columns() {
 #[test]
 fn projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical() {
     let ds = dataset();
-    let (_, unprojected_schema) =
-        drain(ds.stream_with_cancel(&ViewportQuery::all(), CancelToken::new()).expect("unprojected"));
-    let projection = ds.resolve_projection(&["zone".to_string()]).expect("admitted projection");
+    let (_, unprojected_schema) = drain(
+        ds.stream_with_cancel(&ViewportQuery::all(), CancelToken::new())
+            .expect("unprojected"),
+    );
+    let projection = ds
+        .resolve_projection(&["zone".to_string()])
+        .expect("admitted projection");
     let (_, projected_schema) = drain(
         ds.stream_projected_with_cancel(&ViewportQuery::all(), &projection, CancelToken::new())
             .expect("projected"),
@@ -205,14 +262,34 @@ fn projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical() {
 
     let u = unprojected_schema.metadata();
     let p = projected_schema.metadata();
-    for key in ["frame", "crs", "crs_source", "axis_order", "axis_normalization"] {
-        assert!(u.contains_key(key), "unprojected envelope must carry `{key}`");
-        assert_eq!(u.get(key), p.get(key), "`{key}` must be identical, projected or not");
+    for key in [
+        "frame",
+        "crs",
+        "crs_source",
+        "axis_order",
+        "axis_normalization",
+    ] {
+        assert!(
+            u.contains_key(key),
+            "unprojected envelope must carry `{key}`"
+        );
+        assert_eq!(
+            u.get(key),
+            p.get(key),
+            "`{key}` must be identical, projected or not"
+        );
     }
     let identity_keys: Vec<&String> = u.keys().filter(|k| k.starts_with("id_")).collect();
-    assert!(!identity_keys.is_empty(), "the fixture's identity metadata must carry at least one id_* key");
+    assert!(
+        !identity_keys.is_empty(),
+        "the fixture's identity metadata must carry at least one id_* key"
+    );
     for key in identity_keys {
-        assert_eq!(u.get(key), p.get(key), "identity metadata `{key}` must be identical, projected or not");
+        assert_eq!(
+            u.get(key),
+            p.get(key),
+            "identity metadata `{key}` must be identical, projected or not"
+        );
     }
 }
 
@@ -227,9 +304,15 @@ fn projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical() {
 #[test]
 fn a_file_with_a_float32_column_binds_every_predicate_without_panicking() {
     let ds = dataset();
-    for predicate in ["f32 > 0", "f32 = 0.1", "f32 < 1000.0", "f32 > 0.1 AND f32 < 1.0"] {
-        AdmittedPredicate::admit(predicate, &ds)
-            .unwrap_or_else(|e| panic!("`{predicate}` over a real Float32 column must admit: {e:?}"));
+    for predicate in [
+        "f32 > 0",
+        "f32 = 0.1",
+        "f32 < 1000.0",
+        "f32 > 0.1 AND f32 < 1.0",
+    ] {
+        AdmittedPredicate::admit(predicate, &ds).unwrap_or_else(|e| {
+            panic!("`{predicate}` over a real Float32 column must admit: {e:?}")
+        });
     }
 }
 
@@ -247,10 +330,12 @@ fn a_file_with_a_float32_column_binds_every_predicate_without_panicking() {
 #[test]
 fn how_a_float32_column_compares_with_a_numeric_literal_is_pinned() {
     let ds = dataset();
-    let expected_eq: std::collections::BTreeSet<u64> =
-        (0..FEATURES as u64).filter(|&id| f32_for(SEED, id) == 0.1f32).collect();
-    let expected_gt: std::collections::BTreeSet<u64> =
-        (0..FEATURES as u64).filter(|&id| f32_for(SEED, id) > 0.1f32).collect();
+    let expected_eq: std::collections::BTreeSet<u64> = (0..FEATURES as u64)
+        .filter(|&id| f32_for(SEED, id) == 0.1f32)
+        .collect();
+    let expected_gt: std::collections::BTreeSet<u64> = (0..FEATURES as u64)
+        .filter(|&id| f32_for(SEED, id) > 0.1f32)
+        .collect();
     assert!(
         !expected_eq.is_empty() && !expected_gt.is_empty(),
         "the fixture must exercise both buckets, or this test proves nothing"
@@ -259,8 +344,10 @@ fn how_a_float32_column_compares_with_a_numeric_literal_is_pinned() {
     for (text, expected) in [("f32 = 0.1", &expected_eq), ("f32 > 0.1", &expected_gt)] {
         let predicate = AdmittedPredicate::admit(text, &ds).expect("admitted predicate");
         let query = ViewportQuery::all().with_filter(predicate);
-        let (batches, _) =
-            drain(ds.stream_with_cancel(&query, CancelToken::new()).expect("filtered stream"));
+        let (batches, _) = drain(
+            ds.stream_with_cancel(&query, CancelToken::new())
+                .expect("filtered stream"),
+        );
         let mut observed = std::collections::BTreeSet::new();
         for batch in &batches {
             let ids = column_u64(batch, ID_COLUMN);
@@ -268,6 +355,9 @@ fn how_a_float32_column_compares_with_a_numeric_literal_is_pinned() {
                 observed.insert(ids.value(r));
             }
         }
-        assert_eq!(&observed, expected, "`{text}` over the declared stored values");
+        assert_eq!(
+            &observed, expected,
+            "`{text}` over the declared stored values"
+        );
     }
 }

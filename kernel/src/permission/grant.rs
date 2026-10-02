@@ -102,7 +102,10 @@ impl Principal {
             .iter()
             .find_map(|k| std::env::var(k).ok().filter(|v| !v.trim().is_empty()))
             .unwrap_or_else(|| "(unknown)".to_string());
-        Self { kind: PrincipalKind::OsUser, id }
+        Self {
+            kind: PrincipalKind::OsUser,
+            id,
+        }
     }
 }
 
@@ -152,10 +155,11 @@ impl DestinationScope {
 
     /// Scope a directory's direct children. The directory must exist — it is resolved, not assumed.
     pub fn direct_child_of(dir: &Path) -> Result<Self, PermissionError> {
-        let resolved = std::fs::canonicalize(dir).map_err(|e| PermissionError::DestinationUnresolvable {
-            path: dir.display().to_string(),
-            detail: e.to_string(),
-        })?;
+        let resolved =
+            std::fs::canonicalize(dir).map_err(|e| PermissionError::DestinationUnresolvable {
+                path: dir.display().to_string(),
+                detail: e.to_string(),
+            })?;
         Ok(Self::DirectChildOf(resolved))
     }
 
@@ -196,13 +200,16 @@ pub fn resolve_destination(destination: &Path) -> Result<PathBuf, PermissionErro
         .file_name()
         .ok_or_else(|| unresolvable("it has no final path component to name a bundle"))?;
     let parent = destination.parent().unwrap_or_else(|| Path::new("."));
-    let parent = if parent.as_os_str().is_empty() { Path::new(".") } else { parent };
-    let parent = std::fs::canonicalize(parent).map_err(|e| {
-        PermissionError::DestinationUnresolvable {
+    let parent = if parent.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        parent
+    };
+    let parent =
+        std::fs::canonicalize(parent).map_err(|e| PermissionError::DestinationUnresolvable {
             path: destination.display().to_string(),
             detail: format!("its parent directory could not be resolved: {e}"),
-        }
-    })?;
+        })?;
     Ok(parent.join(name))
 }
 
@@ -438,10 +445,15 @@ impl GrantSet {
         facts: &OperationFacts,
         now: Instant,
     ) -> Result<&PublishGrant, PermissionError> {
-        let for_operation: Vec<&PublishGrant> =
-            self.grants.iter().filter(|g| g.operation == facts.operation).collect();
+        let for_operation: Vec<&PublishGrant> = self
+            .grants
+            .iter()
+            .filter(|g| g.operation == facts.operation)
+            .collect();
         if for_operation.is_empty() {
-            return Err(PermissionError::NoGrant { operation: facts.operation.as_str() });
+            return Err(PermissionError::NoGrant {
+                operation: facts.operation.as_str(),
+            });
         }
 
         let mut in_scope: Vec<&PublishGrant> = Vec::new();
@@ -500,7 +512,9 @@ mod tests {
     }
 
     fn tmp(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join("spatial-kernel-grant-tests").join(name);
+        let d = std::env::temp_dir()
+            .join("spatial-kernel-grant-tests")
+            .join(name);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::canonicalize(&d).unwrap()
@@ -510,9 +524,15 @@ mod tests {
         let _ = dir;
         PublishGrant::new(
             OperationKind::Publish,
-            SourceScope { dataset_name: "parcels".into(), content_hash: "sha256:aa".into() },
+            SourceScope {
+                dataset_name: "parcels".into(),
+                content_hash: "sha256:aa".into(),
+            },
             dest,
-            Principal { kind: PrincipalKind::OsUser, id: "someone".into() },
+            Principal {
+                kind: PrincipalKind::OsUser,
+                id: "someone".into(),
+            },
             lifetime,
         )
         .unwrap()
@@ -542,12 +562,20 @@ mod tests {
         let now = Instant::now();
 
         // The happy case first, so the refusals below are not simply "everything is refused".
-        assert!(set.find(&facts(&dir, "parcels", "sha256:aa", "out"), now).is_ok());
+        assert!(set
+            .find(&facts(&dir, "parcels", "sha256:aa", "out"), now)
+            .is_ok());
 
         for (f, needle) in [
             (facts(&dir, "other", "sha256:aa", "out"), "catalog name"),
-            (facts(&dir, "parcels", "sha256:bb", "source hashes"), "source hashes"),
-            (facts(&dir, "parcels", "sha256:aa", "elsewhere"), "resolves to"),
+            (
+                facts(&dir, "parcels", "sha256:bb", "source hashes"),
+                "source hashes",
+            ),
+            (
+                facts(&dir, "parcels", "sha256:aa", "elsewhere"),
+                "resolves to",
+            ),
         ] {
             match set.find(&f, now) {
                 Err(PermissionError::GrantScopeMismatch { detail }) => {
@@ -572,8 +600,12 @@ mod tests {
         .unwrap();
         let now = Instant::now();
 
-        assert!(set.find(&facts(&dir, "parcels", "sha256:aa", "out"), now).is_ok());
-        assert!(set.find(&facts(&dir, "parcels", "sha256:aa", "also-fine"), now).is_ok());
+        assert!(set
+            .find(&facts(&dir, "parcels", "sha256:aa", "out"), now)
+            .is_ok());
+        assert!(set
+            .find(&facts(&dir, "parcels", "sha256:aa", "also-fine"), now)
+            .is_ok());
         // A grandchild is outside the class: a grant for a directory is not a grant for its tree.
         assert!(matches!(
             set.find(&facts(&dir, "parcels", "sha256:aa", "nested/deep"), now),
@@ -604,12 +636,18 @@ mod tests {
         let dir = tmp("ceiling");
         let e = PublishGrant::new(
             OperationKind::Publish,
-            SourceScope { dataset_name: "parcels".into(), content_hash: "sha256:aa".into() },
+            SourceScope {
+                dataset_name: "parcels".into(),
+                content_hash: "sha256:aa".into(),
+            },
             DestinationScope::exact(&dir.join("out")).unwrap(),
             Principal::from_environment(),
             MAX_GRANT_LIFETIME + Duration::from_secs(1),
         );
-        assert!(matches!(e, Err(PermissionError::GrantLifetimeExceeded { .. })));
+        assert!(matches!(
+            e,
+            Err(PermissionError::GrantLifetimeExceeded { .. })
+        ));
     }
 
     #[test]
@@ -641,7 +679,8 @@ mod tests {
     /// property directly: many more than `MAX_GRANTS` short-lived grants, pruned between each add,
     /// never hit the ceiling.
     #[test]
-    fn prune_expired_keeps_a_long_lived_set_under_the_ceiling_across_many_more_grants_than_it_holds() {
+    fn prune_expired_keeps_a_long_lived_set_under_the_ceiling_across_many_more_grants_than_it_holds(
+    ) {
         let dir = tmp("prune-many");
         let mut set = GrantSet::new();
         let short = Duration::from_millis(1);
@@ -649,8 +688,12 @@ mod tests {
         for _ in 0..(MAX_GRANTS + 6) {
             std::thread::sleep(Duration::from_millis(2));
             set.prune_expired(Instant::now());
-            set.add(grant(&dir, DestinationScope::exact(&dir.join("out")).unwrap(), short))
-                .expect("pruning keeps the set well under MAX_GRANTS, so add must not refuse");
+            set.add(grant(
+                &dir,
+                DestinationScope::exact(&dir.join("out")).unwrap(),
+                short,
+            ))
+            .expect("pruning keeps the set well under MAX_GRANTS, so add must not refuse");
         }
         assert!(
             set.len() < MAX_GRANTS,
@@ -666,10 +709,18 @@ mod tests {
     fn prune_expired_removes_only_grants_whose_lifetime_has_elapsed() {
         let dir = tmp("prune-selective");
         let mut set = GrantSet::new();
-        set.add(grant(&dir, DestinationScope::exact(&dir.join("short")).unwrap(), Duration::from_millis(1)))
-            .unwrap();
-        set.add(grant(&dir, DestinationScope::exact(&dir.join("long")).unwrap(), Duration::from_secs(300)))
-            .unwrap();
+        set.add(grant(
+            &dir,
+            DestinationScope::exact(&dir.join("short")).unwrap(),
+            Duration::from_millis(1),
+        ))
+        .unwrap();
+        set.add(grant(
+            &dir,
+            DestinationScope::exact(&dir.join("long")).unwrap(),
+            Duration::from_secs(300),
+        ))
+        .unwrap();
         assert_eq!(set.len(), 2);
 
         std::thread::sleep(Duration::from_millis(5));
@@ -678,7 +729,9 @@ mod tests {
         assert_eq!(set.len(), 1, "exactly the expired grant must be removed");
         // The survivor is still findable -- proving `prune_expired` did not disturb a live grant's
         // own usability, only remove the dead one.
-        assert!(set.find(&facts(&dir, "parcels", "sha256:aa", "long"), Instant::now()).is_ok());
+        assert!(set
+            .find(&facts(&dir, "parcels", "sha256:aa", "long"), Instant::now())
+            .is_ok());
     }
 
     /// `remove_matching` -- the "consumed" half of pruning -- removes exactly the grant matching
@@ -688,11 +741,19 @@ mod tests {
         let dir = tmp("remove-matching");
         let mut set = GrantSet::new();
         // A long-lived grant for `out` -- NOT expired, but about to be "consumed".
-        set.add(grant(&dir, DestinationScope::exact(&dir.join("out")).unwrap(), Duration::from_secs(300)))
-            .unwrap();
+        set.add(grant(
+            &dir,
+            DestinationScope::exact(&dir.join("out")).unwrap(),
+            Duration::from_secs(300),
+        ))
+        .unwrap();
         // An unrelated grant for a different destination -- must survive.
-        set.add(grant(&dir, DestinationScope::exact(&dir.join("other")).unwrap(), Duration::from_secs(300)))
-            .unwrap();
+        set.add(grant(
+            &dir,
+            DestinationScope::exact(&dir.join("other")).unwrap(),
+            Duration::from_secs(300),
+        ))
+        .unwrap();
         assert_eq!(set.len(), 2);
 
         let consumed = OperationFacts {
@@ -701,10 +762,17 @@ mod tests {
             content_hash: "sha256:aa".into(),
             destination: dir.join("out"),
         };
-        assert!(set.remove_matching(&consumed), "the matching grant must be reported as removed");
+        assert!(
+            set.remove_matching(&consumed),
+            "the matching grant must be reported as removed"
+        );
         assert_eq!(set.len(), 1, "exactly the consumed grant is gone");
         assert!(
-            set.find(&facts(&dir, "parcels", "sha256:aa", "other"), Instant::now()).is_ok(),
+            set.find(
+                &facts(&dir, "parcels", "sha256:aa", "other"),
+                Instant::now()
+            )
+            .is_ok(),
             "the unrelated grant must be untouched"
         );
 
@@ -717,22 +785,34 @@ mod tests {
     /// `remove_matching` call after a terminal outcome) -- the set never grows past what is
     /// momentarily live, so the 65th (or 700th) never refuses.
     #[test]
-    fn a_grant_removed_the_instant_its_attempt_is_consumed_never_grows_the_set_across_many_more_than_the_ceiling() {
+    fn a_grant_removed_the_instant_its_attempt_is_consumed_never_grows_the_set_across_many_more_than_the_ceiling(
+    ) {
         let dir = tmp("consume-many");
         let mut set = GrantSet::new();
 
         for i in 0..(MAX_GRANTS * 10) {
             let dest = dir.join(format!("out-{i}"));
-            set.add(grant(&dir, DestinationScope::exact(&dest).unwrap(), Duration::from_secs(300)))
-                .unwrap_or_else(|e| panic!("prepare #{i} refused despite immediate consumption: {e}"));
+            set.add(grant(
+                &dir,
+                DestinationScope::exact(&dest).unwrap(),
+                Duration::from_secs(300),
+            ))
+            .unwrap_or_else(|e| panic!("prepare #{i} refused despite immediate consumption: {e}"));
             let facts = OperationFacts {
                 operation: OperationKind::Publish,
                 dataset_name: "parcels".into(),
                 content_hash: "sha256:aa".into(),
                 destination: dest,
             };
-            assert!(set.remove_matching(&facts), "consumption #{i} found nothing to remove");
-            assert_eq!(set.len(), 0, "the set must be empty again after each consumption, iteration {i}");
+            assert!(
+                set.remove_matching(&facts),
+                "consumption #{i} found nothing to remove"
+            );
+            assert_eq!(
+                set.len(),
+                0,
+                "the set must be empty again after each consumption, iteration {i}"
+            );
         }
     }
 
@@ -752,6 +832,9 @@ mod tests {
             !rendered.contains("\\\\?\\"),
             "a verbatim prefix reached a Debug rendering: {rendered}"
         );
-        assert!(rendered.contains("out"), "the destination is not identifiable at all: {rendered}");
+        assert!(
+            rendered.contains("out"),
+            "the destination is not identifiable at all: {rendered}"
+        );
     }
 }

@@ -115,7 +115,10 @@ pub struct Catalog {
 
 impl Default for Catalog {
     fn default() -> Self {
-        Self { datasets: RwLock::new(HashMap::new()), connections: PoolConfig::default() }
+        Self {
+            datasets: RwLock::new(HashMap::new()),
+            connections: PoolConfig::default(),
+        }
     }
 }
 
@@ -130,7 +133,10 @@ impl Catalog {
     /// It is a capacity on the same code path, not a second implementation — see
     /// `spatial_engine::PoolConfig`.
     pub fn with_connections(connections: PoolConfig) -> Self {
-        Self { datasets: RwLock::new(HashMap::new()), connections }
+        Self {
+            datasets: RwLock::new(HashMap::new()),
+            connections,
+        }
     }
 
     pub fn connections(&self) -> PoolConfig {
@@ -200,8 +206,13 @@ impl Catalog {
         declared_identity: Option<IdentityDeclaration>,
         cancel: &CancelToken,
     ) -> spatial_engine::Result<()> {
-        let ds =
-            Dataset::open_cancellable(path, assertion, declared_identity, cancel, self.connections)?;
+        let ds = Dataset::open_cancellable(
+            path,
+            assertion,
+            declared_identity,
+            cancel,
+            self.connections,
+        )?;
         self.lock_write().insert(name.into(), Arc::new(ds));
         Ok(())
     }
@@ -290,7 +301,10 @@ enum AdmissionMode {
     /// because the source was observed to have changed" (P3b §2c). Holding only the first is what
     /// made P3 attempt 2's guard dead in every build that shipped — nothing ever constructed a
     /// factory with the second (`engine/ADMISSION-PREREGISTRATION.md:739-741`).
-    TicketOnly { tickets: Arc<skp::StreamRegistry>, generations: Arc<skp::GenerationRegistry> },
+    TicketOnly {
+        tickets: Arc<skp::StreamRegistry>,
+        generations: Arc<skp::GenerationRegistry>,
+    },
 }
 
 /// Turns an operation request into an engine stream. This is the whole composition.
@@ -306,7 +320,11 @@ pub struct EngineSourceFactory {
 
 impl EngineSourceFactory {
     pub fn new(catalog: Arc<Catalog>) -> Self {
-        Self { catalog, connection_reports: None, mode: AdmissionMode::Raw }
+        Self {
+            catalog,
+            connection_reports: None,
+            mode: AdmissionMode::Raw,
+        }
     }
 
     /// As `new`, reporting each finished stream's connection facts.
@@ -319,7 +337,11 @@ impl EngineSourceFactory {
         catalog: Arc<Catalog>,
         reports: std::sync::mpsc::Sender<StreamConnectionRecord>,
     ) -> Self {
-        Self { catalog, connection_reports: Some(reports), mode: AdmissionMode::Raw }
+        Self {
+            catalog,
+            connection_reports: Some(reports),
+            mode: AdmissionMode::Raw,
+        }
     }
 
     /// `frontends/shell`'s constructor (ADR-019). A START frame's `params` is redeemed as a
@@ -339,7 +361,10 @@ impl EngineSourceFactory {
         Self {
             catalog,
             connection_reports: None,
-            mode: AdmissionMode::TicketOnly { tickets, generations },
+            mode: AdmissionMode::TicketOnly {
+                tickets,
+                generations,
+            },
         }
     }
 }
@@ -357,9 +382,10 @@ impl SourceFactory for EngineSourceFactory {
         }
         match &self.mode {
             AdmissionMode::Raw => self.create_from_raw_params(request),
-            AdmissionMode::TicketOnly { tickets, generations } => {
-                Self::create_from_ticket(tickets, generations, request)
-            }
+            AdmissionMode::TicketOnly {
+                tickets,
+                generations,
+            } => Self::create_from_ticket(tickets, generations, request),
         }
     }
 }
@@ -377,7 +403,12 @@ impl EngineSourceFactory {
 
         let query = match (p.bbox, p.bbox_crs.as_deref()) {
             (Some(b), Some(crs)) => ViewportQuery::viewport(
-                spatial_engine::Bbox { xmin: b[0], ymin: b[1], xmax: b[2], ymax: b[3] },
+                spatial_engine::Bbox {
+                    xmin: b[0],
+                    ymin: b[1],
+                    xmax: b[2],
+                    ymax: b[3],
+                },
                 crs,
             ),
             _ => ViewportQuery::all(),
@@ -479,23 +510,26 @@ impl EngineSourceFactory {
                 // `{size, mtime, footer-length, footer-hash}` here would be a second fabrication of
                 // the same class. What R-D2 declares `detail` to be on the paths that DO read the
                 // file is a named open item (P3b's §10 amendment).
-                Some(skp::terminal_detail_of(&spatial_engine::EngineError::SourceChanged {
-                    detail: "{this dataset's session ended when its source was observed to have \
+                Some(skp::terminal_detail_of(
+                    &spatial_engine::EngineError::SourceChanged {
+                        detail:
+                            "{this dataset's session ended when its source was observed to have \
                              changed}"
-                        .to_string(),
-                }))
+                                .to_string(),
+                    },
+                ))
             }
             // `SOURCE-WATCHER-PREREGISTRATION.md` §2b: a coverage loss takes its own code, never
             // `engine.source_changed` (block-on-sight 3). Same discipline as the arm above: this
             // registry holds no descriptor and never read the file, so `detail` names the fact
             // this registry itself knows, not a fabricated component list.
-            skp::TicketLiveness::EndedByCoverageLoss => {
-                Some(skp::terminal_detail_of(&spatial_engine::EngineError::SourceCoverageLost {
+            skp::TicketLiveness::EndedByCoverageLoss => Some(skp::terminal_detail_of(
+                &spatial_engine::EngineError::SourceCoverageLost {
                     detail: "{[P6 placeholder] this dataset's session ended when the advisory \
                              watch on its source lost coverage}"
                         .to_string(),
-                }))
-            }
+                },
+            )),
             skp::TicketLiveness::Live | skp::TicketLiveness::Unknown => None,
         }
     }
@@ -559,13 +593,18 @@ impl EngineSource {
         if self.session_ended {
             return;
         }
-        let Some(detail) = self.stats.source_changed_detail() else { return };
+        let Some(detail) = self.stats.source_changed_detail() else {
+            return;
+        };
         self.session_ended = true;
-        let Some(invalidator) = self.invalidator.as_ref() else { return };
+        let Some(invalidator) = self.invalidator.as_ref() else {
+            return;
+        };
         // The engine's own post-check descriptor comparison — never the watcher — so this always
         // passes `ObservedChange`, as `SOURCE-WATCHER-PREREGISTRATION.md` §2b's single emission
         // point assigns to the post-check.
-        let cancelled = invalidator.end_generation(&self.dataset, skp::SessionEndReason::ObservedChange);
+        let cancelled =
+            invalidator.end_generation(&self.dataset, skp::SessionEndReason::ObservedChange);
         // **What this line is: a record of which stream noticed, how many siblings went with it,
         // and what the post-check cost.** The generation is already over by the time it runs —
         // `end_generation` above did that — so the line reports; it does not decide anything.
@@ -600,7 +639,9 @@ impl Drop for EngineSource {
         // the next query issue's pre-check is what ends the generation instead — deferred, not lost.
         // See `end_session_if_source_changed`'s own note.
         self.end_session_if_source_changed();
-        let Some(reports) = self.reports.as_ref() else { return };
+        let Some(reports) = self.reports.as_ref() else {
+            return;
+        };
         let facts = self.stream.connection_facts();
         // A closed receiver means nobody is recording, which is not an error.
         let _ = reports.send(StreamConnectionRecord {
@@ -627,7 +668,9 @@ impl BatchSource for EngineSource {
                 self.end_session_if_source_changed();
                 None
             }
-            Some(Ok(info)) => Some(Ok(BatchMeta { rows: info.rows as u64 })),
+            Some(Ok(info)) => Some(Ok(BatchMeta {
+                rows: info.rows as u64,
+            })),
             // Every terminal error, cancellation included.
             //
             // **The detail carries the typed code, `"<code>: <display>"`** — P3 gate attempt 1,

@@ -348,7 +348,10 @@ mod tests {
     fn definition_provenance_is_carried_through_for_an_assertion_and_absent_for_a_file_crs() {
         let a = assertion();
         let asserted = admit(None, Some(&a), Some(AxisOrder::EastingNorthing)).unwrap();
-        assert_eq!(asserted.definition_provenance(), Some(a.definition_provenance.as_str()));
+        assert_eq!(
+            asserted.definition_provenance(),
+            Some(a.definition_provenance.as_str())
+        );
 
         let file = admit(
             Some(("EPSG:2056".into(), None, AxisOrder::EastingNorthing)),

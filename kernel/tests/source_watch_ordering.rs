@@ -15,9 +15,7 @@ use std::sync::Arc;
 use spatial_data_plane::transport::SourceFactory;
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::WatchSignal;
-use spatial_kernel::skp::{
-    error_of, session_end_channel, SkpHost, StreamRegistry,
-};
+use spatial_kernel::skp::{error_of, session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
     ChecksState, CoverageState, DescribeRequest, EndReason, OpenDatasetRequest,
@@ -25,15 +23,24 @@ use spatial_skp::v0::{
 };
 
 fn dir() -> PathBuf {
-    let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/source-watch-ordering");
+    let d =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/source-watch-ordering");
     std::fs::create_dir_all(&d).expect("fixture dir");
     d
 }
 
 fn fixture(name: &str) -> PathBuf {
     let path = dir().join(format!("{name}.parquet"));
-    write_geoparquet(&path, &FixtureSpec { features: 40, avg_vertices: 6, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 40,
+            avg_vertices: 6,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -48,7 +55,10 @@ fn open_req(path: &std::path::Path, cancel_key: &str) -> OpenDatasetRequest {
 }
 
 fn describe_req(dataset: spatial_skp::v0::DatasetHandle) -> DescribeRequest {
-    DescribeRequest { skp: SKP_VERSION.to_string(), dataset }
+    DescribeRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset,
+    }
 }
 
 fn viewport_req(dataset: spatial_skp::v0::DatasetHandle) -> ViewportQueryRequest {
@@ -64,7 +74,12 @@ fn viewport_req(dataset: spatial_skp::v0::DatasetHandle) -> ViewportQueryRequest
 }
 
 fn host_with(arm: Arc<injected_watch::InjectedArm>) -> SkpHost {
-    SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm, session_end_channel().0)
+    SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm,
+        session_end_channel().0,
+    )
 }
 
 // -------------------------------------------------------------------------------------------
@@ -84,7 +99,9 @@ fn a_signal_before_a_query_ends_the_generation_before_its_ticket_is_minted() {
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
 
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("refused");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("refused");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 }
 
@@ -103,7 +120,9 @@ fn a_signal_during_a_stream_ends_the_generation_before_its_terminal() {
     let host = host_with(arm.clone());
     let path = fixture("k2");
     let open = host.open_dataset(open_req(&path, "k2")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset.clone())).expect("mints a ticket");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect("mints a ticket");
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
 
@@ -126,24 +145,36 @@ fn a_signal_during_a_stream_ends_the_generation_before_its_terminal() {
 fn a_signal_while_idle_ends_the_generation_and_emits_once() {
     let arm = injected_watch::InjectedArm::new();
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        tx,
+    );
     let path = fixture("k3");
     let open = host.open_dataset(open_req(&path, "k3")).expect("open");
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
 
-    let event = rx.recv_timeout(std::time::Duration::from_secs(5)).expect("exactly one event");
+    let event = rx
+        .recv_timeout(std::time::Duration::from_secs(5))
+        .expect("exactly one event");
     assert_eq!(event.session, open.session);
     assert_eq!(event.reason, EndReason::ObservedChange);
     assert!(
-        rx.recv_timeout(std::time::Duration::from_millis(100)).is_err(),
+        rx.recv_timeout(std::time::Duration::from_millis(100))
+            .is_err(),
         "exactly one event, never a second"
     );
 
-    let d = host.describe(describe_req(open.dataset.clone())).expect("describe still answers");
+    let d = host
+        .describe(describe_req(open.dataset.clone()))
+        .expect("describe still answers");
     assert_eq!(d.session_end, Some(EndReason::ObservedChange));
 
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("refused");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("refused");
     assert_eq!(refused.code, "engine.source_changed");
 }
 
@@ -161,18 +192,34 @@ fn coverage_loss_refuses_with_its_own_code_never_source_changed() {
     let host = host_with(arm.clone());
     let path = fixture("k4");
     let open = host.open_dataset(open_req(&path, "k4")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset.clone())).expect("mints a ticket");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect("mints a ticket");
 
-    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
+    arm.signal(
+        &path,
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+    );
 
     // The pre-check refusal.
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("refused");
-    assert_eq!(refused.code, "engine.source_coverage_lost", "{}", refused.message);
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("refused");
+    assert_eq!(
+        refused.code, "engine.source_coverage_lost",
+        "{}",
+        refused.message
+    );
 
     // The dead-ticket terminal, through the real `create_from_ticket` seam.
     let generations = host.generations();
-    let factory =
-        spatial_kernel::EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), generations);
+    let factory = spatial_kernel::EngineSourceFactory::ticket_only(
+        host.catalog(),
+        host.tickets(),
+        generations,
+    );
     let detail = factory
         .create(&spatial_data_plane::transport::OpenRequest {
             operation: spatial_kernel::OPERATION.to_string(),
@@ -217,9 +264,20 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
     let arm = injected_watch::InjectedArm::new();
     let host = host_with(arm.clone());
     let path = fixture("k5");
-    let open = host.open_dataset(open_req(&path, "k5-first")).expect("open");
-    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
-    assert!(host.viewport_query(viewport_req(open.dataset.clone())).is_err(), "ended, refuses");
+    let open = host
+        .open_dataset(open_req(&path, "k5-first"))
+        .expect("open");
+    arm.signal(
+        &path,
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+    );
+    assert!(
+        host.viewport_query(viewport_req(open.dataset.clone()))
+            .is_err(),
+        "ended, refuses"
+    );
 
     host.close_dataset(spatial_skp::v0::CloseDatasetRequest {
         skp: SKP_VERSION.to_string(),
@@ -228,12 +286,19 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
     .expect("close");
 
     // A fresh open of the SAME file, no signal injected this time — "signal-free".
-    let reopened = host.open_dataset(open_req(&path, "k5-second")).expect("reopen");
+    let reopened = host
+        .open_dataset(open_req(&path, "k5-second"))
+        .expect("reopen");
     let vq = host.viewport_query(viewport_req(reopened.dataset.clone()));
-    assert!(vq.is_ok(), "a reopen with no new signal must not stay refused");
+    assert!(
+        vq.is_ok(),
+        "a reopen with no new signal must not stay refused"
+    );
 
     // "and a reopen watches again": the new open's coverage is a real watch, not checks-only.
-    let d = host.describe(describe_req(reopened.dataset)).expect("describe");
+    let d = host
+        .describe(describe_req(reopened.dataset))
+        .expect("describe");
     assert_eq!(d.coverage.state, CoverageState::Watching);
 }
 
@@ -271,16 +336,24 @@ fn a_signal_free_rearm_does_not_restore_an_ended_generation() {
 fn a_signal_between_arming_and_admission_refuses_the_open() {
     let arm = injected_watch::InjectedArm::new();
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        tx,
+    );
     let path = fixture("k6");
 
     arm.fire_on_next_arm(&path, WatchSignal::Change { action: "modified" });
-    let refused = host.open_dataset(open_req(&path, "k6")).expect_err("refused before admission");
+    let refused = host
+        .open_dataset(open_req(&path, "k6"))
+        .expect_err("refused before admission");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 
     // No event for an open that never admitted (case (e)): no generation ever existed to end.
     assert!(
-        rx.recv_timeout(std::time::Duration::from_millis(100)).is_err(),
+        rx.recv_timeout(std::time::Duration::from_millis(100))
+            .is_err(),
         "an open refused before admission must never emit"
     );
 
@@ -291,7 +364,9 @@ fn a_signal_between_arming_and_admission_refuses_the_open() {
     );
 
     // A second, signal-free open of the SAME path succeeds cleanly under its own fresh handle.
-    let open = host.open_dataset(open_req(&path, "k6-clean")).expect("a clean retry succeeds");
+    let open = host
+        .open_dataset(open_req(&path, "k6-clean"))
+        .expect("a clean retry succeeds");
     assert!(host.viewport_query(viewport_req(open.dataset)).is_ok());
 }
 
@@ -315,10 +390,19 @@ fn the_first_reason_wins_and_is_the_emitted_reason() {
     // A second signal on the same (already-ended) generation. The real adapter could never
     // deliver this (one signal per handle), but the kernel's own bookkeeping must be idempotent
     // and defensive regardless of what a future caller does.
-    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
+    arm.signal(
+        &path,
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+    );
 
     let d = host.describe(describe_req(open.dataset)).expect("describe");
-    assert_eq!(d.session_end, Some(EndReason::ObservedChange), "the first mark stands");
+    assert_eq!(
+        d.session_end,
+        Some(EndReason::ObservedChange),
+        "the first mark stands"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -334,8 +418,12 @@ fn an_unwatchable_source_opens_checks_only_and_describe_says_so() {
     let path = fixture("k8");
     arm.mark_checks_only(&path, "test: the parent directory could not be opened");
 
-    let open = host.open_dataset(open_req(&path, "k8")).expect("open still succeeds, checks-only");
-    let d = host.describe(describe_req(open.dataset.clone())).expect("describe");
+    let open = host
+        .open_dataset(open_req(&path, "k8"))
+        .expect("open still succeeds, checks-only");
+    let d = host
+        .describe(describe_req(open.dataset.clone()))
+        .expect("describe");
     assert_eq!(d.coverage.state, CoverageState::ChecksOnly);
     assert_eq!(
         d.coverage.reason.as_deref(),
@@ -360,13 +448,26 @@ fn a_loss_after_admission_ends_the_generation_and_describe_still_says_watching()
     let path = fixture("k9");
     let open = host.open_dataset(open_req(&path, "k9")).expect("open");
 
-    let before = host.describe(describe_req(open.dataset.clone())).expect("describe before");
+    let before = host
+        .describe(describe_req(open.dataset.clone()))
+        .expect("describe before");
     assert_eq!(before.coverage.state, CoverageState::Watching);
 
-    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
+    arm.signal(
+        &path,
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+    );
 
-    let after = host.describe(describe_req(open.dataset)).expect("describe after");
-    assert_eq!(after.coverage.state, CoverageState::Watching, "rule 3: never downgraded");
+    let after = host
+        .describe(describe_req(open.dataset))
+        .expect("describe after");
+    assert_eq!(
+        after.coverage.state,
+        CoverageState::Watching,
+        "rule 3: never downgraded"
+    );
     assert_eq!(after.session_end, Some(EndReason::CoverageLost));
 }
 
@@ -386,7 +487,9 @@ fn no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
     let host = host_with(arm.clone());
     let path = fixture("k10");
     let open = host.open_dataset(open_req(&path, "k10")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset.clone())).expect("mints a ticket");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect("mints a ticket");
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
 
@@ -396,7 +499,10 @@ fn no_batch_from_an_ended_generation_is_admitted_and_nothing_reloads() {
     );
     // Retrying does not "reload" a fresh batch from the ended generation.
     let retried = host.viewport_query(viewport_req(open.dataset));
-    assert!(retried.is_err(), "no new ticket is ever minted against an ended generation");
+    assert!(
+        retried.is_err(),
+        "no new ticket is ever minted against an ended generation"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -425,10 +531,15 @@ fn describe_reports_checks_full_for_an_undegraded_fixture() {
 /// test's `assert_eq!` on `code` fails.
 #[test]
 fn source_coverage_lost_maps_to_its_own_code_and_detail() {
-    let e = spatial_engine::EngineError::SourceCoverageLost { detail: "overflow".to_string() };
+    let e = spatial_engine::EngineError::SourceCoverageLost {
+        detail: "overflow".to_string(),
+    };
     let mapped = error_of(&e);
     assert_eq!(mapped.code, "engine.source_coverage_lost");
-    assert_eq!(mapped.fields.get("detail").map(String::as_str), Some("overflow"));
+    assert_eq!(
+        mapped.fields.get("detail").map(String::as_str),
+        Some("overflow")
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -447,16 +558,24 @@ fn describe_after_an_end_carries_session_end_and_describe_cancel_close_still_ans
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
 
-    let d = host.describe(describe_req(open.dataset.clone())).expect("describe still answers");
+    let d = host
+        .describe(describe_req(open.dataset.clone()))
+        .expect("describe still answers");
     assert_eq!(d.session_end, Some(EndReason::ObservedChange));
 
     let cancelled = host
-        .cancel(spatial_skp::v0::CancelRequest { skp: SKP_VERSION.to_string(), handle: "sh_00000000000000000000000000000000".to_string() })
+        .cancel(spatial_skp::v0::CancelRequest {
+            skp: SKP_VERSION.to_string(),
+            handle: "sh_00000000000000000000000000000000".to_string(),
+        })
         .expect("cancel still answers");
     assert_eq!(cancelled.state, "unknown");
 
     let closed = host
-        .close_dataset(spatial_skp::v0::CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
+        .close_dataset(spatial_skp::v0::CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: open.dataset,
+        })
         .expect("close still answers");
     assert_eq!(closed.cancelled_streams, 0);
 }

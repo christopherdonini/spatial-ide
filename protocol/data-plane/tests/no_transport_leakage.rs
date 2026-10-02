@@ -15,25 +15,58 @@ use std::path::Path;
 const FORBIDDEN: &[&str] = &[
     // Single tokens, because the scan compares *identifier components*: a two-word entry like
     // "close code" could never match one and would sit here looking like coverage.
-    "socket", "websocket", "http", "url", "header", "fetch", "port", "close", "opcode", "tcp",
-    "axum", "tungstenite",
+    "socket",
+    "websocket",
+    "http",
+    "url",
+    "header",
+    "fetch",
+    "port",
+    "close",
+    "opcode",
+    "tcp",
+    "axum",
+    "tungstenite",
     // **Connection-lifecycle vocabulary, added with pre-warmed connections.** A *connection* is a
     // transport concept: the neutral interface knows operations, streams, batches, cancellation,
     // progress, terminal errors and demand — and nothing about how many sockets carry them or how
     // long one is held open. Without these entries the pre-warming work could have leaked the
     // concept upward and the mechanical "swapping the adapter changes one construction site" claim
     // would have decayed silently, which is the whole reason this scan exists.
-    "connection", "connect", "prewarm", "warm", "reconnect", "spare", "idle", "pool", "keepalive",
+    "connection",
+    "connect",
+    "prewarm",
+    "warm",
+    "reconnect",
+    "spare",
+    "idle",
+    "pool",
+    "keepalive",
 ];
 
 /// Words that name what the interface *is* allowed to talk about, asserted so the scan cannot pass
 /// by the file having become empty or having been renamed out from under it.
-const REQUIRED: &[&str] = &["operation", "stream", "batch", "cancel", "progress", "terminal", "credit"];
+const REQUIRED: &[&str] = &[
+    "operation",
+    "stream",
+    "batch",
+    "cancel",
+    "progress",
+    "terminal",
+    "credit",
+];
 
 /// Identifiers that decompose into a forbidden word but belong to **Rust**, not to a transport.
 /// Listed rather than pattern-matched away, so adding one is a visible decision.
-const LANGUAGE_IDENTIFIERS: &[&str] =
-    &["fetch_add", "fetch_sub", "fetch_max", "fetch_min", "fetch_update", "fetch_or", "fetch_and"];
+const LANGUAGE_IDENTIFIERS: &[&str] = &[
+    "fetch_add",
+    "fetch_sub",
+    "fetch_max",
+    "fetch_min",
+    "fetch_update",
+    "fetch_or",
+    "fetch_and",
+];
 
 /// Split an identifier into lowercase components on underscores and camelCase boundaries.
 ///
@@ -93,7 +126,10 @@ fn the_neutral_interface_names_no_transport() {
 #[test]
 fn the_scan_is_not_vacuous() {
     // A check that cannot fail is not a check. These are the shapes a real leak would take.
-    assert!(components("WebSocket").contains(&"websocket".to_string()) || components("WebSocket").contains(&"socket".to_string()));
+    assert!(
+        components("WebSocket").contains(&"websocket".to_string())
+            || components("WebSocket").contains(&"socket".to_string())
+    );
     assert!(components("close_code").contains(&"close".to_string()));
     assert!(components("http_status").contains(&"http".to_string()));
     assert!(components("listen_port").contains(&"port".to_string()));
@@ -106,7 +142,10 @@ fn the_scan_is_not_vacuous() {
 fn the_neutral_interface_still_covers_its_declared_vocabulary() {
     let src = neutral_interface().to_ascii_lowercase();
     for word in REQUIRED {
-        assert!(src.contains(word), "the interface no longer mentions `{word}`");
+        assert!(
+            src.contains(word),
+            "the interface no longer mentions `{word}`"
+        );
     }
 }
 

@@ -16,7 +16,9 @@ use spatial_engine::identity::IdentityDeclaration;
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
 
 fn dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join("spatial-engine-publish-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-engine-publish-tests")
+        .join(name);
     std::fs::create_dir_all(&d).unwrap();
     d
 }
@@ -57,7 +59,11 @@ fn drain(stream: &mut spatial_engine::BatchStream) -> (Vec<u64>, Vec<Option<Stri
                 .downcast_ref::<arrow::array::StringArray>()
                 .expect("zone is utf8");
             for i in 0..z.len() {
-                zones.push(if z.is_null(i) { None } else { Some(z.value(i).to_string()) });
+                zones.push(if z.is_null(i) {
+                    None
+                } else {
+                    Some(z.value(i).to_string())
+                });
             }
         }
         rows.push(info.rows);
@@ -76,17 +82,29 @@ fn adding_the_categorical_column_leaves_the_fixtures_geometry_bit_identical() {
     let plain = write_geoparquet(d.join("plain.parquet"), &FixtureSpec::default()).unwrap();
     let zoned = write_geoparquet(
         d.join("zoned.parquet"),
-        &FixtureSpec { attributes: AttributeMode::CategoricalZone, ..Default::default() },
+        &FixtureSpec {
+            attributes: AttributeMode::CategoricalZone,
+            ..Default::default()
+        },
     )
     .unwrap();
 
     assert_eq!(plain.features, zoned.features);
     assert_eq!(plain.vertices, zoned.vertices, "vertex count moved");
     assert_eq!(plain.rings, zoned.rings, "ring count moved");
-    assert_eq!(plain.coord_bits_xor, zoned.coord_bits_xor, "a coordinate bit moved");
+    assert_eq!(
+        plain.coord_bits_xor, zoned.coord_bits_xor,
+        "a coordinate bit moved"
+    );
     assert_eq!(plain.extent, zoned.extent);
-    assert_eq!(plain.min_vertices_per_feature, zoned.min_vertices_per_feature);
-    assert_eq!(plain.max_vertices_per_feature, zoned.max_vertices_per_feature);
+    assert_eq!(
+        plain.min_vertices_per_feature,
+        zoned.min_vertices_per_feature
+    );
+    assert_eq!(
+        plain.max_vertices_per_feature,
+        zoned.max_vertices_per_feature
+    );
     // The file itself is of course larger — it carries a column the other does not.
     assert!(zoned.bytes > plain.bytes);
 
@@ -103,11 +121,17 @@ fn the_categorical_column_produces_every_branch_a_style_must_declare() {
     let d = dir("zone-distribution");
     let facts = write_geoparquet(d.join("z.parquet"), &zoned_spec(5_000)).unwrap();
     let total: usize = facts.zone_counts.iter().sum::<usize>() + facts.zone_nulls;
-    assert_eq!(total, facts.features, "every feature carries a zone or a NULL");
+    assert_eq!(
+        total, facts.features,
+        "every feature carries a zone or a NULL"
+    );
     for (i, n) in facts.zone_counts.iter().enumerate() {
         assert!(*n > 0, "`{}` never appeared", ZONE_VALUES[i]);
     }
-    assert!(facts.zone_nulls > 0, "no NULL appeared, so `on_null` would be untested");
+    assert!(
+        facts.zone_nulls > 0,
+        "no NULL appeared, so `on_null` would be untested"
+    );
 }
 
 #[test]
@@ -131,7 +155,10 @@ fn the_zone_of_a_feature_is_a_function_of_the_feature_and_not_of_its_position() 
     // Also different chunk sizes must not change it.
     let chunked = write_geoparquet(
         d.join("chunked.parquet"),
-        &FixtureSpec { chunk: 97, ..zoned_spec(400) },
+        &FixtureSpec {
+            chunk: 97,
+            ..zoned_spec(400)
+        },
     )
     .unwrap();
     assert_eq!(small.zone_counts, chunked.zone_counts);
@@ -154,15 +181,23 @@ fn the_publish_stream_emits_the_declared_projection_in_declared_order() {
     let fields = ds.resolve_projection(&["zone".to_string()]).unwrap();
     assert_eq!(fields.len(), 1);
     assert_eq!(fields.fields()[0].name(), "zone");
-    assert!(fields.fields()[0].is_nullable(), "a published attribute is always nullable");
+    assert!(
+        fields.fields()[0].is_nullable(),
+        "a published attribute is always nullable"
+    );
 
     let concat_before = spatial_engine::stream::attribute_concatenations();
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
+    let mut s = ds
+        .stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new())
+        .unwrap();
     // The envelope names the projection — on docs/11 and principle 8's authority, not ADR-010
     // rule 1's, which is about coordinate space.
     let md = s.envelope().schema().metadata().clone();
     assert_eq!(md.get("attribute_columns").unwrap(), r#"["zone"]"#);
-    assert_eq!(md.get("frame").unwrap(), spatial_engine::FRAME_AUTHORITATIVE);
+    assert_eq!(
+        md.get("frame").unwrap(),
+        spatial_engine::FRAME_AUTHORITATIVE
+    );
 
     let (ids, zones, rows) = drain(&mut s);
     assert_eq!(ids.len(), 20_000);
@@ -175,7 +210,10 @@ fn the_publish_stream_emits_the_declared_projection_in_declared_order() {
         let expected = spatial_engine::fixture::zone_for(seed, *id).map(|s| s.to_string());
         assert_eq!(*zone, expected, "feature {id}");
     }
-    assert!(zones.iter().any(|z| z.is_none()), "the NULL branch never travelled");
+    assert!(
+        zones.iter().any(|z| z.is_none()),
+        "the NULL branch never travelled"
+    );
 
     // And the shape that makes the assertion above meaningful actually occurred — **read from the
     // producer's own counter, not inferred from the row counts.**
@@ -185,7 +223,11 @@ fn the_publish_stream_emits_the_declared_projection_in_declared_order() {
     // partition larger than a chunk" concludes the concatenation path was untaken while it is in
     // fact running for nearly every partition. (That check was written first, and failed here,
     // which is how the counter came to exist.)
-    assert!(rows.len() >= 3, "expected several partitions, got {}", rows.len());
+    assert!(
+        rows.len() >= 3,
+        "expected several partitions, got {}",
+        rows.len()
+    );
     assert!(
         spatial_engine::stream::attribute_concatenations() > concat_before,
         "no attribute run was concatenated, so the multi-chunk path was never exercised: {rows:?}"
@@ -206,14 +248,19 @@ fn an_attribute_run_that_is_shifted_by_one_row_would_be_caught() {
     write_geoparquet(&path, &zoned_spec(6_000)).unwrap();
     let ds = Dataset::open(&path).unwrap();
     let fields = ds.resolve_projection(&["zone".to_string()]).unwrap();
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
+    let mut s = ds
+        .stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new())
+        .unwrap();
     let (ids, zones, _) = drain(&mut s);
 
     let seed = zoned_spec(1).seed;
     let expected = |id: u64| spatial_engine::fixture::zone_for(seed, id).map(|s| s.to_string());
 
     // The real pairing holds …
-    assert!(ids.iter().zip(zones.iter()).all(|(id, z)| *z == expected(*id)));
+    assert!(ids
+        .iter()
+        .zip(zones.iter())
+        .all(|(id, z)| *z == expected(*id)));
     // … and a one-row shift does not, so the assertion has teeth.
     let shifted: Vec<_> = zones[1..].to_vec();
     let mismatches = ids
@@ -234,11 +281,19 @@ fn the_publish_stream_orders_by_identity_and_the_query_path_still_does_not() {
     write_geoparquet(&path, &zoned_spec(3_000)).unwrap();
     let ds = Dataset::open(&path).unwrap();
 
-    let mut published =
-        ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
+    let mut published = ds
+        .stream_for_publish(
+            &ViewportQuery::all(),
+            &empty_projection(&ds),
+            CancelToken::new(),
+        )
+        .unwrap();
     let (ids, _, _) = drain(&mut published);
     assert_eq!(ids.len(), 3_000);
-    assert!(ids.windows(2).all(|w| w[0] < w[1]), "publish rows are not ascending by identity");
+    assert!(
+        ids.windows(2).all(|w| w[0] < w[1]),
+        "publish rows are not ascending by identity"
+    );
 
     // The viewport path is untouched: it returns the same set, and this test asserts the set rather
     // than an order, because the absence of an ORDER BY is what that path is *for*.
@@ -270,7 +325,11 @@ fn duckdb_resolves_order_by_and_where_in_opposite_directions() {
     .unwrap();
     let read = |sql: &str| -> Vec<i64> {
         let mut s = c.prepare(sql).unwrap();
-        let v: Vec<i64> = s.query_map([], |r| r.get(0)).unwrap().map(|x| x.unwrap()).collect();
+        let v: Vec<i64> = s
+            .query_map([], |r| r.get(0))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect();
         v
     };
 
@@ -281,13 +340,22 @@ fn duckdb_resolves_order_by_and_where_in_opposite_directions() {
         vec![0, 1, 2],
         "ORDER BY no longer resolves the select alias; stream.rs's comment needs revising"
     );
-    assert_eq!(read(r#"SELECT "parcel_key" AS "id" FROM t ORDER BY "parcel_key" ASC"#), vec![0, 1, 2]);
+    assert_eq!(
+        read(r#"SELECT "parcel_key" AS "id" FROM t ORDER BY "parcel_key" ASC"#),
+        vec![0, 1, 2]
+    );
 
     // WHERE binds the **base column**: `"id" >= 200` selects the rows whose base id is 300 and 200,
     // which are parcel_keys 0 and 1 — not the parcel_keys >= 200, of which there are none. This is
     // the hazard `build_sql`'s range-predicate paragraph already records.
-    assert_eq!(read(r#"SELECT "parcel_key" AS "id" FROM t WHERE "id" >= 200 ORDER BY "parcel_key""#), vec![0, 1]);
-    assert_eq!(read(r#"SELECT "parcel_key" AS "id" FROM t WHERE "parcel_key" >= 2 ORDER BY "parcel_key""#), vec![2]);
+    assert_eq!(
+        read(r#"SELECT "parcel_key" AS "id" FROM t WHERE "id" >= 200 ORDER BY "parcel_key""#),
+        vec![0, 1]
+    );
+    assert_eq!(
+        read(r#"SELECT "parcel_key" AS "id" FROM t WHERE "parcel_key" >= 2 ORDER BY "parcel_key""#),
+        vec![2]
+    );
 }
 
 #[test]
@@ -310,14 +378,24 @@ fn a_mapped_identity_orders_by_the_identity_the_stream_actually_emits() {
     )
     .unwrap();
 
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
+    let mut s = ds
+        .stream_for_publish(
+            &ViewportQuery::all(),
+            &empty_projection(&ds),
+            CancelToken::new(),
+        )
+        .unwrap();
     let (ids, _, _) = drain(&mut s);
     assert_eq!(ids.len(), 500);
     assert!(
         ids.windows(2).all(|w| w[0] < w[1]),
         "rows are not ascending by the *mapped* identity — the ORDER BY bound the wrong column"
     );
-    assert_eq!(ids.first(), Some(&0), "first emitted identity is not parcel_key's minimum");
+    assert_eq!(
+        ids.first(),
+        Some(&0),
+        "first emitted identity is not parcel_key's minimum"
+    );
     assert_eq!(ids.last(), Some(&499));
 }
 
@@ -332,19 +410,32 @@ fn a_publish_partition_is_one_batch_and_its_boundaries_are_reproducible() {
     let ds = Dataset::open(&path).unwrap();
     let fields = ds.resolve_projection(&["zone".to_string()]).unwrap();
 
-    let mut a = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
+    let mut a = ds
+        .stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new())
+        .unwrap();
     assert_eq!(a.size_policy(), spatial_engine::BatchSizePolicy::publish());
     let (ids_a, zones_a, rows_a) = drain(&mut a);
 
-    let mut b = ds.stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new()).unwrap();
+    let mut b = ds
+        .stream_for_publish(&ViewportQuery::all(), &fields, CancelToken::new())
+        .unwrap();
     let (ids_b, zones_b, rows_b) = drain(&mut b);
 
-    assert_eq!(rows_a, rows_b, "partition boundaries moved between two identical publishes");
+    assert_eq!(
+        rows_a, rows_b,
+        "partition boundaries moved between two identical publishes"
+    );
     assert_eq!(ids_a, ids_b);
     assert_eq!(zones_a, zones_b);
-    assert!(rows_a.len() > 1, "the fixture should span several partitions");
+    assert!(
+        rows_a.len() > 1,
+        "the fixture should span several partitions"
+    );
     for n in &rows_a {
-        assert!(*n <= spatial_engine::PUBLISH_PARTITION_ROWS, "a partition exceeded the row ceiling");
+        assert!(
+            *n <= spatial_engine::PUBLISH_PARTITION_ROWS,
+            "a partition exceeded the row ceiling"
+        );
     }
 }
 
@@ -362,7 +453,8 @@ fn an_inadmissible_or_reserved_column_is_refused_before_anything_is_written() {
     ));
     // The geometry column already travels as GeoArrow.
     assert!(matches!(
-        ds.resolve_projection(&["geometry".to_string()]).unwrap_err(),
+        ds.resolve_projection(&["geometry".to_string()])
+            .unwrap_err(),
         EngineError::AttributeUnpublishable { .. }
     ));
     // The identity already travels as `id`.
@@ -386,7 +478,9 @@ fn a_publish_stream_is_cancellable_like_any_other() {
     let cancel = CancelToken::new();
     cancel.cancel();
     let proj = empty_projection(&ds);
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &proj, cancel).unwrap();
+    let mut s = ds
+        .stream_for_publish(&ViewportQuery::all(), &proj, cancel)
+        .unwrap();
     let mut buf = Vec::new();
     match s.next_into(&mut buf) {
         Some(Err(EngineError::Cancelled)) => {}
@@ -404,8 +498,19 @@ fn a_batch_reports_the_bounds_of_the_rows_it_actually_carries() {
     let facts = write_geoparquet(&path, &zoned_spec(4_000)).unwrap();
     let ds = Dataset::open(&path).unwrap();
 
-    let mut s = ds.stream_for_publish(&ViewportQuery::all(), &empty_projection(&ds), CancelToken::new()).unwrap();
-    let mut union = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut s = ds
+        .stream_for_publish(
+            &ViewportQuery::all(),
+            &empty_projection(&ds),
+            CancelToken::new(),
+        )
+        .unwrap();
+    let mut union = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     let mut buf = Vec::new();
     let mut seen = 0usize;
     while let Some(info) = s.next_into(&mut buf) {
@@ -433,10 +538,22 @@ fn a_batch_reports_the_bounds_of_the_rows_it_actually_carries() {
 
 fn decoded_coords(batch: &arrow::array::RecordBatch) -> Vec<f64> {
     use arrow::array::{FixedSizeListArray, Float64Array, ListArray};
-    let polys = batch.column(1).as_any().downcast_ref::<ListArray>().unwrap();
+    let polys = batch
+        .column(1)
+        .as_any()
+        .downcast_ref::<ListArray>()
+        .unwrap();
     let rings = polys.values().as_any().downcast_ref::<ListArray>().unwrap();
-    let fsl = rings.values().as_any().downcast_ref::<FixedSizeListArray>().unwrap();
-    let flat = fsl.values().as_any().downcast_ref::<Float64Array>().unwrap();
+    let fsl = rings
+        .values()
+        .as_any()
+        .downcast_ref::<FixedSizeListArray>()
+        .unwrap();
+    let flat = fsl
+        .values()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap();
     flat.values().to_vec()
 }
 
@@ -479,7 +596,11 @@ fn write_both_id_columns(path: &std::path::Path, features: usize) {
 
     let batch = RecordBatch::try_new(
         schema.clone(),
-        vec![Arc::new(ids.finish()), Arc::new(keys.finish()), Arc::new(geoms.finish())],
+        vec![
+            Arc::new(ids.finish()),
+            Arc::new(keys.finish()),
+            Arc::new(geoms.finish()),
+        ],
     )
     .unwrap();
 

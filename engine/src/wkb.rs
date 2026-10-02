@@ -41,7 +41,11 @@ pub struct PolygonBuilder {
 
 impl PolygonBuilder {
     pub fn new() -> Self {
-        Self { coords: Vec::new(), ring_offsets: vec![0], geom_offsets: vec![0] }
+        Self {
+            coords: Vec::new(),
+            ring_offsets: vec![0],
+            geom_offsets: vec![0],
+        }
     }
 
     pub fn polygons(&self) -> usize {
@@ -93,7 +97,9 @@ impl PolygonBuilder {
             let last = self.coords.len() - 2;
             // Bit-exact closure, not an epsilon: an "almost closed" ring is a defect the data
             // doctor should show the user, not something this decoder decides to tolerate.
-            if self.coords[first] != self.coords[last] || self.coords[first + 1] != self.coords[last + 1] {
+            if self.coords[first] != self.coords[last]
+                || self.coords[first + 1] != self.coords[last + 1]
+            {
                 return Err(EngineError::Wkb(format!("ring {ring} is not closed")));
             }
             self.ring_offsets.push((self.coords.len() / 2) as i32);
@@ -102,7 +108,10 @@ impl PolygonBuilder {
         self.geom_offsets.push((self.ring_offsets.len() - 1) as i32);
 
         if !r.is_exhausted() {
-            return Err(EngineError::Wkb(format!("{} trailing bytes after the polygon", r.remaining())));
+            return Err(EngineError::Wkb(format!(
+                "{} trailing bytes after the polygon",
+                r.remaining()
+            )));
         }
         Ok(())
     }
@@ -117,31 +126,48 @@ struct Reader<'a> {
 impl<'a> Reader<'a> {
     fn new(b: &'a [u8]) -> Result<Self> {
         match b.first() {
-            Some(1) => Ok(Self { b, at: 1, little: true }),
-            Some(0) => Ok(Self { b, at: 1, little: false }),
-            Some(o) => Err(EngineError::Wkb(format!("byte-order byte {o} is neither 0 nor 1"))),
+            Some(1) => Ok(Self {
+                b,
+                at: 1,
+                little: true,
+            }),
+            Some(0) => Ok(Self {
+                b,
+                at: 1,
+                little: false,
+            }),
+            Some(o) => Err(EngineError::Wkb(format!(
+                "byte-order byte {o} is neither 0 nor 1"
+            ))),
             None => Err(EngineError::Wkb("empty geometry".into())),
         }
     }
 
     fn take<const N: usize>(&mut self) -> Result<[u8; N]> {
         let end = self.at + N;
-        let s = self
-            .b
-            .get(self.at..end)
-            .ok_or_else(|| EngineError::Wkb(format!("truncated: wanted {N} bytes at {}", self.at)))?;
+        let s = self.b.get(self.at..end).ok_or_else(|| {
+            EngineError::Wkb(format!("truncated: wanted {N} bytes at {}", self.at))
+        })?;
         self.at = end;
         Ok(s.try_into().expect("slice length checked above"))
     }
 
     fn u32(&mut self) -> Result<u32> {
         let raw = self.take::<4>()?;
-        Ok(if self.little { u32::from_le_bytes(raw) } else { u32::from_be_bytes(raw) })
+        Ok(if self.little {
+            u32::from_le_bytes(raw)
+        } else {
+            u32::from_be_bytes(raw)
+        })
     }
 
     fn f64(&mut self) -> Result<f64> {
         let raw = self.take::<8>()?;
-        Ok(if self.little { f64::from_le_bytes(raw) } else { f64::from_be_bytes(raw) })
+        Ok(if self.little {
+            f64::from_le_bytes(raw)
+        } else {
+            f64::from_be_bytes(raw)
+        })
     }
 
     fn is_exhausted(&self) -> bool {
@@ -180,7 +206,13 @@ mod tests {
 
     #[test]
     fn decodes_a_polygon_with_a_hole_and_keeps_the_ring_structure() {
-        let outer = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]];
+        let outer = vec![
+            [0.0, 0.0],
+            [10.0, 0.0],
+            [10.0, 10.0],
+            [0.0, 10.0],
+            [0.0, 0.0],
+        ];
         let hole = vec![[2.0, 2.0], [4.0, 2.0], [4.0, 4.0], [2.0, 4.0], [2.0, 2.0]];
         let wkb = encode_polygon(&[outer, hole]);
 
@@ -205,7 +237,11 @@ mod tests {
         b.push_wkb(&encode_polygon(&[many])).unwrap();
 
         assert_eq!(b.geom_offsets, vec![0, 1, 2]);
-        assert_eq!(b.ring_offsets, vec![0, 5, 18], "features have different vertex counts");
+        assert_eq!(
+            b.ring_offsets,
+            vec![0, 5, 18],
+            "features have different vertex counts"
+        );
     }
 
     #[test]
@@ -243,7 +279,10 @@ mod tests {
 
         // Unclosed ring.
         let open = vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]];
-        assert!(matches!(b.push_wkb(&encode_polygon(&open)), Err(EngineError::Wkb(_))));
+        assert!(matches!(
+            b.push_wkb(&encode_polygon(&open)),
+            Err(EngineError::Wkb(_))
+        ));
 
         // A point, not a polygon.
         let mut point = vec![1u8];
@@ -261,7 +300,10 @@ mod tests {
 
         // Truncated.
         let full = encode_polygon(&square(0.0, 0.0, 1.0));
-        assert!(matches!(b.push_wkb(&full[..full.len() - 3]), Err(EngineError::Wkb(_))));
+        assert!(matches!(
+            b.push_wkb(&full[..full.len() - 3]),
+            Err(EngineError::Wkb(_))
+        ));
 
         // Trailing bytes.
         let mut trailing = full.clone();

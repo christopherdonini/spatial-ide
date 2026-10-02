@@ -21,8 +21,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use arrow::array::{Array, ArrayRef, BinaryArray, BinaryBuilder, StructArray, UInt64Array,
-                   UInt64Builder};
+use arrow::array::{
+    Array, ArrayRef, BinaryArray, BinaryBuilder, StructArray, UInt64Array, UInt64Builder,
+};
 use arrow::datatypes::{DataType, Field, Fields, Schema};
 use arrow::record_batch::RecordBatch;
 use geo::{Simplify, SimplifyVwPreserve, Validation};
@@ -39,8 +40,8 @@ use spatial_engine::error::EngineError;
 use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
 use spatial_engine::lod::{
     build_tiers, LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
-    LOD_BUILD_WORKERS_ARM_S, LOD_CRS_NOT_LINEAR, LOD_CRS_UNIT_UNDECLARED, LOD_TIER_COUNT,
-    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE,
+    LOD_BUILD_WORKERS_ARM_S, LOD_CRS_NOT_LINEAR, LOD_CRS_UNIT_UNDECLARED,
+    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_COUNT, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -57,7 +58,8 @@ mod common;
 use common::polygons_100k;
 
 /// §3's `parcels-5gb`, for the `#[ignore]`d rows only.
-const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
+const PARCELS_5GB: &str =
+    r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
 
 struct Ladder {
     set: TierSet,
@@ -156,9 +158,16 @@ impl FixtureAside {
              one, or check the tester's evidence for why it is absent",
             original.display()
         );
-        let aside = PathBuf::from(format!("{}.aside.{}", original.display(), std::process::id()));
+        let aside = PathBuf::from(format!(
+            "{}.aside.{}",
+            original.display(),
+            std::process::id()
+        ));
         std::fs::rename(original, &aside).expect("move the fixture aside");
-        Self { original: original.to_path_buf(), aside }
+        Self {
+            original: original.to_path_buf(),
+            aside,
+        }
     }
 }
 
@@ -213,7 +222,10 @@ impl Drop for FixtureAside {
 fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     let path = PathBuf::from(common::POLYGONS_100K);
     let _aside = FixtureAside::take(&path);
-    assert!(!path.is_file(), "the fixture must be absent for this test to exercise regeneration");
+    assert!(
+        !path.is_file(),
+        "the fixture must be absent for this test to exercise regeneration"
+    );
     let before = common::generations_performed();
 
     // Each thread reads back its *own* view of the file the instant its own call to
@@ -223,7 +235,9 @@ fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     let (a, b) = std::thread::scope(|scope| {
         let read_back = || {
             let p = polygons_100k();
-            let bytes = std::fs::metadata(&p).expect("stat the published fixture").len();
+            let bytes = std::fs::metadata(&p)
+                .expect("stat the published fixture")
+                .len();
             let sha = sha256_of_file(&p);
             (p, bytes, sha)
         };
@@ -235,11 +249,18 @@ fn two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file() {
     // `LOD-PREREGISTRATION.md:146`'s declared table row for `polygons-100k`, and the tester's own
     // recorded hash for the same bytes (`LOD-PREREGISTRATION.md` §10 Amendment 10(e)).
     const DECLARED_BYTES: u64 = 151_812_642;
-    const DECLARED_SHA256: &str = "9ecd79242ac7d99e09f1989c8c124fd53dcd697689546ec6013949f806ca6043";
+    const DECLARED_SHA256: &str =
+        "9ecd79242ac7d99e09f1989c8c124fd53dcd697689546ec6013949f806ca6043";
     assert_eq!(a.0, path, "thread a's path is the fixture's own path");
     assert_eq!(b.0, path, "thread b's path is the fixture's own path");
-    assert_eq!(a.1, DECLARED_BYTES, "thread a's file is the declared, complete size");
-    assert_eq!(b.1, DECLARED_BYTES, "thread b's file is the declared, complete size");
+    assert_eq!(
+        a.1, DECLARED_BYTES,
+        "thread a's file is the declared, complete size"
+    );
+    assert_eq!(
+        b.1, DECLARED_BYTES,
+        "thread b's file is the declared, complete size"
+    );
     assert_eq!(
         a.2, b.2,
         "both threads read back the same bytes from the one file this function ever publishes"
@@ -294,7 +315,10 @@ fn read_polygons(path: &Path) -> Vec<geo::Polygon<f64>> {
     let mut out = Vec::new();
     for batch in reader {
         let batch = batch.expect("batch");
-        let idx = batch.schema().index_of("geometry").expect("geometry column");
+        let idx = batch
+            .schema()
+            .index_of("geometry")
+            .expect("geometry column");
         let a = batch
             .column(idx)
             .as_any()
@@ -335,19 +359,25 @@ fn dense_circle(cx: f64, cy: f64, r: f64, n: usize) -> Vec<Vec<[f64; 2]>> {
     vec![ring]
 }
 
-
 /// A minimal GeoParquet written by this test, so a source with an arbitrary `geo` key can exist
 /// without teaching the shipped fixture generator a CRS shape only one test needs.
 fn write_source(path: &Path, geo_key: &str, rings: &[(u64, Vec<Vec<[f64; 2]>>)]) {
     std::fs::create_dir_all(path.parent().expect("dir")).expect("dir");
     let schema = std::sync::Arc::new(Schema::new(vec![
         std::sync::Arc::new(Field::new("id", DataType::UInt64, false)),
-        std::sync::Arc::new(Field::new("bbox", DataType::Struct(test_bbox_fields()), false)),
+        std::sync::Arc::new(Field::new(
+            "bbox",
+            DataType::Struct(test_bbox_fields()),
+            false,
+        )),
         std::sync::Arc::new(Field::new("geometry", DataType::Binary, false)),
     ]));
     let props = WriterProperties::builder()
         .set_compression(Compression::SNAPPY)
-        .set_key_value_metadata(Some(vec![KeyValue::new("geo".to_string(), geo_key.to_string())]))
+        .set_key_value_metadata(Some(vec![KeyValue::new(
+            "geo".to_string(),
+            geo_key.to_string(),
+        )]))
         .build();
     let file = std::fs::File::create(path).expect("create source");
     let mut writer = ArrowWriter::try_new(file, schema.clone(), Some(props)).expect("writer");
@@ -363,7 +393,12 @@ fn write_source(path: &Path, geo_key: &str, rings: &[(u64, Vec<Vec<[f64; 2]>>)])
     for (id, polygon) in rings {
         ids.append_value(*id);
         geoms.append_value(spatial_engine::wkb::encode_polygon(polygon));
-        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut b = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for ring in polygon {
             for p in ring {
                 b[0] = b[0].min(p[0]);
@@ -457,17 +492,27 @@ fn drop_tiers(set: &TierSet) {
 // `the_rejected_simplifier_is_the_one_that_emits_invalid_polygons` below, which runs both
 // simplifiers over the same five features and asserts the divergence directly.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn tier_build_emits_zero_invalid_polygons() {
     let l = ladder();
-    assert_eq!(l.set.tiers().len(), LOD_TIER_COUNT, "the ladder is the declared three tiers");
+    assert_eq!(
+        l.set.tiers().len(),
+        LOD_TIER_COUNT,
+        "the ladder is the declared three tiers"
+    );
     for outcome in l.set.tiers() {
         let record = outcome.record();
         let mut invalid: Vec<String> = Vec::new();
         for (i, p) in read_polygons(record.path()).iter().enumerate() {
             if !p.is_valid() {
-                let errors: Vec<String> =
-                    p.validation_errors().iter().map(|e| e.to_string()).collect();
+                let errors: Vec<String> = p
+                    .validation_errors()
+                    .iter()
+                    .map(|e| e.to_string())
+                    .collect();
                 invalid.push(format!("row {i}: {}", errors.join("; ")));
             }
         }
@@ -508,8 +553,15 @@ fn the_rejected_simplifier_is_the_one_that_emits_invalid_polygons() {
             vw_invalid += 1;
         }
     }
-    assert_eq!(seen, wanted.len(), "all five named features are in the fixture");
-    assert_eq!(vw_invalid, 0, "the pre-committed simplifier emits no invalid polygon on these five");
+    assert_eq!(
+        seen,
+        wanted.len(),
+        "all five named features are in the fixture"
+    );
+    assert_eq!(
+        vw_invalid, 0,
+        "the pre-committed simplifier emits no invalid polygon on these five"
+    );
     assert!(
         rdp_invalid > 0,
         "the rejected alternative is what emits invalid polygons here — if it no longer does, T1's \
@@ -527,11 +579,18 @@ fn the_rejected_simplifier_is_the_one_that_emits_invalid_polygons() {
 // row group and the assertion names the first missing id ("tier 1 is missing 13 source id(s), first
 // 8191").
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn tier_preserves_identity_for_every_row() {
     let l = ladder();
     let source: std::collections::BTreeSet<u64> = l.source_ids.iter().copied().collect();
-    assert_eq!(source.len(), l.source_ids.len(), "the source's own ids are unique");
+    assert_eq!(
+        source.len(),
+        l.source_ids.len(),
+        "the source's own ids are unique"
+    );
 
     for outcome in l.set.tiers() {
         let emitted = read_ids(outcome.record().path(), "id");
@@ -552,8 +611,17 @@ fn tier_preserves_identity_for_every_row() {
             missing[0]
         );
         let extra: Vec<u64> = unique.difference(&source).copied().collect();
-        assert!(extra.is_empty(), "tier {} emitted {} id(s) the source has not", outcome.record().tier(), extra.len());
-        assert_eq!(emitted.len() as u64, outcome.record().features(), "the record counts what was written");
+        assert!(
+            extra.is_empty(),
+            "tier {} emitted {} id(s) the source has not",
+            outcome.record().tier(),
+            extra.len()
+        );
+        assert_eq!(
+            emitted.len() as u64,
+            outcome.record().features(),
+            "the record counts what was written"
+        );
     }
 }
 
@@ -566,16 +634,26 @@ fn tier_preserves_identity_for_every_row() {
 // engine_opens_its_own_tier fails: `Dataset::open` returns `EngineError::GeoMetadata` at R-P2
 // (`dataset.rs:684-686`) and the test fails by name on "open the tier this engine wrote".
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn engine_opens_its_own_tier() {
     let l = ladder();
     let source = Dataset::open(polygons_100k()).expect("open the source");
     for outcome in l.set.tiers() {
         let tier = Dataset::open(outcome.record().path()).expect("open the tier this engine wrote");
-        assert_eq!(tier.crs().identifier(), source.crs().identifier(), "the tier is in the source's CRS");
+        assert_eq!(
+            tier.crs().identifier(),
+            source.crs().identifier(),
+            "the tier is in the source's CRS"
+        );
         assert_eq!(tier.geometry_column(), source.geometry_column());
         assert_eq!(tier.geoparquet_version(), source.geoparquet_version());
-        assert!(tier.covering().is_some(), "the tier declares its own covering bbox columns");
+        assert!(
+            tier.covering().is_some(),
+            "the tier declares its own covering bbox columns"
+        );
         assert_eq!(
             tier.identity().source().source_column(),
             source.identity().source().source_column(),
@@ -600,12 +678,20 @@ fn engine_opens_its_own_tier() {
 // altered tier is admitted, `was_rebuilt()` is false, and the disclosed set size is the record's
 // stale byte count rather than the bytes on disk.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size() {
     let dir = scratch_dir("reuse-restat");
     let path = dir.join("source.parquet");
     let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..32u64)
-        .map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256)))
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256),
+            )
+        })
         .collect();
     write_source(&path, &geo_key(&lv95_definition()), &rings);
 
@@ -617,16 +703,25 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
 
     // The source is untouched, so its key still admits — and every tier is reused.
     let reused = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
-    assert!(reused.tiers().iter().all(|t| !t.was_rebuilt()), "an unchanged ladder is reused whole");
+    assert!(
+        reused.tiers().iter().all(|t| !t.was_rebuilt()),
+        "an unchanged ladder is reused whole"
+    );
 
     // Now the artifact changes under the record: same path, same key, different bytes.
     {
         use std::io::Write;
-        let mut f = std::fs::OpenOptions::new().append(true).open(&tier_one).expect("open the tier");
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&tier_one)
+            .expect("open the tier");
         f.write_all(&[0u8; 4_096]).expect("alter the tier on disk");
     }
     let altered_bytes = std::fs::metadata(&tier_one).expect("stat").len();
-    assert_ne!(altered_bytes, recorded_bytes, "the alteration really changed the file's size");
+    assert_ne!(
+        altered_bytes, recorded_bytes,
+        "the alteration really changed the file's size"
+    );
 
     let after = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("rebuild");
     assert!(
@@ -643,14 +738,20 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
     let on_disk: u64 = after
         .tiers()
         .iter()
-        .map(|t| std::fs::metadata(t.record().path()).expect("stat a tier").len())
+        .map(|t| {
+            std::fs::metadata(t.record().path())
+                .expect("stat a tier")
+                .len()
+        })
         .sum();
     assert_eq!(after.total_bytes(), on_disk);
     assert_eq!(after.disk_cost().total_bytes, on_disk);
     for outcome in after.tiers() {
         assert_eq!(
             outcome.record().bytes(),
-            std::fs::metadata(outcome.record().path()).expect("stat").len(),
+            std::fs::metadata(outcome.record().path())
+                .expect("stat")
+                .len(),
             "every disclosed per-tier size is the file's own"
         );
     }
@@ -663,7 +764,10 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
 // features measures the residual": `max_single_feature_simplify()` is `None`, because the builder
 // reports a maximum only when one was actually taken.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn a_build_measures_the_largest_single_feature_simplify() {
     let dir = scratch_dir("residual-instrument");
     let path = dir.join("source.parquet");
@@ -671,14 +775,22 @@ fn a_build_measures_the_largest_single_feature_simplify() {
     // the source's content hash, so two tests whose sources have the same bytes would build, alter
     // and delete tiers in the *same* directory — and this suite runs its tests in parallel threads.
     let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..24u64)
-        .map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 70.0, 1_200_000.0, 21.0, 192)))
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * 70.0, 1_200_000.0, 21.0, 192),
+            )
+        })
         .collect();
     write_source(&path, &geo_key(&lv95_definition()), &rings);
     let source = Dataset::open(&path).expect("open");
     let cancel = CancelToken::new();
 
     let built = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
-    assert!(built.tiers().iter().all(|t| t.was_rebuilt()), "this ladder was built, not reused");
+    assert!(
+        built.tiers().iter().all(|t| t.was_rebuilt()),
+        "this ladder was built, not reused"
+    );
     let measured = built
         .max_single_feature_simplify()
         .expect("a build that simplified features measures the residual");
@@ -701,12 +813,21 @@ fn a_build_measures_the_largest_single_feature_simplify() {
 }
 
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn tier_is_not_served_when_source_content_hash_changes() {
     let dir = scratch_dir("t4");
     let path = dir.join("source.parquet");
-    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> =
-        (0..64u64).map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256))).collect();
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..64u64)
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256),
+            )
+        })
+        .collect();
     write_source(&path, &geo_key(&lv95_definition()), &rings);
 
     let source = Dataset::open(&path).expect("open");
@@ -727,7 +848,10 @@ fn tier_is_not_served_when_source_content_hash_changes() {
         Err(stale) => assert_eq!(stale.miss(), TierMiss::KeyMismatch),
     }
     // The same record admits for its own key — otherwise the assertion above would be vacuous.
-    assert!(record.admit(record.key(), validity.as_ref()).is_ok(), "its own key still admits");
+    assert!(
+        record.admit(record.key(), validity.as_ref()).is_ok(),
+        "its own key still admits"
+    );
 
     // (b) End to end: an unchanged source reuses; a rewritten one is a miss and is rebuilt.
     let again = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
@@ -741,9 +865,16 @@ fn tier_is_not_served_when_source_content_hash_changes() {
     write_source(&path, &geo_key(&lv95_definition()), &changed);
     let source2 = Dataset::open(&path).expect("reopen");
     let rebuilt = build_tiers(&source2, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("rebuild");
-    assert_ne!(rebuilt.source_content_hash(), set.source_content_hash(), "the source changed");
+    assert_ne!(
+        rebuilt.source_content_hash(),
+        set.source_content_hash(),
+        "the source changed"
+    );
     assert!(
-        rebuilt.tiers().iter().all(|t| t.miss() == Some(TierMiss::Absent)),
+        rebuilt
+            .tiers()
+            .iter()
+            .all(|t| t.miss() == Some(TierMiss::Absent)),
         "a tier built from the old bytes is not served for the new ones"
     );
     drop_tiers(&set);
@@ -761,12 +892,21 @@ fn tier_is_not_served_when_source_content_hash_changes() {
 // constructors where the type's contract allows two and reports "a constructor of TierBatch that
 // does not derive its label from a witness".
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     let dir = scratch_dir("t5");
     let path = dir.join("source.parquet");
-    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> =
-        (0..16u64).map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256))).collect();
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..16u64)
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256),
+            )
+        })
+        .collect();
     write_source(&path, &geo_key(&lv95_definition()), &rings);
     let source = Dataset::open(&path).expect("open");
     let cancel = CancelToken::new();
@@ -777,7 +917,11 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     // produced, and that path always labels it.
     let stale = record
         .admit(
-            &LodTierKey::new("deadbeef", record.key().min_triangle_area_square_metres, record.key().id_column.clone()),
+            &LodTierKey::new(
+                "deadbeef",
+                record.key().min_triangle_area_square_metres,
+                record.key().id_column.clone(),
+            ),
             spatial_engine::index::ValidityHeuristic::of(&path).as_ref(),
         )
         .expect_err("a mismatched key is a miss");
@@ -787,19 +931,24 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     assert_eq!(batch.rows(), 42);
 
     let admitted = record
-        .admit(record.key(), spatial_engine::index::ValidityHeuristic::of(&path).as_ref())
+        .admit(
+            record.key(),
+            spatial_engine::index::ValidityHeuristic::of(&path).as_ref(),
+        )
         .expect("its own key admits");
     let resident = TierBatch::from_admitted(&admitted, 42);
     assert!(!resident.is_stale());
-    assert_eq!(resident.label().as_str(), format!("lod.tier_resident{{{}}}", record.tier()));
+    assert_eq!(
+        resident.label().as_str(),
+        format!("lod.tier_resident{{{}}}", record.tier())
+    );
 
     // Structural half: there is no third way in. Every constructor in `impl TierBatch` takes a
     // witness and sets the label from it; none takes a `TierLabel`. A new constructor that skipped
     // the witness would be the block-on-sight of §8 item 5, and this is what notices it.
-    let source_text = std::fs::read_to_string(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/lod.rs"),
-    )
-    .expect("read lod.rs");
+    let source_text =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/lod.rs"))
+            .expect("read lod.rs");
     let block = source_text
         .split("impl TierBatch {")
         .nth(1)
@@ -807,15 +956,19 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
         .split("\n}\n")
         .next()
         .expect("the impl block ends");
-    let constructors: Vec<&str> =
-        block.lines().filter(|l| l.contains("pub fn ") && l.contains("-> Self")).collect();
+    let constructors: Vec<&str> = block
+        .lines()
+        .filter(|l| l.contains("pub fn ") && l.contains("-> Self"))
+        .collect();
     assert_eq!(
         constructors.len(),
         2,
         "a constructor of TierBatch that does not derive its label from a witness: {constructors:?}"
     );
     assert!(
-        constructors.iter().all(|c| c.contains("&AdmittedTier") || c.contains("&StaleTier")),
+        constructors
+            .iter()
+            .all(|c| c.contains("&AdmittedTier") || c.contains("&StaleTier")),
         "every TierBatch constructor takes an admission witness: {constructors:?}"
     );
     assert!(
@@ -839,12 +992,20 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 // tier_writer_does_not_reorder_rows fails naming the first differing row ("tier 1 row 0: source id
 // 0, tier id 8191").
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn tier_writer_does_not_reorder_rows() {
     let l = ladder();
     for outcome in l.set.tiers() {
         let emitted = read_ids(outcome.record().path(), "id");
-        assert_eq!(emitted.len(), l.source_ids.len(), "tier {} row count", outcome.record().tier());
+        assert_eq!(
+            emitted.len(),
+            l.source_ids.len(),
+            "tier {} row count",
+            outcome.record().tier()
+        );
         if let Some(i) = (0..emitted.len()).find(|&i| emitted[i] != l.source_ids[i]) {
             panic!(
                 "tier {} row {i}: source id {}, tier id {} — the tier must be written in the \
@@ -885,7 +1046,10 @@ fn geographic_crs_source_is_refused_for_tier_building() {
     let outcome = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None);
     match outcome {
         Err(EngineError::LodRefused { refusal, .. }) => {
-            assert_eq!(refusal, LOD_CRS_NOT_LINEAR, "a geographic CRS must be refused");
+            assert_eq!(
+                refusal, LOD_CRS_NOT_LINEAR,
+                "a geographic CRS must be refused"
+            );
         }
         other => panic!("a geographic CRS must be refused with {LOD_CRS_NOT_LINEAR}: {other:?}"),
     }
@@ -911,17 +1075,28 @@ fn crs_without_a_declared_linear_unit_is_refused() {
     {
         axis.as_object_mut().expect("axis object").remove("unit");
     }
-    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> =
-        (0..16u64).map(|i| (i, dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256))).collect();
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..16u64)
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * 60.0, 1_200_000.0, 20.0, 256),
+            )
+        })
+        .collect();
     write_source(&path, &geo_key(&definition.to_string()), &rings);
 
     let source = Dataset::open(&path).expect("open the unit-less source");
     let outcome = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None);
     match outcome {
         Err(EngineError::LodRefused { refusal, .. }) => {
-            assert_eq!(refusal, LOD_CRS_UNIT_UNDECLARED, "no default factor is assumed");
+            assert_eq!(
+                refusal, LOD_CRS_UNIT_UNDECLARED,
+                "no default factor is assumed"
+            );
         }
-        other => panic!("an undeclared linear unit must be refused with {LOD_CRS_UNIT_UNDECLARED}: {other:?}"),
+        other => panic!(
+            "an undeclared linear unit must be refused with {LOD_CRS_UNIT_UNDECLARED}: {other:?}"
+        ),
     }
 }
 
@@ -934,7 +1109,10 @@ fn crs_without_a_declared_linear_unit_is_refused() {
 // source's byte size is written and returned `Ok` instead of `engine.lod_tier_larger_than_source`,
 // and the assertion fails by name.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn tier_larger_than_its_source_is_refused() {
     let dir = scratch_dir("t10");
     let path = dir.join("nothing-to-simplify.parquet");
@@ -957,14 +1135,22 @@ fn tier_larger_than_its_source_is_refused() {
     let source = Dataset::open(&path).expect("open");
     let outcome = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None);
     match outcome {
-        Err(EngineError::CeilingExceeded { ceiling, limit, saw }) => {
+        Err(EngineError::CeilingExceeded {
+            ceiling,
+            limit,
+            saw,
+        }) => {
             assert_eq!(ceiling, LOD_TIER_LARGER_THAN_SOURCE);
-            assert!(saw > limit, "the refusal reports what convicted it: {saw} > {limit}");
+            assert!(
+                saw > limit,
+                "the refusal reports what convicted it: {saw} > {limit}"
+            );
         }
         other => panic!("a tier larger than its source must be refused: {other:?}"),
     }
     // Nothing over the ceiling is kept on disk.
-    let (hash, _ms) = spatial_engine::index::content_hash(&path, &CancelToken::new()).expect("hash");
+    let (hash, _ms) =
+        spatial_engine::index::content_hash(&path, &CancelToken::new()).expect("hash");
     let tier_dir = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
         .join("spatial-ide/tiers")
         .join(hash);
@@ -976,7 +1162,10 @@ fn tier_larger_than_its_source_is_refused() {
                 .collect()
         })
         .unwrap_or_default();
-    assert!(kept.is_empty(), "the over-ceiling tier was kept on disk: {kept:?}");
+    assert!(
+        kept.is_empty(),
+        "the over-ceiling tier was kept on disk: {kept:?}"
+    );
     let _ = std::fs::remove_dir_all(&tier_dir);
 }
 
@@ -991,18 +1180,33 @@ fn tier_larger_than_its_source_is_refused() {
 // the file still decodes, which is the point: a byte-order defect is silent until something
 // compares coordinates.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn wkb_writer_round_trips_the_first_tier_written() {
     let l = ladder();
-    let first = l.set.tiers().first().expect("the ladder has a first tier").record();
+    let first = l
+        .set
+        .tiers()
+        .first()
+        .expect("the ladder has a first tier")
+        .record();
     assert_eq!(first.tier(), 1);
-    assert_eq!(first.key().min_triangle_area_square_metres, LOD_MIN_TRIANGLE_AREA_LADDER[0]);
+    assert_eq!(
+        first.key().min_triangle_area_square_metres,
+        LOD_MIN_TRIANGLE_AREA_LADDER[0]
+    );
 
     // The expected geometry is computed here, independently of the builder: the source's own WKB,
     // decoded and simplified at the tier's own minimum triangle area, in the source's squared unit.
     let source_polygons = read_polygons(&polygons_100k());
     let tier_polygons = read_polygons(first.path());
-    assert_eq!(tier_polygons.len(), source_polygons.len(), "the tier has the source's row count");
+    assert_eq!(
+        tier_polygons.len(),
+        source_polygons.len(),
+        "the tier has the source's row count"
+    );
 
     let epsilon = first.min_triangle_area_source_units();
     let mut vertices_after = 0u64;
@@ -1014,8 +1218,12 @@ fn wkb_writer_round_trips_the_first_tier_written() {
         vertices_after += ga.iter().map(|n| *n as u64).sum::<u64>();
 
         let coords_of = |p: &geo::Polygon<f64>| -> Vec<(u64, u64)> {
-            let mut v: Vec<(u64, u64)> =
-                p.exterior().0.iter().map(|c| (c.x.to_bits(), c.y.to_bits())).collect();
+            let mut v: Vec<(u64, u64)> = p
+                .exterior()
+                .0
+                .iter()
+                .map(|c| (c.x.to_bits(), c.y.to_bits()))
+                .collect();
             for i in p.interiors() {
                 v.extend(i.0.iter().map(|c| (c.x.to_bits(), c.y.to_bits())));
             }
@@ -1046,35 +1254,71 @@ fn wkb_writer_round_trips_the_first_tier_written() {
 // name on "tiers.json discloses the set's own size": `manifest["set"]` is `null`, so the assertion
 // that `set.bytes` equals the sum of the tier files' bytes cannot be made at all.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn the_built_sets_size_is_disclosed_with_the_tiers() {
     let l = ladder();
-    let manifest: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(l.set.manifest_path()).expect("read tiers.json"))
-            .expect("tiers.json parses");
+    let manifest: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(l.set.manifest_path()).expect("read tiers.json"),
+    )
+    .expect("tiers.json parses");
 
-    let set = manifest.get("set").expect("tiers.json discloses the set's own size");
-    let disclosed = set.get("bytes").and_then(serde_json::Value::as_u64).expect("set.bytes");
+    let set = manifest
+        .get("set")
+        .expect("tiers.json discloses the set's own size");
+    let disclosed = set
+        .get("bytes")
+        .and_then(serde_json::Value::as_u64)
+        .expect("set.bytes");
     let on_disk: u64 = l
         .set
         .tiers()
         .iter()
-        .map(|t| std::fs::metadata(t.record().path()).expect("stat a tier").len())
+        .map(|t| {
+            std::fs::metadata(t.record().path())
+                .expect("stat a tier")
+                .len()
+        })
         .sum();
-    assert_eq!(disclosed, on_disk, "the disclosed size is the size of the files on disk");
-    assert_eq!(disclosed, l.set.total_bytes(), "and the same the result type reports");
+    assert_eq!(
+        disclosed, on_disk,
+        "the disclosed size is the size of the files on disk"
+    );
+    assert_eq!(
+        disclosed,
+        l.set.total_bytes(),
+        "and the same the result type reports"
+    );
 
     // The bound it is read against, and the source it is relative to.
-    let bound = set.get("hard_bound_bytes").and_then(serde_json::Value::as_u64).expect("hard bound");
+    let bound = set
+        .get("hard_bound_bytes")
+        .and_then(serde_json::Value::as_u64)
+        .expect("hard bound");
     assert_eq!(bound, l.set.hard_bound_bytes());
-    assert_eq!(bound, l.set.source_bytes() * 3, "tier count x the per-tier ceiling, by construction");
-    assert!(disclosed <= bound, "the set is within its by-construction bound");
+    assert_eq!(
+        bound,
+        l.set.source_bytes() * 3,
+        "tier count x the per-tier ceiling, by construction"
+    );
+    assert!(
+        disclosed <= bound,
+        "the set is within its by-construction bound"
+    );
 
     // Per tier, in ladder order — the disclosure is not one number a reader has to trust.
-    let per_tier = set.get("per_tier_bytes").and_then(serde_json::Value::as_array).expect("per tier");
+    let per_tier = set
+        .get("per_tier_bytes")
+        .and_then(serde_json::Value::as_array)
+        .expect("per tier");
     assert_eq!(per_tier.len(), LOD_TIER_COUNT);
     for (i, entry) in per_tier.iter().enumerate() {
-        assert_eq!(entry.get("tier").and_then(serde_json::Value::as_u64), Some(i as u64 + 1));
+        assert_eq!(
+            entry.get("tier").and_then(serde_json::Value::as_u64),
+            Some(i as u64 + 1)
+        );
         assert_eq!(
             entry.get("bytes").and_then(serde_json::Value::as_u64),
             Some(l.set.tiers()[i].record().bytes())
@@ -1085,19 +1329,32 @@ fn the_built_sets_size_is_disclosed_with_the_tiers() {
     let cost = l.set.disk_cost();
     assert_eq!(cost.total_bytes, disclosed);
     assert_eq!(cost.hard_bound_bytes, bound);
-    assert!(cost.free_bytes_before_build.is_some(), "the preflight ran and its reading is disclosed");
+    assert!(
+        cost.free_bytes_before_build.is_some(),
+        "the preflight ran and its reading is disclosed"
+    );
 
     // The ruling's first rider, on the tier's own description: areas in squared units, never a
     // "tolerance in metres".
-    let first = &manifest.get("tiers").and_then(serde_json::Value::as_array).expect("tiers")[0];
+    let first = &manifest
+        .get("tiers")
+        .and_then(serde_json::Value::as_array)
+        .expect("tiers")[0];
     assert_eq!(
         first.get("quantity").and_then(serde_json::Value::as_str),
         Some("minimum triangle area")
     );
     assert!(first.get("min_triangle_area_square_metres").is_some());
-    assert!(first.get("area_unit").and_then(serde_json::Value::as_str).unwrap().starts_with("square "));
+    assert!(first
+        .get("area_unit")
+        .and_then(serde_json::Value::as_str)
+        .unwrap()
+        .starts_with("square "));
     let text = std::fs::read_to_string(l.set.manifest_path()).expect("read tiers.json");
-    assert!(!text.contains("tolerance"), "no tier is described as a tolerance (§10 Amendment 7)");
+    assert!(
+        !text.contains("tolerance"),
+        "no tier is described as a tolerance (§10 Amendment 7)"
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1183,7 +1440,10 @@ fn the_5gb_ladder_under_disk_discipline() {
         .join("spatial-ide/tiers")
         .join(&hash);
     let _ = std::fs::remove_dir_all(&directory);
-    let discipline = DiskDiscipline { directory: directory.clone(), deleted: Mutex::new(Vec::new()) };
+    let discipline = DiskDiscipline {
+        directory: directory.clone(),
+        deleted: Mutex::new(Vec::new()),
+    };
 
     let set = build_tiers(&source, LOD_BUILD_WORKERS, &cancel, Some(&discipline))
         .expect("build the 5 GB ladder");
@@ -1201,7 +1461,11 @@ fn the_5gb_ladder_under_disk_discipline() {
             record.sha256()
         );
     }
-    println!("ladder total (arithmetic, §3): {} B over a source of {} B", set.total_bytes(), set.source_bytes());
+    println!(
+        "ladder total (arithmetic, §3): {} B over a source of {} B",
+        set.total_bytes(),
+        set.source_bytes()
+    );
 
     // Delete after the measurement, and say what is left.
     for outcome in set.tiers() {
@@ -1215,6 +1479,9 @@ fn the_5gb_ladder_under_disk_discipline() {
                 .collect()
         })
         .unwrap_or_default();
-    assert!(left.is_empty(), "the tier directory still holds a parquet file after deletion: {left:?}");
+    assert!(
+        left.is_empty(),
+        "the tier directory still holds a parquet file after deletion: {left:?}"
+    );
     println!("free disk after: {} B", free_bytes_on_c().unwrap_or(0));
 }

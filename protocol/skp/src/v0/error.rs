@@ -24,7 +24,11 @@ pub struct SkpError {
 impl SkpError {
     /// Build a protocol-level (`skp.*`) error with no fields.
     pub fn protocol(name: &str, message: impl Into<String>) -> Self {
-        Self { code: format!("skp.{name}"), message: message.into(), fields: BTreeMap::new() }
+        Self {
+            code: format!("skp.{name}"),
+            message: message.into(),
+            fields: BTreeMap::new(),
+        }
     }
 
     /// Build a protocol-level (`skp.*`) error carrying named fields.
@@ -36,22 +40,33 @@ impl SkpError {
         Self {
             code: format!("skp.{name}"),
             message: message.into(),
-            fields: fields.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
+            fields: fields
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v))
+                .collect(),
         }
     }
 
     pub fn version_unsupported(got: &str) -> Self {
         Self::protocol_with_fields(
             "version_unsupported",
-            format!("unsupported skp version `{got}`; this host speaks `{}`", crate::v0::SKP_VERSION),
-            [("got", got.to_string()), ("supported", crate::v0::SKP_VERSION.to_string())],
+            format!(
+                "unsupported skp version `{got}`; this host speaks `{}`",
+                crate::v0::SKP_VERSION
+            ),
+            [
+                ("got", got.to_string()),
+                ("supported", crate::v0::SKP_VERSION.to_string()),
+            ],
         )
     }
 
     pub fn unknown_dataset(handle: &str) -> Self {
         Self::protocol_with_fields(
             "unknown_dataset",
-            format!("no open dataset with handle `{handle}` (closed, or never opened this session)"),
+            format!(
+                "no open dataset with handle `{handle}` (closed, or never opened this session)"
+            ),
             [("handle", handle.to_string())],
         )
     }
@@ -124,8 +139,13 @@ mod tests {
         assert_eq!(back, e);
 
         let mut v: serde_json::Value = serde_json::from_str(&json).unwrap();
-        v.as_object_mut().unwrap().insert("extra".into(), serde_json::Value::Bool(true));
-        assert!(serde_json::from_value::<SkpError>(v).is_err(), "unknown field must be refused");
+        v.as_object_mut()
+            .unwrap()
+            .insert("extra".into(), serde_json::Value::Bool(true));
+        assert!(
+            serde_json::from_value::<SkpError>(v).is_err(),
+            "unknown field must be refused"
+        );
     }
 
     #[test]

@@ -90,7 +90,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // **Wall time and bytes, side by side and deliberately not divided.** `kernel/RESULTS.md`'s
     // standing rule: no throughput claim is made anywhere in this repository, and a generator that
     // printed MB/s would be the first.
-    println!("  wall ms             : {:.1}", elapsed.as_secs_f64() * 1000.0);
+    println!(
+        "  wall ms             : {:.1}",
+        elapsed.as_secs_f64() * 1000.0
+    );
     println!("  features            : {}", facts.features);
     println!("  vertices            : {}", facts.vertices);
     println!("  rings               : {}", facts.rings);

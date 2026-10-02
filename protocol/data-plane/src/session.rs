@@ -71,7 +71,10 @@ impl Session {
     /// port>` in dev, `http://tauri.localhost` packaged on Windows/WebView2), which has nothing to
     /// do with this server's own bound port. See ADR-020.
     pub fn with_origin(origin: String) -> std::io::Result<Self> {
-        Ok(Self { token: mint_token()?, origin })
+        Ok(Self {
+            token: mint_token()?,
+            origin,
+        })
     }
 
     /// The credential, for the one caller that must hand it to a consumer out of band. In

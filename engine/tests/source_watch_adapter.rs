@@ -14,13 +14,17 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::time::Duration;
 
-use spatial_engine::{ArmOutcome, ArmedWatch, PlatformWatch, SourceDescriptor, SourceWatchArm, WatchSignal, WatchSink};
+use spatial_engine::{
+    ArmOutcome, ArmedWatch, PlatformWatch, SourceDescriptor, SourceWatchArm, WatchSignal, WatchSink,
+};
 
 /// §7: a harness ceiling, never a claim about delivery latency.
 const WATCH_TEST_WAIT: Duration = Duration::from_secs(10);
 
 fn scratch_dir(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-engine-source-watch-adapter-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-engine-source-watch-adapter-tests")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).expect("scratch dir");
     d
@@ -102,7 +106,9 @@ fn is_change(signal: &WatchSignal) -> bool {
 /// self-contained fix rather than a new `--test-threads=1` invocation convention to remember.
 fn serial_guard() -> std::sync::MutexGuard<'static, ()> {
     static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
-    LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+    LOCK.get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
 }
 
 // -------------------------------------------------------------------------------------------
@@ -118,7 +124,10 @@ fn a_same_size_in_place_write_with_restored_mtime_signals_change_while_the_descr
     let _guard = serial_guard();
     let dir = scratch_dir("a1");
     let path = plain_file(&dir, "source.dat", b"the original body, thirty-two b!");
-    let original_mtime = std::fs::metadata(&path).expect("metadata").modified().expect("mtime");
+    let original_mtime = std::fs::metadata(&path)
+        .expect("metadata")
+        .modified()
+        .expect("mtime");
     let before = SourceDescriptor::of(&path).expect("descriptor before");
 
     let (watch, rx) = arm_watching(&path);
@@ -138,7 +147,10 @@ fn a_same_size_in_place_write_with_restored_mtime_signals_change_while_the_descr
     assert!(is_change(&signal), "expected Change, got {signal:?}");
 
     let after = SourceDescriptor::of(&path).expect("descriptor after");
-    assert_eq!(before, after, "a same-size write with mtime restored must not appear in the descriptor");
+    assert_eq!(
+        before, after,
+        "a same-size write with mtime restored must not appear in the descriptor"
+    );
     drop(watch);
 }
 
@@ -362,7 +374,10 @@ fn a_forced_overflow_signals_coverage_lost() {
     let (watch, rx) = arm_watching(&path);
 
     let suspended = raw_win32::suspend_threads_named("spatial-source-watch");
-    assert!(!suspended.is_empty(), "could not find the watch thread to suspend by name");
+    assert!(
+        !suspended.is_empty(),
+        "could not find the watch thread to suspend by name"
+    );
 
     // Flood while the watch thread cannot run at all — no scheduler boost can rescue it.
     for i in 0..2_000 {
@@ -447,7 +462,10 @@ fn renaming_the_watched_directory_succeeds_and_signals_change() {
     std::fs::rename(&parent, &renamed).expect("rename the watched directory itself");
 
     let signal = recv_signal(&rx);
-    assert!(is_change(&signal), "expected Change (via G), got {signal:?}");
+    assert!(
+        is_change(&signal),
+        "expected Change (via G), got {signal:?}"
+    );
     drop(watch);
 }
 
@@ -481,7 +499,10 @@ fn deleting_the_watched_directory_succeeds_and_signals() {
     // Windows keeps a share-delete-marked directory alive in the namespace until the last handle
     // closes.
     drop(watch);
-    assert!(!parent.exists(), "the directory must be fully gone once the watch releases it");
+    assert!(
+        !parent.exists(),
+        "the directory must be fully gone once the watch releases it"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -539,7 +560,10 @@ fn a_source_reached_through_a_junction_is_watched_at_its_final_path() {
     std::fs::rename(&real_dir, &renamed_p).expect("rename P itself");
 
     let signal = recv_signal(&rx);
-    assert!(is_change(&signal), "expected Change (via the real G), got {signal:?}");
+    assert!(
+        is_change(&signal),
+        "expected Change (via the real G), got {signal:?}"
+    );
     drop(watch);
     let _ = path; // kept for readability of the setup; not read again after arming.
 }

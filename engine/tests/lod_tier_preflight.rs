@@ -39,7 +39,9 @@ fn absent_volume() -> PathBuf {
             return root.join("spatial-ide-lod-preflight");
         }
     }
-    panic!("every candidate drive letter exists on this machine; this test needs one that does not");
+    panic!(
+        "every candidate drive letter exists on this machine; this test needs one that does not"
+    );
 }
 
 fn bbox_fields() -> Fields {
@@ -137,7 +139,10 @@ fn write_source(path: &Path) {
 // returns `EngineError::Source` from `create the tier file`, which is the wrong refusal at the wrong
 // moment — after the builder has already decided to write.
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn the_preflight_refuses_before_the_first_tier_is_written() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -168,7 +173,10 @@ fn the_preflight_refuses_before_the_first_tier_is_written() {
 
     match outcome {
         Err(EngineError::LodRefused { refusal, detail }) => {
-            assert_eq!(refusal, LOD_INSUFFICIENT_DISK, "no free space must refuse before any tier is written");
+            assert_eq!(
+                refusal, LOD_INSUFFICIENT_DISK,
+                "no free space must refuse before any tier is written"
+            );
             assert!(
                 detail.contains(&set_hard_bound_bytes(source_bytes).to_string()),
                 "the refusal names what it required: {detail}"
@@ -189,7 +197,10 @@ fn the_preflight_refuses_before_the_first_tier_is_written() {
     // preflight's, not something else about this source.
     let ok = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None)
         .expect("the same source builds when there is room");
-    assert!(ok.disk_cost().free_bytes_before_build.is_some(), "the preflight's reading is disclosed");
+    assert!(
+        ok.disk_cost().free_bytes_before_build.is_some(),
+        "the preflight's reading is disclosed"
+    );
     assert!(ok.total_bytes() <= ok.hard_bound_bytes());
     let _ = std::fs::remove_dir_all(ok.directory());
 }

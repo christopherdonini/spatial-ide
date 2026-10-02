@@ -106,8 +106,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ds = catalog.get(&name).expect("just opened");
 
     println!("dataset      : {name} ({})", data.display());
-    println!("crs          : {} (source: {})", ds.crs().identifier(), ds.crs().source().as_str());
-    println!("axis order   : {} (normalization: none-performed)", ds.crs().axis_order().as_str());
+    println!(
+        "crs          : {} (source: {})",
+        ds.crs().identifier(),
+        ds.crs().source().as_str()
+    );
+    println!(
+        "axis order   : {} (normalization: none-performed)",
+        ds.crs().axis_order().as_str()
+    );
     println!("geoparquet   : {}", ds.geoparquet_version());
     println!(
         "viewport     : {}",
@@ -132,27 +139,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // is unbounded, so nothing here can block a producer; the record is emitted when the stream is
     // dropped, which is after it is over and outside any segment a probe measures.
     let (reports, incoming) = std::sync::mpsc::channel::<spatial_kernel::StreamConnectionRecord>();
-    std::thread::Builder::new().name("connection-reporter".into()).spawn(move || {
-        for r in incoming {
-            // `post_check_bytes` is the R-D2 post-check's cost for this stream, printed on EVERY
-            // stream end — cancelled, failed or completed — because that is when this record is
-            // sent. Its bound is printed beside it so the figure is read against a declared
-            // ceiling; it is a byte count and never a duration (ADR-018).
-            println!(
-                "connection   : dataset={} mode={} physical={} lease={} already_configured={} \
+    std::thread::Builder::new()
+        .name("connection-reporter".into())
+        .spawn(move || {
+            for r in incoming {
+                // `post_check_bytes` is the R-D2 post-check's cost for this stream, printed on EVERY
+                // stream end — cancelled, failed or completed — because that is when this record is
+                // sent. Its bound is printed beside it so the figure is read against a declared
+                // ceiling; it is a byte count and never a duration (ADR-018).
+                println!(
+                    "connection   : dataset={} mode={} physical={} lease={} already_configured={} \
                  post_check_bytes={} (bound FOOTER_DESCRIPTOR_MAX_BYTES={})",
-                r.dataset,
-                if r.dataset_reuses_connections { "reuse" } else { "fresh" },
-                r.physical_id,
-                r.lease_generation,
-                r.reused_an_existing_connection,
-                r.post_check_bytes_read,
-                spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES
-            );
-            use std::io::Write;
-            let _ = std::io::stdout().flush();
-        }
-    })?;
+                    r.dataset,
+                    if r.dataset_reuses_connections {
+                        "reuse"
+                    } else {
+                        "fresh"
+                    },
+                    r.physical_id,
+                    r.lease_generation,
+                    r.reused_an_existing_connection,
+                    r.post_check_bytes_read,
+                    spatial_engine::FOOTER_DESCRIPTOR_MAX_BYTES
+                );
+                use std::io::Write;
+                let _ = std::io::stdout().flush();
+            }
+        })?;
 
     let running = serve(DataPlaneConfig {
         factory: std::sync::Arc::new(EngineSourceFactory::with_connection_reports(
@@ -164,7 +177,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await?;
 
-    println!("data plane   : 127.0.0.1:{} (loopback, ephemeral port)", running.addr.port());
+    println!(
+        "data plane   : 127.0.0.1:{} (loopback, ephemeral port)",
+        running.addr.port()
+    );
     println!("open         : {}", running.launch_url());
     println!("\nADR-012 is Proposed; this adapter is the provisional choice per the bake-off");
     println!("README §19.10 step 3, and is not a transport decision. Ctrl-C to stop.");

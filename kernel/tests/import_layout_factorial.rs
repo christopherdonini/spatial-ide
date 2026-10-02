@@ -88,8 +88,11 @@ use support::*;
 // engine/tests/import_layout_digest.rs) --------------------------------------------------------------
 
 const GRANULARITIES: [usize; 3] = [8_192, 4_096, 2_048];
-const ORDERS: [ClusterOrder; 3] =
-    [ClusterOrder::SourceIdentity, ClusterOrder::Hilbert16, ClusterOrder::Shuffled];
+const ORDERS: [ClusterOrder; 3] = [
+    ClusterOrder::SourceIdentity,
+    ClusterOrder::Hilbert16,
+    ClusterOrder::Shuffled,
+];
 
 /// The phase-2 pin (`CUT-STATE.md`'s phase-2 addendum table), independently re-verified against the
 /// file on disk before any trial reads it — a fixture that moved underneath this phase must not be
@@ -159,7 +162,10 @@ fn logs_dir() -> PathBuf {
 }
 
 fn fixture_path(order: ClusterOrder, granularity: usize) -> PathBuf {
-    evidence_dir().join(format!("parcels-145mb-duckdb-{}-g{granularity}.parquet", order.as_str()))
+    evidence_dir().join(format!(
+        "parcels-145mb-duckdb-{}-g{granularity}.parquet",
+        order.as_str()
+    ))
 }
 
 /// This cut's own 40 GiB preflight floor (`CUT-STATE.md` phase 0). **Deliberately shadows**
@@ -203,7 +209,12 @@ enum ViewId {
 }
 
 impl ViewId {
-    const ALL: [ViewId; 4] = [Self::Whole, Self::NearQuarter, Self::FarQuarter, Self::Sixty4th];
+    const ALL: [ViewId; 4] = [
+        Self::Whole,
+        Self::NearQuarter,
+        Self::FarQuarter,
+        Self::Sixty4th,
+    ];
 
     fn as_str(self) -> &'static str {
         match self {
@@ -266,7 +277,13 @@ fn predicted_rows(v: ViewId) -> u64 {
     };
     let mut rows = 0u64;
     for j in y_lo..=y_hi {
-        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        let in_row = if j < full_rows {
+            cols
+        } else if j == full_rows {
+            partial
+        } else {
+            0
+        };
         rows += in_row.min(x_cols);
     }
     rows
@@ -283,7 +300,12 @@ struct Cell {
 
 impl Cell {
     fn label(&self) -> String {
-        format!("{}|g{}|{}", self.order.as_str(), self.granularity, self.view.as_str())
+        format!(
+            "{}|g{}|{}",
+            self.order.as_str(),
+            self.granularity,
+            self.view.as_str()
+        )
     }
     fn parse(s: &str) -> Option<Self> {
         let p: Vec<&str> = s.split('|').collect();
@@ -304,7 +326,11 @@ impl Cell {
             "1-64" => ViewId::Sixty4th,
             _ => return None,
         };
-        Some(Self { order, granularity, view })
+        Some(Self {
+            order,
+            granularity,
+            view,
+        })
     }
 }
 
@@ -315,7 +341,11 @@ fn cells() -> Vec<Cell> {
     for &order in &ORDERS {
         for &granularity in &GRANULARITIES {
             for &view in &ViewId::ALL {
-                out.push(Cell { order, granularity, view });
+                out.push(Cell {
+                    order,
+                    granularity,
+                    view,
+                });
             }
         }
     }
@@ -485,21 +515,37 @@ fn io_read_bytes() -> Option<u64> {
 
 // ---- the driver -----------------------------------------------------------------------------------
 
-fn spawn_trial(exe: &std::path::Path, cell: &Cell, slot: &std::path::Path) -> Result<String, String> {
+fn spawn_trial(
+    exe: &std::path::Path,
+    cell: &Cell,
+    slot: &std::path::Path,
+) -> Result<String, String> {
     let _ = std::fs::remove_file(slot);
     let started = Instant::now();
     let out = Command::new(exe)
-        .args(["import_layout_trial_child", "--exact", "--nocapture", "--test-threads=1"])
+        .args([
+            "import_layout_trial_child",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+        ])
         .env(CELL_VAR, cell.label())
         .env(OUT_VAR, slot)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
     if started.elapsed() > CEIL_TRIAL {
-        return Err(format!("exceeded the declared {} s trial ceiling", CEIL_TRIAL.as_secs()));
+        return Err(format!(
+            "exceeded the declared {} s trial ceiling",
+            CEIL_TRIAL.as_secs()
+        ));
     }
     if !out.status.success() {
-        let tail: String =
-            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        let tail: String = String::from_utf8_lossy(&out.stderr)
+            .lines()
+            .rev()
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(" / ");
         return Err(format!("child exited {:?}: {tail}", out.status.code()));
     }
     std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
@@ -558,12 +604,16 @@ fn the_145mb_factorial_pass() {
         let path = fixture_path(order, g);
         let (bytes, hash) = file_facts(&path);
         assert_eq!(
-            hash, want_hash,
+            hash,
+            want_hash,
             "{}@{g}: fixture hash does not match the phase-2 pin ({want_hash}) — refusing to \
              measure a fixture that moved underneath this phase",
             order.as_str()
         );
-        say!("verified {} @ g{g}: {bytes} B, sha256 {hash}", order.as_str());
+        say!(
+            "verified {} @ g{g}: {bytes} B, sha256 {hash}",
+            order.as_str()
+        );
         fixture_facts.push((order, g, bytes, hash));
     }
     assert_eq!(fixture_facts.len(), 9, "expected the full nine-file matrix");
@@ -581,12 +631,19 @@ fn the_145mb_factorial_pass() {
         .map(|&v| serde_json::json!({"viewport": v.as_str(), "rows": predicted_rows(v)}))
         .collect();
     for &v in &ViewId::ALL {
-        say!("viewport {} selects {} rows (arithmetic, generator-derived)", v.as_str(), predicted_rows(v));
+        say!(
+            "viewport {} selects {} rows (arithmetic, generator-derived)",
+            v.as_str(),
+            predicted_rows(v)
+        );
     }
 
     // ---- mechanism self-check, before anything is settled or timed ----------------------------
-    let probe =
-        Cell { order: ClusterOrder::SourceIdentity, granularity: 8_192, view: ViewId::Sixty4th };
+    let probe = Cell {
+        order: ClusterOrder::SourceIdentity,
+        granularity: 8_192,
+        view: ViewId::Sixty4th,
+    };
     let slot = evidence_dir().join("trial-slot-factorial.json");
     match spawn_trial(&exe, &probe, &slot) {
         Ok(line) => {
@@ -630,8 +687,16 @@ fn the_145mb_factorial_pass() {
 
     // ---- the trial loop ---------------------------------------------------------------------------
     let all = cells();
-    assert_eq!(all.len(), 36, "expected the full 3-order x 3-granularity x 4-viewport matrix");
-    say!("{} cells x n={N} = {} trials; interleaving: interleaved(len, r) = (i + 5r) mod len", all.len(), all.len() * N);
+    assert_eq!(
+        all.len(),
+        36,
+        "expected the full 3-order x 3-granularity x 4-viewport matrix"
+    );
+    say!(
+        "{} cells x n={N} = {} trials; interleaving: interleaved(len, r) = (i + 5r) mod len",
+        all.len(),
+        all.len() * N
+    );
 
     let mut trials: Vec<(usize, Cell, serde_json::Value)> = Vec::new();
     for r in 0..N {
@@ -651,7 +716,11 @@ fn the_145mb_factorial_pass() {
                 }
                 Err(e) => {
                     say!("UNMEASURED — trial {} rep {r}: {e}", cell.label());
-                    trials.push((r, cell, serde_json::json!({"cell": cell.label(), "error": e})));
+                    trials.push((
+                        r,
+                        cell,
+                        serde_json::json!({"cell": cell.label(), "error": e}),
+                    ));
                 }
             }
         }
@@ -661,7 +730,11 @@ fn the_145mb_factorial_pass() {
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     // ---- re-hash the fixtures after the last trial ---------------------------------------------
@@ -685,32 +758,41 @@ fn the_145mb_factorial_pass() {
     }
 
     let free_after = free_bytes_on_c().unwrap_or(0);
-    say!("free disk after: {:.2} GiB ({free_after} B)", free_after as f64 / (1u64 << 30) as f64);
+    say!(
+        "free disk after: {:.2} GiB ({free_after} B)",
+        free_after as f64 / (1u64 << 30) as f64
+    );
 
     // ---- per-cell summaries ----------------------------------------------------------------------
-    let field_u64 = |order: ClusterOrder, g: usize, view: ViewId, field: &str| -> Vec<Option<u64>> {
-        let mut byrep: Vec<Option<u64>> = vec![None; N];
-        for (r, c, v) in &trials {
-            if c.order == order && c.granularity == g && c.view == view {
-                byrep[*r] = v.get(field).and_then(|x| x.as_u64());
+    let field_u64 =
+        |order: ClusterOrder, g: usize, view: ViewId, field: &str| -> Vec<Option<u64>> {
+            let mut byrep: Vec<Option<u64>> = vec![None; N];
+            for (r, c, v) in &trials {
+                if c.order == order && c.granularity == g && c.view == view {
+                    byrep[*r] = v.get(field).and_then(|x| x.as_u64());
+                }
             }
-        }
-        byrep
-    };
-    let field_f64 = |order: ClusterOrder, g: usize, view: ViewId, field: &str| -> Vec<Option<f64>> {
-        let mut byrep: Vec<Option<f64>> = vec![None; N];
-        for (r, c, v) in &trials {
-            if c.order == order && c.granularity == g && c.view == view {
-                byrep[*r] = v.get(field).and_then(|x| x.as_f64());
+            byrep
+        };
+    let field_f64 =
+        |order: ClusterOrder, g: usize, view: ViewId, field: &str| -> Vec<Option<f64>> {
+            let mut byrep: Vec<Option<f64>> = vec![None; N];
+            for (r, c, v) in &trials {
+                if c.order == order && c.granularity == g && c.view == view {
+                    byrep[*r] = v.get(field).and_then(|x| x.as_f64());
+                }
             }
-        }
-        byrep
-    };
+            byrep
+        };
     let cell_errors = |order: ClusterOrder, g: usize, view: ViewId| -> Vec<String> {
         trials
             .iter()
             .filter(|(_, c, _)| c.order == order && c.granularity == g && c.view == view)
-            .filter_map(|(_, _, v)| v.get("error").and_then(|e| e.as_str()).map(|s| s.to_string()))
+            .filter_map(|(_, _, v)| {
+                v.get("error")
+                    .and_then(|e| e.as_str())
+                    .map(|s| s.to_string())
+            })
             .collect()
     };
 
@@ -720,47 +802,51 @@ fn the_145mb_factorial_pass() {
             for &view in &ViewId::ALL {
                 let rb = field_u64(order, g, view, "read_bytes_query");
                 let errs = cell_errors(order, g, view);
-                let (status, value, distinct_count) = if !errs.is_empty()
-                    || rb.iter().any(|v| v.is_none())
-                {
-                    (
+                let (status, value, distinct_count) =
+                    if !errs.is_empty() || rb.iter().any(|v| v.is_none()) {
+                        (
                         "unmeasured — one or more of the 7 trials errored or returned no read-byte \
                          count"
                             .to_string(),
                         None,
                         0usize,
                     )
-                } else {
-                    let vals: Vec<u64> = rb.iter().map(|v| v.unwrap()).collect();
-                    let distinct: BTreeSet<u64> = vals.iter().copied().collect();
-                    if distinct.len() != 1 {
-                        (
-                            format!(
+                    } else {
+                        let vals: Vec<u64> = rb.iter().map(|v| v.unwrap()).collect();
+                        let distinct: BTreeSet<u64> = vals.iter().copied().collect();
+                        if distinct.len() != 1 {
+                            (
+                                format!(
                                 "unmeasured — read counter non-deterministic ({} distinct values: \
                                  {distinct:?})",
                                 distinct.len()
                             ),
-                            None,
-                            distinct.len(),
-                        )
-                    } else {
-                        ("measured".to_string(), Some(vals[0]), 1usize)
-                    }
-                };
+                                None,
+                                distinct.len(),
+                            )
+                        } else {
+                            ("measured".to_string(), Some(vals[0]), 1usize)
+                        }
+                    };
                 let file_bytes = file_bytes_of(order, g);
                 let read_fraction = value.map(|v| v as f64 / file_bytes as f64);
 
                 let tm = field_f64(order, g, view, "total_ms");
                 let tm_ok: Vec<f64> = tm.iter().flatten().copied().collect();
-                let total_ms_p50 =
-                    if tm_ok.len() == N { Some(pct(&sorted(&tm_ok), 0.5)) } else { None };
+                let total_ms_p50 = if tm_ok.len() == N {
+                    Some(pct(&sorted(&tm_ok), 0.5))
+                } else {
+                    None
+                };
 
                 let fb = field_f64(order, g, view, "first_batch_ms");
 
                 let rows = field_u64(order, g, view, "rows");
                 let predicted = predicted_rows(view);
-                let rows_match_predicted =
-                    !rows.is_empty() && rows.iter().all(|r| r.map(|x| x == predicted).unwrap_or(false));
+                let rows_match_predicted = !rows.is_empty()
+                    && rows
+                        .iter()
+                        .all(|r| r.map(|x| x == predicted).unwrap_or(false));
 
                 cell_summaries.push(CellSummary {
                     order,
@@ -794,8 +880,18 @@ fn the_145mb_factorial_pass() {
     for &g in &GRANULARITIES {
         let c = find_cell(ClusterOrder::SourceIdentity, g, ViewId::NearQuarter);
         let h = find_cell(ClusterOrder::Hilbert16, g, ViewId::NearQuarter);
-        let c_rep = field_u64(ClusterOrder::SourceIdentity, g, ViewId::NearQuarter, "read_bytes_query");
-        let h_rep = field_u64(ClusterOrder::Hilbert16, g, ViewId::NearQuarter, "read_bytes_query");
+        let c_rep = field_u64(
+            ClusterOrder::SourceIdentity,
+            g,
+            ViewId::NearQuarter,
+            "read_bytes_query",
+        );
+        let h_rep = field_u64(
+            ClusterOrder::Hilbert16,
+            g,
+            ViewId::NearQuarter,
+            "read_bytes_query",
+        );
         let per_rep_ratio: Vec<Option<f64>> = c_rep
             .iter()
             .zip(h_rep.iter())
@@ -813,7 +909,9 @@ fn the_145mb_factorial_pass() {
         };
         say!(
             "h_le_70pct g{g}: C={:?} H={:?} per-rep ratios={:?} -> {verdict}",
-            c.read_bytes, h.read_bytes, per_rep_ratio
+            c.read_bytes,
+            h.read_bytes,
+            per_rep_ratio
         );
         h_le_70pct.push(serde_json::json!({
             "granularity": g, "c_read_bytes": c.read_bytes, "h_read_bytes": h.read_bytes,
@@ -875,7 +973,10 @@ fn the_145mb_factorial_pass() {
     say!(
         "prediction 3 (quarter crossover, 13 vs 49 groups): g8192 C={:?} H={:?} (sign {s13:?}); \
          g2048 C={:?} H={:?} (sign {s49:?}) -> {pred3_verdict}",
-        c13.read_bytes, h13.read_bytes, c49.read_bytes, h49.read_bytes
+        c13.read_bytes,
+        h13.read_bytes,
+        c49.read_bytes,
+        h49.read_bytes
     );
 
     // ---- reported, not one of the three required verdicts: whole-file regression, and the
@@ -985,9 +1086,15 @@ fn the_145mb_factorial_pass() {
     )
     .expect("write artifact");
     std::fs::write(logs_dir().join("factorial-145mb.log"), &log).expect("write log");
-    println!("→ {}", evidence_dir().join("first-factorial-145mb.json").display());
+    println!(
+        "→ {}",
+        evidence_dir().join("first-factorial-145mb.json").display()
+    );
 
-    assert!(!any_fixture_changed, "a fixture changed during the pass — see the log above");
+    assert!(
+        !any_fixture_changed,
+        "a fixture changed during the pass — see the log above"
+    );
 }
 
 // =====================================================================================================
@@ -1042,7 +1149,13 @@ fn predicted_rows_5gb(v: ViewId) -> u64 {
     };
     let mut rows = 0u64;
     for j in y_lo..=y_hi {
-        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        let in_row = if j < full_rows {
+            cols
+        } else if j == full_rows {
+            partial
+        } else {
+            0
+        };
         rows += in_row.min(x_cols);
     }
     rows
@@ -1261,17 +1374,29 @@ fn spawn_trial_5gb(
     let _ = std::fs::remove_file(slot);
     let started = Instant::now();
     let out = Command::new(exe)
-        .args(["import_layout_5gb_trial_child", "--exact", "--nocapture", "--test-threads=1"])
+        .args([
+            "import_layout_5gb_trial_child",
+            "--exact",
+            "--nocapture",
+            "--test-threads=1",
+        ])
         .env(CELL_VAR_5GB, cell.label())
         .env(OUT_VAR_5GB, slot)
         .output()
         .map_err(|e| format!("spawn: {e}"))?;
     if started.elapsed() > CEIL_TRIAL_5GB {
-        return Err(format!("exceeded the declared {} s trial ceiling", CEIL_TRIAL_5GB.as_secs()));
+        return Err(format!(
+            "exceeded the declared {} s trial ceiling",
+            CEIL_TRIAL_5GB.as_secs()
+        ));
     }
     if !out.status.success() {
-        let tail: String =
-            String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" / ");
+        let tail: String = String::from_utf8_lossy(&out.stderr)
+            .lines()
+            .rev()
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(" / ");
         return Err(format!("child exited {:?}: {tail}", out.status.code()));
     }
     std::fs::read_to_string(slot).map_err(|e| format!("child wrote no result file: {e}"))
@@ -1332,7 +1457,8 @@ fn the_5gb_scored_cells() {
             order.as_str()
         );
         assert_eq!(
-            bytes, want_bytes,
+            bytes,
+            want_bytes,
             "{}: fixture size does not match the phase-5 pin ({want_bytes} B)",
             order.as_str()
         );
@@ -1342,7 +1468,11 @@ fn the_5gb_scored_cells() {
     assert_eq!(fixture_facts.len(), 3, "expected exactly C5, H5, R5");
 
     let file_bytes_of = |order: FileId5gb| -> u64 {
-        fixture_facts.iter().find(|(o, _, _)| *o == order).map(|(_, b, _)| *b).unwrap_or(0)
+        fixture_facts
+            .iter()
+            .find(|(o, _, _)| *o == order)
+            .map(|(_, b, _)| *b)
+            .unwrap_or(0)
     };
 
     let predicted: Vec<serde_json::Value> = ViewId::ALL
@@ -1359,7 +1489,10 @@ fn the_5gb_scored_cells() {
 
     // ---- mechanism self-check, before anything is settled or timed ------------------------------
     // The fastest cell (1/64 of C5) so the self-check itself stays well inside the 900 s ceiling.
-    let probe = Cell5gb { order: FileId5gb::C5, view: ViewId::Sixty4th };
+    let probe = Cell5gb {
+        order: FileId5gb::C5,
+        view: ViewId::Sixty4th,
+    };
     let slot = evidence_dir().join("trial-slot-5gb.json");
     match spawn_trial_5gb(&exe, &probe, &slot) {
         Ok(line) => {
@@ -1401,8 +1534,16 @@ fn the_5gb_scored_cells() {
 
     // ---- the trial loop ----------------------------------------------------------------------------
     let all = cells_5gb();
-    assert_eq!(all.len(), 12, "expected the full 3-order x 4-viewport 5 GB matrix");
-    say!("{} cells x n={N} = {} trials; interleaving: interleaved(len, r) = (i + 5r) mod len", all.len(), all.len() * N);
+    assert_eq!(
+        all.len(),
+        12,
+        "expected the full 3-order x 4-viewport 5 GB matrix"
+    );
+    say!(
+        "{} cells x n={N} = {} trials; interleaving: interleaved(len, r) = (i + 5r) mod len",
+        all.len(),
+        all.len() * N
+    );
 
     let mut trials: Vec<(usize, Cell5gb, serde_json::Value)> = Vec::new();
     for r in 0..N {
@@ -1422,7 +1563,11 @@ fn the_5gb_scored_cells() {
                 }
                 Err(e) => {
                     say!("UNMEASURED — trial {} rep {r}: {e}", cell.label());
-                    trials.push((r, cell, serde_json::json!({"cell": cell.label(), "error": e})));
+                    trials.push((
+                        r,
+                        cell,
+                        serde_json::json!({"cell": cell.label(), "error": e}),
+                    ));
                 }
             }
         }
@@ -1432,7 +1577,11 @@ fn the_5gb_scored_cells() {
 
     let spreads = phase_spreads(&canaries);
     for (label, spread, ok) in &spreads {
-        say!("canary {label}: spread {:.1}% {}", spread * 100.0, if *ok { "OK" } else { "OVER" });
+        say!(
+            "canary {label}: spread {:.1}% {}",
+            spread * 100.0,
+            if *ok { "OK" } else { "OVER" }
+        );
     }
 
     // ---- re-hash the fixtures after the last trial -----------------------------------------------
@@ -1443,7 +1592,10 @@ fn the_5gb_scored_cells() {
         let (bytes_after, hash_after) = file_facts(&path);
         if hash_after != *hash_before {
             any_fixture_changed = true;
-            say!("INVALIDATED — {} changed during the pass: {hash_before} -> {hash_after}", order.as_str());
+            say!(
+                "INVALIDATED — {} changed during the pass: {hash_before} -> {hash_after}",
+                order.as_str()
+            );
         }
         fixture_json.push(serde_json::json!({
             "order": order.as_str(), "path": path.display().to_string(),
@@ -1453,7 +1605,10 @@ fn the_5gb_scored_cells() {
     }
 
     let free_after = free_bytes_on_c().unwrap_or(0);
-    say!("free disk after: {:.2} GiB ({free_after} B)", free_after as f64 / (1u64 << 30) as f64);
+    say!(
+        "free disk after: {:.2} GiB ({free_after} B)",
+        free_after as f64 / (1u64 << 30) as f64
+    );
 
     // ---- per-cell summaries ------------------------------------------------------------------------
     let field_u64 = |order: FileId5gb, view: ViewId, field: &str| -> Vec<Option<u64>> {
@@ -1478,7 +1633,11 @@ fn the_5gb_scored_cells() {
         trials
             .iter()
             .filter(|(_, c, _)| c.order == order && c.view == view)
-            .filter_map(|(_, _, v)| v.get("error").and_then(|e| e.as_str()).map(|s| s.to_string()))
+            .filter_map(|(_, _, v)| {
+                v.get("error")
+                    .and_then(|e| e.as_str())
+                    .map(|s| s.to_string())
+            })
             .collect()
     };
 
@@ -1518,14 +1677,20 @@ fn the_5gb_scored_cells() {
 
             let tm = field_f64(order, view, "total_ms");
             let tm_ok: Vec<f64> = tm.iter().flatten().copied().collect();
-            let total_ms_p50 = if tm_ok.len() == N { Some(pct(&sorted(&tm_ok), 0.5)) } else { None };
+            let total_ms_p50 = if tm_ok.len() == N {
+                Some(pct(&sorted(&tm_ok), 0.5))
+            } else {
+                None
+            };
 
             let fb = field_f64(order, view, "first_batch_ms");
 
             let rows = field_u64(order, view, "rows");
             let predicted = predicted_rows_5gb(view);
-            let rows_match_predicted =
-                !rows.is_empty() && rows.iter().all(|r| r.map(|x| x == predicted).unwrap_or(false));
+            let rows_match_predicted = !rows.is_empty()
+                && rows
+                    .iter()
+                    .all(|r| r.map(|x| x == predicted).unwrap_or(false));
 
             cell_summaries.push(CellSummary5gb {
                 order,
@@ -1543,7 +1708,11 @@ fn the_5gb_scored_cells() {
             });
         }
     }
-    assert_eq!(cell_summaries.len(), 12, "expected one summary per 5 GB cell");
+    assert_eq!(
+        cell_summaries.len(),
+        12,
+        "expected one summary per 5 GB cell"
+    );
 
     let find_cell = |order: FileId5gb, view: ViewId| -> &CellSummary5gb {
         cell_summaries
@@ -1575,7 +1744,9 @@ fn the_5gb_scored_cells() {
     say!(
         "GATE item 1 (H5 <= 70% of C5 at near quarter, all 7 trials): C5={:?} H5={:?} per-rep \
          ratios={:?} -> {gate1_verdict}",
-        c_nq.read_bytes, h_nq.read_bytes, per_rep_ratio
+        c_nq.read_bytes,
+        h_nq.read_bytes,
+        per_rep_ratio
     );
 
     // ---- THE GATE's determinism condition, restated per cell for visibility -----------------------
@@ -1590,22 +1761,22 @@ fn the_5gb_scored_cells() {
     }
 
     // ---- THE GATE, item 2: total query time — H5 beats C5 at the near quarter -----------------------
-    let (gate2_wins, gate2_of) = if c_nq.total_ms_samples.len() == N && h_nq.total_ms_samples.len() == N
-    {
-        let mut w = 0usize;
-        let mut o = 0usize;
-        for &hv in &h_nq.total_ms_samples {
-            for &cv in &c_nq.total_ms_samples {
-                o += 1;
-                if hv < cv {
-                    w += 1;
+    let (gate2_wins, gate2_of) =
+        if c_nq.total_ms_samples.len() == N && h_nq.total_ms_samples.len() == N {
+            let mut w = 0usize;
+            let mut o = 0usize;
+            for &hv in &h_nq.total_ms_samples {
+                for &cv in &c_nq.total_ms_samples {
+                    o += 1;
+                    if hv < cv {
+                        w += 1;
+                    }
                 }
             }
-        }
-        (Some(w), Some(o))
-    } else {
-        (None, None)
-    };
+            (Some(w), Some(o))
+        } else {
+            (None, None)
+        };
     let gate2_p50_lower = match (h_nq.total_ms_p50, c_nq.total_ms_p50) {
         (Some(hp), Some(cp)) => Some(hp < cp),
         _ => None,
@@ -1618,7 +1789,11 @@ fn the_5gb_scored_cells() {
     say!(
         "GATE item 2 (total time, H5 vs C5 near quarter): H5 p50={:?} C5 p50={:?} p50_lower={:?} \
          pairwise={:?}/{:?} (need >=42/49) -> {gate2_verdict}",
-        h_nq.total_ms_p50, c_nq.total_ms_p50, gate2_p50_lower, gate2_wins, gate2_of
+        h_nq.total_ms_p50,
+        c_nq.total_ms_p50,
+        gate2_p50_lower,
+        gate2_wins,
+        gate2_of
     );
 
     // ---- THE GATE, "and all of": no whole-file regression -------------------------------------------
@@ -1636,7 +1811,9 @@ fn the_5gb_scored_cells() {
     say!(
         "GATE item 3 (no whole-file regression, H5 <= 100.5% of C5): C5 whole={:?} H5 whole={:?} \
          ratio={:?} -> {gate3_verdict}",
-        c_whole.read_bytes, h_whole.read_bytes, whole_ratio
+        c_whole.read_bytes,
+        h_whole.read_bytes,
+        whole_ratio
     );
 
     // ---- THE GATE, "and all of": row counts match the generator-derived prediction ------------------
@@ -1678,10 +1855,15 @@ fn the_5gb_scored_cells() {
     say!("prediction 1, 5 GB half (R5 >= 95% at every viewport): {pred1_verdict}");
 
     // ---- THE GATE's overall verdict -------------------------------------------------------------------
-    let gate_overall = if [gate1_verdict, gate2_verdict, gate3_verdict].iter().any(|v| *v == "UNMEASURED")
+    let gate_overall = if [gate1_verdict, gate2_verdict, gate3_verdict]
+        .iter()
+        .any(|v| *v == "UNMEASURED")
     {
         "UNMEASURED"
-    } else if gate1_verdict == "PASS" && gate2_verdict == "PASS" && gate3_verdict == "PASS" && rows_all_match
+    } else if gate1_verdict == "PASS"
+        && gate2_verdict == "PASS"
+        && gate3_verdict == "PASS"
+        && rows_all_match
     {
         "GATE PASSES"
     } else {
@@ -1758,5 +1940,8 @@ fn the_5gb_scored_cells() {
     std::fs::write(logs_dir().join("factorial-5gb.log"), &log).expect("write log");
     println!("→ {}", evidence_dir().join("factorial-5gb.json").display());
 
-    assert!(!any_fixture_changed, "a fixture changed during the pass — see the log above");
+    assert!(
+        !any_fixture_changed,
+        "a fixture changed during the pass — see the log above"
+    );
 }

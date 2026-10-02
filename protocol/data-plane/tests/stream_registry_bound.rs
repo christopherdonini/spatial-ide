@@ -109,9 +109,14 @@ async fn connect(dp: &RunningDataPlane) -> Result<Client, String> {
     let origin = format!("http://127.0.0.1:{}", dp.addr.port());
     req.headers_mut().insert("origin", origin.parse().unwrap());
     let token = dp.session.token_for_delivery().to_string();
-    req.headers_mut()
-        .insert("sec-websocket-protocol", format!("{SUBPROTOCOL}, tok.{token}").parse().unwrap());
-    tokio_tungstenite::connect_async(req).await.map(|(s, _)| s).map_err(|e| e.to_string())
+    req.headers_mut().insert(
+        "sec-websocket-protocol",
+        format!("{SUBPROTOCOL}, tok.{token}").parse().unwrap(),
+    );
+    tokio_tungstenite::connect_async(req)
+        .await
+        .map(|(s, _)| s)
+        .map_err(|e| e.to_string())
 }
 
 async fn send_start(c: &mut Client, params: &[u8]) {
@@ -147,14 +152,21 @@ fn frame_payload(b: &[u8]) -> &[u8] {
 /// and the stream id, space-separated — `adapter_ws::drive`'s own encoding).
 fn parse_open_stream_id(b: &[u8]) -> String {
     let s = std::str::from_utf8(frame_payload(b)).expect("OPEN payload is opaque UTF-8");
-    s.split(' ').nth(1).expect("operation and stream id are space-separated").to_string()
+    s.split(' ')
+        .nth(1)
+        .expect("operation and stream id are space-separated")
+        .to_string()
 }
 
 /// The server always sends OPEN as the very first frame on a stream (`adapter_ws::drive`, before
 /// it ever waits on credit), so reading exactly one frame is enough.
 async fn read_open_id(c: &mut Client) -> String {
-    let msg = recv_by(c, "the OPEN frame").await.expect("connection ended before OPEN");
-    let Message::Binary(b) = msg else { panic!("expected a binary OPEN frame") };
+    let msg = recv_by(c, "the OPEN frame")
+        .await
+        .expect("connection ended before OPEN");
+    let Message::Binary(b) = msg else {
+        panic!("expected a binary OPEN frame")
+    };
     assert_eq!(b[0], wire::TAG_OPEN, "the first frame is always OPEN");
     parse_open_stream_id(&b)
 }
@@ -188,7 +200,11 @@ async fn run_finished_stream(dp: &RunningDataPlane) -> String {
     let id = read_open_id(&mut c).await;
     grant(&mut c, 10).await;
     let code = read_terminal_code(&mut c, "the finished stream's terminal frame").await;
-    assert_eq!(code, wire::TERM_COMPLETED, "the finite source must complete cleanly");
+    assert_eq!(
+        code,
+        wire::TERM_COMPLETED,
+        "the finite source must complete cleanly"
+    );
     c.close(None).await.ok();
     wait_for_terminal_recorded(dp, &id).await;
     id
@@ -257,7 +273,10 @@ async fn a_live_stream_is_never_pruned_at_the_count_ceiling() {
     for _ in 0..(MAX_TERMINAL_RECORDS + EXTRA) {
         run_finished_stream(&dp).await;
         assert!(
-            dp.registry.snapshot().iter().any(|s| s.stream.as_str() == live_id),
+            dp.registry
+                .snapshot()
+                .iter()
+                .any(|s| s.stream.as_str() == live_id),
             "the live entry must never be pruned while it has no terminal record"
         );
     }
@@ -316,12 +335,25 @@ async fn a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer() {
 
     wait_for_terminal_recorded(&dp, &id).await;
     let recorded = dp.registry.terminals();
-    let (_, terminal) = recorded.iter().find(|(sid, _)| sid == &id).expect("recorded");
-    assert_eq!(terminal, &Terminal::Completed, "the recorded terminal is unaffected by a late cancel");
+    let (_, terminal) = recorded
+        .iter()
+        .find(|(sid, _)| sid == &id)
+        .expect("recorded");
+    assert_eq!(
+        terminal,
+        &Terminal::Completed,
+        "the recorded terminal is unaffected by a late cancel"
+    );
 
     let states = dp.registry.snapshot();
-    let state = states.iter().find(|s| s.stream.as_str() == id).expect("state retained");
-    assert!(state.is_cancelled(), "the producer still observes a cancel sent during its own drain");
+    let state = states
+        .iter()
+        .find(|s| s.stream.as_str() == id)
+        .expect("state retained");
+    assert!(
+        state.is_cancelled(),
+        "the producer still observes a cancel sent during its own drain"
+    );
 
     dp.shutdown().await;
 }

@@ -28,7 +28,9 @@ use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
 use spatial_engine::{EngineError, WatchSignal};
 use spatial_kernel::publish::error::PublishError;
-use spatial_kernel::skp::{error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry};
+use spatial_kernel::skp::{
+    error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry,
+};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
 use spatial_skp::v0::{DatasetHandle, OpenDatasetRequest, ViewportQueryRequest, SKP_VERSION};
 
@@ -90,10 +92,18 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
     let path = fixture("terminal-carries-code");
     let handle = DatasetHandle::mint();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -136,7 +146,10 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
          string `frontends/shell/src/streaming/liveTicketSet.ts` matches as a prefix: {detail}"
     );
     // The prose is carried whole behind the code; nothing is summarized away.
-    assert!(detail.contains("does not establish snapshot consistency"), "{detail}");
+    assert!(
+        detail.contains("does not establish snapshot consistency"),
+        "{detail}"
+    );
 }
 
 /// Mutation: drop `terminal_detail_of` from `EngineSource::next_into`. Expected failure:
@@ -157,7 +170,10 @@ fn a_data_plane_terminal_detail_begins_with_the_refusal_s_typed_code() {
     // And the prose is still all there, unedited — the code is added, nothing is taken away. The
     // wording itself is the human's at P6, so nothing here asserts it verbatim; what is asserted is
     // that `Display`'s output is carried whole.
-    assert!(detail.ends_with(&e.to_string()), "the refusal's own text is carried verbatim");
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
 
     // **The exact bytes the shell's own tests are written against.** `formatTerminalRefusal.test.ts`
     // and both streaming-manager test files use this literal; pinning it here means a change to the
@@ -208,14 +224,19 @@ finished reading"
 /// — 1 failed.
 #[test]
 fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
-    let e = EngineError::SourceCoverageLost { detail: "overflow".to_string() };
+    let e = EngineError::SourceCoverageLost {
+        detail: "overflow".to_string(),
+    };
     let detail = terminal_detail_of(&e);
 
     assert!(
         detail.starts_with(&format!("{SOURCE_COVERAGE_LOST_CODE}: ")),
         "the terminal detail must open with the typed code: {detail}"
     );
-    assert!(detail.ends_with(&e.to_string()), "the refusal's own text is carried verbatim");
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
 
     assert_eq!(
         detail,
@@ -257,8 +278,12 @@ fn a_coverage_lost_terminal_detail_carries_its_typed_code_and_exact_text() {
 fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
     let path = fixture("coverage-lost-pre-check");
     let arm = injected_watch::InjectedArm::new();
-    let host =
-        SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), session_end_channel().0);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        session_end_channel().0,
+    );
 
     let open = host
         .open_dataset(OpenDatasetRequest {
@@ -272,7 +297,12 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
 
     // A coverage loss AFTER admission: the sink's own `Admitted` arm ends the generation with
     // `SessionEndReason::CoverageLost` (`SOURCE-WATCHER-PREREGISTRATION.md` §2b).
-    arm.signal(&path, WatchSignal::CoverageLost { cause: "overflow".to_string() });
+    arm.signal(
+        &path,
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+    );
 
     let refused = host
         .viewport_query(ViewportQueryRequest {
@@ -285,7 +315,11 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
             columns: None,
         })
         .expect_err("a coverage-lost generation refuses the pre-check");
-    assert_eq!(refused.code, SOURCE_COVERAGE_LOST_CODE, "{}", refused.message);
+    assert_eq!(
+        refused.code, SOURCE_COVERAGE_LOST_CODE,
+        "{}",
+        refused.message
+    );
 
     let detail = format!("{}: {}", refused.code, refused.message);
     assert_eq!(
@@ -308,9 +342,15 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
 fn the_prefix_is_the_convention_for_every_engine_refusal_not_a_special_case() {
     for e in [
         EngineError::Cancelled,
-        EngineError::IdentityOrdinalPartitionedUnsupported { detail: "a directory".into() },
-        EngineError::InternalInconsistency { detail: "contradictory provenance".into() },
-        EngineError::NoCoveringBbox { detail: "no covering".into() },
+        EngineError::IdentityOrdinalPartitionedUnsupported {
+            detail: "a directory".into(),
+        },
+        EngineError::InternalInconsistency {
+            detail: "contradictory provenance".into(),
+        },
+        EngineError::NoCoveringBbox {
+            detail: "no covering".into(),
+        },
     ] {
         let detail = terminal_detail_of(&e);
         let code = error_of(&e).code;
@@ -338,8 +378,14 @@ fn a_publish_refusal_detail_begins_with_its_typed_code() {
     };
     assert_eq!(e.code(), "publish.geographic_crs_not_publishable");
     let detail = e.refusal_detail();
-    assert!(detail.starts_with("publish.geographic_crs_not_publishable: "), "{detail}");
-    assert!(detail.ends_with(&e.to_string()), "the refusal's own text is carried verbatim");
+    assert!(
+        detail.starts_with("publish.geographic_crs_not_publishable: "),
+        "{detail}"
+    );
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
 
     // **The exact bytes the shell's own test is written against.** `formatPublishRefusal.test.ts`'s
     // `REAL_KERNEL_REFUSAL` is this literal, captured from this function's output rather than
@@ -359,7 +405,10 @@ fn a_publish_refusal_detail_begins_with_its_typed_code() {
 
     // Every publish code lives in the `publish.` namespace and is distinct from the `engine.` one,
     // so a single client-side dispatch over `code` cannot confuse the two surfaces.
-    for other in [PublishError::RowFilterNotRecordable, PublishError::SourceNotPinned] {
+    for other in [
+        PublishError::RowFilterNotRecordable,
+        PublishError::SourceNotPinned,
+    ] {
         assert!(other.code().starts_with("publish."), "{}", other.code());
         assert_ne!(other.code(), e.code());
     }

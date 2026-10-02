@@ -39,7 +39,8 @@ use spatial_engine::lod::{
 mod common;
 use common::polygons_100k;
 
-const PARCELS_5GB: &str = r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
+const PARCELS_5GB: &str =
+    r"C:\dev\spatial-ide\target\slice-evidence\scale-pass\parcels-5gb.parquet";
 
 /// The same 40 GiB floor this crate's other 5 GB phases declare
 /// (`engine/tests/import_layout_5gb_fixtures.rs:132`, `engine/tests/lod_tier_builder.rs:947`).
@@ -118,7 +119,10 @@ struct ArmClock {
 
 impl ArmClock {
     fn new() -> Self {
-        Self { origin: Instant::now(), first_progress: Mutex::new(Vec::new()) }
+        Self {
+            origin: Instant::now(),
+            first_progress: Mutex::new(Vec::new()),
+        }
     }
 
     fn marks(&self) -> Vec<(u8, Duration)> {
@@ -140,7 +144,11 @@ impl TierBuildProgress for ArmClock {
 /// Print one built ladder's facts: the per-tier reduction (O5), bytes and sha256 (O8's disclosure),
 /// and §6's residual. Nothing here asserts a time.
 fn report(set: &TierSet, label: &str, total: Duration, marks: &[(u8, Duration)]) {
-    println!("--- {label}: total {:.3} ms ({:.3} s)", millis(total), total.as_secs_f64());
+    println!(
+        "--- {label}: total {:.3} ms ({:.3} s)",
+        millis(total),
+        total.as_secs_f64()
+    );
     for (i, outcome) in set.tiers().iter().enumerate() {
         let r = outcome.record();
         let start = marks.iter().find(|(t, _)| *t == r.tier()).map(|(_, d)| *d);
@@ -192,7 +200,11 @@ fn one_sample(source: &Dataset, directory: &Path, workers: usize, label: &str) -
     let set = build_tiers(source, workers, &cancel, Some(&clock)).expect("build the ladder");
     let total = started.elapsed();
 
-    assert_eq!(set.tiers().len(), LOD_TIER_COUNT, "the ladder is the declared three tiers");
+    assert_eq!(
+        set.tiers().len(),
+        LOD_TIER_COUNT,
+        "the ladder is the declared three tiers"
+    );
     // **The reuse guard.** A sample that reused a tier is not a build-time sample at all.
     for outcome in set.tiers() {
         assert!(
@@ -257,11 +269,17 @@ fn wall_time_arm_s_and_arm_p_over_polygons_100k() {
     // Arms in a fixed order, both arms' samples interleaved in neither direction: arm S first, then
     // arm P, each cleared before every sample. The order is stated because it is the only thing a
     // reader can check about a drift the session might have had.
-    for (arm, workers) in [("arm S", LOD_BUILD_WORKERS_ARM_S), ("arm P", LOD_BUILD_WORKERS)] {
+    for (arm, workers) in [
+        ("arm S", LOD_BUILD_WORKERS_ARM_S),
+        ("arm P", LOD_BUILD_WORKERS),
+    ] {
         for sample in 1..=SAMPLES_100K {
             let label = format!("{arm} sample {sample}/{SAMPLES_100K}");
             let total = one_sample(&source, &directory, workers, &label);
-            println!("SAMPLE {arm} workers {workers} total_ms {:.3}", millis(total));
+            println!(
+                "SAMPLE {arm} workers {workers} total_ms {:.3}",
+                millis(total)
+            );
         }
     }
     clear_tier_directory(&directory);
@@ -363,10 +381,25 @@ fn the_5gb_ladder_outcomes_o1_to_o4() {
 /// vertices per tier would measure the same property a second time and nothing else.
 fn verify_tier(tier_path: &Path, source: &Dataset, source_ids: &[u64], label: &str) {
     let opened = Dataset::open(tier_path).expect("O3: open the tier this engine wrote");
-    assert_eq!(opened.crs().identifier(), source.crs().identifier(), "O3: the tier is in the source's CRS");
-    assert_eq!(opened.geometry_column(), source.geometry_column(), "O3: geometry column");
-    assert_eq!(opened.geoparquet_version(), source.geoparquet_version(), "O3: GeoParquet version");
-    assert!(opened.covering().is_some(), "O3: the tier declares its own covering bbox columns");
+    assert_eq!(
+        opened.crs().identifier(),
+        source.crs().identifier(),
+        "O3: the tier is in the source's CRS"
+    );
+    assert_eq!(
+        opened.geometry_column(),
+        source.geometry_column(),
+        "O3: geometry column"
+    );
+    assert_eq!(
+        opened.geoparquet_version(),
+        source.geoparquet_version(),
+        "O3: GeoParquet version"
+    );
+    assert!(
+        opened.covering().is_some(),
+        "O3: the tier declares its own covering bbox columns"
+    );
     assert_eq!(
         opened.identity().source().source_column(),
         source.identity().source().source_column(),
@@ -375,18 +408,34 @@ fn verify_tier(tier_path: &Path, source: &Dataset, source_ids: &[u64], label: &s
 
     let emitted = read_ids(tier_path, source.identity().source().source_column());
     let unique: BTreeSet<u64> = emitted.iter().copied().collect();
-    assert_eq!(unique.len(), emitted.len(), "O2: {label} emitted duplicate ids");
+    assert_eq!(
+        unique.len(),
+        emitted.len(),
+        "O2: {label} emitted duplicate ids"
+    );
     let expected: BTreeSet<u64> = source_ids.iter().copied().collect();
     let missing: Vec<u64> = expected.difference(&unique).copied().take(4).collect();
-    assert!(missing.is_empty(), "O2: {label} is missing source id(s), first {missing:?}");
+    assert!(
+        missing.is_empty(),
+        "O2: {label} is missing source id(s), first {missing:?}"
+    );
     let extra: Vec<u64> = unique.difference(&expected).copied().take(4).collect();
-    assert!(extra.is_empty(), "O2: {label} emitted id(s) the source has not: {extra:?}");
+    assert!(
+        extra.is_empty(),
+        "O2: {label} emitted id(s) the source has not: {extra:?}"
+    );
 
     assert_eq!(emitted.len(), source_ids.len(), "O4: {label} row count");
     if let Some(i) = first_out_of_order(&emitted, source_ids) {
-        panic!("O4: {label} row {i}: source id {}, tier id {}", source_ids[i], emitted[i]);
+        panic!(
+            "O4: {label} row {i}: source id {}, tier id {}",
+            source_ids[i], emitted[i]
+        );
     }
-    println!("{label}: O2 identity ok ({} ids, unique, complete) · O3 open ok · O4 row order ok", emitted.len());
+    println!(
+        "{label}: O2 identity ok ({} ids, unique, complete) · O3 open ok · O4 row order ok",
+        emitted.len()
+    );
 }
 
 /// O4's positional half, factored out so it can be checked without a 5 GB build: the index of the
@@ -407,7 +456,11 @@ fn first_out_of_order(emitted: &[u64], expected: &[u64]) -> Option<usize> {
 #[test]
 fn the_row_order_check_fires_on_a_permutation() {
     let source: Vec<u64> = (0..8).collect();
-    assert_eq!(first_out_of_order(&source, &source), None, "an unpermuted tier is in order");
+    assert_eq!(
+        first_out_of_order(&source, &source),
+        None,
+        "an unpermuted tier is in order"
+    );
     let mut swapped = source.clone();
     swapped.swap(1, 2);
     assert_eq!(
@@ -415,8 +468,18 @@ fn the_row_order_check_fires_on_a_permutation() {
         Some(1),
         "a swapped pair is out of order at the first swapped index"
     );
-    let rotated: Vec<u64> = source.iter().copied().cycle().skip(1).take(source.len()).collect();
-    assert_eq!(first_out_of_order(&rotated, &source), Some(0), "a rotation is out of order at row 0");
+    let rotated: Vec<u64> = source
+        .iter()
+        .copied()
+        .cycle()
+        .skip(1)
+        .take(source.len())
+        .collect();
+    assert_eq!(
+        first_out_of_order(&rotated, &source),
+        Some(0),
+        "a rotation is out of order at row 0"
+    );
 }
 
 fn five_gb_build(workers: usize, label: &str, verify: bool) {
@@ -471,7 +534,10 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
                 let previous = tier - 1;
                 let already = self.inner.deleted.lock().expect("lock").contains(&previous);
                 if !already {
-                    let p = self.inner.directory.join(format!("tier-{previous}.parquet"));
+                    let p = self
+                        .inner
+                        .directory
+                        .join(format!("tier-{previous}.parquet"));
                     if p.is_file() {
                         verify_tier(
                             &p,
@@ -502,10 +568,15 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
 
     let cancel = CancelToken::new();
     let started = Instant::now();
-    let set = build_tiers(&source, workers, &cancel, Some(&observer)).expect("build the 5 GB ladder");
+    let set =
+        build_tiers(&source, workers, &cancel, Some(&observer)).expect("build the 5 GB ladder");
     let total = started.elapsed();
 
-    assert_eq!(set.tiers().len(), LOD_TIER_COUNT, "the ladder is the declared three tiers");
+    assert_eq!(
+        set.tiers().len(),
+        LOD_TIER_COUNT,
+        "the ladder is the declared three tiers"
+    );
     for outcome in set.tiers() {
         assert!(
             outcome.was_rebuilt(),
@@ -513,15 +584,32 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
             outcome.record().tier()
         );
     }
-    assert!(set.max_single_feature_simplify().is_some(), "{label}: §7's residual is reported");
+    assert!(
+        set.max_single_feature_simplify().is_some(),
+        "{label}: §7's residual is reported"
+    );
     report(&set, label, total, &observer.inner.clock.marks());
-    println!("SAMPLE {label} workers {workers} total_ms {:.3}", millis(total));
+    println!(
+        "SAMPLE {label} workers {workers} total_ms {:.3}",
+        millis(total)
+    );
 
     // The last tier is still on disk (disk discipline removed the two before it as they were
     // superseded), so it is the one verification can still reach after the build.
     if verify {
-        let last = set.tiers().last().expect("three tiers").record().path().to_path_buf();
-        verify_tier(&last, &source, &source_ids, &format!("{label} tier {LOD_TIER_COUNT}"));
+        let last = set
+            .tiers()
+            .last()
+            .expect("three tiers")
+            .record()
+            .path()
+            .to_path_buf();
+        verify_tier(
+            &last,
+            &source,
+            &source_ids,
+            &format!("{label} tier {LOD_TIER_COUNT}"),
+        );
     }
 
     for outcome in set.tiers() {
@@ -535,6 +623,12 @@ fn five_gb_build(workers: usize, label: &str, verify: bool) {
                 .collect()
         })
         .unwrap_or_default();
-    assert!(left.is_empty(), "{label}: the tier directory still holds a parquet file: {left:?}");
-    println!("{label}: free disk after {:?} B; directory listed empty of parquet files", free_bytes_on_c());
+    assert!(
+        left.is_empty(),
+        "{label}: the tier directory still holds a parquet file: {left:?}"
+    );
+    println!(
+        "{label}: free disk after {:?} B; directory listed empty of parquet files",
+        free_bytes_on_c()
+    );
 }

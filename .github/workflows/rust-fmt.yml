@@ -1,0 +1,80 @@
+name: Rust fmt
+
+# A rustfmt drift check over the two Rust scopes, and nothing more.
+#
+# ## What a green run here means, stated narrowly
+#
+# Both `cargo fmt --check` commands below found no formatting difference: the root workspace
+# (engine, kernel, renderer, protocol/data-plane, protocol/skp) and the shell's own workspace at
+# `frontends/shell/src-tauri`. The version step prints which rustfmt ran.
+#
+# ## What it does not mean
+#
+# See WORKSPACE-RUSTFMT-PREREGISTRATION.md, section 1, May not claim. In short: not the excluded
+# crates, not a later rustfmt, not clippy, not any behaviour or performance claim, not any
+# portability level. It reports drift; it does not prevent it, and this file claims nothing about
+# whether the check is required for merge.
+#
+# ## Why ubuntu-latest
+#
+# Hypothesis H1 of that form takes rustfmt's output on ubuntu-latest to equal the Windows reference
+# profile's for this tree; its declared test, E1, is this piece's pull_request run. Linux is the
+# cheapest runner and needs no C++ build, because `cargo fmt` does not compile anything.
+#
+# ## Why the heavy suite's filter is not widened
+#
+# product-ci-rust and product-ci-shell build and test; a format check needs neither, so it is its
+# own small workflow and the heavy workflows' `paths` stay as they are.
+
+on:
+  push:
+    paths:
+      - "**/*.rs"
+      - "**/Cargo.toml"
+      - "**/rustfmt.toml"
+      - "**/.rustfmt.toml"
+      - "**/rust-toolchain"
+      - "**/rust-toolchain.toml"
+      - ".github/workflows/rust-fmt.yml"
+  pull_request:
+    paths:
+      - "**/*.rs"
+      - "**/Cargo.toml"
+      - "**/rustfmt.toml"
+      - "**/.rustfmt.toml"
+      - "**/rust-toolchain"
+      - "**/rust-toolchain.toml"
+      - ".github/workflows/rust-fmt.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A superseded push is cancelled; `main` is exempt, as in the product workflows.
+concurrency:
+  group: rust-fmt-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  fmt:
+    name: cargo fmt --check (workspace and src-tauri)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: cargo fmt --version
+        run: cargo fmt --version
+
+      - name: cargo fmt --all --check (root workspace)
+        run: cargo fmt --all -- --check --color never
+
+      - name: cargo fmt --check (frontends/shell/src-tauri)
+        if: ${{ !cancelled() }}
+        run: cargo fmt --manifest-path frontends/shell/src-tauri/Cargo.toml -- --check --color never

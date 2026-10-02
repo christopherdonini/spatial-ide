@@ -164,7 +164,10 @@ fn viewer() -> ViewerAssets {
             path: "index.html".into(),
             bytes: b"<!doctype html><title>scale</title>".to_vec(),
         },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .expect("the viewer assets are valid")
 }
@@ -188,14 +191,22 @@ fn clock() -> String {
 }
 
 fn principal() -> Principal {
-    Principal { kind: PrincipalKind::OsUser, id: "scale-pass-operator".into() }
+    Principal {
+        kind: PrincipalKind::OsUser,
+        id: "scale-pass-operator".into(),
+    }
 }
 
 fn request<'a>(ds: &'a Dataset, v: &'a ViewerAssets, destination: PathBuf) -> PublishRequest<'a> {
     PublishRequest {
         dataset: ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
+        query: ViewportQuery {
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        },
         // The fixture is `AttributeMode::None` (§1a), so there is nothing to project.
         attributes: Vec::new(),
         style_source: STYLE,
@@ -214,7 +225,9 @@ fn request<'a>(ds: &'a Dataset, v: &'a ViewerAssets, destination: PathBuf) -> Pu
 /// at scale, not the authority model.** `DestinationScope::exact` is the one non-tautological part
 /// of a self-minted grant, checked against a resolved fact.
 fn grant_for(ds: &Dataset, destination: &Path) -> GrantSet {
-    let pin = ds.content_pin().expect("the 5 GB source is pinned before the boundary runs");
+    let pin = ds
+        .content_pin()
+        .expect("the 5 GB source is pinned before the boundary runs");
     let mut set = GrantSet::new();
     set.add(
         PublishGrant::new(
@@ -339,7 +352,8 @@ impl<'w> Obs<'w> {
     ) {
         *fired.in_phase.lock().expect("fired phase lock") =
             Some(current.lock().expect("phase lock").clone());
-        *fired.partitions.lock().expect("fired partitions lock") = partitions.load(Ordering::SeqCst);
+        *fired.partitions.lock().expect("fired partitions lock") =
+            partitions.load(Ordering::SeqCst);
         *fired.at.lock().expect("fired at lock") = Some(Instant::now());
         cancel.cancel();
     }
@@ -349,7 +363,10 @@ impl PublishProgress for Obs<'_> {
     fn phase(&self, phase: PublishPhase) {
         self.dog.beat();
         *self.current.lock().expect("phase lock") = phase.as_str().to_string();
-        self.phases_seen.lock().expect("phases lock").push(phase.as_str().to_string());
+        self.phases_seen
+            .lock()
+            .expect("phases lock")
+            .push(phase.as_str().to_string());
         if phase == PublishPhase::Querying {
             self.saw_querying.store(true, Ordering::SeqCst);
         }
@@ -432,7 +449,10 @@ fn left_nothing(parent: &Path, destination: &Path) -> (bool, Vec<String>) {
     }
     let own = format!(
         ".{}.staging-",
-        destination.file_name().expect("the destination has a basename").to_string_lossy()
+        destination
+            .file_name()
+            .expect("the destination has a basename")
+            .to_string_lossy()
     );
     if let Ok(entries) = std::fs::read_dir(parent) {
         for e in entries.flatten() {
@@ -449,7 +469,11 @@ fn left_nothing(parent: &Path, destination: &Path) -> (bool, Vec<String>) {
 fn append_only_violation(log: &Path, before: &[u8]) -> Option<String> {
     let after = std::fs::read(log).unwrap_or_default();
     if after.len() < before.len() {
-        return Some(format!("the log shrank from {} to {} bytes", before.len(), after.len()));
+        return Some(format!(
+            "the log shrank from {} to {} bytes",
+            before.len(),
+            after.len()
+        ));
     }
     (after[..before.len()] != *before)
         .then(|| "a previously written audit line changed".to_string())
@@ -609,7 +633,12 @@ fn peak_resident(
 ) -> (usize, u64, usize, bool) {
     let cancel = CancelToken::new();
     let dog = Watchdog::start(label, ceiling, Some(SILENCE_STREAM), cancel.clone());
-    let q = ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None };
+    let q = ViewportQuery {
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+        filter: None,
+    };
     let mut stream = ds.stream_with_cancel(&q, cancel).expect("the stream opens");
     let mut payload = Vec::new();
     let mut rows = 0u64;
@@ -635,8 +664,16 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let dir = evidence_dir();
     let fixture = fixture_path();
     let control = control_path();
-    assert!(fixture.exists(), "the 5 GB fixture is absent at {}", fixture.display());
-    assert!(control.exists(), "the 145 MB control is absent at {}", control.display());
+    assert!(
+        fixture.exists(),
+        "the 5 GB fixture is absent at {}",
+        fixture.display()
+    );
+    assert!(
+        control.exists(),
+        "the 145 MB control is absent at {}",
+        control.display()
+    );
 
     let audit_dir = dir.join("audit");
     std::fs::create_dir_all(&audit_dir).expect("create the audit directory");
@@ -664,9 +701,14 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     // chunked hash** — the path publish itself uses, and the pin the grants need anyway.
     let ds = Dataset::open(&fixture).expect("open the 5 GB fixture");
     let t_pin = Instant::now();
-    ds.pin_content(&CancelToken::new()).expect("pin the 5 GB source");
+    ds.pin_content(&CancelToken::new())
+        .expect("pin the 5 GB source");
     let pin_ms = t_pin.elapsed().as_secs_f64() * 1000.0;
-    let sha = ds.content_pin().expect("the source is pinned").hash().to_string();
+    let sha = ds
+        .content_pin()
+        .expect("the source is pinned")
+        .hash()
+        .to_string();
     assert_eq!(
         sha, FIXTURE_SHA256,
         "this is not the fixture the runs of record measured; the phases would not be additive"
@@ -720,10 +762,14 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     // **§7: a row count that differs from §1b is an instrument failure, not a result.** Without this
     // a truncated stream would be written into the artifact as the bound measurement.
     if rows_5gb != FIXTURE_ROWS {
-        failures.push(format!("the 5 GB stream yielded {rows_5gb} rows, not {FIXTURE_ROWS}"));
+        failures.push(format!(
+            "the 5 GB stream yielded {rows_5gb} rows, not {FIXTURE_ROWS}"
+        ));
     }
     if rows_control != CONTROL_ROWS {
-        failures.push(format!("the control stream yielded {rows_control} rows, not {CONTROL_ROWS}"));
+        failures.push(format!(
+            "the control stream yielded {rows_control} rows, not {CONTROL_ROWS}"
+        ));
     }
     if dog_5gb || dog_control {
         failures.push("a watchdog fired during the bounded-memory phase; it is unmeasured".into());
@@ -819,8 +865,11 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let spill_dirs = spill_seen.lock().expect("spill lock").clone();
 
     let iv = sorted(&cad.intervals);
-    let (iv_p50, iv_p95, iv_max) =
-        (pct(&iv, 0.50), pct(&iv, 0.95), iv.last().copied().unwrap_or(f64::NAN));
+    let (iv_p50, iv_p95, iv_max) = (
+        pct(&iv, 0.50),
+        pct(&iv, 0.95),
+        iv.last().copied().unwrap_or(f64::NAN),
+    );
     println!(
         "  cadence: {} intervals from {} partitions | p50 {} ms p95 {} ms max {} ms | wall {cadence_wall_ms:.0} ms",
         iv.len(),
@@ -832,7 +881,9 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     // The cadence bundle's own facts, recorded before the directory is removed — otherwise the row
     // rests on a number whose only evidence was deleted.
     let cadence_bundle = trial_dir.join("cadence");
-    let cadence_partitions = std::fs::read_dir(cadence_bundle.join("data")).map(|d| d.count()).unwrap_or(0);
+    let cadence_partitions = std::fs::read_dir(cadence_bundle.join("data"))
+        .map(|d| d.count())
+        .unwrap_or(0);
     canaries.push(Canary::take("after-cadence-publish"));
 
     // ---- Item 1: the three cancellation cells ----------------------------------------------------
@@ -868,7 +919,10 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let mut partial_cells: Vec<String> = Vec::new();
 
     for (cell, trigger, on_target, ceiling) in cells {
-        println!("  cell `{cell}` — on target means: {}", on_target.describe());
+        println!(
+            "  cell `{cell}` — on target means: {}",
+            on_target.describe()
+        );
         let mut trials = Vec::with_capacity(CANCEL_TRIALS);
         for i in 0..CANCEL_TRIALS {
             require_disk(cell);
@@ -953,8 +1007,17 @@ fn measure_the_registered_rows_that_had_no_instrument() {
             trials.len(),
             s.len(),
             summarize_or_null(&format!("cancel latency, {cell}"), &samples),
-            trials.iter().map(|t| format!("{:?}", t.fired_in)).collect::<Vec<_>>().join(", "),
-            json_usizes(&trials.iter().map(|t| t.partitions_at_fire).collect::<Vec<_>>()),
+            trials
+                .iter()
+                .map(|t| format!("{:?}", t.fired_in))
+                .collect::<Vec<_>>()
+                .join(", "),
+            json_usizes(
+                &trials
+                    .iter()
+                    .map(|t| t.partitions_at_fire)
+                    .collect::<Vec<_>>()
+            ),
             trials.iter().filter(|t| t.watchdog_fired).count(),
             trials.iter().filter(|t| t.fired_after_return).count(),
             !trials.iter().any(|t| !t.left_nothing),
@@ -1051,7 +1114,9 @@ fn measure_the_registered_rows_that_had_no_instrument() {
         .map(|(a, (i, o))| format!("{a}: {i} intent, {o} outcome"))
         .collect();
     if !unpaired.is_empty() {
-        failures.push(format!("audit records are not one-intent-one-outcome per attempt: {unpaired:?}"));
+        failures.push(format!(
+            "audit records are not one-intent-one-outcome per attempt: {unpaired:?}"
+        ));
     }
     if by_attempt.len() != attempts {
         failures.push(format!(
@@ -1087,8 +1152,14 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let free_after = free_bytes_on_c();
     println!(
         "[§5d] spill directories seen while publishing: {} | free {free_before} -> {}",
-        if spill_dirs.is_empty() { "none".to_string() } else { spill_dirs.join(", ") },
-        free_after.map(|v| v.to_string()).unwrap_or_else(|| "unreadable".into())
+        if spill_dirs.is_empty() {
+            "none".to_string()
+        } else {
+            spill_dirs.join(", ")
+        },
+        free_after
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "unreadable".into())
     );
     json.push_str(&format!(
         "  \"duckdb_settings\": {{\"status\": \"partially measurable, with the reason\", \
@@ -1105,8 +1176,14 @@ fn measure_the_registered_rows_that_had_no_instrument() {
          spill files when the query ends and a post-hoc look could only ever report none\", \
          \"spill_directories_seen\": [{}], \
          \"free_bytes_before\": {free_before}, \"free_bytes_after\": {}}},\n",
-        spill_dirs.iter().map(|d| format!("{d:?}")).collect::<Vec<_>>().join(", "),
-        free_after.map(|v| v.to_string()).unwrap_or_else(|| "null".into())
+        spill_dirs
+            .iter()
+            .map(|d| format!("{d:?}"))
+            .collect::<Vec<_>>()
+            .join(", "),
+        free_after
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "null".into())
     ));
 
     // ---- Canary verdicts -----------------------------------------------------------------------
@@ -1117,7 +1194,10 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let spreads = phase_spreads(&canaries);
     let mut all_within = true;
     for (phase, spread, ok) in &spreads {
-        println!("canary phase [{phase}] spread {spread:.4} {}", if *ok { "ok" } else { "EXCEEDS" });
+        println!(
+            "canary phase [{phase}] spread {spread:.4} {}",
+            if *ok { "ok" } else { "EXCEEDS" }
+        );
         if !ok {
             all_within = false;
         }
@@ -1125,7 +1205,9 @@ fn measure_the_registered_rows_that_had_no_instrument() {
     let points: Vec<String> = canaries.iter().map(Canary::json).collect();
     let verdicts: Vec<String> = spreads
         .iter()
-        .map(|(p, s, ok)| format!(r#"{{"phase": {p:?}, "spread": {s:.4}, "within_declared": {ok}}}"#))
+        .map(|(p, s, ok)| {
+            format!(r#"{{"phase": {p:?}, "spread": {s:.4}, "within_declared": {ok}}}"#)
+        })
         .collect();
     json.push_str(&format!(
         "  \"canary\": {{\"points\": [{}], \"phase_verdicts\": [{}], \
@@ -1135,11 +1217,14 @@ fn measure_the_registered_rows_that_had_no_instrument() {
         points.join(", "),
         verdicts.join(", ")
     ));
-    json.push_str(&format!("  \"failures\": [{}]\n}}\n", failures
-        .iter()
-        .map(|f| format!("{f:?}"))
-        .collect::<Vec<_>>()
-        .join(", ")));
+    json.push_str(&format!(
+        "  \"failures\": [{}]\n}}\n",
+        failures
+            .iter()
+            .map(|f| format!("{f:?}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
 
     let artifact = dir.join("scale-pass-a6.json");
     std::fs::write(&artifact, &json).expect("write the evidence artifact");
@@ -1150,22 +1235,40 @@ fn measure_the_registered_rows_that_had_no_instrument() {
 
     // **Everything is asserted after the artifact is written**, so a failure is evidenced rather
     // than costing the run its record (§7: recorded with the invalidator named, never discarded).
-    assert!(failures.is_empty(), "{} failure(s):\n  {}", failures.len(), failures.join("\n  "));
-    assert!(bound_holds_5gb, "the engine-queue bound did NOT hold at 5 GB: {peak_5gb} B");
-    assert!(bound_holds_control, "the engine-queue bound did NOT hold at 145 MB: {peak_control} B");
+    assert!(
+        failures.is_empty(),
+        "{} failure(s):\n  {}",
+        failures.len(),
+        failures.join("\n  ")
+    );
+    assert!(
+        bound_holds_5gb,
+        "the engine-queue bound did NOT hold at 5 GB: {peak_5gb} B"
+    );
+    assert!(
+        bound_holds_control,
+        "the engine-queue bound did NOT hold at 145 MB: {peak_control} B"
+    );
     assert!(!any_residue, "a cancelled publish left something on disk");
     assert!(
         cells_without_samples.is_empty(),
         "these cells produced no usable sample, so their verdict would rest on nothing: \
          {cells_without_samples:?}"
     );
-    assert!(all_within, "a phase exceeded the declared canary spread of {CANARY_MAX_SPREAD}");
+    assert!(
+        all_within,
+        "a phase exceeded the declared canary spread of {CANARY_MAX_SPREAD}"
+    );
     // **The budget is recorded, not asserted** — `scale_pass.rs` treats the docs/08 cancellation
     // budget the same way. A miss is a finding this pass reports, not a reason to throw the run
     // away; §7's invalidators are about the machine, not about the result.
     println!(
         "\ncancellation budget {CANCEL_BUDGET_MS} ms: worst usable {} ms -> {}",
         f64_or_null(worst_on_target),
-        if budget_met { "MET" } else { "MISSED — recorded, not established" }
+        if budget_met {
+            "MET"
+        } else {
+            "MISSED — recorded, not established"
+        }
     );
 }
