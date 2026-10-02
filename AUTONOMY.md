@@ -498,3 +498,14 @@ Question round 33, item 2 adopted the same-PR superseded pin as a piece; questio
 - **What reads it.** `scripts/plan/verify-test-claims.mjs` reads it under that form: for a gate file of such a node, a superseded pin to a commit of the scanned PR, refused by condition (e) alone, is accepted as advisory when the form's (f2) and (f3) also hold.
 - **The exception.** Question round 34, item 4 rules a narrow exception to round 15 (e) for that one row shape: a superseded row whose claiming line and pinned commit both come from the scanned PR, on a node that records `merge: merge-commit`. Round 15 (e) holds for every other hash reference in an append-only record.
 - **§6a item 3.** Its sentence on superseded claims is read with this acceptance: the pinned commit must be on main for the exemption to bind, except in the form's case, where the exemption is advisory until the merge and a squash or rebase merge turns the claim into a binding finding.
+
+## §28. The round mirror is a PreToolUse hook, one round per AskUserQuestion call (the human, 2026-10-02, round 33, item 3; appended after §27 so that no line a record cites above it moves)
+
+Round 33, item 3 adopted the custodian's proposal that the question-round Telegram mirror (§4, §16) be carried by a hook. The record is PLAN node `round-mirror-pretooluse-hook` and `scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`. §4 and §16 are not edited in place. From this section on:
+
+- From the merge, in the lease session, the hook (`scripts/hooks/questions-mirror.mjs --hook`, wired in `.claude/settings.json`) carries §4's round mirror for every `AskUserQuestion` call. The proof is the test `the_settings_command_mirrors_a_recorded_askuserquestion_payload`; the live record is the form's E2.
+- Each call is its own round. A batch of more than four questions is consecutive rounds, and the digest's question-set-n-of-m numbering stays.
+- The custodian writes no round file by hand for a call and runs no mirror CLI before one. Context goes in the question text, or in a `state/drafts/` file that the text names.
+- After each call the custodian checks that the new round file exists and reads the last line of `.claude/state/round-mirror.jsonl`. A missing file, or `ok: false`, is mirrored or re-sent by hand with the file-argument CLI, and the ledger records it.
+- A round answered without a call (round 32's shape) is still filed by hand.
+- The custodian commits each hook-written file with its RULED record.
