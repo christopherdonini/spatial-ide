@@ -3,10 +3,10 @@
 
 //! A human-legible reader over the audit log's own `spatial-audit/1` JSONL.
 //!
-//! **ADR-017's Exposure review, 2026-08-17, condition 2** — the human's own words, verbatim: *"the
-//! audit record must be human-legible without a decoder in the loop ... the raw JSONL was honest
-//! but unreadable by its own audience"* (G6). This module is that reader; `publish-bundle
-//! --audit-show` (`kernel/src/bin/publish-bundle.rs`) is its one caller.
+//! **ADR-017's Exposure review, 2026-08-17, condition 2**, in paraphrase of the custodian's record
+//! of the human's ruling there: the audit record must be human-legible without a decoder in the
+//! loop; the raw JSONL was honest but unreadable by its own audience (G6). This module is that
+//! reader; `publish-bundle --audit-show` (`kernel/src/bin/publish-bundle.rs`) is its one caller.
 //!
 //! **Read-only.** Nothing here ever opens the log for write, rotates it, or otherwise touches it —
 //! [`render_audit_log`] takes the file's own text and returns sentences, nothing more. It also
@@ -18,18 +18,18 @@
 //!
 //! ## Corruption is visible, not silent
 //!
-//! The same doctrine `super::log`'s own module docs state for the write side — *"an interleaved
-//! line fails to parse and is visible as corrupt, rather than silently changing a valid record's
-//! meaning"* — governs the read side too. A line that does not parse as JSON, that does not carry
-//! the `spatial-audit/1` schema tag, or that is missing a field this reader needs to say anything
-//! about it, is reported as its own `CORRUPT` line in the output — **never dropped, never merged
-//! into a neighbour, never silently skipped.**
+//! The same doctrine `super::log`'s own module docs state for the write side (in paraphrase: an
+//! interleaved line fails to parse and is visible as corrupt, rather than silently changing a valid
+//! record's meaning) governs the read side too. A line that does not parse as JSON, that does not
+//! carry the `spatial-audit/1` schema tag, or that is missing a field this reader needs to say
+//! anything about it, is reported as its own `CORRUPT` line in the output — **never dropped, never
+//! merged into a neighbour, never silently skipped.**
 //!
 //! ## Two schema generations on one machine, and this reader tolerates both
 //!
-//! `super::mod`'s own module docs: *"the log is append-only, so generation N and generation N+1
-//! coexist in one file forever and a reader will meet both."* This is not hypothetical for
-//! `approval_route`: the field was named `approval` before it was renamed
+//! `super::record`'s doc on `AUDIT_SCHEMA`, in paraphrase: the log is append-only, so generation N
+//! and generation N+1 coexist in one file forever, and a reader will meet both. This is not
+//! hypothetical for `approval_route`: the field was named `approval` before it was renamed
 //! (`kernel/src/permission/audit/record.rs`'s own git history), and a real, still-live log on this
 //! project's own development machine carries lines from both spellings. Reading `approval` as a
 //! fallback when `approval_route` is absent is exactly the tolerance the schema's own append-only
@@ -190,9 +190,15 @@ impl Outcome {
 /// `"2026-08-17T08:44:08Z"` → `"2026-08-17 08:44"` — `clock::rfc3339_utc`'s own fixed-width shape
 /// (`YYYY-MM-DDTHH:MM:SSZ`, 20 bytes, `T` at index 10), sliced rather than parsed with a date
 /// crate, the same "no date crate is pulled in for one string" reasoning `clock.rs` states for the
-/// write side. A value that does not match the shape is shown verbatim rather than mangled.
+/// write side.
+///
+/// The check is that byte 10 is `T` and byte 16 is a char boundary (which also means the value has
+/// at least 16 bytes). Only 16 needs the boundary check: the ASCII `T` at byte 10 makes bytes 10
+/// and 11 boundaries. A hand-edited or corrupted log can put a multi-byte character across byte 16.
+/// A value that passes the check is sliced whether or not its other bytes are digits. Any other
+/// value is returned unchanged.
 fn plain_date(at: &str) -> String {
-    if at.len() >= 16 && at.as_bytes().get(10) == Some(&b'T') {
+    if at.is_char_boundary(16) && at.as_bytes().get(10) == Some(&b'T') {
         format!("{} {}", &at[0..10], &at[11..16])
     } else {
         at.to_string()
@@ -208,11 +214,12 @@ fn plain_route(route: &str) -> String {
     }
 }
 
-/// `error_kind`'s stable variant name (`boundary.rs::error_kind`'s own doc comment: "a variant
-/// name, never a rendered message") turned into a plain-language fragment for a reader with no
-/// Rust source open beside them. Every arm here is a real variant this tree's own `error_kind`
-/// function can write (`kernel/src/permission/boundary.rs`); an unrecognized string — a future
-/// variant this reader has not been told about yet — is shown as itself rather than guessed at.
+/// `error_kind`'s stable variant name (`boundary.rs::error_kind`'s own doc comment, in paraphrase:
+/// a variant name, never a rendered message) turned into a plain-language fragment for a reader
+/// with no Rust source open beside them. Every arm here is a real variant this tree's own
+/// `error_kind` function can write (`kernel/src/permission/boundary.rs`); an unrecognized string —
+/// a future variant this reader has not been told about yet — is shown as itself rather than
+/// guessed at.
 fn plain_reason(kind: &str) -> String {
     match kind {
         "NoGrant" => "no grant authorized this publish".to_string(),
@@ -339,7 +346,7 @@ mod tests {
             // Attempt C: intent only -- interrupted, never reached an outcome.
             r#"{"schema":"spatial-audit/1","attempt":"ccc3","phase":"intent","at":"2026-08-17T09:15:00Z","operation":"publish-static-bundle","class":3,"reversibility":"irreversible","principal_kind":"os-user","principal_name":"someone","source_name":"parcels","source_content_hash":"sha256:aa","destination":"C:/dev/out/interrupted","style_hash":"sha256:bb","residual_classes":[]}"#,
             // An unparseable line -- truncated mid-object, as an interrupted write would leave one
-            // (`log.rs`'s own module docs: "an interleaved line fails to parse").
+            // (`log.rs`'s own module docs, in paraphrase: an interleaved line fails to parse).
             r#"{"schema":"spatial-audit/1","attempt":"ddd4","phase":"intent","at":"2026-08-17T09:2"#,
         ]
         .join("\n")
@@ -425,5 +432,55 @@ mod tests {
     fn blank_lines_are_ignored_without_being_reported_as_corrupt() {
         let text = format!("{}\n\n\n", fixture());
         assert_eq!(render_audit_log(&text).len(), render_audit_log(&fixture()).len());
+    }
+
+    /// Mutation M1 observed at 256154c: with the condition restored to its base text, this test
+    /// panics at its first value (the standard library's char-boundary panic, byte index 16 inside
+    /// a 2-byte character); the change was reverted.
+    #[test]
+    fn a_timestamp_cut_by_a_multibyte_character_at_byte_16_is_returned_verbatim_not_sliced() {
+        // S1 first: a 2-byte character at bytes 15-16, so byte 16 is not a char boundary.
+        for cut in [
+            "2026-08-17T08:4\u{e9}",
+            "2026-08-17T08:\u{20ac}Z",
+            "2026-08-17T08:4\u{1f600}",
+        ] {
+            assert_eq!(plain_date(cut), cut);
+        }
+        // S4: byte 16 is a boundary, so the value is sliced as before.
+        assert_eq!(plain_date("2026-08-17T08:44\u{e9}"), "2026-08-17 08:44");
+    }
+
+    /// Mutation M2 observed at efe19e6: with the new condition's index 16 changed to 15, this test
+    /// panics at its first record (the standard library's char-boundary panic, byte index 16 inside
+    /// a 2-byte character); the change was reverted.
+    ///
+    /// Mutation M1 observed on this text at efe19e6: with the condition restored to its base
+    /// text (`at.len() >= 16`), this test panics (end byte index 16 is not a char boundary, inside
+    /// the character at bytes 15..17), and so does M2 on this text (index 16 changed to 15); each
+    /// change was reverted.
+    #[test]
+    fn each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value() {
+        let at = r"2026-08-17T08:4\u00e9";
+        let stored = "2026-08-17T08:4\u{e9}";
+        let text = [
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"p1","phase":"intent","at":"{at}","destination":"out/pair"}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"p1","phase":"outcome","at":"{at}","outcome":"success","approval_route":"flag","rows":1,"partitions":1}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"o2","phase":"outcome","at":"{at}","outcome":"failed"}}"#),
+            format!(r#"{{"schema":"spatial-audit/1","attempt":"i3","phase":"intent","at":"{at}","destination":"out/orphan"}}"#),
+        ]
+        .join("\n");
+        let lines = render_audit_log(&text);
+        assert_eq!(lines.len(), 3, "{lines:#?}");
+        let markers = [
+            "SUCCEEDED",
+            "outcome recorded with no matching intent",
+            "intent recorded, no outcome (interrupted?)",
+        ];
+        for (line, marker) in lines.iter().zip(markers) {
+            assert!(line.starts_with(stored), "{line}");
+            assert!(line.contains(marker), "{line}");
+            assert!(!line.contains("CORRUPT"), "{line}");
+        }
     }
 }
