@@ -7,6 +7,8 @@
 - *the diff over 01b5ba0...948f126 is 7 files, 484 insertions and 3 deletions (the report's table says 4 deletions; git's count is 3);*
 - *the settings hunk is one PreToolUse entry, matcher AskUserQuestion, timeout 20.*
 
+*Branch-only cites: the report's `path:line` cites into the branch's changed scripts (its §8 caller-grep line and its deviation 4) are de-rooted at filing to the file's basename, since the lines exist only on the branch (read them at 948f126); nothing else in the text is changed.*
+
 *Two notes, kept for the gates and the closing record:*
 - *Deviation 4: commit 753dcaf's message cites two line numbers wrongly. It is a pushed commit message, not a tracked record, and it is not rewritten, since a force-push is a red line.*
 - *Deviation 7: the worker ran as Sonnet 5.5, while its commit trailers name Opus 5.5 because the brief required that trailer. Future worker briefs ask for a trailer naming the model that actually ran.*
@@ -80,7 +82,7 @@ My first M8 attempt anchored on the wrong `if (!outcome.ok)`, the one in `main()
 - Item 14 (record form): I wrote no record row. The `RECORDED MUTATION` comments name 753dcaf, a branch commit, as a commit id only, with no hash.
 - Item 15: no squash or rebase was used.
 - R1–R6: paths use `path.join`, LF is written, there is no OS-conditional code in the script, and the hook shell branch exists only in T11 (copied from `cloud.test.mjs`). There are no drive letters.
-- Caller grep for `leaseHeldBy`: it is imported at `scripts/hooks/questions-mirror.mjs:31` and called at `scripts/hooks/questions-mirror.mjs:164`, besides its existing use at `scripts/hooks/stop-queue.mjs:248`.
+- Caller grep for `leaseHeldBy`: it is imported at `questions-mirror.mjs:31` and called at `questions-mirror.mjs:164`, besides its existing use at `stop-queue.mjs:248`.
 
 **Failure classes**
 - Cross-module code uses the interface the other side actually has: `leaseHeldBy`, `mirrorRound`, `sendMessage`/`sendDocument` and `isCloudSession` were all read at their real signatures, and T11 runs the real settings command.
@@ -92,7 +94,7 @@ My first M8 attempt anchored on the wrong `if (!outcome.ok)`, the one in `main()
 1. **T11 project copy.** The settings command resolves the script under `$CLAUDE_PROJECT_DIR`, and S11 sets that to the test project. T11 therefore copies 6 files (the hook, `telegram.mjs`, `cloud.mjs`, `stop-queue.mjs`, `plan.mjs`, `yamlSubset.mjs`) into the tmp project. The test still runs the command string read from settings.
 2. **Red-line header separator.** The form says "comma-separated" without a separator, so I used `, `.
 3. **Non-object stdin.** Valid JSON that is not an object (for example `null`) gets the "not JSON" line.
-4. **Commit 753dcaf message cites.** It cites `mirrorRound` at `scripts/hooks/questions-mirror.mjs:60` and `isCloudSession` at `scripts/hooks/cloud.mjs:14`. The real lines are 65 and 13, and `leaseHeldBy` is at 143. The commit is already pushed and I did not rewrite it (no force-push).
+4. **Commit 753dcaf message cites.** It cites `mirrorRound` at `questions-mirror.mjs:60` and `isCloudSession` at `cloud.mjs:14`. The real lines are 65 and 13, and `leaseHeldBy` is at 143. The commit is already pushed and I did not rewrite it (no force-push).
 5. **Fixture size.** The fixture is 74 lines against the estimate of 45. The total stays under budget.
 6. **E2.** I did not run it. It is the custodian's live record after the merge.
 7. **Observed model.** I observed myself running as claude-sonnet-5-5 (Sonnet 5.5), though the commit trailers carry "Claude Opus 5.5 (1M context)" as the brief required. I used no model override and received no context handoff.
