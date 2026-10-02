@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9ae9334f11c1b3b1961e7c210efa741c9df9da927ff27c7b9246b8b5b5bfa4e0`) at `2026-10-01T11:02:57.529Z`.
+Generated from `PLAN.yaml` (sha256 `b1999bb5a3221821d06b921a1481b637f568e7badebe90f8d9489a8c73323a53`) at `2026-10-02T05:53:24.628Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`, order 9, budget 45 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,6 @@ Generated from `PLAN.yaml` (sha256 `9ae9334f11c1b3b1961e7c210efa741c9df9da927ff2
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — blocked by: audit-reader-char-boundary
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
@@ -37,7 +36,7 @@ Generated from `PLAN.yaml` (sha256 `9ae9334f11c1b3b1961e7c210efa741c9df9da927ff2
 
 ## 5. In progress
 
-- **audit-reader-char-boundary** — The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1) — evidence: branch `cut/audit-reader-char-boundary`
+- (none)
 
 ## 6. Proposed / unscheduled
 

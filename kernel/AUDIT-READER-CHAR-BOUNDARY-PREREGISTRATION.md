@@ -211,3 +211,17 @@ Assertions only:
 - **Operator:** none. A valid log's output is unchanged.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — the closing record (class 1, references only)
+
+Written after the piece merged (class 1).
+- **The merge:** PR #152 merged at 2026-10-02T05:51:43Z as merge commit 415bb3b (parents e596c32 and ad728d9), not a squash. 2a96670 (B), e01b665 (C), 256154c (D), 693f4f5, 1b112b1, efe19e6 and ad728d9 (correction round 1) are reachable from main. The merge notice is `state/directives/2026-10-02-pr152-merged.md`.
+- **The gates:**
+  - gate 1 at 1b112b1, FAIL/FAIL on one shared blocker (T2's encoding against §3 S5): `state/consults/gates/2026-10-01-audit-reader-char-boundary-gate1-architect.md` and `state/consults/gates/2026-10-01-audit-reader-char-boundary-gate1-reviewer.md`;
+  - gate 2 at ad728d9, PASS/PASS: `state/consults/gates/2026-10-01-audit-reader-char-boundary-gate2-architect.md` and `state/consults/gates/2026-10-01-audit-reader-char-boundary-gate2-reviewer.md`.
+- **The observations of record:**
+  - P0 at 2a96670, H1 and I4 at 1b112b1, M1 on T1 and on T3 at 1b112b1, and the guard harness: the gate-1 reviewer's checks 3, 2 and 1 and its mutation table;
+  - M1 and M2 on the corrected T2 at ad728d9: the gate-2 reviewer's table;
+  - the worker's own runs: `state/consults/2026-10-01-audit-reader-char-boundary-worker-report-1.md` and `state/consults/2026-10-01-audit-reader-char-boundary-worker-report-2.md`.
+- **Readings the gate made:** P1 to P5 each match §2 item 6 and their true sources, and the reflowed neighbouring lines are word-identical (the gate-1 architect, item 3). No amendment or superseded index is owed for correction round 1, because the test was brought to §3 as written (the gate-2 architect, item 4).
+- **Size:** 117 against §7's 175, over 2 files. No overrun. Record rounds: one.

@@ -3025,25 +3025,25 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: in-progress
+    status: done
     order: 5
     depends_on: [catalog-open-replace-drop-latency-note]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md
-    evidence: {branch: cut/audit-reader-char-boundary}
+    evidence: {pr: 152}
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes. The full-form preregistration is committed as kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md), under full gating: plain_date guards byte 16 with is_char_boundary, so a value cut there goes to the existing as-stored fallback (no new string, code or exit code); the five misquoted doc passages in the same file are corrected to attributed paraphrase (one credited the custodian wording to the human as verbatim). The whole-log UTF-8 refusal the draft found is the proposed node audit-show-invalid-utf8-whole-refusal."
-    dates: {opened: 2026-09-26, done: null}
+    summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes. The full-form preregistration is committed as kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md), under full gating: plain_date guards byte 16 with is_char_boundary, so a value cut there goes to the existing as-stored fallback (no new string, code or exit code); the five misquoted doc passages in the same file are corrected to attributed paraphrase (one credited the custodian wording to the human as verbatim). The whole-log UTF-8 refusal the draft found is the proposed node audit-show-invalid-utf8-whole-refusal. DONE 2026-10-02: PR #152 merged as merge commit 415bb3b (the PR #152 merge notice, state/directives/2026-10-02-pr152-merged.md); gate 1 FAIL/FAIL at 1b112b1 on T2 encoding, one correction round, gate 2 PASS/PASS at ad728d9; 117 of 175; closing record the form Amendment 1."
+    dates: {opened: 2026-09-26, done: 2026-10-02}
 
   - id: skp-cancel-state-closed-set
     title: "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)"
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 9
     depends_on: [audit-reader-char-boundary]
     needs_human: {kind: none, minutes: 0}

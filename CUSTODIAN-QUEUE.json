@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-01T11:02:57.529Z",
-  "plan_hash": "9ae9334f11c1b3b1961e7c210efa741c9df9da927ff27c7b9246b8b5b5bfa4e0",
+  "generated_at": "2026-10-02T05:53:24.628Z",
+  "plan_hash": "b1999bb5a3221821d06b921a1481b637f568e7badebe90f8d9489a8c73323a53",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "skp-cancel-state-closed-set",
+    "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+    "lane": "kernel-protocol",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 9,
+    "budget_minutes": 45,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-26",
+      "done": null
+    },
+    "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes."
+  },
+  "ready": [
+    {
+      "id": "skp-cancel-state-closed-set",
+      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 9,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -142,28 +180,6 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
-      ]
-    },
-    {
-      "id": "skp-cancel-state-closed-set",
-      "title": "The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 9,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes.",
-      "blocked_by": [
-        "audit-reader-char-boundary"
       ]
     },
     {
@@ -387,30 +403,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "audit-reader-char-boundary",
-      "title": "The audit reader's plain_date refuses a non-char-boundary slice instead of panicking (wave-1 A3 observation 1)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 5,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/audit-reader-char-boundary"
-      },
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. kernel/src/permission/audit/reader.rs's plain_date panics publish-bundle --audit-show on a hand-edited audit log: a trusted, local input (state/cloud/wave1/A3.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 6 of 16 in the human's order, order 5 in its lane. It depends on catalog-open-replace-drop-latency-note, position 5, so that the order holds across lanes. The full-form preregistration is committed as kernel/AUDIT-READER-CHAR-BOUNDARY-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md), under full gating: plain_date guards byte 16 with is_char_boundary, so a value cut there goes to the existing as-stored fallback (no new string, code or exit code); the five misquoted doc passages in the same file are corrected to attributed paraphrase (one credited the custodian wording to the human as verbatim). The whole-log UTF-8 refusal the draft found is the proposed node audit-show-invalid-utf8-whole-refusal.",
-      "evidence_label": "branch `cut/audit-reader-char-boundary`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
