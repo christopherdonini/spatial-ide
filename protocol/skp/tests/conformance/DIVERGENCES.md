@@ -2,11 +2,15 @@
 
 Baseline `bb98f71f43a2891d317b10a124387df9d5ee0ebf`; fixtures re-run at `skp/0.6` (merge of `main`
 into this branch, commit `37b3644`, Windows evidence). Run:
-`cargo test -p spatial-skp --test conformance -- --nocapture` → `pass=62 deferred_to_host=15 diverged=1`
-(unchanged from the `skp/0.5` run).
+`cargo test -p spatial-skp --test conformance -- --nocapture` → `pass=63 deferred_to_host=15 diverged=0`
+at commit `5d4da4d` (PLAN node `skp-cancel-state-closed-set`; the previous run was `pass=62
+deferred_to_host=15 diverged=1`).
 
-## D1 — `cancel` response `state` accepts any string
+## D1 — `cancel` response `state` accepts any string — RESOLVED
 
+- **Resolved** by PLAN node `skp-cancel-state-closed-set` at commit `5d4da4d`: `CancelResponse.state`
+  is the closed `CancelState`, so the fixture is refused at deserialize. The record below is the
+  finding as it stood at the baseline.
 - **Spec section:** SKP-V0.md §1 `cancel`: `→ { state: "requested" | "unknown" | "already_terminal" }`.
 - **Fixture:** `fixtures/refusals-at-deserialize.json` → `rej-resp-cancel-bad-state`
   (`{"state":"cancelled"}` as `CancelResponse`).
@@ -23,5 +27,5 @@ into this branch, commit `37b3644`, Windows evidence). Run:
 15 `refused_any_layer` fixtures are accepted at the type layer, because `skp`
 (all request structs) and `open_dataset.cancel_key` are `String` fields: the 9 version-literal
 fixtures and the 6 malformed-cancel-key fixtures. The spec does not say which layer refuses them
-(A3). Code path only, not executed here: `kernel/src/skp.rs:1378-1383` (`check_version`, `==`) and
-`kernel/src/skp.rs:982-983` (`CancelKey::try_from` → `skp.malformed_cancel_key`).
+(A3). Code path only, not executed here: `kernel/src/skp.rs`'s `check_version` (`==`) and
+`CancelKey::try_from` in `SkpHost::open_dataset` (→ `skp.malformed_cancel_key`).

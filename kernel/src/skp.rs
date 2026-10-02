@@ -2352,6 +2352,9 @@ mod tests {
     /// (`already_terminal`) — is serialized, and is compared with the shared fixture both sides'
     /// tests read; same real-shape discipline as
     /// `the_real_describe_crs_shape_matches_the_shared_fixture`.
+    ///
+    /// RECORDED MUTATION (M4), observed at commit 5d4da4d: `cancel_state_of` maps `AlreadyTerminal` to
+    /// `Unknown`. This test fails at the `already_terminal` comparison (left `unknown`).
     #[test]
     fn the_real_cancel_responses_match_the_shared_fixtures() {
         let tickets = StreamRegistry::new();

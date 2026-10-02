@@ -392,12 +392,16 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.state).toBe("requested");
   });
 
+  // RECORDED MUTATION (M3), observed at commit 5d4da4d: `CancelState` widened to `string`;
+  // `npm run typecheck` fails with TS2578 (unused directive) at the directive in this test.
   it("a cancel response state outside the closed set does not typecheck", () => {
     // @ts-expect-error SKP-V0.md section 1: `state` is one of three strings, never "cancelled".
     const bad: CancelResponse = { state: "cancelled" };
     expect(bad.state).toBe("cancelled");
   });
 
+  // RECORDED MUTATION (M5), observed at commit 5d4da4d: `already_terminal` dropped from
+  // `CancelState`; `npm run typecheck` fails with TS2322 at the array in this test.
   it("each shared cancel response fixture carries one of the three states", () => {
     const states: CancelResponse["state"][] = ["requested", "unknown", "already_terminal"];
     const files: Record<string, CancelResponse["state"]> = {

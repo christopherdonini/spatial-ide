@@ -502,6 +502,9 @@ mod tests {
 
     /// T2 (`CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): the three states serialize as exactly
     /// the spec's strings and round-trip.
+    ///
+    /// RECORDED MUTATION (M2), observed at commit 5d4da4d: `rename_all = "kebab-case"` on
+    /// `CancelState`. This test fails at `already_terminal` (left `already-terminal`).
     #[test]
     fn the_three_cancel_states_serialize_as_the_spec_strings_and_round_trip() {
         for (state, wire) in [
@@ -520,6 +523,10 @@ mod tests {
     /// exactly three values, and §4 item 13 refuses a tolerant reader, so every other string is
     /// refused at deserialize — F4 (`"cancelled"`, the conformance harness's own fixture) and F5
     /// (wrong case, a hyphenated spelling, empty).
+    ///
+    /// RECORDED MUTATION (M1), observed at commit 5d4da4d: a `#[serde(other)] Other` variant on
+    /// `CancelState`. This test fails at F4 (`"cancelled" must be refused at deserialize`), and
+    /// the conformance harness fails with it (diverged=1).
     #[test]
     fn a_cancel_response_state_outside_the_closed_set_is_refused_at_deserialize() {
         for bad in ["cancelled", "Requested", "already-terminal", ""] {
