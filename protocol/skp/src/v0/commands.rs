@@ -459,12 +459,23 @@ pub struct CancelRequest {
     pub handle: String,
 }
 
+/// `cancel`'s `state` (SKP-V0.md §1): the three values the spec gives, closed. Serialized
+/// snake_case; any other string fails to deserialize — there is no fourth value and no tolerant
+/// fallback (SKP-V0.md §4 item 13; the `skp/0.4` `CrsUnit` precedent).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CancelState {
+    Requested,
+    Unknown,
+    AlreadyTerminal,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CancelResponse {
-    /// `"requested"`, `"unknown"`, or `"already_terminal"`. No timestamp, counter or duration here —
+    /// One of [`CancelState`]'s three values. No timestamp, counter or duration here —
     /// ADR-004 Amendment 4 forbids instrument surface as an SKP field.
-    pub state: String,
+    pub state: CancelState,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -488,6 +499,22 @@ pub struct CloseDatasetResponse {
 mod tests {
     use super::*;
     use crate::v0::SKP_VERSION;
+
+    /// T2 (`CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): the three states serialize as exactly
+    /// the spec's strings and round-trip.
+    #[test]
+    fn the_three_cancel_states_serialize_as_the_spec_strings_and_round_trip() {
+        for (state, wire) in [
+            (CancelState::Requested, "requested"),
+            (CancelState::Unknown, "unknown"),
+            (CancelState::AlreadyTerminal, "already_terminal"),
+        ] {
+            let json = serde_json::to_value(CancelResponse { state }).unwrap();
+            assert_eq!(json, serde_json::json!({ "state": wire }));
+            let back: CancelResponse = serde_json::from_value(json).unwrap();
+            assert_eq!(back.state, state);
+        }
+    }
 
     /// T1 (`CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): SKP-V0.md §1 gives `cancel`'s `state`
     /// exactly three values, and §4 item 13 refuses a tolerant reader, so every other string is

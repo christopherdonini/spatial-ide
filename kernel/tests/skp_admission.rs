@@ -889,7 +889,10 @@ async fn cancel_reaches_the_producer_directly_once() -> Result<(), OrderingRaceO
         skp: SKP_VERSION.to_string(),
         handle: stream_handle.as_str().to_string(),
     });
-    assert_eq!(outcome.unwrap().state, "requested");
+    assert_eq!(
+        outcome.unwrap().state,
+        spatial_skp::v0::CancelState::Requested
+    );
 
     // Drain to a terminal. `SkpHost::cancel` interrupts the engine directly (ADR-019's Consequences); the
     // adapter's own `StreamState` never saw a CANCEL control frame, so the terminal code the wire

@@ -264,8 +264,11 @@ export interface CancelRequest {
   skp: string;
   handle: string;
 }
+/** SKP-V0.md section 1: `cancel`'s `state`, a closed set mirroring `protocol/skp/src/v0/commands.rs`'s
+ * `CancelState` exactly. There is no fourth value and no default. Checked at compile time only. */
+export type CancelState = "requested" | "unknown" | "already_terminal";
 export interface CancelResponse {
-  state: string; // "requested" | "unknown" | "already_terminal"
+  state: CancelState;
 }
 
 export interface CloseDatasetRequest {

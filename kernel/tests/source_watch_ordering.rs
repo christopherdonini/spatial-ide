@@ -569,7 +569,7 @@ fn describe_after_an_end_carries_session_end_and_describe_cancel_close_still_ans
             handle: "sh_00000000000000000000000000000000".to_string(),
         })
         .expect("cancel still answers");
-    assert_eq!(cancelled.state, "unknown");
+    assert_eq!(cancelled.state, spatial_skp::v0::CancelState::Unknown);
 
     let closed = host
         .close_dataset(spatial_skp::v0::CloseDatasetRequest {

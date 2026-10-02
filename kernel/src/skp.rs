@@ -26,12 +26,12 @@ use spatial_engine::{
     TypeRefusalReason, ViewportQuery, WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
-    CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
-    CloseDatasetResponse, CoverageState, CrsInfo, CrsUnit, DatasetHandle, DatasetSessionEnded,
-    DecU64, DescribeRequest, DescribeResponse, EndReason as WireEndReason, Extent, FieldInfo,
-    GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest, OpenDatasetResponse, RowCount,
-    SessionRef, SkpError, SourceChecks, SourceCoverage, SourceInfo, StreamHandle,
-    ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
+    CancelKey, CancelRequest, CancelResponse, CancelState, CheckComponent, ChecksState,
+    CloseDatasetRequest, CloseDatasetResponse, CoverageState, CrsInfo, CrsUnit, DatasetHandle,
+    DatasetSessionEnded, DecU64, DescribeRequest, DescribeResponse, EndReason as WireEndReason,
+    Extent, FieldInfo, GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest,
+    OpenDatasetResponse, RowCount, SessionRef, SkpError, SourceChecks, SourceCoverage, SourceInfo,
+    StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
 };
 
 use crate::{open_engine_stream, wrap_for_data_plane, Catalog};
@@ -68,6 +68,16 @@ fn end_reason_of(r: SessionEndReason) -> WireEndReason {
     }
 }
 
+/// The wire's `CancelState` is the projection `cancel_state_of` makes of [`CancelOutcome`]: an
+/// exhaustive `match`, so a new outcome cannot reach the wire without a wire value.
+fn cancel_state_of(o: CancelOutcome) -> CancelState {
+    match o {
+        CancelOutcome::Requested => CancelState::Requested,
+        CancelOutcome::Unknown => CancelState::Unknown,
+        CancelOutcome::AlreadyTerminal => CancelState::AlreadyTerminal,
+    }
+}
+
 /// ADR-019: an unredeemed ticket is swept and its slot freed.
 pub const TICKET_TTL: Duration = Duration::from_secs(30);
 /// ADR-019, ADR-010 rule 6 (declared, not discovered): `viewport_query` mints tickets at gesture
@@ -93,22 +103,13 @@ pub const MAX_PENDING_TICKETS: usize = 8;
 /// this registry.
 pub const TERMINAL_ENTRY_MAX_AGE: Duration = Duration::from_secs(300);
 
-/// `state` in a [`CancelResponse`] (SKP-V0.md §1) — no timestamp, counter or duration attaches to
-/// it (ADR-004 Amendment 4).
+/// `state` in a [`CancelResponse`] (SKP-V0.md §1), projected onto the wire's closed
+/// [`CancelState`] by `cancel_state_of` — no timestamp, counter or duration attaches to it
+/// (ADR-004 Amendment 4).
 pub enum CancelOutcome {
     Requested,
     Unknown,
     AlreadyTerminal,
-}
-
-impl CancelOutcome {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Requested => "requested",
-            Self::Unknown => "unknown",
-            Self::AlreadyTerminal => "already_terminal",
-        }
-    }
 }
 
 struct PendingBuilt {
@@ -1521,7 +1522,7 @@ impl SkpHost {
             Err(_) => self.opens.cancel(&req.handle),
         };
         Ok(CancelResponse {
-            state: outcome.as_str().to_string(),
+            state: cancel_state_of(outcome),
         })
     }
 
