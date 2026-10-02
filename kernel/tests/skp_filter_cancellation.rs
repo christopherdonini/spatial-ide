@@ -23,7 +23,9 @@ use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::trace::{self, TraceKey};
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
-use spatial_skp::v0::{DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION};
+use spatial_skp::v0::{
+    DatasetHandle, Filter, ViewportQueryRequest, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION,
+};
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 
@@ -42,8 +44,16 @@ fn fixture(name: &str, features: usize) -> std::path::PathBuf {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join(format!("skp-filter-cancel-{name}.parquet"));
-    write_geoparquet(&path, &FixtureSpec { features, avg_vertices: 12, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features,
+            avg_vertices: 12,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -53,16 +63,29 @@ fn duckdb_filter(predicate: &str) -> Filter {
 }
 
 async fn connect(dp: &RunningDataPlane) -> Client {
-    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
     req.headers_mut().insert(
-        "sec-websocket-protocol",
-        format!("{}, tok.{}", spatial_data_plane::session::SUBPROTOCOL, dp.session.token_for_delivery())
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
             .parse()
             .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    req.headers_mut().insert(
+        "sec-websocket-protocol",
+        format!(
+            "{}, tok.{}",
+            spatial_data_plane::session::SUBPROTOCOL,
+            dp.session.token_for_delivery()
+        )
+        .parse()
+        .unwrap(),
+    );
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 /// A known instrumentation-ordering race in `engine::cancel::CancelToken::cancel_inner`, not a
@@ -125,12 +148,23 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     let path = fixture("late-match", FEATURES);
     let handle = dataset_handle();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host = SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
-    assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+    assert!(
+        !trace::is_enabled(),
+        "tracing is off unless a trace is started"
+    );
     let guard = trace::start(TraceKey {
         dataset: handle.as_str().to_string(),
         physical_id: 0,
@@ -155,7 +189,11 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     let stream_handle = ticket.stream.clone();
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -163,14 +201,20 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     .expect("serve");
 
     let mut c = connect(&dp).await;
-    let start_frame =
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, stream_handle.as_str().as_bytes()));
-    c.send(Message::Binary(start_frame.into())).await.expect("start");
+    let start_frame = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, stream_handle.as_str().as_bytes()),
+    );
+    c.send(Message::Binary(start_frame.into()))
+        .await
+        .expect("start");
     // Generous credit: nothing here is meant to be gated by backpressure -- the predicate itself
     // (not withheld credit) is what keeps output from arriving for a while.
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
-        .await
-        .expect("credit");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     // Wait for `TAG_OPEN`, not a `TAG_BATCH` -- design essential 7's own shortfall: a selective,
     // late-matching scan may emit no batch for a long time, so this cannot wait for one before
@@ -219,7 +263,8 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
     let observed = trace.first(trace::PRODUCER_CANCELLED);
     drop(guard);
 
-    let requested = requested.expect("cancel_requested must be stamped -- CancelToken::cancel() ran");
+    let requested =
+        requested.expect("cancel_requested must be stamped -- CancelToken::cancel() ran");
     let observed = observed.expect(
         "cancel_observed must be stamped -- the producer must notice the interrupt and stop, even \
          mid-scan on a predicate that has not matched anything yet (ADR-018 item 1)",

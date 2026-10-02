@@ -59,7 +59,9 @@ const STYLE: &str = r##"{
 const FEATURES: usize = 60_000;
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-publish-cancellation").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-publish-cancellation")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -89,9 +91,18 @@ fn pinned(path: &Path) -> Dataset {
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "app.js".into(), bytes: b"export const ok = 1;\n".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "app.js".into(),
+            bytes: b"export const ok = 1;\n".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -163,11 +174,17 @@ impl PublishProgress for Recorder {
         self.partitions_written.fetch_add(1, Ordering::SeqCst);
     }
     fn partition_write_progress(&self, index: usize, written: u64, total: u64) {
-        self.write_progress.lock().unwrap().push((index, written, total));
+        self.write_progress
+            .lock()
+            .unwrap()
+            .push((index, written, total));
     }
     fn cancellation_observed(&self, at: Instant) {
         let mut slot = self.acknowledged_at.lock().unwrap();
-        assert!(slot.is_none(), "the acknowledgement must be reported at most once per operation");
+        assert!(
+            slot.is_none(),
+            "the acknowledgement must be reported at most once per operation"
+        );
         *slot = Some(at);
     }
 }
@@ -213,7 +230,10 @@ fn a_cancel_inside_the_sort_is_observed_rather_than_waited_out() {
     let dest = d.join("out");
     let cancel = CancelToken::new();
     let rec = Arc::new(Recorder::default());
-    let obs = OnQueryRunning { rec: Arc::clone(&rec), token: cancel.clone() };
+    let obs = OnQueryRunning {
+        rec: Arc::clone(&rec),
+        token: cancel.clone(),
+    };
 
     let started = Instant::now();
     let outcome = publish_unguarded(&request(&ds, &v, dest.clone()), &cancel, Some(&obs));
@@ -272,8 +292,12 @@ fn writing_partitions_is_not_announced_before_a_partition_exists() {
     let dest = d.join("out");
     let rec = Arc::new(Recorder::default());
 
-    publish_unguarded(&request(&ds, &v, dest), &CancelToken::new(), Some(rec.as_ref()))
-        .expect("an uncancelled publish succeeds");
+    publish_unguarded(
+        &request(&ds, &v, dest),
+        &CancelToken::new(),
+        Some(rec.as_ref()),
+    )
+    .expect("an uncancelled publish succeeds");
 
     let phases = rec.phases();
     let writing = phases
@@ -298,11 +322,18 @@ fn writing_partitions_is_not_announced_before_a_partition_exists() {
     // The phase is reported once, not once per poll: an observer driving a UI would otherwise be
     // redrawing every 10 ms for the length of the sort.
     assert!(
-        phases.iter().filter(|p| **p == PublishPhase::QueryRunning).count() <= 1,
+        phases
+            .iter()
+            .filter(|p| **p == PublishPhase::QueryRunning)
+            .count()
+            <= 1,
         "QueryRunning is reported at most once per operation, got {phases:?}"
     );
     assert_eq!(
-        phases.iter().filter(|p| **p == PublishPhase::WritingPartitions).count(),
+        phases
+            .iter()
+            .filter(|p| **p == PublishPhase::WritingPartitions)
+            .count(),
         1,
         "WritingPartitions is reported exactly once, got {phases:?}"
     );
@@ -323,18 +354,31 @@ fn every_partition_reports_its_final_byte_before_the_sync() {
     let dest = d.join("out");
     let rec = Arc::new(Recorder::default());
 
-    publish_unguarded(&request(&ds, &v, dest), &CancelToken::new(), Some(rec.as_ref()))
-        .expect("an uncancelled publish succeeds");
+    publish_unguarded(
+        &request(&ds, &v, dest),
+        &CancelToken::new(),
+        Some(rec.as_ref()),
+    )
+    .expect("an uncancelled publish succeeds");
 
     let progress = rec.write_progress.lock().unwrap().clone();
-    assert!(!progress.is_empty(), "partitions report byte-cadence progress");
+    assert!(
+        !progress.is_empty(),
+        "partitions report byte-cadence progress"
+    );
 
     let partitions = rec.partitions_written.load(Ordering::SeqCst);
-    assert!(partitions > 0, "the fixture produces at least one partition");
+    assert!(
+        partitions > 0,
+        "the fixture produces at least one partition"
+    );
 
     for index in 0..partitions {
         let mine: Vec<_> = progress.iter().filter(|(i, _, _)| *i == index).collect();
-        assert!(!mine.is_empty(), "partition {index} reported no write progress");
+        assert!(
+            !mine.is_empty(),
+            "partition {index} reported no write progress"
+        );
         let (_, last_written, last_total) = *mine[mine.len() - 1];
         assert_eq!(
             last_written, last_total,
@@ -345,7 +389,10 @@ fn every_partition_reports_its_final_byte_before_the_sync() {
         // "bytes remaining" any UI derives from it wrong.
         let mut prev = 0u64;
         for (_, w, t) in &mine {
-            assert!(*w > prev || (*w == 0 && prev == 0), "write progress must advance: {mine:?}");
+            assert!(
+                *w > prev || (*w == 0 && prev == 0),
+                "write progress must advance: {mine:?}"
+            );
             assert!(w <= t, "written never exceeds total: {mine:?}");
             prev = *w;
         }
@@ -353,9 +400,8 @@ fn every_partition_reports_its_final_byte_before_the_sync() {
 
     // The declared cadence must actually be a cadence for at least one partition, or the constant
     // is decoration. A partition at the 1 MiB ceiling is four 256 KiB chunks.
-    let multi_chunk = (0..partitions).any(|index| {
-        progress.iter().filter(|(i, _, _)| *i == index).count() > 1
-    });
+    let multi_chunk =
+        (0..partitions).any(|index| progress.iter().filter(|(i, _, _)| *i == index).count() > 1);
     assert!(
         multi_chunk,
         "at least one partition must exceed one chunk, or PUBLISH_WRITE_CHUNK_BYTES is not \
@@ -398,8 +444,11 @@ fn a_cancel_mid_partition_write_ends_the_operation() {
     let dest = d.join("out");
     let cancel = CancelToken::new();
     let rec = Arc::new(Recorder::default());
-    let obs =
-        OnPartialWrite { rec: Arc::clone(&rec), token: cancel.clone(), fired: AtomicBool::new(false) };
+    let obs = OnPartialWrite {
+        rec: Arc::clone(&rec),
+        token: cancel.clone(),
+        fired: AtomicBool::new(false),
+    };
 
     let outcome = publish_unguarded(&request(&ds, &v, dest.clone()), &cancel, Some(&obs));
 
@@ -416,7 +465,10 @@ fn a_cancel_mid_partition_write_ends_the_operation() {
         "the operation must report the instant it noticed"
     );
     assert!(!dest.exists(), "a cancelled publish leaves no destination");
-    assert!(no_staging_beside(&dest), "a cancelled publish leaves no staging directory");
+    assert!(
+        no_staging_beside(&dest),
+        "a cancelled publish leaves no staging directory"
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -444,8 +496,13 @@ fn a_cancelled_publish_releases_the_lease_and_detaches_the_interrupt() {
     let dest = d.join("out");
     let cancel = CancelToken::new();
 
-    let outcome =
-        publish_unguarded(&request(&ds, &v, dest), &cancel, Some(&OnFirstPartition { token: cancel.clone() }));
+    let outcome = publish_unguarded(
+        &request(&ds, &v, dest),
+        &cancel,
+        Some(&OnFirstPartition {
+            token: cancel.clone(),
+        }),
+    );
     assert!(matches!(outcome, Err(PublishError::Cancelled)));
 
     // The producer may still be unwinding when the call returns; both properties are settled by a
@@ -453,7 +510,8 @@ fn a_cancelled_publish_releases_the_lease_and_detaches_the_interrupt() {
     // discovered by whoever first sees a flake.
     const JOIN_WINDOW: Duration = Duration::from_secs(5);
     let deadline = Instant::now() + JOIN_WINDOW;
-    while (ds.connections().active_leases() != 0 || cancel.is_bound()) && Instant::now() < deadline {
+    while (ds.connections().active_leases() != 0 || cancel.is_bound()) && Instant::now() < deadline
+    {
         std::thread::sleep(Duration::from_millis(10));
     }
     assert_eq!(
@@ -479,10 +537,19 @@ fn an_uncancelled_publish_is_unaffected_by_the_new_polling() {
     let outcome = publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None)
         .expect("an uncancelled publish succeeds");
 
-    assert!(dest.join("manifest.json").exists(), "the bundle has a manifest");
+    assert!(
+        dest.join("manifest.json").exists(),
+        "the bundle has a manifest"
+    );
     assert!(outcome.partitions > 0, "the bundle has partitions");
-    assert_eq!(outcome.rows, FEATURES as u64, "every row reaches the bundle");
-    assert!(no_staging_beside(&dest), "the staging directory is gone after a success");
+    assert_eq!(
+        outcome.rows, FEATURES as u64,
+        "every row reaches the bundle"
+    );
+    assert!(
+        no_staging_beside(&dest),
+        "the staging directory is gone after a success"
+    );
 }
 
 /// No staging directory survives beside `dest`. Staging is named `.<name>.staging-<hex>`.

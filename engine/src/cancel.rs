@@ -122,7 +122,13 @@ impl CancelToken {
         if stamp && !already {
             crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
         }
-        if let Some(h) = self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).as_ref() {
+        if let Some(h) = self
+            .inner
+            .interrupt
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+        {
             h.interrupt();
         }
         // The re-interrupter: spawned at most once per token, on the false→true transition only,
@@ -225,7 +231,11 @@ impl CancelToken {
     /// reachable — `Dataset::stream_with_cancel` is public and takes a caller-held token precisely
     /// so a binding can hold one, and nothing stopped a caller passing the same one twice.
     pub(crate) fn attach(&self, handle: Arc<InterruptHandle>) -> crate::error::Result<()> {
-        let mut slot = self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner());
+        let mut slot = self
+            .inner
+            .interrupt
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         if slot.is_some() {
             return Err(crate::error::EngineError::Source(
                 "this cancellation token is already bound to a running stream; each stream needs \
@@ -243,7 +253,11 @@ impl CancelToken {
     /// Release the connection when the stream is over, so a later `cancel()` cannot poke a
     /// connection that has been handed back.
     pub(crate) fn detach(&self) {
-        *self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *self
+            .inner
+            .interrupt
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = None;
     }
 
     /// Whether a running query's interrupt handle is currently bound to this token.
@@ -255,7 +269,11 @@ impl CancelToken {
     /// afterwards is what says a cancelled token was not left attached to a connection that has
     /// been handed back to the pool.
     pub fn is_bound(&self) -> bool {
-        self.inner.interrupt.lock().unwrap_or_else(|e| e.into_inner()).is_some()
+        self.inner
+            .interrupt
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_some()
     }
 }
 
@@ -289,7 +307,10 @@ mod tests {
         let b = duckdb::Connection::open_in_memory().unwrap();
         let t = CancelToken::new();
         t.attach(a.interrupt_handle()).unwrap();
-        assert!(t.attach(b.interrupt_handle()).is_err(), "a second binding must be refused");
+        assert!(
+            t.attach(b.interrupt_handle()).is_err(),
+            "a second binding must be refused"
+        );
 
         // And the refusal is not permanent: the token is reusable once its stream releases it.
         t.detach();
@@ -485,7 +506,9 @@ mod tests {
         t.cancel();
         t.attach(conn.interrupt_handle()).unwrap();
 
-        let mut stmt = conn.prepare("SELECT count(*) FROM range(0, 1000) t(i)").unwrap();
+        let mut stmt = conn
+            .prepare("SELECT count(*) FROM range(0, 1000) t(i)")
+            .unwrap();
         assert!(
             stmt.query_arrow([]).is_ok(),
             "an interrupt raised while idle does not carry over to the next query"

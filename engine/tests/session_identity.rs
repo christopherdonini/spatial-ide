@@ -51,7 +51,12 @@ fn touch_modification_time(path: &std::path::Path) {
 /// A file with no `id` column at all — the R-I3 shape, and the class §3 predicts for six of the
 /// seven corpus files that reach the identity rules.
 fn keyless() -> FixtureSpec {
-    FixtureSpec { features: 500, avg_vertices: 12, identity: IdentityMode::ForeignKeyColumn, ..Default::default() }
+    FixtureSpec {
+        features: 500,
+        avg_vertices: 12,
+        identity: IdentityMode::ForeignKeyColumn,
+        ..Default::default()
+    }
 }
 
 // ---- §13 F, the escalation gate, in its standing form ------------------------------------------
@@ -150,7 +155,10 @@ fn the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture(
          ORDER BY \"parcel_key\" DESC"
     ));
 
-    assert!(!natural.is_empty() && !reordered.is_empty(), "both scans returned rows");
+    assert!(
+        !natural.is_empty() && !reordered.is_empty(),
+        "both scans returned rows"
+    );
     assert!(
         reordered.iter().all(|(ordinal, key)| natural.get(ordinal) == Some(key)),
         "on this file the ordinal did not renumber under ORDER BY — consistent with a physical \
@@ -170,7 +178,10 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
     let ds = Dataset::open(&path).expect("R-I3 admits what used to refuse `identity_unusable`");
 
     assert_eq!(*ds.identity().source(), IdSource::SessionOrdinal);
-    assert_eq!(ds.identity().source().as_envelope_value(), "session-ordinal:file_row_number");
+    assert_eq!(
+        ds.identity().source().as_envelope_value(),
+        "session-ordinal:file_row_number"
+    );
     assert_eq!(
         ds.identity().uniqueness().as_str(),
         "by-construction-within-generation",
@@ -184,7 +195,10 @@ fn a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis
     assert_eq!(ds.identity().max_value(), None);
     assert_eq!(ds.identity().js_exact(), None);
     // R-I3's own sentence: the candidate list is still reported.
-    assert!(ds.identity().candidate_columns().contains(&"parcel_key".to_string()));
+    assert!(ds
+        .identity()
+        .candidate_columns()
+        .contains(&"parcel_key".to_string()));
 }
 
 /// The bare word "unique" appears nowhere in the session tier's record (the proposed ADR-016
@@ -203,8 +217,14 @@ fn the_session_tier_record_says_neither_unique_nor_snapshot() {
         spatial_engine::SESSION_IDENTITY_STATEMENT
     );
     let lower = recorded.to_lowercase();
-    assert!(!lower.contains("unique"), "the bare word must not appear: {recorded}");
-    assert!(!lower.contains("snapshot"), "no snapshot claim anywhere: {recorded}");
+    assert!(
+        !lower.contains("unique"),
+        "the bare word must not appear: {recorded}"
+    );
+    assert!(
+        !lower.contains("snapshot"),
+        "no snapshot claim anywhere: {recorded}"
+    );
     // What it *does* say: this identity does not outlive the open.
     assert!(spatial_engine::SESSION_IDENTITY_STATEMENT.contains("does not survive this open"));
 }
@@ -244,7 +264,10 @@ fn a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file() {
     std::fs::create_dir_all(&d).expect("partition dir");
     match Dataset::open(&d) {
         Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail }) => {
-            assert!(detail.contains("directory"), "the refusal names what it saw: {detail}");
+            assert!(
+                detail.contains("directory"),
+                "the refusal names what it saw: {detail}"
+            );
         }
         other => panic!("expected R-I4's named refusal, got {:?}", other.err()),
     }
@@ -309,12 +332,18 @@ fn the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_datas
 
     // A real rewrite of the same path with a different file: two more features, so size, footer
     // length and footer hash all differ — the `-appended` mutation fixture's registered shape.
-    let bigger = FixtureSpec { features: 700, ..keyless() };
+    let bigger = FixtureSpec {
+        features: 700,
+        ..keyless()
+    };
     write_geoparquet(&path, &bigger).expect("rewrite the source under the open dataset");
 
     match ds.check_source_unchanged() {
         Err(EngineError::SourceChanged { detail }) => {
-            assert!(detail.contains("size"), "every component that differed is named: {detail}");
+            assert!(
+                detail.contains("size"),
+                "every component that differed is named: {detail}"
+            );
             assert!(detail.contains("footer-hash"), "{detail}");
         }
         other => panic!("expected engine.source_changed, got {other:?}"),
@@ -324,7 +353,10 @@ fn the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_datas
     // after the change refuses before anything is leased.
     match ds.stream(&spatial_engine::ViewportQuery::all()) {
         Err(EngineError::SourceChanged { .. }) => {}
-        other => panic!("a query issued after a detected change must refuse, got {:?}", other.err()),
+        other => panic!(
+            "a query issued after a detected change must refuse, got {:?}",
+            other.err()
+        ),
     }
 }
 
@@ -334,7 +366,10 @@ fn the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_datas
 /// `the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim` fails.
 #[test]
 fn the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim() {
-    let message = EngineError::SourceChanged { detail: "{size}".into() }.to_string();
+    let message = EngineError::SourceChanged {
+        detail: "{size}".into(),
+    }
+    .to_string();
     assert!(message.contains("does not establish snapshot consistency"));
     assert!(message.contains("cannot detect every in-place modification"));
     assert!(message.contains("only after that query has finished reading"));
@@ -362,10 +397,17 @@ fn a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_pa
     // component that was read covers it — then restore size and mtime exactly.
     let mut bytes = std::fs::read(&path).expect("read");
     let offset = 1_000usize;
-    assert!(offset < bytes.len() / 2, "the edit must land in data, not in the footer");
+    assert!(
+        offset < bytes.len() / 2,
+        "the edit must land in data, not in the footer"
+    );
     bytes[offset] ^= 0x01;
     std::fs::write(&path, &bytes).expect("write");
-    assert_eq!(std::fs::metadata(&path).unwrap().len(), before.len(), "size restored by construction");
+    assert_eq!(
+        std::fs::metadata(&path).unwrap().len(),
+        before.len(),
+        "size restored by construction"
+    );
     std::fs::File::options()
         .write(true)
         .open(&path)
@@ -410,7 +452,9 @@ fn the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing() {
 fn a_clean_stream_whose_source_changed_terminates_as_source_changed() {
     let path = write("post-check-clean", &keyless());
     let ds = Dataset::open(&path).expect("opens");
-    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+    let mut stream = ds
+        .stream(&spatial_engine::ViewportQuery::all())
+        .expect("stream issues");
 
     // Change the source while the stream is open. **The modification time only, bytes untouched**:
     // rewriting the file under a scan that is still reading it makes DuckDB itself fail first, and
@@ -482,7 +526,10 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
     //    ends clean — a real outcome of a real race, not a defect, and the assertion above is the
     //    one that holds in both cases.
     if let Some(e) = &terminal {
-        assert!(matches!(e, EngineError::Cancelled), "the only terminal error here is the cancel: {e:?}");
+        assert!(
+            matches!(e, EngineError::Cancelled),
+            "the only terminal error here is the cancel: {e:?}"
+        );
     }
     // And the finding is still recorded, which is what ends the dataset-session generation — the
     // whole reason the side channel exists. It was written before the terminal above was sent.
@@ -510,14 +557,19 @@ fn a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_rec
 fn the_post_check_reports_the_footer_bytes_it_read() {
     let path = write("post-check-cost", &keyless());
     let ds = Dataset::open(&path).expect("opens");
-    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+    let mut stream = ds
+        .stream(&spatial_engine::ViewportQuery::all())
+        .expect("stream issues");
     let mut buf = Vec::new();
     while let Some(item) = stream.next_into(&mut buf) {
         item.expect("an unchanged source streams to a clean terminal");
     }
 
     let reported = stream.stats().post_check_bytes_read();
-    assert!(reported > 0, "the post-check read a footer and must say how much of one");
+    assert!(
+        reported > 0,
+        "the post-check read a footer and must say how much of one"
+    );
     assert!(
         reported <= FOOTER_DESCRIPTOR_MAX_BYTES,
         "the read is bounded by the declared ceiling: {reported} > {FOOTER_DESCRIPTOR_MAX_BYTES}"
@@ -535,7 +587,9 @@ fn the_post_check_reports_the_footer_bytes_it_read() {
 fn an_unchanged_source_records_no_post_check_finding() {
     let path = write("post-check-unchanged", &keyless());
     let ds = Dataset::open(&path).expect("opens");
-    let mut stream = ds.stream(&spatial_engine::ViewportQuery::all()).expect("stream issues");
+    let mut stream = ds
+        .stream(&spatial_engine::ViewportQuery::all())
+        .expect("stream issues");
     let mut buf = Vec::new();
     while let Some(item) = stream.next_into(&mut buf) {
         item.expect("an unchanged source streams to a clean terminal");
@@ -588,8 +642,12 @@ fn a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_f
 /// bracket and brace cases.
 #[test]
 fn every_glob_metacharacter_read_parquet_expands_is_refused_by_name() {
-    for name in ["parts-*.parquet", "parts-?.parquet", "parts-[0-9].parquet", "parts-{a,b}.parquet"]
-    {
+    for name in [
+        "parts-*.parquet",
+        "parts-?.parquet",
+        "parts-[0-9].parquet",
+        "parts-{a,b}.parquet",
+    ] {
         match Dataset::open(dir().join(name)) {
             Err(EngineError::IdentityOrdinalPartitionedUnsupported { detail }) => {
                 assert!(detail.contains("glob metacharacter"), "{name}: {detail}");

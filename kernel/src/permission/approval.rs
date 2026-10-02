@@ -174,7 +174,9 @@ impl ApprovalSource for StdinApproval {
                 expected: prompt.confirmation_phrase.clone(),
             }),
             Ok(_) => Ok(Approval::new(line)),
-            Err(e) => Err(PermissionError::ApprovalUnavailable { detail: e.to_string() }),
+            Err(e) => Err(PermissionError::ApprovalUnavailable {
+                detail: e.to_string(),
+            }),
         }
     }
 
@@ -233,8 +235,16 @@ mod tests {
 
     #[test]
     fn the_exact_phrase_approves_and_surrounding_whitespace_is_tolerated() {
-        for ok in ["parcels-2026", "parcels-2026\n", "  parcels-2026\r\n", "\tparcels-2026 "] {
-            assert!(check(&prompt(), &Approval::new(ok)).is_ok(), "{ok:?} should approve");
+        for ok in [
+            "parcels-2026",
+            "parcels-2026\n",
+            "  parcels-2026\r\n",
+            "\tparcels-2026 ",
+        ] {
+            assert!(
+                check(&prompt(), &Approval::new(ok)).is_ok(),
+                "{ok:?} should approve"
+            );
         }
     }
 
@@ -243,18 +253,27 @@ mod tests {
     #[test]
     fn anything_that_is_not_the_phrase_refuses() {
         for bad in [
-            "y", "Y", "yes", "YES", "",
+            "y",
+            "Y",
+            "yes",
+            "YES",
+            "",
             // Case folding would accept this. It must not.
             "PARCELS-2026",
             // A prefix, a suffix, and the full path — none of them is the phrase.
-            "parcels", "parcels-2026-old", "D:/maps/parcels-2026",
+            "parcels",
+            "parcels-2026-old",
+            "D:/maps/parcels-2026",
             // Interior whitespace is not trimmed; only the edges are.
             "parcels 2026",
         ] {
             assert!(
                 matches!(
                     check(&prompt(), &Approval::new(bad)),
-                    Err(PermissionError::ApprovalRefused { reason: RefusalReason::NotMatched, .. })
+                    Err(PermissionError::ApprovalRefused {
+                        reason: RefusalReason::NotMatched,
+                        ..
+                    })
                 ),
                 "{bad:?} was accepted as an approval"
             );

@@ -71,8 +71,11 @@ use spatial_engine::{Bbox, CancelToken, Dataset, ViewportQuery};
 // ---- the fixture matrix, restated from `engine/tests/import_layout_fixtures.rs` (phase 2) -------
 
 const GRANULARITIES: [usize; 3] = [8_192, 4_096, 2_048];
-const ORDERS: [ClusterOrder; 3] =
-    [ClusterOrder::SourceIdentity, ClusterOrder::Hilbert16, ClusterOrder::Shuffled];
+const ORDERS: [ClusterOrder; 3] = [
+    ClusterOrder::SourceIdentity,
+    ClusterOrder::Hilbert16,
+    ClusterOrder::Shuffled,
+];
 
 /// The known-good hashes phase 2 recorded (`CUT-STATE.md`'s phase-2 addendum table), independently
 /// re-verified against the file on disk before any digest is trusted — a fixture that moved
@@ -139,11 +142,16 @@ fn logs_dir() -> PathBuf {
 }
 
 fn fixture_path(order: ClusterOrder, granularity: usize) -> PathBuf {
-    evidence_dir().join(format!("parcels-145mb-duckdb-{}-g{granularity}.parquet", order.as_str()))
+    evidence_dir().join(format!(
+        "parcels-145mb-duckdb-{}-g{granularity}.parquet",
+        order.as_str()
+    ))
 }
 
 fn file_facts(p: &std::path::Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());
@@ -200,7 +208,12 @@ enum ViewId {
 }
 
 impl ViewId {
-    const ALL: [ViewId; 4] = [Self::Whole, Self::NearQuarter, Self::FarQuarter, Self::Sixty4th];
+    const ALL: [ViewId; 4] = [
+        Self::Whole,
+        Self::NearQuarter,
+        Self::FarQuarter,
+        Self::Sixty4th,
+    ];
 
     fn as_str(self) -> &'static str {
         match self {
@@ -262,7 +275,13 @@ fn predicted_rows(v: ViewId) -> u64 {
     };
     let mut rows = 0u64;
     for j in y_lo..=y_hi {
-        let in_row = if j < full_rows { cols } else if j == full_rows { partial } else { 0 };
+        let in_row = if j < full_rows {
+            cols
+        } else if j == full_rows {
+            partial
+        } else {
+            0
+        };
         rows += in_row.min(x_cols);
     }
     rows
@@ -307,9 +326,15 @@ fn per_feature_digest_set(
 fn coordinate_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
     use arrow::array::Array;
     use sha2::{Digest, Sha256};
-    let list = col.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<rings>");
+    let list = col
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<rings>");
     let rings = list.value(row);
-    let rings = rings.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<vertices>");
+    let rings = rings
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<vertices>");
     let mut h = Sha256::new();
     for r in 0..rings.len() {
         let verts = rings.value(r);
@@ -318,7 +343,10 @@ fn coordinate_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
             .downcast_ref::<arrow::array::FixedSizeListArray>()
             .expect("FixedSizeList<xy>");
         let xy = verts.values();
-        let xy = xy.as_any().downcast_ref::<arrow::array::Float64Array>().expect("f64 xy");
+        let xy = xy
+            .as_any()
+            .downcast_ref::<arrow::array::Float64Array>()
+            .expect("f64 xy");
         h.update((xy.len() as u64).to_le_bytes());
         for v in xy.values() {
             h.update(v.to_bits().to_le_bytes());
@@ -397,7 +425,12 @@ impl DigestWatchdog {
             eprintln!("[watchdog] did not return inside the grace; aborting");
             std::process::abort();
         });
-        Self { fired, stop, beat, handle: Some(handle) }
+        Self {
+            fired,
+            stop,
+            beat,
+            handle: Some(handle),
+        }
     }
 
     fn beat(&self) {
@@ -457,7 +490,10 @@ fn the_cross_file_digest_correctness_pass() {
              underneath this phase; refusing to read it",
             order.as_str()
         );
-        say!("verified {} @ g{g}: {bytes} B, sha256:{hash}", order.as_str());
+        say!(
+            "verified {} @ g{g}: {bytes} B, sha256:{hash}",
+            order.as_str()
+        );
     }
 
     // ---- per (file, viewport): the digest set, n = 1, one watchdog per file --------------------
@@ -493,13 +529,28 @@ fn the_cross_file_digest_correctness_pass() {
                     order.as_str(),
                     view.as_str()
                 );
-                cells.push(Cell { order, granularity: g, view, set, digest, rows });
+                cells.push(Cell {
+                    order,
+                    granularity: g,
+                    view,
+                    set,
+                    digest,
+                    rows,
+                });
             }
             let fired = dog.finish();
-            assert!(!fired, "the digest watchdog fired for {} @ g{g}", order.as_str());
+            assert!(
+                !fired,
+                "the digest watchdog fired for {} @ g{g}",
+                order.as_str()
+            );
         }
     }
-    assert_eq!(cells.len(), 9 * 4, "expected the full 9-file x 4-viewport matrix");
+    assert_eq!(
+        cells.len(),
+        9 * 4,
+        "expected the full 9-file x 4-viewport matrix"
+    );
 
     // ---- cross-file comparison at fixed granularity, every viewport ----------------------------
     let find = |order: ClusterOrder, g: usize, view: ViewId| -> &Cell {
@@ -510,7 +561,9 @@ fn the_cross_file_digest_correctness_pass() {
     };
 
     let mut matrix = String::new();
-    matrix.push_str("granularity  viewport      verdict  rows(C/H/R/predicted)      set_digest equal?\n");
+    matrix.push_str(
+        "granularity  viewport      verdict  rows(C/H/R/predicted)      set_digest equal?\n",
+    );
     let mut any_fail = false;
     for &g in &GRANULARITIES {
         for view in ViewId::ALL {

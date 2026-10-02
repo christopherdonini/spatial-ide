@@ -99,9 +99,13 @@ impl SourceFactory for SyntheticFactory {
 }
 
 async fn start(factory: Arc<SyntheticFactory>) -> RunningDataPlane {
-    spatial_data_plane::serve(DataPlaneConfig { factory, static_dir: None, expected_origin: None })
-        .await
-        .expect("serve")
+    spatial_data_plane::serve(DataPlaneConfig {
+        factory,
+        static_dir: None,
+        expected_origin: None,
+    })
+    .await
+    .expect("serve")
 }
 
 fn factory(batches: usize, bytes: usize, per_batch_ms: u64) -> Arc<SyntheticFactory> {
@@ -114,12 +118,16 @@ fn factory(batches: usize, bytes: usize, per_batch_ms: u64) -> Arc<SyntheticFact
     })
 }
 
-type Client = tokio_tungstenite::WebSocketStream<
-    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
->;
+type Client =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 async fn connect(dp: &RunningDataPlane) -> Result<Client, String> {
-    connect_with(dp, Some(&format!("http://127.0.0.1:{}", dp.addr.port())), true).await
+    connect_with(
+        dp,
+        Some(&format!("http://127.0.0.1:{}", dp.addr.port())),
+        true,
+    )
+    .await
 }
 
 async fn connect_with(
@@ -149,7 +157,10 @@ async fn connect_with(
 }
 
 async fn send_start(c: &mut Client) {
-    let f = wire::frame(wire::TAG_START, &wire::start_payload("synthetic", &[1, 2, 3]));
+    let f = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload("synthetic", &[1, 2, 3]),
+    );
     c.send(Message::Binary(f.into())).await.expect("start");
 }
 
@@ -232,8 +243,10 @@ async fn drain(c: &mut Client) -> Received {
                 r.progress.push((g(0), g(8), g(16)));
             }
             wire::TAG_TERMINAL => {
-                r.terminal =
-                    Some((payload[0], String::from_utf8_lossy(&payload[1..]).to_string()));
+                r.terminal = Some((
+                    payload[0],
+                    String::from_utf8_lossy(&payload[1..]).to_string(),
+                ));
                 break;
             }
             _ => panic!("unknown tag {tag}"),
@@ -271,7 +284,10 @@ async fn every_batch_and_a_terminal_frame_are_delivered() {
     );
 
     // Progress is monotonic and its total is known here, so it is a real denominator.
-    assert!(r.progress.windows(2).all(|w| w[0].0 < w[1].0 && w[0].1 <= w[1].1));
+    assert!(r
+        .progress
+        .windows(2)
+        .all(|w| w[0].0 < w[1].0 && w[0].1 <= w[1].1));
     assert_eq!(r.progress.last().unwrap().2, 12);
     dp.shutdown().await;
 }
@@ -309,7 +325,9 @@ async fn a_cancel_control_frame_reaches_the_source_and_is_observed_producer_side
 
     let states = dp.registry.snapshot();
     let state = states.last().expect("one stream");
-    let observed = state.observed_at().expect("the producer observed the cancel");
+    let observed = state
+        .observed_at()
+        .expect("the producer observed the cancel");
     let latency = observed.duration_since(sent_at);
     assert!(
         latency < Duration::from_millis(100),
@@ -322,7 +340,13 @@ async fn a_cancel_control_frame_reaches_the_source_and_is_observed_producer_side
 
     // Cloned out of the lock rather than holding the guard: a `MutexGuard` alive across an await
     // is a deadlock waiting for this test to move to a multi-thread runtime.
-    let flag = f.last.lock().unwrap().last().cloned().expect("a source was created");
+    let flag = f
+        .last
+        .lock()
+        .unwrap()
+        .last()
+        .cloned()
+        .expect("a source was created");
     assert!(
         flag.cancelled.load(Ordering::SeqCst),
         "the cancel reached the source, not merely the writer"
@@ -351,7 +375,12 @@ async fn a_peer_that_closes_without_cancelling_still_stops_the_producer() {
 
     let stopped = tokio::time::timeout(Duration::from_secs(3), async {
         loop {
-            if f.last.lock().unwrap().last().map(|f| f.cancelled.load(Ordering::SeqCst)) == Some(true)
+            if f.last
+                .lock()
+                .unwrap()
+                .last()
+                .map(|f| f.cancelled.load(Ordering::SeqCst))
+                == Some(true)
             {
                 return;
             }
@@ -462,7 +491,11 @@ async fn withholding_credit_bounds_producer_memory() {
     // Grant nothing, and wait for the producer to work ahead into its window and *stop* — sampling
     // once after an arbitrary delay would read a value mid-climb.
     let plateau = wait_for_plateau(Duration::from_secs(20), 25, || {
-        dp.registry.snapshot().last().map(|s| s.batches_generated()).unwrap_or(0)
+        dp.registry
+            .snapshot()
+            .last()
+            .map(|s| s.batches_generated())
+            .unwrap_or(0)
     })
     .await
     .expect("a backpressured producer stops; this one never did");
@@ -502,12 +535,30 @@ async fn a_grant_of_n_moves_exactly_n_batches() {
 
     send_start(&mut c).await;
     grant(&mut c, 3).await;
-    let first = expect_exactly(&mut c, 3, Duration::from_secs(5), Duration::from_millis(400)).await;
-    assert_eq!(first, 3, "a grant of 3 must move exactly 3 batches, not {first}");
+    let first = expect_exactly(
+        &mut c,
+        3,
+        Duration::from_secs(5),
+        Duration::from_millis(400),
+    )
+    .await;
+    assert_eq!(
+        first, 3,
+        "a grant of 3 must move exactly 3 batches, not {first}"
+    );
 
     grant(&mut c, 2).await;
-    let second = expect_exactly(&mut c, 2, Duration::from_secs(5), Duration::from_millis(400)).await;
-    assert_eq!(second, 2, "a further grant of 2 must move exactly 2 batches, not {second}");
+    let second = expect_exactly(
+        &mut c,
+        2,
+        Duration::from_secs(5),
+        Duration::from_millis(400),
+    )
+    .await;
+    assert_eq!(
+        second, 2,
+        "a further grant of 2 must move exactly 2 batches, not {second}"
+    );
 
     c.close(None).await.ok();
     dp.shutdown().await;
@@ -538,9 +589,14 @@ async fn the_declared_concurrency_ceiling_refuses_rather_than_queues() {
     send_start(&mut extra).await;
     let r = drain(&mut extra).await;
 
-    let (code, detail) = r.terminal.expect("the refusal is a terminal frame, not a dropped socket");
+    let (code, detail) = r
+        .terminal
+        .expect("the refusal is a terminal frame, not a dropped socket");
     assert_eq!(code, wire::TERM_PRODUCER_FAILED);
-    assert!(detail.contains("MAX_CONCURRENT_STREAMS"), "the refusal names the ceiling: {detail}");
+    assert!(
+        detail.contains("MAX_CONCURRENT_STREAMS"),
+        "the refusal names the ceiling: {detail}"
+    );
     assert!(detail.contains("not queued"));
     assert_eq!(r.batches, 0);
     assert_eq!(dp.registry.refusals(), 1);
@@ -568,7 +624,10 @@ async fn a_source_refusal_reaches_the_consumer_as_a_typed_terminal() {
 
     let (code, detail) = r.terminal.expect("terminal frame");
     assert_eq!(code, wire::TERM_PRODUCER_FAILED);
-    assert!(detail.contains("declares no CRS"), "the refusal's own words survive: {detail}");
+    assert!(
+        detail.contains("declares no CRS"),
+        "the refusal's own words survive: {detail}"
+    );
     assert_eq!(r.batches, 0);
     c.close(None).await.ok();
     dp.shutdown().await;
@@ -580,14 +639,28 @@ async fn credentials_and_origins_are_enforced_on_the_data_channel() {
     let dp = start(factory(1, 16, 0)).await;
     let good_origin = format!("http://127.0.0.1:{}", dp.addr.port());
 
-    assert!(connect_with(&dp, Some(&good_origin), false).await.is_err(), "wrong credential");
-    assert!(connect_with(&dp, Some("http://evil.example"), true).await.is_err(), "foreign origin");
-    assert!(connect_with(&dp, Some("null"), true).await.is_err(), "null origin");
+    assert!(
+        connect_with(&dp, Some(&good_origin), false).await.is_err(),
+        "wrong credential"
+    );
+    assert!(
+        connect_with(&dp, Some("http://evil.example"), true)
+            .await
+            .is_err(),
+        "foreign origin"
+    );
+    assert!(
+        connect_with(&dp, Some("null"), true).await.is_err(),
+        "null origin"
+    );
     assert!(
         connect_with(&dp, None, true).await.is_err(),
         "a client presenting neither Origin nor a same-origin fetch-metadata signal is rejected"
     );
-    assert!(connect_with(&dp, Some(&good_origin), true).await.is_ok(), "the real client connects");
+    assert!(
+        connect_with(&dp, Some(&good_origin), true).await.is_ok(),
+        "the real client connects"
+    );
     dp.shutdown().await;
 }
 
@@ -604,7 +677,10 @@ async fn a_completed_stream_is_recorded_with_its_terminal_outcome() {
     // So the stream is not finished server-side until the client closes — which is the behaviour
     // that stops a server-initiated close from racing frames still in the peer's receive path, and
     // is why this test closes before asserting.
-    assert!(dp.registry.terminals().is_empty(), "the producer is still waiting for the peer");
+    assert!(
+        dp.registry.terminals().is_empty(),
+        "the producer is still waiting for the peer"
+    );
     c.close(None).await.ok();
 
     let recorded = tokio::time::timeout(Duration::from_secs(3), async {
@@ -647,8 +723,10 @@ async fn a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_nam
             wire::TAG_BATCH => batches += 1,
             wire::TAG_TERMINAL => {
                 let payload = &b[wire::FRAME_PREFIX_LEN..];
-                terminal =
-                    Some((payload[0], String::from_utf8_lossy(&payload[1..]).into_owned()));
+                terminal = Some((
+                    payload[0],
+                    String::from_utf8_lossy(&payload[1..]).into_owned(),
+                ));
                 break;
             }
             _ => {}
@@ -658,7 +736,8 @@ async fn a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_nam
     let (code, detail) = terminal.expect("an over-ceiling batch must produce a terminal frame");
     assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
     assert!(
-        detail.contains("frame ceiling") && detail.contains(&spatial_data_plane::MAX_FRAME_BYTES.to_string()),
+        detail.contains("frame ceiling")
+            && detail.contains(&spatial_data_plane::MAX_FRAME_BYTES.to_string()),
         "the terminal must name the ceiling it hit, got: {detail}"
     );
     assert_eq!(batches, 0, "no over-ceiling batch may reach the consumer");
@@ -697,7 +776,10 @@ async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own
     send_start(&mut over).await;
     grant(&mut over, 10).await;
     let served = drain(&mut over).await;
-    assert_eq!(served.batches, 4, "a crowded-pool connection that starts work is still served");
+    assert_eq!(
+        served.batches, 4,
+        "a crowded-pool connection that starts work is still served"
+    );
 
     for mut s in spares {
         s.close(None).await.ok();

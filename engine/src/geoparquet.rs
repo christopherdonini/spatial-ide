@@ -221,7 +221,10 @@ fn cap_unit_name(name: String) -> String {
     while end > 0 && !name.is_char_boundary(end) {
         end -= 1;
     }
-    format!("{} (truncated at the declared {MAX_UNIT_NAME_BYTES}-byte ceiling)", &name[..end])
+    format!(
+        "{} (truncated at the declared {MAX_UNIT_NAME_BYTES}-byte ceiling)",
+        &name[..end]
+    )
 }
 
 /// Where a recorded [`CoordinateUnit`] was established from.
@@ -396,7 +399,12 @@ impl GeoMeta {
         let geometry_types = col
             .get("geometry_types")
             .and_then(Value::as_array)
-            .map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect())
+            .map(|a| {
+                a.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_string)
+                    .collect()
+            })
             .unwrap_or_default();
 
         // Three distinguishable states, only one of which is "the file declares a CRS":
@@ -422,7 +430,11 @@ impl GeoMeta {
             Some(_) => (None, CrsKeyState::ExplicitNull),
         };
 
-        let covering = col.get("covering").and_then(|c| c.get("bbox")).map(parse_covering).transpose()?;
+        let covering = col
+            .get("covering")
+            .and_then(|c| c.get("bbox"))
+            .map(parse_covering)
+            .transpose()?;
         let bbox = col.get("bbox").and_then(parse_bbox_member);
 
         Ok(Self {
@@ -592,7 +604,11 @@ fn parse_covering(bbox: &Value) -> Result<CoveringBbox> {
             .get(k)
             .and_then(Value::as_array)
             .ok_or_else(|| EngineError::GeoMetadata(format!("`covering.bbox.{k}` missing")))?;
-        let segs: Vec<String> = arr.iter().filter_map(Value::as_str).map(str::to_string).collect();
+        let segs: Vec<String> = arr
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::to_string)
+            .collect();
         if segs.is_empty() || segs.len() != arr.len() {
             return Err(EngineError::GeoMetadata(format!(
                 "`covering.bbox.{k}` is not a path of strings"
@@ -600,7 +616,12 @@ fn parse_covering(bbox: &Value) -> Result<CoveringBbox> {
         }
         Ok(FieldPath(segs))
     };
-    Ok(CoveringBbox { xmin: one("xmin")?, ymin: one("ymin")?, xmax: one("xmax")?, ymax: one("ymax")? })
+    Ok(CoveringBbox {
+        xmin: one("xmin")?,
+        ymin: one("ymin")?,
+        xmax: one("xmax")?,
+        ymax: one("ymax")?,
+    })
 }
 
 /// `EPSG:2056` when the definition carries an authority id; otherwise an explicit marker.
@@ -610,7 +631,9 @@ fn parse_covering(bbox: &Value) -> Result<CoveringBbox> {
 /// and the full definition travels alongside it.
 pub fn identifier_from_projjson(crs: &Value) -> String {
     match (
-        crs.get("id").and_then(|i| i.get("authority")).and_then(Value::as_str),
+        crs.get("id")
+            .and_then(|i| i.get("authority"))
+            .and_then(Value::as_str),
         crs.get("id").and_then(|i| i.get("code")),
     ) {
         (Some(auth), Some(code)) => match code {
@@ -643,8 +666,20 @@ pub fn axis_order_from_projjson(crs: &Value) -> Result<AxisOrder> {
         });
     }
 
-    let dir = |i: usize| axes[i].get("direction").and_then(Value::as_str).unwrap_or("").to_ascii_lowercase();
-    let name = |i: usize| axes[i].get("name").and_then(Value::as_str).unwrap_or("").to_ascii_lowercase();
+    let dir = |i: usize| {
+        axes[i]
+            .get("direction")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_ascii_lowercase()
+    };
+    let name = |i: usize| {
+        axes[i]
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_ascii_lowercase()
+    };
 
     let geographic = name(0).contains("longitude")
         || name(0).contains("latitude")
@@ -652,8 +687,16 @@ pub fn axis_order_from_projjson(crs: &Value) -> Result<AxisOrder> {
         || name(1).contains("latitude");
 
     match (dir(0).as_str(), dir(1).as_str()) {
-        ("east", "north") => Ok(if geographic { AxisOrder::LongitudeLatitude } else { AxisOrder::EastingNorthing }),
-        ("north", "east") => Ok(if geographic { AxisOrder::LatitudeLongitude } else { AxisOrder::NorthingEasting }),
+        ("east", "north") => Ok(if geographic {
+            AxisOrder::LongitudeLatitude
+        } else {
+            AxisOrder::EastingNorthing
+        }),
+        ("north", "east") => Ok(if geographic {
+            AxisOrder::LatitudeLongitude
+        } else {
+            AxisOrder::NorthingEasting
+        }),
         (a, b) => Err(EngineError::AxisOrderUnestablished {
             detail: format!("axis directions ({a}, {b}) are not a planar east/north pair"),
         }),
@@ -688,7 +731,10 @@ pub fn coordinate_unit_for_admission(
                 "the absent-key rule supplies a CRS and no definition; one appearing here would \
                  mean the rule branch was reached by an admission it does not describe"
             );
-            (CoordinateUnit::Degree, Some(CoordinateUnitSource::FormatRule))
+            (
+                CoordinateUnit::Degree,
+                Some(CoordinateUnitSource::FormatRule),
+            )
         }
         CrsProvenance::Declared | CrsProvenance::Asserted => {
             coordinate_unit_from_definition(definition_json)
@@ -713,9 +759,15 @@ pub fn coordinate_unit_from_definition(
     let Ok(value) = serde_json::from_str::<Value>(text) else {
         // A definition that does not parse is one nothing can be read from. It is not silently a
         // degree: the record says `unestablished`, and the source says a definition was there.
-        return (CoordinateUnit::Unestablished, Some(CoordinateUnitSource::Definition));
+        return (
+            CoordinateUnit::Unestablished,
+            Some(CoordinateUnitSource::Definition),
+        );
     };
-    (coordinate_unit_from_projjson(&value), Some(CoordinateUnitSource::Definition))
+    (
+        coordinate_unit_from_projjson(&value),
+        Some(CoordinateUnitSource::Definition),
+    )
 }
 
 /// The unit declared on `coordinate_system.axis[0]` and `coordinate_system.axis[1]`, and on nothing
@@ -807,7 +859,9 @@ mod tests {
 
     #[test]
     fn a_definition_without_a_coordinate_system_is_refused_not_guessed() {
-        let doc = geo_doc(r#","crs":{"type":"ProjectedCRS","name":"CH1903+ / LV95","id":{"authority":"EPSG","code":2056}}"#);
+        let doc = geo_doc(
+            r#","crs":{"type":"ProjectedCRS","name":"CH1903+ / LV95","id":{"authority":"EPSG","code":2056}}"#,
+        );
         let e = GeoMeta::parse(&doc).unwrap_err();
         assert!(matches!(e, EngineError::AxisOrderUnestablished { .. }));
     }
@@ -835,7 +889,10 @@ mod tests {
         let m = GeoMeta::parse(&doc).unwrap();
         let (_, _, axis) = m.declared_crs.unwrap();
         assert_eq!(axis, AxisOrder::LatitudeLongitude);
-        assert!(!axis.is_x_first(), "the EPSG:4326 trap must not read as x-first");
+        assert!(
+            !axis.is_x_first(),
+            "the EPSG:4326 trap must not read as x-first"
+        );
     }
 
     // ---- the coordinate unit: read from the axes, never from anything else ------------------
@@ -852,8 +909,14 @@ mod tests {
                 {"direction": "east", "unit": {"type": "AngularUnit", "name": "degree"}},
                 {"direction": "north", "unit": {"type": "AngularUnit", "name": "degree"}}]}
         });
-        assert_eq!(coordinate_unit_from_projjson(&string_form), CoordinateUnit::Degree);
-        assert_eq!(coordinate_unit_from_projjson(&object_form), CoordinateUnit::Degree);
+        assert_eq!(
+            coordinate_unit_from_projjson(&string_form),
+            CoordinateUnit::Degree
+        );
+        assert_eq!(
+            coordinate_unit_from_projjson(&object_form),
+            CoordinateUnit::Degree
+        );
     }
 
     #[test]
@@ -885,7 +948,10 @@ mod tests {
         let one_axis = serde_json::json!({"coordinate_system": {"axis": [{"unit": "degree"}]}});
         let no_cs = serde_json::json!({"id": {"authority": "OGC", "code": "CRS84"}});
         for case in [disagreeing, missing, unreadable, one_axis, no_cs] {
-            assert_eq!(coordinate_unit_from_projjson(&case), CoordinateUnit::Unestablished);
+            assert_eq!(
+                coordinate_unit_from_projjson(&case),
+                CoordinateUnit::Unestablished
+            );
         }
     }
 
@@ -910,7 +976,10 @@ mod tests {
         );
         assert_eq!(
             coordinate_unit_from_definition(Some("{not json")),
-            (CoordinateUnit::Unestablished, Some(CoordinateUnitSource::Definition)),
+            (
+                CoordinateUnit::Unestablished,
+                Some(CoordinateUnitSource::Definition)
+            ),
             "a definition was there to read; nothing was established from it"
         );
     }
@@ -921,13 +990,19 @@ mod tests {
     fn the_provenance_class_decides_which_source_supplies_the_unit() {
         assert_eq!(
             coordinate_unit_for_admission(CrsProvenance::FormatDefault, None),
-            (CoordinateUnit::Degree, Some(CoordinateUnitSource::FormatRule)),
+            (
+                CoordinateUnit::Degree,
+                Some(CoordinateUnitSource::FormatRule)
+            ),
             "the pinned absent-key rule names OGC:CRS84 — longitude and latitude in degrees — and \
              the record says the rule is where that came from"
         );
         assert_eq!(
             coordinate_unit_for_admission(CrsProvenance::Declared, Some(LV95)),
-            (CoordinateUnit::Metre, Some(CoordinateUnitSource::Definition)),
+            (
+                CoordinateUnit::Metre,
+                Some(CoordinateUnitSource::Definition)
+            ),
             "a declared definition is read, and its own axes are what is recorded"
         );
         assert_eq!(

@@ -120,12 +120,21 @@ enum TicketState {
     /// Minted by `viewport_query`, not yet redeemed by the data plane. The engine stream already
     /// exists and is already validated — `viewport_query` built it synchronously before minting —
     /// so redemption costs a lock and a map removal, nothing more.
-    Pending { built: PendingBuilt, dataset: String, minted_at: Instant },
+    Pending {
+        built: PendingBuilt,
+        dataset: String,
+        minted_at: Instant,
+    },
     /// Redeemed exactly once. `cancelled` is this registry's own record of whether `cancel` has
     /// been called on it — never inferred from the underlying `SourceCancel`, which exposes no way
     /// to ask. `redeemed_at` bounds this entry's own lifetime in the map (`TERMINAL_ENTRY_MAX_AGE`)
     /// — it is not a signal that the underlying stream has finished.
-    Redeemed { dataset: String, cancel: Arc<dyn SourceCancel>, cancelled: bool, redeemed_at: Instant },
+    Redeemed {
+        dataset: String,
+        cancel: Arc<dyn SourceCancel>,
+        cancelled: bool,
+        redeemed_at: Instant,
+    },
     /// Was `Pending`, cancelled before a redemption ever arrived. A later redemption is refused —
     /// this is the whole of what closes the cancel-then-redeem race ADR-019 names.
     CancelledBeforeRedeem { cancelled_at: Instant },
@@ -180,7 +189,10 @@ impl StreamRegistry {
             })
             .map(|(k, _)| k.clone())
             .collect();
-        expired.into_iter().filter_map(|k| tickets.remove(&k)).collect()
+        expired
+            .into_iter()
+            .filter_map(|k| tickets.remove(&k))
+            .collect()
     }
 
     /// Reclaim stale entries — a `Pending` ticket's leased connection among them — without waiting
@@ -249,12 +261,12 @@ impl StreamRegistry {
                 "ticket `{handle}` is unknown: never minted, already redeemed and gone, or \
                  expired after {TICKET_TTL:?}"
             )),
-            Some(TicketState::CancelledBeforeRedeem { .. }) => {
-                Err(format!("ticket `{handle}` was cancelled before it was redeemed"))
-            }
-            Some(TicketState::Redeemed { .. }) => {
-                Err(format!("ticket `{handle}` was already redeemed; a ticket is single-use"))
-            }
+            Some(TicketState::CancelledBeforeRedeem { .. }) => Err(format!(
+                "ticket `{handle}` was cancelled before it was redeemed"
+            )),
+            Some(TicketState::Redeemed { .. }) => Err(format!(
+                "ticket `{handle}` was already redeemed; a ticket is single-use"
+            )),
             Some(TicketState::Pending { .. }) => {
                 let Some(TicketState::Pending { built, dataset, .. }) = tickets.remove(handle)
                 else {
@@ -296,11 +308,15 @@ impl StreamRegistry {
             Some(state @ TicketState::Pending { .. }) => {
                 retired = Some(std::mem::replace(
                     state,
-                    TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() },
+                    TicketState::CancelledBeforeRedeem {
+                        cancelled_at: Instant::now(),
+                    },
                 ));
                 CancelOutcome::Requested
             }
-            Some(TicketState::Redeemed { cancel, cancelled, .. }) => {
+            Some(TicketState::Redeemed {
+                cancel, cancelled, ..
+            }) => {
                 if *cancelled {
                     CancelOutcome::AlreadyTerminal
                 } else {
@@ -335,11 +351,18 @@ impl StreamRegistry {
                 TicketState::Pending { dataset: d, .. } if d == dataset => {
                     retired.push(std::mem::replace(
                         state,
-                        TicketState::CancelledBeforeRedeem { cancelled_at: Instant::now() },
+                        TicketState::CancelledBeforeRedeem {
+                            cancelled_at: Instant::now(),
+                        },
                     ));
                     n += 1;
                 }
-                TicketState::Redeemed { dataset: d, cancel, cancelled, .. } if d == dataset && !*cancelled => {
+                TicketState::Redeemed {
+                    dataset: d,
+                    cancel,
+                    cancelled,
+                    ..
+                } if d == dataset && !*cancelled => {
                     cancel.cancel();
                     *cancelled = true;
                     n += 1;
@@ -575,9 +598,12 @@ impl GenerationRegistry {
         if st.closing.contains(dataset) {
             return false;
         }
-        let Some((g, _)) = st.live.get(dataset) else { return false };
+        let Some((g, _)) = st.live.get(dataset) else {
+            return false;
+        };
         let g = *g;
-        st.tickets.insert(handle.to_string(), (dataset.to_string(), g, Instant::now()));
+        st.tickets
+            .insert(handle.to_string(), (dataset.to_string(), g, Instant::now()));
         true
     }
 
@@ -690,7 +716,8 @@ impl GenerationRegistry {
         // was written. Past this window `StreamRegistry` no longer answers for the handle either
         // (`sweep_locked`), so the refusal this record would have produced degrades to `redeem`'s
         // own "unknown" answer — a weaker statement, never a wrong one, and never an admission.
-        st.dead_tickets.retain(|_, (_, _, ended_at)| ended_at.elapsed() <= max_age);
+        st.dead_tickets
+            .retain(|_, (_, _, ended_at)| ended_at.elapsed() <= max_age);
     }
 
     /// The reason this dataset's generation ended, if it has. Round 18 item 3: `describe`'s
@@ -753,13 +780,18 @@ impl GenerationRegistry {
         // other.
         let ended_at = Instant::now();
         for h in &ended {
-            st.dead_tickets.insert(h.clone(), (dataset.to_string(), recorded_reason, ended_at));
+            st.dead_tickets
+                .insert(h.clone(), (dataset.to_string(), recorded_reason, ended_at));
         }
         // The generation these entries name is gone as of the line above, so `prune_locked`'s
         // second condition now sweeps them — collected first, because the caller still has to
         // cancel them.
         Self::prune_locked(&mut st);
-        Some(EndReport { session, reason: recorded_reason, tickets: ended })
+        Some(EndReport {
+            session,
+            reason: recorded_reason,
+            tickets: ended,
+        })
     }
 
     /// Forget a dataset entirely — its live generation, its closing mark and every ticket
@@ -812,7 +844,11 @@ impl SessionInvalidator {
         tickets: Arc<StreamRegistry>,
         events: SessionEndSender,
     ) -> Arc<Self> {
-        Arc::new(Self { generations, tickets, events })
+        Arc::new(Self {
+            generations,
+            tickets,
+            events,
+        })
     }
 
     /// **Record half of the single emission point** (§2b step 1; phase-2 delta 5). Takes the
@@ -849,7 +885,9 @@ impl SessionInvalidator {
     /// change do not double-cancel or double-emit, and so a source whose post-check fires on
     /// several concurrent tile streams ends one session rather than N.
     pub fn end_generation(&self, dataset: &str, reason: SessionEndReason) -> u32 {
-        let Some(report) = self.record(dataset, reason) else { return 0 };
+        let Some(report) = self.record(dataset, reason) else {
+            return 0;
+        };
         self.enqueue(&report);
         let mut cancelled = 0u32;
         for h in report.tickets {
@@ -881,7 +919,10 @@ impl OpenRegistry {
     }
 
     fn end(&self, key: &str) {
-        self.inflight.lock().unwrap_or_else(|e| e.into_inner()).remove(key);
+        self.inflight
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(key);
     }
 
     fn cancel(&self, key: &str) -> CancelOutcome {
@@ -891,7 +932,11 @@ impl OpenRegistry {
             Some(token) => {
                 let was_cancelled = token.is_cancelled();
                 token.cancel();
-                if was_cancelled { CancelOutcome::AlreadyTerminal } else { CancelOutcome::Requested }
+                if was_cancelled {
+                    CancelOutcome::AlreadyTerminal
+                } else {
+                    CancelOutcome::Requested
+                }
             }
         }
     }
@@ -1034,7 +1079,10 @@ impl SkpHost {
         // `open_cancellable` runs arbitrary engine/DuckDB code, and an unwind out of it must still
         // free this cancel key. Without this, a panic here would leave `cancel_key` permanently
         // `cancel_key_in_use` for the rest of the process's life, since nothing else ever removes it.
-        let _end_open_on_drop = OpenGuard { opens: &self.opens, key: cancel_key.as_str().to_string() };
+        let _end_open_on_drop = OpenGuard {
+            opens: &self.opens,
+            key: cancel_key.as_str().to_string(),
+        };
         let handle = DatasetHandle::mint();
         // `NEXT-CUT.md` P1: the wire carries the caller's *claim* (identifier/definition_json,
         // column) and nothing else — `by`/`at` are never read from the request (I4, ADR-004
@@ -1096,7 +1144,8 @@ impl SkpHost {
         let arm_outcome = self.arm.arm(Path::new(&req.path), sink);
 
         let outcome =
-            self.catalog.open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
+            self.catalog
+                .open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
         if let Err(e) = outcome {
             // The open itself refused before admission was ever reached: disarm, nothing else to
             // clean up (the catalog entry was never inserted).
@@ -1164,29 +1213,46 @@ impl SkpHost {
                 }
                 // Step 3: mint, still under the latch, before it flips to `Admitted`.
                 let session = SessionRef::mint();
-                self.generations.mint_for_open(handle.as_str(), session.clone());
+                self.generations
+                    .mint_for_open(handle.as_str(), session.clone());
                 *guard = LatchState::Admitted;
                 drop(guard);
                 self.watches
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
-                    .insert(dataset_name, OpenRecord { watch: Some(watch), coverage: CoverageOutcome::Watching });
+                    .insert(
+                        dataset_name,
+                        OpenRecord {
+                            watch: Some(watch),
+                            coverage: CoverageOutcome::Watching,
+                        },
+                    );
                 session
             }
             ArmOutcome::ChecksOnly { reason } => {
                 let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
                 let session = SessionRef::mint();
-                self.generations.mint_for_open(handle.as_str(), session.clone());
+                self.generations
+                    .mint_for_open(handle.as_str(), session.clone());
                 *guard = LatchState::Admitted;
                 drop(guard);
-                self.watches.lock().unwrap_or_else(|e| e.into_inner()).insert(
-                    dataset_name,
-                    OpenRecord { watch: None, coverage: CoverageOutcome::ChecksOnly { reason } },
-                );
+                self.watches
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .insert(
+                        dataset_name,
+                        OpenRecord {
+                            watch: None,
+                            coverage: CoverageOutcome::ChecksOnly { reason },
+                        },
+                    );
                 session
             }
         };
-        Ok(OpenDatasetResponse { dataset: handle, session })
+        Ok(OpenDatasetResponse {
+            dataset: handle,
+            session,
+        })
     }
 
     pub fn describe(&self, req: DescribeRequest) -> Result<DescribeResponse, SkpError> {
@@ -1200,12 +1266,20 @@ impl SkpHost {
         resp.coverage = {
             let watches = self.watches.lock().unwrap_or_else(|e| e.into_inner());
             match watches.get(req.dataset.as_str()) {
-                Some(OpenRecord { coverage: CoverageOutcome::Watching, .. }) => {
-                    SourceCoverage { state: CoverageState::Watching, reason: None }
-                }
-                Some(OpenRecord { coverage: CoverageOutcome::ChecksOnly { reason }, .. }) => {
-                    SourceCoverage { state: CoverageState::ChecksOnly, reason: Some(reason.clone()) }
-                }
+                Some(OpenRecord {
+                    coverage: CoverageOutcome::Watching,
+                    ..
+                }) => SourceCoverage {
+                    state: CoverageState::Watching,
+                    reason: None,
+                },
+                Some(OpenRecord {
+                    coverage: CoverageOutcome::ChecksOnly { reason },
+                    ..
+                }) => SourceCoverage {
+                    state: CoverageState::ChecksOnly,
+                    reason: Some(reason.clone()),
+                },
                 // No `OpenRecord`: this dataset was opened through an entry point other than this
                 // host's own `open_dataset` (`Catalog::open`/`open_cancellable` directly), so no
                 // watch was ever armed for it.
@@ -1220,7 +1294,10 @@ impl SkpHost {
         resp.checks = {
             let components = ds.descriptor().unestablished_components();
             if components.is_empty() {
-                SourceChecks { state: ChecksState::Full, components: Vec::new() }
+                SourceChecks {
+                    state: ChecksState::Full,
+                    components: Vec::new(),
+                }
             } else {
                 SourceChecks {
                     state: ChecksState::Degraded,
@@ -1238,7 +1315,10 @@ impl SkpHost {
                 }
             }
         };
-        resp.session_end = self.generations.ended_reason(req.dataset.as_str()).map(end_reason_of);
+        resp.session_end = self
+            .generations
+            .ended_reason(req.dataset.as_str())
+            .map(end_reason_of);
 
         Ok(resp)
     }
@@ -1340,12 +1420,13 @@ impl SkpHost {
         // opened. Every ticket that belonged to it is cancelled through the existing cancel. This
         // is the engine's own descriptor pre-check, never the watcher, so it always passes
         // `ObservedChange`, as §2b's single emission point assigns to the pre-check.
-        let (stream, cancel) = open_engine_stream(ds, &query, projection.as_ref()).map_err(|e| {
-            if matches!(e, EngineError::SourceChanged { .. }) {
-                self.end_generation(dataset_name);
-            }
-            error_of(&e)
-        })?;
+        let (stream, cancel) =
+            open_engine_stream(ds, &query, projection.as_ref()).map_err(|e| {
+                if matches!(e, EngineError::SourceChanged { .. }) {
+                    self.end_generation(dataset_name);
+                }
+                error_of(&e)
+            })?;
         // `None`: `frontends/shell` has no consumer for `StreamConnectionRecord` telemetry yet
         // (unlike `kernel::main`'s own product binary, which does via `with_connection_reports`) —
         // no half-built reporting path here waiting for a caller that doesn't exist (S7, reviewer,
@@ -1376,7 +1457,10 @@ impl SkpHost {
         // kernel-side. `attribute_ticket` returning false means the generation ended, or the close
         // began, between the check above and this line — a real race, and the honest answer is to
         // cancel the ticket just minted rather than hand out one that is already dead.
-        if !self.generations.attribute_ticket(handle.as_str(), dataset_name) {
+        if !self
+            .generations
+            .attribute_ticket(handle.as_str(), dataset_name)
+        {
             self.tickets.cancel(handle.as_str());
             // The actual reason this generation ended, never hardcoded to `SourceChanged`
             // (block-on-sight 3). No recorded end means the close had begun, or had already
@@ -1400,7 +1484,10 @@ impl SkpHost {
                 },
             }));
         }
-        Ok(ViewportQueryResponse { stream: handle, expires_in_ms: TICKET_TTL.as_millis() as u32 })
+        Ok(ViewportQueryResponse {
+            stream: handle,
+            expires_in_ms: TICKET_TTL.as_millis() as u32,
+        })
     }
 
     /// End a dataset's `dataset_session_generation` and cancel every ticket that belonged to it.
@@ -1420,7 +1507,8 @@ impl SkpHost {
     pub fn end_generation(&self, dataset: &str) -> u32 {
         // The engine's own pre-check descriptor comparison — never the watcher — so this always
         // passes `ObservedChange`, as §2b's single emission point assigns to the pre-check.
-        self.invalidator.end_generation(dataset, SessionEndReason::ObservedChange)
+        self.invalidator
+            .end_generation(dataset, SessionEndReason::ObservedChange)
     }
 
     pub fn cancel(&self, req: CancelRequest) -> Result<CancelResponse, SkpError> {
@@ -1432,7 +1520,9 @@ impl SkpHost {
             Ok(h) => self.tickets.cancel(h.as_str()),
             Err(_) => self.opens.cancel(&req.handle),
         };
-        Ok(CancelResponse { state: outcome.as_str().to_string() })
+        Ok(CancelResponse {
+            state: outcome.as_str().to_string(),
+        })
     }
 
     pub fn close_dataset(
@@ -1448,7 +1538,11 @@ impl SkpHost {
         // close releases its dataset's watch on every outcome after the SKP version check, the
         // `unknown_dataset` refusal included
         // (`kernel/CLOSE-DATASET-UNKNOWN-KEEPS-OPENRECORD-PREREGISTRATION.md` §2).
-        let removed_watch = self.watches.lock().unwrap_or_else(|e| e.into_inner()).remove(name);
+        let removed_watch = self
+            .watches
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(name);
         drop(removed_watch);
         if self.catalog.get(name).is_none() {
             return Err(SkpError::unknown_dataset(name));
@@ -1591,17 +1685,25 @@ fn projection_error_of(e: &ProjectionError) -> SkpError {
             message,
             [("limit", limit.to_string()), ("saw", saw.to_string())],
         ),
-        ProjectionError::ColumnUnknown { column, known_columns } => SkpError::protocol_with_fields(
+        ProjectionError::ColumnUnknown {
+            column,
+            known_columns,
+        } => SkpError::protocol_with_fields(
             "projection_column_unknown",
             message,
             [
                 ("column", column.clone()),
-                ("known_columns", spatial_engine::attributes::known_columns_wire_field(known_columns)),
+                (
+                    "known_columns",
+                    spatial_engine::attributes::known_columns_wire_field(known_columns),
+                ),
             ],
         ),
-        ProjectionError::ColumnIsGeometry { column } => {
-            SkpError::protocol_with_fields("projection_column_is_geometry", message, [("column", column.clone())])
-        }
+        ProjectionError::ColumnIsGeometry { column } => SkpError::protocol_with_fields(
+            "projection_column_is_geometry",
+            message,
+            [("column", column.clone())],
+        ),
         ProjectionError::ColumnIsIdentity { column, id_column } => SkpError::protocol_with_fields(
             "projection_column_is_identity",
             message,
@@ -1612,7 +1714,12 @@ fn projection_error_of(e: &ProjectionError) -> SkpError {
             message,
             [("column", column.clone())],
         ),
-        ProjectionError::TypeNotAdmitted { column, arrow_type, detail, .. } => SkpError::protocol_with_fields(
+        ProjectionError::TypeNotAdmitted {
+            column,
+            arrow_type,
+            detail,
+            ..
+        } => SkpError::protocol_with_fields(
             "projection_type_not_admitted",
             message,
             [
@@ -1650,17 +1757,25 @@ fn build_viewport_query(
             return Err(ViewportQueryBuildError::ProjectionEmptyList)
         }
         Some(names) => Some(
-            ds.admit_projection(names).map_err(ViewportQueryBuildError::Projection)?,
+            ds.admit_projection(names)
+                .map_err(ViewportQueryBuildError::Projection)?,
         ),
     };
 
     let query = match &req.bbox {
         Some(b) => {
-            let bbox =
-                spatial_engine::Bbox { xmin: b.xmin.0, ymin: b.ymin.0, xmax: b.xmax.0, ymax: b.ymax.0 };
+            let bbox = spatial_engine::Bbox {
+                xmin: b.xmin.0,
+                ymin: b.ymin.0,
+                xmax: b.xmax.0,
+                ymax: b.ymax.0,
+            };
             // `bbox_crs: null` declares "in the dataset's own CRS" (ADR-015 §7; SKP-V0.md §1) — it
             // is a declaration, not an inference from silence.
-            let crs = req.bbox_crs.clone().unwrap_or_else(|| ds.crs().identifier().to_string());
+            let crs = req
+                .bbox_crs
+                .clone()
+                .unwrap_or_else(|| ds.crs().identifier().to_string());
             ViewportQuery::viewport(bbox, crs)
         }
         None => ViewportQuery::all(),
@@ -1711,10 +1826,14 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
     // **C2** (SKP-V0.md §2): never a bare integer. `verified_rows()` is `Some` only under
     // `VerifiedAtOpenFullFile`; `None` is the honest answer under `DeclaredNotVerified`.
     let row_count = match identity.verified_rows() {
-        Some(rows) => {
-            RowCount { basis: "identity-uniqueness-scan-full-file".to_string(), value: Some(DecU64(rows)) }
-        }
-        None => RowCount { basis: "not-established".to_string(), value: None },
+        Some(rows) => RowCount {
+            basis: "identity-uniqueness-scan-full-file".to_string(),
+            value: Some(DecU64(rows)),
+        },
+        None => RowCount {
+            basis: "not-established".to_string(),
+            value: None,
+        },
     };
 
     DescribeResponse {
@@ -1739,12 +1858,14 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             // every dataset that opened (`Dataset::admission`'s own contract), so the `None` arms
             // below are unreachable; they record "not established" rather than inventing a class,
             // which is the same rule `dataset::open_inner` applies to itself.
-            provenance: ds
-                .admission()
-                .map_or_else(|| "not-established".to_string(), |a| a.crs_provenance.as_str().to_string()),
-            axis_provenance: ds
-                .admission()
-                .map_or_else(|| "not-established".to_string(), |a| a.axis_provenance.as_str().to_string()),
+            provenance: ds.admission().map_or_else(
+                || "not-established".to_string(),
+                |a| a.crs_provenance.as_str().to_string(),
+            ),
+            axis_provenance: ds.admission().map_or_else(
+                || "not-established".to_string(),
+                |a| a.axis_provenance.as_str().to_string(),
+            ),
             // **The P2-held carrier, closed at P3** (the P2 architect: "P3 carries it over the
             // wire via describe, never as a second TypeScript literal"). The bytes are
             // `spatial_engine::GEOGRAPHIC_DISPLAY_CONVENTION`'s own, read from the constant, so the
@@ -1808,7 +1929,10 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
         row_count,
         // **C1** (SKP-V0.md §2): no `Dataset::bounds()` accessor exists on the engine; `describe`
         // never claims a dataset extent it cannot establish without a second query.
-        extent: Extent { basis: "not-established-at-open".to_string(), value: None },
+        extent: Extent {
+            basis: "not-established-at-open".to_string(),
+            value: None,
+        },
         license: LicenseInfo {
             license: license.license.clone(),
             attribution: license.attribution.clone(),
@@ -1818,9 +1942,10 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
         // Boundary 9's sanity-check level, read from the same admission record. `level` and
         // `reason` say what was read and from where; neither ever says a file passed (boundary 2).
         sanity: spatial_skp::v0::SanityInfo {
-            level: ds
-                .admission()
-                .map_or_else(|| "none".to_string(), |a| a.sanity_level.as_str().to_string()),
+            level: ds.admission().map_or_else(
+                || "none".to_string(),
+                |a| a.sanity_level.as_str().to_string(),
+            ),
             reason: ds.admission().map_or_else(
                 || "no admission record; not checked".to_string(),
                 |a| a.sanity_reason.clone(),
@@ -1828,8 +1953,14 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
         },
         // `skp/0.5`: placeholder shapes, always overwritten by `SkpHost::describe` (this function
         // has no access to the host's watch/generation state) — never read as final values.
-        coverage: SourceCoverage { state: CoverageState::ChecksOnly, reason: None },
-        checks: SourceChecks { state: ChecksState::Full, components: Vec::new() },
+        coverage: SourceCoverage {
+            state: CoverageState::ChecksOnly,
+            reason: None,
+        },
+        checks: SourceChecks {
+            state: ChecksState::Full,
+            components: Vec::new(),
+        },
         session_end: None,
     }
 }
@@ -1859,10 +1990,15 @@ pub fn error_of(e: &EngineError) -> SkpError {
     let message = e.to_string();
     let (name, fields): (&str, Vec<(&'static str, String)>) = match e {
         EngineError::Source(_) => ("source", vec![]),
-        EngineError::CrsUndeclared { detail } => ("crs_undeclared", vec![("detail", detail.clone())]),
+        EngineError::CrsUndeclared { detail } => {
+            ("crs_undeclared", vec![("detail", detail.clone())])
+        }
         EngineError::CrsAssertionConflict { declared, asserted } => (
             "crs_assertion_conflict",
-            vec![("declared", declared.clone()), ("asserted", asserted.clone())],
+            vec![
+                ("declared", declared.clone()),
+                ("asserted", asserted.clone()),
+            ],
         ),
         EngineError::CrsAssertionIdentifierBlank => ("crs_assertion_identifier_blank", vec![]),
         EngineError::CrsAssertionDefinitionTooLarge { limit, saw } => (
@@ -1877,17 +2013,19 @@ pub fn error_of(e: &EngineError) -> SkpError {
         EngineError::AxisOrderUnestablished { detail } => {
             ("axis_order_unestablished", vec![("detail", detail.clone())])
         }
-        EngineError::AxisOrderUnsupported { established } => {
-            ("axis_order_unsupported", vec![("established", established.clone())])
-        }
+        EngineError::AxisOrderUnsupported { established } => (
+            "axis_order_unsupported",
+            vec![("established", established.clone())],
+        ),
         // **A P1 stub, and only because this match has no wildcard arm.** Brief A's boundary 9
         // names `engine.format_default_contradicted` as one of this cut's typed refusals; the
         // `describe` additions, the SKP version bump and the fixtures that go with it are P3's, and
         // nothing here bumps a version or adds a wire field. Without this arm the kernel does not
         // compile at all, which is exactly what the no-wildcard discipline is for.
-        EngineError::FormatDefaultContradicted { detail } => {
-            ("format_default_contradicted", vec![("detail", detail.clone())])
-        }
+        EngineError::FormatDefaultContradicted { detail } => (
+            "format_default_contradicted",
+            vec![("detail", detail.clone())],
+        ),
         // **Brief A P3, boundary 9's remaining two typed refusals.** Both are `engine.` + the
         // variant name, per SKP-V0.md `:266`'s rule, and both carry `detail` in the structured
         // field rather than only in the message — a client that must clear residency and refuse
@@ -1899,9 +2037,10 @@ pub fn error_of(e: &EngineError) -> SkpError {
         EngineError::SourceChanged { detail } => {
             ("source_changed", vec![("detail", detail.clone())])
         }
-        EngineError::IdentityOrdinalPartitionedUnsupported { detail } => {
-            ("identity_ordinal_partitioned_unsupported", vec![("detail", detail.clone())])
-        }
+        EngineError::IdentityOrdinalPartitionedUnsupported { detail } => (
+            "identity_ordinal_partitioned_unsupported",
+            vec![("detail", detail.clone())],
+        ),
         // The retyped internal-inconsistency arm (Brief A P3). It used to
         // arrive here as `engine.source`, telling a caller its file was unreadable when the
         // contradiction is in this tree's own record.
@@ -1920,11 +2059,23 @@ pub fn error_of(e: &EngineError) -> SkpError {
         EngineError::Query(_) => ("query", vec![]),
         EngineError::Arrow(_) => ("arrow", vec![]),
         EngineError::Cancelled => ("cancelled", vec![]),
-        EngineError::CeilingExceeded { ceiling, limit, saw } => (
+        EngineError::CeilingExceeded {
+            ceiling,
+            limit,
+            saw,
+        } => (
             "ceiling_exceeded",
-            vec![("ceiling", ceiling.to_string()), ("limit", limit.to_string()), ("saw", saw.to_string())],
+            vec![
+                ("ceiling", ceiling.to_string()),
+                ("limit", limit.to_string()),
+                ("saw", saw.to_string()),
+            ],
         ),
-        EngineError::IdentityUnusable { column, detail, candidate_columns } => (
+        EngineError::IdentityUnusable {
+            column,
+            detail,
+            candidate_columns,
+        } => (
             "identity_unusable",
             vec![
                 ("column", column.clone()),
@@ -1937,7 +2088,11 @@ pub fn error_of(e: &EngineError) -> SkpError {
         ),
         EngineError::FeatureTooLarge { id, limit, saw } => (
             "feature_too_large",
-            vec![("id", id.to_string()), ("limit", limit.to_string()), ("saw", saw.to_string())],
+            vec![
+                ("id", id.to_string()),
+                ("limit", limit.to_string()),
+                ("saw", saw.to_string()),
+            ],
         ),
         EngineError::ConnectionSetup { detail } => {
             ("connection_setup", vec![("detail", detail.clone())])
@@ -1946,7 +2101,11 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "attribute_unpublishable",
             vec![("column", column.clone()), ("detail", detail.clone())],
         ),
-        EngineError::SourceChangedUnderPublish { pinned, observed, detected_by } => (
+        EngineError::SourceChangedUnderPublish {
+            pinned,
+            observed,
+            detected_by,
+        } => (
             "source_changed_under_publish",
             vec![
                 ("pinned", pinned.clone()),
@@ -1956,7 +2115,10 @@ pub fn error_of(e: &EngineError) -> SkpError {
         ),
         EngineError::ConnectionsExhausted { class, capacity } => (
             "connections_exhausted",
-            vec![("class", class.to_string()), ("capacity", capacity.to_string())],
+            vec![
+                ("class", class.to_string()),
+                ("capacity", capacity.to_string()),
+            ],
         ),
         EngineError::TimingDependentOrdering { ordering, cut } => (
             "timing_dependent_ordering",
@@ -1985,7 +2147,10 @@ pub fn error_of(e: &EngineError) -> SkpError {
     SkpError {
         code: format!("engine.{name}"),
         message,
-        fields: fields.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
+        fields: fields
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect(),
     }
 }
 
@@ -2003,9 +2168,11 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
             message,
             [("declared", declared.clone())],
         ),
-        FilterError::Unparsable { detail } => {
-            SkpError::protocol_with_fields("filter_unparsable", message, [("detail", detail.clone())])
-        }
+        FilterError::Unparsable { detail } => SkpError::protocol_with_fields(
+            "filter_unparsable",
+            message,
+            [("detail", detail.clone())],
+        ),
         FilterError::NotASingleExpression { statements } => SkpError::protocol_with_fields(
             "filter_not_a_single_expression",
             message,
@@ -2026,10 +2193,16 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
             message,
             [("column", column.clone()), ("reason", reason.clone())],
         ),
-        FilterError::IdentityAliasAmbiguous { column, source_column } => SkpError::protocol_with_fields(
+        FilterError::IdentityAliasAmbiguous {
+            column,
+            source_column,
+        } => SkpError::protocol_with_fields(
             "filter_identity_alias_ambiguous",
             message,
-            [("column", column.clone()), ("source_column", source_column.clone())],
+            [
+                ("column", column.clone()),
+                ("source_column", source_column.clone()),
+            ],
         ),
         FilterError::NotBoolean { inferred_type } => SkpError::protocol_with_fields(
             "filter_not_boolean",
@@ -2091,7 +2264,9 @@ struct NoWatchArm;
 #[cfg(test)]
 impl SourceWatchArm for NoWatchArm {
     fn arm(&self, _path: &Path, _sink: WatchSink) -> ArmOutcome {
-        ArmOutcome::ChecksOnly { reason: "test fixture: no watch armed".to_string() }
+        ArmOutcome::ChecksOnly {
+            reason: "test fixture: no watch armed".to_string(),
+        }
     }
 }
 #[cfg(test)]
@@ -2163,7 +2338,10 @@ mod tests {
                 self.0.store(true, std::sync::atomic::Ordering::SeqCst);
             }
         }
-        (Box::new(Empty), Arc::new(NoopCancel(std::sync::atomic::AtomicBool::new(false))))
+        (
+            Box::new(Empty),
+            Arc::new(NoopCancel(std::sync::atomic::AtomicBool::new(false))),
+        )
     }
 
     #[test]
@@ -2172,7 +2350,10 @@ mod tests {
         let (s, c) = synthetic_source();
         let handle = reg.mint("d", s, c).unwrap();
         assert!(reg.redeem(handle.as_str()).is_ok());
-        assert!(reg.redeem(handle.as_str()).is_err(), "a second redemption must be refused");
+        assert!(
+            reg.redeem(handle.as_str()).is_err(),
+            "a second redemption must be refused"
+        );
     }
 
     #[test]
@@ -2180,14 +2361,20 @@ mod tests {
         let reg = StreamRegistry::default();
         let (s, c) = synthetic_source();
         let handle = reg.mint("d", s, c).unwrap();
-        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Requested));
+        assert!(matches!(
+            reg.cancel(handle.as_str()),
+            CancelOutcome::Requested
+        ));
         assert!(reg.redeem(handle.as_str()).is_err());
     }
 
     #[test]
     fn cancel_on_an_unknown_handle_is_unknown_not_an_error() {
         let reg = StreamRegistry::default();
-        assert!(matches!(reg.cancel("sh_00000000000000000000000000000000"), CancelOutcome::Unknown));
+        assert!(matches!(
+            reg.cancel("sh_00000000000000000000000000000000"),
+            CancelOutcome::Unknown
+        ));
     }
 
     #[test]
@@ -2196,8 +2383,14 @@ mod tests {
         let (s, c) = synthetic_source();
         let handle = reg.mint("d", s, c).unwrap();
         reg.redeem(handle.as_str()).unwrap();
-        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Requested));
-        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::AlreadyTerminal));
+        assert!(matches!(
+            reg.cancel(handle.as_str()),
+            CancelOutcome::Requested
+        ));
+        assert!(matches!(
+            reg.cancel(handle.as_str()),
+            CancelOutcome::AlreadyTerminal
+        ));
     }
 
     #[test]
@@ -2231,7 +2424,10 @@ mod tests {
                 Some(TicketState::Pending { minted_at, .. }) => {
                     *minted_at = Instant::now() - TICKET_TTL - Duration::from_secs(1);
                 }
-                other => panic!("expected a fresh Pending ticket, found_entry={}", other.is_some()),
+                other => panic!(
+                    "expected a fresh Pending ticket, found_entry={}",
+                    other.is_some()
+                ),
             }
         }
         reg.sweep_expired();
@@ -2249,20 +2445,30 @@ mod tests {
         let reg = StreamRegistry::default();
         let (s, c) = synthetic_source();
         let handle = reg.mint("d", s, c).unwrap();
-        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Requested));
+        assert!(matches!(
+            reg.cancel(handle.as_str()),
+            CancelOutcome::Requested
+        ));
         {
             let mut tickets = reg.tickets.lock().unwrap();
             match tickets.get_mut(handle.as_str()) {
                 Some(TicketState::CancelledBeforeRedeem { cancelled_at }) => {
-                    *cancelled_at = Instant::now() - TERMINAL_ENTRY_MAX_AGE - Duration::from_secs(1);
+                    *cancelled_at =
+                        Instant::now() - TERMINAL_ENTRY_MAX_AGE - Duration::from_secs(1);
                 }
-                other => panic!("expected CancelledBeforeRedeem, found_entry={}", other.is_some()),
+                other => panic!(
+                    "expected CancelledBeforeRedeem, found_entry={}",
+                    other.is_some()
+                ),
             }
         }
         reg.sweep_expired();
         // Gone from the map entirely: a fresh cancel on the same handle now reports `Unknown`, not
         // `AlreadyTerminal` -- the two are observably different outcomes over SKP's own wire shape.
-        assert!(matches!(reg.cancel(handle.as_str()), CancelOutcome::Unknown));
+        assert!(matches!(
+            reg.cancel(handle.as_str()),
+            CancelOutcome::Unknown
+        ));
     }
 
     #[test]
@@ -2278,7 +2484,10 @@ mod tests {
 
         assert_eq!(reg.cancel_all_for_dataset("d"), 2);
         assert!(reg.redeem(pending.as_str()).is_err());
-        assert!(matches!(reg.cancel(redeemed.as_str()), CancelOutcome::AlreadyTerminal));
+        assert!(matches!(
+            reg.cancel(redeemed.as_str()),
+            CancelOutcome::AlreadyTerminal
+        ));
         // Untouched: a different dataset's ticket was not cancelled.
         assert!(reg.redeem(other.as_str()).is_ok());
     }
@@ -2302,7 +2511,11 @@ mod tests {
         assert_eq!(e.code, "engine.cancelled");
         assert!(e.fields.is_empty());
 
-        let e = error_of(&EngineError::CeilingExceeded { ceiling: "c", limit: 1, saw: 2 });
+        let e = error_of(&EngineError::CeilingExceeded {
+            ceiling: "c",
+            limit: 1,
+            saw: 2,
+        });
         assert_eq!(e.code, "engine.ceiling_exceeded");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("1"));
     }
@@ -2362,10 +2575,23 @@ mod tests {
 
         let e = error_of(&produced);
         assert_eq!(e.code, "engine.lod_refused");
-        assert_eq!(e.fields.get("refusal").map(String::as_str), Some("engine.lod_crs_not_linear"));
-        let detail = e.fields.get("detail").expect("the refusal's detail reaches the wire");
-        assert!(!detail.is_empty(), "a typed refusal arrives with the evidence that convicted it");
-        assert_eq!(e.message, produced.to_string(), "the message is the error's own Display");
+        assert_eq!(
+            e.fields.get("refusal").map(String::as_str),
+            Some("engine.lod_crs_not_linear")
+        );
+        let detail = e
+            .fields
+            .get("detail")
+            .expect("the refusal's detail reaches the wire");
+        assert!(
+            !detail.is_empty(),
+            "a typed refusal arrives with the evidence that convicted it"
+        );
+        assert_eq!(
+            e.message,
+            produced.to_string(),
+            "the message is the error's own Display"
+        );
     }
 
     /// SF3/SF4 (reviewer gate, admission-remediation cut): the two new typed refusals get their
@@ -2376,7 +2602,10 @@ mod tests {
         assert_eq!(e.code, "engine.crs_assertion_identifier_blank");
         assert!(e.fields.is_empty());
 
-        let e = error_of(&EngineError::CrsAssertionDefinitionTooLarge { limit: 65_536, saw: 70_000 });
+        let e = error_of(&EngineError::CrsAssertionDefinitionTooLarge {
+            limit: 65_536,
+            saw: 70_000,
+        });
         assert_eq!(e.code, "engine.crs_assertion_definition_too_large");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("65536"));
         assert_eq!(e.fields.get("saw").map(String::as_str), Some("70000"));
@@ -2392,16 +2621,26 @@ mod tests {
 
     #[test]
     fn filter_dialect_unsupported_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::DialectUnsupported { declared: "sql/legacy".into() });
+        let e = filter_error_of(&FilterError::DialectUnsupported {
+            declared: "sql/legacy".into(),
+        });
         assert_eq!(e.code, "skp.filter_dialect_unsupported");
-        assert_eq!(e.fields.get("declared").map(String::as_str), Some("sql/legacy"));
+        assert_eq!(
+            e.fields.get("declared").map(String::as_str),
+            Some("sql/legacy")
+        );
     }
 
     #[test]
     fn filter_unparsable_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::Unparsable { detail: "syntax error".into() });
+        let e = filter_error_of(&FilterError::Unparsable {
+            detail: "syntax error".into(),
+        });
         assert_eq!(e.code, "skp.filter_unparsable");
-        assert_eq!(e.fields.get("detail").map(String::as_str), Some("syntax error"));
+        assert_eq!(
+            e.fields.get("detail").map(String::as_str),
+            Some("syntax error")
+        );
     }
 
     #[test]
@@ -2413,14 +2652,21 @@ mod tests {
 
     #[test]
     fn filter_construct_not_admitted_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::ConstructNotAdmitted { construct: "a subquery".into() });
+        let e = filter_error_of(&FilterError::ConstructNotAdmitted {
+            construct: "a subquery".into(),
+        });
         assert_eq!(e.code, "skp.filter_construct_not_admitted");
-        assert_eq!(e.fields.get("construct").map(String::as_str), Some("a subquery"));
+        assert_eq!(
+            e.fields.get("construct").map(String::as_str),
+            Some("a subquery")
+        );
     }
 
     #[test]
     fn filter_unknown_column_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::UnknownColumn { column: "zzz".into() });
+        let e = filter_error_of(&FilterError::UnknownColumn {
+            column: "zzz".into(),
+        });
         assert_eq!(e.code, "skp.filter_unknown_column");
         assert_eq!(e.fields.get("column").map(String::as_str), Some("zzz"));
     }
@@ -2433,7 +2679,10 @@ mod tests {
         });
         assert_eq!(e.code, "skp.filter_column_not_filterable");
         assert_eq!(e.fields.get("column").map(String::as_str), Some("geometry"));
-        assert_eq!(e.fields.get("reason").map(String::as_str), Some("this is the geometry column"));
+        assert_eq!(
+            e.fields.get("reason").map(String::as_str),
+            Some("this is the geometry column")
+        );
     }
 
     #[test]
@@ -2444,19 +2693,30 @@ mod tests {
         });
         assert_eq!(e.code, "skp.filter_identity_alias_ambiguous");
         assert_eq!(e.fields.get("column").map(String::as_str), Some("id"));
-        assert_eq!(e.fields.get("source_column").map(String::as_str), Some("parcel_key"));
+        assert_eq!(
+            e.fields.get("source_column").map(String::as_str),
+            Some("parcel_key")
+        );
     }
 
     #[test]
     fn filter_not_boolean_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::NotBoolean { inferred_type: "BIGINT".into() });
+        let e = filter_error_of(&FilterError::NotBoolean {
+            inferred_type: "BIGINT".into(),
+        });
         assert_eq!(e.code, "skp.filter_not_boolean");
-        assert_eq!(e.fields.get("inferred_type").map(String::as_str), Some("BIGINT"));
+        assert_eq!(
+            e.fields.get("inferred_type").map(String::as_str),
+            Some("BIGINT")
+        );
     }
 
     #[test]
     fn filter_too_long_maps_to_its_code_and_fields() {
-        let e = filter_error_of(&FilterError::TooLong { limit: 4096, saw: 5000 });
+        let e = filter_error_of(&FilterError::TooLong {
+            limit: 4096,
+            saw: 5000,
+        });
         assert_eq!(e.code, "skp.filter_too_long");
         assert_eq!(e.fields.get("limit").map(String::as_str), Some("4096"));
         assert_eq!(e.fields.get("saw").map(String::as_str), Some("5000"));
@@ -2472,9 +2732,14 @@ mod tests {
 
     #[test]
     fn filter_rejected_by_binder_maps_to_its_code_and_field() {
-        let e = filter_error_of(&FilterError::RejectedByBinder { detail: "binder refused".into() });
+        let e = filter_error_of(&FilterError::RejectedByBinder {
+            detail: "binder refused".into(),
+        });
         assert_eq!(e.code, "skp.filter_rejected_by_binder");
-        assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
+        assert_eq!(
+            e.fields.get("detail").map(String::as_str),
+            Some("binder refused")
+        );
     }
 
     /// B-T6 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §4). Mutation: the arm maps to
@@ -2523,17 +2788,24 @@ mod tests {
         // The other half of the same match, in the same test: an admission-*content* refusal still
         // takes `filter_error_of`'s twelve-code route, unchanged (ADR-021 item 8) — including the
         // genuine binder rejection, whose code the arm above must not be allowed to steal.
-        let e = predicate_admit_error_of(PredicateAdmitError::Filter(
-            FilterError::RejectedByBinder { detail: "binder refused".into() },
-        ));
+        let e =
+            predicate_admit_error_of(PredicateAdmitError::Filter(FilterError::RejectedByBinder {
+                detail: "binder refused".into(),
+            }));
         assert_eq!(e.code, "skp.filter_rejected_by_binder");
-        assert_eq!(e.fields.get("detail").map(String::as_str), Some("binder refused"));
+        assert_eq!(
+            e.fields.get("detail").map(String::as_str),
+            Some("binder refused")
+        );
 
         let e = predicate_admit_error_of(PredicateAdmitError::Filter(FilterError::NotBoolean {
             inferred_type: "BIGINT".into(),
         }));
         assert_eq!(e.code, "skp.filter_not_boolean");
-        assert_eq!(e.fields.get("inferred_type").map(String::as_str), Some("BIGINT"));
+        assert_eq!(
+            e.fields.get("inferred_type").map(String::as_str),
+            Some("BIGINT")
+        );
     }
 
     /// **`skp/0.4`, crs-unit-fact-and-bounds**, §3 row 9: a named unit that is neither degree nor
@@ -2582,8 +2854,12 @@ mod tests {
         .expect("write fixture");
 
         let catalog = Arc::new(Catalog::new());
-        let host =
-            SkpHost::new(catalog, StreamRegistry::new(), no_watch_arm(), discard_session_end_events());
+        let host = SkpHost::new(
+            catalog,
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
         let open = host
             .open_dataset(OpenDatasetRequest {
                 skp: SKP_VERSION.to_string(),
@@ -2778,8 +3054,11 @@ mod ticket_drop_under_lock_regression {
 
         let tickets = StreamRegistry::new();
         let generations = GenerationRegistry::new();
-        let invalidator =
-            SessionInvalidator::new(generations.clone(), tickets.clone(), discard_session_end_events());
+        let invalidator = SessionInvalidator::new(
+            generations.clone(),
+            tickets.clone(),
+            discard_session_end_events(),
+        );
         let (source, source_cancel) = crate::wrap_for_data_plane(
             stream,
             cancel,
@@ -2790,7 +3069,9 @@ mod ticket_drop_under_lock_regression {
         );
 
         generations.mint_for_open(dataset, SessionRef::mint());
-        let handle = tickets.mint(dataset, source, source_cancel).expect("mint a pending ticket");
+        let handle = tickets
+            .mint(dataset, source, source_cancel)
+            .expect("mint a pending ticket");
         assert!(
             generations.attribute_ticket(handle.as_str(), dataset),
             "attribute under the live generation `mint_for_open` just minted"
@@ -2838,7 +3119,10 @@ mod ticket_drop_under_lock_regression {
         // Reviewer should-fix (PR #116 attempt 1): the hang-avoidance assertion above cannot see a
         // fix that avoids the hang by forgetting the retired value instead of dropping it after
         // release — only this generation-liveness check can.
-        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+        assert_eq!(
+            generations.ticket_liveness(handle.as_str()),
+            TicketLiveness::EndedBySourceChange
+        );
     }
 
     /// RECORDED MUTATION: in the fixed `StreamRegistry::sweep_locked`, replace the collect-and-remove
@@ -2868,7 +3152,11 @@ mod ticket_drop_under_lock_regression {
             };
             map.insert(
                 handle.as_str().to_string(),
-                TicketState::Pending { built, dataset, minted_at: expired_minted_at },
+                TicketState::Pending {
+                    built,
+                    dataset,
+                    minted_at: expired_minted_at,
+                },
             );
         }
 
@@ -2888,7 +3176,10 @@ mod ticket_drop_under_lock_regression {
         // `SessionInvalidator::end_generation`, which still records the handle as dead before
         // pruning its attribution — this registry still knows the handle was ended by a source
         // change, not merely swept away.
-        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+        assert_eq!(
+            generations.ticket_liveness(handle.as_str()),
+            TicketLiveness::EndedBySourceChange
+        );
     }
 
     /// RECORDED MUTATION (A): in the fixed `StreamRegistry::cancel_all_for_dataset`, replace
@@ -2925,7 +3216,10 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(n, 1);
         // Reviewer should-fix (PR #116 attempt 1): `n == 1` alone cannot see a fix that avoids the
         // hang by forgetting the retired value instead of dropping it after release.
-        assert_eq!(generations.ticket_liveness(handle.as_str()), TicketLiveness::EndedBySourceChange);
+        assert_eq!(
+            generations.ticket_liveness(handle.as_str()),
+            TicketLiveness::EndedBySourceChange
+        );
     }
 
     /// **No behaviour change, asserted as an outcome.** After a ticket whose source changed is
@@ -2963,16 +3257,31 @@ mod ticket_drop_under_lock_regression {
         // dataset's own pre-check descriptor.
         catalog.open(&name, &path, None).expect("open dataset");
         let tickets = StreamRegistry::new();
-        let host =
-            SkpHost::new(catalog, tickets.clone(), no_watch_arm(), discard_session_end_events());
+        let host = SkpHost::new(
+            catalog,
+            tickets.clone(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
         let generations = host.generations();
-        let invalidator =
-            SessionInvalidator::new(generations.clone(), tickets.clone(), discard_session_end_events());
-        let (source, source_cancel) =
-            crate::wrap_for_data_plane(stream, cancel, name.clone(), reuses, None, Some(invalidator));
+        let invalidator = SessionInvalidator::new(
+            generations.clone(),
+            tickets.clone(),
+            discard_session_end_events(),
+        );
+        let (source, source_cancel) = crate::wrap_for_data_plane(
+            stream,
+            cancel,
+            name.clone(),
+            reuses,
+            None,
+            Some(invalidator),
+        );
 
         generations.mint_for_open(&name, SessionRef::mint());
-        let handle = tickets.mint(&name, source, source_cancel).expect("mint a pending ticket");
+        let handle = tickets
+            .mint(&name, source, source_cancel)
+            .expect("mint a pending ticket");
         assert!(generations.attribute_ticket(handle.as_str(), &name));
 
         run_with_timeout(HANG_TIMEOUT, {
@@ -2991,7 +3300,9 @@ mod ticket_drop_under_lock_regression {
             filter: None,
             columns: None,
         };
-        let refused = host.viewport_query(request).expect_err("the ended generation refuses");
+        let refused = host
+            .viewport_query(request)
+            .expect_err("the ended generation refuses");
         assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
     }
 
@@ -3046,7 +3357,9 @@ mod ticket_drop_under_lock_regression {
         );
 
         generations.mint_for_open(dataset, SessionRef::mint());
-        let handle = tickets.mint(dataset, source, source_cancel).expect("mint a pending ticket");
+        let handle = tickets
+            .mint(dataset, source, source_cancel)
+            .expect("mint a pending ticket");
         assert!(generations.attribute_ticket(handle.as_str(), dataset));
 
         // Seeded past `TICKET_TTL`, exactly as the non-hang test above does — see that test's own
@@ -3056,13 +3369,19 @@ mod ticket_drop_under_lock_regression {
             .expect("system uptime exceeds TICKET_TTL; re-run once the machine has been up longer");
         {
             let mut map = tickets.tickets.lock().unwrap_or_else(|e| e.into_inner());
-            let Some(TicketState::Pending { built, dataset: d, .. }) = map.remove(handle.as_str())
+            let Some(TicketState::Pending {
+                built, dataset: d, ..
+            }) = map.remove(handle.as_str())
             else {
                 panic!("seeding did not leave a Pending entry");
             };
             map.insert(
                 handle.as_str().to_string(),
-                TicketState::Pending { built, dataset: d, minted_at: expired_minted_at },
+                TicketState::Pending {
+                    built,
+                    dataset: d,
+                    minted_at: expired_minted_at,
+                },
             );
         }
 
@@ -3074,9 +3393,14 @@ mod ticket_drop_under_lock_regression {
             panic!("StreamRegistry::sweep_expired did not return within {HANG_TIMEOUT:?}")
         });
 
-        let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event, within the bound");
+        let event = rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("one event, within the bound");
         assert_eq!(event.reason, WireEndReason::ObservedChange);
-        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+        assert!(
+            rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "exactly one event"
+        );
     }
 
     /// E7 `a_pending_drop_inside_close_emits_once_with_its_session_reference`. A real `SkpHost`, a
@@ -3120,7 +3444,12 @@ mod ticket_drop_under_lock_regression {
     fn a_pending_drop_inside_close_emits_once_with_its_session_reference() {
         let path = fixture("close-drop-path");
         let (tx, rx) = super::session_end_channel();
-        let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
         let open = host
             .open_dataset(OpenDatasetRequest {
                 skp: SKP_VERSION.to_string(),
@@ -3149,17 +3478,26 @@ mod ticket_drop_under_lock_regression {
             None,
             Some(host.invalidator.clone()),
         );
-        let handle = host.tickets().mint(&name, source, source_cancel).expect("mint a pending ticket");
+        let handle = host
+            .tickets()
+            .mint(&name, source, source_cancel)
+            .expect("mint a pending ticket");
         assert!(host.generations().attribute_ticket(handle.as_str(), &name));
 
-        host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
-            .expect("close");
+        host.close_dataset(CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: open.dataset,
+        })
+        .expect("close");
 
         let event = rx
             .recv_timeout(Duration::from_secs(5))
             .expect("one event, carrying the open's own reference");
         assert_eq!(event.session, open.session);
-        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+        assert!(
+            rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "exactly one event"
+        );
     }
 
     /// E8 `an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference`
@@ -3192,7 +3530,12 @@ mod ticket_drop_under_lock_regression {
     fn an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference() {
         let path = fixture("close-drop-race-path");
         let (tx, rx) = super::session_end_channel();
-        let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), no_watch_arm(), tx);
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            tx,
+        );
         let open = host
             .open_dataset(OpenDatasetRequest {
                 skp: SKP_VERSION.to_string(),
@@ -3214,8 +3557,11 @@ mod ticket_drop_under_lock_regression {
 
         // The close's own thread runs to completion — including `forget_dataset` — while the
         // report above is only held locally, its `enqueue` not yet called.
-        host.close_dataset(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
-            .expect("close");
+        host.close_dataset(CloseDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: open.dataset,
+        })
+        .expect("close");
 
         // The data-plane thread's own step 2 (§2b), run only now — strictly after `forget_dataset`.
         host.invalidator.enqueue(&report);
@@ -3224,7 +3570,10 @@ mod ticket_drop_under_lock_regression {
             .recv_timeout(Duration::from_secs(5))
             .expect("one event, carrying the reference recorded before forget_dataset ran");
         assert_eq!(event.session, open.session);
-        assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+        assert!(
+            rx.recv_timeout(Duration::from_millis(200)).is_err(),
+            "exactly one event"
+        );
     }
 
     /// K15 `a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark`
@@ -3250,8 +3599,12 @@ mod ticket_drop_under_lock_regression {
     fn a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark() {
         let path = fixture("k15-coverage-loss-race");
         let (tx, rx) = super::session_end_channel();
-        let host =
-            SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), racing_coverage_loss_arm(), tx);
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            racing_coverage_loss_arm(),
+            tx,
+        );
 
         let refused = host
             .open_dataset(OpenDatasetRequest {
@@ -3262,7 +3615,11 @@ mod ticket_drop_under_lock_regression {
                 identity: None,
             })
             .expect_err("a coverage loss racing admission refuses the open");
-        assert_eq!(refused.code, "engine.source_coverage_lost", "{}", refused.message);
+        assert_eq!(
+            refused.code, "engine.source_coverage_lost",
+            "{}",
+            refused.message
+        );
 
         assert!(
             host.catalog().names().is_empty(),
@@ -3276,7 +3633,10 @@ mod ticket_drop_under_lock_regression {
         {
             let generations = host.generations();
             let st = generations.inner.lock().unwrap_or_else(|e| e.into_inner());
-            assert!(st.live.is_empty(), "a refused-before-admission open must mint no generation");
+            assert!(
+                st.live.is_empty(),
+                "a refused-before-admission open must mint no generation"
+            );
             assert!(
                 st.invalidated.is_empty(),
                 "a refused-before-admission open must leave no invalidated mark"

@@ -55,7 +55,9 @@ use duckdb::Connection;
 use crate::cancel::CancelToken;
 use crate::error::{EngineError, Result};
 use crate::geoparquet::{CoveringBbox, FieldPath};
-use crate::index::{observe, IndexPhase, IndexPhaseObserver, ValidityHeuristic, CANCEL_POLL_INTERVAL};
+use crate::index::{
+    observe, IndexPhase, IndexPhaseObserver, ValidityHeuristic, CANCEL_POLL_INTERVAL,
+};
 use crate::stream::Bbox;
 
 /// Bumped whenever the built structure or its query semantics change. Part of the key: two indexes
@@ -194,7 +196,9 @@ impl RowGroupEntry {
     fn intersects(&self, view: &Bbox) -> bool {
         match self.envelope {
             None => true,
-            Some(b) => b[0] <= view.xmax && b[2] >= view.xmin && b[1] <= view.ymax && b[3] >= view.ymin,
+            Some(b) => {
+                b[0] <= view.xmax && b[2] >= view.xmin && b[1] <= view.ymax && b[3] >= view.ymin
+            }
         }
     }
 }
@@ -290,7 +294,11 @@ impl RowGroupIndex {
                 _ => ranges.push((g.id_lo, g.id_hi)),
             }
         }
-        Ok(RowGroupSelection { total: self.groups.len(), kept, ranges })
+        Ok(RowGroupSelection {
+            total: self.groups.len(),
+            kept,
+            ranges,
+        })
     }
 
     /// Whether this index may serve a request, or the reason it may not.
@@ -656,7 +664,10 @@ impl RowGroupCache {
     }
 
     pub fn insert(&self, path: std::path::PathBuf, index: Arc<RowGroupIndex>) {
-        self.entries.lock().unwrap_or_else(|e| e.into_inner()).insert(path, index);
+        self.entries
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(path, index);
     }
 
     /// The content hash an entry for `path` was built from, if any. The hash is an *identity*, so
@@ -681,7 +692,13 @@ mod tests {
     use super::*;
 
     fn entry(ordinal: u32, id_lo: u64, id_hi: u64, env: Option<[f64; 4]>) -> RowGroupEntry {
-        RowGroupEntry { ordinal, rows: id_hi - id_lo + 1, id_lo, id_hi, envelope: env }
+        RowGroupEntry {
+            ordinal,
+            rows: id_hi - id_lo + 1,
+            id_lo,
+            id_hi,
+            envelope: env,
+        }
     }
 
     fn index_of(groups: Vec<RowGroupEntry>) -> RowGroupIndex {
@@ -704,11 +721,20 @@ mod tests {
             entry(2, 20, 29, Some([100.0, 100.0, 101.0, 101.0])),
         ]);
         let sel = idx
-            .ranges_for(&Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 })
+            .ranges_for(&Bbox {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            })
             .expect("admissible");
         // Group 2 is excluded on its envelope; group 1 has none and is kept regardless.
         assert_eq!(sel.kept, 2);
-        assert_eq!(sel.ranges, vec![(0, 19)], "adjacent survivors merge into one range");
+        assert_eq!(
+            sel.ranges,
+            vec![(0, 19)],
+            "adjacent survivors merge into one range"
+        );
         assert!(sel.excludes_io());
     }
 
@@ -720,7 +746,12 @@ mod tests {
             entry(2, 20, 29, Some([0.0, 0.0, 1.0, 1.0])),
         ]);
         let sel = idx
-            .ranges_for(&Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 })
+            .ranges_for(&Bbox {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            })
             .expect("admissible");
         assert_eq!(sel.ranges, vec![(0, 9), (20, 29)]);
         assert_eq!(sel.kept, 2);
@@ -733,7 +764,12 @@ mod tests {
             entry(1, 10, 19, Some([0.0, 0.0, 10.0, 10.0])),
         ]);
         let sel = idx
-            .ranges_for(&Bbox { xmin: 0.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 })
+            .ranges_for(&Bbox {
+                xmin: 0.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            })
             .expect("admissible");
         assert_eq!(sel.kept, sel.total);
         // The distinction the lever turns on: the plan is in force and prunes nothing.
@@ -744,11 +780,29 @@ mod tests {
     fn a_viewport_this_index_will_not_reason_about_narrows_nothing() {
         let idx = index_of(vec![entry(0, 0, 9, Some([0.0, 0.0, 1.0, 1.0]))]);
         for bad in [
-            Bbox { xmin: f64::NAN, ymin: 0.0, xmax: 1.0, ymax: 1.0 },
-            Bbox { xmin: 5.0, ymin: 0.0, xmax: 1.0, ymax: 1.0 },
-            Bbox { xmin: 0.0, ymin: 5.0, xmax: 1.0, ymax: 1.0 },
+            Bbox {
+                xmin: f64::NAN,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            },
+            Bbox {
+                xmin: 5.0,
+                ymin: 0.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            },
+            Bbox {
+                xmin: 0.0,
+                ymin: 5.0,
+                xmax: 1.0,
+                ymax: 1.0,
+            },
         ] {
-            assert!(idx.ranges_for(&bad).is_err(), "{bad:?} should narrow nothing");
+            assert!(
+                idx.ranges_for(&bad).is_err(),
+                "{bad:?} should narrow nothing"
+            );
         }
     }
 
@@ -760,14 +814,24 @@ mod tests {
                 rows: 10,
                 id: Some((Some("0".into()), Some("20".into()))),
                 id_nulls: Some(0),
-                bounds: [Some("0".into()), Some("0".into()), Some("1".into()), Some("1".into())],
+                bounds: [
+                    Some("0".into()),
+                    Some("0".into()),
+                    Some("1".into()),
+                    Some("1".into()),
+                ],
             },
             RawGroup {
                 ordinal: 1,
                 rows: 10,
                 id: Some((Some("10".into()), Some("30".into()))),
                 id_nulls: Some(0),
-                bounds: [Some("0".into()), Some("0".into()), Some("1".into()), Some("1".into())],
+                bounds: [
+                    Some("0".into()),
+                    Some("0".into()),
+                    Some("1".into()),
+                    Some("1".into()),
+                ],
             },
         ];
         let (_, verdict) = RowGroupIndex::admit(raw, &CancelToken::new()).expect("admit");
@@ -781,7 +845,12 @@ mod tests {
             rows: 10,
             id: Some((None, Some("20".into()))),
             id_nulls: Some(0),
-            bounds: [Some("0".into()), Some("0".into()), Some("1".into()), Some("1".into())],
+            bounds: [
+                Some("0".into()),
+                Some("0".into()),
+                Some("1".into()),
+                Some("1".into()),
+            ],
         }];
         let (_, verdict) = RowGroupIndex::admit(raw, &CancelToken::new()).expect("admit");
         assert_eq!(verdict, Err(RowGroupRefusal::IdStatsAbsent));
@@ -794,7 +863,12 @@ mod tests {
             rows: 10,
             id: Some((Some("0".into()), Some("9".into()))),
             id_nulls: Some(1),
-            bounds: [Some("0".into()), Some("0".into()), Some("1".into()), Some("1".into())],
+            bounds: [
+                Some("0".into()),
+                Some("0".into()),
+                Some("1".into()),
+                Some("1".into()),
+            ],
         }];
         let (_, verdict) = RowGroupIndex::admit(raw, &CancelToken::new()).expect("admit");
         assert_eq!(verdict, Err(RowGroupRefusal::IdStatsAbsent));
@@ -807,10 +881,19 @@ mod tests {
             rows: 10,
             id: Some((Some("0".into()), Some("9".into()))),
             id_nulls: Some(0),
-            bounds: [Some("nan".into()), Some("0".into()), Some("1".into()), Some("1".into())],
+            bounds: [
+                Some("nan".into()),
+                Some("0".into()),
+                Some("1".into()),
+                Some("1".into()),
+            ],
         }];
         let (entries, verdict) = RowGroupIndex::admit(raw, &CancelToken::new()).expect("admit");
-        assert_eq!(verdict, Ok(()), "an unusable envelope is a retention, not a refusal");
+        assert_eq!(
+            verdict,
+            Ok(()),
+            "an unusable envelope is a retention, not a refusal"
+        );
         assert_eq!(entries[0].envelope, None);
     }
 

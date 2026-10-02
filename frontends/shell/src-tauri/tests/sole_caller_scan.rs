@@ -35,7 +35,11 @@ fn no_line_in_the_shell_crate_names_publish_unguarded() {
             if path.extension().and_then(|e| e.to_str()) != Some("rs") {
                 continue;
             }
-            let rel = path.strip_prefix(&src).unwrap().to_string_lossy().replace('\\', "/");
+            let rel = path
+                .strip_prefix(&src)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
             let text = std::fs::read_to_string(&path).unwrap();
             for (n, line) in text.lines().enumerate() {
                 // Doc comments and this crate's own docs name the function freely (this file does,

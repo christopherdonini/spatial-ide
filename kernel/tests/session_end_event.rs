@@ -20,7 +20,9 @@ use spatial_kernel::skp::{
     StreamRegistry, SESSION_END_EVENT_QUEUE_BOUND,
 };
 use spatial_kernel::{Catalog, EngineSourceFactory, OPERATION};
-use spatial_skp::v0::{DatasetHandle, EndReason, OpenDatasetRequest, SessionRef, ViewportQueryRequest, SKP_VERSION};
+use spatial_skp::v0::{
+    DatasetHandle, EndReason, OpenDatasetRequest, SessionRef, ViewportQueryRequest, SKP_VERSION,
+};
 
 fn dir() -> PathBuf {
     let d = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/session-end-event");
@@ -30,8 +32,16 @@ fn dir() -> PathBuf {
 
 fn fixture(name: &str) -> PathBuf {
     let path = dir().join(format!("{name}.parquet"));
-    write_geoparquet(&path, &FixtureSpec { features: 300, avg_vertices: 10, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 300,
+            avg_vertices: 10,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -99,19 +109,31 @@ fn viewport_req(dataset: DatasetHandle) -> ViewportQueryRequest {
 fn a_pre_check_end_emits_once_and_refuses_its_call() {
     let path = fixture("e1");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e1")).expect("open");
     // A real ticket, so the pre-check's own `end_generation` call has something to cancel.
-    let _ticket = host.viewport_query(viewport_req(open.dataset.clone())).expect("mint");
+    let _ticket = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect("mint");
 
     touch_modification_time(&path);
 
-    let refused = host.viewport_query(viewport_req(open.dataset)).expect_err("the pre-check refuses");
+    let refused = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect_err("the pre-check refuses");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 
     let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event");
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -128,13 +150,24 @@ fn a_pre_check_end_emits_once_and_refuses_its_call() {
 fn a_post_check_end_on_a_clean_terminal_emits_once() {
     let path = fixture("e2");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e2")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset)).expect("mint");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect("mint");
 
-    let factory = EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
+    let factory =
+        EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
     let (mut source, _cancel) = factory
-        .create(&OpenRequest { operation: OPERATION.to_string(), params: ticket.stream.as_str().as_bytes().to_vec() })
+        .create(&OpenRequest {
+            operation: OPERATION.to_string(),
+            params: ticket.stream.as_str().as_bytes().to_vec(),
+        })
         .expect("redeem");
 
     touch_modification_time(&path);
@@ -153,7 +186,10 @@ fn a_post_check_end_on_a_clean_terminal_emits_once() {
 
     let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event");
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -170,13 +206,24 @@ fn a_post_check_end_on_a_clean_terminal_emits_once() {
 fn a_post_check_end_on_an_error_terminal_emits_once() {
     let path = fixture("e3");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e3")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset)).expect("mint");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect("mint");
 
-    let factory = EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
+    let factory =
+        EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
     let (mut source, cancel) = factory
-        .create(&OpenRequest { operation: OPERATION.to_string(), params: ticket.stream.as_str().as_bytes().to_vec() })
+        .create(&OpenRequest {
+            operation: OPERATION.to_string(),
+            params: ticket.stream.as_str().as_bytes().to_vec(),
+        })
         .expect("redeem");
 
     touch_modification_time(&path);
@@ -192,11 +239,17 @@ fn a_post_check_end_on_an_error_terminal_emits_once() {
         buf.clear();
     }
     let detail = terminal.expect("a cancelled stream still ends with a terminal");
-    assert!(!detail.starts_with("engine.source_changed"), "cancellation keeps its own terminal: {detail}");
+    assert!(
+        !detail.starts_with("engine.source_changed"),
+        "cancellation keeps its own terminal: {detail}"
+    );
 
     let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event");
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -224,13 +277,24 @@ fn a_post_check_end_on_an_error_terminal_emits_once() {
 fn an_end_on_the_drop_path_emits_once() {
     let path = fixture("e4");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), watch_support::no_watch_arm(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        watch_support::no_watch_arm(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e4")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset)).expect("mint");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset))
+        .expect("mint");
 
-    let factory = EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
+    let factory =
+        EngineSourceFactory::ticket_only(host.catalog(), host.tickets(), host.generations());
     let (source, _cancel) = factory
-        .create(&OpenRequest { operation: OPERATION.to_string(), params: ticket.stream.as_str().as_bytes().to_vec() })
+        .create(&OpenRequest {
+            operation: OPERATION.to_string(),
+            params: ticket.stream.as_str().as_bytes().to_vec(),
+        })
         .expect("redeem");
 
     touch_modification_time(&path);
@@ -241,9 +305,14 @@ fn an_end_on_the_drop_path_emits_once() {
     // Walk away without ever draining: only `Drop for EngineSource` can end this session now.
     drop(source);
 
-    let event = rx.recv_timeout(Duration::from_secs(10)).expect("one event, via the drop path");
+    let event = rx
+        .recv_timeout(Duration::from_secs(10))
+        .expect("one event, via the drop path");
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -260,7 +329,12 @@ fn a_watcher_signal_after_admission_emits_once() {
     let arm = injected_watch::InjectedArm::new();
     let path = fixture("e6");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e6")).expect("open");
 
     arm.signal(&path, WatchSignal::Change { action: "modified" });
@@ -268,7 +342,10 @@ fn a_watcher_signal_after_admission_emits_once() {
     let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event");
     assert_eq!(event.session, open.session);
     assert_eq!(event.reason, EndReason::ObservedChange);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -284,12 +361,19 @@ fn a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
     let arm = injected_watch::InjectedArm::new();
     let path = fixture("e9");
     let (tx, rx) = session_end_channel();
-    let host = SkpHost::new(Arc::new(Catalog::new()), StreamRegistry::new(), arm.clone(), tx);
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        tx,
+    );
     let open = host.open_dataset(open_req(&path, "e9")).expect("open");
 
     // The one real end.
     arm.signal(&path, WatchSignal::Change { action: "modified" });
-    let event = rx.recv_timeout(Duration::from_secs(5)).expect("the one real event");
+    let event = rx
+        .recv_timeout(Duration::from_secs(5))
+        .expect("the one real event");
     assert_eq!(event.session, open.session);
 
     // A repeat: idempotent, per the same watch's own `fired` flag AND the registry's own guard.
@@ -300,11 +384,17 @@ fn a_repeat_a_nested_and_a_post_close_end_emit_nothing() {
     host.end_generation(open.dataset.as_str());
 
     // A post-close end: close, then try to end the same (now-forgotten) name again.
-    host.close_dataset(spatial_skp::v0::CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
-        .expect("close");
+    host.close_dataset(spatial_skp::v0::CloseDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: open.dataset,
+    })
+    .expect("close");
     host.end_generation("a-name-nothing-still-knows");
 
-    assert!(rx.recv_timeout(Duration::from_millis(300)).is_err(), "exactly one event, ever");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(300)).is_err(),
+        "exactly one event, ever"
+    );
 }
 
 // -------------------------------------------------------------------------------------------
@@ -343,7 +433,10 @@ fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_ref
     .unwrap_or_else(|| {
         panic!("SessionInvalidator::end_generation did not return within {HANG_TIMEOUT:?}")
     });
-    assert!(started.elapsed() < Duration::from_secs(2), "the end must never block on a full queue");
+    assert!(
+        started.elapsed() < Duration::from_secs(2),
+        "the end must never block on a full queue"
+    );
 
     // The end itself still took effect, event or no event: the next call refuses by name.
     assert!(
@@ -356,5 +449,8 @@ fn a_full_queue_loses_the_event_never_blocks_the_end_and_the_next_call_still_ref
     while rx.recv_timeout(Duration::from_millis(50)).is_ok() {
         received += 1;
     }
-    assert!(received <= SESSION_END_EVENT_QUEUE_BOUND, "never more than the declared bound");
+    assert!(
+        received <= SESSION_END_EVENT_QUEUE_BOUND,
+        "never more than the declared bound"
+    );
 }

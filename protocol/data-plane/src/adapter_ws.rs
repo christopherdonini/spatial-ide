@@ -107,54 +107,55 @@ pub(crate) async fn drive(
                     Some(Ok(Message::Binary(b))) => {
                         note_if_json(&json_frames_seen, &b);
                         match parse_control(&b) {
-                        Some(Control::Credit(n)) => {
-                            // **Credit is granted as sent.** The only thing clamped is the
-                            // arithmetic overflow `Semaphore::add_permits` panics on.
-                            //
-                            // An earlier version of this clamped the *cumulative* permits to
-                            // `server::MAX_INFLIGHT_BATCHES`, reasoning that the constant is
-                            // documented as "credit window, in batches". That conflated two
-                            // different quantities and deadlocked the transport: the window bounds
-                            // how many batches may be **in flight**, which the pump's bounded
-                            // channel already enforces, whereas a grant says how many the consumer
-                            // is willing to receive **in total from here**. A conforming peer that
-                            // grants 100 up front and then waits — which is exactly what
-                            // `every_batch_and_a_terminal_frame_are_delivered` does — had 96 of
-                            // those credits silently discarded and waited forever for batches this
-                            // loop would never send. Discarding credit a peer legitimately issued
-                            // is a worse failure than the overflow it was guarding against.
-                            let room =
-                                tokio::sync::Semaphore::MAX_PERMITS - credit.available_permits();
-                            credit.add_permits((n as usize).min(room));
-                        }
-                        Some(Control::Cancel) => {
-                            // Producer-visible cancellation, stamped on the producer's own clock at
-                            // the instant this adapter learns of it — and propagated to the source
-                            // in the same breath, so the work stops rather than just the writing.
-                            state.observe_cancel(Instant::now());
-                            source_cancel.cancel();
-                            let _ = halt_tx.send(Some(Terminal::Cancelled("control frame".into())));
-                            // **Deliberately no `break`.** This task *is* the peer-drain below: it
-                            // must run until the peer closes, or the connection is dropped the
-                            // moment the writer finishes and the terminal frame races the teardown.
-                            //
-                            // Found by `superseded_query_cancel_while_a_second_stream_continues`,
-                            // which saw the cancelled stream end in an aborted connection
-                            // (os error 10053) after four batches and **no terminal frame at all**.
-                            // That is the same silent-truncation failure ADR-012's Consequences
-                            // describe — "a stream that ends without a terminal frame must be
-                            // reported as a failure rather than as a short stream" — reached by the
-                            // cancel path rather than the completion path. Breaking here is what
-                            // caused it.
-                        }
-                        None => {
-                            state.observe_cancel(Instant::now());
-                            source_cancel.cancel();
-                            let _ = halt_tx.send(Some(Terminal::TransportFailed(
-                                "malformed control frame".into(),
-                            )));
-                            break;
-                        }
+                            Some(Control::Credit(n)) => {
+                                // **Credit is granted as sent.** The only thing clamped is the
+                                // arithmetic overflow `Semaphore::add_permits` panics on.
+                                //
+                                // An earlier version of this clamped the *cumulative* permits to
+                                // `server::MAX_INFLIGHT_BATCHES`, reasoning that the constant is
+                                // documented as "credit window, in batches". That conflated two
+                                // different quantities and deadlocked the transport: the window bounds
+                                // how many batches may be **in flight**, which the pump's bounded
+                                // channel already enforces, whereas a grant says how many the consumer
+                                // is willing to receive **in total from here**. A conforming peer that
+                                // grants 100 up front and then waits — which is exactly what
+                                // `every_batch_and_a_terminal_frame_are_delivered` does — had 96 of
+                                // those credits silently discarded and waited forever for batches this
+                                // loop would never send. Discarding credit a peer legitimately issued
+                                // is a worse failure than the overflow it was guarding against.
+                                let room = tokio::sync::Semaphore::MAX_PERMITS
+                                    - credit.available_permits();
+                                credit.add_permits((n as usize).min(room));
+                            }
+                            Some(Control::Cancel) => {
+                                // Producer-visible cancellation, stamped on the producer's own clock at
+                                // the instant this adapter learns of it — and propagated to the source
+                                // in the same breath, so the work stops rather than just the writing.
+                                state.observe_cancel(Instant::now());
+                                source_cancel.cancel();
+                                let _ =
+                                    halt_tx.send(Some(Terminal::Cancelled("control frame".into())));
+                                // **Deliberately no `break`.** This task *is* the peer-drain below: it
+                                // must run until the peer closes, or the connection is dropped the
+                                // moment the writer finishes and the terminal frame races the teardown.
+                                //
+                                // Found by `superseded_query_cancel_while_a_second_stream_continues`,
+                                // which saw the cancelled stream end in an aborted connection
+                                // (os error 10053) after four batches and **no terminal frame at all**.
+                                // That is the same silent-truncation failure ADR-012's Consequences
+                                // describe — "a stream that ends without a terminal frame must be
+                                // reported as a failure rather than as a short stream" — reached by the
+                                // cancel path rather than the completion path. Breaking here is what
+                                // caused it.
+                            }
+                            None => {
+                                state.observe_cancel(Instant::now());
+                                source_cancel.cancel();
+                                let _ = halt_tx.send(Some(Terminal::TransportFailed(
+                                    "malformed control frame".into(),
+                                )));
+                                break;
+                            }
                         }
                     }
                     Some(Ok(Message::Close(_))) | None => {
@@ -167,7 +168,8 @@ pub(crate) async fn drive(
                     Some(Err(e)) => {
                         state.observe_cancel(Instant::now());
                         source_cancel.cancel();
-                        let _ = halt_tx.send(Some(Terminal::TransportFailed(format!("receive: {e}"))));
+                        let _ =
+                            halt_tx.send(Some(Terminal::TransportFailed(format!("receive: {e}"))));
                         break;
                     }
                 }
@@ -303,7 +305,10 @@ pub(crate) async fn drive(
     // this stream's state, source-cancel handle and credit semaphore alive. That is one leaked
     // task, socket and descriptor per such connection, with nothing bounding the count.
     let drain = reader.abort_handle();
-    if tokio::time::timeout(crate::server::PEER_DRAIN_TIMEOUT, reader).await.is_err() {
+    if tokio::time::timeout(crate::server::PEER_DRAIN_TIMEOUT, reader)
+        .await
+        .is_err()
+    {
         drain.abort();
     }
 
@@ -333,9 +338,9 @@ fn parse_control(b: &[u8]) -> Option<Control> {
     let len = wire::payload_len(b)?;
     let payload = b.get(wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len)?;
     match tag {
-        wire::TAG_CREDIT => {
-            Some(Control::Credit(u32::from_be_bytes(payload.get(..4)?.try_into().ok()?)))
-        }
+        wire::TAG_CREDIT => Some(Control::Credit(u32::from_be_bytes(
+            payload.get(..4)?.try_into().ok()?,
+        ))),
         wire::TAG_CANCEL => Some(Control::Cancel),
         _ => None,
     }

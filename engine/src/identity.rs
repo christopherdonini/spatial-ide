@@ -34,7 +34,11 @@ pub enum IdSource {
     /// The file's own `id` column, read with no transform.
     File,
     /// A caller-declared mapping from a named source column.
-    Mapped { column: String, by: String, at: String },
+    Mapped {
+        column: String,
+        by: String,
+        at: String,
+    },
     /// **The session tier** — the third identity class (R-I3,
     /// `engine/ADMISSION-PREREGISTRATION.md` §2d; the proposed ADR-016 Amendment 1, point 1).
     ///
@@ -209,7 +213,13 @@ impl DatasetIdentity {
         verified_rows: Option<u64>,
         max_value: Option<u64>,
     ) -> Self {
-        Self { source, uniqueness, verified_rows, max_value, candidate_columns: Vec::new() }
+        Self {
+            source,
+            uniqueness,
+            verified_rows,
+            max_value,
+            candidate_columns: Vec::new(),
+        }
     }
 
     /// The session tier's identity — **R-I3**.
@@ -339,22 +349,28 @@ mod tests {
     use arrow::datatypes::DataType as D;
 
     fn schema_with(name: &str, ty: D) -> arrow::datatypes::SchemaRef {
-        std::sync::Arc::new(arrow::datatypes::Schema::new(vec![arrow::datatypes::Field::new(
-            name, ty, true,
-        )]))
+        std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+            arrow::datatypes::Field::new(name, ty, true),
+        ]))
     }
 
     #[test]
     fn only_value_preserving_integer_types_are_admitted() {
         for ty in [D::UInt64, D::Int64, D::UInt32, D::Int32, D::Int16, D::UInt8] {
             let schema = schema_with("k", ty.clone());
-            assert!(admit_column_type("k", &ty, &schema).is_ok(), "{ty} should widen exactly");
+            assert!(
+                admit_column_type("k", &ty, &schema).is_ok(),
+                "{ty} should widen exactly"
+            );
         }
         // Each of these would need a transform to become a u64, and a transform is where
         // collisions and scan-order dependence enter.
         for ty in [D::Utf8, D::Float64, D::Binary, D::Boolean] {
             let schema = schema_with("k", ty.clone());
-            assert!(admit_column_type("k", &ty, &schema).is_err(), "{ty} must be refused");
+            assert!(
+                admit_column_type("k", &ty, &schema).is_err(),
+                "{ty} must be refused"
+            );
         }
     }
 
@@ -417,15 +433,29 @@ mod tests {
 
     #[test]
     fn uniqueness_is_reported_as_what_was_checked() {
-        assert_eq!(IdUniqueness::VerifiedAtOpenFullFile.as_str(), "verified-at-open-full-file");
-        assert_eq!(IdUniqueness::DeclaredNotVerified.as_str(), "declared-not-verified");
+        assert_eq!(
+            IdUniqueness::VerifiedAtOpenFullFile.as_str(),
+            "verified-at-open-full-file"
+        );
+        assert_eq!(
+            IdUniqueness::DeclaredNotVerified.as_str(),
+            "declared-not-verified"
+        );
     }
 
     #[test]
     fn js_exactness_is_unknown_rather_than_assumed_when_nothing_was_verified() {
-        let unverified =
-            DatasetIdentity::new(IdSource::File, IdUniqueness::DeclaredNotVerified, None, None);
-        assert_eq!(unverified.js_exact(), None, "unknown must not default to true");
+        let unverified = DatasetIdentity::new(
+            IdSource::File,
+            IdUniqueness::DeclaredNotVerified,
+            None,
+            None,
+        );
+        assert_eq!(
+            unverified.js_exact(),
+            None,
+            "unknown must not default to true"
+        );
 
         let small = DatasetIdentity::new(
             IdSource::File,
@@ -441,6 +471,10 @@ mod tests {
             Some(2),
             Some(JS_EXACT_INTEGER_LIMIT),
         );
-        assert_eq!(huge.js_exact(), Some(false), "2^53 itself does not round-trip");
+        assert_eq!(
+            huge.js_exact(),
+            Some(false),
+            "2^53 itself does not round-trip"
+        );
     }
 }

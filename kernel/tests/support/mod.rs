@@ -68,7 +68,11 @@ impl Canary {
     pub fn take(label: &str) -> Self {
         let short: Vec<f64> = (0..5).map(|_| canary_ms(CANARY_ITERS_SHORT)).collect();
         let long: Vec<f64> = (0..3).map(|_| canary_ms(CANARY_ITERS_LONG)).collect();
-        let c = Self { label: label.to_string(), short, long };
+        let c = Self {
+            label: label.to_string(),
+            short,
+            long,
+        };
         println!(
             "canary [{label}] short min {:.2} ms | long min {:.1} ms",
             c.short_min(),
@@ -111,7 +115,11 @@ pub fn phase_spreads(points: &[Canary]) -> Vec<(String, f64, bool)> {
         .windows(2)
         .map(|w| {
             let (a, b) = (w[0].long_min(), w[1].long_min());
-            let spread = if a.min(b) > 0.0 { (a - b).abs() / a.min(b) } else { f64::INFINITY };
+            let spread = if a.min(b) > 0.0 {
+                (a - b).abs() / a.min(b)
+            } else {
+                f64::INFINITY
+            };
             (w[1].label.clone(), spread, spread <= CANARY_MAX_SPREAD)
         })
         .collect()
@@ -151,7 +159,10 @@ pub mod procmem {
     }
 
     pub fn sample() -> Option<Counters> {
-        let mut c = Counters { cb: std::mem::size_of::<Counters>() as u32, ..Default::default() };
+        let mut c = Counters {
+            cb: std::mem::size_of::<Counters>() as u32,
+            ..Default::default()
+        };
         let ok = unsafe {
             K32GetProcessMemoryInfo(
                 GetCurrentProcess(),
@@ -203,13 +214,20 @@ impl MemorySampler {
             }
             samples
         });
-        Self { stop, handle: Some(handle), cadence_ms }
+        Self {
+            stop,
+            handle: Some(handle),
+            cadence_ms,
+        }
     }
 
     /// Stop and return every sample taken.
     pub fn finish(mut self) -> Vec<usize> {
         self.stop.store(true, Ordering::Relaxed);
-        self.handle.take().map(|h| h.join().unwrap_or_default()).unwrap_or_default()
+        self.handle
+            .take()
+            .map(|h| h.join().unwrap_or_default())
+            .unwrap_or_default()
     }
 }
 
@@ -258,9 +276,8 @@ impl Watchdog {
                 std::thread::sleep(Duration::from_millis(250));
 
                 let over_total = started.elapsed() > total;
-                let over_silence = silence.is_some_and(|q| {
-                    b.lock().map(|t| t.elapsed() > q).unwrap_or(false)
-                });
+                let over_silence =
+                    silence.is_some_and(|q| b.lock().map(|t| t.elapsed() > q).unwrap_or(false));
                 if !(over_total || over_silence) {
                     continue;
                 }
@@ -287,7 +304,12 @@ impl Watchdog {
                 std::process::abort();
             }
         });
-        Self { fired, stop, beat, handle: Some(handle) }
+        Self {
+            fired,
+            stop,
+            beat,
+            handle: Some(handle),
+        }
     }
 
     /// One heartbeat. Called from a progress observer; resets the silence clock.
@@ -393,7 +415,9 @@ pub fn require_disk(phase: &str) -> u64 {
 /// to tidy code is not this cut's business) — but a *new* harness reaching for the identical logic a
 /// third time is exactly the drift this module's own header warns about.
 pub fn file_facts(p: &std::path::Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &spatial_engine::CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());

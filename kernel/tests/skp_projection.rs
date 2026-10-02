@@ -94,14 +94,25 @@ fn mapped_multitype_fixture(name: &str, features: usize) -> std::path::PathBuf {
 }
 
 async fn connect(dp: &RunningDataPlane) -> Client {
-    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port()).into_client_request().unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
+        .into_client_request()
+        .unwrap();
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 /// X12 (Amendment 5, row 5.6): SHA-256 of a file, on `kernel/tests/scale_pass.rs`'s own
@@ -154,7 +165,10 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     .expect("read the committed wire fixture");
     let req: ViewportQueryRequest =
         serde_json::from_str(&fixture_json).expect("the committed fixture must deserialize");
-    assert_eq!(req.columns, Some(vec!["area".to_string(), "zone".to_string()]));
+    assert_eq!(
+        req.columns,
+        Some(vec!["area".to_string(), "zone".to_string()])
+    );
 
     let path = multitype_fixture("k1-seam", 300);
     // X12 (Amendment 5, row 5.6): hashed before and after this run.
@@ -166,7 +180,9 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     {
         let conn = spatial_engine::fixture::configured_connection().expect("conn");
         let path_str = path.to_string_lossy().to_string();
-        let mut stmt = conn.prepare("SELECT id, area, zone FROM read_parquet(?)").expect("prepare");
+        let mut stmt = conn
+            .prepare("SELECT id, area, zone FROM read_parquet(?)")
+            .expect("prepare");
         for batch in stmt.query_arrow([path_str.as_str()]).expect("query") {
             let ids = batch
                 .column_by_name("id")
@@ -195,16 +211,29 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     assert_eq!(oracle.len(), 300);
 
     let catalog = Arc::new(Catalog::new());
-    catalog.open(req.dataset.as_str(), &path, None).expect("open dataset under the fixture's own handle");
+    catalog
+        .open(req.dataset.as_str(), &path, None)
+        .expect("open dataset under the fixture's own handle");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(req.dataset.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(req.dataset.as_str(), spatial_skp::v0::SessionRef::mint());
 
-    let ticket = host.viewport_query(req).expect("the fixture's own request must admit");
+    let ticket = host
+        .viewport_query(req)
+        .expect("the fixture's own request must admit");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -212,13 +241,19 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
     .expect("serve");
     let mut c = connect(&dp).await;
     c.send(Message::Binary(
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes())).into(),
+        wire::frame(
+            wire::TAG_START,
+            &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()),
+        )
+        .into(),
     ))
     .await
     .expect("start");
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
-        .await
-        .expect("credit");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     let mut ids: BTreeSet<u64> = BTreeSet::new();
     let mut checked_schema = false;
@@ -229,7 +264,9 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
             Err(_) => panic!("timed out waiting for a frame"),
         };
         let Message::Binary(b) = msg else { continue };
-        let Some(len) = wire::payload_len(&b) else { continue };
+        let Some(len) = wire::payload_len(&b) else {
+            continue;
+        };
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
         match b.first() {
             Some(&wire::TAG_BATCH) => {
@@ -238,7 +275,8 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
                         .expect("ipc reader");
                 if !checked_schema {
                     let schema = rdr.schema();
-                    let names: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
+                    let names: Vec<&str> =
+                        schema.fields().iter().map(|f| f.name().as_str()).collect();
                     assert_eq!(
                         names,
                         vec!["id", "geometry", "area", "zone"],
@@ -275,9 +313,14 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
                         // ticket redemption) proven end to end against a source the generator did
                         // not compute, on `live_projection.rs`'s E-8 own precedent, rather than
                         // against the fixture's own pure generator function.
-                        let (expected_area, expected_zone) =
-                            oracle.get(&id).unwrap_or_else(|| panic!("id {id} in oracle"));
-                        assert_eq!(area_col.value(r), *expected_area, "area mismatch at id {id}");
+                        let (expected_area, expected_zone) = oracle
+                            .get(&id)
+                            .unwrap_or_else(|| panic!("id {id} in oracle"));
+                        assert_eq!(
+                            area_col.value(r),
+                            *expected_area,
+                            "area mismatch at id {id}"
+                        );
                         let zone = (!zone_col.is_null(r)).then(|| zone_col.value(r).to_string());
                         assert_eq!(&zone, expected_zone, "zone mismatch at id {id}");
                     }
@@ -330,19 +373,30 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
 /// only presence is checked — `detail` in particular, sighted at B1's close). A named alias, not
 /// the nested tuple type inline, on X20's own fix (R nit 3: clippy's `type_complexity` lint fired
 /// on the un-aliased form at this file's own line 247, pre-Amendment-5).
-type ProjectionRefusalCase =
-    (&'static str, Vec<String>, &'static str, Vec<(&'static str, Option<&'static str>)>);
+type ProjectionRefusalCase = (
+    &'static str,
+    Vec<String>,
+    &'static str,
+    Vec<(&'static str, Option<&'static str>)>,
+);
 
 #[test]
 fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     let path = multitype_fixture("k2-refusals", 40);
     let handle: DatasetHandle = "ds_00000000000000000000000000000010".parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
     let ds = catalog.get(handle.as_str()).expect("dataset in catalog");
 
     // X9 (Amendment 5, row 5.6): each case's expected fields is now the **exact** key set (with
@@ -386,7 +440,11 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
             "type not admitted",
             vec!["d32".to_string()],
             "skp.projection_type_not_admitted",
-            vec![("column", Some("d32")), ("arrow_type", Some("Date32")), ("detail", None)],
+            vec![
+                ("column", Some("d32")),
+                ("arrow_type", Some("Date32")),
+                ("detail", None),
+            ],
         ),
     ];
 
@@ -394,7 +452,10 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
     for (label, columns, expected_code, expected_fields) in cases {
         let leases_before = ds.connections().leases_issued();
         let cancelled_before = tickets.cancel_all_for_dataset(handle.as_str());
-        assert_eq!(cancelled_before, 0, "{label}: no ticket should exist before this case runs");
+        assert_eq!(
+            cancelled_before, 0,
+            "{label}: no ticket should exist before this case runs"
+        );
 
         let err = host
             .viewport_query(base_request(handle.clone(), Some(columns)))
@@ -411,7 +472,10 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
                     "{label}: field `{key}`"
                 );
             } else {
-                assert!(err.fields.contains_key(key), "{label}: field `{key}` must be present");
+                assert!(
+                    err.fields.contains_key(key),
+                    "{label}: field `{key}` must be present"
+                );
             }
         }
         codes.insert(err.code.clone());
@@ -861,18 +925,27 @@ fn a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte()
     let path = multitype_fixture("x1-filter-refusal-text", 20);
     let handle: DatasetHandle = "ds_00000000000000000000000000000060".parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let mut req = base_request(handle, None);
     req.filter = Some(
         spatial_skp::v0::Filter::new("d32 > 0", spatial_skp::v0::FILTER_DIALECT_DUCKDB_EXPR_0)
             .expect("the one admitted wire dialect must construct"),
     );
-    let err = host.viewport_query(req).expect_err("a Date32 predicate must be refused");
+    let err = host
+        .viewport_query(req)
+        .expect_err("a Date32 predicate must be refused");
     assert_eq!(err.code, "skp.filter_column_not_filterable");
     // Byte-copied by script from main's rendering at `d6d9862` (see this test's own doc comment).
     let expected_reason = "refused: `d32` cannot be published as an attribute — type is Date32, \
@@ -880,7 +953,10 @@ fn a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte()
                             boolean, the 8/16/32/64-bit integers, float64). Nothing is cast, \
                             widened or stringified to make a column fit; a conversion the caller \
                             did not ask for is the silent conversion docs/01 principle 8 forbids";
-    assert_eq!(err.fields.get("reason").map(String::as_str), Some(expected_reason));
+    assert_eq!(
+        err.fields.get("reason").map(String::as_str),
+        Some(expected_reason)
+    );
 }
 
 /// K-3's own claim, isolated from the table above: `columns: []` and `columns: null` are two
@@ -891,11 +967,18 @@ fn columns_empty_list_is_refused_never_read_as_null() {
     let path = multitype_fixture("k3-empty-vs-null", 20);
     let handle: DatasetHandle = "ds_00000000000000000000000000000011".parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let null_ticket = host
         .viewport_query(base_request(handle.clone(), None))
@@ -1170,21 +1253,34 @@ async fn a_projection_composes_with_a_filter() {
     let path = multitype_fixture("k7-compose", 300);
     let handle: DatasetHandle = "ds_00000000000000000000000000000040".parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), &path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), &path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let mut req = base_request(handle, Some(vec!["f32".to_string()]));
     req.filter = Some(
         spatial_skp::v0::Filter::new("f32 > 0.1", spatial_skp::v0::FILTER_DIALECT_DUCKDB_EXPR_0)
             .expect("the one admitted wire dialect must construct"),
     );
-    let ticket = host.viewport_query(req).expect("a projection and a valid filter must compose");
+    let ticket = host
+        .viewport_query(req)
+        .expect("a projection and a valid filter must compose");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -1192,13 +1288,19 @@ async fn a_projection_composes_with_a_filter() {
     .expect("serve");
     let mut c = connect(&dp).await;
     c.send(Message::Binary(
-        wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes())).into(),
+        wire::frame(
+            wire::TAG_START,
+            &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()),
+        )
+        .into(),
     ))
     .await
     .expect("start");
-    c.send(Message::Binary(wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into()))
-        .await
-        .expect("credit");
+    c.send(Message::Binary(
+        wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes()).into(),
+    ))
+    .await
+    .expect("credit");
 
     let mut saw_batch = false;
     let mut saw_schema_with_f32 = false;
@@ -1209,7 +1311,9 @@ async fn a_projection_composes_with_a_filter() {
             Err(_) => panic!("timed out waiting for a frame"),
         };
         let Message::Binary(b) = msg else { continue };
-        let Some(len) = wire::payload_len(&b) else { continue };
+        let Some(len) = wire::payload_len(&b) else {
+            continue;
+        };
         let payload = &b[wire::FRAME_PREFIX_LEN..wire::FRAME_PREFIX_LEN + len];
         match b.first() {
             Some(&wire::TAG_BATCH) => {
@@ -1243,7 +1347,10 @@ async fn a_projection_composes_with_a_filter() {
         }
     }
     assert!(saw_batch, "the composed query must still deliver batches");
-    assert!(saw_schema_with_f32, "the projection must still be honoured alongside the filter");
+    assert!(
+        saw_schema_with_f32,
+        "the projection must still be honoured alongside the filter"
+    );
     c.close(None).await.ok();
     dp.shutdown().await;
 }
@@ -1252,9 +1359,18 @@ async fn a_projection_composes_with_a_filter() {
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "app.js".into(), bytes: b"export const ok = 1;\n".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "app.js".into(),
+            bytes: b"export const ok = 1;\n".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -1310,7 +1426,10 @@ fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_forma
     };
 
     match preflight_pinless(&req) {
-        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable { column, detail })) => {
+        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column,
+            detail,
+        })) => {
             assert_eq!(column, "f32");
             assert_eq!(
                 detail,
@@ -1319,9 +1438,14 @@ fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_forma
                  reading `float64` would be told the source held one"
             );
         }
-        other => panic!("expected AttributeUnpublishable naming Float32 at preflight, got {other:?}"),
+        other => {
+            panic!("expected AttributeUnpublishable naming Float32 at preflight, got {other:?}")
+        }
     }
-    assert!(!destination.exists(), "nothing may be written before the refusal");
+    assert!(
+        !destination.exists(),
+        "nothing may be written before the refusal"
+    );
 }
 
 /// X2 (Amendment 5, row 5.6; O1): `publish_refuses_a_multi_failure_list_by_shared_admission_before_the_bundle_format_restriction`.
@@ -1358,15 +1482,29 @@ fn publish_refuses_a_multi_failure_list_by_shared_admission_before_the_bundle_fo
         finished_at: &|| "2026-09-27T00:00:01Z".to_string(),
     };
 
-    let known: Vec<String> = ds.file_schema().fields().iter().map(|f| f.name().clone()).collect();
+    let known: Vec<String> = ds
+        .file_schema()
+        .fields()
+        .iter()
+        .map(|f| f.name().clone())
+        .collect();
     match preflight_pinless(&req) {
-        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable { column, detail })) => {
+        Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
+            column,
+            detail,
+        })) => {
             assert_eq!(column, "nope", "shared admission's unknown name must be refused before the bundle-format restriction reaches `f32`");
-            assert_eq!(detail, format!("the file has no such column (it has: {})", known.join(", ")));
+            assert_eq!(
+                detail,
+                format!("the file has no such column (it has: {})", known.join(", "))
+            );
         }
         other => panic!("expected AttributeUnpublishable naming `nope` as unknown, got {other:?}"),
     }
-    assert!(!destination.exists(), "nothing may be written before the refusal");
+    assert!(
+        !destination.exists(),
+        "nothing may be written before the refusal"
+    );
 }
 
 /// Cross-checks `f32_for`'s own bucket claim used by `live_projection.rs`'s E-20, so this file's
@@ -1377,5 +1515,8 @@ fn f32_for_exercises_both_sides_of_0_1_over_a_300_feature_run() {
     let seed = FixtureSpec::default().seed;
     let gt = (0..300u64).filter(|&id| f32_for(seed, id) > 0.1).count();
     let le = 300 - gt;
-    assert!(gt > 0 && le > 0, "the fixture must exercise both sides of the 0.1 boundary");
+    assert!(
+        gt > 0 && le > 0,
+        "the fixture must exercise both sides of the 0.1 boundary"
+    );
 }

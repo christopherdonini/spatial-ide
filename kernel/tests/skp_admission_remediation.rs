@@ -16,7 +16,9 @@ use std::sync::Arc;
 
 mod watch_support;
 
-use spatial_engine::fixture::{write_geoparquet, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON};
+use spatial_engine::fixture::{
+    write_geoparquet, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON,
+};
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{
@@ -39,7 +41,12 @@ fn fixture(name: &str, spec: &FixtureSpec) -> PathBuf {
 }
 
 fn small_spec() -> FixtureSpec {
-    FixtureSpec { features: 20, avg_vertices: 6, hole_every: 0, ..Default::default() }
+    FixtureSpec {
+        features: 20,
+        avg_vertices: 6,
+        hole_every: 0,
+        ..Default::default()
+    }
 }
 
 fn host() -> SkpHost {
@@ -74,13 +81,24 @@ fn open_req(
 fn null_crs_assertion_and_null_identity_admit_exactly_as_before() {
     let path = fixture("null-null", &small_spec());
     let host = host();
-    let resp = host.open_dataset(open_req(&path, "open-null-null", None, None)).expect("open");
+    let resp = host
+        .open_dataset(open_req(&path, "open-null-null", None, None))
+        .expect("open");
     let describe = host
-        .describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: resp.dataset })
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
         .expect("describe");
     assert_eq!(describe.crs.source, "file");
-    assert!(describe.crs.asserted_by.is_none(), "no assertion means no asserted_by");
-    assert!(describe.crs.asserted_at.is_none(), "no assertion means no asserted_at");
+    assert!(
+        describe.crs.asserted_by.is_none(),
+        "no assertion means no asserted_by"
+    );
+    assert!(
+        describe.crs.asserted_at.is_none(),
+        "no assertion means no asserted_at"
+    );
     assert_eq!(describe.identity.source, "file:id");
 }
 
@@ -99,23 +117,34 @@ fn null_crs_assertion_and_null_identity_admit_exactly_as_before() {
 fn asserted_crs_over_a_crs_less_file_is_admitted_with_host_minted_attribution() {
     let path = fixture(
         "no-crs",
-        &FixtureSpec { crs_mode: CrsMode::AbsentKey, ..small_spec() },
+        &FixtureSpec {
+            crs_mode: CrsMode::AbsentKey,
+            ..small_spec()
+        },
     );
     let host = host();
-    let assertion =
-        CrsAssertion { identifier: "EPSG:2056".to_string(), definition_json: LV95_PROJJSON.to_string() };
+    let assertion = CrsAssertion {
+        identifier: "EPSG:2056".to_string(),
+        definition_json: LV95_PROJJSON.to_string(),
+    };
     let resp = host
         .open_dataset(open_req(&path, "open-assert", Some(assertion), None))
         .expect("assertion over a CRS-less file must be admitted");
     let describe = host
-        .describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: resp.dataset })
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
         .expect("describe");
     assert_eq!(describe.crs.source, "caller_asserted");
     assert_eq!(describe.crs.identifier, "EPSG:2056");
     let by = describe.crs.asserted_by.expect("by must be present");
     assert!(!by.trim().is_empty(), "by must be non-empty, got {by:?}");
     let at = describe.crs.asserted_at.expect("at must be present");
-    assert!(at.contains('T') && at.ends_with('Z'), "at must be RFC-3339 UTC, got {at:?}");
+    assert!(
+        at.contains('T') && at.ends_with('Z'),
+        "at must be RFC-3339 UTC, got {at:?}"
+    );
 }
 
 /// (3) An assertion over a file that already declares a CRS is refused as
@@ -128,8 +157,10 @@ fn asserted_crs_over_a_crs_less_file_is_admitted_with_host_minted_attribution() 
 fn asserted_crs_over_a_declaring_file_is_refused_without_echoing_a_definition_comparison() {
     let path = fixture("declaring", &small_spec());
     let host = host();
-    let assertion =
-        CrsAssertion { identifier: "EPSG:2056".to_string(), definition_json: LV95_PROJJSON.to_string() };
+    let assertion = CrsAssertion {
+        identifier: "EPSG:2056".to_string(),
+        definition_json: LV95_PROJJSON.to_string(),
+    };
     let err = host
         .open_dataset(open_req(&path, "open-conflict", Some(assertion), None))
         .expect_err("an assertion over a declaring file must be refused");
@@ -154,15 +185,23 @@ fn asserted_crs_over_a_declaring_file_is_refused_without_echoing_a_definition_co
 fn declared_identity_on_parcel_key_is_admitted_and_reads_mapped() {
     let path = fixture(
         "parcel-key",
-        &FixtureSpec { identity: IdentityMode::ForeignKeyColumn, ..small_spec() },
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small_spec()
+        },
     );
     let host = host();
-    let decl = IdentityDeclaration { column: "parcel_key".to_string() };
+    let decl = IdentityDeclaration {
+        column: "parcel_key".to_string(),
+    };
     let resp = host
         .open_dataset(open_req(&path, "open-identity", None, Some(decl)))
         .expect("a declared mapping to an existing unique column must be admitted");
     let describe = host
-        .describe(DescribeRequest { skp: SKP_VERSION.to_string(), dataset: resp.dataset })
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
         .expect("describe");
     assert_eq!(describe.identity.source, "mapped:parcel_key");
     assert_eq!(describe.identity.uniqueness, "verified-at-open-full-file");
@@ -174,12 +213,17 @@ fn declared_identity_on_parcel_key_is_admitted_and_reads_mapped() {
 fn declared_identity_naming_a_missing_column_is_refused() {
     let path = fixture("missing-col", &small_spec());
     let host = host();
-    let decl = IdentityDeclaration { column: "does_not_exist".to_string() };
+    let decl = IdentityDeclaration {
+        column: "does_not_exist".to_string(),
+    };
     let err = host
         .open_dataset(open_req(&path, "open-missing-col", None, Some(decl)))
         .expect_err("a declaration naming an absent column must be refused");
     assert_eq!(err.code, "engine.identity_unusable");
-    assert_eq!(err.fields.get("column").map(String::as_str), Some("does_not_exist"));
+    assert_eq!(
+        err.fields.get("column").map(String::as_str),
+        Some("does_not_exist")
+    );
 }
 
 /// (5b) A declared identity column that repeats a value is a typed `identity_unusable` refusal —
@@ -193,10 +237,15 @@ fn declared_identity_naming_a_missing_column_is_refused() {
 fn declared_identity_naming_a_non_unique_column_is_refused() {
     let path = fixture(
         "dup-id",
-        &FixtureSpec { identity: IdentityMode::DuplicateIds, ..small_spec() },
+        &FixtureSpec {
+            identity: IdentityMode::DuplicateIds,
+            ..small_spec()
+        },
     );
     let host = host();
-    let decl = IdentityDeclaration { column: "id".to_string() };
+    let decl = IdentityDeclaration {
+        column: "id".to_string(),
+    };
     let err = host
         .open_dataset(open_req(&path, "open-dup", None, Some(decl)))
         .expect_err("a declaration naming a non-unique column must be refused");

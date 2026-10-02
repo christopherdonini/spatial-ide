@@ -160,7 +160,10 @@ pub enum ProjectionError {
     /// A name resolves to nothing in the dataset's own resident schema — including the reserved
     /// wire identity name `id` treated specially first, so this never fires for it (see
     /// [`ColumnIsIdentity`](Self::ColumnIsIdentity)'s own doc).
-    ColumnUnknown { column: String, known_columns: Vec<String> },
+    ColumnUnknown {
+        column: String,
+        known_columns: Vec<String>,
+    },
     /// The name is the geometry column; it already travels as GeoArrow.
     ColumnIsGeometry { column: String },
     /// The name is the reserved wire identity name `id`, or the dataset's own identity **source**
@@ -326,14 +329,16 @@ impl From<ProjectionError> for EngineError {
                 column: column.clone(),
                 detail: "this is the geometry column; it already travels as GeoArrow".to_string(),
             },
-            ProjectionError::ColumnIsIdentity { column, .. } => EngineError::AttributeUnpublishable {
-                column: column.clone(),
-                detail: format!(
-                    "this is the dataset's identity column; it already travels as `{}`, and a \
+            ProjectionError::ColumnIsIdentity { column, .. } => {
+                EngineError::AttributeUnpublishable {
+                    column: column.clone(),
+                    detail: format!(
+                        "this is the dataset's identity column; it already travels as `{}`, and a \
                      second identity-shaped column is two names for one fact",
-                    crate::envelope::ID_COLUMN
-                ),
-            },
+                        crate::envelope::ID_COLUMN
+                    ),
+                }
+            }
             ProjectionError::ColumnDuplicated { column } => EngineError::AttributeUnpublishable {
                 column: column.clone(),
                 detail: "named twice in the projection".to_string(),
@@ -618,14 +623,20 @@ mod tests {
             DataType::Float32,
             DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8)),
         ] {
-            assert!(admit_attribute_type("c", &ty).is_ok(), "{ty} should be admissible");
+            assert!(
+                admit_attribute_type("c", &ty).is_ok(),
+                "{ty} should be admissible"
+            );
         }
         for ty in [
             DataType::Binary,
             DataType::Date32,
             DataType::Dictionary(Box::new(DataType::Int8), Box::new(DataType::Date32)),
         ] {
-            assert!(admit_attribute_type("c", &ty).is_err(), "{ty} must be refused");
+            assert!(
+                admit_attribute_type("c", &ty).is_err(),
+                "{ty} must be refused"
+            );
         }
     }
 
@@ -633,7 +644,11 @@ mod tests {
     #[test]
     fn float32_is_admitted_as_its_own_type_and_never_widened() {
         let emitted = admit_attribute_type("f32", &DataType::Float32).unwrap();
-        assert_eq!(emitted, DataType::Float32, "Float32 must never widen to Float64");
+        assert_eq!(
+            emitted,
+            DataType::Float32,
+            "Float32 must never widen to Float64"
+        );
     }
 
     /// E-2: `dictionary_is_admitted_under_its_value_types_rule_and_emitted_as_the_value_type`.
@@ -654,10 +669,17 @@ mod tests {
             DataType::Date32,
             DataType::Decimal128(10, 2),
             DataType::Timestamp(arrow::datatypes::TimeUnit::Microsecond, None),
-            DataType::List(std::sync::Arc::new(Field::new("item", DataType::Int32, true))),
+            DataType::List(std::sync::Arc::new(Field::new(
+                "item",
+                DataType::Int32,
+                true,
+            ))),
             DataType::Struct(Fields::from(vec![Field::new("a", DataType::Int32, true)])),
         ] {
-            assert!(admit_attribute_type("c", &ty).is_err(), "{ty} must still be refused");
+            assert!(
+                admit_attribute_type("c", &ty).is_err(),
+                "{ty} must still be refused"
+            );
         }
     }
 
@@ -684,7 +706,12 @@ mod tests {
             Err(ProjectionError::ColumnIsIdentity { .. })
         ));
         assert!(matches!(
-            admit_projection(&["zone".to_string(), "zone".to_string()], &schema, "geometry", "id"),
+            admit_projection(
+                &["zone".to_string(), "zone".to_string()],
+                &schema,
+                "geometry",
+                "id"
+            ),
             Err(ProjectionError::ColumnDuplicated { .. })
         ));
         assert!(matches!(
@@ -756,7 +783,12 @@ mod tests {
         // `id` is recognised as the reserved identity name during pass 1 itself (before the
         // unknown check even runs), so it wins over `geometry`'s own per-column failure too.
         assert!(matches!(
-            admit_projection(&["geometry".to_string(), "id".to_string()], &schema, "geometry", "id"),
+            admit_projection(
+                &["geometry".to_string(), "id".to_string()],
+                &schema,
+                "geometry",
+                "id"
+            ),
             Err(ProjectionError::ColumnIsIdentity { .. })
         ));
         // Both `d32` and `geometry` resolve in pass 1 (both are real columns); pass 2 then runs
@@ -825,7 +857,9 @@ mod tests {
                 assert_eq!(column, "id");
                 assert_eq!(id_column, "parcel_key");
             }
-            other => panic!("expected ColumnIsIdentity naming the mapped source column, got {other:?}"),
+            other => {
+                panic!("expected ColumnIsIdentity naming the mapped source column, got {other:?}")
+            }
         }
     }
 
@@ -842,7 +876,10 @@ mod tests {
             Field::new("zone", DataType::Utf8, false),
         ]);
         let out = admit_projection(&["zone".to_string()], &schema, "geometry", "id").unwrap();
-        assert!(out.fields()[0].is_nullable(), "an admitted projection must not be able to lose a NULL");
+        assert!(
+            out.fields()[0].is_nullable(),
+            "an admitted projection must not be able to lose a NULL"
+        );
     }
 
     /// X4 (row 5.6; O1(c), O2): `From<ProjectionError> for EngineError`'s `TypeNotAdmitted` arm
@@ -942,9 +979,18 @@ mod tests {
             Field::new("cat", dict.clone(), true),
             Field::new("f32", DataType::Float32, true),
         ]);
-        let admitted =
-            admit_projection(&["cat".to_string(), "f32".to_string()], &schema, "geometry", "id").unwrap();
-        let emitted: Vec<DataType> = admitted.fields().iter().map(|f| f.data_type().clone()).collect();
+        let admitted = admit_projection(
+            &["cat".to_string(), "f32".to_string()],
+            &schema,
+            "geometry",
+            "id",
+        )
+        .unwrap();
+        let emitted: Vec<DataType> = admitted
+            .fields()
+            .iter()
+            .map(|f| f.data_type().clone())
+            .collect();
         assert_eq!(emitted, vec![DataType::Utf8, DataType::Float32]);
         assert_eq!(
             admitted.source_types(),
@@ -965,7 +1011,10 @@ mod tests {
     // Reverted.
     #[test]
     fn the_reserved_id_refusal_states_the_reserved_name_on_the_wire_and_keeps_publishs_text() {
-        let e = ProjectionError::ColumnIsIdentity { column: "id".to_string(), id_column: "i64".to_string() };
+        let e = ProjectionError::ColumnIsIdentity {
+            column: "id".to_string(),
+            id_column: "i64".to_string(),
+        };
         assert_eq!(
             e.to_string(),
             "refused: `id` is the name reserved for the identity column in every batch; this \

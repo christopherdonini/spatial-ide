@@ -58,7 +58,9 @@ mod watch_support;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 
-use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode};
+use spatial_engine::fixture::{
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode,
+};
 use spatial_engine::lod::{build_tiers, LOD_BUILD_WORKERS_ARM_S};
 use spatial_engine::{CancelToken, Dataset, EngineError, ViewportQuery};
 use spatial_kernel::bundle;
@@ -68,7 +70,9 @@ use spatial_kernel::publish::{
     publish_unguarded, CorrespondingSource, CorrespondingSourceKind, PublishRequest, ViewerAsset,
     ViewerAssets, ViewerLicenseInput,
 };
-use spatial_kernel::skp::{error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry};
+use spatial_kernel::skp::{
+    error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry,
+};
 use spatial_kernel::Catalog;
 use spatial_skp::v0::{OpenDatasetRequest, SKP_VERSION};
 
@@ -90,7 +94,9 @@ fn workspace(name: &str) -> PathBuf {
     // then trip on the *scratch directory's name*, not on anything the product wrote. (Found by
     // running this file's own tests: the first version of this prefix, `spatial-kernel-no-
     // generation-tests`, produced exactly that false failure.)
-    let d = std::env::temp_dir().join("spatial-kernel-artifact-scan-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-artifact-scan-tests")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -122,9 +128,18 @@ fn pinned(path: &Path) -> Dataset {
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "app.js".into(), bytes: b"export const ok = 1;\n".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "app.js".into(),
+            bytes: b"export const ok = 1;\n".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -174,7 +189,11 @@ fn contains_ascii_ci(haystack: &[u8], needle: &[u8]) -> bool {
     if needle.is_empty() || haystack.len() < needle.len() {
         return false;
     }
-    haystack.windows(needle.len()).any(|w| w.iter().zip(needle).all(|(a, b)| a.to_ascii_lowercase() == *b))
+    haystack.windows(needle.len()).any(|w| {
+        w.iter()
+            .zip(needle)
+            .all(|(a, b)| a.to_ascii_lowercase() == *b)
+    })
 }
 
 /// Every regular file under `dir`, recursively -- the same "every byte the bundle contains" scope
@@ -271,7 +290,10 @@ fn the_published_bundles_bytes_carry_no_generation_substring() {
 
     let mut files = Vec::new();
     every_file(&dest, &mut files);
-    assert!(!files.is_empty(), "the bundle wrote nothing; this scan would be vacuous");
+    assert!(
+        !files.is_empty(),
+        "the bundle wrote nothing; this scan would be vacuous"
+    );
 
     let mut offending = Vec::new();
     for f in &files {
@@ -287,7 +309,11 @@ fn the_published_bundles_bytes_carry_no_generation_substring() {
 
     // The scan is only meaningful if it can fire at all -- the same discipline
     // `the_redaction_scan_passes_over_every_byte_of_an_emitted_bundle` uses (`kernel/tests/publish.rs`).
-    std::fs::write(dest.join("planted.txt"), b"this line names a Generation on purpose").unwrap();
+    std::fs::write(
+        dest.join("planted.txt"),
+        b"this line names a Generation on purpose",
+    )
+    .unwrap();
     let mut files_with_plant = Vec::new();
     every_file(&dest, &mut files_with_plant);
     let planted_bytes = std::fs::read(dest.join("planted.txt")).unwrap();
@@ -312,25 +338,45 @@ fn the_published_bundles_bytes_carry_no_generation_substring() {
 /// test fails, naming the three scanned strings that carried it (`SourceChanged Display`,
 /// `error_of.message`, `terminal_detail_of`, each with the mutated sentence quoted in full).
 #[test]
-fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_no_generation_substring() {
-    let source_changed = EngineError::SourceChanged { detail: "mtime".to_string() };
+fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_no_generation_substring(
+) {
+    let source_changed = EngineError::SourceChanged {
+        detail: "mtime".to_string(),
+    };
     let partitioned = EngineError::IdentityOrdinalPartitionedUnsupported {
         detail: "path carries a glob metacharacter".to_string(),
     };
-    let internal = EngineError::InternalInconsistency { detail: "an admitted CRS lost its provenance class".to_string() };
+    let internal = EngineError::InternalInconsistency {
+        detail: "an admitted CRS lost its provenance class".to_string(),
+    };
 
     let mut strings: Vec<(String, String)> = vec![
         ("SourceChanged Display".into(), source_changed.to_string()),
-        ("SourceChanged error_of.message".into(), error_of(&source_changed).message),
-        ("SourceChanged error_of.code".into(), error_of(&source_changed).code),
-        ("SourceChanged terminal_detail_of".into(), terminal_detail_of(&source_changed)),
-        ("IdentityOrdinalPartitionedUnsupported Display".into(), partitioned.to_string()),
+        (
+            "SourceChanged error_of.message".into(),
+            error_of(&source_changed).message,
+        ),
+        (
+            "SourceChanged error_of.code".into(),
+            error_of(&source_changed).code,
+        ),
+        (
+            "SourceChanged terminal_detail_of".into(),
+            terminal_detail_of(&source_changed),
+        ),
+        (
+            "IdentityOrdinalPartitionedUnsupported Display".into(),
+            partitioned.to_string(),
+        ),
         (
             "IdentityOrdinalPartitionedUnsupported terminal_detail_of".into(),
             terminal_detail_of(&partitioned),
         ),
         ("InternalInconsistency Display".into(), internal.to_string()),
-        ("InternalInconsistency terminal_detail_of".into(), terminal_detail_of(&internal)),
+        (
+            "InternalInconsistency terminal_detail_of".into(),
+            terminal_detail_of(&internal),
+        ),
     ];
     // `SkpError::fields` too -- the named values a client can build on without parsing `message`
     // (`protocol/skp/src/v0/error.rs`'s own doc comment). A generation stuffed into a field value
@@ -367,7 +413,10 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
 /// substring "generation" appears in these LOD tier-set files:` -- followed by this run's own
 /// `tiers.json` path (content-hash-keyed, not fixed text, not reproduced here).
 #[test]
-#[cfg_attr(not(windows), ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)")]
+#[cfg_attr(
+    not(windows),
+    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+)]
 fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring() {
     let d = workspace("lod-tiers");
     let path = d.join("parcels.parquet");
@@ -389,7 +438,10 @@ fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring()
     for outcome in set.tiers() {
         files.push(outcome.record().path().to_path_buf());
     }
-    assert!(files.len() > 1, "the tier set wrote nothing but its own manifest; this scan would be vacuous");
+    assert!(
+        files.len() > 1,
+        "the tier set wrote nothing but its own manifest; this scan would be vacuous"
+    );
 
     let mut offending = Vec::new();
     for f in &files {
@@ -410,7 +462,9 @@ fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring()
 /// is ever added here.
 fn env_lock() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|e| e.into_inner())
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
 }
 
 /// **The permission audit log half of G-A4** (gate-log record 85, finding B-1, family 4).
@@ -450,7 +504,10 @@ fn one_permission_audit_log_line_carries_no_generation_substring() {
     std::env::remove_var(AUDIT_LOG_ENV);
 
     let bytes = std::fs::read(&log).expect("read the audit log back");
-    assert!(!bytes.is_empty(), "the audit log wrote nothing; this scan would be vacuous");
+    assert!(
+        !bytes.is_empty(),
+        "the audit log wrote nothing; this scan would be vacuous"
+    );
     assert!(
         !contains_ascii_ci(&bytes, b"generation"),
         "the substring \"generation\" appears in the permission audit log"
@@ -471,7 +528,10 @@ fn contains_a_session_reference_shape(bytes: &[u8]) -> bool {
     for start in 0..=bytes.len() - PREFIX.len() - 32 {
         if &bytes[start..start + PREFIX.len()] == PREFIX {
             let hex = &bytes[start + PREFIX.len()..start + PREFIX.len() + 32];
-            if hex.iter().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(b)) {
+            if hex
+                .iter()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(b))
+            {
                 return true;
             }
         }
@@ -541,7 +601,10 @@ fn the_published_bundle_carries_no_session_reference_key_or_value() {
         "the vacuity check's own planted value must itself match the shape it plants"
     );
 
-    let ds = host.catalog().get(open.dataset.as_str()).expect("the catalog holds the open dataset");
+    let ds = host
+        .catalog()
+        .get(open.dataset.as_str())
+        .expect("the catalog holds the open dataset");
     ds.pin_content(&CancelToken::new()).expect("pin");
     let v = viewer();
     let dest = d.join("bundle");
@@ -571,7 +634,10 @@ fn the_published_bundle_carries_no_session_reference_key_or_value() {
     // one open's own).
     let mut files = Vec::new();
     every_file(&dest, &mut files);
-    assert!(!files.is_empty(), "the bundle wrote nothing; this scan would be vacuous");
+    assert!(
+        !files.is_empty(),
+        "the bundle wrote nothing; this scan would be vacuous"
+    );
 
     let mut offending_bytes = Vec::new();
     for f in &files {
@@ -593,8 +659,11 @@ fn the_published_bundle_carries_no_session_reference_key_or_value() {
     // The scan is only meaningful if it can fire at all — same vacuity discipline as
     // `the_published_bundles_bytes_carry_no_generation_substring` above, planting this open's own
     // real minted value rather than a synthetic one.
-    std::fs::write(dest.join("planted.txt"), format!("this line plants {minted_session} on purpose"))
-        .unwrap();
+    std::fs::write(
+        dest.join("planted.txt"),
+        format!("this line plants {minted_session} on purpose"),
+    )
+    .unwrap();
     let planted_bytes = std::fs::read(dest.join("planted.txt")).unwrap();
     assert!(
         contains_ascii_ci(&planted_bytes, minted_session.as_bytes())

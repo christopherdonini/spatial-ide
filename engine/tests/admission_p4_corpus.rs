@@ -72,7 +72,9 @@ fn manifest_path() -> PathBuf {
 }
 
 fn derivations_path() -> PathBuf {
-    Path::new(CORPUS_ROOT).join("mutations").join("DERIVATIONS.json")
+    Path::new(CORPUS_ROOT)
+        .join("mutations")
+        .join("DERIVATIONS.json")
 }
 
 /// `sha256(file)` as lowercase hex, or `None` if the file cannot be read at all — never a panic, so
@@ -82,7 +84,13 @@ fn sha256_hex(path: &Path) -> Option<String> {
     let bytes = std::fs::read(path).ok()?;
     let mut hasher = Sha256::new();
     hasher.update(&bytes);
-    Some(hasher.finalize().iter().map(|b| format!("{b:02x}")).collect())
+    Some(
+        hasher
+            .finalize()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect(),
+    )
 }
 
 /// The one comparison the RECORDED MUTATION above inverts.
@@ -178,9 +186,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("metadata"),
             registered_declared_axis_order: Some("latitude,longitude"),
-            unrun_boundary8_reason: Some(
-                "a single Dataset::open cannot reach a publish preflight",
-            ),
+            unrun_boundary8_reason: Some("a single Dataset::open cannot reach a publish preflight"),
         },
         RowSpec {
             id: "#4",
@@ -235,9 +241,7 @@ fn main_set_rows() -> Vec<RowSpec> {
             expect_sanity_reason_contains: None,
             registered_sanity_level: Some("metadata"),
             registered_declared_axis_order: None,
-            unrun_boundary8_reason: Some(
-                "a single Dataset::open cannot reach a publish preflight",
-            ),
+            unrun_boundary8_reason: Some("a single Dataset::open cannot reach a publish preflight"),
         },
         RowSpec {
             id: "#9",
@@ -426,7 +430,10 @@ fn open_and_observe(path: &Path) -> Observed {
                 identity_class,
             }
         }
-        Err(e) => Observed::Refused { code: refusal_code(&e), detail: e.to_string() },
+        Err(e) => Observed::Refused {
+            code: refusal_code(&e),
+            detail: e.to_string(),
+        },
     }
 }
 
@@ -468,7 +475,11 @@ fn observed_sanity_level(observed: &Observed) -> Option<String> {
     match observed {
         Observed::Admitted { sanity_level, .. } => Some(sanity_level.clone()),
         Observed::Refused { code, detail } if code == "engine.format_default_contradicted" => {
-            detail.split("at level `").nth(1).and_then(|rest| rest.split('`').next()).map(String::from)
+            detail
+                .split("at level `")
+                .nth(1)
+                .and_then(|rest| rest.split('`').next())
+                .map(String::from)
         }
         Observed::Refused { .. } => None,
     }
@@ -524,7 +535,10 @@ fn evaluate(
     // too, the same "mechanism, not only class" shape as the two blocks above.
     if let Some(expected_order) = registered_declared_axis_order {
         let observed_order = match observed {
-            Observed::Admitted { declared_axis_order, .. } => declared_axis_order.clone(),
+            Observed::Admitted {
+                declared_axis_order,
+                ..
+            } => declared_axis_order.clone(),
             Observed::Refused { .. } => None,
         };
         if observed_order.as_deref() != Some(expected_order) {
@@ -579,7 +593,14 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
             "predicted the open to fail (variant undetermined per §4); observed: admitted."
                 .to_string(),
         ),
-        (Prediction::AdmittedAsDeclared, Observed::Admitted { format_rule_reference, identity_class, .. }) => {
+        (
+            Prediction::AdmittedAsDeclared,
+            Observed::Admitted {
+                format_rule_reference,
+                identity_class,
+                ..
+            },
+        ) => {
             if let Some(reference) = format_rule_reference {
                 (
                     Verdict::Deviation,
@@ -597,7 +618,10 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
                     ),
                 )
             } else {
-                (Verdict::AsPredicted, "admitted-as-declared, session-ordinal.".to_string())
+                (
+                    Verdict::AsPredicted,
+                    "admitted-as-declared, session-ordinal.".to_string(),
+                )
             }
         }
         (Prediction::AdmittedAsDeclared, Observed::Refused { code, detail }) => (
@@ -655,7 +679,10 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
                 }
             }
         },
-        (Prediction::AdmittedUnderFormatRule(expected_provenance), Observed::Refused { code, detail }) => (
+        (
+            Prediction::AdmittedUnderFormatRule(expected_provenance),
+            Observed::Refused { code, detail },
+        ) => (
             Verdict::Deviation,
             format!(
                 "predicted admitted-under-format-rule ({expected_provenance}); observed refused \
@@ -668,7 +695,9 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
             } else {
                 (
                     Verdict::Deviation,
-                    format!("predicted refusal {expected_code}; observed refused {code} ({detail})"),
+                    format!(
+                        "predicted refusal {expected_code}; observed refused {code} ({detail})"
+                    ),
                 )
             }
         }
@@ -685,9 +714,15 @@ fn evaluate_class(prediction: &Prediction, observed: &Observed) -> (Verdict, Str
 /// `target/fixtures/compat-corpus/` prefix its own `path` field carries.
 fn manifest_sha_by_suffix(manifest: &Value) -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
-    for f in manifest["files"].as_array().expect("MANIFEST.json `files` is an array") {
+    for f in manifest["files"]
+        .as_array()
+        .expect("MANIFEST.json `files` is an array")
+    {
         let path = f["path"].as_str().expect("file entry has a `path`");
-        let sha = f["sha256"].as_str().expect("file entry has a `sha256`").to_string();
+        let sha = f["sha256"]
+            .as_str()
+            .expect("file entry has a `sha256`")
+            .to_string();
         let suffix = path
             .strip_prefix("target/fixtures/compat-corpus/")
             .unwrap_or(path)
@@ -702,14 +737,22 @@ fn manifest_sha_by_suffix(manifest: &Value) -> BTreeMap<String, String> {
 /// `DERIVATIONS.json` too, not only `MANIFEST.json`).
 fn derivations_sha_by_suffix(derivations: &Value) -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
-    for m in derivations["mutations"].as_array().expect("DERIVATIONS.json `mutations` is an array")
+    for m in derivations["mutations"]
+        .as_array()
+        .expect("DERIVATIONS.json `mutations` is an array")
     {
         let path = m["path"].as_str().expect("mutation entry has a `path`");
         let sha = m["observed_difference"]["mutation_sha256"]
             .as_str()
             .expect("mutation entry has observed_difference.mutation_sha256")
             .to_string();
-        out.insert(format!("mutations/{}", path.strip_prefix("mutations/").unwrap_or(path)), sha);
+        out.insert(
+            format!(
+                "mutations/{}",
+                path.strip_prefix("mutations/").unwrap_or(path)
+            ),
+            sha,
+        );
     }
     out
 }
@@ -761,7 +804,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     let manifest_sha256 = {
         let mut h = Sha256::new();
         h.update(manifest_raw.as_bytes());
-        h.finalize().iter().map(|b| format!("{b:02x}")).collect::<String>()
+        h.finalize()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
     };
     let by_suffix_manifest = manifest_sha_by_suffix(&manifest);
 
@@ -774,7 +820,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     let mut rows = main_set_rows();
     rows.extend(mutation_rows());
     let total_rows = rows.len();
-    assert_eq!(total_rows, 17, "§3's 12 main-set rows plus §4's 5 mutation rows");
+    assert_eq!(
+        total_rows, 17,
+        "§3's 12 main-set rows plus §4's 5 mutation rows"
+    );
 
     struct RowRecord {
         spec_id: &'static str,
@@ -804,14 +853,18 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         let full_path = Path::new(CORPUS_ROOT).join(row.suffix);
         let actual_sha = sha256_hex(&full_path);
 
-        let expected_manifest_sha =
-            by_suffix_manifest.get(row.suffix).cloned().unwrap_or_default();
+        let expected_manifest_sha = by_suffix_manifest
+            .get(row.suffix)
+            .cloned()
+            .unwrap_or_default();
         let manifest_ok = !expected_manifest_sha.is_empty()
             && sha256_matches(&actual_sha, &expected_manifest_sha);
         let is_mutation = row.suffix.starts_with("mutations/");
         let derivations_ok = if is_mutation {
-            let expected_derivations_sha =
-                by_suffix_derivations.get(row.suffix).cloned().unwrap_or_default();
+            let expected_derivations_sha = by_suffix_derivations
+                .get(row.suffix)
+                .cloned()
+                .unwrap_or_default();
             !expected_derivations_sha.is_empty()
                 && sha256_matches(&actual_sha, &expected_derivations_sha)
         } else {
@@ -822,7 +875,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         let main_set = row.id.starts_with('#');
 
         if !pre_hash_ok {
-            let reason = if actual_sha.is_none() { "absent" } else { "hash mismatch" };
+            let reason = if actual_sha.is_none() {
+                "absent"
+            } else {
+                "hash mismatch"
+            };
             *counts.entry("unrun").or_insert(0) += 1;
             records.push(RowRecord {
                 spec_id: row.id,
@@ -993,14 +1050,24 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         .map(|r| r.spec_id)
         .collect();
     let p1_expected: Vec<&str> = vec!["#2", "#4", "#5", "#11", "#12"];
-    let p1_status = if p1_refusals == p1_expected { "borne out" } else { "not borne out" };
+    let p1_status = if p1_refusals == p1_expected {
+        "borne out"
+    } else {
+        "not borne out"
+    };
 
     let p2_rows: Vec<&str> = records
         .iter()
-        .filter(|r| r.main_set && r.refusal_code.as_deref() == Some("engine.format_default_contradicted"))
+        .filter(|r| {
+            r.main_set && r.refusal_code.as_deref() == Some("engine.format_default_contradicted")
+        })
         .map(|r| r.spec_id)
         .collect();
-    let p2_status = if p2_rows == vec!["#6"] { "borne out" } else { "not borne out" };
+    let p2_status = if p2_rows == vec!["#6"] {
+        "borne out"
+    } else {
+        "not borne out"
+    };
 
     // `axis_provenance` alone is not the row's *primary* provenance class — #8 also carries
     // `axis:format-override` (it has no declared axis either), but its primary class is
@@ -1028,7 +1095,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
 
     // Prediction 4 names the G-A2 workflow this instrument cannot exercise (see this file's own doc
     // comment); §8's `unrun — reason` rule applies rather than a pass-by-omission "borne out".
-    let m1c_verdict = records.iter().find(|r| r.spec_id == "M-1c").map(|r| r.verdict_label);
+    let m1c_verdict = records
+        .iter()
+        .find(|r| r.spec_id == "M-1c")
+        .map(|r| r.verdict_label);
     let p4_status = match m1c_verdict {
         Some("not comparable (different instrument)") => {
             "unrun — this instrument performs one standalone Dataset::open; §4's Brief A text for \
@@ -1049,7 +1119,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         .filter(|r| r.main_set && r.sanity_level.as_deref() == Some("sample"))
         .map(|r| r.spec_id)
         .collect();
-    let p5_status = if p5_sample_rows.is_empty() { "borne out" } else { "not borne out" };
+    let p5_status = if p5_sample_rows.is_empty() {
+        "borne out"
+    } else {
+        "not borne out"
+    };
 
     // Prediction 6 claims a trend across "any wider producer set" (§5's own words); this fixed
     // 17-file corpus carries at most one instance of each path, so a population-level trend is
@@ -1084,15 +1158,21 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
          #8 are not reached by this instrument (see each row's own note, above)";
 
     // ---- Write the GENERATED admission table --------------------------------------------------
-    let repo_root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").canonicalize().expect("repo root");
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .canonicalize()
+        .expect("repo root");
     let commit = git_head(&repo_root);
     let date = today_utc();
 
     let mut out = String::new();
     writeln!(out, "<!-- GENERATED by engine/tests/admission_p4_corpus.rs::the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results -->").unwrap();
     writeln!(out, "<!-- commit: {commit} -->").unwrap();
-    writeln!(out, "<!-- corpus manifest: {CORPUS_ROOT}\\MANIFEST.json sha256:{manifest_sha256} -->").unwrap();
+    writeln!(
+        out,
+        "<!-- corpus manifest: {CORPUS_ROOT}\\MANIFEST.json sha256:{manifest_sha256} -->"
+    )
+    .unwrap();
     writeln!(out, "<!-- generated: {date} -->").unwrap();
     writeln!(out).unwrap();
     writeln!(out, "# Admission table (P4) — GENERATED, never hand-edited").unwrap();
@@ -1113,7 +1193,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
             r.spec_id,
             r.suffix,
             r.pipeline,
-            if r.pre_hash_ok { "match" } else { "MISMATCH/ABSENT" },
+            if r.pre_hash_ok {
+                "match"
+            } else {
+                "MISMATCH/ABSENT"
+            },
             if !r.pre_hash_ok {
                 "n/a"
             } else if r.post_hash_ok {
@@ -1131,7 +1215,14 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(out, "## Notes, by row").unwrap();
     writeln!(out).unwrap();
     for r in &records {
-        writeln!(out, "- **{}** (`{}`): {}", r.spec_id, r.suffix, r.note.replace('\n', " ")).unwrap();
+        writeln!(
+            out,
+            "- **{}** (`{}`): {}",
+            r.spec_id,
+            r.suffix,
+            r.note.replace('\n', " ")
+        )
+        .unwrap();
     }
     writeln!(out).unwrap();
     writeln!(out, "## Totals").unwrap();
@@ -1174,11 +1265,19 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(
         out,
         "| 5 | {p5_status} — sample-level rows (main set): {} |",
-        if p5_sample_rows.is_empty() { "none".to_string() } else { p5_sample_rows.join(", ") },
+        if p5_sample_rows.is_empty() {
+            "none".to_string()
+        } else {
+            p5_sample_rows.join(", ")
+        },
     )
     .unwrap();
     writeln!(out, "| 6 | {p6_status} |").unwrap();
-    writeln!(out, "| §3 rows #3, #8 (boundary-8) | {p_boundary8_status} |").unwrap();
+    writeln!(
+        out,
+        "| §3 rows #3, #8 (boundary-8) | {p_boundary8_status} |"
+    )
+    .unwrap();
 
     let results_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ADMISSION-RESULTS.md");
     std::fs::write(&results_path, &out).expect("write engine/ADMISSION-RESULTS.md");
@@ -1194,7 +1293,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
          written to {}",
         results_path.display()
     );
-    assert_eq!(records.len(), total_rows, "every row produced exactly one record, none skipped");
+    assert_eq!(
+        records.len(),
+        total_rows,
+        "every row produced exactly one record, none skipped"
+    );
     assert_eq!(
         rows_opened + not_run,
         total_rows as u32,
@@ -1205,7 +1308,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     // every row (bytes always differ from themselves under `!=`), so every row is recorded unrun —
     // hash mismatch and `not_run` is 17; `assert_eq!(not_run, 0, ...)` above is what fails — not a
     // setup-time panic — before this `assert!(rows_opened > 0, ...)` is ever reached.
-    assert!(rows_opened > 0, "at least one row must have actually been opened and observed");
+    assert!(
+        rows_opened > 0,
+        "at least one row must have actually been opened and observed"
+    );
     for r in &records {
         if r.pre_hash_ok {
             assert!(
@@ -1217,7 +1323,9 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         }
     }
     assert!(
-        std::fs::metadata(&results_path).map(|m| m.len() > 0).unwrap_or(false),
+        std::fs::metadata(&results_path)
+            .map(|m| m.len() > 0)
+            .unwrap_or(false),
         "engine/ADMISSION-RESULTS.md was written and is non-empty"
     );
 

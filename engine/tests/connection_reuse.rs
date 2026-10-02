@@ -44,13 +44,21 @@ fn write(name: &str, spec: &FixtureSpec) -> (PathBuf, FixtureFacts) {
 }
 
 fn spec() -> FixtureSpec {
-    FixtureSpec { features: 4_000, avg_vertices: 16, ..Default::default() }
+    FixtureSpec {
+        features: 4_000,
+        avg_vertices: 16,
+        ..Default::default()
+    }
 }
 
 /// Big enough that a query is still running some milliseconds in, so a cancellation test cancels
 /// something rather than racing a query that has already finished.
 fn big_spec() -> FixtureSpec {
-    FixtureSpec { features: 40_000, avg_vertices: 64, ..Default::default() }
+    FixtureSpec {
+        features: 40_000,
+        avg_vertices: 64,
+        ..Default::default()
+    }
 }
 
 fn drain_to_end(s: &mut spatial_engine::BatchStream) -> usize {
@@ -85,7 +93,12 @@ fn matches_nothing(facts: &FixtureFacts) -> ViewportQuery {
     let w = e[2] - e[0];
     let h = e[3] - e[1];
     ViewportQuery::viewport(
-        Bbox { xmin: e[2] + w, ymin: e[3] + h, xmax: e[2] + w * 2.0, ymax: e[3] + h * 2.0 },
+        Bbox {
+            xmin: e[2] + w,
+            ymin: e[3] + h,
+            xmax: e[2] + w * 2.0,
+            ymax: e[3] + h * 2.0,
+        },
         "EPSG:2056",
     )
 }
@@ -96,14 +109,20 @@ fn two_sequential_streams_run_on_one_physical_connection() {
     let ds = Dataset::open(&path).expect("open");
 
     // Open itself leased and returned one connection, so nothing is created for the first stream.
-    assert_eq!(ds.connections().physical_connections_created(), 1, "open prepared one");
+    assert_eq!(
+        ds.connections().physical_connections_created(),
+        1,
+        "open prepared one"
+    );
     assert_eq!(ds.connections().idle_connections(), 1, "and kept it");
 
     let mut first = ds.stream(&ViewportQuery::all()).expect("first stream");
     let first_facts = first.connection_facts();
     assert_eq!(drain_to_end(&mut first), facts.features);
     drop(first);
-    until("the first stream's lease to come back", || ds.connections().idle_connections() == 1);
+    until("the first stream's lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let mut second = ds.stream(&ViewportQuery::all()).expect("second stream");
     let second_facts = second.connection_facts();
@@ -113,11 +132,18 @@ fn two_sequential_streams_run_on_one_physical_connection() {
         first_facts.physical_id, second_facts.physical_id,
         "two sequential streams must run on the same physical connection"
     );
-    assert_eq!(first_facts.lease_generation, 2, "open was generation 1; the first stream is 2");
+    assert_eq!(
+        first_facts.lease_generation, 2,
+        "open was generation 1; the first stream is 2"
+    );
     assert_eq!(second_facts.lease_generation, 3);
     assert!(first_facts.reused_an_existing_connection);
     assert!(second_facts.reused_an_existing_connection);
-    assert_eq!(ds.connections().physical_connections_created(), 1, "nothing created after open");
+    assert_eq!(
+        ds.connections().physical_connections_created(),
+        1,
+        "nothing created after open"
+    );
 }
 
 #[test]
@@ -136,13 +162,20 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
     let mut warm = ds.stream(&ViewportQuery::all()).expect("warm-up stream");
     assert_eq!(drain_to_end(&mut warm), facts.features);
     drop(warm);
-    until("the warm-up lease to come back", || ds.connections().idle_connections() == 1);
+    until("the warm-up lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let cancel = CancelToken::new();
-    let mut stream = ds.stream_with_cancel(&matches_nothing(&facts), cancel.clone()).expect("stream");
+    let mut stream = ds
+        .stream_with_cancel(&matches_nothing(&facts), cancel.clone())
+        .expect("stream");
     let f = stream.connection_facts();
     assert_eq!(f.lease_generation, 3, "generation exercised: 3");
-    assert!(f.reused_an_existing_connection, "this test needs a recycled connection");
+    assert!(
+        f.reused_an_existing_connection,
+        "this test needs a recycled connection"
+    );
     assert!(
         cancel.is_bound(),
         "a recycled connection's interrupt handle must reach the token, or cancellation degrades \
@@ -166,7 +199,10 @@ fn cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_
             "the scan completed before the cancel was issued, so this trial says nothing about \
              cancellation. It is reported as inconclusive rather than counted as a pass"
         ),
-        other => panic!("expected a cancelled terminal, got {:?}", other.map(|r| r.map(|_| ()))),
+        other => panic!(
+            "expected a cancelled terminal, got {:?}",
+            other.map(|r| r.map(|_| ()))
+        ),
     }
 }
 
@@ -179,15 +215,26 @@ fn midstream_cancellation_still_stops_the_producer_on_a_recycled_connection() {
     let mut warm = ds.stream(&ViewportQuery::all()).expect("warm-up stream");
     assert_eq!(drain_to_end(&mut warm), facts.features);
     drop(warm);
-    until("the warm-up lease to come back", || ds.connections().idle_connections() == 1);
+    until("the warm-up lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let cancel = CancelToken::new();
-    let mut stream = ds.stream_with_cancel(&ViewportQuery::all(), cancel.clone()).expect("stream");
-    assert_eq!(stream.connection_facts().lease_generation, 3, "generation exercised: 3");
+    let mut stream = ds
+        .stream_with_cancel(&ViewportQuery::all(), cancel.clone())
+        .expect("stream");
+    assert_eq!(
+        stream.connection_facts().lease_generation,
+        3,
+        "generation exercised: 3"
+    );
     assert!(cancel.is_bound());
 
     let mut buf = Vec::new();
-    let first = stream.next_into(&mut buf).expect("a first batch").expect("batch");
+    let first = stream
+        .next_into(&mut buf)
+        .expect("a first batch")
+        .expect("batch");
     assert!(first.rows > 0);
     buf.clear();
     cancel.cancel();
@@ -228,24 +275,38 @@ fn a_query_after_a_cancellation_completes_on_a_replaced_connection() {
     let mut warm = ds.stream(&ViewportQuery::all()).expect("warm-up");
     assert_eq!(drain_to_end(&mut warm), facts.features);
     drop(warm);
-    until("the warm-up lease to come back", || ds.connections().idle_connections() == 1);
+    until("the warm-up lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let cancel = CancelToken::new();
-    let cancelled = ds.stream_with_cancel(&ViewportQuery::all(), cancel.clone()).expect("stream");
+    let cancelled = ds
+        .stream_with_cancel(&ViewportQuery::all(), cancel.clone())
+        .expect("stream");
     let cancelled_facts = cancelled.connection_facts();
-    assert_eq!(cancelled_facts.lease_generation, 3, "generation exercised: 3");
+    assert_eq!(
+        cancelled_facts.lease_generation, 3,
+        "generation exercised: 3"
+    );
     cancel.cancel();
     drop(cancelled);
 
-    until("the cancelled lease to be released", || ds.connections().active_leases() == 0);
+    until("the cancelled lease to be released", || {
+        ds.connections().active_leases() == 0
+    });
     assert_eq!(
         ds.connections().idle_connections(),
         0,
         "a connection whose query was interrupted must not be returned to the pool"
     );
-    assert!(!cancel.is_bound(), "a cancelled token must not stay attached to anything");
+    assert!(
+        !cancel.is_bound(),
+        "a cancelled token must not stay attached to anything"
+    );
 
-    let mut next = ds.stream(&ViewportQuery::all()).expect("a query after a cancellation");
+    let mut next = ds
+        .stream(&ViewportQuery::all())
+        .expect("a query after a cancellation");
     let next_facts = next.connection_facts();
     assert_ne!(
         next_facts.physical_id, cancelled_facts.physical_id,
@@ -264,7 +325,9 @@ fn two_concurrent_streams_hold_separate_leases_and_cancelling_one_leaves_the_oth
     let ds = Dataset::open(&path).expect("open");
 
     let cancel_a = CancelToken::new();
-    let mut a = ds.stream_with_cancel(&ViewportQuery::all(), cancel_a.clone()).expect("stream a");
+    let mut a = ds
+        .stream_with_cancel(&ViewportQuery::all(), cancel_a.clone())
+        .expect("stream a");
     let mut b = ds.stream(&ViewportQuery::all()).expect("stream b");
     assert_ne!(
         a.connection_facts().physical_id,
@@ -276,9 +339,15 @@ fn two_concurrent_streams_hold_separate_leases_and_cancelling_one_leaves_the_oth
     // Pull one batch from each, so both are genuinely running when the cancel arrives. B's first
     // batch counts toward its total — it is part of the result B must still deliver in full.
     let mut buf = Vec::new();
-    a.next_into(&mut buf).expect("a batch from a").expect("batch");
+    a.next_into(&mut buf)
+        .expect("a batch from a")
+        .expect("batch");
     buf.clear();
-    let mut b_rows = b.next_into(&mut buf).expect("a batch from b").expect("batch").rows;
+    let mut b_rows = b
+        .next_into(&mut buf)
+        .expect("a batch from b")
+        .expect("batch")
+        .rows;
     buf.clear();
 
     cancel_a.cancel();
@@ -286,10 +355,15 @@ fn two_concurrent_streams_hold_separate_leases_and_cancelling_one_leaves_the_oth
     // B completes in full. This is the assertion that matters: one stream's cancellation is not
     // another's.
     while let Some(item) = b.next_into(&mut buf) {
-        b_rows += item.expect("b must not be affected by a's cancellation").rows;
+        b_rows += item
+            .expect("b must not be affected by a's cancellation")
+            .rows;
         buf.clear();
     }
-    assert_eq!(b_rows, facts.features, "the untouched stream delivers its whole result");
+    assert_eq!(
+        b_rows, facts.features,
+        "the untouched stream delivers its whole result"
+    );
     drop(a);
 }
 
@@ -299,19 +373,28 @@ fn dropping_a_stream_releases_its_lease_and_detaches_the_interrupt_handle() {
     let ds = Dataset::open(&path).expect("open");
 
     let cancel = CancelToken::new();
-    let stream = ds.stream_with_cancel(&ViewportQuery::all(), cancel.clone()).expect("stream");
+    let stream = ds
+        .stream_with_cancel(&ViewportQuery::all(), cancel.clone())
+        .expect("stream");
     assert_eq!(ds.connections().active_leases(), 1);
     assert!(cancel.is_bound());
     drop(stream);
 
-    until("the abandoned stream's lease to be released", || ds.connections().active_leases() == 0);
+    until("the abandoned stream's lease to be released", || {
+        ds.connections().active_leases() == 0
+    });
     // **Detached, not merely finished.** `CancelToken::detach` exists so a later `cancel()` cannot
     // poke a connection that has been handed back — which is precisely the hazard reuse creates,
     // because the connection now outlives the stream that used it.
-    assert!(!cancel.is_bound(), "the interrupt handle must be released with the lease");
+    assert!(
+        !cancel.is_bound(),
+        "the interrupt handle must be released with the lease"
+    );
 
     // And the dataset still serves: abandoning a stream must not cost the pool its capacity.
-    let mut next = ds.stream(&ViewportQuery::all()).expect("the dataset still serves");
+    let mut next = ds
+        .stream(&ViewportQuery::all())
+        .expect("the dataset still serves");
     assert!(drain_to_end(&mut next) > 0);
 }
 
@@ -330,7 +413,10 @@ fn capacity_exhaustion_is_a_typed_refusal_rather_than_a_queue() {
 
     let mut held = Vec::new();
     for i in 0..MAX_STREAM_CONNECTIONS {
-        held.push(ds.stream(&ViewportQuery::all()).unwrap_or_else(|e| panic!("stream {i}: {e}")));
+        held.push(
+            ds.stream(&ViewportQuery::all())
+                .unwrap_or_else(|e| panic!("stream {i}: {e}")),
+        );
     }
     match ds.stream(&ViewportQuery::all()) {
         Err(EngineError::ConnectionsExhausted { class, capacity }) => {
@@ -358,20 +444,29 @@ fn the_measurement_control_creates_a_connection_for_every_query() {
     let (path, facts) = write("control", &spec());
     let ds =
         Dataset::open_with_connections(&path, None, PoolConfig::fresh_per_query()).expect("open");
-    assert_eq!(ds.connections().idle_connections(), 0, "nothing is kept from open");
+    assert_eq!(
+        ds.connections().idle_connections(),
+        0,
+        "nothing is kept from open"
+    );
 
     let mut a = ds.stream(&ViewportQuery::all()).expect("a");
     let a_facts = a.connection_facts();
     assert_eq!(drain_to_end(&mut a), facts.features);
     drop(a);
-    until("a's lease to be released", || ds.connections().active_leases() == 0);
+    until("a's lease to be released", || {
+        ds.connections().active_leases() == 0
+    });
 
     let mut b = ds.stream(&ViewportQuery::all()).expect("b");
     let b_facts = b.connection_facts();
     assert_eq!(drain_to_end(&mut b), facts.features);
 
     assert_ne!(a_facts.physical_id, b_facts.physical_id);
-    assert_eq!(a_facts.lease_generation, 1, "every lease is a first lease when nothing is kept");
+    assert_eq!(
+        a_facts.lease_generation, 1,
+        "every lease is a first lease when nothing is kept"
+    );
     assert_eq!(b_facts.lease_generation, 1);
     assert!(!a_facts.reused_an_existing_connection);
     assert!(!b_facts.reused_an_existing_connection);
@@ -398,16 +493,32 @@ fn a_connection_that_skipped_the_identity_scan_is_still_safe_to_reuse() {
     declaration.skip_uniqueness_check = true;
     let ds = Dataset::open_with_declared_identity(&path, declaration, &CancelToken::new())
         .expect("open");
-    assert_eq!(ds.connections().idle_connections(), 1, "the connection was verified and kept");
+    assert_eq!(
+        ds.connections().idle_connections(),
+        1,
+        "the connection was verified and kept"
+    );
 
-    let mut first = ds.stream(&ViewportQuery::all()).expect("first stream after a skipped scan");
-    assert_eq!(first.connection_facts().lease_generation, 2, "generation exercised: 2");
+    let mut first = ds
+        .stream(&ViewportQuery::all())
+        .expect("first stream after a skipped scan");
+    assert_eq!(
+        first.connection_facts().lease_generation,
+        2,
+        "generation exercised: 2"
+    );
     assert_eq!(drain_to_end(&mut first), facts.features);
     drop(first);
-    until("the lease to come back", || ds.connections().idle_connections() == 1);
+    until("the lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let mut second = ds.stream(&ViewportQuery::all()).expect("second stream");
-    assert_eq!(drain_to_end(&mut second), facts.features, "and the one after it");
+    assert_eq!(
+        drain_to_end(&mut second),
+        facts.features,
+        "and the one after it"
+    );
 }
 
 #[test]
@@ -422,7 +533,10 @@ fn dropping_the_dataset_closes_its_idle_connections() {
     let ds = Dataset::open(&path).expect("open");
     let watch = std::sync::Arc::downgrade(ds.connections());
     assert_eq!(
-        watch.upgrade().expect("alive while the dataset is").idle_connections(),
+        watch
+            .upgrade()
+            .expect("alive while the dataset is")
+            .idle_connections(),
         1,
         "open left one configured connection ready"
     );
@@ -445,12 +559,19 @@ fn a_lease_in_flight_keeps_the_pool_alive_after_the_dataset_is_dropped() {
     let watch = std::sync::Arc::downgrade(ds.connections());
 
     let cancel = CancelToken::new();
-    let stream = ds.stream_with_cancel(&ViewportQuery::all(), cancel.clone()).expect("stream");
+    let stream = ds
+        .stream_with_cancel(&ViewportQuery::all(), cancel.clone())
+        .expect("stream");
     drop(ds);
-    assert!(watch.upgrade().is_some(), "a lease in flight keeps the pool alive");
+    assert!(
+        watch.upgrade().is_some(),
+        "a lease in flight keeps the pool alive"
+    );
 
     drop(stream);
-    until("the last lease to be released", || watch.upgrade().is_none());
+    until("the last lease to be released", || {
+        watch.upgrade().is_none()
+    });
 }
 
 #[test]
@@ -471,15 +592,29 @@ fn a_bbox_query_on_a_reused_connection_returns_what_it_always_did() {
     let mut first = ds.stream(&q).expect("first");
     let expected = drain_to_end(&mut first);
     drop(first);
-    until("the lease to come back", || ds.connections().idle_connections() == 1);
+    until("the lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let mut whole = ds.stream(&ViewportQuery::all()).expect("whole");
     assert_eq!(drain_to_end(&mut whole), facts.features);
     drop(whole);
-    until("the lease to come back", || ds.connections().idle_connections() == 1);
+    until("the lease to come back", || {
+        ds.connections().idle_connections() == 1
+    });
 
     let mut third = ds.stream(&q).expect("third");
-    assert!(third.connection_facts().lease_generation >= 4, "generation exercised: 4 or more");
-    assert_eq!(drain_to_end(&mut third), expected, "the same viewport must select the same rows");
-    assert!(expected > 0 && expected < facts.features, "the viewport must actually narrow");
+    assert!(
+        third.connection_facts().lease_generation >= 4,
+        "generation exercised: 4 or more"
+    );
+    assert_eq!(
+        drain_to_end(&mut third),
+        expected,
+        "the same viewport must select the same rows"
+    );
+    assert!(
+        expected > 0 && expected < facts.features,
+        "the viewport must actually narrow"
+    );
 }

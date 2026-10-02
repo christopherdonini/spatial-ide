@@ -71,19 +71,36 @@ async fn connect(dp: &RunningDataPlane) -> Client {
     let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
         .into_client_request()
         .unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 async fn open_stream(dp: &RunningDataPlane, credit: u32) -> Client {
     let mut c = connect(dp).await;
-    let p = StreamParams { dataset: DATASET.into(), bbox: None, bbox_crs: None, limit: None };
-    let f = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &p.encode()));
+    let p = StreamParams {
+        dataset: DATASET.into(),
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+    };
+    let f = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &p.encode()),
+    );
     c.send(Message::Binary(f.into())).await.expect("start");
     let g = wire::frame(wire::TAG_CREDIT, &credit.to_be_bytes());
     c.send(Message::Binary(g.into())).await.expect("credit");
@@ -92,18 +109,29 @@ async fn open_stream(dp: &RunningDataPlane, credit: u32) -> Client {
 
 fn coord_bits_of(payload: &[u8]) -> (u64, usize) {
     use arrow::array::{Array, FixedSizeListArray, Float64Array, ListArray};
-    let mut rdr =
-        arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None).expect("ipc");
+    let mut rdr = arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(payload), None)
+        .expect("ipc");
     let batch = rdr.next().expect("batch").expect("decode");
-    let polys = batch.column(1).as_any().downcast_ref::<ListArray>().expect("polygons");
+    let polys = batch
+        .column(1)
+        .as_any()
+        .downcast_ref::<ListArray>()
+        .expect("polygons");
     let mut acc = 0u64;
     for p in 0..polys.len() {
         let rings = polys.value(p);
         let rings = rings.as_any().downcast_ref::<ListArray>().expect("rings");
         for r in 0..rings.len() {
             let verts = rings.value(r);
-            let verts = verts.as_any().downcast_ref::<FixedSizeListArray>().expect("vertices");
-            let flat = verts.values().as_any().downcast_ref::<Float64Array>().expect("xy");
+            let verts = verts
+                .as_any()
+                .downcast_ref::<FixedSizeListArray>()
+                .expect("vertices");
+            let flat = verts
+                .values()
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .expect("xy");
             for v in 0..verts.len() {
                 acc ^= flat.value(v * 2).to_bits().rotate_left(1) ^ flat.value(v * 2 + 1).to_bits();
             }
@@ -136,11 +164,17 @@ async fn pump(
         let msg = match tokio::time::timeout(RECV_DEADLINE, c.next()).await {
             Ok(Some(Ok(m))) => m,
             Ok(Some(Err(e))) => {
-                eprintln!("stream ended with a transport error after {} batches: {e}", run.batches);
+                eprintln!(
+                    "stream ended with a transport error after {} batches: {e}",
+                    run.batches
+                );
                 break;
             }
             Ok(None) => {
-                eprintln!("stream ended with no terminal after {} batches", run.batches);
+                eprintln!(
+                    "stream ended with no terminal after {} batches",
+                    run.batches
+                );
                 break;
             }
             Err(_) => panic!(
@@ -220,7 +254,12 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
     let path = dir.join("concurrency.parquet");
     let facts: FixtureFacts = write_geoparquet(
         &path,
-        &FixtureSpec { features: FEATURES, avg_vertices: 24, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features: FEATURES,
+            avg_vertices: 24,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("fixture");
 
@@ -265,7 +304,10 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
 
     let cancel_sent_at = Instant::now();
     let cf = wire::frame(wire::TAG_CANCEL, &[]);
-    superseded.send(Message::Binary(cf.into())).await.expect("cancel");
+    superseded
+        .send(Message::Binary(cf.into()))
+        .await
+        .expect("cancel");
 
     // Both are read to their terminals concurrently — the survivor must not be blocked by the
     // teardown of the stream that was cancelled.
@@ -281,11 +323,18 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
     let canary_after = canary_ms();
 
     // ---- What must hold regardless of any timing --------------------------------------------
-    assert_eq!(super_run.terminal, Some(wire::TERM_CANCELLED), "the superseded stream is cancelled");
-    assert_eq!(survivor_run.terminal, Some(wire::TERM_COMPLETED), "the survivor completes");
     assert_eq!(
-        survivor_run.rows,
-        facts.features,
+        super_run.terminal,
+        Some(wire::TERM_CANCELLED),
+        "the superseded stream is cancelled"
+    );
+    assert_eq!(
+        survivor_run.terminal,
+        Some(wire::TERM_COMPLETED),
+        "the survivor completes"
+    );
+    assert_eq!(
+        survivor_run.rows, facts.features,
         "the survivor delivers the whole result while its peer was cancelled underneath it"
     );
     assert_eq!(
@@ -313,7 +362,8 @@ async fn superseded_query_cancel_while_a_second_stream_continues() {
     assert!(cancelled_state.batches_after_cancel() <= 1);
 
     // ---- The record -------------------------------------------------------------------------
-    let out_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/slice-evidence");
+    let out_dir =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/slice-evidence");
     std::fs::create_dir_all(&out_dir).expect("evidence dir");
     let artifact = out_dir.join("concurrency-in-situ.json");
 
@@ -376,7 +426,14 @@ async fn the_admission_slot_is_released_when_the_stream_ends_not_when_the_peer_l
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures");
     std::fs::create_dir_all(&dir).expect("dir");
     let path = dir.join("admission.parquet");
-    write_geoparquet(&path, &FixtureSpec { features: 1_000, ..Default::default() }).expect("fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 1_000,
+            ..Default::default()
+        },
+    )
+    .expect("fixture");
 
     let catalog = Catalog::new();
     catalog.open(DATASET, &path, None).expect("open");
@@ -403,9 +460,12 @@ async fn the_admission_slot_is_released_when_the_stream_ends_not_when_the_peer_l
     let mut extra = open_stream(&dp, 64).await;
     let t = Instant::now();
     let mut run = new_run();
-    tokio::time::timeout(Duration::from_secs(30), pump(&mut extra, &mut run, t, 64, None))
-        .await
-        .expect("a new stream is admitted while finished peers linger");
+    tokio::time::timeout(
+        Duration::from_secs(30),
+        pump(&mut extra, &mut run, t, 64, None),
+    )
+    .await
+    .expect("a new stream is admitted while finished peers linger");
     assert_eq!(run.terminal, Some(wire::TERM_COMPLETED));
     assert_eq!(dp.registry.refusals(), 0);
 

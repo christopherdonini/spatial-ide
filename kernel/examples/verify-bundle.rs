@@ -64,7 +64,10 @@ struct Failure {
 }
 
 fn fail(state: &'static str, detail: impl Into<String>) -> Failure {
-    Failure { state, detail: detail.into() }
+    Failure {
+        state,
+        detail: detail.into(),
+    }
 }
 
 fn main() -> std::process::ExitCode {
@@ -97,7 +100,14 @@ fn main() -> std::process::ExitCode {
         Ok(s) => (true, s.clone()),
         Err(f) => {
             eprintln!("[verify] FAILED {}: {}", f.state, f.detail);
-            (false, Summary { state: f.state, detail: f.detail.clone(), ..Default::default() })
+            (
+                false,
+                Summary {
+                    state: f.state,
+                    detail: f.detail.clone(),
+                    ..Default::default()
+                },
+            )
         }
     };
 
@@ -126,12 +136,19 @@ fn main() -> std::process::ExitCode {
             summary.manifest_hash,
         );
         if let Err(e) = std::fs::write(&path, json) {
-            eprintln!("[verify] the summary could not be written to {}: {e}", path.display());
+            eprintln!(
+                "[verify] the summary could not be written to {}: {e}",
+                path.display()
+            );
             return std::process::ExitCode::FAILURE;
         }
     }
 
-    if ok { std::process::ExitCode::SUCCESS } else { std::process::ExitCode::FAILURE }
+    if ok {
+        std::process::ExitCode::SUCCESS
+    } else {
+        std::process::ExitCode::FAILURE
+    }
 }
 
 #[derive(Clone, Default)]
@@ -148,19 +165,29 @@ struct Summary {
 fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
     // ---- manifest ------------------------------------------------------------------------------
     let manifest_path = bundle.join(spatial_kernel::bundle::MANIFEST_PATH);
-    let manifest_bytes = std::fs::read(&manifest_path)
-        .map_err(|e| fail("manifest-unreachable", format!("{}: {e}", manifest_path.display())))?;
+    let manifest_bytes = std::fs::read(&manifest_path).map_err(|e| {
+        fail(
+            "manifest-unreachable",
+            format!("{}: {e}", manifest_path.display()),
+        )
+    })?;
     let manifest_hash = sha256_hex(&manifest_bytes);
     let m: serde_json::Value = serde_json::from_slice(&manifest_bytes)
         .map_err(|e| fail("manifest-unparseable", e.to_string()))?;
 
-    let version = m["bundle_version"]
-        .as_i64()
-        .ok_or_else(|| fail("manifest-schema-invalid", "bundle_version is not an integer"))?;
+    let version = m["bundle_version"].as_i64().ok_or_else(|| {
+        fail(
+            "manifest-schema-invalid",
+            "bundle_version is not an integer",
+        )
+    })?;
     if version != spatial_kernel::bundle::BUNDLE_VERSION {
         return Err(fail(
             "manifest-unsupported-version",
-            format!("bundle_version {version}; this reader implements {}", spatial_kernel::bundle::BUNDLE_VERSION),
+            format!(
+                "bundle_version {version}; this reader implements {}",
+                spatial_kernel::bundle::BUNDLE_VERSION
+            ),
         ));
     }
 
@@ -175,7 +202,12 @@ fn verify(bundle: &Path, quiet: bool) -> Result<Summary, Failure> {
         .map_err(|e| fail("asset-missing", format!("{}: {e}", style_path.display())))?;
     let declared_style_hash = m["style"]["resource"]["content_hash"]
         .as_str()
-        .ok_or_else(|| fail("manifest-schema-invalid", "style.resource.content_hash is absent"))?;
+        .ok_or_else(|| {
+            fail(
+                "manifest-schema-invalid",
+                "style.resource.content_hash is absent",
+            )
+        })?;
     if sha256_hex(&style_bytes) != declared_style_hash {
         return Err(fail("asset-hash-mismatch", "style.json"));
     }
@@ -331,9 +363,14 @@ fn admit_asset_path(asset: &serde_json::Value) -> Result<String, Failure> {
         || rel.starts_with('/')
         || rel.contains('\\')
         || rel.contains(':')
-        || rel.split('/').any(|c| c == ".." || c == "." || c.is_empty());
+        || rel
+            .split('/')
+            .any(|c| c == ".." || c == "." || c.is_empty());
     if bad {
-        return Err(fail("manifest-schema-invalid", format!("unsafe asset path `{rel}`")));
+        return Err(fail(
+            "manifest-schema-invalid",
+            format!("unsafe asset path `{rel}`"),
+        ));
     }
     Ok(rel)
 }
@@ -353,18 +390,24 @@ fn check_bytes_and_hash(
     asset: &serde_json::Value,
     mismatch_state: &'static str,
 ) -> Result<(), Failure> {
-    let declared_bytes = asset["bytes"].as_u64().ok_or_else(|| {
-        fail("manifest-schema-invalid", format!("{rel}: bytes is absent"))
-    })?;
+    let declared_bytes = asset["bytes"]
+        .as_u64()
+        .ok_or_else(|| fail("manifest-schema-invalid", format!("{rel}: bytes is absent")))?;
     if payload.len() as u64 != declared_bytes {
         return Err(fail(
             mismatch_state,
-            format!("{rel}: {} bytes on disk, {declared_bytes} declared", payload.len()),
+            format!(
+                "{rel}: {} bytes on disk, {declared_bytes} declared",
+                payload.len()
+            ),
         ));
     }
-    let declared_hash = asset["content_hash"]
-        .as_str()
-        .ok_or_else(|| fail("manifest-schema-invalid", format!("{rel}: content_hash is absent")))?;
+    let declared_hash = asset["content_hash"].as_str().ok_or_else(|| {
+        fail(
+            "manifest-schema-invalid",
+            format!("{rel}: content_hash is absent"),
+        )
+    })?;
     if sha256_hex(payload) != declared_hash {
         return Err(fail("asset-hash-mismatch", rel.to_string()));
     }
@@ -390,18 +433,27 @@ fn verify_partition(
 
     // ADR-010 rule 1: the buffer says what space it is in.
     if get("frame") != "authoritative-project-crs" {
-        return Err(fail("envelope-frame-mismatch", format!("{rel}: frame `{}`", get("frame"))));
+        return Err(fail(
+            "envelope-frame-mismatch",
+            format!("{rel}: frame `{}`", get("frame")),
+        ));
     }
     if get("crs") != manifest_crs {
         return Err(fail(
             "envelope-crs-mismatch",
-            format!("{rel}: envelope `{}`, manifest `{manifest_crs}`", get("crs")),
+            format!(
+                "{rel}: envelope `{}`, manifest `{manifest_crs}`",
+                get("crs")
+            ),
         ));
     }
     if get("axis_order") != manifest_axis {
         return Err(fail(
             "envelope-axis-order-mismatch",
-            format!("{rel}: envelope `{}`, manifest `{manifest_axis}`", get("axis_order")),
+            format!(
+                "{rel}: envelope `{}`, manifest `{manifest_axis}`",
+                get("axis_order")
+            ),
         ));
     }
     if !get("geometry_encoding").starts_with("geoarrow.") {
@@ -416,7 +468,10 @@ fn verify_partition(
     // Fails closed:  turned an unparseable list into , which passes
     // whenever the manifest declares no attributes -- exactly this pass's configuration.
     let declared: Vec<String> = serde_json::from_str(get("attribute_columns")).map_err(|e| {
-        fail("envelope-attributes-mismatch", format!("{rel}: attribute_columns is unparseable: {e}"))
+        fail(
+            "envelope-attributes-mismatch",
+            format!("{rel}: attribute_columns is unparseable: {e}"),
+        )
     })?;
     if declared != declared_attributes {
         return Err(fail(

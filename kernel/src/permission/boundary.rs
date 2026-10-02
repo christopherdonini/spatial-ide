@@ -109,7 +109,7 @@ use crate::publish::{
 use super::approval::{self, ApprovalPrompt, ApprovalSource};
 use super::audit::log::is_inside as log_is_inside;
 use super::audit::{
-    ApprovalRoute, AuditLog, IntentRecord, Outcome, OutcomeRecord, normalize_destination,
+    normalize_destination, ApprovalRoute, AuditLog, IntentRecord, Outcome, OutcomeRecord,
 };
 use super::error::{AuditError, PermissionError};
 use super::grant::{
@@ -144,7 +144,11 @@ pub enum BoundaryError {
     /// Carries the outcome whole, because reporting only the audit failure would lose the fact that
     /// a bundle now exists on disk — and a caller who was told "audit failed" and not "you published
     /// something" has been told the less important half.
-    OutcomeNotAudited { outcome: Box<PublishOutcome>, path: String, detail: String },
+    OutcomeNotAudited {
+        outcome: Box<PublishOutcome>,
+        path: String,
+        detail: String,
+    },
 }
 
 impl std::fmt::Display for BoundaryError {
@@ -526,9 +530,15 @@ mod tests {
 
     #[test]
     fn the_confirmation_phrase_is_the_final_component() {
-        assert_eq!(confirmation_phrase(std::path::Path::new("/a/b/parcels-2026")), "parcels-2026");
+        assert_eq!(
+            confirmation_phrase(std::path::Path::new("/a/b/parcels-2026")),
+            "parcels-2026"
+        );
         #[cfg(windows)]
-        assert_eq!(confirmation_phrase(std::path::Path::new(r"D:\maps\out")), "out");
+        assert_eq!(
+            confirmation_phrase(std::path::Path::new(r"D:\maps\out")),
+            "out"
+        );
     }
 
     /// A cleanup failure carries **two** facts, and the record keeps both: `outcome` describes what
@@ -542,7 +552,11 @@ mod tests {
             (PublishError::Cancelled, Outcome::Cancelled),
             (PublishError::SourceNotPinned, Outcome::Refused),
             (
-                PublishError::Io { context: "x".into(), raw_os_error: None, detail: "y".into() },
+                PublishError::Io {
+                    context: "x".into(),
+                    raw_os_error: None,
+                    detail: "y".into(),
+                },
                 Outcome::Failed,
             ),
         ] {

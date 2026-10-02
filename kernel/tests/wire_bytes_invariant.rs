@@ -63,7 +63,12 @@ fn fixture() -> std::path::PathBuf {
     let path = dir.join("wire-bytes-invariant.parquet");
     write_geoparquet(
         &path,
-        &FixtureSpec { features: FEATURES, avg_vertices: 24, hole_every: 7, ..Default::default() },
+        &FixtureSpec {
+            features: FEATURES,
+            avg_vertices: 24,
+            hole_every: 7,
+            ..Default::default()
+        },
     )
     .expect("write fixture");
     path
@@ -85,13 +90,22 @@ async fn connect(dp: &RunningDataPlane) -> Client {
     let mut req = format!("ws://127.0.0.1:{}/stream", dp.addr.port())
         .into_client_request()
         .unwrap();
-    req.headers_mut()
-        .insert("origin", format!("http://127.0.0.1:{}", dp.addr.port()).parse().unwrap());
+    req.headers_mut().insert(
+        "origin",
+        format!("http://127.0.0.1:{}", dp.addr.port())
+            .parse()
+            .unwrap(),
+    );
     req.headers_mut().insert(
         "sec-websocket-protocol",
-        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery()).parse().unwrap(),
+        format!("{SUBPROTOCOL}, tok.{}", dp.session.token_for_delivery())
+            .parse()
+            .unwrap(),
     );
-    tokio_tungstenite::connect_async(req).await.expect("connect").0
+    tokio_tungstenite::connect_async(req)
+        .await
+        .expect("connect")
+        .0
 }
 
 /// One emitted frame, kept whole so the comparison is over bytes rather than over a summary.
@@ -106,15 +120,24 @@ async fn collect_frames(path: &std::path::Path) -> Vec<Frame> {
     let dp = host(path).await;
     let mut c = connect(&dp).await;
 
-    let params =
-        StreamParams { dataset: DATASET.into(), bbox: None, bbox_crs: None, limit: None };
-    let start = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, &params.encode()));
+    let params = StreamParams {
+        dataset: DATASET.into(),
+        bbox: None,
+        bbox_crs: None,
+        limit: None,
+    };
+    let start = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, &params.encode()),
+    );
     c.send(Message::Binary(start.into())).await.expect("start");
     // **One lump of credit, granted before anything arrives.** A schedule that reacts to arrivals
     // would couple the framing to consumer timing, and the two runs could then differ for a reason
     // that is not tracing.
     let credit = wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes());
-    c.send(Message::Binary(credit.into())).await.expect("credit");
+    c.send(Message::Binary(credit.into()))
+        .await
+        .expect("credit");
 
     let mut frames = Vec::new();
     loop {
@@ -125,13 +148,17 @@ async fn collect_frames(path: &std::path::Path) -> Vec<Frame> {
         };
         let Message::Binary(b) = msg else { continue };
         let tag = b[0];
-        frames.push(Frame { tag, bytes: b.to_vec() });
+        frames.push(Frame {
+            tag,
+            bytes: b.to_vec(),
+        });
         if tag == wire::TAG_TERMINAL {
             break;
         }
     }
     assert_eq!(
-        dp.json_frames_seen.load(std::sync::atomic::Ordering::SeqCst),
+        dp.json_frames_seen
+            .load(std::sync::atomic::Ordering::SeqCst),
         0,
         "no JSON may appear on the data path, traced or not"
     );
@@ -143,7 +170,10 @@ async fn tracing_changes_no_byte_on_the_wire() {
     let path = fixture();
 
     // Untraced first, so the traced run cannot be the one that establishes the baseline shape.
-    assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+    assert!(
+        !trace::is_enabled(),
+        "tracing is off unless a trace is started"
+    );
     let untraced = collect_frames(&path).await;
 
     let guard = trace::start(TraceKey {
@@ -155,8 +185,12 @@ async fn tracing_changes_no_byte_on_the_wire() {
     .expect("no other trace is running");
     assert!(trace::is_enabled(), "the traced run really is traced");
     let traced = collect_frames(&path).await;
-    let traced_batches =
-        guard.trace().events().iter().filter(|e| e.name == trace::BATCH_FULL).count();
+    let traced_batches = guard
+        .trace()
+        .events()
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .count();
     drop(guard);
 
     // If the traced run recorded nothing, the comparison is vacuous — two untraced runs would of
@@ -188,7 +222,10 @@ async fn tracing_changes_no_byte_on_the_wire() {
     );
 
     for (i, (a, b)) in untraced.iter().zip(traced.iter()).enumerate() {
-        assert_eq!(a.tag, b.tag, "frame {i}: tag differs between the traced and untraced runs");
+        assert_eq!(
+            a.tag, b.tag,
+            "frame {i}: tag differs between the traced and untraced runs"
+        );
 
         if a.tag == wire::TAG_OPEN {
             // **The one exclusion, and why.** OPEN's payload is `"{operation_id} {stream_id}"`,
@@ -250,11 +287,18 @@ fn projected_fixture() -> std::path::PathBuf {
 async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
     let handle: spatial_skp::v0::DatasetHandle = PROJECTED_DATASET_HANDLE.parse().unwrap();
     let catalog = Arc::new(Catalog::new());
-    catalog.open(handle.as_str(), path, None).expect("open dataset");
+    catalog
+        .open(handle.as_str(), path, None)
+        .expect("open dataset");
     let tickets = StreamRegistry::new();
-    let host =
-        SkpHost::new(catalog.clone(), tickets.clone(), watch_support::no_watch_arm(), session_end_channel().0);
-    host.generations().mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
+    let host = SkpHost::new(
+        catalog.clone(),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    host.generations()
+        .mint_for_open(handle.as_str(), spatial_skp::v0::SessionRef::mint());
 
     let ticket = host
         .viewport_query(ViewportQueryRequest {
@@ -269,7 +313,11 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
         .expect("a declared projection over a real Float64/Utf8 pair must admit");
 
     let dp = spatial_data_plane::serve(DataPlaneConfig {
-        factory: Arc::new(EngineSourceFactory::ticket_only(catalog, tickets, host.generations())),
+        factory: Arc::new(EngineSourceFactory::ticket_only(
+            catalog,
+            tickets,
+            host.generations(),
+        )),
         static_dir: None,
         expected_origin: None,
     })
@@ -277,10 +325,15 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
     .expect("serve");
     let mut c = connect(&dp).await;
 
-    let start = wire::frame(wire::TAG_START, &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()));
+    let start = wire::frame(
+        wire::TAG_START,
+        &wire::start_payload(OPERATION, ticket.stream.as_str().as_bytes()),
+    );
     c.send(Message::Binary(start.into())).await.expect("start");
     let credit = wire::frame(wire::TAG_CREDIT, &u32::MAX.to_be_bytes());
-    c.send(Message::Binary(credit.into())).await.expect("credit");
+    c.send(Message::Binary(credit.into()))
+        .await
+        .expect("credit");
 
     let mut frames = Vec::new();
     loop {
@@ -291,13 +344,17 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
         };
         let Message::Binary(b) = msg else { continue };
         let tag = b[0];
-        frames.push(Frame { tag, bytes: b.to_vec() });
+        frames.push(Frame {
+            tag,
+            bytes: b.to_vec(),
+        });
         if tag == wire::TAG_TERMINAL {
             break;
         }
     }
     assert_eq!(
-        dp.json_frames_seen.load(std::sync::atomic::Ordering::SeqCst),
+        dp.json_frames_seen
+            .load(std::sync::atomic::Ordering::SeqCst),
         0,
         "no JSON may appear on the data path for a ticket-redeemed projected stream either"
     );
@@ -317,7 +374,10 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
 async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     let path = projected_fixture();
 
-    assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+    assert!(
+        !trace::is_enabled(),
+        "tracing is off unless a trace is started"
+    );
     let untraced = collect_frames_via_ticket(&path).await;
 
     let guard = trace::start(TraceKey {
@@ -329,8 +389,12 @@ async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     .expect("no other trace is running");
     assert!(trace::is_enabled(), "the traced run really is traced");
     let traced = collect_frames_via_ticket(&path).await;
-    let traced_batches =
-        guard.trace().events().iter().filter(|e| e.name == trace::BATCH_FULL).count();
+    let traced_batches = guard
+        .trace()
+        .events()
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .count();
     drop(guard);
 
     assert!(
@@ -348,9 +412,16 @@ async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     );
 
     for (i, (a, b)) in untraced.iter().zip(traced.iter()).enumerate() {
-        assert_eq!(a.tag, b.tag, "frame {i}: tag differs between the traced and untraced runs");
+        assert_eq!(
+            a.tag, b.tag,
+            "frame {i}: tag differs between the traced and untraced runs"
+        );
         if a.tag == wire::TAG_OPEN {
-            assert_eq!(a.bytes.len(), b.bytes.len(), "frame {i} (OPEN): payload length must not change");
+            assert_eq!(
+                a.bytes.len(),
+                b.bytes.len(),
+                "frame {i} (OPEN): payload length must not change"
+            );
             continue;
         }
         assert!(

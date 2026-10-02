@@ -67,7 +67,11 @@ fn build_verifier() -> PathBuf {
         .parent()
         .and_then(|deps| deps.parent())
         .expect("target/<profile>/deps/<test>");
-    let exe = if cfg!(windows) { "verify-bundle.exe" } else { "verify-bundle" };
+    let exe = if cfg!(windows) {
+        "verify-bundle.exe"
+    } else {
+        "verify-bundle"
+    };
     let path = profile_dir.join("examples").join(exe);
     if path.exists() {
         return path;
@@ -75,7 +79,13 @@ fn build_verifier() -> PathBuf {
 
     let release = profile_dir.file_name().and_then(|n| n.to_str()) == Some("release");
     let mut cmd = Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()));
-    cmd.args(["build", "-p", "spatial-kernel", "--example", "verify-bundle"]);
+    cmd.args([
+        "build",
+        "-p",
+        "spatial-kernel",
+        "--example",
+        "verify-bundle",
+    ]);
     if release {
         cmd.arg("--release");
     }
@@ -95,7 +105,9 @@ fn build_verifier() -> PathBuf {
 }
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-verify-bundle").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-verify-bundle")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     std::fs::canonicalize(&d).unwrap()
@@ -120,8 +132,14 @@ fn publish_a_bundle(d: &Path) -> PathBuf {
     let pin = ds.content_pin().unwrap();
 
     let viewer = ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap();
 
@@ -130,7 +148,12 @@ fn publish_a_bundle(d: &Path) -> PathBuf {
     let req = PublishRequest {
         dataset: &ds,
         dataset_name: "parcels",
-        query: ViewportQuery { bbox: None, bbox_crs: None, limit: None, filter: None },
+        query: ViewportQuery {
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: None,
+        },
         attributes: vec!["zone".into()],
         style_source: STYLE,
         viewer: &viewer,
@@ -212,7 +235,10 @@ fn a_real_bundle_verifies() {
     let d = workspace("accepts");
     let bundle = publish_a_bundle(&d);
     let (ok, text) = verify(&bundle);
-    assert!(ok, "a freshly published bundle failed verification:\n{text}");
+    assert!(
+        ok,
+        "a freshly published bundle failed verification:\n{text}"
+    );
 }
 
 /// **The five corruption classes, each with ADR-017 §14's own state name.**
@@ -262,7 +288,9 @@ fn every_corruption_class_is_caught_with_its_declared_state() {
             state: "partition-row-count-mismatch",
             mutate: |b| {
                 let p = b.join("manifest.json");
-                let s = std::fs::read_to_string(&p).unwrap().replace("\"rows\":2000", "\"rows\":1999");
+                let s = std::fs::read_to_string(&p)
+                    .unwrap()
+                    .replace("\"rows\":2000", "\"rows\":1999");
                 std::fs::write(&p, s).unwrap();
             },
         },
@@ -283,7 +311,11 @@ fn every_corruption_class_is_caught_with_its_declared_state() {
         (case.mutate)(&copy);
 
         let (ok, text) = verify(&copy);
-        assert!(!ok, "{}: the verifier accepted a corrupt bundle\n{text}", case.name);
+        assert!(
+            !ok,
+            "{}: the verifier accepted a corrupt bundle\n{text}",
+            case.name
+        );
         assert!(
             text.contains(case.state),
             "{}: expected state `{}`, got:\n{text}",

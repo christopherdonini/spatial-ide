@@ -424,21 +424,26 @@ pub fn preflight_pinless(req: &PublishRequest<'_>) -> Result<(), PublishError> {
 fn admit_bundle_format(column: &str, ty: &arrow::datatypes::DataType) -> Result<(), PublishError> {
     use arrow::datatypes::DataType as D;
     match ty {
-        D::Dictionary(_, _) => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
-            column: column.to_string(),
-            detail: format!(
+        D::Dictionary(_, _) => Err(PublishError::Engine(
+            spatial_engine::EngineError::AttributeUnpublishable {
+                column: column.to_string(),
+                detail: format!(
                 "type is {ty}. A dictionary index is an ordinal, and decoding one to publish it \
                  would be a conversion the caller did not ask for. The bundle format carries no \
                  dictionary batches"
             ),
-        })),
-        D::Float32 => Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
-            column: column.to_string(),
-            detail: "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
+            },
+        )),
+        D::Float32 => Err(PublishError::Engine(
+            spatial_engine::EngineError::AttributeUnpublishable {
+                column: column.to_string(),
+                detail:
+                    "type is Float32. The bundle carries doubles; widening f32 to f64 is exact but \
                      it is still a conversion this engine was not asked to perform, and a consumer \
                      reading `float64` would be told the source held one"
-                .to_string(),
-        })),
+                        .to_string(),
+            },
+        )),
         _ => Ok(()),
     }
 }
@@ -470,7 +475,10 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
             unit_source: ds
                 .admission()
                 .and_then(|a| a.coordinate_unit_source)
-                .map_or_else(|| "unit source not recorded".to_string(), |s| s.as_str().to_string()),
+                .map_or_else(
+                    || "unit source not recorded".to_string(),
+                    |s| s.as_str().to_string(),
+                ),
         });
     }
     let logical_uri = dataset_logical_uri(req.dataset_name)?;
@@ -527,7 +535,13 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
         &ceilings::reader_ceilings(),
     )?;
 
-    Ok(PreflightPinless { logical_uri, style, projection, license, viewer_license })
+    Ok(PreflightPinless {
+        logical_uri,
+        style,
+        projection,
+        license,
+        viewer_license,
+    })
 }
 
 /// Resolve, admit and compile everything that can be decided before any byte is written.
@@ -547,10 +561,25 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
 /// to refuse an over-ceiling source before paying for a whole-file hash should call
 /// [`preflight_pinless`] first — this function still requires the pin to already exist, unchanged.
 pub fn preflight(req: &PublishRequest<'_>) -> Result<PublishPreflight, PublishError> {
-    let PreflightPinless { logical_uri, style, projection, license, viewer_license } =
-        preflight_pinless_parts(req)?;
-    let pin = req.dataset.content_pin().ok_or(PublishError::SourceNotPinned)?;
-    Ok(PublishPreflight { logical_uri, pin, style, projection, license, viewer_license })
+    let PreflightPinless {
+        logical_uri,
+        style,
+        projection,
+        license,
+        viewer_license,
+    } = preflight_pinless_parts(req)?;
+    let pin = req
+        .dataset
+        .content_pin()
+        .ok_or(PublishError::SourceNotPinned)?;
+    Ok(PublishPreflight {
+        logical_uri,
+        pin,
+        style,
+        projection,
+        license,
+        viewer_license,
+    })
 }
 
 /// Publish a static bundle, **with no grant, no approval and no audit record**.
@@ -650,7 +679,14 @@ fn run_inner(
     let ds = req.dataset;
 
     // Admitted in `preflight`, before the staging directory existed.
-    let PublishPreflight { logical_uri, pin, style, projection, license, viewer_license } = pre;
+    let PublishPreflight {
+        logical_uri,
+        pin,
+        style,
+        projection,
+        license,
+        viewer_license,
+    } = pre;
     let logical_uri = logical_uri.as_str();
     let license = license.clone();
     let viewer_license = viewer_license.clone();
@@ -670,7 +706,9 @@ fn run_inner(
     // this the `VerifyingSource` cell could never produce a `cancel_observed` instant at all — and
     // the harness filters on that instant, so the miss would not look like a missing stamp, it would
     // look like a smaller sample with no explanation.
-    let content_hash_millis = pin.verify_by_rehash(ds.path(), cancel).inspect_err(|_| watch.observe_if_cancelled())?;
+    let content_hash_millis = pin
+        .verify_by_rehash(ds.path(), cancel)
+        .inspect_err(|_| watch.observe_if_cancelled())?;
     spatial_engine::trace::mark(trace_names::VERIFY_END, 0, 0);
 
     // ---- partitions ---------------------------------------------------------------------------
@@ -698,7 +736,8 @@ fn run_inner(
     loop {
         watch.check()?;
         let info = loop {
-            match stream.next_into_timeout(&mut payload, spatial_engine::PUBLISH_STREAM_POLL_INTERVAL)
+            match stream
+                .next_into_timeout(&mut payload, spatial_engine::PUBLISH_STREAM_POLL_INTERVAL)
             {
                 // **The producer can win the race.** A cancel raised while this thread is parked
                 // reaches DuckDB's interrupt first, so the producer may fail the stream and send the
@@ -811,7 +850,10 @@ fn run_inner(
     //
     // **No test covers this branch**, because reaching it requires a code change that breaks the
     // 1:1 mapping. Saying so is better than implying a test exists.
-    if !viewer_assets.iter().any(|a| a.path == viewer_license.notice_path) {
+    if !viewer_assets
+        .iter()
+        .any(|a| a.path == viewer_license.notice_path)
+    {
         return Err(PublishError::ViewerLicenseNoticeMissing {
             notice_path: req.viewer_license.notice_path.clone(),
             bundle_relative: viewer_license.notice_path.clone(),
@@ -906,7 +948,11 @@ struct CancelWatch<'a> {
 
 impl<'a> CancelWatch<'a> {
     fn new(cancel: &'a CancelToken, progress: &'a dyn PublishProgress) -> Self {
-        Self { cancel, progress, reported: std::cell::Cell::new(false) }
+        Self {
+            cancel,
+            progress,
+            reported: std::cell::Cell::new(false),
+        }
     }
 
     fn check(&self) -> Result<(), PublishError> {
@@ -934,7 +980,8 @@ impl<'a> CancelWatch<'a> {
     fn observe(&self) {
         if !self.reported.replace(true) {
             spatial_engine::trace::mark(trace_names::CANCEL_OBSERVED, 0, 0);
-            self.progress.cancellation_observed(std::time::Instant::now());
+            self.progress
+                .cancellation_observed(std::time::Instant::now());
         }
     }
 }
@@ -998,7 +1045,10 @@ fn admit_license(
 
     match (source.declares_anything(), operator) {
         (true, Some(op)) => Err(PublishError::LicenseDeclaredTwice {
-            source: source.license.clone().unwrap_or_else(|| "(terms without a name)".into()),
+            source: source
+                .license
+                .clone()
+                .unwrap_or_else(|| "(terms without a name)".into()),
             operator: op.license.clone(),
         }),
         (true, None) => {
@@ -1159,7 +1209,11 @@ fn format_declaration() -> FormatDeclaration {
 
 fn columns(fields: &[arrow::datatypes::Field]) -> Vec<Column> {
     let mut out = vec![
-        Column { name: "id".into(), arrow_type: "UInt64".into(), nullable: false },
+        Column {
+            name: "id".into(),
+            arrow_type: "UInt64".into(),
+            nullable: false,
+        },
         Column {
             name: "geometry".into(),
             arrow_type: "List<List<FixedSizeList<Float64>[2]>>".into(),
@@ -1260,7 +1314,10 @@ fn build_manifest(
             "none-pinned",
             "this bundle format carries no revision of itself; a republish is a new bundle",
         )),
-        locators: vec![Locator { kind: "bundle-relative", at: ".".into() }],
+        locators: vec![Locator {
+            kind: "bundle-relative",
+            at: ".".into(),
+        }],
         cache_status: "materialized",
         portability_policy: "self-contained",
     };
@@ -1288,7 +1345,10 @@ fn build_manifest(
             "none-pinned",
             "the style is immutable text carried verbatim; its content hash is its identity",
         )),
-        locators: vec![Locator { kind: "bundle-local", at: bundle::STYLE_PATH.into() }],
+        locators: vec![Locator {
+            kind: "bundle-local",
+            at: bundle::STYLE_PATH.into(),
+        }],
         cache_status: "materialized-in-bundle",
         portability_policy: "self-contained",
     };
@@ -1304,7 +1364,9 @@ fn build_manifest(
             kernel: env!("CARGO_PKG_VERSION").to_string(),
             renderer: spatial_renderer::CRATE_VERSION.to_string(),
             arrow: spatial_engine::ARROW_CRATE_VERSION_REQUIREMENT.to_string(),
-            duckdb: ds.duckdb_version().unwrap_or_else(|_| "unavailable".to_string()),
+            duckdb: ds
+                .duckdb_version()
+                .unwrap_or_else(|_| "unavailable".to_string()),
             bundle_writer: bundle::BUNDLE_VERSION,
         },
         operation,
@@ -1370,8 +1432,13 @@ impl Staging {
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| "bundle".into());
         let path = parent.join(format!(".{name}.staging-{}", random_suffix()));
-        std::fs::create_dir(&path)
-            .map_err(|e| error::classify_io(&path.display().to_string(), "creating the staging directory", e))?;
+        std::fs::create_dir(&path).map_err(|e| {
+            error::classify_io(
+                &path.display().to_string(),
+                "creating the staging directory",
+                e,
+            )
+        })?;
         Ok(Self { path })
     }
 
@@ -1381,8 +1448,13 @@ impl Staging {
 
     fn create_dir(&self, rel: &str) -> Result<(), PublishError> {
         let target = self.path.join(rel);
-        std::fs::create_dir_all(&target)
-            .map_err(|e| error::classify_io(&target.display().to_string(), "creating a bundle directory", e))
+        std::fs::create_dir_all(&target).map_err(|e| {
+            error::classify_io(
+                &target.display().to_string(),
+                "creating a bundle directory",
+                e,
+            )
+        })
     }
 
     /// Write one file and return its `sha256:` hash.
@@ -1478,11 +1550,13 @@ impl Staging {
         }
         // Flushed and synced before it is hashed and listed: a manifest that lists a hash for bytes
         // still sitting in a buffer is describing something that may never reach the disk.
-        f.flush().map_err(|e| error::classify_io(&display, "flushing a bundle file", e))?;
+        f.flush()
+            .map_err(|e| error::classify_io(&display, "flushing a bundle file", e))?;
         if observed.is_some() {
             spatial_engine::trace::mark(trace_names::PARTITION_SYNC_START, 0, bytes.len() as u64);
         }
-        f.sync_all().map_err(|e| error::classify_io(&display, "syncing a bundle file", e))?;
+        f.sync_all()
+            .map_err(|e| error::classify_io(&display, "syncing a bundle file", e))?;
         if observed.is_some() {
             spatial_engine::trace::mark(trace_names::PARTITION_SYNC_END, 0, bytes.len() as u64);
         }
@@ -1525,7 +1599,11 @@ impl Staging {
             });
         }
         std::fs::rename(&self.path, destination).map_err(|e| {
-            error::classify_io(&destination.display().to_string(), "finalizing the bundle", e)
+            error::classify_io(
+                &destination.display().to_string(),
+                "finalizing the bundle",
+                e,
+            )
         })?;
         // The directory has moved; `remove` is a no-op from here because the staging path no longer
         // exists. That is deliberate rather than incidental: it means the caller's error path can
@@ -1606,8 +1684,14 @@ mod tests {
                 "`{bad}` must not become a logical URI"
             );
         }
-        assert_eq!(dataset_logical_uri("parcels").unwrap(), "spatial://dataset/parcels");
-        assert_eq!(dataset_logical_uri("parcels-2026_v1.2").unwrap(), "spatial://dataset/parcels-2026_v1.2");
+        assert_eq!(
+            dataset_logical_uri("parcels").unwrap(),
+            "spatial://dataset/parcels"
+        );
+        assert_eq!(
+            dataset_logical_uri("parcels-2026_v1.2").unwrap(),
+            "spatial://dataset/parcels-2026_v1.2"
+        );
     }
 
     #[test]
@@ -1693,10 +1777,9 @@ mod tests {
             ),
         ] {
             match admit_bundle_format("cat", &ty) {
-                Err(PublishError::Engine(spatial_engine::EngineError::AttributeUnpublishable {
-                    column,
-                    detail,
-                })) => {
+                Err(PublishError::Engine(
+                    spatial_engine::EngineError::AttributeUnpublishable { column, detail },
+                )) => {
                     assert_eq!(column, "cat");
                     assert_eq!(
                         detail,
@@ -1707,7 +1790,9 @@ mod tests {
                         )
                     );
                 }
-                other => panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}"),
+                other => {
+                    panic!("expected AttributeUnpublishable naming the dictionary, got {other:?}")
+                }
             }
         }
     }
@@ -1721,7 +1806,10 @@ mod tests {
         };
         assert!(matches!(
             admit_license(&source, None),
-            Err(PublishError::LicenseNotCarryable { declared_by: "source", .. })
+            Err(PublishError::LicenseNotCarryable {
+                declared_by: "source",
+                ..
+            })
         ));
 
         let op = OperatorLicense {
@@ -1733,7 +1821,10 @@ mod tests {
         };
         assert!(matches!(
             admit_license(&Default::default(), Some(&op)),
-            Err(PublishError::LicenseNotCarryable { declared_by: "operator", .. })
+            Err(PublishError::LicenseNotCarryable {
+                declared_by: "operator",
+                ..
+            })
         ));
     }
 
@@ -1751,7 +1842,9 @@ mod tests {
             redistribution: Some("ask us first".into()),
         };
         let l = admit_license(&source, None).unwrap();
-        let License::DeclaredBySource(terms) = &l else { panic!("got {l:?}") };
+        let License::DeclaredBySource(terms) = &l else {
+            panic!("got {l:?}")
+        };
         assert_eq!(terms.redistribution, Redistribution::Unknown);
     }
 
@@ -1807,7 +1900,10 @@ mod tests {
         let License::DeclaredBySource(terms) = &l else {
             panic!("a source that declares attribution is `declared-by-source`, got {l:?}")
         };
-        assert_eq!(terms.license, None, "a placeholder was substituted for an absent license");
+        assert_eq!(
+            terms.license, None,
+            "a placeholder was substituted for an absent license"
+        );
         assert_eq!(terms.attribution.as_deref(), Some("© Example Cadastre"));
         assert_eq!(terms.redistribution, Redistribution::Permitted);
         // What this becomes in the manifest is asserted where the serializer lives
@@ -1821,7 +1917,9 @@ mod tests {
             redistribution: Some("permitted".into()),
         };
         let l = admit_license(&only_terms, None).unwrap();
-        let License::DeclaredBySource(terms) = &l else { panic!("got {l:?}") };
+        let License::DeclaredBySource(terms) = &l else {
+            panic!("got {l:?}")
+        };
         assert_eq!(terms.license, None);
         assert_eq!(terms.attribution, None);
     }

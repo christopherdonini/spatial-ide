@@ -18,8 +18,8 @@
 //! never re-canonicalizes, so the two sides must agree on what those bytes are.
 
 use spatial_renderer::canonical::sha256_hex;
-use spatial_renderer::style::Rgb;
 use spatial_renderer::compile;
+use spatial_renderer::style::Rgb;
 
 use arrow::datatypes::DataType;
 
@@ -52,8 +52,12 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
             (name, ty)
         })
         .collect();
-    let published: Vec<String> =
-        v["published"].as_array().unwrap().iter().map(|s| s.as_str().unwrap().into()).collect();
+    let published: Vec<String> = v["published"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| s.as_str().unwrap().into())
+        .collect();
 
     let compiled = compile(&style_src, &schema, &published).expect("the vector's style compiles");
 
@@ -63,9 +67,15 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
         v["expected_canonical_json"].as_str().unwrap(),
         "canonical form drifted from the shared vector"
     );
-    assert_eq!(compiled.style_hash(), v["expected_style_hash"].as_str().unwrap());
+    assert_eq!(
+        compiled.style_hash(),
+        v["expected_style_hash"].as_str().unwrap()
+    );
     // …and the hash really is over those bytes, which is what the viewer checks.
-    assert_eq!(compiled.style_hash(), sha256_hex(compiled.canonical_json().as_bytes()));
+    assert_eq!(
+        compiled.style_hash(),
+        sha256_hex(compiled.canonical_json().as_bytes())
+    );
 
     // 2. Resolution, branch by branch. `null` is a NULL key, not an absent probe.
     //
@@ -83,8 +93,16 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
         let key = probe["key"].as_str();
         let d = compiled.resolve(key);
         let label = probe["key"].to_string();
-        assert_eq!(hex(d.fill_color), probe["fill_color"].as_str().unwrap(), "fill_color at {label}");
-        assert_eq!(d.fill_opacity, probe["fill_opacity"].as_f64().unwrap(), "fill_opacity at {label}");
+        assert_eq!(
+            hex(d.fill_color),
+            probe["fill_color"].as_str().unwrap(),
+            "fill_color at {label}"
+        );
+        assert_eq!(
+            d.fill_opacity,
+            probe["fill_opacity"].as_f64().unwrap(),
+            "fill_opacity at {label}"
+        );
         assert_eq!(
             hex(d.outline_color),
             probe["outline_color"].as_str().unwrap(),
@@ -98,5 +116,8 @@ fn rust_agrees_with_the_shared_vector_that_typescript_also_reads() {
     }
 
     // 3. The legend's shape: one row per declared case, then NULL, then unmatched.
-    assert_eq!(compiled.legend().len(), v["expected_legend_rows"].as_u64().unwrap() as usize);
+    assert_eq!(
+        compiled.legend().len(),
+        v["expected_legend_rows"].as_u64().unwrap() as usize
+    );
 }

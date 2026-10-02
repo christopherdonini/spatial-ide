@@ -126,7 +126,11 @@ impl PoolPollTasks {
     /// map entry under the same key -- it checks the entry is still its own `AbortHandle` (by
     /// `tokio::task::Id`) before touching the map at all.
     fn record(&self, dataset: String, handle: tokio::task::AbortHandle) {
-        let previous = self.0.lock().unwrap_or_else(|e| e.into_inner()).insert(dataset, handle);
+        let previous = self
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .insert(dataset, handle);
         if let Some(previous) = previous {
             previous.abort();
         }
@@ -138,7 +142,12 @@ impl PoolPollTasks {
     /// `commands::close_dataset` to actively cancel a running poll -- always aborts whatever is
     /// currently mapped, unconditionally, unlike `forget_if_current` below.
     pub fn stop(&self, dataset: &str) {
-        if let Some(handle) = self.0.lock().unwrap_or_else(|e| e.into_inner()).remove(dataset) {
+        if let Some(handle) = self
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(dataset)
+        {
             handle.abort();
         }
     }
@@ -153,7 +162,10 @@ impl PoolPollTasks {
     /// there is nothing left to cancel, only a stale reference to clean up.
     fn forget_if_current(&self, dataset: &str, expected_id: tokio::task::Id) {
         let mut tasks = self.0.lock().unwrap_or_else(|e| e.into_inner());
-        if tasks.get(dataset).is_some_and(|current| current.id() == expected_id) {
+        if tasks
+            .get(dataset)
+            .is_some_and(|current| current.id() == expected_id)
+        {
             tasks.remove(dataset);
         }
     }
@@ -175,7 +187,9 @@ async fn poll_loop(app: AppHandle, dataset: String) -> &'static str {
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
-        let Some(host) = app.try_state::<Arc<SkpHost>>() else { return "host-missing" };
+        let Some(host) = app.try_state::<Arc<SkpHost>>() else {
+            return "host-missing";
+        };
         let Some(ds) = host.catalog().get(&dataset) else {
             // The dataset is no longer in the catalog. `commands::close_dataset` normally stops this
             // task (via `stop()`, an abort, not this return) before that happens; reaching this arm
@@ -189,7 +203,9 @@ async fn poll_loop(app: AppHandle, dataset: String) -> &'static str {
             pool.live_connections(),
             pool.idle_connections(),
         );
-        let Some(fields) = line.strip_prefix(POOL_POLL_LOG_CLASS) else { continue };
+        let Some(fields) = line.strip_prefix(POOL_POLL_LOG_CLASS) else {
+            continue;
+        };
         let fields = fields.trim_start().to_string();
         // Reviewer M1 (this comment corrected by reviewer S-c, post-gate sweep): `write_all` +
         // `flush` under `SessionLog`'s own `Mutex<File>` (`state.rs:43-55`) is the only blocking
@@ -256,12 +272,18 @@ mod tests {
 
     #[test]
     fn formats_the_exact_producer_pool_poll_line() {
-        assert_eq!(format_pool_poll_line(2, 4, 2), "producer-pool-poll active=2 live=4 idle=2");
+        assert_eq!(
+            format_pool_poll_line(2, 4, 2),
+            "producer-pool-poll active=2 live=4 idle=2"
+        );
     }
 
     #[test]
     fn formats_all_zero_counts() {
-        assert_eq!(format_pool_poll_line(0, 0, 0), "producer-pool-poll active=0 live=0 idle=0");
+        assert_eq!(
+            format_pool_poll_line(0, 0, 0),
+            "producer-pool-poll active=0 live=0 idle=0"
+        );
     }
 
     #[test]
@@ -326,9 +348,13 @@ mod tests {
         let second = tokio::spawn(std::future::pending::<()>());
         tasks.record("ds-a".to_string(), second.abort_handle());
         assert_eq!(tasks.0.lock().unwrap().len(), 1); // the second's entry
-        // The FIRST task's own (superseded) id must not evict the second's still-current entry.
+                                                      // The FIRST task's own (superseded) id must not evict the second's still-current entry.
         tasks.forget_if_current("ds-a", first_id);
-        assert_eq!(tasks.0.lock().unwrap().len(), 1, "a superseded id must never remove a live entry");
+        assert_eq!(
+            tasks.0.lock().unwrap().len(),
+            1,
+            "a superseded id must never remove a live entry"
+        );
         // The SECOND task's own id, correctly, does remove its own still-current entry.
         let second_id = second.abort_handle().id();
         tasks.forget_if_current("ds-a", second_id);

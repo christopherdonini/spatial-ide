@@ -20,7 +20,9 @@ use spatial_engine::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureS
 use spatial_engine::{AdmittedPredicate, Dataset, ViewportQuery, ID_COLUMN};
 
 fn dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join("spatial-engine-filter-composition-tests").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-engine-filter-composition-tests")
+        .join(name);
     std::fs::create_dir_all(&d).unwrap();
     d
 }
@@ -47,7 +49,10 @@ fn geometry_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
         .downcast_ref::<arrow::array::ListArray>()
         .expect("geometry is List<rings>");
     let rings = list.value(row);
-    let rings = rings.as_any().downcast_ref::<arrow::array::ListArray>().expect("List<vertices>");
+    let rings = rings
+        .as_any()
+        .downcast_ref::<arrow::array::ListArray>()
+        .expect("List<vertices>");
     let mut h = Sha256::new();
     for r in 0..rings.len() {
         let verts = rings.value(r);
@@ -56,7 +61,10 @@ fn geometry_digest(col: &arrow::array::ArrayRef, row: usize) -> String {
             .downcast_ref::<arrow::array::FixedSizeListArray>()
             .expect("FixedSizeList<xy>");
         let xy = verts.values();
-        let xy = xy.as_any().downcast_ref::<arrow::array::Float64Array>().expect("f64 xy");
+        let xy = xy
+            .as_any()
+            .downcast_ref::<arrow::array::Float64Array>()
+            .expect("f64 xy");
         h.update((xy.len() as u64).to_le_bytes());
         for v in xy.values() {
             h.update(v.to_bits().to_le_bytes());
@@ -97,7 +105,10 @@ fn drain_digests(
         }
         buf.clear();
     }
-    (out, schema.expect("a fully-drained stream produced at least one batch"))
+    (
+        out,
+        schema.expect("a fully-drained stream produced at least one batch"),
+    )
 }
 
 /// Evidence item E: a filtered stream's rows are an id-keyed **subset** of the unfiltered stream's
@@ -132,7 +143,10 @@ fn a_filtered_stream_is_an_id_keyed_subset_with_byte_identical_rows_and_envelope
     let (filtered, filtered_schema) =
         drain_digests(ds.stream(&filtered_query).expect("filtered stream"));
 
-    assert!(!filtered.is_empty(), "the predicate selected nothing; this test proves nothing");
+    assert!(
+        !filtered.is_empty(),
+        "the predicate selected nothing; this test proves nothing"
+    );
     assert!(
         filtered.len() < unfiltered.len(),
         "the predicate excluded nothing ({} == {}); this test proves nothing about filtering",

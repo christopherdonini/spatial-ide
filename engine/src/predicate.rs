@@ -147,7 +147,9 @@ impl AdmittedPredicate {
                     PredicateAdmitError::ConnectionsExhausted { class, capacity }
                 }
                 other => FilterError::RejectedByBinder {
-                    detail: format!("no connection was available to validate this predicate: {other}"),
+                    detail: format!(
+                        "no connection was available to validate this predicate: {other}"
+                    ),
                 }
                 .into(),
             })?;
@@ -263,7 +265,10 @@ pub enum FilterError {
 
     /// The predicate referenced the wire's `id` name while a declared identity mapping means that
     /// name **also** exists, unrelated, in the source file — see [`identity_alias_ambiguity`].
-    IdentityAliasAmbiguous { column: String, source_column: String },
+    IdentityAliasAmbiguous {
+        column: String,
+        source_column: String,
+    },
 
     /// The predicate binds, but its inferred type is not `BOOLEAN`. An int-to-bool (or any other)
     /// implicit coercion is refused rather than silently applied (`docs/01` principle 8).
@@ -389,7 +394,10 @@ pub enum PredicateAdmitError {
     /// Composition-unreachable for the shipped shell at the declared ceiling
     /// (`pool::MAX_ADMISSION_CONNECTIONS`'s own doc); recorded here as raw material for ADR-014,
     /// citable as evidence for nothing else.
-    ConnectionsExhausted { class: &'static str, capacity: usize },
+    ConnectionsExhausted {
+        class: &'static str,
+        capacity: usize,
+    },
 }
 
 impl fmt::Display for PredicateAdmitError {
@@ -460,9 +468,11 @@ fn wrap_with(predicate: &str, sentinel: &str) -> String {
 /// entire admission this module exists to perform.
 fn serialize_sql(wrapped: &str, conn: &Connection) -> Result<Value, FilterError> {
     let sql = "SELECT json_serialize_sql(CAST(? AS VARCHAR))";
-    let json_text: String = conn.query_row(sql, [wrapped], |row| row.get(0)).map_err(|e| {
-        FilterError::Unparsable { detail: format!("json_serialize_sql could not be called: {e}") }
-    })?;
+    let json_text: String = conn
+        .query_row(sql, [wrapped], |row| row.get(0))
+        .map_err(|e| FilterError::Unparsable {
+            detail: format!("json_serialize_sql could not be called: {e}"),
+        })?;
     serde_json::from_str(&json_text).map_err(|e| FilterError::Unparsable {
         detail: format!("json_serialize_sql returned JSON this module could not parse: {e}"),
     })
@@ -496,7 +506,8 @@ fn structural_admit(
     let operands = differential_operands(predicate, conn)?;
     if operands.is_empty() {
         return Err(FilterError::ConstructNotAdmitted {
-            construct: "an empty predicate (nothing but this module's own AND-sentinel)".to_string(),
+            construct: "an empty predicate (nothing but this module's own AND-sentinel)"
+                .to_string(),
         });
     }
 
@@ -522,7 +533,11 @@ fn structural_admit(
 /// independent parses. Everything that used to be one function (`expect_bare_select_wrapper`, this
 /// module's original name) is now shared, single-parse plumbing that [`differential_operands`]
 /// calls twice.
-fn parse_and_children(predicate: &str, sentinel: &str, conn: &Connection) -> Result<Vec<Value>, FilterError> {
+fn parse_and_children(
+    predicate: &str,
+    sentinel: &str,
+    conn: &Connection,
+) -> Result<Vec<Value>, FilterError> {
     let payload = serialize_sql(&wrap_with(predicate, sentinel), conn)?;
 
     // `CUT-STATE.md` P0: a malformed inner SQL string never surfaces as a Rust `Err` from the call
@@ -530,7 +545,11 @@ fn parse_and_children(predicate: &str, sentinel: &str, conn: &Connection) -> Res
     // payload's `"error"` field, which is what this checks. A missing or non-boolean `"error"` key
     // is treated the same as `true` — refuse-by-default, never admit what the payload did not
     // affirmatively say was `false`.
-    if payload.get("error").and_then(Value::as_bool).unwrap_or(true) {
+    if payload
+        .get("error")
+        .and_then(Value::as_bool)
+        .unwrap_or(true)
+    {
         let detail = payload
             .get("error_message")
             .and_then(Value::as_str)
@@ -539,13 +558,16 @@ fn parse_and_children(predicate: &str, sentinel: &str, conn: &Connection) -> Res
         return Err(FilterError::Unparsable { detail });
     }
 
-    let statements = payload.get("statements").and_then(Value::as_array).ok_or_else(|| {
-        FilterError::Unparsable {
+    let statements = payload
+        .get("statements")
+        .and_then(Value::as_array)
+        .ok_or_else(|| FilterError::Unparsable {
             detail: "json_serialize_sql's payload carries no `statements` array".to_string(),
-        }
-    })?;
+        })?;
     if statements.len() != 1 {
-        return Err(FilterError::NotASingleExpression { statements: statements.len() });
+        return Err(FilterError::NotASingleExpression {
+            statements: statements.len(),
+        });
     }
     let stmt = &statements[0];
     refuse_unknown_keys(stmt, KNOWN_STATEMENT_KEYS, "statement")?;
@@ -554,13 +576,16 @@ fn parse_and_children(predicate: &str, sentinel: &str, conn: &Connection) -> Res
     // up here too, not only as a `PARAMETER` node the walk below would refuse on its own.
     if !matches!(stmt.get("named_param_map").and_then(Value::as_array), Some(a) if a.is_empty()) {
         return Err(FilterError::ConstructNotAdmitted {
-            construct: "a bind parameter (the statement's named_param_map is non-empty)".to_string(),
+            construct: "a bind parameter (the statement's named_param_map is non-empty)"
+                .to_string(),
         });
     }
 
-    let node = stmt.get("node").ok_or_else(|| FilterError::ConstructNotAdmitted {
-        construct: "a statement with no `node`".to_string(),
-    })?;
+    let node = stmt
+        .get("node")
+        .ok_or_else(|| FilterError::ConstructNotAdmitted {
+            construct: "a statement with no `node`".to_string(),
+        })?;
     let children = expect_wrapper_shape(node)?;
     Ok(children.clone())
 }
@@ -632,14 +657,22 @@ fn differential_operands(predicate: &str, conn: &Connection) -> Result<Vec<Value
         ),
     };
 
-    let last_a = children_a.last().ok_or_else(|| mismatch("probe A's top-level AND has no operands"))?;
-    let last_b = children_b.last().ok_or_else(|| mismatch("probe B's top-level AND has no operands"))?;
+    let last_a = children_a
+        .last()
+        .ok_or_else(|| mismatch("probe A's top-level AND has no operands"))?;
+    let last_b = children_b
+        .last()
+        .ok_or_else(|| mismatch("probe B's top-level AND has no operands"))?;
 
     if !is_integer_equality_sentinel(last_a, SENTINEL_A_VALUE) {
-        return Err(mismatch("probe A's last operand is not this module's own 1=1 sentinel"));
+        return Err(mismatch(
+            "probe A's last operand is not this module's own 1=1 sentinel",
+        ));
     }
     if !is_integer_equality_sentinel(last_b, SENTINEL_B_VALUE) {
-        return Err(mismatch("probe B's last operand is not this module's own 2=2 sentinel"));
+        return Err(mismatch(
+            "probe B's last operand is not this module's own 2=2 sentinel",
+        ));
     }
 
     let preceding_a = &children_a[..children_a.len() - 1];
@@ -720,7 +753,10 @@ fn is_integer_constant(node: Option<&Value>, value: i64) -> bool {
     match node {
         Some(n) => {
             n.get("class").and_then(Value::as_str) == Some("CONSTANT")
-                && n.get("value").and_then(|v| v.get("value")).and_then(Value::as_i64) == Some(value)
+                && n.get("value")
+                    .and_then(|v| v.get("value"))
+                    .and_then(Value::as_i64)
+                    == Some(value)
         }
         None => false,
     }
@@ -746,7 +782,10 @@ fn is_integer_constant(node: Option<&Value>, value: i64) -> bool {
 /// `1=1` plus a same-line comment) that a single-sentinel version of this same shape check missed,
 /// and the fix.
 fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
-    let node_type = node.get("type").and_then(Value::as_str).unwrap_or("<missing type>");
+    let node_type = node
+        .get("type")
+        .and_then(Value::as_str)
+        .unwrap_or("<missing type>");
     if node_type != "SELECT_NODE" {
         return Err(FilterError::ConstructNotAdmitted {
             construct: format!("a top-level statement of type `{node_type}`, not a bare SELECT"),
@@ -754,7 +793,8 @@ fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
     }
     refuse_unknown_keys(node, KNOWN_SELECT_NODE_KEYS, "SELECT_NODE")?;
 
-    let empty_array = |key: &str| matches!(node.get(key).and_then(Value::as_array), Some(a) if a.is_empty());
+    let empty_array =
+        |key: &str| matches!(node.get(key).and_then(Value::as_array), Some(a) if a.is_empty());
     let is_null = |key: &str| node.get(key).map(Value::is_null).unwrap_or(false);
 
     if !empty_array("modifiers") {
@@ -771,20 +811,33 @@ fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
             construct: "a WITH / common table expression".to_string(),
         });
     }
-    let select_list = node.get("select_list").and_then(Value::as_array).ok_or_else(|| {
-        FilterError::ConstructNotAdmitted { construct: "a malformed select_list".to_string() }
-    })?;
-    if select_list.len() != 1 || select_list[0].get("class").and_then(Value::as_str) != Some("CONSTANT")
+    let select_list = node
+        .get("select_list")
+        .and_then(Value::as_array)
+        .ok_or_else(|| FilterError::ConstructNotAdmitted {
+            construct: "a malformed select_list".to_string(),
+        })?;
+    if select_list.len() != 1
+        || select_list[0].get("class").and_then(Value::as_str) != Some("CONSTANT")
     {
         return Err(FilterError::ConstructNotAdmitted {
             construct: "the wrapper's own `SELECT 1` was altered".to_string(),
         });
     }
-    if node.get("from_table").and_then(|t| t.get("type")).and_then(Value::as_str) != Some("EMPTY") {
-        return Err(FilterError::ConstructNotAdmitted { construct: "a FROM clause".to_string() });
+    if node
+        .get("from_table")
+        .and_then(|t| t.get("type"))
+        .and_then(Value::as_str)
+        != Some("EMPTY")
+    {
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "a FROM clause".to_string(),
+        });
     }
     if !empty_array("group_expressions") || !empty_array("group_sets") {
-        return Err(FilterError::ConstructNotAdmitted { construct: "a GROUP BY clause".to_string() });
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "a GROUP BY clause".to_string(),
+        });
     }
     if node.get("aggregate_handling").and_then(Value::as_str) != Some("STANDARD_HANDLING") {
         return Err(FilterError::ConstructNotAdmitted {
@@ -792,13 +845,19 @@ fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
         });
     }
     if !is_null("having") {
-        return Err(FilterError::ConstructNotAdmitted { construct: "a HAVING clause".to_string() });
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "a HAVING clause".to_string(),
+        });
     }
     if !is_null("sample") {
-        return Err(FilterError::ConstructNotAdmitted { construct: "a SAMPLE clause".to_string() });
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "a SAMPLE clause".to_string(),
+        });
     }
     if !is_null("qualify") {
-        return Err(FilterError::ConstructNotAdmitted { construct: "a QUALIFY clause".to_string() });
+        return Err(FilterError::ConstructNotAdmitted {
+            construct: "a QUALIFY clause".to_string(),
+        });
     }
 
     let where_clause = match node.get("where_clause") {
@@ -827,13 +886,17 @@ fn expect_wrapper_shape(node: &Value) -> Result<&Vec<Value>, FilterError> {
 
 /// Read `node`'s `children` array, refusing (by construct) any node whose shape does not carry one.
 fn expect_children(node: &Value) -> Result<&Vec<Value>, FilterError> {
-    node.get("children").and_then(Value::as_array).ok_or_else(|| FilterError::ConstructNotAdmitted {
-        construct: "a node with no `children` array".to_string(),
-    })
+    node.get("children")
+        .and_then(Value::as_array)
+        .ok_or_else(|| FilterError::ConstructNotAdmitted {
+            construct: "a node with no `children` array".to_string(),
+        })
 }
 
 fn missing_field(what: &str) -> FilterError {
-    FilterError::ConstructNotAdmitted { construct: format!("a node missing `{what}`") }
+    FilterError::ConstructNotAdmitted {
+        construct: format!("a node missing `{what}`"),
+    }
 }
 
 /// Walk one expression node against the declared allowlist, collecting every `COLUMN_REF` name
@@ -851,7 +914,9 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
     }
 
     let class = node.get("class").and_then(Value::as_str).ok_or_else(|| {
-        FilterError::ConstructNotAdmitted { construct: "an expression node with no `class`".to_string() }
+        FilterError::ConstructNotAdmitted {
+            construct: "an expression node with no `class`".to_string(),
+        }
     })?;
 
     match class {
@@ -861,21 +926,25 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
         "CONSTANT" => Ok(()),
 
         "COLUMN_REF" => {
-            let names = node.get("column_names").and_then(Value::as_array).ok_or_else(|| {
-                FilterError::ConstructNotAdmitted {
+            let names = node
+                .get("column_names")
+                .and_then(Value::as_array)
+                .ok_or_else(|| FilterError::ConstructNotAdmitted {
                     construct: "a COLUMN_REF with no column_names".to_string(),
-                }
-            })?;
+                })?;
             if names.len() != 1 {
                 return Err(FilterError::ConstructNotAdmitted {
-                    construct: "a qualified column reference (table.column) — this predicate names \
+                    construct:
+                        "a qualified column reference (table.column) — this predicate names \
                                 no table"
-                        .to_string(),
+                            .to_string(),
                 });
             }
-            let name = names[0].as_str().ok_or_else(|| FilterError::ConstructNotAdmitted {
-                construct: "a COLUMN_REF whose name is not a string".to_string(),
-            })?;
+            let name = names[0]
+                .as_str()
+                .ok_or_else(|| FilterError::ConstructNotAdmitted {
+                    construct: "a COLUMN_REF whose name is not a string".to_string(),
+                })?;
             columns.push(name.to_string());
             Ok(())
         }
@@ -894,17 +963,27 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
         // A basic comparison (`=`, `<`, `>`, `<>`, `<=`, `>=`, ...). Every `COMPARE_*` type is
         // admitted uniformly; the comparison *operator* is never the thing being restricted here.
         "COMPARISON" => {
-            let left = node.get("left").ok_or_else(|| missing_field("COMPARISON.left"))?;
-            let right = node.get("right").ok_or_else(|| missing_field("COMPARISON.right"))?;
+            let left = node
+                .get("left")
+                .ok_or_else(|| missing_field("COMPARISON.left"))?;
+            let right = node
+                .get("right")
+                .ok_or_else(|| missing_field("COMPARISON.right"))?;
             walk_expr(left, depth + 1, columns)?;
             walk_expr(right, depth + 1, columns)
         }
 
         // `x BETWEEN lower AND upper`.
         "BETWEEN" => {
-            let input = node.get("input").ok_or_else(|| missing_field("BETWEEN.input"))?;
-            let lower = node.get("lower").ok_or_else(|| missing_field("BETWEEN.lower"))?;
-            let upper = node.get("upper").ok_or_else(|| missing_field("BETWEEN.upper"))?;
+            let input = node
+                .get("input")
+                .ok_or_else(|| missing_field("BETWEEN.input"))?;
+            let lower = node
+                .get("lower")
+                .ok_or_else(|| missing_field("BETWEEN.lower"))?;
+            let upper = node
+                .get("upper")
+                .ok_or_else(|| missing_field("BETWEEN.upper"))?;
             walk_expr(input, depth + 1, columns)?;
             walk_expr(lower, depth + 1, columns)?;
             walk_expr(upper, depth + 1, columns)
@@ -912,7 +991,10 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
 
         // `NOT`, `IS [NOT] NULL`, and (DuckDB models it here too) `IN` with a literal list.
         "OPERATOR" => {
-            let op_type = node.get("type").and_then(Value::as_str).unwrap_or("<missing type>");
+            let op_type = node
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or("<missing type>");
             match op_type {
                 "OPERATOR_NOT" | "OPERATOR_IS_NULL" | "OPERATOR_IS_NOT_NULL" => {
                     let children = expect_children(node)?;
@@ -957,8 +1039,14 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
         // except those two small, named sets is refused unconditionally — the docs/09 boundary
         // this module's own doc states in full.
         "FUNCTION" => {
-            let name = node.get("function_name").and_then(Value::as_str).unwrap_or("<missing name>");
-            let is_operator = node.get("is_operator").and_then(Value::as_bool).unwrap_or(false);
+            let name = node
+                .get("function_name")
+                .and_then(Value::as_str)
+                .unwrap_or("<missing name>");
+            let is_operator = node
+                .get("is_operator")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
             let children = expect_children(node)?;
 
             if is_operator && ADMITTED_ARITHMETIC_FUNCTIONS.contains(&name) {
@@ -969,7 +1057,10 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
             } else if is_operator && ADMITTED_PATTERN_FUNCTIONS.contains(&name) {
                 if children.len() != 2 {
                     return Err(FilterError::ConstructNotAdmitted {
-                        construct: format!("`{name}` (LIKE/ILIKE) with {} operand(s)", children.len()),
+                        construct: format!(
+                            "`{name}` (LIKE/ILIKE) with {} operand(s)",
+                            children.len()
+                        ),
                     });
                 }
                 if children[1].get("class").and_then(Value::as_str) != Some("CONSTANT") {
@@ -986,16 +1077,24 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
             }
         }
 
-        "CAST" => Err(FilterError::ConstructNotAdmitted { construct: "CAST".to_string() }),
-        "SUBQUERY" => Err(FilterError::ConstructNotAdmitted { construct: "a subquery".to_string() }),
+        "CAST" => Err(FilterError::ConstructNotAdmitted {
+            construct: "CAST".to_string(),
+        }),
+        "SUBQUERY" => Err(FilterError::ConstructNotAdmitted {
+            construct: "a subquery".to_string(),
+        }),
         "PARAMETER" => Err(FilterError::ConstructNotAdmitted {
             construct: "a bind parameter placeholder".to_string(),
         }),
-        "STAR" => Err(FilterError::ConstructNotAdmitted { construct: "a star expression".to_string() }),
+        "STAR" => Err(FilterError::ConstructNotAdmitted {
+            construct: "a star expression".to_string(),
+        }),
 
         other => Err(FilterError::ConstructNotAdmitted {
-            construct: format!("an unrecognized node class `{other}` — refused, never admitted, \
-                                 because this module cannot name what it would be admitting"),
+            construct: format!(
+                "an unrecognized node class `{other}` — refused, never admitted, \
+                                 because this module cannot name what it would be admitting"
+            ),
         }),
     }
 }
@@ -1018,8 +1117,11 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
 fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
     match dataset.identity().source() {
         IdSource::Mapped { column, .. } if column != ID_COLUMN => {
-            let file_has_its_own_id =
-                dataset.file_schema().fields().iter().any(|f| f.name() == ID_COLUMN);
+            let file_has_its_own_id = dataset
+                .file_schema()
+                .fields()
+                .iter()
+                .any(|f| f.name() == ID_COLUMN);
             file_has_its_own_id.then(|| (ID_COLUMN.to_string(), column.clone()))
         }
         _ => None,
@@ -1078,8 +1180,17 @@ fn namespace_admit(
                     .to_string(),
             });
         }
-        match dataset.file_schema().fields().iter().find(|f| f.name() == name) {
-            None => return Err(FilterError::UnknownColumn { column: name.clone() }),
+        match dataset
+            .file_schema()
+            .fields()
+            .iter()
+            .find(|f| f.name() == name)
+        {
+            None => {
+                return Err(FilterError::UnknownColumn {
+                    column: name.clone(),
+                })
+            }
             // The referenced column's own surrogate is required to exist (O4) — this is where a
             // "no surrogate" refusal actually fires for a column that matters to this predicate.
             Some(field) => {
@@ -1120,8 +1231,12 @@ fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<Data
             ),
         });
     }
-    crate::attributes::admit_attribute_type(name, field.data_type())
-        .map_err(|e| FilterError::ColumnNotFilterable { column: name.to_string(), reason: e.to_string() })
+    crate::attributes::admit_attribute_type(name, field.data_type()).map_err(|e| {
+        FilterError::ColumnNotFilterable {
+            column: name.to_string(),
+            reason: e.to_string(),
+        }
+    })
 }
 
 /// The DuckDB surrogate type name for `field`, if the filter namespace admits it — one function
@@ -1129,10 +1244,7 @@ fn filterable_column_type(name: &str, field: &Field) -> std::result::Result<Data
 /// [`crate::attributes::admit_attribute_type`]) with the DuckDB-side name ([`duckdb_type_name`]), so
 /// a column's surrogate is computed exactly once and [`namespace_admit`] can carry it (X5; O4) —
 /// [`bind_admit`] never recomputes it.
-fn filter_surrogate(
-    name: &str,
-    field: &Field,
-) -> std::result::Result<&'static str, FilterError> {
+fn filter_surrogate(name: &str, field: &Field) -> std::result::Result<&'static str, FilterError> {
     let emitted = filterable_column_type(name, field)?;
     duckdb_type_name(&emitted).ok_or_else(|| FilterError::ColumnNotFilterable {
         column: name.to_string(),
@@ -1218,10 +1330,14 @@ fn bind_admit(
 
     let mut stmt = conn
         .prepare(&sql)
-        .map_err(|e| FilterError::RejectedByBinder { detail: e.to_string() })?;
+        .map_err(|e| FilterError::RejectedByBinder {
+            detail: e.to_string(),
+        })?;
     let arrow = stmt
         .query_arrow([])
-        .map_err(|e| FilterError::RejectedByBinder { detail: e.to_string() })?;
+        .map_err(|e| FilterError::RejectedByBinder {
+            detail: e.to_string(),
+        })?;
     let schema = arrow.get_schema();
     // `.fields().first()`, never the indexing `schema.field(0)` — this runs on a caller-driven
     // path, and an index access would be a panic waiting on whatever input makes the surrogate
@@ -1237,7 +1353,9 @@ fn bind_admit(
     };
 
     if inferred != &DataType::Boolean {
-        return Err(FilterError::NotBoolean { inferred_type: inferred.to_string() });
+        return Err(FilterError::NotBoolean {
+            inferred_type: inferred.to_string(),
+        });
     }
     Ok(())
 }
@@ -2376,7 +2494,8 @@ mod tests {
     /// remove the exclusion (fall through to `admit_attribute_type`, which now admits the
     /// dictionary's value type).
     #[test]
-    fn a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding() {
+    fn a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding()
+    {
         let field = Field::new(
             "cat",
             DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8)),
@@ -2496,9 +2615,14 @@ mod tests {
     fn a_chained_not_deeper_than_the_ceiling_is_refused_as_too_deep() {
         let depth = MAX_PREDICATE_DEPTH + 8;
         let bomb = format!("{}x{}", "NOT (".repeat(depth), ")".repeat(depth));
-        assert!(bomb.len() < MAX_PREDICATE_BYTES, "must trip depth, not the byte ceiling");
+        assert!(
+            bomb.len() < MAX_PREDICATE_BYTES,
+            "must trip depth, not the byte ceiling"
+        );
         match structural_admit(&bomb, &conn()) {
-            Err(FilterError::TooDeep { limit, .. }) => assert_eq!(limit, MAX_PREDICATE_DEPTH as u64),
+            Err(FilterError::TooDeep { limit, .. }) => {
+                assert_eq!(limit, MAX_PREDICATE_DEPTH as u64)
+            }
             other => panic!("expected TooDeep, got {other:?}"),
         }
     }
@@ -2551,9 +2675,14 @@ mod tests {
     fn a_union_breakout_is_refused_because_the_top_level_statement_is_no_longer_a_select() {
         match structural_admit("1=1) UNION SELECT 1 --", &conn()) {
             Err(FilterError::ConstructNotAdmitted { construct }) => {
-                assert!(construct.to_uppercase().contains("SET_OPERATION"), "{construct}");
+                assert!(
+                    construct.to_uppercase().contains("SET_OPERATION"),
+                    "{construct}"
+                );
             }
-            other => panic!("expected ConstructNotAdmitted naming the set operation, got {other:?}"),
+            other => {
+                panic!("expected ConstructNotAdmitted naming the set operation, got {other:?}")
+            }
         }
     }
 
@@ -2598,7 +2727,8 @@ mod tests {
     /// <bbox> ... LIMIT n` suffix eats this module's own `AND 1=1` sentinel identically — refused
     /// because `where_clause` is a bare `COMPARISON`, not a `CONJUNCTION_AND` at all.
     #[test]
-    fn a_trailing_comment_that_would_eat_compositions_and_bbox_also_eats_the_sentinel_and_is_refused() {
+    fn a_trailing_comment_that_would_eat_compositions_and_bbox_also_eats_the_sentinel_and_is_refused(
+    ) {
         match structural_admit("1=1) --", &conn()) {
             Err(FilterError::ConstructNotAdmitted { construct }) => {
                 assert!(construct.contains("AND-sentinel"), "{construct}");
@@ -2619,9 +2749,15 @@ mod tests {
             Ok(admission) => {
                 let columns = admission.columns;
                 for name in ["a", "b", "c"] {
-                    assert!(columns.iter().any(|c| c == name), "missing {name} in {columns:?}");
+                    assert!(
+                        columns.iter().any(|c| c == name),
+                        "missing {name} in {columns:?}"
+                    );
                 }
-                assert!(!columns.contains(&"1".to_string()), "the sentinel must not be collected");
+                assert!(
+                    !columns.contains(&"1".to_string()),
+                    "the sentinel must not be collected"
+                );
             }
             other => panic!("expected the AND-chain to admit, got {other:?}"),
         }
@@ -2657,7 +2793,9 @@ mod tests {
         }
         match structural_admit("1=1) AND 1=1 /*", &conn()) {
             Err(FilterError::Unparsable { .. }) => {}
-            other => panic!("`1=1) AND 1=1 /*` was expected Unparsable (unterminated comment), got {other:?}"),
+            other => panic!(
+                "`1=1) AND 1=1 /*` was expected Unparsable (unterminated comment), got {other:?}"
+            ),
         }
     }
 
@@ -2703,12 +2841,20 @@ mod tests {
             "sample": null,
             "qualify": null,
         });
-        node.as_object_mut().unwrap().insert("a_future_clause_this_module_has_never_seen".into(), Value::Bool(true));
+        node.as_object_mut().unwrap().insert(
+            "a_future_clause_this_module_has_never_seen".into(),
+            Value::Bool(true),
+        );
         match expect_wrapper_shape(&node) {
             Err(FilterError::ConstructNotAdmitted { construct }) => {
-                assert!(construct.contains("a_future_clause_this_module_has_never_seen"), "{construct}");
+                assert!(
+                    construct.contains("a_future_clause_this_module_has_never_seen"),
+                    "{construct}"
+                );
             }
-            other => panic!("expected ConstructNotAdmitted naming the unrecognized key, got {other:?}"),
+            other => {
+                panic!("expected ConstructNotAdmitted naming the unrecognized key, got {other:?}")
+            }
         }
     }
 

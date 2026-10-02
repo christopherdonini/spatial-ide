@@ -40,7 +40,10 @@ fn resolve_out_path(raw: &str) -> PathBuf {
     if p.is_absolute() {
         p
     } else {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join(p)
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join(p)
     }
 }
 
@@ -102,7 +105,10 @@ fn refuses_to_overwrite_an_existing_output_path() {
     let path = dir.join("placeholder.parquet");
     std::fs::write(&path, b"not a real fixture").expect("create the placeholder file");
 
-    let tiny = FixtureSpec { features: 1, ..support::spec_5gb() };
+    let tiny = FixtureSpec {
+        features: 1,
+        ..support::spec_5gb()
+    };
     // `write_geoparquet_cancellable` is never reached when this fires, which is the property under
     // test: the refusal happens before any write is attempted.
     regenerate(&path, &tiny);
@@ -133,7 +139,11 @@ fn relative_out_path_resolves_under_the_workspace_root_not_kernel() {
         resolved.display()
     );
 
-    let absolute = if cfg!(windows) { "C:/spatial-ide-scratch/x.parquet" } else { "/tmp/x.parquet" };
+    let absolute = if cfg!(windows) {
+        "C:/spatial-ide-scratch/x.parquet"
+    } else {
+        "/tmp/x.parquet"
+    };
     assert_eq!(
         resolve_out_path(absolute),
         PathBuf::from(absolute),

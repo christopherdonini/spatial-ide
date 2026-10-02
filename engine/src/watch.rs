@@ -91,9 +91,10 @@ impl SourceWatchArm for PlatformWatch {
         {
             let _ = (path, sink);
             ArmOutcome::ChecksOnly {
-                reason: "[P6 placeholder] this platform is not Windows; the advisory source-change \
+                reason:
+                    "[P6 placeholder] this platform is not Windows; the advisory source-change \
                          watcher runs on Windows only"
-                    .to_string(),
+                        .to_string(),
             }
         }
     }
@@ -140,7 +141,11 @@ mod windows_watch {
 
     impl NameSet {
         fn matches(&self, observed: &str) -> bool {
-            names_match(&self.long, observed) || self.short.as_deref().is_some_and(|s| names_match(s, observed))
+            names_match(&self.long, observed)
+                || self
+                    .short
+                    .as_deref()
+                    .is_some_and(|s| names_match(s, observed))
         }
     }
 
@@ -177,14 +182,15 @@ mod windows_watch {
         let mut buf = [0u16; 512];
         // SAFETY: `wide_path` is a valid, nul-terminated UTF-16 buffer; `buf` is large enough for
         // any 8.3 short path, and its length is passed as the declared capacity.
-        let len = unsafe {
-            GetShortPathNameW(wide_path.as_ptr(), buf.as_mut_ptr(), buf.len() as u32)
-        };
+        let len =
+            unsafe { GetShortPathNameW(wide_path.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) };
         if len == 0 || len as usize >= buf.len() {
             return None;
         }
         let short_full = String::from_utf16_lossy(&buf[..len as usize]);
-        Path::new(&short_full).file_name().map(|n| n.to_string_lossy().to_string())
+        Path::new(&short_full)
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
     }
 
     /// Open a directory handle suitable for `ReadDirectoryChangesW` (§2a's edge): list-directory
@@ -264,7 +270,11 @@ mod windows_watch {
             let err = unsafe { GetLastError() };
             return Err(format!("ReadDirectoryChangesW failed, error {err}"));
         }
-        Ok(PendingRead { handle, buffer, overlapped })
+        Ok(PendingRead {
+            handle,
+            buffer,
+            overlapped,
+        })
     }
 
     // SAFETY: a Win32 `HANDLE` is an opaque, process-wide resource identifier, never a pointer
@@ -373,7 +383,9 @@ mod windows_watch {
                                 return;
                             }
                             sink(WatchSignal::CoverageLost {
-                                cause: format!("re-issuing the watch after a non-matching name failed: {e}"),
+                                cause: format!(
+                                    "re-issuing the watch after a non-matching name failed: {e}"
+                                ),
                             });
                             return;
                         }
@@ -397,7 +409,8 @@ mod windows_watch {
             // unaligned — the structure's own layout is not naturally aligned inside this byte
             // buffer, which is why every read here is `from_ne_bytes` over a copied, aligned
             // array rather than a cast onto the buffer's own (possibly misaligned) bytes.
-            let next_entry_offset = u32::from_ne_bytes(buffer[offset..offset + 4].try_into().unwrap());
+            let next_entry_offset =
+                u32::from_ne_bytes(buffer[offset..offset + 4].try_into().unwrap());
             let action = u32::from_ne_bytes(buffer[offset + 4..offset + 8].try_into().unwrap());
             let file_name_length =
                 u32::from_ne_bytes(buffer[offset + 8..offset + 12].try_into().unwrap()) as usize;
@@ -591,9 +604,7 @@ mod windows_watch {
             Ok(p) => p,
             Err(e) => {
                 return ArmOutcome::ChecksOnly {
-                    reason: format!(
-                        "[P6 placeholder] could not canonicalize the source path: {e}"
-                    ),
+                    reason: format!("[P6 placeholder] could not canonicalize the source path: {e}"),
                 }
             }
         };

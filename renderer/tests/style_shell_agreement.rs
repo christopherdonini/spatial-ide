@@ -63,15 +63,21 @@ fn hex(c: spatial_renderer::style::Rgb) -> String {
 fn shell_emitted_documents_are_accepted_by_the_publish_side_grammar() {
     let v: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture is JSON");
 
-    for (label, key) in [("default_document", "default_document"), ("changed_document", "changed_document")] {
+    for (label, key) in [
+        ("default_document", "default_document"),
+        ("changed_document", "changed_document"),
+    ] {
         // Read directly as a string and handed to `parse` UNCHANGED (S3) -- no
         // `serde_json::to_string` round trip in between, so this really is the shell's own bytes,
         // not a re-serialized approximation of them. `doc` (below, for the field-by-field
         // expected-value assertions in step 3) is a SEPARATE parse of that same string, purely for
         // this test's own convenience reading fields back out -- it is never what gets handed to
         // `parse`/`compile`.
-        let src = v[key].as_str().unwrap_or_else(|| panic!("fixture's `{key}` is missing or not a string"));
-        let doc: serde_json::Value = serde_json::from_str(src).expect("fixture string is valid JSON");
+        let src = v[key]
+            .as_str()
+            .unwrap_or_else(|| panic!("fixture's `{key}` is missing or not a string"));
+        let doc: serde_json::Value =
+            serde_json::from_str(src).expect("fixture string is valid JSON");
 
         // 1. `spatial_renderer::style::parse` -- the same grammar `publish-bundle --style` compiles
         // against -- accepts the document the shell actually emitted, verbatim bytes (see this
@@ -105,9 +111,23 @@ fn shell_emitted_documents_are_accepted_by_the_publish_side_grammar() {
         let expected_outline_width = doc["layer"]["outline_width"]["literal"].as_f64().unwrap();
 
         let resolved = compiled.resolve(None);
-        assert_eq!(hex(resolved.fill_color), expected_fill_color, "fill_color at {label}");
-        assert_eq!(resolved.fill_opacity, expected_fill_opacity, "fill_opacity at {label}");
-        assert_eq!(hex(resolved.outline_color), expected_outline_color, "outline_color at {label}");
-        assert_eq!(resolved.outline_width, expected_outline_width, "outline_width at {label}");
+        assert_eq!(
+            hex(resolved.fill_color),
+            expected_fill_color,
+            "fill_color at {label}"
+        );
+        assert_eq!(
+            resolved.fill_opacity, expected_fill_opacity,
+            "fill_opacity at {label}"
+        );
+        assert_eq!(
+            hex(resolved.outline_color),
+            expected_outline_color,
+            "outline_color at {label}"
+        );
+        assert_eq!(
+            resolved.outline_width, expected_outline_width,
+            "outline_width at {label}"
+        );
     }
 }

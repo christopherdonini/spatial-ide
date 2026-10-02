@@ -204,7 +204,10 @@ impl IntentRecord {
             ("principal_kind", Json::str(self.principal_kind)),
             ("principal_name", Json::str(self.principal_name.clone())),
             ("source_name", Json::str(self.source_name.clone())),
-            ("source_content_hash", Json::str(self.source_content_hash.clone())),
+            (
+                "source_content_hash",
+                Json::str(self.source_content_hash.clone()),
+            ),
             ("destination", Json::str(self.destination.clone())),
             ("style_hash", Json::str(self.style_hash.clone())),
             (
@@ -238,7 +241,10 @@ impl OutcomeRecord {
             ("grantor_name", opt_str(self.grantor_name.as_ref())),
             ("grant_lifetime_s", opt_uint(self.grant_lifetime_s)),
             ("grant_remaining_s", opt_uint(self.grant_remaining_s)),
-            ("approval_route", opt_static(self.approval_route.map(|a| a.as_str()))),
+            (
+                "approval_route",
+                opt_static(self.approval_route.map(|a| a.as_str())),
+            ),
             ("operation_digest", opt_str(self.operation_digest.as_ref())),
             ("manifest_hash", opt_str(self.manifest_hash.as_ref())),
             ("rows", opt_uint(self.rows)),
@@ -292,7 +298,9 @@ mod tests {
         r.source_name = "par\ncels".into();
         assert!(matches!(
             r.to_json(&[]),
-            Err(AuditError::ControlCharacterInField { field: "source_name" })
+            Err(AuditError::ControlCharacterInField {
+                field: "source_name"
+            })
         ));
     }
 
@@ -300,14 +308,27 @@ mod tests {
     /// a member would change what every future reader of an append-only file must handle.
     #[test]
     fn both_shapes_declare_a_fixed_key_set_in_a_fixed_order() {
-        let Json::Obj(members) = intent().to_json(&["username"]).unwrap() else { panic!() };
+        let Json::Obj(members) = intent().to_json(&["username"]).unwrap() else {
+            panic!()
+        };
         let keys: Vec<&str> = members.iter().map(|(k, _)| k.as_str()).collect();
         assert_eq!(
             keys,
             [
-                "schema", "attempt", "phase", "at", "operation", "class", "reversibility",
-                "principal_kind", "principal_name", "source_name", "source_content_hash",
-                "destination", "style_hash", "residual_classes"
+                "schema",
+                "attempt",
+                "phase",
+                "at",
+                "operation",
+                "class",
+                "reversibility",
+                "principal_kind",
+                "principal_name",
+                "source_name",
+                "source_content_hash",
+                "destination",
+                "style_hash",
+                "residual_classes"
             ]
         );
 
@@ -326,14 +347,29 @@ mod tests {
             rows: Some(10),
             partitions: Some(1),
         };
-        let Json::Obj(members) = outcome.to_json(&[]).unwrap() else { panic!() };
+        let Json::Obj(members) = outcome.to_json(&[]).unwrap() else {
+            panic!()
+        };
         let keys: Vec<&str> = members.iter().map(|(k, _)| k.as_str()).collect();
         assert_eq!(
             keys,
             [
-                "schema", "attempt", "phase", "at", "outcome", "error_kind", "grantor_kind",
-                "grantor_name", "grant_lifetime_s", "grant_remaining_s", "approval_route",
-                "operation_digest", "manifest_hash", "rows", "partitions", "residual_classes"
+                "schema",
+                "attempt",
+                "phase",
+                "at",
+                "outcome",
+                "error_kind",
+                "grantor_kind",
+                "grantor_name",
+                "grant_lifetime_s",
+                "grant_remaining_s",
+                "approval_route",
+                "operation_digest",
+                "manifest_hash",
+                "rows",
+                "partitions",
+                "residual_classes"
             ]
         );
     }
@@ -386,14 +422,29 @@ mod tests {
             rows: Some(10),
             partitions: Some(1),
         };
-        let Json::Obj(members) = outcome.to_json(&[]).unwrap() else { panic!() };
+        let Json::Obj(members) = outcome.to_json(&[]).unwrap() else {
+            panic!()
+        };
         let keys: Vec<&str> = members.iter().map(|(k, _)| k.as_str()).collect();
         assert_eq!(
             keys,
             [
-                "schema", "attempt", "phase", "at", "outcome", "error_kind", "grantor_kind",
-                "grantor_name", "grant_lifetime_s", "grant_remaining_s", "approval_route",
-                "operation_digest", "manifest_hash", "rows", "partitions", "residual_classes"
+                "schema",
+                "attempt",
+                "phase",
+                "at",
+                "outcome",
+                "error_kind",
+                "grantor_kind",
+                "grantor_name",
+                "grant_lifetime_s",
+                "grant_remaining_s",
+                "approval_route",
+                "operation_digest",
+                "manifest_hash",
+                "rows",
+                "partitions",
+                "residual_classes"
             ],
             "a third ApprovalRoute variant must not change the outcome record's key set"
         );

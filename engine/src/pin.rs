@@ -86,7 +86,14 @@ impl ContentPin {
                 path.display()
             ))
         })?;
-        Ok((Self { hash, len: h.len, modified_nanos: h.modified_nanos }, millis))
+        Ok((
+            Self {
+                hash,
+                len: h.len,
+                modified_nanos: h.modified_nanos,
+            },
+            millis,
+        ))
     }
 
     /// Re-hash and compare. The real check, and the one publishing performs at its start.
@@ -171,7 +178,10 @@ mod tests {
         std::fs::write(&p, vec![7u8; 4 << 20]).unwrap();
         let c = CancelToken::new();
         c.cancel();
-        assert!(matches!(ContentPin::take(&p, &c), Err(EngineError::Cancelled)));
+        assert!(matches!(
+            ContentPin::take(&p, &c),
+            Err(EngineError::Cancelled)
+        ));
         let _ = std::fs::remove_file(&p);
     }
 
@@ -189,7 +199,10 @@ mod tests {
             ContentPin::take_with_progress(&p, &c, Some(&mut |_, _| calls += 1)),
             Err(EngineError::Cancelled)
         ));
-        assert_eq!(calls, 0, "a token cancelled before the first read must report no progress at all");
+        assert_eq!(
+            calls, 0,
+            "a token cancelled before the first read must report no progress at all"
+        );
         let _ = std::fs::remove_file(&p);
     }
 
@@ -214,7 +227,11 @@ mod tests {
         assert_eq!(seen.last().unwrap().0, seen.last().unwrap().1);
 
         let (plain, _) = ContentPin::take(&p, &CancelToken::new()).unwrap();
-        assert_eq!(pin.hash(), plain.hash(), "the two routes must hash to the same value");
+        assert_eq!(
+            pin.hash(),
+            plain.hash(),
+            "the two routes must hash to the same value"
+        );
 
         let _ = std::fs::remove_file(&p);
     }

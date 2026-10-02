@@ -21,15 +21,24 @@ use spatial_skp::v0::{
 };
 
 fn dir() -> std::path::PathBuf {
-    let d = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/session-reference");
+    let d = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../target/fixtures/session-reference");
     std::fs::create_dir_all(&d).expect("fixture dir");
     d
 }
 
 fn fixture(name: &str) -> std::path::PathBuf {
     let path = dir().join(format!("{name}.parquet"));
-    write_geoparquet(&path, &FixtureSpec { features: 20, avg_vertices: 5, hole_every: 0, ..Default::default() })
-        .expect("write fixture");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 20,
+            avg_vertices: 5,
+            hole_every: 0,
+            ..Default::default()
+        },
+    )
+    .expect("write fixture");
     path
 }
 
@@ -86,11 +95,16 @@ fn the_session_reference_routes_only_the_end_event_and_attributes_no_ticket() {
         tx,
     );
     let open = host.open_dataset(open_req(&path, "r-a")).expect("open");
-    let ticket = host.viewport_query(viewport_req(open.dataset.clone())).expect("mint a ticket");
+    let ticket = host
+        .viewport_query(viewport_req(open.dataset.clone()))
+        .expect("mint a ticket");
 
     // Before the end: the ticket answers `Live` — from the ticket's own attribution, never from the
     // `SessionRef` (this test never gives the registry the reference to look anything up with).
-    assert_eq!(host.generations().ticket_liveness(ticket.stream.as_str()), TicketLiveness::Live);
+    assert_eq!(
+        host.generations().ticket_liveness(ticket.stream.as_str()),
+        TicketLiveness::Live
+    );
 
     touch_modification_time(&path);
     host.end_generation(open.dataset.as_str());
@@ -105,14 +119,21 @@ fn the_session_reference_routes_only_the_end_event_and_attributes_no_ticket() {
     // The event is this reference's only carrier.
     let event = rx.recv_timeout(Duration::from_secs(5)).expect("one event");
     assert_eq!(event.session, open.session);
-    assert!(rx.recv_timeout(Duration::from_millis(200)).is_err(), "exactly one event");
+    assert!(
+        rx.recv_timeout(Duration::from_millis(200)).is_err(),
+        "exactly one event"
+    );
 
     // No command's request type accepts a `session` member — each of the five, valid otherwise,
     // fails to decode once one is spliced on.
-    let session_value = serde_json::to_value(SessionRef::mint()).expect("SessionRef serializes bare");
+    let session_value =
+        serde_json::to_value(SessionRef::mint()).expect("SessionRef serializes bare");
 
     let mut open_value = serde_json::to_value(open_req(&path, "r-a-splice")).expect("serialize");
-    open_value.as_object_mut().unwrap().insert("session".to_string(), session_value.clone());
+    open_value
+        .as_object_mut()
+        .unwrap()
+        .insert("session".to_string(), session_value.clone());
     assert!(
         serde_json::from_value::<OpenDatasetRequest>(open_value).is_err(),
         "OpenDatasetRequest must refuse a spliced-on `session` member"
@@ -123,7 +144,10 @@ fn the_session_reference_routes_only_the_end_event_and_attributes_no_ticket() {
         dataset: open.dataset.clone(),
     })
     .expect("serialize");
-    describe_value.as_object_mut().unwrap().insert("session".to_string(), session_value.clone());
+    describe_value
+        .as_object_mut()
+        .unwrap()
+        .insert("session".to_string(), session_value.clone());
     assert!(
         serde_json::from_value::<DescribeRequest>(describe_value).is_err(),
         "DescribeRequest must refuse a spliced-on `session` member"
@@ -131,7 +155,10 @@ fn the_session_reference_routes_only_the_end_event_and_attributes_no_ticket() {
 
     let mut viewport_value =
         serde_json::to_value(viewport_req(open.dataset.clone())).expect("serialize");
-    viewport_value.as_object_mut().unwrap().insert("session".to_string(), session_value.clone());
+    viewport_value
+        .as_object_mut()
+        .unwrap()
+        .insert("session".to_string(), session_value.clone());
     assert!(
         serde_json::from_value::<ViewportQueryRequest>(viewport_value).is_err(),
         "ViewportQueryRequest must refuse a spliced-on `session` member"
@@ -142,16 +169,24 @@ fn the_session_reference_routes_only_the_end_event_and_attributes_no_ticket() {
         handle: ticket.stream.as_str().to_string(),
     })
     .expect("serialize");
-    cancel_value.as_object_mut().unwrap().insert("session".to_string(), session_value.clone());
+    cancel_value
+        .as_object_mut()
+        .unwrap()
+        .insert("session".to_string(), session_value.clone());
     assert!(
         serde_json::from_value::<CancelRequest>(cancel_value).is_err(),
         "CancelRequest must refuse a spliced-on `session` member"
     );
 
-    let mut close_value =
-        serde_json::to_value(CloseDatasetRequest { skp: SKP_VERSION.to_string(), dataset: open.dataset })
-            .expect("serialize");
-    close_value.as_object_mut().unwrap().insert("session".to_string(), session_value);
+    let mut close_value = serde_json::to_value(CloseDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: open.dataset,
+    })
+    .expect("serialize");
+    close_value
+        .as_object_mut()
+        .unwrap()
+        .insert("session".to_string(), session_value);
     assert!(
         serde_json::from_value::<CloseDatasetRequest>(close_value).is_err(),
         "CloseDatasetRequest must refuse a spliced-on `session` member"

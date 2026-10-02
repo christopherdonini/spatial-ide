@@ -63,7 +63,11 @@ fn write(name: &str, spec: &FixtureSpec) -> (PathBuf, FixtureFacts) {
 }
 
 fn small() -> FixtureSpec {
-    FixtureSpec { features: 2_000, avg_vertices: 20, ..Default::default() }
+    FixtureSpec {
+        features: 2_000,
+        avg_vertices: 20,
+        ..Default::default()
+    }
 }
 
 fn declare(column: &str) -> IdentityDeclaration {
@@ -79,14 +83,23 @@ fn a_native_id_column_is_verified_unique_rather_than_trusted() {
     let ds = Dataset::open(&path).expect("open");
 
     assert_eq!(*ds.identity().source(), IdSource::File);
-    assert_eq!(ds.identity().uniqueness(), IdUniqueness::VerifiedAtOpenFullFile);
+    assert_eq!(
+        ds.identity().uniqueness(),
+        IdUniqueness::VerifiedAtOpenFullFile
+    );
     assert_eq!(ds.identity().verified_rows(), Some(facts.features as u64));
     assert_eq!(ds.identity().js_exact(), Some(true));
 
     let md = ds.envelope().schema().metadata().clone();
     assert_eq!(md.get("id_source").unwrap(), "file:id");
-    assert_eq!(md.get("id_uniqueness").unwrap(), "verified-at-open-full-file");
-    assert_eq!(md.get("id_verified_rows").unwrap(), &facts.features.to_string());
+    assert_eq!(
+        md.get("id_uniqueness").unwrap(),
+        "verified-at-open-full-file"
+    );
+    assert_eq!(
+        md.get("id_verified_rows").unwrap(),
+        &facts.features.to_string()
+    );
 }
 
 #[test]
@@ -95,12 +108,24 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
     // The gap ADR-016's Context names first: legal parquet, an integer column called `id`, and two
     // features sharing an identity — ADR-010 rule 2's wrong-but-plausible pick arriving through
     // the data instead of through buffer order.
-    let (path, _) =
-        write("duplicate", &FixtureSpec { identity: IdentityMode::DuplicateIds, ..small() });
+    let (path, _) = write(
+        "duplicate",
+        &FixtureSpec {
+            identity: IdentityMode::DuplicateIds,
+            ..small()
+        },
+    );
     match Dataset::open(&path) {
-        Err(EngineError::IdentityUnusable { column, detail, candidate_columns }) => {
+        Err(EngineError::IdentityUnusable {
+            column,
+            detail,
+            candidate_columns,
+        }) => {
             assert_eq!(column, "id");
-            assert!(detail.contains("distinct"), "the refusal must say why: {detail}");
+            assert!(
+                detail.contains("distinct"),
+                "the refusal must say why: {detail}"
+            );
             assert!(
                 candidate_columns.contains(&"id".to_string()),
                 "the file's own 64-bit `id` column must be among the candidates: {candidate_columns:?}"
@@ -114,8 +139,13 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
 fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
     let _wd = Watchdog::new("a_foreign_key_column_needs_a_declaration");
     // The shape most real GeoParquet has, and the reason ADR-016 exists.
-    let (path, facts) =
-        write("foreign-key", &FixtureSpec { identity: IdentityMode::ForeignKeyColumn, ..small() });
+    let (path, facts) = write(
+        "foreign-key",
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small()
+        },
+    );
     // **Changed at Brief A P3 — R-I3, and this is the consequence the preregistration §12d put on
     // the human's sight list by name** ("R-I3's consequence for files that today refuse
     // `identity_unusable`"). This file used to refuse here. It now admits on the **session tier**:
@@ -131,14 +161,18 @@ fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
         "no scan ran, and the record says what the basis is rather than the bare word"
     );
     assert!(
-        unmapped.identity().candidate_columns().contains(&"parcel_key".to_string()),
+        unmapped
+            .identity()
+            .candidate_columns()
+            .contains(&"parcel_key".to_string()),
         "the candidate list is still reported so an operator can declare a mapping (R-I3)"
     );
     drop(unmapped);
 
     // …and a declaration redirects identity without weakening anything.
-    let ds = Dataset::open_with_declared_identity(&path, declare("parcel_key"), &CancelToken::new())
-        .expect("a declared mapping admits the file");
+    let ds =
+        Dataset::open_with_declared_identity(&path, declare("parcel_key"), &CancelToken::new())
+            .expect("a declared mapping admits the file");
     assert_eq!(
         *ds.identity().source(),
         IdSource::Mapped {
@@ -147,7 +181,10 @@ fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
             at: "2026-08-05T00:00:00Z".into(),
         }
     );
-    assert_eq!(ds.identity().uniqueness(), IdUniqueness::VerifiedAtOpenFullFile);
+    assert_eq!(
+        ds.identity().uniqueness(),
+        IdUniqueness::VerifiedAtOpenFullFile
+    );
 
     let md = ds.envelope().schema().metadata().clone();
     assert_eq!(md.get("id_source").unwrap(), "mapped:parcel_key");
@@ -174,7 +211,11 @@ fn a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared() {
     assert_eq!(rows, facts.features);
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), facts.features, "every mapped id is distinct on the wire too");
+    assert_eq!(
+        ids.len(),
+        facts.features,
+        "every mapped id is distinct on the wire too"
+    );
 }
 
 #[test]
@@ -182,11 +223,23 @@ fn a_declared_mapping_to_a_non_integer_column_is_refused_not_hashed() {
     let _wd = Watchdog::new("a_non_integer_mapping_is_refused");
     // ADR-016 §4: a hash or a dictionary index is a synthesized identity wearing a mapping's
     // clothes. Hashing would introduce a collision probability a stable identity may not have.
-    let (path, _) = write("string-key", &FixtureSpec { identity: IdentityMode::StringIds, ..small() });
+    let (path, _) = write(
+        "string-key",
+        &FixtureSpec {
+            identity: IdentityMode::StringIds,
+            ..small()
+        },
+    );
     match Dataset::open_with_declared_identity(&path, declare("id"), &CancelToken::new()) {
         Err(EngineError::IdentityUnusable { detail, .. }) => {
-            assert!(detail.contains("Utf8"), "the refusal names the type: {detail}");
-            assert!(detail.contains("synthesized"), "and says why a hash is not a way out: {detail}");
+            assert!(
+                detail.contains("Utf8"),
+                "the refusal names the type: {detail}"
+            );
+            assert!(
+                detail.contains("synthesized"),
+                "and says why a hash is not a way out: {detail}"
+            );
         }
         other => panic!("expected a typed refusal, got {:?}", other.err()),
     }
@@ -197,8 +250,13 @@ fn a_negative_identity_value_is_refused_because_it_cannot_widen_into_u64() {
     let _wd = Watchdog::new("a_negative_identity_value_is_refused");
     // The *type* is admissible — Int64 widens — and the *values* are not. That is why §4's type
     // test and the value check both exist; either alone would let this through or refuse too much.
-    let (path, _) =
-        write("negative", &FixtureSpec { identity: IdentityMode::NegativeIds, ..small() });
+    let (path, _) = write(
+        "negative",
+        &FixtureSpec {
+            identity: IdentityMode::NegativeIds,
+            ..small()
+        },
+    );
     match Dataset::open(&path) {
         Err(EngineError::IdentityUnusable { detail, .. }) => {
             assert!(detail.contains("negative"), "{detail}");
@@ -213,10 +271,23 @@ fn identities_above_the_js_exact_limit_are_admitted_but_flagged_on_the_envelope(
     // ADR-016 §7. The engine carries u64 exactly, so this is admitted — but a consumer narrowing
     // to a JS `Number` would collide, and the envelope says so rather than leaving it to be
     // discovered per value. An unhandled BigInt is the M4 root cause behind ADR-010 rule 7.
-    let (path, _) = write("huge", &FixtureSpec { identity: IdentityMode::HugeIds, ..small() });
+    let (path, _) = write(
+        "huge",
+        &FixtureSpec {
+            identity: IdentityMode::HugeIds,
+            ..small()
+        },
+    );
     let ds = Dataset::open(&path).expect("u64 carries these exactly");
     assert_eq!(ds.identity().js_exact(), Some(false));
-    assert_eq!(ds.envelope().schema().metadata().get("id_js_exact").unwrap(), "false");
+    assert_eq!(
+        ds.envelope()
+            .schema()
+            .metadata()
+            .get("id_js_exact")
+            .unwrap(),
+        "false"
+    );
 }
 
 #[test]
@@ -225,18 +296,29 @@ fn skipping_the_uniqueness_check_is_recorded_rather_than_hidden() {
     // A caller may take responsibility for uniqueness. It may not make that invisible: ADR-016 §6
     // requires the record to say what was *checked*, so an opt-out is visible to every consumer
     // downstream of it — including on a file that would have failed the check.
-    let (path, _) =
-        write("unverified", &FixtureSpec { identity: IdentityMode::DuplicateIds, ..small() });
+    let (path, _) = write(
+        "unverified",
+        &FixtureSpec {
+            identity: IdentityMode::DuplicateIds,
+            ..small()
+        },
+    );
     let mut d = declare("id");
     d.skip_uniqueness_check = true;
     let ds = Dataset::open_with_declared_identity(&path, d, &CancelToken::new())
         .expect("the opt-out admits without checking");
 
-    assert_eq!(ds.identity().uniqueness(), IdUniqueness::DeclaredNotVerified);
+    assert_eq!(
+        ds.identity().uniqueness(),
+        IdUniqueness::DeclaredNotVerified
+    );
     let md = ds.envelope().schema().metadata().clone();
     assert_eq!(md.get("id_uniqueness").unwrap(), "declared-not-verified");
     // Unknown, and reported as unknown rather than defaulted to the reassuring answer.
-    assert!(md.get("id_js_exact").is_none(), "unverified width must not read as exact");
+    assert!(
+        md.get("id_js_exact").is_none(),
+        "unverified width must not read as exact"
+    );
     assert!(md.get("id_verified_rows").is_none());
 }
 
@@ -246,7 +328,13 @@ fn the_uniqueness_scan_is_cancellable_because_it_reads_a_whole_column() {
     // ADR-016 §5: the scan is an *operation*, not a lookup, so `docs/01` principle 7 binds it.
     // At `docs/07`'s 5 GB this is the difference between an open a user can abandon and one that
     // holds the application for the length of a full column read.
-    let (path, _) = write("cancellable", &FixtureSpec { features: 40_000, ..small() });
+    let (path, _) = write(
+        "cancellable",
+        &FixtureSpec {
+            features: 40_000,
+            ..small()
+        },
+    );
     let cancel = CancelToken::new();
     cancel.cancel();
 
@@ -255,6 +343,9 @@ fn the_uniqueness_scan_is_cancellable_because_it_reads_a_whole_column() {
         // A pre-cancelled token may also surface as DuckDB refusing to run at all; either way the
         // open must not complete as if nothing happened.
         Err(EngineError::Query(_)) => {}
-        other => panic!("a cancelled open must not succeed, got {:?}", other.map(|_| "Ok")),
+        other => panic!(
+            "a cancelled open must not succeed, got {:?}",
+            other.map(|_| "Ok")
+        ),
     }
 }

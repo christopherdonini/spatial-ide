@@ -173,7 +173,10 @@ impl Outcome {
         Some(Self {
             at: v.get("at")?.as_str()?.to_string(),
             outcome: v.get("outcome")?.as_str()?.to_string(),
-            error_kind: v.get("error_kind").and_then(|v| v.as_str()).map(str::to_string),
+            error_kind: v
+                .get("error_kind")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
             // `approval_route` is the current field name; `approval` is the same domain's earlier
             // spelling — see this module's own top doc comment on why both are read.
             approval_route: v
@@ -226,16 +229,25 @@ fn plain_reason(kind: &str) -> String {
         "GrantScopeMismatch" => "the grant did not cover this operation".to_string(),
         "GrantExpired" => "the matching grant had expired".to_string(),
         "GrantCeilingExceeded" => "the declared grant ceiling was reached".to_string(),
-        "GrantLifetimeExceeded" => "the requested grant lifetime exceeded the declared ceiling".to_string(),
+        "GrantLifetimeExceeded" => {
+            "the requested grant lifetime exceeded the declared ceiling".to_string()
+        }
         "DestinationUnresolvable" => "the destination could not be resolved".to_string(),
         "ApprovalRefused" => {
-            "the confirmation did not match the destination (wrong phrase, or none given)".to_string()
+            "the confirmation did not match the destination (wrong phrase, or none given)"
+                .to_string()
         }
-        "ApprovalUnavailable" => "the approval channel failed (not an operator decision)".to_string(),
+        "ApprovalUnavailable" => {
+            "the approval channel failed (not an operator decision)".to_string()
+        }
         "AuditUnwritable" => "the audit log itself could not be written".to_string(),
-        "AuditLogInsideDestination" => "the audit log path resolved inside the destination".to_string(),
+        "AuditLogInsideDestination" => {
+            "the audit log path resolved inside the destination".to_string()
+        }
         "AuditRotationFailed" => "the audit log could not be rotated".to_string(),
-        "AuditControlCharacterInField" => "a record field contained a control character".to_string(),
+        "AuditControlCharacterInField" => {
+            "a record field contained a control character".to_string()
+        }
         "AuditCredentialInRecord" => "a credential was found in the record and refused".to_string(),
         "AuditCanonical" => "the record could not be serialized".to_string(),
         "DestinationExists" => "the destination already exists".to_string(),
@@ -249,7 +261,9 @@ fn plain_reason(kind: &str) -> String {
         "ViewerAssetPathRejected" => "a viewer asset path was rejected".to_string(),
         "ViewerLicenseIncomplete" => "the viewer license was incomplete".to_string(),
         "ViewerLicenseNoticeMissing" => "the viewer's own notice file was missing".to_string(),
-        "CorrespondingSourceNotDurable" => "the corresponding-source route was not durable".to_string(),
+        "CorrespondingSourceNotDurable" => {
+            "the corresponding-source route was not durable".to_string()
+        }
         "DatasetNameRejected" => "the dataset name was rejected".to_string(),
         "RowFilterNotRecordable" => {
             "the active row filter cannot be recorded in this bundle format".to_string()
@@ -259,7 +273,9 @@ fn plain_reason(kind: &str) -> String {
                 .to_string()
         }
         "CeilingExceeded" => "a declared ceiling was exceeded".to_string(),
-        "StagingNotRemoved" => "the operation failed and left a staging directory behind".to_string(),
+        "StagingNotRemoved" => {
+            "the operation failed and left a staging directory behind".to_string()
+        }
         "Engine" => "an engine-level error occurred".to_string(),
         "Style" => "a style error occurred".to_string(),
         "Canonical" => "the operation could not be serialized".to_string(),
@@ -277,7 +293,11 @@ fn render_pair(intent: &Intent, outcome: &Outcome) -> String {
                 None => "an unrecorded number of".to_string(),
             };
             let partitions = outcome.partitions.unwrap_or(0);
-            let noun = if partitions == 1 { "partition" } else { "partitions" };
+            let noun = if partitions == 1 {
+                "partition"
+            } else {
+                "partitions"
+            };
             let route = outcome
                 .approval_route
                 .as_deref()
@@ -314,7 +334,10 @@ fn render_pair(intent: &Intent, outcome: &Outcome) -> String {
 
 fn render_orphan_intent(intent: &Intent) -> String {
     let date = plain_date(&intent.at);
-    format!("{date} — publish to {} — intent recorded, no outcome (interrupted?)", intent.destination)
+    format!(
+        "{date} — publish to {} — intent recorded, no outcome (interrupted?)",
+        intent.destination
+    )
 }
 
 fn render_orphan_outcome(attempt: &str, outcome: &Outcome) -> String {
@@ -355,12 +378,18 @@ mod tests {
     #[test]
     fn a_success_pair_reads_as_one_plain_sentence() {
         let lines = render_audit_log(&fixture());
-        let line = lines.iter().find(|l| l.contains("C:/dev/out/parcels")).expect("the pair is present");
+        let line = lines
+            .iter()
+            .find(|l| l.contains("C:/dev/out/parcels"))
+            .expect("the pair is present");
         assert!(line.starts_with("2026-08-17 08:44"), "{line}");
         assert!(line.contains("APPROVED via shell dialog"), "{line}");
         assert!(line.contains("SUCCEEDED"), "{line}");
         assert!(line.contains("2000 rows"), "{line}");
-        assert!(line.contains("1 partition)"), "{line} (singular noun expected for exactly one)");
+        assert!(
+            line.contains("1 partition)"),
+            "{line} (singular noun expected for exactly one)"
+        );
     }
 
     #[test]
@@ -372,7 +401,10 @@ mod tests {
             .expect("the pair is present");
         assert!(line.contains("REFUSED:"), "{line}");
         assert!(line.contains("did not match the destination"), "{line}");
-        assert!(!line.contains("ApprovalRefused"), "the raw variant name must not leak: {line}");
+        assert!(
+            !line.contains("ApprovalRefused"),
+            "the raw variant name must not leak: {line}"
+        );
     }
 
     #[test]
@@ -382,7 +414,10 @@ mod tests {
             .iter()
             .find(|l| l.contains("C:/dev/out/interrupted"))
             .expect("the orphan intent is present");
-        assert!(line.contains("intent recorded, no outcome (interrupted?)"), "{line}");
+        assert!(
+            line.contains("intent recorded, no outcome (interrupted?)"),
+            "{line}"
+        );
     }
 
     #[test]
@@ -408,7 +443,11 @@ mod tests {
         let lines = render_audit_log(text);
         assert_eq!(lines.len(), 1, "{lines:#?}");
         assert!(lines[0].contains("CORRUPT"), "{}", lines[0]);
-        assert!(lines[0].contains("not a spatial-audit/1 record"), "{}", lines[0]);
+        assert!(
+            lines[0].contains("not a spatial-audit/1 record"),
+            "{}",
+            lines[0]
+        );
     }
 
     /// **The append-only property named in this module's own top doc comment, exercised directly**:
@@ -424,14 +463,21 @@ mod tests {
         .join("\n");
         let lines = render_audit_log(&text);
         assert_eq!(lines.len(), 1, "{lines:#?}");
-        assert!(lines[0].contains("APPROVED via an interactive prompt"), "{}", lines[0]);
+        assert!(
+            lines[0].contains("APPROVED via an interactive prompt"),
+            "{}",
+            lines[0]
+        );
         assert!(!lines[0].contains("CORRUPT"), "{}", lines[0]);
     }
 
     #[test]
     fn blank_lines_are_ignored_without_being_reported_as_corrupt() {
         let text = format!("{}\n\n\n", fixture());
-        assert_eq!(render_audit_log(&text).len(), render_audit_log(&fixture()).len());
+        assert_eq!(
+            render_audit_log(&text).len(),
+            render_audit_log(&fixture()).len()
+        );
     }
 
     /// Mutation M1 observed at 256154c: with the condition restored to its base text, this test

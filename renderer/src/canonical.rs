@@ -67,7 +67,12 @@ pub enum Json {
 impl Json {
     /// Build an object from members in their declared order.
     pub fn obj<const N: usize>(members: [(&str, Json); N]) -> Json {
-        Json::Obj(members.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
+        Json::Obj(
+            members
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v))
+                .collect(),
+        )
     }
 
     pub fn str(s: impl Into<String>) -> Json {
@@ -115,7 +120,10 @@ impl std::fmt::Display for CanonicalError {
                  writes no exponent and cannot express it"
             ),
             Self::DuplicateKey { at, key } => {
-                write!(f, "canonical json: object at {at} has two members named `{key}`")
+                write!(
+                    f,
+                    "canonical json: object at {at} has two members named `{key}`"
+                )
             }
             Self::NotRoundTrippable { at, value } => write!(
                 f,
@@ -230,7 +238,10 @@ pub fn write_double(d: f64, at: &str) -> Result<String, CanonicalError> {
     let d = if d == 0.0 { 0.0 } else { d };
     let mag = d.abs();
     if d != 0.0 && (mag < MIN_ABS_DOUBLE || mag >= MAX_ABS_DOUBLE) {
-        return Err(CanonicalError::OutOfDomain { at: at.to_string(), value: d });
+        return Err(CanonicalError::OutOfDomain {
+            at: at.to_string(),
+            value: d,
+        });
     }
     for precision in 1..=30usize {
         let s = format!("{d:.precision$}");
@@ -238,7 +249,10 @@ pub fn write_double(d: f64, at: &str) -> Result<String, CanonicalError> {
             return Ok(trim_fraction(s));
         }
     }
-    Err(CanonicalError::NotRoundTrippable { at: at.to_string(), value: d })
+    Err(CanonicalError::NotRoundTrippable {
+        at: at.to_string(),
+        value: d,
+    })
 }
 
 /// Drop trailing fractional zeros, keeping at least one fractional digit.
@@ -284,7 +298,10 @@ mod tests {
             write_double(f64::NAN, "$.bounds.xmin"),
             Err(CanonicalError::NonFinite { .. })
         ));
-        assert!(matches!(write_double(f64::INFINITY, "$"), Err(CanonicalError::NonFinite { .. })));
+        assert!(matches!(
+            write_double(f64::INFINITY, "$"),
+            Err(CanonicalError::NonFinite { .. })
+        ));
         assert!(matches!(
             write_double(f64::NEG_INFINITY, "$"),
             Err(CanonicalError::NonFinite { .. })
@@ -295,8 +312,14 @@ mod tests {
     fn the_no_exponent_promise_is_kept_by_refusing_what_it_cannot_express() {
         // A grammar that promises "no exponent" and then depends on nobody passing 1e20 has not
         // promised anything.
-        assert!(matches!(write_double(1e20, "$"), Err(CanonicalError::OutOfDomain { .. })));
-        assert!(matches!(write_double(1e-9, "$"), Err(CanonicalError::OutOfDomain { .. })));
+        assert!(matches!(
+            write_double(1e20, "$"),
+            Err(CanonicalError::OutOfDomain { .. })
+        ));
+        assert!(matches!(
+            write_double(1e-9, "$"),
+            Err(CanonicalError::OutOfDomain { .. })
+        ));
         // …and the LV95 working domain is comfortably inside it.
         assert_eq!(write_double(2_612_680.125, "$").unwrap(), "2612680.125");
         assert_eq!(write_double(1e-6, "$").unwrap(), "0.000001");
@@ -324,7 +347,11 @@ mod tests {
                 -(2_600_000.0 + unit * 12_680.0),
             ] {
                 let s = write_double(v, "$").unwrap();
-                assert_eq!(s.parse::<f64>().unwrap().to_bits(), v.to_bits(), "{v:e} wrote {s}");
+                assert_eq!(
+                    s.parse::<f64>().unwrap().to_bits(),
+                    v.to_bits(),
+                    "{v:e} wrote {s}"
+                );
                 assert!(!s.contains('e') && !s.contains('E'), "{s} used an exponent");
                 assert!(s.contains('.'), "{s} has no fractional digit");
             }
@@ -340,7 +367,10 @@ mod tests {
     #[test]
     fn a_duplicate_key_is_a_refusal_rather_than_a_last_one_wins() {
         let v = Json::Obj(vec![("a".into(), Json::Int(1)), ("a".into(), Json::Int(2))]);
-        assert!(matches!(to_canonical_string(&v), Err(CanonicalError::DuplicateKey { .. })));
+        assert!(matches!(
+            to_canonical_string(&v),
+            Err(CanonicalError::DuplicateKey { .. })
+        ));
     }
 
     #[test]

@@ -148,13 +148,19 @@ fn require_disk_with_deletion_policy(phase: &str, log: &mut String) -> u64 {
     if free < MIN_FREE_BYTES {
         let dir = pilot_residue_dir();
         if dir.exists() {
-            say!("below floor — deleting this cut's own pilot residue at {}", dir.display());
+            say!(
+                "below floor — deleting this cut's own pilot residue at {}",
+                dir.display()
+            );
             match std::fs::remove_dir_all(&dir) {
                 Ok(()) => say!("deleted {}", dir.display()),
                 Err(e) => say!("could not delete {}: {e}", dir.display()),
             }
         } else {
-            say!("below floor — no pilot residue present at {} to delete", dir.display());
+            say!(
+                "below floor — no pilot residue present at {} to delete",
+                dir.display()
+            );
         }
         free = free_bytes_on_c().unwrap_or(0);
         say!(
@@ -173,7 +179,9 @@ fn require_disk_with_deletion_policy(phase: &str, log: &mut String) -> u64 {
 }
 
 fn file_facts(p: &Path) -> (u64, String) {
-    let Ok(md) = std::fs::metadata(p) else { return (0, "absent".into()) };
+    let Ok(md) = std::fs::metadata(p) else {
+        return (0, "absent".into());
+    };
     let hash = spatial_engine::index::content_hash(p, &CancelToken::new())
         .map(|(h, _)| h)
         .unwrap_or_else(|_| "unreadable".into());
@@ -183,7 +191,9 @@ fn file_facts(p: &Path) -> (u64, String) {
 fn row_groups_of(path: &Path) -> u64 {
     let conn = configured_connection().expect("configured connection");
     let path_sql = path.to_str().unwrap().replace('\'', "''");
-    spatial_engine::layout::row_group_row_counts(&conn, &path_sql).expect("row groups").len() as u64
+    spatial_engine::layout::row_group_row_counts(&conn, &path_sql)
+        .expect("row groups")
+        .len() as u64
 }
 
 /// A minimal rewrite watchdog, restated from `import_layout_fixtures.rs::RewriteWatchdog` — that
@@ -217,7 +227,11 @@ impl RewriteWatchdog {
                 return;
             }
         });
-        Self { stop, fired, handle: Some(handle) }
+        Self {
+            stop,
+            fired,
+            handle: Some(handle),
+        }
     }
     fn finish(mut self) -> bool {
         self.stop.store(true, Ordering::Relaxed);
@@ -274,7 +288,12 @@ fn ensure(
     }
     let cancel = CancelToken::new();
     let dog = RewriteWatchdog::start(REWRITE_CEILING, cancel.clone());
-    let spec = VariantSpec { order, extent, row_group_rows: SHIPPED_GRANULARITY, id_column: "id".into() };
+    let spec = VariantSpec {
+        order,
+        extent,
+        row_group_rows: SHIPPED_GRANULARITY,
+        id_column: "id".into(),
+    };
     let started = Instant::now();
     let result = write_clustered_variant(src, dst, &spec, &cancel);
     let elapsed = started.elapsed();
@@ -294,11 +313,19 @@ fn ensure(
             (bytes, hash, facts.row_groups)
         }
         Ok(_) => {
-            std::fs::write(evidence_dir().join("import-layout-5gb-fixtures.log"), &log as &str).ok();
+            std::fs::write(
+                evidence_dir().join("import-layout-5gb-fixtures.log"),
+                &log as &str,
+            )
+            .ok();
             panic!("{id}: watchdog at {REWRITE_CEILING:?} (fired={fired}), not retried within this run");
         }
         Err(e) => {
-            std::fs::write(evidence_dir().join("import-layout-5gb-fixtures.log"), &log as &str).ok();
+            std::fs::write(
+                evidence_dir().join("import-layout-5gb-fixtures.log"),
+                &log as &str,
+            )
+            .ok();
             panic!("{id}: rewrite refused or failed: {e}. A refusal stops this phase (F3).");
         }
     }
@@ -325,10 +352,17 @@ fn generate_the_5gb_fixture_set() {
     // ---- G5: read-only, never regenerated. A mismatch here STOPS the cut — there is no repair
     // path this harness is allowed to take (ADR-006 ruling, preregistration §10). --------------------
     let g5 = g5_path();
-    assert!(g5.exists(), "G5 (the scale-pass source fixture) is absent at {} — this phase refuses \
-             to generate one (preregistration §4/§10)", g5.display());
+    assert!(
+        g5.exists(),
+        "G5 (the scale-pass source fixture) is absent at {} — this phase refuses \
+             to generate one (preregistration §4/§10)",
+        g5.display()
+    );
     let (g5_bytes, g5_hash) = file_facts(&g5);
-    say!("G5 (read-only source): {} — {g5_bytes} B, sha256 {g5_hash}", g5.display());
+    say!(
+        "G5 (read-only source): {} — {g5_bytes} B, sha256 {g5_hash}",
+        g5.display()
+    );
     assert_eq!(
         g5_hash, G5_SHA256,
         "G5's sha256 does not match the recorded value ({G5_SHA256}). This file is READ-ONLY and \
@@ -340,10 +374,24 @@ fn generate_the_5gb_fixture_set() {
     let extent = source_extent();
 
     // ---- C5, H5: reused iff they verify; rewritten (1 800 s watchdog) otherwise ------------------
-    let (c5_bytes, c5_hash, c5_groups) =
-        ensure("C5", &c5_path(), C5_SHA256, ClusterOrder::SourceIdentity, &g5, extent, &mut log);
-    let (h5_bytes, h5_hash, h5_groups) =
-        ensure("H5", &h5_path(), H5_SHA256, ClusterOrder::Hilbert16, &g5, extent, &mut log);
+    let (c5_bytes, c5_hash, c5_groups) = ensure(
+        "C5",
+        &c5_path(),
+        C5_SHA256,
+        ClusterOrder::SourceIdentity,
+        &g5,
+        extent,
+        &mut log,
+    );
+    let (h5_bytes, h5_hash, h5_groups) = ensure(
+        "H5",
+        &h5_path(),
+        H5_SHA256,
+        ClusterOrder::Hilbert16,
+        &g5,
+        extent,
+        &mut log,
+    );
 
     // ---- R5: the one genuinely new file ------------------------------------------------------------
     // No known-good hash exists yet (it is new); an empty string as the "known" value means `ensure`

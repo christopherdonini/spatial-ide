@@ -106,7 +106,9 @@ pub fn start_payload(operation: &str, params: &[u8]) -> Vec<u8> {
 
 pub fn parse_start(payload: &[u8]) -> Option<(String, Vec<u8>)> {
     let op_len = u16::from_be_bytes(payload.get(..2)?.try_into().ok()?) as usize;
-    let op = std::str::from_utf8(payload.get(2..2 + op_len)?).ok()?.to_string();
+    let op = std::str::from_utf8(payload.get(2..2 + op_len)?)
+        .ok()?
+        .to_string();
     let at = 2 + op_len;
     let params_len = u32::from_be_bytes(payload.get(at..at + 4)?.try_into().ok()?) as usize;
     let params = payload.get(at + 4..at + 4 + params_len)?.to_vec();
@@ -123,7 +125,10 @@ pub fn looks_like_json(frame_bytes: &[u8]) -> bool {
     } else {
         return false;
     };
-    matches!(payload.iter().find(|b| !b.is_ascii_whitespace()), Some(b'{') | Some(b'['))
+    matches!(
+        payload.iter().find(|b| !b.is_ascii_whitespace()),
+        Some(b'{') | Some(b'[')
+    )
 }
 
 #[cfg(test)]
@@ -134,7 +139,11 @@ mod tests {
     fn frame_layout_roundtrips() {
         let f = frame(TAG_BATCH, &[1, 2, 3, 4]);
         assert_eq!(f[0], TAG_BATCH);
-        assert_eq!(&f[1..4], &[0, 0, 0], "reserved bytes keep the payload 8-byte aligned");
+        assert_eq!(
+            &f[1..4],
+            &[0, 0, 0],
+            "reserved bytes keep the payload 8-byte aligned"
+        );
         assert_eq!(payload_len(&f), Some(4));
         assert_eq!(&f[FRAME_PREFIX_LEN..], &[1, 2, 3, 4]);
     }
@@ -165,7 +174,10 @@ mod tests {
         let (op, got) = parse_start(&f).unwrap();
         assert_eq!(op, "stream_features");
         assert_eq!(got, params);
-        assert!(parse_start(&f[..3]).is_none(), "a truncated START does not half-parse");
+        assert!(
+            parse_start(&f[..3]).is_none(),
+            "a truncated START does not half-parse"
+        );
     }
 
     #[test]
@@ -184,6 +196,9 @@ mod tests {
         assert!(looks_like_json(&frame(TAG_PROGRESS, br#"{"batches":7}"#)));
         assert!(looks_like_json(&frame(TAG_PROGRESS, br#"  [1,2,3]"#)));
         // Arrow IPC streams start with the 0xFFFFFFFF continuation marker, never '{' or '['.
-        assert!(!looks_like_json(&frame(TAG_BATCH, &[0xff, 0xff, 0xff, 0xff, 0x00])));
+        assert!(!looks_like_json(&frame(
+            TAG_BATCH,
+            &[0xff, 0xff, 0xff, 0xff, 0x00]
+        )));
     }
 }

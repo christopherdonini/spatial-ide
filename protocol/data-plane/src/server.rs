@@ -204,12 +204,18 @@ impl StreamRegistry {
             evicted.push(state.terminals.remove(0).stream);
         }
         if !evicted.is_empty() {
-            state.streams.retain(|s| !evicted.iter().any(|id| id == s.stream.as_str()));
+            state
+                .streams
+                .retain(|s| !evicted.iter().any(|id| id == s.stream.as_str()));
         }
     }
 
     pub fn snapshot(&self) -> Vec<Arc<StreamState>> {
-        self.state.lock().unwrap_or_else(|e| e.into_inner()).streams.clone()
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .streams
+            .clone()
     }
     pub fn terminals(&self) -> Vec<(String, Terminal)> {
         self.state
@@ -259,7 +265,11 @@ impl RunningDataPlane {
     /// It is returned, never written: ADR-012's threat model requires that the production transport
     /// "must not write the credential to disk", and nothing in this crate does.
     pub fn launch_url(&self) -> String {
-        format!("http://127.0.0.1:{}/#{}", self.addr.port(), self.session.token_for_delivery())
+        format!(
+            "http://127.0.0.1:{}/#{}",
+            self.addr.port(),
+            self.session.token_for_delivery()
+        )
     }
 
     pub async fn shutdown(mut self) {
@@ -276,7 +286,10 @@ impl RunningDataPlane {
 pub async fn serve(config: DataPlaneConfig) -> std::io::Result<RunningDataPlane> {
     let listener = TcpListener::bind(("127.0.0.1", 0)).await?;
     let addr = listener.local_addr()?;
-    assert!(addr.ip().is_loopback(), "the data plane binds loopback only");
+    assert!(
+        addr.ip().is_loopback(),
+        "the data plane binds loopback only"
+    );
 
     let session = match config.expected_origin {
         Some(origin) => Session::with_origin(origin)?,
@@ -328,7 +341,10 @@ async fn page(State(st): State<AppState>) -> Response {
     serve_file(&st, "index.html").await
 }
 
-async fn asset(State(st): State<AppState>, axum::extract::Path(file): axum::extract::Path<String>) -> Response {
+async fn asset(
+    State(st): State<AppState>,
+    axum::extract::Path(file): axum::extract::Path<String>,
+) -> Response {
     serve_file(&st, &file).await
 }
 
@@ -393,7 +409,8 @@ async fn upgrade(State(st): State<AppState>, headers: HeaderMap, ws: WebSocketUp
         return (StatusCode::UNAUTHORIZED, "credential").into_response();
     }
 
-    ws.protocols([SUBPROTOCOL]).on_upgrade(move |socket| handle(st, socket))
+    ws.protocols([SUBPROTOCOL])
+        .on_upgrade(move |socket| handle(st, socket))
 }
 
 async fn handle(st: AppState, mut socket: WebSocket) {
@@ -411,7 +428,11 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     // and stream capacity is untouched — which is what keeps this a latency change rather than an
     // admission-policy change (ADR-014's reserved question).
     let idle_permit = st.idle.clone().try_acquire_owned().ok();
-    let start_budget = if idle_permit.is_some() { START_TIMEOUT } else { CROWDED_START_TIMEOUT };
+    let start_budget = if idle_permit.is_some() {
+        START_TIMEOUT
+    } else {
+        CROWDED_START_TIMEOUT
+    };
 
     // **The operation is read before a capacity slot is taken.** Admission is about *streams*, and a
     // connection that never starts one must not hold a slot: with the slot taken first,
@@ -424,8 +445,13 @@ async fn handle(st: AppState, mut socket: WebSocket) {
             // A START this producer cannot parse is a transport failure and says so. Returning
             // here instead would drop the socket with no terminal frame — the silent truncation
             // `lib.rs` declares a correctness failure, reached on the parse path.
-            terminal_and_drain(socket, wire::TERM_TRANSPORT_FAILED, detail, &st.json_frames_seen)
-                .await;
+            terminal_and_drain(
+                socket,
+                wire::TERM_TRANSPORT_FAILED,
+                detail,
+                &st.json_frames_seen,
+            )
+            .await;
             return;
         }
         Err(_) => {
@@ -436,8 +462,13 @@ async fn handle(st: AppState, mut socket: WebSocket) {
                     "no operation started, and the declared ceiling                      MAX_IDLE_CONNECTIONS={MAX_IDLE_CONNECTIONS} was already reached, so this                      connection was held for {CROWDED_START_TIMEOUT:?} rather than                      {START_TIMEOUT:?}"
                 )
             };
-            terminal_and_drain(socket, wire::TERM_TRANSPORT_FAILED, &detail, &st.json_frames_seen)
-                .await;
+            terminal_and_drain(
+                socket,
+                wire::TERM_TRANSPORT_FAILED,
+                &detail,
+                &st.json_frames_seen,
+            )
+            .await;
             return;
         }
     };
@@ -450,7 +481,9 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     let permit: OwnedSemaphorePermit = match st.admission.clone().try_acquire_owned() {
         Ok(p) => p,
         Err(_) => {
-            st.registry.refusals.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            st.registry
+                .refusals
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             terminal_and_drain(
                 socket,
                 wire::TERM_PRODUCER_FAILED,
@@ -487,8 +520,13 @@ async fn handle(st: AppState, mut socket: WebSocket) {
             // timing rather than of load — the exact property this file's ceiling comment claims,
             // and ADR-010 rule 6's "declared, not discovered".
             drop(permit);
-            terminal_and_drain(socket, wire::TERM_PRODUCER_FAILED, &detail, &st.json_frames_seen)
-                .await;
+            terminal_and_drain(
+                socket,
+                wire::TERM_PRODUCER_FAILED,
+                &detail,
+                &st.json_frames_seen,
+            )
+            .await;
             return;
         }
         Err(join) => {
@@ -529,9 +567,15 @@ async fn handle(st: AppState, mut socket: WebSocket) {
             // record.
             drop(permit);
             let detail = format!("could not start the producer: {e}");
-            terminal_and_drain(socket, wire::TERM_PRODUCER_FAILED, &detail, &st.json_frames_seen)
-                .await;
-            st.registry.record_terminal(&state.stream, Terminal::ProducerFailed(detail));
+            terminal_and_drain(
+                socket,
+                wire::TERM_PRODUCER_FAILED,
+                &detail,
+                &st.json_frames_seen,
+            )
+            .await;
+            st.registry
+                .record_terminal(&state.stream, Terminal::ProducerFailed(detail));
             return;
         }
     };
@@ -722,11 +766,14 @@ mod tests {
 
         let snap = reg.snapshot();
         assert!(
-            snap.iter().any(|s| s.stream.as_str() == live.stream.as_str()),
+            snap.iter()
+                .any(|s| s.stream.as_str() == live.stream.as_str()),
             "the live entry, never terminal, must be retained"
         );
         assert!(
-            !snap.iter().any(|s| s.stream.as_str() == old.stream.as_str()),
+            !snap
+                .iter()
+                .any(|s| s.stream.as_str() == old.stream.as_str()),
             "the pruned terminal record's StreamState must be dropped with it"
         );
     }

@@ -88,7 +88,10 @@ impl Asset {
         let mut members = vec![
             ("path".to_string(), Json::str(self.path.clone())),
             ("bytes".to_string(), Json::UInt(self.bytes)),
-            ("content_hash".to_string(), Json::str(self.content_hash.clone())),
+            (
+                "content_hash".to_string(),
+                Json::str(self.content_hash.clone()),
+            ),
         ];
         if let Some(rows) = self.rows {
             members.push(("rows".to_string(), Json::UInt(rows)));
@@ -111,10 +114,16 @@ pub struct Unknown {
 
 impl Unknown {
     pub fn new(state: &'static str, basis: impl Into<String>) -> Self {
-        Self { state, basis: basis.into() }
+        Self {
+            state,
+            basis: basis.into(),
+        }
     }
     fn to_json(&self) -> Json {
-        Json::obj([("state", Json::str(self.state)), ("basis", Json::str(self.basis.clone()))])
+        Json::obj([
+            ("state", Json::str(self.state)),
+            ("basis", Json::str(self.basis.clone())),
+        ])
     }
 }
 
@@ -298,22 +307,26 @@ impl License {
             // **`declared-by-operator` never nulls `license`** — and this arm cannot, because the
             // variant holds a `String`. Declaring a member nullable that the writer is incapable of
             // nulling would be a schema saying something untrue about the format.
-            Self::DeclaredByOperator { license, attribution, redistribution, by, at } => {
-                Json::obj([
-                    ("state", Json::str("declared-by-operator")),
-                    ("license", Json::str(license.clone())),
-                    (
-                        "attribution",
-                        match attribution {
-                            Some(a) => Json::str(a.clone()),
-                            None => Json::Null,
-                        },
-                    ),
-                    ("redistribution", Json::str(redistribution.as_str())),
-                    ("by", Json::str(by.clone())),
-                    ("at", Json::str(at.clone())),
-                ])
-            }
+            Self::DeclaredByOperator {
+                license,
+                attribution,
+                redistribution,
+                by,
+                at,
+            } => Json::obj([
+                ("state", Json::str("declared-by-operator")),
+                ("license", Json::str(license.clone())),
+                (
+                    "attribution",
+                    match attribution {
+                        Some(a) => Json::str(a.clone()),
+                        None => Json::Null,
+                    },
+                ),
+                ("redistribution", Json::str(redistribution.as_str())),
+                ("by", Json::str(by.clone())),
+                ("at", Json::str(at.clone())),
+            ]),
         }
     }
 }
@@ -426,14 +439,26 @@ impl ViewerLicense {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Filter {
     WholeFile,
-    CoveringBboxIntersects { xmin: f64, ymin: f64, xmax: f64, ymax: f64, bbox_crs: Option<String> },
+    CoveringBboxIntersects {
+        xmin: f64,
+        ymin: f64,
+        xmax: f64,
+        ymax: f64,
+        bbox_crs: Option<String>,
+    },
 }
 
 impl Filter {
     fn to_json(&self) -> Json {
         match self {
             Self::WholeFile => Json::obj([("kind", Json::str("whole-file"))]),
-            Self::CoveringBboxIntersects { xmin, ymin, xmax, ymax, bbox_crs } => Json::obj([
+            Self::CoveringBboxIntersects {
+                xmin,
+                ymin,
+                xmax,
+                ymax,
+                bbox_crs,
+            } => Json::obj([
                 ("kind", Json::str("covering-bbox-intersects")),
                 ("xmin", Json::Double(*xmin)),
                 ("ymin", Json::Double(*ymin)),
@@ -490,11 +515,23 @@ impl FormatDeclaration {
             ("framing", Json::str(self.framing)),
             ("compression", Json::str(self.compression)),
             ("dictionaries", Json::str(self.dictionaries)),
-            ("geometry_encoding", Json::str(self.geometry_encoding.clone())),
-            ("coordinate_layout", Json::str(self.coordinate_layout.clone())),
-            ("partition_target_bytes", Json::UInt(self.partition_target_bytes)),
+            (
+                "geometry_encoding",
+                Json::str(self.geometry_encoding.clone()),
+            ),
+            (
+                "coordinate_layout",
+                Json::str(self.coordinate_layout.clone()),
+            ),
+            (
+                "partition_target_bytes",
+                Json::UInt(self.partition_target_bytes),
+            ),
             ("partition_max_rows", Json::UInt(self.partition_max_rows)),
-            ("partition_boundary_rule", Json::str(self.partition_boundary_rule)),
+            (
+                "partition_boundary_rule",
+                Json::str(self.partition_boundary_rule),
+            ),
             ("max_partitions", Json::UInt(self.max_partitions)),
         ])
     }
@@ -547,8 +584,14 @@ impl Operation {
         Json::obj([
             ("digest_version", Json::Int(OPERATION_DIGEST_VERSION)),
             ("operation", Json::str(self.operation)),
-            ("source_logical_uri", Json::str(self.source_logical_uri.clone())),
-            ("source_content_hash", Json::str(self.source_content_hash.clone())),
+            (
+                "source_logical_uri",
+                Json::str(self.source_logical_uri.clone()),
+            ),
+            (
+                "source_content_hash",
+                Json::str(self.source_content_hash.clone()),
+            ),
             ("id_source", Json::str(self.id_source.clone())),
             ("id_uniqueness", Json::str(self.id_uniqueness.clone())),
             (
@@ -561,7 +604,10 @@ impl Operation {
             ("crs_identifier", Json::str(self.crs_identifier.clone())),
             ("crs_source", Json::str(self.crs_source.clone())),
             ("axis_order", Json::str(self.axis_order.clone())),
-            ("axis_normalization", Json::str(self.axis_normalization.clone())),
+            (
+                "axis_normalization",
+                Json::str(self.axis_normalization.clone()),
+            ),
             ("crs_definition_hash", self.crs_definition_hash.to_json()),
             ("filter", self.filter.to_json()),
             (
@@ -571,7 +617,10 @@ impl Operation {
                     None => Json::Null,
                 },
             ),
-            ("projection", Json::Arr(self.projection.iter().map(Column::to_json).collect())),
+            (
+                "projection",
+                Json::Arr(self.projection.iter().map(Column::to_json).collect()),
+            ),
             ("ordering", Json::str(self.ordering)),
             ("format", self.format.to_json()),
             ("style_hash", Json::str(self.style_hash.clone())),
@@ -588,7 +637,9 @@ impl Operation {
     /// it. A digest whose input set a reader has to guess cannot be verified, which fails
     /// `docs/01` principle 8.
     fn to_json(&self) -> Result<Json, canonical::CanonicalError> {
-        let Json::Obj(mut members) = self.digest_input() else { unreachable!("digest input is an object") };
+        let Json::Obj(mut members) = self.digest_input() else {
+            unreachable!("digest input is an object")
+        };
         members.push(("digest".to_string(), Json::str(self.digest()?)));
         Ok(Json::Obj(members))
     }
@@ -611,7 +662,10 @@ impl Software {
             ("engine_crate_version", Json::str(self.engine.clone())),
             ("kernel_crate_version", Json::str(self.kernel.clone())),
             ("renderer_crate_version", Json::str(self.renderer.clone())),
-            ("arrow_crate_version_requirement", Json::str(self.arrow.clone())),
+            (
+                "arrow_crate_version_requirement",
+                Json::str(self.arrow.clone()),
+            ),
             ("duckdb_library_version", Json::str(self.duckdb.clone())),
             ("bundle_writer_version", Json::Int(self.bundle_writer)),
             (
@@ -667,7 +721,10 @@ impl Reproducibility {
     fn to_json(&self) -> Json {
         Json::obj([
             ("grade", Json::str(self.grade)),
-            ("basis", Json::Arr(self.basis.iter().map(|b| Json::str(b.clone())).collect())),
+            (
+                "basis",
+                Json::Arr(self.basis.iter().map(|b| Json::str(b.clone())).collect()),
+            ),
             ("why_not_higher", Json::str(self.why_not_higher.clone())),
         ])
     }
@@ -888,7 +945,10 @@ impl BuildInfo {
             ("started_at", Json::str(self.started_at.clone())),
             ("finished_at", Json::str(self.finished_at.clone())),
             ("build_millis", Json::Double(self.build_millis)),
-            ("content_hash_millis", Json::Double(self.content_hash_millis)),
+            (
+                "content_hash_millis",
+                Json::Double(self.content_hash_millis),
+            ),
             ("total_bytes", Json::UInt(self.total_bytes)),
             ("partition_count", Json::UInt(self.partition_count)),
             ("rows", Json::UInt(self.rows)),
@@ -917,8 +977,20 @@ mod tests {
         // Fixed width across the whole declared range: the padding covers the ceiling exactly, and
         // one more digit would mean the ceiling and the naming scheme had drifted apart.
         let width = partition_path(0).len();
-        for i in [0, 1, 9, 10, 999, 1_000, spatial_engine::MAX_PUBLISH_PARTITIONS - 1] {
-            assert_eq!(partition_path(i).len(), width, "index {i} changed the name's width");
+        for i in [
+            0,
+            1,
+            9,
+            10,
+            999,
+            1_000,
+            spatial_engine::MAX_PUBLISH_PARTITIONS - 1,
+        ] {
+            assert_eq!(
+                partition_path(i).len(),
+                width,
+                "index {i} changed the name's width"
+            );
         }
 
         // Contiguous and collision-free over a real run of ordinals — the property the manifest's
@@ -955,7 +1027,11 @@ mod tests {
 
         let mut o = sample_operation();
         o.id_source = "mapped:parcel_key".into();
-        assert_ne!(o.digest().unwrap(), d0, "identity space is not in the digest");
+        assert_ne!(
+            o.digest().unwrap(),
+            d0,
+            "identity space is not in the digest"
+        );
 
         let mut o = sample_operation();
         o.filter = Filter::CoveringBboxIntersects {
@@ -992,13 +1068,22 @@ mod tests {
         let r = ResourceRef {
             logical_uri: "spatial://dataset/parcels".into(),
             content_hash: Known::Value("sha256:abc".into()),
-            source_revision: Known::Unknown(Unknown::new("none-pinned", "this slice pins no revision")),
-            locators: vec![Locator { kind: "bundle-local", at: "data/".into() }],
+            source_revision: Known::Unknown(Unknown::new(
+                "none-pinned",
+                "this slice pins no revision",
+            )),
+            locators: vec![Locator {
+                kind: "bundle-local",
+                at: "data/".into(),
+            }],
             cache_status: "materialized-in-bundle",
             portability_policy: "self-contained",
         };
         let s = canonical::to_canonical_string(&r.to_json()).unwrap();
-        assert!(s.contains(r#""source_revision":{"state":"none-pinned""#), "{s}");
+        assert!(
+            s.contains(r#""source_revision":{"state":"none-pinned""#),
+            "{s}"
+        );
         assert!(!s.contains(r#""source_revision":null"#));
         // All six docs/11 members present by name.
         for member in [
@@ -1055,7 +1140,10 @@ mod tests {
             .to_json(),
         )
         .unwrap();
-        assert!(both_absent.contains(r#""license":null,"attribution":null"#), "{both_absent}");
+        assert!(
+            both_absent.contains(r#""license":null,"attribution":null"#),
+            "{both_absent}"
+        );
     }
 
     /// **An operator's license cannot be null, and the type is what guarantees it.**

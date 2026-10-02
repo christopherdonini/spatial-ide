@@ -206,7 +206,9 @@ pub(crate) fn configure_connection(conn: &Connection) -> Result<()> {
 /// [`configure_connection`] and the pool's test seam so the two cannot report differently.
 fn apply_configuration(conn: &Connection, sql: &str) -> Result<()> {
     conn.execute_batch(sql)
-        .map_err(|e| EngineError::ConnectionSetup { detail: format!("configure: {e}") })
+        .map_err(|e| EngineError::ConnectionSetup {
+            detail: format!("configure: {e}"),
+        })
 }
 
 /// What a lease is for. The three classes are bounded separately over one physical pool.
@@ -255,7 +257,9 @@ pub struct PoolConfig {
 impl PoolConfig {
     /// The product default: every healthy connection is kept.
     pub const fn reuse() -> Self {
-        Self { max_idle: MAX_PHYSICAL_CONNECTIONS }
+        Self {
+            max_idle: MAX_PHYSICAL_CONNECTIONS,
+        }
     }
 
     /// The measurement control: nothing is kept, so every lease creates and configures a
@@ -394,7 +398,11 @@ impl ConnectionPool {
             Take::Create(id) => match self.configure_new() {
                 Ok(conn) => {
                     self.physical_created.fetch_add(1, Ordering::SeqCst);
-                    Physical { conn, id, leases: 0 }
+                    Physical {
+                        conn,
+                        id,
+                        leases: 0,
+                    }
                 }
                 Err(e) => {
                     // The reservation is undone, so a failing configuration cannot leak capacity
@@ -421,8 +429,9 @@ impl ConnectionPool {
     }
 
     fn configure_new(&self) -> Result<Connection> {
-        let conn = Connection::open_in_memory()
-            .map_err(|e| EngineError::ConnectionSetup { detail: format!("open: {e}") })?;
+        let conn = Connection::open_in_memory().map_err(|e| EngineError::ConnectionSetup {
+            detail: format!("open: {e}"),
+        })?;
         match self.configure_sql {
             // The product path goes through the shared function, not a copy of it.
             None => configure_connection(&conn)?,
@@ -471,7 +480,11 @@ impl ConnectionPool {
     }
 
     pub fn idle_connections(&self) -> usize {
-        self.state.lock().unwrap_or_else(|e| e.into_inner()).idle.len()
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .idle
+            .len()
     }
 
     pub fn live_connections(&self) -> usize {
@@ -509,7 +522,11 @@ impl Lease {
     /// `expect` below — a live lease holds its connection, because `physical` is only taken as the
     /// lease ends — cannot be broken from outside.
     pub(crate) fn connection(&self) -> &Connection {
-        &self.physical.as_ref().expect("a live lease holds its connection").conn
+        &self
+            .physical
+            .as_ref()
+            .expect("a live lease holds its connection")
+            .conn
     }
 
     /// Which physical connection this is — a monotonic per-dataset counter, never an address.
@@ -583,13 +600,17 @@ impl Drop for Lease {
 fn verify(conn: &Connection) -> Result<()> {
     let mut stmt = conn
         .prepare("SELECT 1")
-        .map_err(|e| EngineError::ConnectionSetup { detail: format!("verify prepare: {e}") })?;
-    let mut rows = stmt
-        .query([])
-        .map_err(|e| EngineError::ConnectionSetup { detail: format!("verify: {e}") })?;
+        .map_err(|e| EngineError::ConnectionSetup {
+            detail: format!("verify prepare: {e}"),
+        })?;
+    let mut rows = stmt.query([]).map_err(|e| EngineError::ConnectionSetup {
+        detail: format!("verify: {e}"),
+    })?;
     while rows
         .next()
-        .map_err(|e| EngineError::ConnectionSetup { detail: format!("verify drain: {e}") })?
+        .map_err(|e| EngineError::ConnectionSetup {
+            detail: format!("verify drain: {e}"),
+        })?
         .is_some()
     {}
     Ok(())
@@ -616,15 +637,27 @@ mod tests {
         let pool = ConnectionPool::new(PoolConfig::reuse());
         let first = pool.acquire(LeaseClass::Stream).expect("first lease");
         let id = first.physical_id();
-        assert_eq!(first.generation(), 1, "a connection created for this lease is generation 1");
+        assert_eq!(
+            first.generation(),
+            1,
+            "a connection created for this lease is generation 1"
+        );
         assert!(!first.reused_an_existing_connection());
         first.release_healthy();
 
         let second = pool.acquire(LeaseClass::Stream).expect("second lease");
-        assert_eq!(second.physical_id(), id, "reuse must hand back the same physical connection");
+        assert_eq!(
+            second.physical_id(),
+            id,
+            "reuse must hand back the same physical connection"
+        );
         assert_eq!(second.generation(), 2);
         assert!(second.reused_an_existing_connection());
-        assert_eq!(pool.physical_connections_created(), 1, "reuse creates nothing the second time");
+        assert_eq!(
+            pool.physical_connections_created(),
+            1,
+            "reuse creates nothing the second time"
+        );
         assert_eq!(pool.leases_issued(), 2);
     }
 
@@ -637,8 +670,16 @@ mod tests {
         let first_id = a.physical_id();
         a.release_healthy();
         let b = pool.acquire(LeaseClass::Stream).expect("lease");
-        assert_ne!(b.physical_id(), first_id, "nothing may be kept when max_idle is 0");
-        assert_eq!(b.generation(), 1, "every lease is a first lease when nothing is kept");
+        assert_ne!(
+            b.physical_id(),
+            first_id,
+            "nothing may be kept when max_idle is 0"
+        );
+        assert_eq!(
+            b.generation(),
+            1,
+            "every lease is a first lease when nothing is kept"
+        );
         assert_eq!(pool.physical_connections_created(), 2);
         assert_eq!(pool.idle_connections(), 0);
     }
@@ -651,11 +692,19 @@ mod tests {
         let lease = pool.acquire(LeaseClass::Stream).expect("lease");
         let id = lease.physical_id();
         drop(lease);
-        assert_eq!(pool.idle_connections(), 0, "a dropped lease returns nothing");
+        assert_eq!(
+            pool.idle_connections(),
+            0,
+            "a dropped lease returns nothing"
+        );
         assert_eq!(pool.live_connections(), 0, "and frees its capacity");
 
         let next = pool.acquire(LeaseClass::Stream).expect("lease again");
-        assert_ne!(next.physical_id(), id, "the discarded connection is replaced, not reused");
+        assert_ne!(
+            next.physical_id(),
+            id,
+            "the discarded connection is replaced, not reused"
+        );
     }
 
     #[test]
@@ -671,22 +720,36 @@ mod tests {
                 assert_eq!(class, "stream");
                 assert_eq!(capacity, MAX_STREAM_CONNECTIONS);
             }
-            other => panic!("expected a typed refusal, got {other:?}", other = other.map(|_| ())),
+            other => panic!(
+                "expected a typed refusal, got {other:?}",
+                other = other.map(|_| ())
+            ),
         }
         // …and maintenance is unaffected, which is the point of the split.
-        let m = pool.acquire(LeaseClass::Maintenance).expect("maintenance is its own budget");
-        assert!(pool.acquire(LeaseClass::Maintenance).is_err(), "and is itself bounded");
+        let m = pool
+            .acquire(LeaseClass::Maintenance)
+            .expect("maintenance is its own budget");
+        assert!(
+            pool.acquire(LeaseClass::Maintenance).is_err(),
+            "and is itself bounded"
+        );
         // …and neither is admission — the third class this piece adds, bounded the same way.
         let mut admission_held = Vec::new();
         for _ in 0..MAX_ADMISSION_CONNECTIONS {
-            admission_held.push(pool.acquire(LeaseClass::Admission).expect("admission is its own budget too"));
+            admission_held.push(
+                pool.acquire(LeaseClass::Admission)
+                    .expect("admission is its own budget too"),
+            );
         }
         match pool.acquire(LeaseClass::Admission) {
             Err(EngineError::ConnectionsExhausted { class, capacity }) => {
                 assert_eq!(class, "admission");
                 assert_eq!(capacity, MAX_ADMISSION_CONNECTIONS);
             }
-            other => panic!("expected a typed refusal, got {other:?}", other = other.map(|_| ())),
+            other => panic!(
+                "expected a typed refusal, got {other:?}",
+                other = other.map(|_| ())
+            ),
         }
         assert_eq!(pool.live_connections(), MAX_PHYSICAL_CONNECTIONS);
         drop(m);
@@ -697,7 +760,8 @@ mod tests {
 
     #[test]
     fn a_configuration_failure_is_a_typed_error_and_leaks_no_capacity() {
-        let pool = ConnectionPool::with_configure_sql(PoolConfig::reuse(), "SET not_a_real_setting=1");
+        let pool =
+            ConnectionPool::with_configure_sql(PoolConfig::reuse(), "SET not_a_real_setting=1");
         for _ in 0..(MAX_STREAM_CONNECTIONS + 2) {
             match pool.acquire(LeaseClass::Stream) {
                 Err(EngineError::ConnectionSetup { detail }) => {
@@ -731,9 +795,11 @@ mod tests {
     const FAIL_CLOSED_TEXT: &str = "requires the extension httpfs to be loaded";
 
     fn setting(conn: &Connection, name: &str) -> String {
-        conn.query_row(&format!("SELECT current_setting('{name}')::VARCHAR"), [], |r| {
-            r.get::<_, String>(0)
-        })
+        conn.query_row(
+            &format!("SELECT current_setting('{name}')::VARCHAR"),
+            [],
+            |r| r.get::<_, String>(0),
+        )
         .unwrap_or_else(|e| panic!("reading `{name}`: {e}"))
     }
 
@@ -771,7 +837,9 @@ mod tests {
 
     /// A fresh, empty directory this test owns, so "zero files" is a fact about this run.
     fn fresh_extension_dir(tag: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join("spatial-engine-extension-autoload-tests").join(tag);
+        let d = std::env::temp_dir()
+            .join("spatial-engine-extension-autoload-tests")
+            .join(tag);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).expect("create extension dir");
         d
@@ -802,7 +870,11 @@ mod tests {
     /// extension at runtime / left: "true" / right: "false"*.
     #[test]
     fn every_lease_class_opens_with_extension_autoload_and_autoinstall_off() {
-        for class in [LeaseClass::Stream, LeaseClass::Maintenance, LeaseClass::Admission] {
+        for class in [
+            LeaseClass::Stream,
+            LeaseClass::Maintenance,
+            LeaseClass::Admission,
+        ] {
             let pool = ConnectionPool::new(PoolConfig::reuse());
             let lease = pool.acquire(class).expect("lease");
             let conn = lease.connection();
@@ -833,7 +905,11 @@ mod tests {
     /// the runtime fetch this piece closes.
     #[test]
     fn a_known_extension_reference_fails_closed_on_every_lease_class() {
-        for class in [LeaseClass::Stream, LeaseClass::Maintenance, LeaseClass::Admission] {
+        for class in [
+            LeaseClass::Stream,
+            LeaseClass::Maintenance,
+            LeaseClass::Admission,
+        ] {
             let dir = fresh_extension_dir(class.as_str());
             let pool = ConnectionPool::new(PoolConfig::reuse());
             let lease = pool.acquire(class).expect("lease");
@@ -845,7 +921,10 @@ mod tests {
             .expect("extension_directory is settable at runtime");
 
             let err = probe_error(conn).unwrap_or_else(|| {
-                panic!("class `{}`: the probe statement must not succeed", class.as_str())
+                panic!(
+                    "class `{}`: the probe statement must not succeed",
+                    class.as_str()
+                )
             });
             assert!(
                 err.contains(FAIL_CLOSED_TEXT),
@@ -854,8 +933,18 @@ mod tests {
             );
 
             let (installed, loaded) = httpfs_installed_loaded(conn);
-            assert_eq!(installed, 0, "class `{}`: httpfs must not be installed", class.as_str());
-            assert_eq!(loaded, 0, "class `{}`: httpfs must not be loaded", class.as_str());
+            assert_eq!(
+                installed,
+                0,
+                "class `{}`: httpfs must not be installed",
+                class.as_str()
+            );
+            assert_eq!(
+                loaded,
+                0,
+                "class `{}`: httpfs must not be loaded",
+                class.as_str()
+            );
             assert_eq!(
                 count_files(&dir),
                 0,

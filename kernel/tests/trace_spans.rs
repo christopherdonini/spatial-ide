@@ -49,7 +49,9 @@ const STYLE: &str = r##"{
 }"##;
 
 fn workspace(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join("spatial-kernel-trace-spans").join(name);
+    let d = std::env::temp_dir()
+        .join("spatial-kernel-trace-spans")
+        .join(name);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -79,9 +81,18 @@ fn pinned(path: &Path) -> Dataset {
 
 fn viewer() -> ViewerAssets {
     ViewerAssets::new(vec![
-        ViewerAsset { path: "index.html".into(), bytes: b"<!doctype html><title>t</title>".to_vec() },
-        ViewerAsset { path: "app.js".into(), bytes: b"export const ok = 1;\n".to_vec() },
-        ViewerAsset { path: "NOTICE.txt".into(), bytes: b"stub notice\n".to_vec() },
+        ViewerAsset {
+            path: "index.html".into(),
+            bytes: b"<!doctype html><title>t</title>".to_vec(),
+        },
+        ViewerAsset {
+            path: "app.js".into(),
+            bytes: b"export const ok = 1;\n".to_vec(),
+        },
+        ViewerAsset {
+            path: "NOTICE.txt".into(),
+            bytes: b"stub notice\n".to_vec(),
+        },
     ])
     .unwrap()
 }
@@ -228,9 +239,15 @@ fn traces_agree_with_the_instruments_that_already_measured_the_same_thing() {
     );
 
     // ---- overlap 1: batches and rows, which must be exactly equal -----------------------------
-    let traced_batches = events.iter().filter(|e| e.name == trace::BATCH_FULL).count() as u64;
-    let traced_rows: u64 =
-        events.iter().filter(|e| e.name == trace::BATCH_FULL).map(|e| e.rows).sum();
+    let traced_batches = events
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .count() as u64;
+    let traced_rows: u64 = events
+        .iter()
+        .filter(|e| e.name == trace::BATCH_FULL)
+        .map(|e| e.rows)
+        .sum();
 
     assert_eq!(
         traced_batches,
@@ -238,13 +255,19 @@ fn traces_agree_with_the_instruments_that_already_measured_the_same_thing() {
         "the traces' batch count and StreamStats' must be the same number — they count the same \
          event, and a disagreement is a defect in one of them, not a tolerance"
     );
-    assert_eq!(traced_batches, batches, "and the consumer saw exactly those batches");
+    assert_eq!(
+        traced_batches, batches,
+        "and the consumer saw exactly those batches"
+    );
     assert_eq!(
         traced_rows,
         stats.rows_generated.load(Ordering::SeqCst),
         "the traces' row total must equal StreamStats'"
     );
-    assert_eq!(traced_rows, rows, "and the consumer received exactly those rows");
+    assert_eq!(
+        traced_rows, rows,
+        "and the consumer received exactly those rows"
+    );
     assert_eq!(traced_rows, FEATURES as u64, "which is the whole fixture");
 
     // ---- overlap 2: time to first batch, two independent clocks -------------------------------
@@ -278,7 +301,9 @@ fn traces_agree_with_the_instruments_that_already_measured_the_same_thing() {
     ];
     let mut last = 0u64;
     for name in order {
-        let e = t.first(name).unwrap_or_else(|| panic!("{name} must be stamped"));
+        let e = t
+            .first(name)
+            .unwrap_or_else(|| panic!("{name} must be stamped"));
         assert!(
             e.offset_nanos >= last,
             "spans must be monotonic; {name} at {} follows {last}",
@@ -305,8 +330,11 @@ fn a_successful_run_stamps_no_cancellation_instant() {
     let d = workspace("no-phantom-cancel");
     let ds = pinned(&fixture(&d));
 
-    let guard = trace::start(TraceKey { label: "no-phantom-cancel".into(), ..Default::default() })
-        .expect("no other trace is running");
+    let guard = trace::start(TraceKey {
+        label: "no-phantom-cancel".into(),
+        ..Default::default()
+    })
+    .expect("no other trace is running");
     let mut stream = ds.stream(&ViewportQuery::all()).expect("stream opens");
     let mut payload = Vec::new();
     while let Some(b) = stream.next_into(&mut payload) {
@@ -329,7 +357,10 @@ fn a_successful_run_stamps_no_cancellation_instant() {
         "nor a producer-side cancellation observation, got {names:?}"
     );
     // The run really did happen, so the absence above is meaningful rather than an empty trace.
-    assert!(t.first(trace::FIRST_BATCH_FULL).is_some(), "the run produced batches");
+    assert!(
+        t.first(trace::FIRST_BATCH_FULL).is_some(),
+        "the run produced batches"
+    );
     assert!(
         t.first(trace::PRODUCER_FINISHED).is_some(),
         "and the producer recorded that it finished"
@@ -350,11 +381,12 @@ fn the_query_windows_internal_spans_are_all_present_and_ordered() {
     let d = workspace("query-window-spans");
     let ds = pinned(&fixture(&d));
 
-    let guard = trace::start(TraceKey { label: "query-window-spans".into(), ..Default::default() })
-        .expect("no other trace is running");
-    let mut stream = ds
-        .stream(&ViewportQuery::all())
-        .expect("stream opens");
+    let guard = trace::start(TraceKey {
+        label: "query-window-spans".into(),
+        ..Default::default()
+    })
+    .expect("no other trace is running");
+    let mut stream = ds.stream(&ViewportQuery::all()).expect("stream opens");
     let mut payload = Vec::new();
     while let Some(b) = stream.next_into(&mut payload) {
         b.expect("no terminal error");
@@ -378,7 +410,9 @@ fn the_query_windows_internal_spans_are_all_present_and_ordered() {
     ];
     let mut last = 0u64;
     for name in order {
-        let e = t.first(name).unwrap_or_else(|| panic!("{name} must be stamped"));
+        let e = t
+            .first(name)
+            .unwrap_or_else(|| panic!("{name} must be stamped"));
         assert!(
             e.offset_nanos >= last,
             "spans must be monotonic; {name} at {} follows {last}",
@@ -390,16 +424,48 @@ fn the_query_windows_internal_spans_are_all_present_and_ordered() {
     // Every adjacent segment is derivable, which is the property that makes an attribution cell
     // trustworthy at all — including the wider `lease_to_first_row` window Phase 1 scores its
     // decision rule against, not just the narrower `query` span.
-    assert!(t.segment_ms(trace::SQL_BUILT, trace::LEASE_ACQUIRED).is_some(), "lease_bind");
-    assert!(t.segment_ms(trace::LEASE_ACQUIRED, trace::PRODUCER_STARTED).is_some(), "producer_handoff");
-    assert!(t.segment_ms(trace::PRODUCER_STARTED, trace::SQL_PREPARED).is_some(), "statement_prepare");
-    assert!(t.segment_ms(trace::SQL_PREPARED, trace::EXECUTE_CALLED).is_some(), "param_assembly");
-    assert!(t.segment_ms(trace::EXECUTE_CALLED, trace::EXECUTE_RETURNED).is_some(), "bind_and_execute");
-    assert!(t.segment_ms(trace::EXECUTE_RETURNED, trace::FIRST_SOURCE_ROW).is_some(), "first_fetch");
-    assert!(t.segment_ms(trace::LEASE_ACQUIRED, trace::FIRST_SOURCE_ROW).is_some(), "lease_to_first_row");
+    assert!(
+        t.segment_ms(trace::SQL_BUILT, trace::LEASE_ACQUIRED)
+            .is_some(),
+        "lease_bind"
+    );
+    assert!(
+        t.segment_ms(trace::LEASE_ACQUIRED, trace::PRODUCER_STARTED)
+            .is_some(),
+        "producer_handoff"
+    );
+    assert!(
+        t.segment_ms(trace::PRODUCER_STARTED, trace::SQL_PREPARED)
+            .is_some(),
+        "statement_prepare"
+    );
+    assert!(
+        t.segment_ms(trace::SQL_PREPARED, trace::EXECUTE_CALLED)
+            .is_some(),
+        "param_assembly"
+    );
+    assert!(
+        t.segment_ms(trace::EXECUTE_CALLED, trace::EXECUTE_RETURNED)
+            .is_some(),
+        "bind_and_execute"
+    );
+    assert!(
+        t.segment_ms(trace::EXECUTE_RETURNED, trace::FIRST_SOURCE_ROW)
+            .is_some(),
+        "first_fetch"
+    );
+    assert!(
+        t.segment_ms(trace::LEASE_ACQUIRED, trace::FIRST_SOURCE_ROW)
+            .is_some(),
+        "lease_to_first_row"
+    );
     // `query` (`sql_prepared -> first_source_row`) keeps its original, narrower definition — see
     // `SPAN_LEASE_TO_FIRST_ROW`'s doc comment for why the two are not the same span.
-    assert!(t.segment_ms(trace::SQL_PREPARED, trace::FIRST_SOURCE_ROW).is_some(), "query");
+    assert!(
+        t.segment_ms(trace::SQL_PREPARED, trace::FIRST_SOURCE_ROW)
+            .is_some(),
+        "query"
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -416,9 +482,16 @@ fn a_traced_publish_and_an_untraced_one_produce_the_same_bundle() {
     let v = viewer();
 
     let untraced_dest = d.join("untraced");
-    let untraced = publish_unguarded(&request(&ds, &v, untraced_dest.clone()), &CancelToken::new(), None)
-        .expect("publish succeeds");
-    assert!(!trace::is_enabled(), "tracing is off unless a trace is started");
+    let untraced = publish_unguarded(
+        &request(&ds, &v, untraced_dest.clone()),
+        &CancelToken::new(),
+        None,
+    )
+    .expect("publish succeeds");
+    assert!(
+        !trace::is_enabled(),
+        "tracing is off unless a trace is started"
+    );
 
     // **Quiesce before the trace opens**, or the untraced publish's producer stamps into the
     // traced run's buffer — the exact defect this file's `quiesce` doc calls the worst shape.
@@ -426,10 +499,17 @@ fn a_traced_publish_and_an_untraced_one_produce_the_same_bundle() {
     quiesce(&ds);
 
     let traced_dest = d.join("traced");
-    let guard = trace::start(TraceKey { label: "same-bundle".into(), ..Default::default() })
-        .expect("no other trace is running");
-    let traced = publish_unguarded(&request(&ds, &v, traced_dest.clone()), &CancelToken::new(), None)
-        .expect("publish succeeds");
+    let guard = trace::start(TraceKey {
+        label: "same-bundle".into(),
+        ..Default::default()
+    })
+    .expect("no other trace is running");
+    let traced = publish_unguarded(
+        &request(&ds, &v, traced_dest.clone()),
+        &CancelToken::new(),
+        None,
+    )
+    .expect("publish succeeds");
     let events = guard.trace().events().len();
     quiesce(&ds);
     drop(guard);
@@ -441,7 +521,10 @@ fn a_traced_publish_and_an_untraced_one_produce_the_same_bundle() {
         untraced.operation_digest, traced.operation_digest,
         "tracing must not change the operation digest"
     );
-    assert_eq!(untraced.partitions, traced.partitions, "nor the partition count");
+    assert_eq!(
+        untraced.partitions, traced.partitions,
+        "nor the partition count"
+    );
     assert_eq!(untraced.rows, traced.rows, "nor the row count");
     assert_eq!(untraced.style_hash, traced.style_hash, "nor the style hash");
 
@@ -450,7 +533,10 @@ fn a_traced_publish_and_an_untraced_one_produce_the_same_bundle() {
         let rel = format!("data/part-{i:05}.arrows");
         let a = std::fs::read(untraced_dest.join(&rel)).expect("untraced partition");
         let b = std::fs::read(traced_dest.join(&rel)).expect("traced partition");
-        assert_eq!(a, b, "partition {i} must be byte-identical with and without tracing");
+        assert_eq!(
+            a, b,
+            "partition {i} must be byte-identical with and without tracing"
+        );
     }
 }
 
@@ -473,8 +559,11 @@ fn a_traced_publish_decomposes_a_partition_write() {
     let dest = d.join("out");
     let counter = Counter(AtomicUsize::new(0));
 
-    let guard = trace::start(TraceKey { label: "decompose".into(), ..Default::default() })
-        .expect("no other trace is running");
+    let guard = trace::start(TraceKey {
+        label: "decompose".into(),
+        ..Default::default()
+    })
+    .expect("no other trace is running");
     publish_unguarded(&request(&ds, &v, dest), &CancelToken::new(), Some(&counter))
         .expect("publish succeeds");
     let t = guard.trace();
@@ -484,10 +573,14 @@ fn a_traced_publish_decomposes_a_partition_write() {
     let events = t.events();
     let count = |n: &str| events.iter().filter(|e| e.name == n).count();
 
-    assert!(t.first(trace_names::VERIFY_START).is_some(), "the source verification is stamped");
+    assert!(
+        t.first(trace_names::VERIFY_START).is_some(),
+        "the source verification is stamped"
+    );
     assert!(t.first(trace_names::VERIFY_END).is_some());
     assert!(
-        t.segment_ms(trace_names::VERIFY_START, trace_names::VERIFY_END).is_some(),
+        t.segment_ms(trace_names::VERIFY_START, trace_names::VERIFY_END)
+            .is_some(),
         "and its duration is derivable"
     );
 
@@ -548,8 +641,14 @@ fn spans_serialize_to_one_json_object_per_line() {
     let read = std::fs::read_to_string(&path).expect("and readable");
 
     let lines: Vec<&str> = read.lines().collect();
-    assert!(lines.len() > 2, "a key line, event lines, and derived span lines");
-    assert!(lines[0].contains(r#""kind":"trace-key""#), "the first line names the trace");
+    assert!(
+        lines.len() > 2,
+        "a key line, event lines, and derived span lines"
+    );
+    assert!(
+        lines[0].contains(r#""kind":"trace-key""#),
+        "the first line names the trace"
+    );
     assert!(lines[0].contains(r#""physical_id":3"#));
 
     // **The drop count travels in the file, not in someone's memory of the run.** The buffer is a
@@ -561,8 +660,14 @@ fn spans_serialize_to_one_json_object_per_line() {
         lines[0]
     );
 
-    let events: Vec<&&str> = lines[1..].iter().filter(|l| l.contains(r#""kind":"event""#)).collect();
-    let spans: Vec<&&str> = lines[1..].iter().filter(|l| l.contains(r#""kind":"span""#)).collect();
+    let events: Vec<&&str> = lines[1..]
+        .iter()
+        .filter(|l| l.contains(r#""kind":"event""#))
+        .collect();
+    let spans: Vec<&&str> = lines[1..]
+        .iter()
+        .filter(|l| l.contains(r#""kind":"span""#))
+        .collect();
     assert!(!events.is_empty(), "a streamed query stamps events");
     assert_eq!(
         events.len() + spans.len(),
@@ -573,14 +678,26 @@ fn spans_serialize_to_one_json_object_per_line() {
     // **An event is an instant; a span is an interval. The artifact must not let one be read as the
     // other**, which is exactly what a single merged `kind` would allow.
     for l in &events {
-        assert!(l.contains(r#""offset_nanos":"#), "an event carries an instant: {l}");
-        assert!(!l.contains(r#""millis":"#), "an event carries no duration: {l}");
+        assert!(
+            l.contains(r#""offset_nanos":"#),
+            "an event carries an instant: {l}"
+        );
+        assert!(
+            !l.contains(r#""millis":"#),
+            "an event carries no duration: {l}"
+        );
     }
     for l in &spans {
         assert!(l.contains(r#""millis":"#), "a span carries a duration: {l}");
-        assert!(!l.contains(r#""offset_nanos":"#), "a span is not an instant: {l}");
+        assert!(
+            !l.contains(r#""offset_nanos":"#),
+            "a span is not an instant: {l}"
+        );
     }
     for l in &lines[..] {
-        assert!(l.starts_with('{') && l.ends_with('}'), "one JSON object per line: {l}");
+        assert!(
+            l.starts_with('{') && l.ends_with('}'),
+            "one JSON object per line: {l}"
+        );
     }
 }
