@@ -140,7 +140,7 @@ export function checkHalt(projectRoot, { now = Date.now() } = {}) {
  * active `lease: <id> ...` line whose <id> equals input.session_id. A missing session_id never
  * matches. A read error (including a missing file) is treated as absent.
  */
-function leaseHeldBy(projectRoot, sessionId) {
+export function leaseHeldBy(projectRoot, sessionId) {
   if (!sessionId) return { held: false, reason: 'no session_id on the stdin input' };
   let first;
   try {

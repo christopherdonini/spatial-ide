@@ -17,6 +17,9 @@
 //   Exit 0 on success; exit 1 (with a clear stderr line) on a missing file, missing env, or an API
 //   error.
 //
+// Hook mode: `node scripts/hooks/questions-mirror.mjs --hook` is the PreToolUse hook on AskUserQuestion
+// (ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md): one round file and one send per call.
+//
 // Node standard library only. Telegram is a read-and-copy mirror: this never reads Telegram for
 // answers, and never sends via markdown parse_mode (plain text, per the directive above).
 
@@ -24,6 +27,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { sendMessage, sendDocument } from './telegram.mjs';
+import { isCloudSession } from './cloud.mjs';
+import { leaseHeldBy } from './stop-queue.mjs';
 
 // Telegram's message limit is 4096 characters. We measure the message text with [...text].length
 // (Unicode code points) rather than text.length (UTF-16 code units): code points match Telegram's
@@ -109,6 +114,107 @@ async function main() {
   process.exit(0);
 }
 
+// ---- Hook mode (--hook): PreToolUse on AskUserQuestion. Exits 0 with empty stdout on every path. ----
+
+const RED_LINE = /^(?:Item \d+\. )?RED LINE/;
+
+function wellFormed(questions) {
+  if (!Array.isArray(questions) || questions.length === 0) return false;
+  return questions.every(
+    (q) =>
+      typeof q?.question === 'string' &&
+      q.question !== '' &&
+      Array.isArray(q.options) &&
+      q.options.every(
+        (o) =>
+          typeof o?.label === 'string' && o.label !== '' && (o.description === undefined || typeof o.description === 'string'),
+      ),
+  );
+}
+
+function renderRound(n, questions, date) {
+  const redLine = questions.flatMap((q, i) => (RED_LINE.test(q.question) ? [i + 1] : []));
+  const k = questions.length;
+  const header =
+    `Question round ${n} — ${date} (custodian → human; written by the round-mirror hook from the AskUserQuestion call). ` +
+    `${k === 1 ? '1 item' : `${k} items`}, asked in one call. RED LINE items: ${redLine.length ? redLine.join(', ') : 'none'}. ` +
+    'AskUserQuestion is the answer channel; this mirror is read-and-copy.';
+  const items = questions.map((q, i) =>
+    [
+      `${i + 1}. ${q.question}`,
+      ...q.options.map(
+        (o, j) => `  (${j + 1}) ${o.label}${typeof o.description === 'string' && o.description !== '' ? ` — ${o.description}` : ''}`,
+      ),
+    ].join('\n'),
+  );
+  return `${[header, ...items].join('\n\n---\n\n')}\n`;
+}
+
+async function hookBody() {
+  let input;
+  try {
+    input = JSON.parse(fs.readFileSync(0, 'utf8'));
+    if (input === null || typeof input !== 'object' || Array.isArray(input)) throw new Error('not an object');
+  } catch {
+    console.error('questions-mirror: hook input is not JSON; no round written.');
+    return;
+  }
+  if (input.agent_id !== undefined && input.agent_id !== null && input.agent_id !== '') return;
+  const root = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+  if (!leaseHeldBy(root, input.session_id).held) return;
+  const questions = input.tool_input?.questions;
+  if (!wellFormed(questions)) {
+    console.error('questions-mirror: hook input carries no well-formed questions; no round written.');
+    return;
+  }
+
+  const dir = path.join(root, 'state', 'questions');
+  let names;
+  try {
+    names = fs.readdirSync(dir);
+  } catch {
+    console.error('questions-mirror: no state/questions directory under the project root; no round written.');
+    return;
+  }
+  const numbers = names.flatMap((name) => {
+    const m = /^round-(\d+)\.md$/.exec(name);
+    return m ? [parseInt(m[1], 10)] : [];
+  });
+  const n = numbers.length ? Math.max(...numbers) + 1 : 1;
+  const file = path.join(dir, `round-${n}.md`);
+  try {
+    fs.writeFileSync(file, renderRound(n, questions, new Date().toISOString().slice(0, 10)), { encoding: 'utf8', flag: 'wx' });
+  } catch (e) {
+    console.error(`questions-mirror: round-${n}.md could not be written (${e.code}); nothing sent.`);
+    return;
+  }
+
+  const outcome = await mirrorRound({ file, sendMessage, sendDocument, readFile: (f) => fs.readFileSync(f, 'utf8') });
+  fs.mkdirSync(path.join(root, '.claude', 'state'), { recursive: true });
+  fs.appendFileSync(
+    path.join(root, '.claude', 'state', 'round-mirror.jsonl'),
+    `${JSON.stringify({ at: new Date().toISOString(), round: n, file: `state/questions/round-${n}.md`, mode: outcome.mode, ok: outcome.ok })}\n`,
+  );
+  if (!outcome.ok) {
+    console.error(`questions-mirror: round ${n} send failed (mode=${outcome.mode}); the round file is kept for a re-send.`);
+  }
+}
+
+async function hookMain() {
+  if (isCloudSession()) return;
+  try {
+    await hookBody();
+  } catch (e) {
+    console.error(`questions-mirror: hook error (${e?.message}); exiting 0.`);
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main();
+  if (process.argv[2] === '--hook') {
+    hookMain().then(() => {
+      process.exitCode = 0;
+    });
+  } else {
+    main();
+  }
 }
