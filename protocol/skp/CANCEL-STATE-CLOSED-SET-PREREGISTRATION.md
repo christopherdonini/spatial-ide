@@ -266,3 +266,13 @@ Written after the results were seen (a post-result amendment), before either gat
    - The H1 line calls any hit I6, but I6's own condition is that compiling needs a file outside §7. That condition is not met, so the custodian reads I6 as not fired. The gates judge this reading. H1 is not edited.
 2. **The commit plan.** §2 item 6's `DIVERGENCES.md` update landed in D (190fd6b), not in C, because its resolved line names C's id (5d4da4d). C carries `main.rs`'s `REPORTED_DIVERGENCES` change. F7 at D is pass 63, deferred 15, diverged 0, as §3 predicts.
 3. **Superseded index.** None. H1 and §4's commit plan stand as registered; this amendment records the deviations.
+
+### Amendment 2 — correction round 1 (class 1)
+
+Written after gate 1's results were seen (a post-result amendment). References only.
+
+1. **The round.** Branch commit 92ed745 answers gate 1. The findings it answers are the architect's S2-2 and S2-3 (`state/consults/gates/2026-10-02-skp-cancel-state-closed-set-gate1-architect.md`), and the reviewer's S2-1 and its note on `DIVERGENCES.md`'s header (`state/consults/gates/2026-10-02-skp-cancel-state-closed-set-gate1-reviewer.md`). Both files are text-only. F7 re-run at 92ed745 is pass 63, deferred 15, diverged 0. §7's count at 92ed745 is 243 lines over 13 files.
+2. **Superseded index.**
+   - The SKP-V0 §8 note's parenthesis restating the entry-30 rule, as commit 190fd6b added it, is superseded by the reference to the entry-30 disposition at 92ed745.
+   - In `protocol/skp/tests/conformance/DIVERGENCES.md` at 190fd6b, three things are superseded at 92ed745: the header's run lines naming the `skp/0.6` re-run, D1's three line cites and the Resolved line. They are replaced by the 5d4da4d run line, item names and the restated Resolved line.
+   - No other line is superseded.
