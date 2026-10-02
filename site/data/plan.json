@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T17:55:22.371Z",
-  "plan_hash": "1d6734648a224df636434d679fb64489b4a8afe05956d2cb0c3ad50f7d3d801e",
+  "generated_at": "2026-10-02T18:34:00.968Z",
+  "plan_hash": "b441f5a801d7a666cc9681bfda538376838a265fca4731c7aed30570b6b5c1b7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4954,13 +4954,14 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": null,
-      "budget_minutes": 45,
+      "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs.",
+      "summary": "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs. Question round 38 (RULED 2026-10-02), item 1: the reader is wrong, no literal bump; the full-form preregistration is protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md), full gating (wire; a property under test).",
       "dates": {
         "opened": "2026-09-26",
         "done": null
@@ -5015,7 +5016,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in the next SKP-V0 change-log entry, not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change. Its stale line cites into kernel/src/skp.rs move again with workspace-rustfmt; the cite fixes belong after that merge (the workspace-rustfmt drafting consult, (c) 2).",
+      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in this node's own SKP-V0 change-log entry (not in skp-cancel-state-closed-set's, per its drafting consult, point 3), not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change. Its stale line cites into kernel/src/skp.rs move again with workspace-rustfmt; the cite fixes belong after that merge (the workspace-rustfmt drafting consult, (c) 2).",
       "dates": {
         "opened": "2026-09-27",
         "done": null
@@ -5740,6 +5741,33 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Found by stop-hook-stale-continuity invalidator I1 (state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md): that piece makes stop-queue.mjs import precompact-flush.mjs, and the T11 test of scripts/hooks/questions-mirror.test.mjs (the_settings_command_mirrors_a_recorded_askuserquestion_payload, from PR #154) hand-copies a fixed list of six scripts into a temp project, so its hook exits 1. Routed by the form architect (state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md): a test-only node on main, merged before E; five-line form, reviewer only; Scope questions-mirror.test.mjs only, at most 10 changed lines; T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ (not recursive); its name, assertions and recorded M11 unchanged; mutation: drop scripts/plan/ from the copy, T11 fails at assertQuiet; seam proof: the changed T11 green against main stop-queue.mjs and against E commit. Its order is the human. Question round 36 (RULED 2026-10-02), item 1: placed ahead of stop-hook-stale-continuity (governance order 14).",
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      }
+    },
+    {
+      "id": "skp-closed-domain-response-strings",
+      "title": "Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "skp-cancel-state-closed-set"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Routed by skp-cancel-state-closed-set drafting consult (state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md, point 8, first bullet): beyond cancel state, other closed-domain response fields are typed String on the reader (crs.source, identity.class, sanity.level and others). No finding names them yet. The same reader-side closure (a closed enum in protocol/skp, a closed union in the shell, no literal bump when the writer bytes are unchanged) would apply, under question round 38 item 1 reasoning, each field checked against SKP-V0. Not placed; its order is the human.",
       "dates": {
         "opened": "2026-10-02",
         "done": null

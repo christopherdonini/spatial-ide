@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1d6734648a224df636434d679fb64489b4a8afe05956d2cb0c3ad50f7d3d801e`) at `2026-10-02T17:55:22.217Z`.
+Generated from `PLAN.yaml` (sha256 `b441f5a801d7a666cc9681bfda538376838a265fca4731c7aed30570b6b5c1b7`) at `2026-10-02T18:34:00.820Z`.
 
 ## 1. Next
 
@@ -8,7 +8,7 @@ Generated from `PLAN.yaml` (sha256 `1d6734648a224df636434d679fb64489b4a8afe05956
 
 ## 2. Ready
 
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`, order 9, budget 45 min)
+- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) (lane `kernel-protocol`, order 9, budget 120 min)
 - **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -85,6 +85,7 @@ Generated from `PLAN.yaml` (sha256 `1d6734648a224df636434d679fb64489b4a8afe05956
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
 - **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
+- **skp-closed-domain-response-strings** — Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
