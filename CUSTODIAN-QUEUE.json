@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T16:55:34.635Z",
-  "plan_hash": "ab996d81fd4bde3dc424b353de309c763fd587df4057eb28b775d6216fb147bc",
+  "generated_at": "2026-10-02T17:11:19.017Z",
+  "plan_hash": "d390eab49671ad3fc52db2f256b57779a6cc4c6a19748bac9947d784cc4e83a1",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1234,6 +1234,25 @@
         "done": null
       },
       "summary": "Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
+    },
+    {
+      "id": "questions-mirror-t11-copy-glob",
+      "title": "questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Found by stop-hook-stale-continuity invalidator I1 (state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md): that piece makes stop-queue.mjs import precompact-flush.mjs, and the T11 test of scripts/hooks/questions-mirror.test.mjs (the_settings_command_mirrors_a_recorded_askuserquestion_payload, from PR #154) hand-copies a fixed list of six scripts into a temp project, so its hook exits 1. Routed by the form architect (state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md): a test-only node on main, merged before E; five-line form, reviewer only; Scope questions-mirror.test.mjs only, at most 10 changed lines; T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ (not recursive); its name, assertions and recorded M11 unchanged; mutation: drop scripts/plan/ from the copy, T11 fails at assertQuiet; seam proof: the changed T11 green against main stop-queue.mjs and against E commit. Its order is the human."
     }
   ],
   "unscheduled": [

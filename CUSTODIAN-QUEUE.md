@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ab996d81fd4bde3dc424b353de309c763fd587df4057eb28b775d6216fb147bc`) at `2026-10-02T16:55:34.635Z`.
+Generated from `PLAN.yaml` (sha256 `d390eab49671ad3fc52db2f256b57779a6cc4c6a19748bac9947d784cc4e83a1`) at `2026-10-02T17:11:19.017Z`.
 
 ## 1. Next
 
@@ -86,6 +86,7 @@ Generated from `PLAN.yaml` (sha256 `ab996d81fd4bde3dc424b353de309c763fd587df4057
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
 - **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
+- **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
