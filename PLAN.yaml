@@ -3479,7 +3479,7 @@ nodes:
     gate: scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md
     evidence: {branch: cut/stop-hook-stale-continuity}
     budget_minutes: 180
-    generation: 1
+    generation: 2
     felt_verdict: false
     entries: []
     summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
