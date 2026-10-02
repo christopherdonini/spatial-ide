@@ -1163,7 +1163,8 @@ test('a_range_scan_refuses_a_profile_path_in_an_added_line', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M1 -- the range mode drops the added-line findings. Observed: pending.
+  // RECORDED MUTATION: M1 -- the range mode drops the added-line findings. Observed: this test's
+  // status assertion failed (0 !== 1, the added-line form was not found). Reverted.
 });
 
 test('a_range_scan_refuses_a_profile_path_in_an_added_path_name', () => {
@@ -1183,7 +1184,8 @@ test('a_range_scan_refuses_a_profile_path_in_an_added_path_name', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M2 -- the range mode skips the name scan. Observed: pending.
+  // RECORDED MUTATION: M2 -- the range mode skips the name scan. Observed: this test's status
+  // assertion failed (0 !== 1, the 8.3 path name was not found). Reverted.
 });
 
 test('a_range_scan_refuses_a_profile_path_in_a_renamed_path_name', () => {
@@ -1205,7 +1207,8 @@ test('a_range_scan_refuses_a_profile_path_in_a_renamed_path_name', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M3 -- the name filter becomes --diff-filter=AC. Observed: pending.
+  // RECORDED MUTATION: M3 -- the name filter becomes --diff-filter=AC. Observed: this test's status
+  // assertion failed (0 !== 1, the renamed path name was not scanned). Reverted.
 });
 
 test('a_range_scan_refuses_a_profile_path_in_a_commit_message', () => {
@@ -1225,7 +1228,8 @@ test('a_range_scan_refuses_a_profile_path_in_a_commit_message', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M4 -- the range mode skips the message scan. Observed: pending.
+  // RECORDED MUTATION: M4 -- the range mode skips the message scan. Observed: this test's status
+  // assertion failed (0 !== 1, the commit message was not scanned). Reverted.
 });
 
 test('a_range_scan_reads_a_merge_commits_message', () => {
@@ -1251,7 +1255,8 @@ test('a_range_scan_reads_a_merge_commits_message', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M5 -- --no-merges added to the log read. Observed: pending.
+  // RECORDED MUTATION: M5 -- --no-merges added to the log read. Observed: this test's status
+  // assertion failed (0 !== 1, the merge commit's message was not read). Reverted.
 });
 
 test('a_range_scan_refuses_a_profile_path_brought_in_by_a_type_change', () => {
@@ -1272,7 +1277,8 @@ test('a_range_scan_refuses_a_profile_path_brought_in_by_a_type_change', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M6 -- T dropped from the range content filter. Observed: pending.
+  // RECORDED MUTATION: M6 -- T dropped from the range content filter. Observed: this test's status
+  // assertion failed (0 !== 1, the type change's added line was not read). Reverted.
 });
 
 test('a_staged_type_change_is_refused_by_the_pre_commit_hook', () => {
@@ -1290,7 +1296,9 @@ test('a_staged_type_change_is_refused_by_the_pre_commit_hook', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M7 -- the staged content filter restored to ACMR. Observed: pending.
+  // RECORDED MUTATION: M7 -- the staged content filter restored to ACMR. Observed: this test's
+  // refusal assertion (assert.notEqual on the commit status) failed: the commit that stages the
+  // type change was accepted. Reverted.
 });
 
 test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned', () => {
@@ -1312,7 +1320,8 @@ test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unsca
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M8 -- -M replaced by --no-renames in the content diff. Observed: pending.
+  // RECORDED MUTATION: M8 -- -M replaced by --no-renames in the content diff. Observed: this test's
+  // status assertion failed (1 !== 0, the pure rename's line was read as an added line). Reverted.
 });
 
 test('a_range_whose_base_is_not_an_ancestor_scans_from_the_merge_base', () => {
@@ -1346,7 +1355,8 @@ test('a_range_whose_base_is_not_an_ancestor_scans_from_the_merge_base', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M9 -- the content diff made two-dot. Observed: pending.
+  // RECORDED MUTATION: M9 -- the content diff made two-dot. Observed: this test's first status
+  // assertion failed (1 !== 0, the line the other side deleted was read as added). Reverted.
 });
 
 test('a_range_that_cannot_be_computed_aborts', () => {
@@ -1376,7 +1386,8 @@ test('a_range_that_cannot_be_computed_aborts', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: M10 -- in the range mode, every git failure read as an empty result.
-  // Observed: pending.
+  // Observed: this test's first case's status assertion failed (0 !== 2, an all-zeros base read as
+  // clean). Reverted.
 });
 
 test('a_range_mode_git_failure_prints_only_declared_lines', () => {
@@ -1392,7 +1403,9 @@ test('a_range_mode_git_failure_prints_only_declared_lines', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M11 -- the range mode's git calls inherit stderr. Observed: pending.
+  // RECORDED MUTATION: M11 -- the range mode's git calls inherit stderr. Observed: this test's
+  // assertion that stderr carries no 'fatal' failed (git's own fatal line reached stderr).
+  // Reverted.
 });
 
 test('the_range_mode_prints_no_segment_and_no_commit_message_text', () => {
@@ -1425,7 +1438,8 @@ test('the_range_mode_prints_no_segment_and_no_commit_message_text', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: M12 -- a commit finding prints the message's first line after its class.
-  // Observed: pending.
+  // Observed: this test's no-text assertion failed (the message's first line was printed).
+  // Reverted.
 });
 
 test('a_range_scan_permits_machine_account_paths_under_a_runner_home', () => {
@@ -1442,5 +1456,6 @@ test('a_range_scan_permits_machine_account_paths_under_a_runner_home', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M13 -- 'runner' removed from MACHINE_ACCOUNTS. Observed: pending.
+  // RECORDED MUTATION: M13 -- 'runner' removed from MACHINE_ACCOUNTS. Observed: this test's status
+  // assertion failed (1 !== 0, two local-profile findings under the runner home). Reverted.
 });
