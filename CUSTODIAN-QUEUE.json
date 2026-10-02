@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-10-02T12:06:10.705Z",
-  "plan_hash": "fae1905f3dbc5389c86be400e608fe04428ed2d98e14bd55fef244c574e02995",
+  "generated_at": "2026-10-02T12:14:49.198Z",
+  "plan_hash": "b803523b72551f0d34395a19f1034edd585a5067906fee1325a75af906f0b007",
   "priorities_approved": true,
   "next": {
-    "id": "workspace-rustfmt",
-    "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
+    "id": "stop-hook-stale-continuity",
+    "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 9,
+    "order": 12,
     "budget_minutes": 120,
     "needs_human": {
       "kind": "none",
@@ -19,28 +19,9 @@
       "opened": "2026-10-02",
       "done": null
     },
-    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4)."
+    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
   },
   "ready": [
-    {
-      "id": "workspace-rustfmt",
-      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4)."
-    },
     {
       "id": "stop-hook-stale-continuity",
       "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
@@ -467,6 +448,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "workspace-rustfmt",
+      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/workspace-rustfmt"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4).",
+      "evidence_label": "branch `cut/workspace-rustfmt`"
+    },
     {
       "id": "test-claims-same-pr-superseded-pin",
       "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",

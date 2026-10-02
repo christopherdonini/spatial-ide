@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fae1905f3dbc5389c86be400e608fe04428ed2d98e14bd55fef244c574e02995`) at `2026-10-02T12:06:10.705Z`.
+Generated from `PLAN.yaml` (sha256 `b803523b72551f0d34395a19f1034edd585a5067906fee1325a75af906f0b007`) at `2026-10-02T12:14:49.198Z`.
 
 ## 1. Next
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`)
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`)
 
 ## 2. Ready
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`, order 9, budget 120 min)
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -39,6 +38,7 @@ Generated from `PLAN.yaml` (sha256 `fae1905f3dbc5389c86be400e608fe04428ed2d98e14
 
 ## 5. In progress
 
+- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
 - **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) — evidence: branch `cut/test-claims-same-pr-pin`
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
 

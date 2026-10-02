@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T12:06:10.904Z",
-  "plan_hash": "fae1905f3dbc5389c86be400e608fe04428ed2d98e14bd55fef244c574e02995",
+  "generated_at": "2026-10-02T12:14:49.421Z",
+  "plan_hash": "b803523b72551f0d34395a19f1034edd585a5067906fee1325a75af906f0b007",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5509,7 +5509,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 9,
       "depends_on": [
         "exposure-scan-ci-backstop"
@@ -5519,7 +5519,9 @@
         "minutes": 0
       },
       "gate": "WORKSPACE-RUSTFMT-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/workspace-rustfmt"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,

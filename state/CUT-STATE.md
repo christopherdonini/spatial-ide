@@ -1578,3 +1578,10 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **What changed.** The envelope keys are added, H4 is labelled, and non-object JSON now takes the malformed line. M1, M9, M10 and M11 were re-observed at fa674a7 and did not change.
   - **Size.** 500 of 700 lines over 7 files.
   - **Next.** Gate 2 (reviewer and architect, scoped to the round) is dispatched.
+- 2026-10-02T12:14Z - **`workspace-rustfmt` is in progress on `cut/workspace-rustfmt`, from a0f0da7.** The worker is dispatched with the form as its spec, and does not run cargo test locally.
+  - **P1, at dispatch:**
+    - (a) The open PRs are #154 (round-mirror hook) and #155 (item C's draft probe PR, never to be merged). Neither has a `.rs` file.
+    - (b) The remote refs with unmerged `.rs` diffs are the wave 1 to 3 `cloud/*` report branches, kept as record, and `cut/b1-close-nul-names`. That is the old A2-1 branch, kept by the 2026-09-29 formatting ruling until the new PR merged; it never had a PR, and its node is done ({pr: 143}). None of these is open work.
+    - (c) No worktree holds Rust work: the C and D worktrees touch JavaScript, Markdown and settings only.
+  - **P2:** no `.rs` file or Cargo manifest changed between 01b5ba0 and a0f0da7.
+  - **Constraint until this merges:** no Rust-touching node is dispatched.

@@ -3418,12 +3418,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 9
     depends_on: [exposure-scan-ci-backstop]
     needs_human: {kind: none, minutes: 0}
     gate: WORKSPACE-RUSTFMT-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/workspace-rustfmt}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
