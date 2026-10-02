@@ -3439,13 +3439,13 @@ nodes:
     order: 10
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 90
+    budget_minutes: 180
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md): item 4, a narrow exception to round 15 (e) for that one row shape; item 5, the node key merge: merge-commit, named in an appended AUTONOMY.md section. The hold is lifted."
+    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md): item 4, a narrow exception to round 15 (e) for that one row shape; item 5, the node key merge: merge-commit, named in an appended AUTONOMY.md section. The hold is lifted. The full-form preregistration is committed as scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md), with R-1 answered by round 34 items 4 and 5; full gating. E2 and E3 use a draft probe PR that is never merged and pushes no force; its appended AUTONOMY.md section takes the next free number."
     dates: {opened: 2026-10-02, done: null}
   - id: round-mirror-pretooluse-hook
     title: "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)"
@@ -3456,13 +3456,13 @@ nodes:
     order: 11
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 120
+    budget_minutes: 150
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies."
+    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c))."
     dates: {opened: 2026-10-02, done: null}
   - id: stop-hook-stale-continuity
     title: "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)"
@@ -3480,4 +3480,21 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
+    dates: {opened: 2026-10-02, done: null}
+  - id: questions-mirror-item-count
+    title: "questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged."
     dates: {opened: 2026-10-02, done: null}

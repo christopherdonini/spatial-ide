@@ -1522,3 +1522,15 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - **The carrier.** The line on `workspace-rustfmt` now reads 7d24ed1 and the N-1 reference.
   - **Before merging.** The PR body names the two deferred rows and asks for a merge commit. CI is green at 65793d6. The gate-log holds 323 records, and this piece took two record rounds.
   - **Item D's draft** is filed as `state/consults/2026-10-02-round-mirror-hook-architect-draft.md`.
+- 2026-10-02T11:32Z - **Two full-form preregistrations are committed before any code, each its node's gate.**
+  - **Item C:** `scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md`.
+    - R-1 is answered by round 34's items 4 and 5, and the narrow exception is named in its appended `AUTONOMY.md` section.
+    - 9 tests, one mutation each. E2 and E3 run on a draft probe PR, which is never merged and has no force-push.
+    - Budget 180 minutes.
+  - **Item D:** `scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`.
+    - It adds a `--hook` mode, one PreToolUse entry, the outcome line, and an appended `AUTONOMY.md` section.
+    - 13 tests. E2 is the first live AskUserQuestion call after the merge.
+    - Budget 150 minutes.
+  - **Both forms** were screened against the red-line list: no force-push, no install, no visibility change.
+  - **Merge order.** Both forms append to `AUTONOMY.md` at the next free number, so their PRs merge one after the other, C first.
+  - **Routed.** D's consult routed the `countItems` off-by-one to a new proposed node, `questions-mirror-item-count`.
