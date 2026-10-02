@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e332bd6e44f50f8933d3525`) at `2026-10-02T16:43:41.868Z`.
+Generated from `PLAN.yaml` (sha256 `ab996d81fd4bde3dc424b353de309c763fd587df4057eb28b775d6216fb147bc`) at `2026-10-02T16:55:34.635Z`.
 
 ## 1. Next
 
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 180 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -39,7 +39,7 @@ Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e33
 ## 5. In progress
 
 - **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
-- **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
 
 ## 6. Proposed / unscheduled
 

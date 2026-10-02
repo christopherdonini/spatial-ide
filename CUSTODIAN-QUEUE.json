@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-02T16:43:41.868Z",
-  "plan_hash": "db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e332bd6e44f50f8933d3525",
+  "generated_at": "2026-10-02T16:55:34.635Z",
+  "plan_hash": "ab996d81fd4bde3dc424b353de309c763fd587df4057eb28b775d6216fb147bc",
   "priorities_approved": true,
-  "next": {
-    "id": "stop-hook-stale-continuity",
-    "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
-    "lane": "governance",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 12,
-    "budget_minutes": 180,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-10-02",
-      "done": null
-    },
-    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
-  },
-  "ready": [
-    {
-      "id": "stop-hook-stale-continuity",
-      "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 12,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -471,26 +433,26 @@
       "evidence_label": "branch `cut/workspace-rustfmt`"
     },
     {
-      "id": "round-mirror-pretooluse-hook",
-      "title": "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)",
+      "id": "stop-hook-stale-continuity",
+      "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
       "lane": "governance",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 11,
-      "budget_minutes": 150,
+      "order": 12,
+      "budget_minutes": 180,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "cut/round-mirror-hook"
+        "branch": "cut/stop-hook-stale-continuity"
       },
       "dates": {
         "opened": "2026-10-02",
         "done": null
       },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c)). The form Amendment 1 (class 2, before any code): the red-line test also reads an Item <n>. prefix, as the custodian rounds 33 and 34 carry.",
-      "evidence_label": "branch `cut/round-mirror-hook`"
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md.",
+      "evidence_label": "branch `cut/stop-hook-stale-continuity`"
     }
   ],
   "proposed": [

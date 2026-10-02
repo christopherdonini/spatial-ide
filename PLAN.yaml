@@ -3426,7 +3426,7 @@ nodes:
     merge: merge-commit
     evidence: {branch: cut/workspace-rustfmt}
     budget_minutes: 120
-    generation: 1
+    generation: 2
     felt_verdict: false
     entries: []
     summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4). Question round 35 (the 2026-10-02 rustfmt notes): it merges after publish-panel-rs-regex-layout. At its merge (note 2), its closing record gains one line, and AUTONOMY.md one appended dated section: an unpinned path:line reference dated before the rustfmt merge commit resolves against that commit first parent."
@@ -3453,29 +3453,29 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 11
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md
-    evidence: {branch: cut/round-mirror-hook}
+    evidence: {pr: 154}
     budget_minutes: 150
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c)). The form Amendment 1 (class 2, before any code): the red-line test also reads an Item <n>. prefix, as the custodian rounds 33 and 34 carry."
-    dates: {opened: 2026-10-02, done: null}
+    dates: {opened: 2026-10-02, done: 2026-10-02}
   - id: stop-hook-stale-continuity
     title: "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)"
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 12
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/stop-hook-stale-continuity}
     budget_minutes: 180
     generation: 1
     felt_verdict: false

@@ -313,3 +313,24 @@ Written after gate 1's results were seen (a post-result amendment). References o
 5. **Observations.** M1, M9, M10 and M11 were re-observed at fa674a7, and their first failing assertions did not change. The worker's report on the round is `state/consults/2026-10-02-round-mirror-hook-worker-report-2.md`.
 6. **Superseded index.** None: no recorded observation and no record row is superseded.
 7. **Not in this round.** The reviewer's S2-1, §28's heading, is made true when main is merged into this branch after the AUTONOMY.md §27 piece lands.
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece's results were seen and after its merge (a post-result amendment). References only.
+
+1. **Merged.** PR #154 merged on 2026-10-02 at 16:54:01Z as merge commit 629d969, a merge commit. Every branch commit named above is reachable from main.
+2. **§28's heading.** The heading reads "appended after §27" from 9da8926. That commit merged main (e4e864e) into the branch after PR #156 landed §27, which discharges Amendment 2 item 7. The scoped merge review is `state/consults/gates/2026-10-02-round-mirror-hook-merge-reviewer.md` (its S2-2).
+3. **Readings the gates asked to be recorded.**
+   - T11 copies six scripts into its test project (the gate-1 architect's N1).
+   - The first diagnostic line's "not JSON" is read as "not a JSON object" (that report's N2).
+   - The check for a non-object is made before §2 item 4's silent cases, so "after parsing" is read as "after parsing to an object" (the gate-2 reviewer's N-1).
+4. **Commit messages.** The line cites and the model trailer that the worker reports as deviations 4 and 7 sit in pushed commit messages, not in records. They are not rewritten, since that would take a force-push (the gate-1 architect's N4).
+5. **§7.** 500 changed lines over 7 files, at e4e864e...9da8926, against a budget of 700 (the merge review, item 6).
+6. **Observations.**
+   - M1 to M13 were observed at 753dcaf and re-observed by the gate-1 reviewer, `state/consults/gates/2026-10-02-round-mirror-hook-gate1-reviewer.md`, item 2.
+   - M1, M9, M10 and M11 were re-observed at fa674a7 (Amendment 2 item 5).
+7. **Evidence.**
+   - **E1** is T11, run in the suite on Windows and in governance-ci.
+   - **E2**, the live record, follows the merge. It is recorded at the next AskUserQuestion call in the lease session, as its own class 1 row, with §6 item 5's versions.
+8. **Tools** (§6 item 6), each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202.
+9. **Superseded index.** None.
