@@ -447,6 +447,10 @@ test('stop-queue: never throws to the shell on a missing plan file (allows)', as
 // stop-queue.mjs — the continuity step (STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md §4).
 // ---------------------------------------------------------------------------
 
+// RECORDED MUTATION: judgeContinuity's `===` between the two flushed_at values inverted to `!==` ->
+// `stop-queue: blocks on a stale continuity block after an entry-only ledger commit`
+// fails, first failing assertion: the queue reason is returned where the stale reason is expected
+// (the reason equality assertion). Observed at merge commit 4b1f641 with this change.
 test('stop-queue: blocks on a stale continuity block after an entry-only ledger commit', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   const result = await decide(input, { projectRoot: dir });
@@ -454,6 +458,10 @@ test('stop-queue: blocks on a stale continuity block after an entry-only ledger 
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: the flushed_at comparison replaced by `stale: true`, so any ledger commit reads
+// stale -> `stop-queue: a flush-only ledger commit reads fresh` fails, first failing
+// assertion: the reason matches the stale text where /^next: two-nodes-ready/ is expected. Observed
+// at merge commit 4b1f641 with this change.
 test('stop-queue: a flush-only ledger commit reads fresh', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 'c2 flush only');
@@ -462,6 +470,11 @@ test('stop-queue: a flush-only ledger commit reads fresh', async (t) => {
   assert.match(result.reason, /^next: two-nodes-ready/);
 });
 
+// RECORDED MUTATION: fresh required a commit that changes only the block (stale also when the text
+// outside the block differs) ->
+// `stop-queue: an entry and a flush in one ledger commit read fresh` fails, first failing
+// assertion: the reason matches the stale text where /^next: two-nodes-ready/ is expected. Observed
+// at merge commit 4b1f641 with this change.
 test('stop-queue: an entry and a flush in one ledger commit read fresh', async (t) => {
   const { dir, input } = stopFixture(t);
   commitLedger(dir, { flushedAt: FLUSH_B, entries: 2 }, 'c1 entry plus flush');
@@ -470,6 +483,10 @@ test('stop-queue: an entry and a flush in one ledger commit read fresh', async (
   assert.match(result.reason, /^next: two-nodes-ready/);
 });
 
+// RECORDED MUTATION: the background_tasks allow moved back to the first step of decide ->
+// `stop-queue: the continuity check runs before the background-tasks allow` fails, first
+// failing assertion: decision 'allow' where 'block' is expected. Observed at merge commit 4b1f641
+// with this change.
 test('stop-queue: the continuity check runs before the background-tasks allow', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   const result = await decide({ ...input, background_tasks: [{ id: 'bg-1' }] }, { projectRoot: dir });
@@ -477,6 +494,10 @@ test('stop-queue: the continuity check runs before the background-tasks allow', 
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: the continuity step moved ahead of the override and HALT step ->
+// `stop-queue: the override and HALT still allow over a stale block` fails, first failing
+// assertion: decision 'block' where 'allow' is expected (the override case). Observed at merge
+// commit 4b1f641 with this change.
 test('stop-queue: the override and HALT still allow over a stale block', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   process.env.CUSTODIAN_STOP_HOOK = 'off';
@@ -493,6 +514,10 @@ test('stop-queue: the override and HALT still allow over a stale block', async (
   assert.match(halted.stderr, /^HALT: halted for the drill/);
 });
 
+// RECORDED MUTATION: the continuity step moved ahead of the lease check ->
+// `stop-queue: a session without the lease allows over a stale block` fails, first failing
+// assertion: decision 'block' where 'allow' is expected (the absent-lease case). Observed at merge
+// commit 4b1f641 with this change.
 test('stop-queue: a session without the lease allows over a stale block', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   fs.rmSync(path.join(dir, 'CUSTODIAN-LEASE'));
@@ -506,6 +531,10 @@ test('stop-queue: a session without the lease allows over a stale block', async 
   assert.match(other.stderr, /another session's lease/);
 });
 
+// RECORDED MUTATION: the cap result ignored in the stale branch, which blocks without reading the
+// caps -> `stop-queue: the caps end the turn on a stale block` fails, first failing
+// assertion: decision 'block' where 'allow' is expected (the session-cap phase). Observed at merge
+// commit 4b1f641 with this change.
 test('stop-queue: the caps end the turn on a stale block', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   const now = new Date();
@@ -532,6 +561,10 @@ test('stop-queue: the caps end the turn on a stale block', async (t) => {
   assert.deepEqual(readJsonFile(files.daily), { count: DAILY_CONTINUATION_CAP });
 });
 
+// RECORDED MUTATION: the accounting routine writes no state when it is called for a stale block ->
+// `stop-queue: a stale block counts as a continuation and a new HEAD resets the count`
+// fails, first failing assertion: 'a stale block records its continuation' (the session state file
+// does not exist). Observed at merge commit 4b1f641 with this change.
 test('stop-queue: a stale block counts as a continuation and a new HEAD resets the count', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   const now = new Date();
@@ -566,6 +599,10 @@ test('stop-queue: a stale block counts as a continuation and a new HEAD resets t
   assert.deepEqual(readJsonFile(files.daily), { count: 4 });
 });
 
+// RECORDED MUTATION: a null `git log` result read as stale ->
+// `stop-queue: the continuity check fails open when git cannot read the ledger history`
+// fails, first failing assertion: the reason matches the stale text where /^next: two-nodes-ready/
+// is expected (S4a). Observed at merge commit 4b1f641 with this change.
 test('stop-queue: the continuity check fails open when git cannot read the ledger history', async (t) => {
   // S4a: a directory that is not a repository, holding the ledger file.
   const bare = makeTempDir('stop-continuity-norepo-');
@@ -597,6 +634,10 @@ test('stop-queue: the continuity check fails open when git cannot read the ledge
   assert.doesNotMatch(noLedger.stderr, /continuity not judged/);
 });
 
+// RECORDED MUTATION: the parent copy read at `<c>^2` instead of `<c>^1` ->
+// `stop-queue: a merge is judged against its first parent` fails, first failing assertion:
+// the queue reason is returned where the stale reason is expected (the reason equality assertion).
+// Observed at merge commit 4b1f641 with this change.
 test('stop-queue: a merge is judged against its first parent', async (t) => {
   // S5: the merge differs from both parents, so it is the newest ledger commit; its first parent
   // already carries flushed_at B.
@@ -612,6 +653,10 @@ test('stop-queue: a merge is judged against its first parent', async (t) => {
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_B));
 });
 
+// RECORDED MUTATION: `--first-parent` added to the `git log` walk ->
+// `stop-queue: a merge that takes the side's ledger is judged at the side's newest ledger commit`
+// fails, first failing assertion: the queue reason is returned where the stale reason is expected
+// (the reason equality assertion). Observed at merge commit 4b1f641 with this change.
 test("stop-queue: a merge that takes the side's ledger is judged at the side's newest ledger commit", async (t) => {
   // S6: the merge's ledger equals its second parent's, so the walk follows that side to s2.
   const { dir, input } = stopFixture(t);
@@ -628,6 +673,10 @@ test("stop-queue: a merge that takes the side's ledger is judged at the side's n
   assert.equal(result.reason, staleReason(dir, headOf(dir, 'side'), FLUSH_B));
 });
 
+// RECORDED MUTATION: a missing parent copy read as stale ->
+// `stop-queue: a ledger commit with no first-parent copy reads fresh` fails, first failing
+// assertion: the reason matches the stale text where /^next: two-nodes-ready/ is expected. Observed
+// at merge commit 4b1f641 with this change.
 test('stop-queue: a ledger commit with no first-parent copy reads fresh', async (t) => {
   const { dir, input } = stopFixture(t); // S7: c0 only, a root commit
   const result = await decide(input, { projectRoot: dir });
@@ -635,6 +684,10 @@ test('stop-queue: a ledger commit with no first-parent copy reads fresh', async 
   assert.match(result.reason, /^next: two-nodes-ready/);
 });
 
+// RECORDED MUTATION: the block read from the working tree instead of the commit's blob ->
+// `stop-queue: an uncommitted flush does not clear a stale block` fails, first failing
+// assertion: the queue reason is returned where the stale reason is expected (the reason equality
+// assertion). Observed at merge commit 4b1f641 with this change.
 test('stop-queue: an uncommitted flush does not clear a stale block', async (t) => {
   const { dir, input } = stopFixtureS1(t);
   writeLedger(dir, { flushedAt: FLUSH_B, entries: 2 }); // S8: rewritten in the working tree, never committed
@@ -643,6 +696,10 @@ test('stop-queue: an uncommitted flush does not clear a stale block', async (t) 
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: flushed_at read by a raw `\n` split that keeps the `\r` ->
+// `stop-queue: a CRLF ledger blob with an unchanged flushed_at reads stale` fails, first
+// failing assertion: the queue reason is returned where the stale reason is expected (the reason
+// equality assertion). Observed at merge commit 4b1f641 with this change.
 test('stop-queue: a CRLF ledger blob with an unchanged flushed_at reads stale', async (t) => {
   const { dir, input } = stopFixture(t);
   commitLedger(dir, { flushedAt: FLUSH_A, entries: 2, eol: '\r\n' }, 'c1 CRLF plus an entry');
@@ -652,6 +709,10 @@ test('stop-queue: a CRLF ledger blob with an unchanged flushed_at reads stale', 
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: the `maxBuffer` option dropped from the continuity git calls ->
+// `stop-queue: a ledger over 1 MiB is still judged` fails, first failing assertion: the
+// queue reason is returned where the stale reason is expected (the reason equality assertion).
+// Observed at merge commit 4b1f641 with this change.
 test('stop-queue: a ledger over 1 MiB is still judged', async (t) => {
   const { dir, input } = stopFixture(t, { ledgerOpts: { padLines: 32768 } }); // 2 MiB
   commitLedger(dir, { flushedAt: FLUSH_A, entries: 2, padLines: 32768 }, 'c1 entry only');
@@ -661,6 +722,10 @@ test('stop-queue: a ledger over 1 MiB is still judged', async (t) => {
   assert.equal(result.reason, staleReason(dir, 'HEAD', FLUSH_A));
 });
 
+// RECORDED MUTATION: the continuity step removed from decide (judged as fresh) ->
+// `stop-queue CLI: a stale ledger blocks with the continuity reason through the shipped entry`
+// fails, first failing assertion: the CLI's reason is the queue reason where the stale reason is
+// expected. Observed at merge commit 4b1f641 with this change.
 test('stop-queue CLI: a stale ledger blocks with the continuity reason through the shipped entry', (t) => {
   const { dir, input } = stopFixtureS1(t);
   const scriptPath = path.join(here, 'stop-queue.mjs');
@@ -988,6 +1053,11 @@ test('session-resume: never throws when state/CUT-STATE.md is missing', () => {
   assert.match(output, /could not be read|no SESSION-CONTINUITY block/);
 });
 
+// RECORDED MUTATION: the state/directives/ line placed after the PRECEDENTS.md line in READING_ORDER
+// ->
+// `session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)`
+// fails, first failing assertion: 'directly after DECISIONS-PENDING.md' (actual index 5, expected
+// 4). Observed at merge commit 4b1f641 with this change.
 test('session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)', () => {
   const lines = READING_ORDER.split('\n');
   const at = (needle) => lines.findIndex((l) => l.includes(needle));
