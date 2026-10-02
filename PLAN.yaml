@@ -3498,3 +3498,20 @@ nodes:
     entries: []
     summary: "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged."
     dates: {opened: 2026-10-02, done: null}
+  - id: template-round15e-exception-pointer
+    title: "docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [test-claims-same-pr-superseded-pin]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 20
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by PR #156 gate 1 architect (state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md, the round 15 (e) pointer section): the template's round 15 (e) and round 25 (d) lines read alone would fail the one row shape question round 34 item 4 allows; one sentence appended at the end of the template names AUTONOMY.md section 27 and round 34 item 4, reproducing nothing. Docs-only. Whether the architect and reviewer agent definitions need the same pointer is the human's and the custodian's call, raised with it."
+    dates: {opened: 2026-10-02, done: null}

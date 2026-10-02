@@ -1594,3 +1594,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
 - 2026-10-02T12:22Z - **PR #154 is PASS/PASS at 2e364d6** (gate 2, scoped; the reviewer's report is filed, and the gate-log holds 327 records).
   - **Before your click.** It waits for #156 to merge. I then merge main into the branch and fix §28's heading and number, and a scoped reviewer pass reads that hunk.
   - **The closing record** carries the reviewer's gate-2 N-1, a reading of where the non-object check sits, and the architect's gate-2 N1, the amendment's class.
+- 2026-10-02T12:27Z - **PR #157 (`workspace-rustfmt`) is open at c6d1414.** C1 is 6371d92: one parent and 133 `.rs` files only. C2 adds the workflow and the blame file, 81 lines.
+  - **The worker's report** is filed, with its branch-line cites de-rooted. E2 (run 37005634673) went red on both scopes, and the probe branch was deleted after reading.
+  - **§6 item 4.** Of 1,241 rooted cites into the 133 files, 994 now point at moved text, the disclosed cost. 32 are pinned, and D is 0.
+  - **Gate 1** (reviewer reproduction, architect) is dispatched. P1 is re-checked before the merge.
+  - **PR #156's gate-1 architect** FAILed on S1-1: a git failure in (f3) reads as acceptance. The report is filed, and the gate-log holds 328 records. The correction waits for the gate-1 reviewer.
+  - **Routed:** the template pointer for round 34 item 4's exception, as the proposed node `template-round15e-exception-pointer`.

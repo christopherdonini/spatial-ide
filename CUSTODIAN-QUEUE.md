@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b803523b72551f0d34395a19f1034edd585a5067906fee1325a75af906f0b007`) at `2026-10-02T12:14:49.198Z`.
+Generated from `PLAN.yaml` (sha256 `c9f6ebea90fac9c09b29ea0087cdc0de6b8ffcd2abf8c40d9b96bf38c1968c8c`) at `2026-10-02T12:27:05.110Z`.
 
 ## 1. Next
 
@@ -85,6 +85,7 @@ Generated from `PLAN.yaml` (sha256 `b803523b72551f0d34395a19f1034edd585a5067906f
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
+- **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
