@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0646fb7f6bc795076b7a03359d8fc31129e7cc410d8505aacd9664927083a557`) at `2026-10-02T21:51:01.986Z`.
+Generated from `PLAN.yaml` (sha256 `cba887dd844679fea39834af35141fcdf54eba7971eeb7f791a7735118007c7b`) at `2026-10-02T21:53:38.554Z`.
 
 ## 1. Next
 
@@ -38,7 +38,6 @@ Generated from `PLAN.yaml` (sha256 `0646fb7f6bc795076b7a03359d8fc31129e7cc410d85
 
 - **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — evidence: branch `cut/skp-cancel-state-closed-set`
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
-- **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) — evidence: branch `cut/questions-mirror-t11-copy-glob`
 
 ## 6. Proposed / unscheduled
 

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T21:51:02.102Z",
-  "plan_hash": "0646fb7f6bc795076b7a03359d8fc31129e7cc410d8505aacd9664927083a557",
+  "generated_at": "2026-10-02T21:53:38.695Z",
+  "plan_hash": "cba887dd844679fea39834af35141fcdf54eba7971eeb7f791a7735118007c7b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5728,7 +5728,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 14,
       "depends_on": [],
       "needs_human": {
@@ -5737,7 +5737,7 @@
       },
       "gate": "scripts/hooks/QUESTIONS-MIRROR-T11-COPY-GLOB-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/questions-mirror-t11-copy-glob"
+        "pr": 159
       },
       "budget_minutes": 30,
       "generation": 1,
@@ -5746,7 +5746,7 @@
       "summary": "Found by stop-hook-stale-continuity invalidator I1 (state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-1.md): that piece makes stop-queue.mjs import precompact-flush.mjs, and the T11 test of scripts/hooks/questions-mirror.test.mjs (the_settings_command_mirrors_a_recorded_askuserquestion_payload, from PR #154) hand-copies a fixed list of six scripts into a temp project, so its hook exits 1. Routed by the form architect (state/consults/gates/2026-10-02-stop-hook-stale-continuity-i1-architect-ruling.md): a test-only node on main, merged before E; five-line form, reviewer only; Scope questions-mirror.test.mjs only, at most 10 changed lines; T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ (not recursive); its name, assertions and recorded M11 unchanged; mutation: drop scripts/plan/ from the copy, T11 fails at assertQuiet; seam proof: the changed T11 green against main stop-queue.mjs and against E commit. Its order is the human. Question round 36 (RULED 2026-10-02), item 1: placed ahead of stop-hook-stale-continuity (governance order 14).",
       "dates": {
         "opened": "2026-10-02",
-        "done": null
+        "done": "2026-10-02"
       }
     },
     {
