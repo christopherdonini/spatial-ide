@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T06:54:11.500Z",
-  "plan_hash": "c6b9ccae4184971c9d7ae1b6284d0b654cadfdd4621b19c78fe55e21ae2dd9d1",
+  "generated_at": "2026-10-02T07:07:25.986Z",
+  "plan_hash": "3113e084bc419fd50dee6ecdee29e46b389623a476f72c71c73e3a27743e7bd0",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4745,7 +4745,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window. The type-change item is taken by exposure-scan-ci-backstop (its form, section 0's intake table) and leaves this node when that node is done; the two main-side hits and the punctuation-only segment stay here.",
+      "summary": "Routed by the exposure-profile-paths form (Amendment 4, 4.7; Amendment 7, 7.6 and 7.7; drafts in state/drafts/): engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md carries a grep pattern whose regex alternation after a Users root the scanner reads as a segment; state/consults/gates/2026-09-27-exposure-profile-paths-gate1-reviewer.md carries an invented 8.3 example (a filed report, byte-identical under AUTONOMY.md section 25(b)); --diff-filter=ACMR skips type changes. Exempting segments that name no person (a punctuation-only segment, the macOS shared folder) changes round 29 item 1's matcher and is the human's, queued for the weekly window. The type-change item is taken by exposure-scan-ci-backstop (its form, section 0's intake table) and leaves this node when that node is done; the two main-side hits and the punctuation-only segment stay here. Routed by PR #153 gate 1 (architect N4, state/consults/gates/2026-10-02-exposure-scan-ci-backstop-gate1-architect.md): GitHub does not run pull_request workflows while a PR has a merge conflict, so such a PR goes unscanned until the conflict is resolved; the push to main still scans it. A note, not a clause.",
       "dates": {
         "opened": "2026-09-27",
         "done": null
