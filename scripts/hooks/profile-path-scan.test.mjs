@@ -1294,12 +1294,17 @@ test('a_staged_type_change_is_refused_by_the_pre_commit_hook', () => {
     r = commit(dir, ['-q', '-s', '-m', 'type change']);
     assert.notEqual(r.status, 0, r.stderr);
     assert.ok(r.stderr.includes('commit refused'), r.stderr);
+    assert.ok(r.stderr.includes('link:1 unlisted-segment'), r.stderr);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
   // RECORDED MUTATION: M7 -- the staged content filter restored to ACMR. Observed: this test's
   // refusal assertion (assert.notEqual on the commit status) failed: the commit that stages the
   // type change was accepted. Reverted.
+  // Re-observed after the finding assertion was added: M7 failed on the same notEqual (status 0).
+  // Abort mutation: '--bogus-option' appended to the staged content diff's arguments, so the staged
+  // scan aborts. Observed: the finding assertion failed (stderr carried git's usage text, not
+  // `link:1 unlisted-segment`), though the 'commit refused' assertion before it passed. Reverted.
 });
 
 test('a_clean_range_exits_zero_and_leaves_unchanged_lines_and_pure_renames_unscanned', () => {
@@ -1386,9 +1391,10 @@ test('a_range_that_cannot_be_computed_aborts', () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  // RECORDED MUTATION: M10 -- in the range mode, every git failure read as an empty result.
-  // Observed: this test's first case's status assertion failed (0 !== 2, an all-zeros base read as
-  // clean). Reverted.
+  // RECORDED MUTATION: M10 -- in the range mode, every git failure read as an empty result: the
+  // catch in runGitCaptured returns '' instead of null. Observed: cases 1 to 3 still exit 2 through
+  // the unresolved-commit guard; the status assertion of case 4 (two unrelated roots) failed
+  // (0 !== 2, the range was read as clean). Reverted.
 });
 
 test('a_range_mode_git_failure_prints_only_declared_lines', () => {
