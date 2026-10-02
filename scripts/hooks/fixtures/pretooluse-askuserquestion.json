@@ -1,0 +1,74 @@
+{
+  "session_id": "fixture-session",
+  "transcript_path": "fixture/transcript.jsonl",
+  "cwd": "fixture-project",
+  "hook_event_name": "PreToolUse",
+  "tool_input": {
+    "questions": [
+      {
+        "question": "Item 5. F — AUTONOMY.md section 0's reading order gains state/directives/ (newest first), after DECISIONS-PENDING.md. The source is your line in state/directives/2026-09-29-directives-not-duplicated-and-holds-check.md. It would be a dated amendment appended at the end of AUTONOMY.md.",
+        "header": "F reading",
+        "multiSelect": false,
+        "options": [
+          {
+            "label": "Adopt (Recommended)",
+            "description": "A dated amendment appended at the end of AUTONOMY.md adds state/directives/ (newest first) after DECISIONS-PENDING.md in section 0's reading order."
+          },
+          {
+            "label": "Hold",
+            "description": "Section 0's reading order stays as it is."
+          }
+        ]
+      },
+      {
+        "question": "Item 6. PORTABILITY section 7, decision 1 — runner minutes. PORT-1 adds a Linux job to every product push, and PORT-2 adds macOS. Standard GitHub-hosted runners have been free for public repositories, but check Settings → Billing before relying on it.",
+        "header": "P1 runners",
+        "multiSelect": false,
+        "options": [
+          {
+            "label": "PORT-1 now (Recommended)",
+            "description": "PORT-1 now, PORT-2 after PORT-1 is green (PORTABILITY's recommendation)."
+          },
+          {
+            "label": "Approve both now",
+            "description": "PORT-1 and PORT-2 are both approved now."
+          },
+          {
+            "label": "Hold both",
+            "description": "Neither runner job is added yet."
+          }
+        ]
+      },
+      {
+        "question": "Item 7. PORTABILITY section 7, decision 2 — support profiles to target. The recommendation: Windows 10/11 x64 (the reference, unchanged); macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Linux Ubuntu 24.04 x64 with WebKitGTK 4.1. Other distributions and architectures are not claimed.",
+        "header": "P2 profiles",
+        "multiSelect": false,
+        "options": [
+          {
+            "label": "Adopt these (Recommended)",
+            "description": "Adopt these profiles (PORTABILITY's recommendation)."
+          },
+          {
+            "label": "Hold",
+            "description": "Hold; decide with PORT-1's results."
+          }
+        ]
+      },
+      {
+        "question": "Item 8. RED LINE (what CI installs) — PORTABILITY section 7, decision 3 — CI system packages for the Linux shell build (PORT-3): WebKitGTK and its build dependencies, installed in the runner only. They are not product dependencies, but they change what CI installs. PORTABILITY gives no recommendation.",
+        "header": "P3 packages",
+        "multiSelect": false,
+        "options": [
+          {
+            "label": "Approve, runner only",
+            "description": "Installed by the PORT-3 workflow, never added to the repository's product dependencies."
+          },
+          {
+            "label": "Hold until green",
+            "description": "Hold until PORT-1 and PORT-2 are green."
+          }
+        ]
+      }
+    ]
+  }
+}
