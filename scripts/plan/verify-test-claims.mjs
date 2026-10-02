@@ -94,7 +94,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadPlan } from './plan.mjs';
 
@@ -384,8 +384,11 @@ function isAncestorOfMain(root, rev) {
  * outside `line`'s range, an unresolvable rev/path, a hash mismatch, a claim line missing the claimed
  * name, or a rev shown NOT to be on main is not a match -- the claim stays a binding finding (or
  * planned), exactly as if no pin existed.
- * Returns `{ span, mainUnchecked }` (`span: null` when nothing matched); `mainUnchecked` is true when
- * condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
+ * `samePrAccept` (optional, `(rev) => boolean`): consulted only when (e) ran and refused; when it
+ * returns true the span is accepted and the result carries `samePr: true` (only the superseded path
+ * passes it).
+ * Returns `{ span, mainUnchecked, samePr }` (`span: null` when nothing matched); `mainUnchecked` is true
+ * when condition (e) could not run (no `origin/main` in this tree) for the span that otherwise won.
  */
 function findMarkedSpan(root, relPath, line, name, spans, extra, samePrAccept) {
   for (const span of spans) {
@@ -419,6 +422,12 @@ function gitSucceeds(root, args) {
   }
 }
 
+// The spawn's exit status, or null when it did not exit normally.
+function gitExitStatus(root, args) {
+  const r = spawnSync('git', args, { cwd: root, stdio: 'ignore' });
+  return r.status;
+}
+
 // (f2): `rev` is reachable from the scanned HEAD. Memoized by (root, rev). A git failure is false.
 const headAncestorCache = new Map();
 function revIsAncestorOfHead(root, rev) {
@@ -445,7 +454,9 @@ function lineIsIntroducedInRange(root, relPath, line) {
       stdio: ['ignore', 'pipe', 'ignore'],
     });
     const c = out.split(/\s/, 1)[0];
-    if (/^[0-9a-f]{40}$/.test(c) && !/^0+$/.test(c)) result = !gitSucceeds(root, ['merge-base', '--is-ancestor', c, mainSha]);
+    // In range only when the ancestry check exits with status 1 (not an ancestor); any other outcome,
+    // a git error included, is not accepted.
+    if (/^[0-9a-f]{40}$/.test(c) && !/^0+$/.test(c)) result = gitExitStatus(root, ['merge-base', '--is-ancestor', c, mainSha]) === 1;
   } catch {
     result = false;
   }
