@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4f7b1d2b2e168ae780726`) at `2026-10-02T15:45:13.633Z`.
+Generated from `PLAN.yaml` (sha256 `6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1`) at `2026-10-02T16:13:05.644Z`.
 
 ## 1. Next
 
@@ -8,7 +8,7 @@ Generated from `PLAN.yaml` (sha256 `91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4
 
 ## 2. Ready
 
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -87,6 +87,7 @@ Generated from `PLAN.yaml` (sha256 `91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
 - **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
+- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

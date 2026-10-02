@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T15:45:13.633Z",
-  "plan_hash": "91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4f7b1d2b2e168ae780726",
+  "generated_at": "2026-10-02T16:13:05.644Z",
+  "plan_hash": "6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1",
   "priorities_approved": true,
   "next": {
     "id": "stop-hook-stale-continuity",
@@ -9,7 +9,7 @@
     "phase": "prototype",
     "status": "ready",
     "order": 12,
-    "budget_minutes": 120,
+    "budget_minutes": 180,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -29,7 +29,7 @@
       "phase": "prototype",
       "status": "ready",
       "order": 12,
-      "budget_minutes": 120,
+      "budget_minutes": 180,
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -1297,6 +1297,25 @@
         "done": null
       },
       "summary": "Routed by PR #156 gate 1 architect (state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md, the round 15 (e) pointer section): the template's round 15 (e) and round 25 (d) lines read alone would fail the one row shape question round 34 item 4 allows; one sentence appended at the end of the template names AUTONOMY.md section 27 and round 34 item 4, reproducing nothing. Docs-only. Whether the architect and reviewer agent definitions need the same pointer is the human's and the custodian's call, raised with it."
+    },
+    {
+      "id": "flush-crlf-field-rewrite",
+      "title": "flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
     }
   ],
   "unscheduled": [

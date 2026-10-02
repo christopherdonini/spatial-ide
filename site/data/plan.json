@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T15:45:13.786Z",
-  "plan_hash": "91c3cf5fd9f048eacb6fdb2ed2e9ce90b190eeb818e4f7b1d2b2e168ae780726",
+  "generated_at": "2026-10-02T16:13:05.763Z",
+  "plan_hash": "6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5599,9 +5599,9 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md",
       "evidence": null,
-      "budget_minutes": 120,
+      "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
@@ -5685,6 +5685,31 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Found by PR #157 gate 1 (invalidator I4; state/consults/gates/2026-10-02-workspace-rustfmt-gate1-reviewer.md): the rustfmt pass moves publish.rs's FILTER_SCOPE_SENTENCE literal onto its own line, and frontends/shell/src/publish/PublishPanel.test.ts's regex expects it right after the equals sign, so product-ci-shell goes red. The architect's ruling (OTHER, the resumed gate-1 architect, filed with the round's record): fix it on main first as its own short-form, test-only piece. One file, at most 6 changed lines, both declaration regexes (FILTER_SCOPE_SENTENCE and PREPARE_CANCEL_KEY_PREFIX) tolerating layout around the colon and equals sign, modelled on checkOriginEventName.mjs. Its mutation is one character of the Rust literal. Its seam proof runs the test against main's and against the formatted publish.rs (c6d1414). Reviewer gate only; no section 21a category is touched. PR #157 then gains a comment-only C3 and gate 2. Placement is the human's (question round 35). PLACED by question round 35 (RULED 2026-10-02; the 2026-10-02 rustfmt notes, note 1): the two regexes tolerate any whitespace between the equals sign and the literal, line breaks and CRLF included (portability R1), and depend on no rustfmt layout. Ahead of workspace-rustfmt merge.",
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      }
+    },
+    {
+      "id": "flush-crlf-field-rewrite",
+      "title": "flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 30,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation.",
       "dates": {
         "opened": "2026-10-02",
         "done": null
