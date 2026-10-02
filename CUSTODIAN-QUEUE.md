@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e5d32a7856798333b372de6799627099795f41612551ec978153f309a09b0bfe`) at `2026-10-02T17:24:28.833Z`.
+Generated from `PLAN.yaml` (sha256 `65621224144f4adfd2e773b07c1c816d565f47a117b4a7f5e13c349b67e6653e`) at `2026-10-02T17:27:40.449Z`.
 
 ## 1. Next
 
-- **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) (lane `governance`, order 14, budget 30 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -40,6 +40,7 @@ Generated from `PLAN.yaml` (sha256 `e5d32a7856798333b372de6799627099795f41612551
 
 - **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
+- **questions-mirror-t11-copy-glob** — questions-mirror.test.mjs T11 copies every top-level .mjs of scripts/hooks/ and scripts/plan/ into its test project instead of a fixed six-file list (test-only, before stop-hook-stale-continuity merges) — evidence: branch `cut/questions-mirror-t11-copy-glob`
 
 ## 6. Proposed / unscheduled
 

@@ -3555,12 +3555,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 14
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/hooks/QUESTIONS-MIRROR-T11-COPY-GLOB-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/questions-mirror-t11-copy-glob}
     budget_minutes: 30
     generation: 1
     felt_verdict: false

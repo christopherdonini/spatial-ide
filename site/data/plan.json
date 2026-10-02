@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T17:24:28.944Z",
-  "plan_hash": "e5d32a7856798333b372de6799627099795f41612551ec978153f309a09b0bfe",
+  "generated_at": "2026-10-02T17:27:40.565Z",
+  "plan_hash": "65621224144f4adfd2e773b07c1c816d565f47a117b4a7f5e13c349b67e6653e",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5724,7 +5724,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 14,
       "depends_on": [],
       "needs_human": {
@@ -5732,7 +5732,9 @@
         "minutes": 0
       },
       "gate": "scripts/hooks/QUESTIONS-MIRROR-T11-COPY-GLOB-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/questions-mirror-t11-copy-glob"
+      },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
