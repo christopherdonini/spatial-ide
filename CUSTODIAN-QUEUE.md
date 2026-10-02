@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1`) at `2026-10-02T16:13:05.644Z`.
+Generated from `PLAN.yaml` (sha256 `db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e332bd6e44f50f8933d3525`) at `2026-10-02T16:43:41.868Z`.
 
 ## 1. Next
 
@@ -39,9 +39,7 @@ Generated from `PLAN.yaml` (sha256 `6934096120059bdadfc8261348ec5b687651412cb1c0
 ## 5. In progress
 
 - **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
-- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) — evidence: branch `cut/test-claims-same-pr-pin`
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
-- **publish-panel-rs-regex-layout** — PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges) — evidence: branch `cut/publish-panel-rs-regex-layout`
 
 ## 6. Proposed / unscheduled
 

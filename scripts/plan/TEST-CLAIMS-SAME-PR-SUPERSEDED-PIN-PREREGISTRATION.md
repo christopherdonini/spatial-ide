@@ -279,3 +279,29 @@ Written after gate 1's results were seen (a post-result amendment). References o
 5. **N-3.** `findMarkedSpan`'s doc comment names `samePrAccept` and the `samePr` field (e9735d4). It is a comment change only.
 6. **Not changed.** §7's budget (the worker's count: 391 changed lines over 3 files), every other test, and the gate-1 notes left to the closing record (the architect's N-3 and the reviewer's N-4 on rebase).
 7. **Superseded index.** None. No line of this form or of a recorded mutation comment is made false by this round. The T1 code replaced at a758290 is test code, not a record.
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece's results were seen and after its merge (a post-result amendment). References and hashes only.
+
+1. **Merged.** PR #156 merged on 2026-10-02 at 16:35:35Z as merge commit 8a8002a, a merge commit. Every branch commit named above is reachable from main.
+2. **Record correction, the class label** (the gate-2 architect's S2-1; record-correction round 1 of 2).
+   - The defect: Amendment 1 is labelled class 9 but cites no standing rule.
+   - The corrected reference: it is class 4 with class 1.
+   - The proof: Amendment 1 item 1 names two gate reports as its source. The superseded span is `scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md:260` @ 8a8002a sha256:89b3d4765a36d8d97dffcdc5bf11ec107475a90063855189b514e64b6ae9c0e8.
+3. **Record correction, the superseded index** (the gate-2 architect's S2-2; the same round).
+   - Amendment 1 item 3's "every other test" is superseded as to T1 by Amendment 2 item 3. The superseded span is `scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md:269` @ 8a8002a sha256:8f16e314bcb04f903450abc9aa3686ad9d1a9ac1ce7c4daed32742a8581ff38b.
+   - Amendment 2 item 7's "None" is read with this row: `scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md:281` @ 8a8002a sha256:fac60e720cc1f34e365a95193c2fa67532f3a795e9da58194a3a70017aee5925.
+4. **§0 H2's merge clause is exercised, not discriminated** (the gate-2 architect's S2-3). T1 and E2 run it, and neither discriminates it; it is reasoned from blame's semantics. The observation that T1's merge half runs (f2) and (f3) at a merge HEAD is the gate-2 reviewer's cache probe, `state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate2-reviewer.md`, item 3, not M1 (that report's S2-1).
+5. **Rebase is reasoned, not tested.** §1's may-claim 3 rests on T4, which tests squash only. This answers the gate-1 architect's N-3, the gate-1 reviewer's N-4 and the gate-2 architect's N-1.
+6. **Evidence:**
+   - **E1:** pull_request run 37030228614 at 1546752, the head merged; success. This answers the gate-1 reviewer's N-2.
+   - **E2:** run 37005296152. Its head is a93090c, and its test merge is 76c6bfff. This answers the gate-1 reviewer's N-1.
+   - **E3:** run 37005569762.
+7. **Observations.**
+   - M1 to M9 were observed at 0e20437.
+   - T10 was observed failing at a758290.
+   - M10 was observed at e9735d4, and M1, M3 and M7 were re-observed there. The source is worker report 2, `state/consults/2026-10-02-test-claims-same-pr-pin-worker-report-2.md`, reproduced by the gate-2 reviewer.
+8. **§7.** 391 changed lines over 3 files, counted at 01b5ba0...1546752. The budget is 650 lines over at most 3 files.
+9. **Tools** (§6 item 5), each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202.
+10. **Superseded index.** Items 2 and 3 above, and nothing else.

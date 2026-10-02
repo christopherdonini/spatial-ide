@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T16:13:05.644Z",
-  "plan_hash": "6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1",
+  "generated_at": "2026-10-02T16:43:41.868Z",
+  "plan_hash": "db43f7b1496fe3ff8c60e5fdde7e5a627686b7a23e332bd6e44f50f8933d3525",
   "priorities_approved": true,
   "next": {
     "id": "stop-hook-stale-continuity",
@@ -471,28 +471,6 @@
       "evidence_label": "branch `cut/workspace-rustfmt`"
     },
     {
-      "id": "test-claims-same-pr-superseded-pin",
-      "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 10,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/test-claims-same-pr-pin"
-      },
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md): item 4, a narrow exception to round 15 (e) for that one row shape; item 5, the node key merge: merge-commit, named in an appended AUTONOMY.md section. The hold is lifted. The full-form preregistration is committed as scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md), with R-1 answered by round 34 items 4 and 5; full gating. E2 and E3 use a draft probe PR that is never merged and pushes no force; its appended AUTONOMY.md section takes the next free number.",
-      "evidence_label": "branch `cut/test-claims-same-pr-pin`"
-    },
-    {
       "id": "round-mirror-pretooluse-hook",
       "title": "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)",
       "lane": "governance",
@@ -513,28 +491,6 @@
       },
       "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c)). The form Amendment 1 (class 2, before any code): the red-line test also reads an Item <n>. prefix, as the custodian rounds 33 and 34 carry.",
       "evidence_label": "branch `cut/round-mirror-hook`"
-    },
-    {
-      "id": "publish-panel-rs-regex-layout",
-      "title": "PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 13,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/publish-panel-rs-regex-layout"
-      },
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Found by PR #157 gate 1 (invalidator I4; state/consults/gates/2026-10-02-workspace-rustfmt-gate1-reviewer.md): the rustfmt pass moves publish.rs's FILTER_SCOPE_SENTENCE literal onto its own line, and frontends/shell/src/publish/PublishPanel.test.ts's regex expects it right after the equals sign, so product-ci-shell goes red. The architect's ruling (OTHER, the resumed gate-1 architect, filed with the round's record): fix it on main first as its own short-form, test-only piece. One file, at most 6 changed lines, both declaration regexes (FILTER_SCOPE_SENTENCE and PREPARE_CANCEL_KEY_PREFIX) tolerating layout around the colon and equals sign, modelled on checkOriginEventName.mjs. Its mutation is one character of the Rust literal. Its seam proof runs the test against main's and against the formatted publish.rs (c6d1414). Reviewer gate only; no section 21a category is touched. PR #157 then gains a comment-only C3 and gate 2. Placement is the human's (question round 35). PLACED by question round 35 (RULED 2026-10-02; the 2026-10-02 rustfmt notes, note 1): the two regexes tolerate any whitespace between the equals sign and the literal, line breaks and CRLF included (portability R1), and depend on no rustfmt layout. Ahead of workspace-rustfmt merge.",
-      "evidence_label": "branch `cut/publish-panel-rs-regex-layout`"
     }
   ],
   "proposed": [
