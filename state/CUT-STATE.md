@@ -1585,3 +1585,9 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - (c) No worktree holds Rust work: the C and D worktrees touch JavaScript, Markdown and settings only.
   - **P2:** no `.rs` file or Cargo manifest changed between 01b5ba0 and a0f0da7.
   - **Constraint until this merges:** no Rust-touching node is dispatched.
+- 2026-10-02T12:20Z - **PR #156 (`test-claims-same-pr-superseded-pin`) is open at 7bff7c1, and it merges before #154.**
+  - **The worker's report** is filed as `state/consults/2026-10-02-test-claims-same-pr-pin-worker-report-1.md`. It shows 9 tests with M1 to M9 at 0e20437, 375 tests passing, and 354 lines over 3 counted files.
+  - **E2 and E3** ran on draft probe PR #155, which is closed unmerged. Runs 37005296152 and 37005569762 show H1 holds, the superseded listing with the suffix, and then the planned listing.
+  - **The probe branch** was deleted after reading. It needed a merge of main to get a pull_request run (worker deviation 1).
+  - **Gate 1** (reviewer and architect) is dispatched.
+  - **PR #154's gate-2 architect** PASSed with notes, and its report is filed. The gate-log holds 326 records.
