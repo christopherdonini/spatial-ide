@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f8777f07339c22e8f3dffb7337a7c4f054526693394acadb971e80137529433b`) at `2026-10-02T06:34:14.233Z`.
+Generated from `PLAN.yaml` (sha256 `4830a98aab5950bdcd017473ab9d4ddc0cb9ad30cfe6bc491dbc245a342def10`) at `2026-10-02T06:36:31.563Z`.
 
 ## 1. Next
 
-- **exposure-scan-ci-backstop** — The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B) (lane `governance`)
+- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`)
 
 ## 2. Ready
 
-- **exposure-scan-ci-backstop** — The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B) (lane `governance`, order 8, budget 180 min)
 - **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`, order 10, budget 90 min)
 - **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) (lane `governance`, order 11, budget 120 min)
 - **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
@@ -42,7 +41,7 @@ Generated from `PLAN.yaml` (sha256 `f8777f07339c22e8f3dffb7337a7c4f054526693394a
 
 ## 5. In progress
 
-- (none)
+- **exposure-scan-ci-backstop** — The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B) — evidence: branch `cut/exposure-scan-ci-backstop`
 
 ## 6. Proposed / unscheduled
 

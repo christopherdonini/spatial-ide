@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T06:34:14.366Z",
-  "plan_hash": "f8777f07339c22e8f3dffb7337a7c4f054526693394acadb971e80137529433b",
+  "generated_at": "2026-10-02T06:36:31.693Z",
+  "plan_hash": "4830a98aab5950bdcd017473ab9d4ddc0cb9ad30cfe6bc491dbc245a342def10",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5482,7 +5482,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 8,
       "depends_on": [],
       "needs_human": {
@@ -5490,7 +5490,9 @@
         "minutes": 0
       },
       "gate": "scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/exposure-scan-ci-backstop"
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,

@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-02T06:34:14.233Z",
-  "plan_hash": "f8777f07339c22e8f3dffb7337a7c4f054526693394acadb971e80137529433b",
+  "generated_at": "2026-10-02T06:36:31.563Z",
+  "plan_hash": "4830a98aab5950bdcd017473ab9d4ddc0cb9ad30cfe6bc491dbc245a342def10",
   "priorities_approved": true,
   "next": {
-    "id": "exposure-scan-ci-backstop",
-    "title": "The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B)",
+    "id": "test-claims-same-pr-superseded-pin",
+    "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 8,
-    "budget_minutes": 180,
+    "order": 10,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,28 +19,9 @@
       "opened": "2026-10-02",
       "done": null
     },
-    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5."
+    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard."
   },
   "ready": [
-    {
-      "id": "exposure-scan-ci-backstop",
-      "title": "The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 8,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5."
-    },
     {
       "id": "test-claims-same-pr-superseded-pin",
       "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
@@ -526,7 +507,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "exposure-scan-ci-backstop",
+      "title": "The exposure scan as a CI backstop -- a range mode for profile-path-scan.mjs and a workflow on every PR and every push to main (weekly window B)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 8,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/exposure-scan-ci-backstop"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1 (RED LINE, public exposure, part B): adopted as the first of two pieces, before workspace-rustfmt. The shape is state/drafts/weekly-window-2026-10-02.md, section B: a range mode scanning added lines (type changes included), added and renamed path names and every commit message in the range; a workflow on every pull_request and every push to main; a matched segment never printed. Full gating under section 21a. Its form says which of exposure-scan-followups' items it absorbs. The full-form preregistration is committed as scripts/hooks/EXPOSURE-SCAN-CI-BACKSTOP-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md), under full gating: a --range mode (added lines with type changes, new path names, every commit message), the staged content filter gaining T, and .github/workflows/exposure-scan.yml on pull_request and on push to main; it detects after publication and never prevents. The push path is proven on a probe branch (E2 to E4) before E5 on main. Making the check required for merge is the human's, raised after a green E5.",
+      "evidence_label": "branch `cut/exposure-scan-ci-backstop`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
