@@ -225,8 +225,8 @@ existing round number) holding that call's own questions and options, and sends 
   question's `question` and each option's `label` and `description`. Nothing else. That the event
   delivers this shape (H2), that its `session_id` equals the lease id (H3) and that the matcher fires
   (H1) are hypotheses until the form's E2 is recorded; the fixture proves the hook against the shape the
-  session transcript recorded, not that Claude Code delivers it. `agent_id` inside a subagent (H4) is
-  unit-tested only.
+  session transcript recorded, not that Claude Code delivers it. `agent_id` inside a subagent is a
+  hypothesis too (H4) and is unit-tested only.
 - **Silent cases** (exit 0, no output, no file, no send): a cloud session; a non-empty `agent_id`; a lease
   not held by the event's `session_id`.
 - **Every path exits 0 with empty stdout.** Malformed input, a write failure, a failed send and an

@@ -154,9 +154,12 @@ async function hookBody() {
   let input;
   try {
     input = JSON.parse(fs.readFileSync(0, 'utf8'));
-    if (input === null || typeof input !== 'object' || Array.isArray(input)) throw new Error('not an object');
   } catch {
     console.error('questions-mirror: hook input is not JSON; no round written.');
+    return;
+  }
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    console.error('questions-mirror: hook input carries no well-formed questions; no round written.');
     return;
   }
   if (input.agent_id !== undefined && input.agent_id !== null && input.agent_id !== '') return;

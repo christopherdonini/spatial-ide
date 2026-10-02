@@ -282,6 +282,12 @@ test('a_call_with_a_malformed_question_writes_no_round_file', (t) => {
     assertQuiet(r);
     assert.equal(r.stderr, 'questions-mirror: hook input carries no well-formed questions; no round written.\n', JSON.stringify(questions));
   }
+  // Valid JSON that is not an object is malformed too, not 'not JSON'.
+  for (const stdin of ['null', '[]', '7']) {
+    const r = runHook(dir, stdin);
+    assertQuiet(r);
+    assert.equal(r.stderr, 'questions-mirror: hook input carries no well-formed questions; no round written.\n', stdin);
+  }
   assert.deepEqual(roundFiles(dir), ['round-7.md']);
 });
 

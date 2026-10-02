@@ -2,7 +2,9 @@
   "session_id": "fixture-session",
   "transcript_path": "fixture/transcript.jsonl",
   "cwd": "fixture-project",
+  "permission_mode": "default",
   "hook_event_name": "PreToolUse",
+  "tool_name": "AskUserQuestion",
   "tool_input": {
     "questions": [
       {
@@ -70,5 +72,7 @@
         ]
       }
     ]
-  }
+  },
+  "tool_use_id": "fixture-tool-use",
+  "prompt_id": "fixture-prompt"
 }
