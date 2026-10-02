@@ -1610,3 +1610,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - M1, M3, M7 and M10 observed at the corrected commit.
   - **PR #157's gate-1 architect** PASSed, with one S2 on the workflow header's H1 sentence. The report is filed, and the gate-log holds 330 records. Its reviewer is still running.
 - 2026-10-02T12:41Z - **Correction, my filing error.** At 43a0fce I filed PR #156's gate-1 reviewer report with one line rewritten (a probe-branch cite de-rooted). §25(b) files gate reports byte-identical, and cites under `gates/` are advisory, so this commit restores the agent's text.
+- 2026-10-02T12:44Z - **PR #157's gate 1 is architect PASS and reviewer FAIL on I4.**
+  - **The cause.** product-ci-shell is red: `PublishPanel.test.ts` reads `publish.rs` by a regex that C1's re-layout broke. F4 reproduced C1's tree exactly, and Product CI — Rust is green.
+  - **The decision.** Since I4 is a stop, the choice between a class 9 amendment (a one-line regex fix plus the header fixes) and a redo is put to the gate-1 architect before any code. The reviewer's report is filed, and the gate-log holds 331 records.
+  - **Also corrected:** fb0cd0e restored #156's gate-1 reviewer report byte-identical, after I had edited one line at filing.
