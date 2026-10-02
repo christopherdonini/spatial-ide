@@ -285,3 +285,10 @@ Assertions only:
 - **Operator:** none.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — S3's rename built through the index, not with `git mv` (class 2, a deviation)
+
+Written after the worker's results were seen (class 2, a post-result amendment). §3 and §4 are not edited.
+
+1. **The deviation.** §3's S3 row names `git mv` for the rename. The worker built the rename through the index instead: `git rm --cached`, then the blob staged at the new name with `git update-index --add --cacheinfo`. This way no directory with an 8.3-shaped name is created on the Windows filesystem. T3 asserts that the range's name status is `R100` before it scans (branch commit 02bde66, `scripts/hooks/profile-path-scan.test.mjs`, the test `a_range_scan_refuses_a_profile_path_in_a_renamed_path_name`). S3's scenario, T3's name and assertions, and M3 do not change.
+2. **Why nothing else changes.** §2 item 9's R4 already builds type changes through git plumbing, and this uses the same means for S3. The worker's report is filed as `state/consults/2026-10-02-exposure-scan-ci-backstop-worker-report-1.md`.
