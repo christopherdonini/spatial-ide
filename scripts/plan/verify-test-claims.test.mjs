@@ -1485,6 +1485,7 @@ test('a_same_pr_pin_to_a_commit_outside_the_range_does_not_exempt', () => {
 // reverted; observed at 0e20437 (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a
 // claiming line already on main must not exempt: [{...,"samePr":true}]" then "1 !== 0". Not isolated:
 // it also fails `an_uncommitted_claiming_line_is_not_introduced_in_the_range` (62 of 64 pass).
+// Re-observed at e9735d4 (same first assertion): it now also fails `a_git_error_in_the_range_check_does_not_exempt` (62 of 65 pass).
 test('a_same_pr_pin_whose_claiming_line_predates_the_range_does_not_exempt', () => {
   const { dir } = sameprFixture({ claimOnMain: true });
   const { findings, superseded } = runVerifyTestClaims({ repoRoot: dir, mergeCommitGates: SAMEPR_GATES });
@@ -1628,7 +1629,12 @@ test('a_same_pr_pin_after_a_merge_commit_holds_on_main_without_the_record', () =
   assert.equal(superseded[0].samePr, undefined, JSON.stringify(superseded));
 });
 
-// RECORDED MUTATION: (not yet observed)
+// RECORDED MUTATION: M10 (`a_git_error_in_the_range_check_does_not_exempt`): in lineIsIntroducedInRange, read any
+// non-zero exit of the `merge-base --is-ancestor` check as "not an ancestor" (`=== 1` becomes `!== 0`) -- applied
+// for real, run via `node --test scripts/plan/verify-test-claims.test.mjs`, then reverted; observed at e9735d4
+// (Node v24.18.1, git 2.49.0.windows.1). First failing assertion: "a git error is not a proof the line is
+// introduced in the range: [{...,"samePr":true}]" then "1 !== 0". 64 of 65 pass, isolated to this test. At the
+// test-only commit a758290 (before the fix) the same test failed with the same assertion.
 test('a_git_error_in_the_range_check_does_not_exempt', () => {
   const { dir } = sameprFixture();
   // A well-formed id for an object the repository does not have: every ancestry check against origin/main errors.
