@@ -3435,17 +3435,17 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: blocked
     order: 10
     depends_on: []
-    needs_human: {kind: none, minutes: 0}
+    needs_human: {kind: ruling, minutes: 10}
     gate: none
     evidence: null
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard."
+    summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then."
     dates: {opened: 2026-10-02, done: null}
   - id: round-mirror-pretooluse-hook
     title: "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)"
