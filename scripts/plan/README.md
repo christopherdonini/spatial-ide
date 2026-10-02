@@ -155,6 +155,18 @@ must hold or the claim stays binding (or planned); a superseded claim is printed
 heading, the same way the planned set is, and never counts toward the exit code. See
 `supersededSpans` and `findSupersededSpan` in the module.
 
+**A same-PR superseded pin** (`TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md`; question round 33, item 2;
+question round 34, items 4 and 5): condition (e) alone refuses a pin whose `<rev>` is a commit of the scanned
+PR itself. That one refusal is accepted, advisory, when (f1) the claiming file is the `gate` of a node that is
+not `done` and carries `merge: merge-commit` (`mergeCommitGateFiles`, set by the custodian; AUTONOMY.md §27),
+(f2) `git merge-base --is-ancestor <rev> HEAD` succeeds, and (f3) the claiming line is introduced in
+`origin/main..HEAD` (`git blame --porcelain` of the working tree names a commit that is not an ancestor of
+`origin/main`; an uncommitted line is not in range). Any git failure is not acceptance. The line is printed
+under the superseded heading with a suffix stating the tool's own fact, and never counts toward the exit code.
+Only the superseded path consults it, and never where `origin/main` does not resolve or condition (e) holds;
+the withdrawn path is unchanged. After a squash or rebase merge the pinned commit is not on main and the same
+row is a binding finding again.
+
 **The boundary** (adopted from the architect gate report, attempt 1, 2026-09-18, PROPOSED item 1):
 SUPERSEDED means **renamed**: the claim's own historical LINE (not the whole pinned span; §2.3) must
 itself contain the claimed name, and the replacement name must be claimed and exist elsewhere in the

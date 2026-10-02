@@ -489,7 +489,17 @@ Round 33, item 5 adopted the weekly window's proposal F (`state/drafts/weekly-wi
 
 §0 is not edited in place, so that no line below it moves. The SessionStart hook prints its own copy of §0's list (`scripts/hooks/session-resume.mjs`, `READING_ORDER`). That copy gains the same step in PLAN node `stop-hook-stale-continuity`'s piece, under that piece's gating; until then, this section governs.
 
-## §28. The round mirror is a PreToolUse hook, one round per AskUserQuestion call (the human, 2026-10-02, round 33, item 3; appended after §26 so that no line a record cites above it moves)
+## §27. The node key `merge: merge-commit`, read by verify-test-claims (the human, 2026-10-02, question round 33, item 2 and question round 34, items 4 and 5; appended after §26 so that no line a record cites above it moves)
+
+Question round 33, item 2 adopted the same-PR superseded pin as a piece; question round 34, item 5 ruled that the merge record is a node key, and item 4 ruled the exception below. Each is cited by round and item and not reproduced. The piece is PLAN node `test-claims-same-pr-superseded-pin`, gated by `scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md`.
+
+- **The key and its value.** A PLAN node may carry `merge: merge-commit`. That is the only accepted value; any other value, or no key, records nothing.
+- **Who sets it.** The custodian sets it, on a node that is not done, when that node's PR will merge as a merge commit (question round 26, item 3). It is a declaration; main's own run after the merge is the proof.
+- **What reads it.** `scripts/plan/verify-test-claims.mjs` reads it under that form: for a gate file of such a node, a superseded pin to a commit of the scanned PR, refused by condition (e) alone, is accepted as advisory when the form's (f2) and (f3) also hold.
+- **The exception.** Question round 34, item 4 rules a narrow exception to round 15 (e) for that one row shape: a superseded row whose claiming line and pinned commit both come from the scanned PR, on a node that records `merge: merge-commit`. Round 15 (e) holds for every other hash reference in an append-only record.
+- **§6a item 3.** Its sentence on superseded claims is read with this acceptance: the pinned commit must be on main for the exemption to bind, except in the form's case, where the exemption is advisory until the merge and a squash or rebase merge turns the claim into a binding finding.
+
+## §28. The round mirror is a PreToolUse hook, one round per AskUserQuestion call (the human, 2026-10-02, round 33, item 3; appended after §27 so that no line a record cites above it moves)
 
 Round 33, item 3 adopted the custodian's proposal that the question-round Telegram mirror (§4, §16) be carried by a hook. The record is PLAN node `round-mirror-pretooluse-hook` and `scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md`. §4 and §16 are not edited in place. From this section on:
 

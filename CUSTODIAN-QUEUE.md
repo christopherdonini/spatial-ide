@@ -1,17 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `81347da4c7a908439aec182a681c775615978b2c07a451ae8f21b87d92c9b288`) at `2026-10-02T11:42:18.126Z`.
+Generated from `PLAN.yaml` (sha256 `6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1`) at `2026-10-02T16:13:05.644Z`.
 
 ## 1. Next
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`)
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`)
 
 ## 2. Ready
 
-- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) (lane `governance`, order 9, budget 90 min)
-- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) (lane `governance`, order 10, budget 180 min)
-- **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) (lane `governance`, order 11, budget 150 min)
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 120 min)
+- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) (lane `governance`, order 12, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -41,7 +38,10 @@ Generated from `PLAN.yaml` (sha256 `81347da4c7a908439aec182a681c775615978b2c07a4
 
 ## 5. In progress
 
-- (none)
+- **workspace-rustfmt** — One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A) — evidence: branch `cut/workspace-rustfmt`
+- **test-claims-same-pr-superseded-pin** — verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C) — evidence: branch `cut/test-claims-same-pr-pin`
+- **round-mirror-pretooluse-hook** — The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D) — evidence: branch `cut/round-mirror-hook`
+- **publish-panel-rs-regex-layout** — PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges) — evidence: branch `cut/publish-panel-rs-regex-layout`
 
 ## 6. Proposed / unscheduled
 
@@ -86,6 +86,8 @@ Generated from `PLAN.yaml` (sha256 `81347da4c7a908439aec182a681c775615978b2c07a4
 - **port-3-shell-l1** — PORT-3 -- the Tauri shell crate checked and tested on Linux and macOS in product-ci-shell (L1 for the shell) (phase `prototype`) — never queued until placed
 - **port-4-l2-smoke** — PORT-4 -- L2: unsigned tauri build on Linux and macOS as a package check, a Linux application smoke test under a virtual display, and the macOS smoke by hand (MACOS-BRINGUP resumed) (phase `prototype`) — never queued until placed
 - **questions-mirror-item-count** — questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many (phase `prototype`) — never queued until placed
+- **template-round15e-exception-pointer** — docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it (phase `prototype`) — never queued until placed
+- **flush-crlf-field-rewrite** — flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

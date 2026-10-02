@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-10-02T11:42:18.126Z",
-  "plan_hash": "81347da4c7a908439aec182a681c775615978b2c07a451ae8f21b87d92c9b288",
+  "generated_at": "2026-10-02T16:13:05.644Z",
+  "plan_hash": "6934096120059bdadfc8261348ec5b687651412cb1c0e6462ea299590c46d8b1",
   "priorities_approved": true,
   "next": {
-    "id": "workspace-rustfmt",
-    "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
+    "id": "stop-hook-stale-continuity",
+    "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
     "lane": "governance",
     "phase": "prototype",
     "status": "ready",
-    "order": 9,
-    "budget_minutes": 90,
+    "order": 12,
+    "budget_minutes": 180,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -19,66 +19,9 @@
       "opened": "2026-10-02",
       "done": null
     },
-    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open."
+    "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
   },
   "ready": [
-    {
-      "id": "workspace-rustfmt",
-      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 9,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open."
-    },
-    {
-      "id": "test-claims-same-pr-superseded-pin",
-      "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 10,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md): item 4, a narrow exception to round 15 (e) for that one row shape; item 5, the node key merge: merge-commit, named in an appended AUTONOMY.md section. The hold is lifted. The full-form preregistration is committed as scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md), with R-1 answered by round 34 items 4 and 5; full gating. E2 and E3 use a draft probe PR that is never merged and pushes no force; its appended AUTONOMY.md section takes the next free number."
-    },
-    {
-      "id": "round-mirror-pretooluse-hook",
-      "title": "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 11,
-      "budget_minutes": 150,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-02",
-        "done": null
-      },
-      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c)). The form Amendment 1 (class 2, before any code): the red-line test also reads an Item <n>. prefix, as the custodian rounds 33 and 34 carry."
-    },
     {
       "id": "stop-hook-stale-continuity",
       "title": "The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E)",
@@ -86,7 +29,7 @@
       "phase": "prototype",
       "status": "ready",
       "order": 12,
-      "budget_minutes": 120,
+      "budget_minutes": 180,
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -344,7 +287,7 @@
         "opened": "2026-09-27",
         "done": null
       },
-      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in the next SKP-V0 change-log entry, not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change.",
+      "summary": "Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in the next SKP-V0 change-log entry, not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change. Its stale line cites into kernel/src/skp.rs move again with workspace-rustfmt; the cite fixes belong after that merge (the workspace-rustfmt drafting consult, (c) 2).",
       "blocked_by": [
         "b1-engine-kernel-half-followups"
       ]
@@ -504,7 +447,96 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "workspace-rustfmt",
+      "title": "One mechanical cargo fmt pass over the workspace and src-tauri, with a CI fmt check in the same PR (weekly window A)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 9,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/workspace-rustfmt"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: adopted as the second of two pieces, after exposure-scan-ci-backstop; it supersedes data-plane-crate-fmt. The shape is state/drafts/weekly-window-2026-10-02.md, section A: exactly cargo fmt --all plus the src-tauri manifest run on the piece's base, the check in the same PR so main is never red between them, and a .git-blame-ignore-revs naming the pass's commit. It runs only while no Rust branch is open: skp-cancel-state-closed-set (node 7) and port-1-linux-l1 wait for it. The pass moves lines in about 133 files; unpinned path:line cites into them point at moved text with no check going red, and the piece rewrites no cite. Full gating under section 21c; the reviewer reproduces the tree from the two commands. Its PR is the first large range the exposure-scan backstop scans; its form says so in one line (the backstop's drafting consult, state/consults/2026-10-02-exposure-scan-ci-backstop-architect-draft.md, item (c) 2). CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. It does not start until that typed ruling. Node 7 and port-1 keep their dependency on it meanwhile, since waiting is the safe direction. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: approved, after the backstop, with its CI fmt check in the same PR, only while no Rust branch is open. CARRIER (round 25 item 2 (d); PR #153 gate 3 architect, its second S2): until exposure-scan-ci-backstop's done commit writes its closing record, this node carries what that record owes: the hash pins of the two class-3 superseded spans its form's Amendment 2 names (scripts/hooks/profile-path-scan.test.mjs lines 1389-1391 at 5d3951f, and lines 1305-1307 at e0442e0); 7680dc9 as the observation commit for M1 to M13; e0442e0 for M7's re-observation and the scoped abort; each section 6 item 5 tool's commit, verify-mutation at 7d24ed1 (its last change; the gate-3 reviewer's S1-1); the gate-1 reviewer's N3, the gate-2 reviewer's N-2, and the gate-1 architect's N2 answered by the T7 assertion; and the discharge clause in Amendment 2 item 2's lead, proved by Amendment 2 items 1 and 4 (the gate-3 reviewer's N-1, as the architect's reduction reads it). The carrier above is DISCHARGED: exposure-scan-ci-backstop closing record is its form Amendment 3. This node is READY; it runs only while no Rust branch is open. The full-form preregistration is committed as WORKSPACE-RUSTFMT-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-workspace-rustfmt-architect-draft.md), under full gating: C1 the pass (133 .rs files at the base), C2 .github/workflows/rust-fmt.yml and .git-blame-ignore-revs; P1 the no-Rust-branch check at dispatch and at merge; E2 a probe branch pushed once, never force-pushed. Its one CI install is the stable toolchain rustfmt component on the runner (round 34 item 1 approves the check). Once test-claims-same-pr-superseded-pin lands, this node also carries merge: merge-commit (the consult, (c) 4). Question round 35 (the 2026-10-02 rustfmt notes): it merges after publish-panel-rs-regex-layout. At its merge (note 2), its closing record gains one line, and AUTONOMY.md one appended dated section: an unpinned path:line reference dated before the rustfmt merge commit resolves against that commit first parent.",
+      "evidence_label": "branch `cut/workspace-rustfmt`"
+    },
+    {
+      "id": "test-claims-same-pr-superseded-pin",
+      "title": "verify-test-claims accepts a superseded pin to a commit the same PR introduces, when the node records a merge-commit merge (weekly window C)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 10,
+      "budget_minutes": 180,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/test-claims-same-pr-pin"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 2: adopted as described in state/drafts/weekly-window-2026-10-02.md, section C, met at A2-1's Amendment 12 on 2026-09-29. Preregistration before any code, the reviewer, and the architect if section 21a applies; unit fixtures cover the squash hazard. HELD 2026-10-02 before its form: the drafting consult (state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md) finds two decisions that are the human's. R-1: whether round 33 item 2 makes a narrow exception to round 15 (e), which forbids a hash reference at a branch commit, for a superseded row whose claiming line and pinned commit both come from the scanned PR. The merge record: a node key merge: merge-commit with an appended AUTONOMY.md section, or round 26 item 3's repository setting read as a global record (the repository still allows squash and rebase merges, read 2026-10-02). To be asked in question round 34; the draft is not committed until then. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md): item 4, a narrow exception to round 15 (e) for that one row shape; item 5, the node key merge: merge-commit, named in an appended AUTONOMY.md section. The hold is lifted. The full-form preregistration is committed as scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-test-claims-same-pr-pin-architect-draft.md), with R-1 answered by round 34 items 4 and 5; full gating. E2 and E3 use a draft probe PR that is never merged and pushes no force; its appended AUTONOMY.md section takes the next free number.",
+      "evidence_label": "branch `cut/test-claims-same-pr-pin`"
+    },
+    {
+      "id": "round-mirror-pretooluse-hook",
+      "title": "The round mirror as a PreToolUse hook on AskUserQuestion, one call per round (weekly window D)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 11,
+      "budget_minutes": 150,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/round-mirror-hook"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 3: adopted with one call per round, as described in state/drafts/weekly-window-2026-10-02.md, section D: each AskUserQuestion call becomes its own round file under state/questions/ and its own Telegram message; the hook exits 0 on every path and stays silent inside a subagent, without the lease and in a cloud session. Telegram stays read-and-copy and AskUserQuestion the answer channel. Preregistration before any code, the reviewer, and the architect if section 21a applies. The full-form preregistration is committed as scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-round-mirror-hook-architect-draft.md), under full gating: a --hook mode of questions-mirror.mjs, one PreToolUse entry in .claude/settings.json, the outcome line, and an appended AUTONOMY.md section at the next free number. E2 is the first live AskUserQuestion call after the merge. The countItems off-by-one is routed (the consult, item (c)). The form Amendment 1 (class 2, before any code): the red-line test also reads an Item <n>. prefix, as the custodian rounds 33 and 34 carry.",
+      "evidence_label": "branch `cut/round-mirror-hook`"
+    },
+    {
+      "id": "publish-panel-rs-regex-layout",
+      "title": "PublishPanel.test.ts reads publish.rs's two constants with regexes that tolerate rustfmt's layout around : and = (test-only, before workspace-rustfmt merges)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 13,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/publish-panel-rs-regex-layout"
+      },
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Found by PR #157 gate 1 (invalidator I4; state/consults/gates/2026-10-02-workspace-rustfmt-gate1-reviewer.md): the rustfmt pass moves publish.rs's FILTER_SCOPE_SENTENCE literal onto its own line, and frontends/shell/src/publish/PublishPanel.test.ts's regex expects it right after the equals sign, so product-ci-shell goes red. The architect's ruling (OTHER, the resumed gate-1 architect, filed with the round's record): fix it on main first as its own short-form, test-only piece. One file, at most 6 changed lines, both declaration regexes (FILTER_SCOPE_SENTENCE and PREPARE_CANCEL_KEY_PREFIX) tolerating layout around the colon and equals sign, modelled on checkOriginEventName.mjs. Its mutation is one character of the Rust literal. Its seam proof runs the test against main's and against the formatted publish.rs (c6d1414). Reviewer gate only; no section 21a category is touched. PR #157 then gains a comment-only C3 and gate 2. Placement is the human's (question round 35). PLACED by question round 35 (RULED 2026-10-02; the 2026-10-02 rustfmt notes, note 1): the two regexes tolerate any whitespace between the equals sign and the literal, line breaks and CRLF included (portability R1), and depend on no rustfmt layout. Ahead of workspace-rustfmt merge.",
+      "evidence_label": "branch `cut/publish-panel-rs-regex-layout`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
@@ -1246,6 +1278,44 @@
         "done": null
       },
       "summary": "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged."
+    },
+    {
+      "id": "template-round15e-exception-pointer",
+      "title": "docs/PREREGISTRATION-TEMPLATE.md gains one appended sentence pointing at round 34 item 4's narrow exception to round 15 (e), as AUTONOMY.md section 27 records it",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Routed by PR #156 gate 1 architect (state/consults/gates/2026-10-02-test-claims-same-pr-pin-gate1-architect.md, the round 15 (e) pointer section): the template's round 15 (e) and round 25 (d) lines read alone would fail the one row shape question round 34 item 4 allows; one sentence appended at the end of the template names AUTONOMY.md section 27 and round 34 item 4, reproducing nothing. Docs-only. Whether the architect and reviewer agent definitions need the same pointer is the human's and the custodian's call, raised with it."
+    },
+    {
+      "id": "flush-crlf-field-rewrite",
+      "title": "flush.mjs splits the ledger on LF and rewrites a field line without its CR, so a CRLF working-tree ledger ends with mixed line endings",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-02",
+        "done": null
+      },
+      "summary": "Routed by stop-hook-stale-continuity drafting consult (state/consults/2026-10-02-stop-hook-stale-continuity-architect-draft.md, open point 8): scripts/hooks/flush.mjs splits CUT-STATE.md on LF and writes a rewritten field line without its CR, so a CRLF working-tree ledger would end with mixed line endings. Out of that piece scope (its form declares flush.mjs unchanged). The repository checks the ledger out LF (.gitattributes eol=lf), so this matters only for a ledger written CRLF by some other tool (portability R1). Short form, a test with a CRLF ledger and its mutation."
     }
   ],
   "unscheduled": [
