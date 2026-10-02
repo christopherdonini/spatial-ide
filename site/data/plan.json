@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-02T11:42:18.297Z",
-  "plan_hash": "81347da4c7a908439aec182a681c775615978b2c07a451ae8f21b87d92c9b288",
+  "generated_at": "2026-10-02T11:47:09.440Z",
+  "plan_hash": "3827366311b073b1a553bf567c50079caaeeeebeb56e96d2ddca1eb252353325",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5536,7 +5536,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 10,
       "depends_on": [],
       "needs_human": {
@@ -5544,7 +5544,9 @@
         "minutes": 0
       },
       "gate": "scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/test-claims-same-pr-pin"
+      },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
@@ -5561,7 +5563,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 11,
       "depends_on": [],
       "needs_human": {
@@ -5569,7 +5571,9 @@
         "minutes": 0
       },
       "gate": "scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/round-mirror-hook"
+      },
       "budget_minutes": 150,
       "generation": 1,
       "felt_verdict": false,

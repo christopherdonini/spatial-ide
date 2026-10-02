@@ -3435,12 +3435,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 10
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/plan/TEST-CLAIMS-SAME-PR-SUPERSEDED-PIN-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/test-claims-same-pr-pin}
     budget_minutes: 180
     generation: 1
     felt_verdict: false
@@ -3452,12 +3452,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 11
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/hooks/ROUND-MIRROR-PRETOOLUSE-HOOK-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/round-mirror-hook}
     budget_minutes: 150
     generation: 1
     felt_verdict: false
