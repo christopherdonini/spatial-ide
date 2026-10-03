@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T11:49:25.555Z",
-  "plan_hash": "39d7769e50b5c85f2369042af3110eb0777506574c758c812d1a878fc917b79e",
+  "generated_at": "2026-10-03T12:12:06.625Z",
+  "plan_hash": "0e1784e6e290816760c7465055a074a608f4963b781519527f411194abdf1ac4",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6043,7 +6043,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form. Also, by PR #166's gate-2 architect N1 (state/consults/gates/2026-10-03-lead-data-pilot-setup-gate2-architect.md): kernel/PERMISSION-BOUNDARY.md's body and kernel/src/lib.rs's module doc still state the exposure position the kernel README's bullet corrects (question round 42, item 1: the shell's binding_publish_* commands are the UI surface ADR-017's acceptance condition was discharged for on 2026-08-17; publish-bundle stays developer/test tooling); the C8 wait is resolved.",
+      "summary": "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form. Also, by PR #166's gate-2 architect N1 (state/consults/gates/2026-10-03-lead-data-pilot-setup-gate2-architect.md): kernel/PERMISSION-BOUNDARY.md's body and kernel/src/lib.rs's module doc still state the exposure position the kernel README's bullet corrects (question round 42, item 1: the shell's binding_publish_* commands are the UI surface ADR-017's acceptance condition was discharged for on 2026-08-17; publish-bundle stays developer/test tooling); the C8 wait is resolved. Also, by PR #166 gate-3 architect N2 (state/consults/gates/2026-10-03-lead-data-pilot-setup-gate3-architect.md): the kernel README publish bullet points at frontends/shell/src-tauri/src/publish.rs for the binding_publish_* commands, which are defined in commands.rs and reach the boundary through publish.rs.",
       "dates": {
         "opened": "2026-10-03",
         "done": null
