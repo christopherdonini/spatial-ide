@@ -139,3 +139,16 @@
 
 - **Compaction during the trial:** 2026-10-03T13:30Z (auto, about 769k tokens), 6.4 h after the 07:06Z one. Two pieces were in flight (node 9 and `subagent-write-audit-script`), and lead-data's two drafts and the setup's three gates fell in the interval.
 - **A report that came back as a message.** #167's gate-1 reviewer did not write its report file. The reviewer agent type has no Write tool, and this run declined to write the file through its shell, so the report (86 lines) arrived in the custodian's context, and the custodian saved it from the hand-back. Earlier reviewer runs in the trial wrote their files through the shell. Next reviewer briefs say so explicitly: the shell write of the one named report path is permitted.
+- **No compaction since 13:30Z.** At the hand-over (about 18:05Z), the interval is about 4.6 h and still running. The session hands over at the human's word, not at a compaction.
+- **Two pieces at once, 2026-10-03.** `subagent-write-audit-script` (governance) and node 9 (kernel) ran together from about 12:54Z to about 17:48Z.
+  - **Conflicts in paths:** none. Their files were disjoint, and no merge or regeneration conflict arose.
+  - **The costs observed:**
+    - one `verify:plan` run timed out at 570 s under concurrent cargo load; the re-run passed in 78 s;
+    - the custodian's main commits landed during other agents' runs, and twice the human's merge moved main under a pending commit (the guard held it both times);
+    - one architect's C3 after-snapshot showed the parallel reviewer's in-progress mutation, attributed by the write audit (zero writes).
+  - **The human's attention:** no question round arose from running two pieces, and the human made two merge clicks.
+- **Reports to files, this session.**
+  - Workers and lead-data wrote their files every time.
+  - Reviewers wrote theirs through the shell once the brief said so; one, before that, declined.
+  - Architect reports stay messages: four this session, each saved from its hand-back.
+- **A finding for the window, not the trial: generation bumps lapsed.** §15 bumps a node's generation on any preregistration amendment. Recent pieces with several amendments stayed at generation 1, node 8 among them. #167's gate-2 architect (N-2) caught it on `subagent-write-audit-script`, which is now at 4; node 9 is at 2.
