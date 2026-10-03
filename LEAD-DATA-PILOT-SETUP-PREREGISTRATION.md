@@ -9,3 +9,23 @@ Change: (1) Part 2's fenced block copied byte for byte as .claude/agents/lead-da
 Tests+mutation: no code or test changes. Checks, each observed by the reviewer: (1) and (2) are byte-equal to the pilot document's fenced blocks, compared by script; every index pointer resolves in the tree at its "Last verified at" commit; each index section is at most 60 lines; the kernel README's updated body states nothing the tree contradicts; verify-cites, verify-quotes and verify:plan are green. No mutation applies: nothing is executable.
 Out-of-scope: ADR none; security none (no product permission or audit surface); wire none; guarantee none. The architect's and reviewer's definitions are unchanged, and so is the architect's write tool, which is the human's. No product source, test, workflow or record rule changes. Owner's-index updates after later merges belong to those pieces.
 ```
+
+Amendment: class 1, correction round 1 after gate 1, written after gate 1's results were seen (a post-result amendment). References only.
+- **The round.** These branch commits answer the gate-1 architect's S1-1 (`state/consults/gates/2026-10-03-lead-data-pilot-setup-gate1-architect.md`) and the gate-1 reviewer's C7 note (`state/consults/gates/2026-10-03-lead-data-pilot-setup-gate1-reviewer.md`, section N). The worker's report is `state/consults/2026-10-03-lead-data-pilot-setup-worker-report-2.md`.
+  - cc8dfcce: the index sections, from `state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-2.md`;
+  - c18f87f9: C7's sentence, from report 2, and C8, from `state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md`, by question round 41, item 1;
+  - daeaa487: the pointer, by question round 41, item 4.
+- **A §21a category found mid-piece** (the gate-1 architect's S2-2; round 25, item 2 (e)).
+  - Edit C5 narrows a declared ceiling's stated scope (ADR-010 rule 6). That is a guarantee touch the Out-of-scope line does not name.
+  - The gate-1 reviewer's S2-1 judges it not a guarantee change. The stricter reading is recorded.
+  - Full gating already applies, by the human's direction.
+  - The custodian took lead-data's question 1 and routed the recomposition to `kernel-composed-ceiling-projected-stream`.
+  - The Out-of-scope line is not rewritten.
+- **The setup dispatches' tools** (the gate-1 architect's S2-1).
+  - Both lead-data dispatches ran as general agents holding the full tool set, at the harness's default effort. The value of that effort is unknown.
+  - The write audit (`state/directives/2026-10-03-write-audit-ruling.md`) passed on both: every write call targets the report path, and there is no shell call.
+- **The Scope figure.** By the Scope line's counting, at daeaa487 against af40bbf, the figure is 191 lines over the same 4 files, within 400.
+- **Superseded index.**
+  - The two owner's-index sections as they stood at 629fb7f are superseded at cc8dfcce.
+  - C7's convergence sentence at 629fb7f is superseded at c18f87f9.
+  - Nothing else is superseded.
