@@ -303,3 +303,47 @@ Every quantity here is an assertion. There is no measurement, and no `docs/08` r
 
 ## §10. Amendments — opens empty, append-only
 
+### Amendment 1 — T3's precondition made deterministic, after gate 1's reviewer S1-1 (classes 1 and 2)
+
+Written after gate 1's results were seen (class 1, a post-result amendment; class 2 for the predictions item 1 records as missed), and before any code of the fix. It touches §4's T3 Precondition bullet, §7's `MAX_REKEY_ATTEMPTS` bullet and its labelled assumption, and the P1, P2 and P3 observations made before it. No line of §0 to §9 is edited. The evidence is the gate-1 reviewer's report, `state/consults/gates/2026-10-03-kernel-ticket-drop-followups-gate1-reviewer.md` (reviewed at branch commit 86774b06), cited by finding.
+
+1. **The result.**
+   - I4 fired on its first clause, and §7's labelled assumption is falsified: S1-1's local runs, its CI push run and its simulation.
+   - P2 is missed for T3 at 86774b06 (class 2). P1 and P3 hold only in the runs that reached T3's call: S1-1's knock-on, with checklist items 3 and 4. In the other runs T3 discriminated nothing. Worker report 1's verdict on I1 to I5 holds for its own runs only (S1-1).
+   - I4's second clause has not fired: every recorded T3 failure was on the precondition (S1-1; the reviewer's exit-code table).
+   - Under C4 of the 2026-10-03 lead-data clarification, this correction is draft-caused. The re-key-P-only precondition and the assumption are lead-data's drafted text, and they were implemented as drafted.
+2. **T3's precondition, re-declared.** This item supersedes §4's T3 Precondition bullet. The rest of §4's T3 entry, and §4's Common setup, stand.
+   - Under the registry's lock, before P is attributed, the map must hold exactly P's and Q's entries; otherwise the helper fails with a message naming the test. If P's key is not the first key in the map's iteration order, the two entries' values are swapped in place, and the test's names for P's key and Q's key are swapped with them. Then P's final key is attributed.
+   - The swap removes no key, inserts no key and drops no `TicketState`. So the map's layout and order do not move, and P's state sits at the earlier key on every run. Q is never attributed, so its key is free to change.
+   - Kept unchanged: T3's call, `cancel_all_for_dataset` on D; its four assertions (the call returned within `HANG_TIMEOUT`; it unwound with the test-named payload; P is `EndedBySourceChange`; P's entry is `CancelledBeforeRedeem`); and M3. T1 and T2 do not use the helper.
+   - The helper stays a private item of the `#[cfg(test)]` module `ticket_drop_under_lock_regression`. No product code changes, so the caller rule and §8, item 4 apply as before.
+3. **What replaces §7's `MAX_REKEY_ATTEMPTS` bullet and its assumption.** §7's line is not edited.
+   - `MAX_REKEY_ATTEMPTS` is withdrawn: nothing is retried, so there is nothing to bound.
+   - Assumption, labelled: the map's iteration order does not change between the helper's guard and the `values_mut` loop of the call under test, because no entry is inserted or removed between them. `attribute_p` writes only `GenerationRegistry`. The call's sweep removes only entries older than `TICKET_TTL` (P's state) or `TERMINAL_ENTRY_MAX_AGE` (Q's).
+   - The `CancelledBeforeRedeem` assertion checks that assumption, and I4's second clause, on every run. A run that fails it fires I4.
+   - Failure bound: the precondition has no failing draw. Its only failure is the two-entry check, which fails by name. Item 4's repetition is the measurement.
+4. **Observations the fix requires.**
+   - F is the branch commit that carries item 2's code.
+   - Each run is recorded with its commit, its rc and each failing test's message.
+   - A failure in any repetition stops the piece and is reported (§5). No run is repeated to obtain a pass.
+   - P1: 5 runs of `cargo test -p spatial-kernel --lib an_unwind_through`, with F's test module over the product code of `kernel/src/skp.rs` at the merge-base, 4c50677c. The record names the commit, or the method, that composes the two. Expected in each run: T1 to T3 each fail by timeout, and none fails on the helper's message.
+   - M1, M2 and M3: 5 runs each at F. Each is applied by hand, run with the same command and reverted, and the tree is clean after each. Expected in every run: as P3.
+   - P2:
+     - T3 alone, 100 runs at F, all passing;
+     - 5 runs of `cargo test -p spatial-kernel --lib skp::` at F;
+     - §9's suites once, at the head the gate reads;
+     - CI's push and pull_request runs at that head.
+   - O1 is not re-made, because the fix touches neither `mint` nor `tests::the_pending_ceiling_is_per_dataset_and_declared`. Its observations of record are listed in item 5.
+   - Each of the three tests' doc comments names F as the commit its mutation was observed at.
+5. **Where the observations are recorded (S2-3).**
+   - The fix's worker report records the runs of item 4.
+   - The test doc comments carry each mutation's commit.
+   - The closing amendment in this section, references only, cites:
+     - worker report 1, `state/consults/2026-10-03-kernel-ticket-drop-followups-worker-report-1.md`: P1 at 2813aead, and M1 to M3 and O1 at 1c8cea2207e2;
+     - the gate-1 reviewer's checklist item 3: O1 at 86774b06;
+     - the fix's worker report: item 4, at F;
+     - the gate reports.
+6. **Budget.**
+   - At 86774b06, §7's counting command gives 316 of 320 (the reviewer's diff line).
+   - Item 2 replaces the helper's re-key loop with a shorter swap. The expected figure at the final gate's head is about 306, within §7's 320, so class 8 is not taken.
+   - If the counted figure exceeds 320, a class-8 amendment records it, and §7 is not edited.
