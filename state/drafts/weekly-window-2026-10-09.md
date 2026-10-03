@@ -41,3 +41,35 @@
 
   No line above the R3 line moves. No record cites the R3 line yet.
 - **Not proposed:** any rewording.
+
+### B2. The lead-data pilot (the 2026-10-03 lead-data pilot direction and clarification, C4)
+
+- **Marking.** Each measured piece is marked here as lead-drafted or architect-drafted, so the reports-to-files figures stay separable.
+- **The baseline,** named before the first measured piece (node 9). These are the most recent architect-drafted pieces that are confined to `engine/` and `kernel/` by paths and by contracts (C2). Each PR's changed top-level paths are only `engine/` and `kernel/`, and each form states no wire or SKP change.
+
+  | Node | PR | Drafting consult | Correction rounds | Drafting reads |
+  |---|---|---|---|---|
+  | `engine-cancel-before-stream-window` | #146 | `state/consults/2026-09-30-engine-cancel-before-execute-architect-draft.md` | 1 | unknown (7) |
+  | `kernel-ticket-liveness-redeem-wording` | #147 | `state/consults/2026-09-30-ticket-liveness-redeem-architect-draft.md` | 0 | unknown (11) |
+  | `kernel-close-dataset-unknown-keeps-openrecord` | #150 | `state/consults/2026-09-30-close-dataset-unknown-architect-draft.md` | 2 | unknown (9) |
+  | `catalog-open-replace-drop-latency-note` | #151 | `state/consults/2026-10-01-catalog-open-replace-note-architect-draft.md` | 1 | unknown (13) |
+  | `audit-reader-char-boundary` | #152 | `state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md` | 1 | unknown (19) |
+
+  - **Correction rounds** are gate attempts after the first, from `state/gate-log.json`. The mean is 1.0 per piece.
+  - **Drafting reads.** The drafting consults do not record what they read, so reads are unknown (C4). The bracketed figure is a different and observable quantity, the distinct repository paths each draft cites. It is a proxy, not a read count.
+  - **Excluded:**
+    - #148, `publish-refusal-codes-and-attempt-lifecycle`'s kernel half, changes a data-plane refusal code's literal (a contract, C2);
+    - #136, `kernel-generation-close-races`, touches `frontends/`;
+    - #141, `watcher-first-read-on-watch-thread`, has no architect drafting consult;
+    - #145 and #143 touch `protocol/` and `frontends/`.
+- **The setup's cost** is reported separately (C4). The setup piece is `lead-data-pilot-setup`, and lead-data's first dispatch is its Part 4.
+- **Per measured piece,** the log records:
+  - lead-drafted or architect-drafted;
+  - the files read during drafting;
+  - its correction rounds, each classed as draft-caused, implementation defect or changed scope (only draft-caused counts against the lead);
+  - whether the index was updated in its PR, before its final gate (C1);
+  - any intervention by the human;
+  - agent usage where observable, otherwise unknown;
+  - index upkeep, as ongoing cost.
+- **C3 log.** For each lead-data or architect dispatch, the before and after `git status --porcelain` of the custodian checkout and of the assigned worktree.
+  - **#165 gate 3, architect** (09:34Z before, 09:40Z after): the only new file is its report, written by the custodian from its message. The worktree is unchanged.
