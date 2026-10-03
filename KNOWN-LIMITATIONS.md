@@ -17,6 +17,20 @@ no performance claim at all (`docs/08_Testing.md`).*
    macOS/WKWebView and Linux/WebKitGTK hardware-validation gate is open by name.
    <!-- docs/07_Roadmap.md, "Gate — open, follow-up to the above: macOS/WKWebView and Linux/WebKitGTK hardware validation"; MACOS-BRINGUP.md (bring-up paused); RELEASE-0.1.md Amendment 17 (RC2: one NSIS artifact) -->
 
+   **Per-platform support levels on `main` (not the v0.1.0 artifact above).** The levels are
+   L1 (the Cargo workspace suite compiles and passes in CI), L2 (the installer builds and the
+   operator walkthroughs pass) and L3 (the gates `docs/07` records), and a green result at one level
+   says nothing about the next.
+   - **Windows 10/11 x64** (the reference profile): L1, the Cargo workspace suite in CI. L2, the
+     installer build and the operator walkthroughs. L3, the gates `docs/07` records as met on
+     Windows/WebView2, and no others.
+   - **Linux, Ubuntu 24.04 x64:** L1 for the Cargo workspace only. Its suite compiles and passes in
+     CI, and every run lists the tests it ignores. The file watcher's own tests do not run there
+     (item 24). Not the Tauri shell, not L2, not L3, and no other distribution or architecture.
+   - **macOS:** no level yet.
+
+   <!-- state/directives/PORTABILITY-2026-09-30.md R5 and section 6 item 4; question round 33, items 6 and 7; the Linux line is proved by PORT-1-LINUX-L1-PREREGISTRATION.md E1 (the product-ci-rust Ubuntu 24.04 entry) -->
+
 2. **Two pinned coordinate reference systems, and three refusals by name.** The catalog the app
    carries holds exactly two entries, in this order: `epsg-2056` — **CH1903+ / LV95** (EPSG:2056),
    and `epsg-3857` — **WGS 84 / Pseudo-Mercator** (EPSG:3857). Those two are what the app can supply

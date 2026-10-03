@@ -363,3 +363,29 @@ Assertions only:
 - **Operator:** none.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — E1 and E2 read; P3 differs, recorded under I7 (class 2)
+
+Written after E1's and E2's results were seen (a post-result amendment). Run ids and observations only.
+
+1. **E1.**
+   - The first product-ci-rust run carrying the Linux entry is push run 37102627964 at 6c3cd63.
+   - The run at the head marked ready, which the gates read, is pull_request run 37104963552 at 6c3cd63.
+   - In both runs both entries are green. Summed from the suite step's `test result:` lines, Linux shows 797 passed, 0 failed, 55 ignored, and Windows shows 831 passed, 0 failed, 40 ignored.
+2. **P2, P5, P6 and H1 hold** in both runs:
+   - **P2:** Linux's `--list --ignored` minus Windows' is §5's 15 names, and Windows' minus Linux's is empty.
+   - **P5:** the job names are §2 item 1's two strings.
+   - **P6:** the profile step prints `NAME="Ubuntu"`, `VERSION_ID="24.04"` and `x86_64`.
+   - **H1:** on each entry, the list step names exactly the tests that the suite step reports as ignored.
+3. **P3 differs (I7).**
+   - Windows' suite minus Linux's is 19 names, not the 17 of §0's three whole-file watcher targets (13, 3 and 1). Linux's minus Windows' is empty.
+   - The two extra names are `engine` library unit tests: `watch::windows_watch::tests::names_match_folds_case` and `watch::windows_watch::tests::an_invalid_handle_reports_its_issuing_error_through_the_handshake`.
+   - They compile out off Windows along with the `#[cfg(windows)] mod windows_watch` item in `engine/src/watch.rs`. That file is §2's file-watching boundary (KNOWN-LIMITATIONS 24).
+   - §0's inventory missed them. They are a compile-out, not an ignore. They predate this piece, which does not touch `engine/src/watch.rs`.
+   - KNOWN-LIMITATIONS 1's Linux line already says that the file watcher's own tests do not run there, and it is not changed.
+   - **Method:** test names were taken from each entry's suite step and compared as sets by name. Per-binary attribution was not used, because the log's `Running` headers interleave with the test lines.
+   - This is recorded as class 2 under I7. The custodian reports the unlisted compile-out in the next round or report. §0 and §5 are not edited.
+4. **E2.** In governance-ci pull_request run 37104963555 at 6c3cd63:
+   - `cfg boundary (PORTABILITY R2)` is green. It prints 18 site lines and then `cfg-boundary: 18 sites in 6 files, 0 outside every boundary`.
+   - The `node --test` step shows 415 pass and 0 fail.
+5. **Superseded index.** None.

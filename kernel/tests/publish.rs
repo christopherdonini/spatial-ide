@@ -666,7 +666,7 @@ fn preflight_pinless_succeeds_on_an_unpinned_small_dataset_and_never_touches_the
 /// property depends on — so the fixture alone is multiple millions of rows. Minimal geometry
 /// (3 vertices, no holes, no attributes) keeps the write itself as cheap as that scale allows.
 #[test]
-#[ignore]
+#[ignore = "release-only: needs a source above MAX_FEATURES rows; run by hand with --release -- --ignored"]
 fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_before_any_write() {
     let ceilings = spatial_kernel::publish::ceilings::reader_ceilings();
     let d = workspace("reader-ceiling-exceeded");
@@ -736,7 +736,7 @@ fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_at_preflight_
 /// whole-file SHA-256 on exactly the sources this ceiling exists to refuse without reading. Run by hand only
 /// (`cargo test -p spatial-kernel --release -- --ignored`), same as its sibling; **not run in CI**.
 #[test]
-#[ignore]
+#[ignore = "release-only: needs a source above MAX_FEATURES rows; run by hand with --release -- --ignored"]
 fn a_dataset_whose_verified_row_count_exceeds_max_features_refuses_before_any_hash_is_taken() {
     let ceilings = spatial_kernel::publish::ceilings::reader_ceilings();
     let d = workspace("reader-ceiling-exceeded-before-any-hash");

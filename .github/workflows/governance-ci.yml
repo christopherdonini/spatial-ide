@@ -49,6 +49,15 @@ name: Governance CI — plan, queue, site
 # dry runs recorded in state/CUT-STATE.md (AUTONOMY.md §3, §7), a human-run instrument, not a
 # per-push check.
 #
+# ## The `cfg-boundary` job (PORTABILITY R2)
+#
+# It means: `scripts/plan/cfg-boundary.mjs` exits 0, so every OS-naming cfg form in product source
+# sits in a file its allowlist names. It does not mean the code is portable: it cannot see test
+# code, `Cargo.toml` target tables, runtime checks such as `std::env::consts::OS`, or separator and
+# case assumptions without a cfg (PORT-1-LINUX-L1-PREREGISTRATION.md section 1, may not claim).
+# The `**/*.rs` path filter above also runs the `plan` job on a push or PR that touches only Rust.
+# Neither new check is a required check; that setting is the human's.
+
 # ## Read-only, GITHUB_TOKEN only
 #
 # verify.mjs's own GitHub calls (`gh api .../pulls/N`, `gh release view`) are read-only; no
@@ -80,6 +89,7 @@ on:
       - "docs/adr/**"
       - "AI_DEVELOPMENT.md"
       - ".claude/agents/*.md"
+      - "**/*.rs"
   pull_request:
     paths:
       - "PLAN.yaml"
@@ -94,6 +104,7 @@ on:
       - "docs/adr/**"
       - "AI_DEVELOPMENT.md"
       - ".claude/agents/*.md"
+      - "**/*.rs"
   workflow_dispatch:
 
 concurrency:
@@ -152,3 +163,19 @@ jobs:
 
       - name: site/ drift check
         run: node scripts/plan/site.mjs --check
+
+  cfg-boundary:
+    name: cfg boundary (PORTABILITY R2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: node scripts/plan/cfg-boundary.mjs
+        run: node scripts/plan/cfg-boundary.mjs

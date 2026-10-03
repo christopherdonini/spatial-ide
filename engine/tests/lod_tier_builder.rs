@@ -494,7 +494,7 @@ fn drop_tiers(set: &TierSet) {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn tier_build_emits_zero_invalid_polygons() {
     let l = ladder();
@@ -581,7 +581,7 @@ fn the_rejected_simplifier_is_the_one_that_emits_invalid_polygons() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn tier_preserves_identity_for_every_row() {
     let l = ladder();
@@ -636,7 +636,7 @@ fn tier_preserves_identity_for_every_row() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn engine_opens_its_own_tier() {
     let l = ladder();
@@ -680,7 +680,7 @@ fn engine_opens_its_own_tier() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size() {
     let dir = scratch_dir("reuse-restat");
@@ -766,7 +766,7 @@ fn a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size()
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn a_build_measures_the_largest_single_feature_simplify() {
     let dir = scratch_dir("residual-instrument");
@@ -815,7 +815,7 @@ fn a_build_measures_the_largest_single_feature_simplify() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn tier_is_not_served_when_source_content_hash_changes() {
     let dir = scratch_dir("t4");
@@ -894,7 +894,7 @@ fn tier_is_not_served_when_source_content_hash_changes() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
     let dir = scratch_dir("t5");
@@ -994,7 +994,7 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn tier_writer_does_not_reorder_rows() {
     let l = ladder();
@@ -1111,7 +1111,7 @@ fn crs_without_a_declared_linear_unit_is_refused() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn tier_larger_than_its_source_is_refused() {
     let dir = scratch_dir("t10");
@@ -1182,7 +1182,7 @@ fn tier_larger_than_its_source_is_refused() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn wkb_writer_round_trips_the_first_tier_written() {
     let l = ladder();
@@ -1256,7 +1256,7 @@ fn wkb_writer_round_trips_the_first_tier_written() {
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn the_built_sets_size_is_disclosed_with_the_tiers() {
     let l = ladder();
