@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a89229ac66f60748cf8ff82d12504467fa3c3d91e996144d3c9b0351b56ed6c4`) at `2026-10-03T17:51:43.748Z`.
+Generated from `PLAN.yaml` (sha256 `f064dbad8354c02c8f8662d1bbce7775b66dfca4ab035f3bec022e38e467306d`) at `2026-10-03T17:56:30.853Z`.
 
 ## 1. Next
 
-- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`)
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (lane `engine`)
 
 ## 2. Ready
 
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (lane `engine`, order 12, budget 90 min)
 - **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`, order 17, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -18,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `a89229ac66f60748cf8ff82d12504467fa3c3d91e996
 
 ## 4. Blocked on dependencies
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) — blocked by: kernel-ticket-drop-followups
 - **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone — blocked by: timing-tests-assert-property-not-budget
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
@@ -34,7 +34,7 @@ Generated from `PLAN.yaml` (sha256 `a89229ac66f60748cf8ff82d12504467fa3c3d91e996
 
 ## 5. In progress
 
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — evidence: branch `cut/kernel-ticket-drop-followups`
+- (none)
 
 ## 6. Proposed / unscheduled
 

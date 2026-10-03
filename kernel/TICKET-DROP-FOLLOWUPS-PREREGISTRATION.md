@@ -347,3 +347,20 @@ Written after gate 1's results were seen (class 1, a post-result amendment; clas
    - At 86774b06, §7's counting command gives 316 of 320 (the reviewer's diff line).
    - Item 2 replaces the helper's re-key loop with a shorter swap. The expected figure at the final gate's head is about 306, within §7's 320, so class 8 is not taken.
    - If the counted figure exceeds 320, a class-8 amendment records it, and §7 is not edited.
+
+### Amendment 2 — the closing record (class 1)
+
+Written after the merge (a post-result amendment), to the gate-2 architect's closing-record list. References only.
+- **(a) Merged:** PR #168 merged on 2026-10-03 at 17:48:00Z as merge commit 844865e6, at head afaa990b. 2813aead, 1c8cea2207e2, 4d487d51, 86774b06, 8195789b, ca005fe0 and afaa990b are reachable from main through it.
+- **(b) P1's composed commit:** 7ba142da, on the branch `cut/kernel-ticket-drop-followups-p1-base`, which is kept. It is not reachable from main. It is named, not pinned.
+- **(c) Gates:** `state/consults/gates/2026-10-03-kernel-ticket-drop-followups-gate1-architect.md`, `-gate1-reviewer.md`, `-gate2-architect.md` and `-gate2-reviewer.md`; `state/gate-log.json` records 372, 374, 375 and 376.
+- **(d) Observations of record:**
+  - `state/consults/2026-10-03-kernel-ticket-drop-followups-worker-report-3.md`: P1 at 7ba142da; M1 to M3 and P2 at ca005fe0; the suites at afaa990b.
+  - CI at afaa990b: Product CI Rust workspace push run 37133969866 and pull_request run 37133972215, both success.
+  - O1 at 1c8cea2207e2 (`state/consults/2026-10-03-kernel-ticket-drop-followups-worker-report-1.md`) and at 86774b06 (the gate-1 reviewer, checklist item 3).
+  - Superseded by Amendment 1, item 1: worker report 1's P1 at 2813aead, and its M1 to M3 at 1c8cea2207e2.
+- **(e) Readings:** Amendment 1 is classes 1 and 2 (the gate-2 architect, Judgment 1), and draft-caused under C4 of the 2026-10-03 lead-data clarification (Judgment 5).
+- **(f) Size:** 310 of §7's 320 at afaa990b (worker report 3; the gate-2 reviewer). No class 8.
+- **(g) Owner's index:** applied in this PR (C1), by `state/consults/2026-10-03-kernel-ticket-drop-followups-lead-data-index.md`.
+- **(h) Routed** to `module-docs-stale-statements`: the gate-1 architect's S2-1, and that index report's sections 3 and 4.
+- **(i) Record rounds:** 0.

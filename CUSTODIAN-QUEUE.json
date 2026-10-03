@@ -1,27 +1,46 @@
 {
-  "generated_at": "2026-10-03T17:51:43.748Z",
-  "plan_hash": "a89229ac66f60748cf8ff82d12504467fa3c3d91e996144d3c9b0351b56ed6c4",
+  "generated_at": "2026-10-03T17:56:30.853Z",
+  "plan_hash": "f064dbad8354c02c8f8662d1bbce7775b66dfca4ab035f3bec022e38e467306d",
   "priorities_approved": true,
   "next": {
-    "id": "guardian-v0",
-    "title": "Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
-    "lane": "governance",
+    "id": "type-walk-null-literal-arithmetic",
+    "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
+    "lane": "engine",
     "phase": "prototype",
     "status": "ready",
-    "order": 17,
-    "budget_minutes": 240,
+    "order": 12,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-03",
+      "opened": "2026-09-30",
       "done": null
     },
-    "summary": "Placed by the 2026-10-03 Guardian v0 direction (state/directives/2026-10-03-guardian-v0-direction.md; RULED 2026-10-03): governance, beside node 10 under the two-pieces limit. The brief is state/directives/MODS-GUARDIAN-V0-2026-10-03.md. P0 first: its section 3 questions answered against the installed build, recorded in the preregistration's section 0, before any code; rules the build cannot support are dropped from v0 as the brief says. Architect-drafted preregistration (the piece is not engine/ or kernel/ confined), full form and gates reviewer plus architect, with the claude plugin validate output in the PR body. Installing it is a security-posture change and a red line: it waits for the human's typed approval after both gates, and the human installs it."
+    "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes."
   },
   "ready": [
+    {
+      "id": "type-walk-null-literal-arithmetic",
+      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 12,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes."
+    },
     {
       "id": "guardian-v0",
       "title": "Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
@@ -72,28 +91,6 @@
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "type-walk-null-literal-arithmetic",
-      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 12,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes.",
-      "blocked_by": [
-        "kernel-ticket-drop-followups"
-      ]
-    },
     {
       "id": "timing-assertions-under-contention",
       "title": "Two latency assertions fail under concurrent build load and pass alone",
@@ -359,30 +356,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "kernel-ticket-drop-followups",
-      "title": "StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 10,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/kernel-ticket-drop-followups"
-      },
-      "dates": {
-        "opened": "2026-09-24",
-        "done": null
-      },
-      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts. Lead-drafted (the lead-data pilot, measured piece 1): the full form is kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md, lead-data draft 2 revised to the architect consult (state/consults/2026-10-03-kernel-ticket-drop-followups-architect-consult.md; Q3 not crossing), pins hashed by the custodian. Implemented at 4d487d51 by the worker-high (P1 to P4 held; 316 of 320 lines); lead-data's C1 index update applied at 86774b06 (write audit PASS, C3 clean). PR #168 is open; gates reviewer plus architect. Gate 1 architect (gate-log 372): PASS, no S1; four draft-caused items, none blocking (the trial log, item B2). The reviewer runs. Gate 1 reviewer (gate-log 374): FAIL, S1-1 T3 flaky (about one run in four; invalidator I4 fired; the section 7 assumption falsified; draft-caused). The piece stops; lead-data drafts Amendment 1 (the T3 setup and the observations, before the code), then a worker-high, then gate 2 reviewer plus architect. Amendment 1 (lead-drafted; classes 1 and 2; draft-caused) appended at 8195789b: T3's precondition by an in-place swap, MAX_REKEY_ATTEMPTS withdrawn, repeated re-observation; generation 2 (section 15). Correction round 1 with the worker-high. Correction round 1 at afaa990b (F ca005fe0; P1 on cut/kernel-ticket-drop-followups-p1-base at 7ba142da); gate 2 (gate-log 375, 376) PASS and PASS, CI green at the head. READY for the human's click, merge commit only.",
-      "evidence_label": "branch `cut/kernel-ticket-drop-followups`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

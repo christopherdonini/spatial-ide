@@ -2017,3 +2017,7 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
   - `guardian-v0` is placed: governance, order 17, ready, beside node 10. P0 comes first, and the preregistration is architect-drafted.
   - Installing it is a red line: it waits for the human's typed approval after both gates, and the human installs it.
   - The human merged #168 at 17:48:00Z, as merge commit 844865e6. Node 9's close follows (step 2).
+- 2026-10-03T17:57Z - **Node 9, `kernel-ticket-drop-followups`, is DONE.** #168 merged at 17:48:00Z as merge commit 844865e6 (head afaa990b).
+  - **The closing record** is the form's Amendment 2, to the gate-2 architect's list. It references only: the reachable commits, the kept P1 branch `cut/kernel-ticket-drop-followups-p1-base` (7ba142da, named, not pinned), the gates, the observations and CI runs, the size, the index, the routes, and record rounds 0.
+  - **Worktree** `C:/dev/wt/ticket-drop-fu` and its target `D:/wt-targets/ticket-drop-fu` are removed after inspection: clean, pushed and merged.
+  - **Node 10,** `type-walk-null-literal-arithmetic`, is now ready. It is the pilot's piece 2, lead-drafted.
