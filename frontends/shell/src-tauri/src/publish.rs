@@ -3009,4 +3009,141 @@ mod tests {
             "C's grant must have survived A's consumption: {message}"
         );
     }
+
+    /// The `.<name>.staging-<hex>` entries the kernel has created beside `dest_name` in `parent`.
+    fn staging_entries(parent: &Path, dest_name: &str) -> usize {
+        let prefix = format!(".{dest_name}.staging-");
+        std::fs::read_dir(parent)
+            .unwrap()
+            .filter(|e| {
+                e.as_ref()
+                    .unwrap()
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(&prefix)
+            })
+            .count()
+    }
+
+    /// F1, registered through `run_exclusive`: while publish A is parked inside `publish_prepared`
+    /// (its staging directory exists, the positive control), `on_exit_requested` cancels it. After
+    /// the release A takes the kernel's own cancelled `Err` arm: no staging entry, no destination,
+    /// and the audit holds exactly the kernel's intent and a cancelled outcome. S2: cancel into
+    /// staging and the audit outcome. The barrier is released before any assertion.
+    #[test]
+    fn exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed() {
+        let _guard = env_lock();
+        let d = workspace("exit-drain");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let (grants, store, attempt_id, phrase) = prepared(&d, "exit");
+        let running = RunningPublishes::new();
+        let park = Park::new();
+        let progress = park.progress(&attempt_id);
+        let drain_rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .build()
+            .unwrap();
+
+        let (while_parked, registered, action, outcome, drained) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let (g, st, id, ph, pr) = (&grants, &store, &attempt_id, &phrase, &progress);
+                tokio::runtime::Builder::new_current_thread()
+                    .build()
+                    .unwrap()
+                    .block_on(run_exclusive(&running, id, |cancel| async move {
+                        execute_with_progress(g, st, id, ph, &cancel, Some(pr))
+                    }))
+            });
+            park.wait_parked();
+            let while_parked = staging_entries(&d, "out-exit");
+            let registered = running.len();
+            let action = running.on_exit_requested();
+            park.release();
+            let drained = drain_rt.block_on(running.wait_idle(Duration::from_secs(60)));
+            (while_parked, registered, action, a.join().unwrap(), drained)
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert_eq!(
+            while_parked, 1,
+            "positive control: staging exists while parked"
+        );
+        assert_eq!(
+            registered, 1,
+            "the running publish is registered while parked"
+        );
+        assert_eq!(action, ExitAction::PreventAndDrain);
+        let Some(ExecuteOutcome::Refused { message }) = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert!(message.starts_with("publish.cancelled: "), "{message}");
+        assert_eq!(drained, DrainOutcome::Drained);
+        assert_eq!(
+            staging_entries(&d, "out-exit"),
+            0,
+            "staging was left behind"
+        );
+        assert!(
+            !d.join("out-exit").exists(),
+            "a cancelled publish leaves no destination"
+        );
+        let raw = std::fs::read_to_string(&log).unwrap();
+        let records: Vec<serde_json::Value> = raw
+            .lines()
+            .map(|l| serde_json::from_str(l).unwrap())
+            .collect();
+        assert_eq!(
+            records.len(),
+            2,
+            "only the kernel's intent and outcome: {raw}"
+        );
+        assert_eq!(records[1]["phase"], "outcome", "{raw}");
+        assert_eq!(records[1]["outcome"], "cancelled", "{raw}");
+    }
+
+    /// F4: the drain returns when the registry empties, whichever of the last removal and the wait
+    /// comes first, and at its ceiling otherwise.
+    #[tokio::test]
+    async fn the_exit_drain_returns_when_the_registry_empties_and_at_its_ceiling_otherwise() {
+        let running = RunningPublishes::new();
+        running.insert("a".into(), CancelToken::new());
+        let at_ceiling = running.wait_idle(Duration::ZERO).await;
+        running.remove("a");
+        let remove_first = running.wait_idle(Duration::from_secs(60)).await;
+        running.insert("b".into(), CancelToken::new());
+        let (wait_first, ()) = tokio::join!(running.wait_idle(Duration::from_secs(60)), async {
+            tokio::task::yield_now().await;
+            running.remove("b");
+        });
+
+        assert_eq!(
+            at_ceiling,
+            DrainOutcome::TimedOut,
+            "one entry left at a zero ceiling"
+        );
+        assert_eq!(remove_first, DrainOutcome::Drained);
+        assert_eq!(wait_first, DrainOutcome::Drained);
+    }
+
+    /// F4: exit is prevented once, and only while something is registered.
+    #[test]
+    fn exit_requested_prevents_exit_once_and_only_while_something_is_registered() {
+        let running = RunningPublishes::new();
+        let empty = running.on_exit_requested();
+        let token = CancelToken::new();
+        running.insert("a".into(), token.clone());
+        let first = running.on_exit_requested();
+        let cancelled = token.is_cancelled();
+        let second = running.on_exit_requested();
+
+        assert_eq!(empty, ExitAction::Proceed, "nothing registered");
+        assert_eq!(first, ExitAction::PreventAndDrain);
+        assert!(cancelled, "the registered token must be cancelled");
+        assert_eq!(second, ExitAction::Proceed, "a drain has already begun");
+    }
 }

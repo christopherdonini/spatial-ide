@@ -550,6 +550,30 @@ pub fn run() {
             #[cfg(debug_assertions)]
             commands::binding_publish_prepare_e2e_destination,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // The last window closed while a publish may be running (tauri 2.11.5's `ExitRequested`,
+            // sent for an exit the user caused with `code: None`). `on_exit_requested` cancels every
+            // registered publish, once per process; each then goes through the kernel's own `Err`
+            // arm, which removes its staging directory and writes a cancelled outcome. The exit is
+            // prevented here, synchronously (the runtime reads the answer straight after this
+            // callback returns), and nothing waits on the event-loop thread: the drain runs on the
+            // async runtime and ends in `app.exit(0)`, which re-enters this callback with a drain
+            // already begun, so it proceeds. `RunEvent::Exit` is not handled: the process ends
+            // straight after it. No audit record is written here.
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                if let Some(running) = app.try_state::<Arc<publish::RunningPublishes>>() {
+                    if running.on_exit_requested() == publish::ExitAction::PreventAndDrain {
+                        api.prevent_exit();
+                        let running = running.inner().clone();
+                        let app = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            running.wait_idle(publish::EXIT_DRAIN_CEILING).await;
+                            app.exit(0);
+                        });
+                    }
+                }
+            }
+        });
 }
