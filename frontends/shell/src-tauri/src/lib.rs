@@ -551,7 +551,7 @@ pub fn run() {
             commands::binding_publish_prepare_e2e_destination,
         ])
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
+        .expect("error while running tauri application")
         .run(|app, event| {
             // The last window closed while a publish may be running (tauri 2.11.5's `ExitRequested`,
             // sent for an exit the user caused with `code: None`). `on_exit_requested` cancels every
