@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a0743043f550b2f8eb36b0d28e6c0c13a77afcac3fc226e09558c4e896e8c265`) at `2026-10-03T18:50:09.322Z`.
+Generated from `PLAN.yaml` (sha256 `66e9fc8927fd48fe05971e3054f051f6e434feb31ed84dcf7ef55492a1804c7f`) at `2026-10-03T19:24:59.115Z`.
 
 ## 1. Next
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (lane `engine`)
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) (lane `engine`)
 
 ## 2. Ready
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, carry a literal's bound flag through a NULL-typed result, and give constant-NULL expressions true refusal reasons (B-1 N1) (lane `engine`, order 12, budget 90 min)
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) (lane `engine`, order 12, budget 90 min)
 - **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`, order 17, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -93,6 +93,7 @@ Generated from `PLAN.yaml` (sha256 `a0743043f550b2f8eb36b0d28e6c0c13a77afcac3fc2
 - **kernel-composed-ceiling-projected-stream** — The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6) (phase `prototype`) — never queued until placed
 - **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
+- **profile-path-scan-stdin-mode** — The profile-path scanner gains a stdin mode, so a mod can run the scanner's own matcher on content not yet on disk (guardian-v0's G5, left out of v0 by round 43, item 3) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

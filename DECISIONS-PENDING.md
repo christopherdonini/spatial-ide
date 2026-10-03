@@ -29,6 +29,35 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-03 — question round 44 (AskUserQuestion, two items in one call, answered at 19:22:28Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-44.md` at 19:20:06Z, and the hook's log reads `ok: true`. Item 1 is typed; item 2 is by option label, verbatim):**
+- **Item 1 — guardian-v0's O-3 to O-8.** The option chosen was **"I'll rule them one by one"**, and the ruling followed in typed words at 19:23:08Z. It is filed verbatim as `state/directives/2026-10-03-guardian-o3-o8-ruling.md`, lines 6-8 (their sha256 c8120e627ef205c7b4b52194cf1ec75946293229ed7f93c4db7a1b6f90ae19e0 at the commit that adds it), referenced and not restated. Applied:
+  - O-3 and O-5 to O-8 are taken as the architect's draft recommends (`state/consults/2026-10-03-guardian-v0-architect-draft.md`, its OPEN list).
+  - O-4 is taken as recommended, with the parity test the ruling adds.
+  - The architect's draft 2 of the form carries them, and the parity test's design and scope, before the form is committed.
+- **Item 2 — the write-audit form's "Mutations added" bullet:** **"Let it stand (Recommended)"**. Applied:
+  - The bullet stands unclassed, as a record of fact, with this ruling as its reference.
+  - No line of `scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md` changes.
+  - The OPEN entry is closed.
+
+**RULED 2026-10-03 — question round 43 (AskUserQuestion, four items in one call, answered at 19:19:51Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-43.md` at 19:04:47Z, and the hook's log reads `ok: true`. All four items are by option label, verbatim; context in `state/drafts/questions-2026-10-03-rounds-43-44.md`):**
+- **Item 1 — node 10's O-1, case (b) `NULL - 0.5 > 0`:** **"(iii) Admit it narrowly (Recommended)"**. Applied:
+  - Case (b) is admitted under ADR-021's Note 2026-09-30, item 2, read so that a rule-2 result over a decimal literal within the bounds counts as that literal for comparison rules 4 and 6. The reading is the human's, by this item, and the form records it as such.
+  - No sentence and no wire value changes.
+  - **The piece is crossing** under the lead-data clarification's C2, by the consult's Q2 condition (`state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md`), so the architect drafts it.
+  - The PLAN node's title and summary are amended to the ruling.
+- **Item 2 — the lead-data pilot's §5 stop:** **"Keep the stop (Recommended)"**. Applied:
+  - Drafting returns to the architect from node 10's next draft on (the pilot directive, §5; the pilot direction, item 4).
+  - The interim report at the 2026-10-09 window covers pieces 1 and 2. Lead-data is not dispatched to draft.
+- **Item 3 — guardian-v0's O-1, G5's route:** **"(c) G5 leaves v0 (Recommended)"**. Applied:
+  - No G5 code is written.
+  - A scanner stdin mode is appended as the proposed node `profile-path-scan-stdin-mode`, never queued until the human places it.
+  - The commit hooks and the CI backstop remain the profile-path refusal.
+- **Item 4 — guardian-v0's O-2, G6:** **"(a) Keep G6 on reads (Recommended)"**. Applied:
+  - G6 runs on route B: `$.agent.list` and `$.session.messages`.
+  - Lead-data briefs carry a `REPORT PATH: <absolute path>` line from install.
+  - Live check E5 runs after install, and G6 is removed by amendment if no id appears.
+  - The write audit stays primary until E5 passes.
+
 **RULED 2026-10-03 — the mods roadmap: Evidence Recorder v0 next, and Fable's four mod decisions approved (the human's ruling line, mid-turn, received at 18:46:31Z by the transcript; recorded verbatim at `state/directives/2026-10-03-evidence-recorder-ruling.md`, lines 12-16 (their sha256 03eb08f93d8cf76120ce2363951ae3a7c6db61e34c2681e40fbd44b0e17495e6 at the commit that adds it); Fable's brief is filed byte-identical as `state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md`, whole-file sha256 23a197d8b3d645b104874c5f770032e17940f7e981bd6978b65a34bd27e4af5e):**
 - **The ruling** is the ruling line, referenced and not restated.
 - **Applied:**
@@ -47,7 +76,7 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
   - **How it runs.** P0 first: the brief's §3 questions, answered against the installed build and recorded in the preregistration's §0, before any code. The piece crosses no engine/ or kernel/ path, so the architect drafts its preregistration (the 2026-10-03 lead-data pilot direction). Its gates are the reviewer and the architect, with the `claude plugin validate` output in the PR body (the brief's §4).
   - **Installing it** is a security-posture change and a red line. It waits for the human's typed approval after both gates, and the human installs it.
 
-**OPEN 2026-10-03 — the write-audit form's unclassed "Mutations added" bullet (PR #167's gate-1 reviewer, S2-3; narrowed by the gate-2 architect's Judgment 3); for the next batched question round:**
+**CLOSED 2026-10-03 (question round 44, item 2: let it stand) — the write-audit form's unclassed "Mutations added" bullet (PR #167's gate-1 reviewer, S2-3; narrowed by the gate-2 architect's Judgment 3):**
 - **Context.**
   - The first Amendment of `scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md` carries two bullets with no class. "Mutations added" records M3 to M5, added before any gate on the custodian's own verify-mutation check. "A record finding" records that worker report 1 gave verify-mutation's rc as 0, when it is rc 1 at that commit.
   - The template's section 10 routes a case that fits no class to the human, rather than to a new freeform amendment. Class 4 needs a gate finding.
