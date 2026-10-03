@@ -178,6 +178,9 @@ test('T9: VOID on an unparseable line, naming its line number', () => {
   });
 });
 
+// RECORDED MUTATION: M10, removing the void for a tool on no list from subagent-write-audit.mjs made T10 fail by
+// name ("T10: VOID on a call to a tool on no list, naming it") at its status assertion (0 !== 1), observed at commit
+// 18715e4b by applying the edit, running T10 alone, and reverting it.
 test('T10: VOID on a call to a tool on no list, naming it', () => {
   withFixture(jsonl([use('Write', { file_path: ALLOWED }), use('Agent', { prompt: 'x' })]), (f) => {
     const { status, report } = run(f, ALLOWED);
