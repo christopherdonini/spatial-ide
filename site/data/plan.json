@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T12:54:55.369Z",
-  "plan_hash": "3267888c7dc3e3341424aa0f7f4d5f23bf8f54674137bcba5d01c0307dd8d611",
+  "generated_at": "2026-10-03T13:23:21.807Z",
+  "plan_hash": "b05a61c618fe4c2739dc2aa3d3e80b31e2a526995df2e153a0cdb89c5662b60f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2680,7 +2680,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 10,
       "depends_on": [
         "kernel-ticket-drop-under-registry-lock",
@@ -2691,15 +2691,17 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/kernel-ticket-drop-followups"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
       "entries": [
         132
       ],
-      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts.",
+      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts. Lead-drafted (the lead-data pilot, measured piece 1): the full form is kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md, lead-data draft 2 revised to the architect consult (state/consults/2026-10-03-kernel-ticket-drop-followups-architect-consult.md; Q3 not crossing), pins hashed by the custodian.",
       "dates": {
         "opened": "2026-09-24",
         "done": null

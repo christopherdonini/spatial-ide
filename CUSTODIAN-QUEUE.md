@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3267888c7dc3e3341424aa0f7f4d5f23bf8f54674137bcba5d01c0307dd8d611`) at `2026-10-03T12:54:55.208Z`.
+Generated from `PLAN.yaml` (sha256 `b05a61c618fe4c2739dc2aa3d3e80b31e2a526995df2e153a0cdb89c5662b60f`) at `2026-10-03T13:23:21.687Z`.
 
 ## 1. Next
 
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (lane `kernel-protocol`, order 10, budget 90 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -34,6 +34,7 @@ Generated from `PLAN.yaml` (sha256 `3267888c7dc3e3341424aa0f7f4d5f23bf8f54674137
 
 ## 5. In progress
 
+- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — evidence: branch `cut/kernel-ticket-drop-followups`
 - **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) — evidence: branch `cut/subagent-write-audit-script`
 
 ## 6. Proposed / unscheduled
