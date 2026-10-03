@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `694b517285ef893bd15514e9b8bccf5088109e246937ea35d690f03ac82f23b0`) at `2026-10-03T06:08:34.390Z`.
+Generated from `PLAN.yaml` (sha256 `a90ac160206073993e12871de3e3c822bb606cd81e1f8ff849e1fdb8359a5ee5`) at `2026-10-03T06:14:41.764Z`.
 
 ## 1. Next
 
@@ -8,7 +8,7 @@ Generated from `PLAN.yaml` (sha256 `694b517285ef893bd15514e9b8bccf5088109e246937
 
 ## 2. Ready
 
-- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`, order 6, budget 90 min)
+- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`, order 6, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -86,6 +86,8 @@ Generated from `PLAN.yaml` (sha256 `694b517285ef893bd15514e9b8bccf5088109e246937
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (phase `prototype`) — never queued until placed
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (phase `prototype`) — never queued until placed
 - **prepare-cancel-key-per-dataset** — Prepare cancel tokens are keyed by dataset handle, so two concurrent prepares on one dataset would replace and remove each other token (phase `prototype`) — never queued until placed
+- **audit-unknown-outcome-at-exit** — An explicit unknown audit outcome when a publish is cut off at the exit-drain ceiling (kernel and audit schema) (phase `prototype`) — never queued until placed
+- **shell-macos-last-window-convention** — The shell honours macOS convention that closing the last window does not quit (RunEvent::Reopen and window recreation) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

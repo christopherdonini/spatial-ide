@@ -2940,13 +2940,14 @@ nodes:
     order: 6
     depends_on: [skp-cancel-state-closed-set]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md
+    merge: merge-commit
     evidence: null
-    budget_minutes: 90
+    budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes."
+    summary: "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling)."
     dates: {opened: 2026-09-30, done: null}
 
   - id: shell-session-log-line-framing
@@ -3636,4 +3637,38 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Found by publish-attempt-lifecycle-src-tauri drafting consult (state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-architect-draft.md, point Q4): with_registered_cancel keys the prepare token by prepare:<dataset_handle> (frontends/shell/src-tauri/src/publish.rs), so two concurrent prepares on one dataset would have node 8 defect 1 shape (replace and remove). Not verified whether the panel can issue two at once; verify first. A fix likely needs a new refusal string. Question round 40, item 4: recorded as its own proposed node; placement is the human."
+    dates: {opened: 2026-10-03, done: null}
+  - id: audit-unknown-outcome-at-exit
+    title: "An explicit unknown audit outcome when a publish is cut off at the exit-drain ceiling (kernel and audit schema)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [publish-attempt-lifecycle-src-tauri]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by publish-attempt-lifecycle-src-tauri revised drafting consult (state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-architect-draft-2.md, open point 1): question round 40 item 1 condition (b) asks the process to record an unknown outcome at the ceiling where it can; today it cannot without a kernel change (Outcome has no unknown value, a spatial-audit/1 value-domain widening that is the human per the record.rs precedent; the attempt id is minted inside boundary::execute; one terminal per attempt needs a guard). Node 8 records nothing and declares it. A scope addition and a schema change: the human types the ruling at placement."
+    dates: {opened: 2026-10-03, done: null}
+  - id: shell-macos-last-window-convention
+    title: "The shell honours macOS convention that closing the last window does not quit (RunEvent::Reopen and window recreation)"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [publish-attempt-lifecycle-src-tauri]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by publish-attempt-lifecycle-src-tauri revised drafting consult (state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-architect-draft-2.md, open point 1): the pinned tauri sources show the last-window close exits the app on every OS, macOS included; honouring the macOS keep-running convention (question round 40 item 1 condition (a) names it) needs a macOS-only RunEvent::Reopen path and window recreation, which is OS-keyed logic under portability R2 and a user-visible behaviour change: the human types the ruling at placement."
     dates: {opened: 2026-10-03, done: null}
