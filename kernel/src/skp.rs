@@ -189,7 +189,8 @@ impl StreamRegistry {
     /// caller below still holds when it calls this, would re-lock that same `Mutex` on the same
     /// thread and hang. Every caller drops the returned `Vec` only after releasing its guard (each
     /// one calls `drop(tickets)` before its own return path, and the swept entries fall out of scope
-    /// after that).
+    /// after that). Each caller declares `swept` before it takes its guard, so an unwind also
+    /// releases the guard first.
     #[must_use]
     fn sweep_locked(tickets: &mut HashMap<String, TicketState>) -> Vec<TicketState> {
         let expired: Vec<String> = tickets
@@ -3001,7 +3002,7 @@ mod tests {
 /// dropping its `PendingBuilt.source` right there. `EngineSource::drop` calls
 /// `end_session_if_source_changed`, which — if the stream's post-check has already recorded a
 /// change (`StreamStats::source_changed_detail`, set by the producer thread before any terminal is
-/// sent, `engine/src/stream.rs:1190-1195`) — calls `SessionInvalidator::end_generation`, which
+/// sent, via `record_source_changed`) — calls `SessionInvalidator::end_generation`, which
 /// calls `GenerationRegistry::invalidate` (a **different** `Mutex`, no conflict) and then, for
 /// every ticket handle that generation held, `StreamRegistry::cancel` again — **the same `Mutex`,
 /// on the same thread, already held**. `std::sync::Mutex` is not reentrant: the second `lock()`
@@ -3012,7 +3013,7 @@ mod tests {
 /// (`GenerationState`, above). `OpenRegistry`'s `Mutex` holds `engine::CancelToken`s, whose `Drop`
 /// (`engine/src/cancel.rs`) is the default (no user impl) and touches nothing beyond its own
 /// `Arc<Inner>`. `StreamRegistry::cancel`'s and `cancel_all_for_dataset`'s `Redeemed` arms call
-/// `cancel.cancel()` (`EngineCancel` → `CancelToken::cancel`, `kernel/src/lib.rs:571-575`), which
+/// `cancel.cancel()` (`EngineCancel` in `kernel/src/lib.rs` → `CancelToken::cancel`), which
 /// sets an atomic flag and interrupts DuckDB — it does not drop the `TicketState`, and neither arm
 /// takes a registry lock beyond the one its own call already holds. `StreamRegistry::redeem`
 /// removes a `Pending` entry too, but **moves** its
@@ -3070,7 +3071,7 @@ mod ticket_drop_under_lock_regression {
     }
 
     /// Move a file's modification time forward without touching a byte of it — the single-component
-    /// mutation `kernel/tests/session_generation.rs`'s `touch_modification_time` (`:251-259`) makes,
+    /// mutation `kernel/tests/session_generation.rs`'s `touch_modification_time` makes,
     /// reproduced here for the same reason: it is a real, detectable source change that does not
     /// make DuckDB fail on a truncated read.
     fn touch_modification_time(path: &std::path::Path) {
