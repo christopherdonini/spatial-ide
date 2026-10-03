@@ -362,3 +362,10 @@ Written after gate 2's results were seen (a post-result amendment). References o
    - Row R1's step cell is unchanged, and the "Before R1" notes only gained a bullet.
    - The source is the same report, S1-1.
 3. **Superseded index.** This amendment's items 1 and 2 supersede Amendment 1 item 4's Reason bullet and item 7's walkthrough bullet. Nothing else is superseded.
+
+### Amendment 3 — record correction round 2 of 2 (classes 1 and 3)
+
+Written after gate 3's results were seen (a post-result amendment). References only. This is the record cap's last record-correction round.
+
+1. **In place of Amendment 2 item 1.** Amendment 1 item 4's Reason does not give §7's count. The corrected reference is S1-2 of `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-reviewer.md`. The proof is §7's own command over the ranges ff57832...4d92733 and ff57832...0391787.
+2. **Superseded index.** Amendment 2 item 1 is superseded by item 1 above. Nothing else is superseded.
