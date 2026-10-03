@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T06:14:42.022Z",
-  "plan_hash": "a90ac160206073993e12871de3e3c822bb606cd81e1f8ff849e1fdb8359a5ee5",
+  "generated_at": "2026-10-03T06:19:33.086Z",
+  "plan_hash": "469939a2277b06e686c5280766b8471627f9c2fcd2fb5f2e8f5ab31b6132ae35",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4786,7 +4786,7 @@
       "kind": "task",
       "lane": "publish-viewer",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 6,
       "depends_on": [
         "skp-cancel-state-closed-set"
@@ -4797,7 +4797,9 @@
       },
       "gate": "frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/publish-attempt-lifecycle-src-tauri"
+      },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,

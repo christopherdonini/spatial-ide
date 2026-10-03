@@ -2936,13 +2936,13 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: ready
+    status: in-progress
     order: 6
     depends_on: [skp-cancel-state-closed-set]
     needs_human: {kind: none, minutes: 0}
     gate: frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/publish-attempt-lifecycle-src-tauri}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

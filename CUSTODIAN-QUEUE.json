@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-03T06:14:41.764Z",
-  "plan_hash": "a90ac160206073993e12871de3e3c822bb606cd81e1f8ff849e1fdb8359a5ee5",
+  "generated_at": "2026-10-03T06:19:32.873Z",
+  "plan_hash": "469939a2277b06e686c5280766b8471627f9c2fcd2fb5f2e8f5ab31b6132ae35",
   "priorities_approved": true,
-  "next": {
-    "id": "publish-attempt-lifecycle-src-tauri",
-    "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
-    "lane": "publish-viewer",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 6,
-    "budget_minutes": 240,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-30",
-      "done": null
-    },
-    "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling)."
-  },
-  "ready": [
-    {
-      "id": "publish-attempt-lifecycle-src-tauri",
-      "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 6,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling)."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -382,6 +344,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "publish-attempt-lifecycle-src-tauri",
+      "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 6,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/publish-attempt-lifecycle-src-tauri"
+      },
+      "dates": {
+        "opened": "2026-09-30",
+        "done": null
+      },
+      "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling).",
+      "evidence_label": "branch `cut/publish-attempt-lifecycle-src-tauri`"
+    },
     {
       "id": "port-1-linux-l1",
       "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",

@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a90ac160206073993e12871de3e3c822bb606cd81e1f8ff849e1fdb8359a5ee5`) at `2026-10-03T06:14:41.764Z`.
+Generated from `PLAN.yaml` (sha256 `469939a2277b06e686c5280766b8471627f9c2fcd2fb5f2e8f5ab31b6132ae35`) at `2026-10-03T06:19:32.873Z`.
 
 ## 1. Next
 
-- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`, order 6, budget 240 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -35,6 +35,7 @@ Generated from `PLAN.yaml` (sha256 `a90ac160206073993e12871de3e3c822bb606cd81e1f
 
 ## 5. In progress
 
+- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — evidence: branch `cut/publish-attempt-lifecycle-src-tauri`
 - **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — evidence: branch `cut/port-1-linux-l1`
 
 ## 6. Proposed / unscheduled
