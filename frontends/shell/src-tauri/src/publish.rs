@@ -665,6 +665,22 @@ fn prepare_with_query(
 // execute
 // -------------------------------------------------------------------------------------------
 
+/// The grants one `boundary::execute` reads: a call-local copy of the found grant, or the shared set
+/// under its guard (the no-grant path — see [`execute_with_progress`]).
+enum Authority<'a> {
+    Local(GrantSet),
+    Shared(std::sync::MutexGuard<'a, GrantSet>),
+}
+
+impl Authority<'_> {
+    fn set(&self) -> &GrantSet {
+        match self {
+            Self::Local(set) => set,
+            Self::Shared(held) => held,
+        }
+    }
+}
+
 /// Take the pending attempt (single-use), open a **fresh** audit log for it alone (F-9), and run it
 /// through `permission::boundary::execute` with a [`ShellApproval`] carrying `typed_phrase`.
 /// `publish::publish_unguarded` is never referenced (`tests/sole_caller_scan.rs` asserts it crate-wide).
@@ -771,12 +787,35 @@ pub fn execute_with_progress(
     };
 
     let approval = ShellApproval::new(typed_phrase);
-    let held = grants.lock().unwrap_or_else(|e| e.into_inner());
-    let grantset: &GrantSet = &held;
+
+    // **The shared mutex is not held while `publish_prepared` runs** (invariant I2). One critical
+    // section finds this attempt's grant, copies it into a call-local set and removes it from the
+    // shared one; `boundary::execute` then runs against the local copy. If the shell's facts find no
+    // grant, the guard stays held and the boundary runs against the shared set, exactly as before:
+    // with equal facts it refuses at step 4, before `publish_prepared`, with the same error, audit
+    // `error_kind` and message.
+    let mut shared = grants.lock().unwrap_or_else(|e| e.into_inner());
+    let local = shared
+        .find(&facts, Instant::now())
+        .ok()
+        .cloned()
+        .and_then(|grant| {
+            let mut one = GrantSet::new();
+            one.add(grant).ok()?;
+            Some(one)
+        });
+    let authority = match local {
+        Some(one) => {
+            shared.remove_matching(&facts);
+            drop(shared);
+            Authority::Local(one)
+        }
+        None => Authority::Shared(shared),
+    };
 
     let attempt = PublishAttempt {
         request: &request,
-        grants: grantset,
+        grants: authority.set(),
         approval: &approval,
         principal: &pending.principal,
         audit: &audit,
@@ -788,10 +827,11 @@ pub fn execute_with_progress(
     // own — [`execute`] above supplies a throwaway token and `None`; `binding_publish_execute`
     // supplies the real [`RunningPublishes`]-registered token and an [`EventProgress`] sink.
     let boundary_outcome = boundary::execute(&attempt, cancel, progress);
-    // Release the read borrow before re-locking (mutably) to remove -- `held`/`grantset` are not
-    // used again below.
-    drop(held);
-    consume_grant();
+    // The `Shared` path consumes the grant under the guard it already holds; the `Local` path
+    // consumed it above, in the critical section that found it.
+    if let Authority::Shared(mut held) = authority {
+        held.remove_matching(&facts);
+    }
 
     match boundary_outcome {
         Ok(outcome) => ExecuteOutcome::Success {
@@ -2892,5 +2932,81 @@ mod tests {
             "the key must still reach the FIRST call's token, not a replacement"
         );
         assert_eq!(running.len(), 0, "the first call removes its own key");
+    }
+
+    /// F1 + F3: attempts A and C are prepared against one destination, C while A is parked inside
+    /// `publish_prepared`. A's execute consumes A's grant in the critical section that found it, so
+    /// C's grant survives and C proceeds past the grant check to the kernel's own refusal that the
+    /// destination now exists. Same discipline as T2: the barrier is released before any assertion,
+    /// and C is prepared only after `try_lock` has proved the mutex free.
+    #[test]
+    fn a_grant_added_while_a_publish_runs_survives_that_publishs_consumption() {
+        let _guard = env_lock();
+        let d = workspace("park-grant-survives");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let ds = fixture(&d, 50);
+        let dest = d.join("out-shared");
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let prepare_one = || {
+            let outcome = prepare(
+                &grants,
+                &store,
+                ds.clone(),
+                "parcels".into(),
+                STYLE.into(),
+                PublishScope::WholeFile,
+                false,
+                viewer(),
+                viewer_license(),
+                dest.clone(),
+                "2026-08-16T10:00:00Z".into(),
+            );
+            let PrepareOutcome::Prompt { attempt_id, .. } = outcome else {
+                panic!("expected a prompt, got {outcome:?}")
+            };
+            attempt_id
+        };
+        let phrase = "out-shared";
+        let id_a = prepare_one();
+
+        let park = Park::new();
+        let progress = park.progress(&id_a);
+        let (lock_free, id_c, first) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let cancel = CancelToken::new();
+                execute_with_progress(&grants, &store, &id_a, phrase, &cancel, Some(&progress))
+            });
+            park.wait_parked();
+            let lock_free = grants.try_lock().is_ok();
+            let id_c = lock_free.then(&prepare_one);
+            park.release();
+            (lock_free, id_c, a.join().unwrap())
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert!(
+            lock_free,
+            "try_lock found the shared grants mutex held while publish_prepared ran"
+        );
+        assert!(
+            matches!(first, ExecuteOutcome::Success { .. }),
+            "got {first:?}"
+        );
+        let second = execute(&grants, &store, &id_c.expect("C was prepared"), phrase);
+        let ExecuteOutcome::Refused { message } = second else {
+            panic!("got {second:?}")
+        };
+        assert!(
+            message.starts_with("publish.destination_exists: "),
+            "C's grant must have survived A's consumption: {message}"
+        );
     }
 }
