@@ -29,3 +29,16 @@ Amendment: class 1, correction round 1 after gate 1, written after gate 1's resu
   - The two owner's-index sections as they stood at 629fb7f are superseded at cc8dfcce.
   - C7's convergence sentence at 629fb7f is superseded at c18f87f9.
   - Nothing else is superseded.
+Amendment: class 1, correction round 2, written after question round 42's results were seen (a post-result amendment). References only.
+- **The round.** Branch commit f59c3566 rewords `kernel/README.md`'s publish-exposure bullet to ADR-017's 2026-08-07 clarification and 2026-08-17 completion, by question round 42, item 1 (the human's typed ruling on a red line).
+  - It answers the gate-2 architect's S2-2 (`state/consults/gates/2026-10-03-lead-data-pilot-setup-gate2-architect.md`).
+  - The worker's report is `state/consults/2026-10-03-lead-data-pilot-setup-worker-report-3.md`.
+- **C8's category** (the gate-2 architect's S2-1).
+  - lead-data classed C8 as security posture.
+  - The bullet withdraws a stated property ("Nothing is exposed"). That is a guarantee-category touch in the sense of C5, found mid-piece, which the Out-of-scope line does not name.
+  - It adds no surface. The human decided it (question rounds 41 and 42, item 1). Full gating already applies.
+  - The Out-of-scope line is not rewritten.
+- **The Scope figure.** By the Scope line's counting, at f59c3566 against af40bbf, the figure is 190 lines over the same 4 files.
+- **Superseded index.**
+  - The publish-exposure bullet as c18f87f9 applied it is superseded at f59c3566.
+  - Nothing else is superseded.
