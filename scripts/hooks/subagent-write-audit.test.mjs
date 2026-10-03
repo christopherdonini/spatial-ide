@@ -44,6 +44,9 @@ function run(...args) {
 
 const ALLOWED = 'C:/repo/state/consults/x.md';
 
+// RECORDED MUTATION: M3, making the allowed-path comparison never match in subagent-write-audit.mjs made T1 fail by
+// name ("T1: PASS when the only write calls target the allowed path") at its status assertion (1 !== 0), observed at commit
+// 47fe9e54 by applying the edit, running T1 alone, and reverting it.
 test('T1: PASS when the only write calls target the allowed path', () => {
   const text = jsonl([
     use('Read', { file_path: 'C:/repo/a.md' }),
@@ -59,6 +62,9 @@ test('T1: PASS when the only write calls target the allowed path', () => {
   });
 });
 
+// RECORDED MUTATION: M4, skipping the target check for Write in subagent-write-audit.mjs made T2 fail by
+// name ("T2: VOID on a Write to another path") at its status assertion (0 !== 1), observed at commit
+// 47fe9e54 by applying the edit, running T2 alone, and reverting it.
 test('T2: VOID on a Write to another path', () => {
   withFixture(jsonl([use('Write', { file_path: 'C:/repo/state/consults/y.md' })]), (f) => {
     const { status, report } = run(f, ALLOWED);
@@ -68,6 +74,9 @@ test('T2: VOID on a Write to another path', () => {
   });
 });
 
+// RECORDED MUTATION: M5, dropping the Bash and PowerShell void in subagent-write-audit.mjs made T3 fail by
+// name ("T3: VOID on any Bash call") at its status assertion (0 !== 1), observed at commit
+// 47fe9e54 by applying the edit, running T3 alone, and reverting it.
 test('T3: VOID on any Bash call', () => {
   withFixture(jsonl([use('Write', { file_path: ALLOWED }), use('Bash', { command: 'ls' })]), (f) => {
     const { status, report } = run(f, ALLOWED);
