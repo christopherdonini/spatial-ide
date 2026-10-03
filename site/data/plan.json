@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T19:45:25.661Z",
-  "plan_hash": "73bd87c241fea88d57cb9b52be9648070231b85aa90ba9ae32aa2b4941291d02",
+  "generated_at": "2026-10-03T19:49:29.538Z",
+  "plan_hash": "8284670854df82db800df0c1113f616e935c10dce01a664f58af8538f4aa193c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6151,7 +6151,7 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "tools/mods/GUARDIAN-V0-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 240,
       "generation": 1,

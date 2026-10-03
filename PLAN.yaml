@@ -3820,7 +3820,7 @@ nodes:
     order: 17
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: tools/mods/GUARDIAN-V0-PREREGISTRATION.md
     evidence: null
     budget_minutes: 240
     generation: 1
