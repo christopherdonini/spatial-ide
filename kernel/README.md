@@ -235,11 +235,10 @@ that with a scan over this crate's own source.
 because each is a place this table could be read as claiming more than is true:
 
 - **No SKP message reaches it.** No SKP message is defined and nothing in `protocol/` is touched.
-  Two product callers reach the operation, both through `permission/boundary.rs`: this crate's
-  `publish-bundle` binary, and the shell's binding-local `binding_publish_*` commands
-  (`frontends/shell/src-tauri/src/publish.rs`). Whether ADR-017's "developer/test tooling until
-  then" has lapsed now that the machinery exists is a question flagged for the custodian, not one
-  this cut answers.
+  Two callers reach the operation, both through `permission/boundary.rs`: the shell's binding-local
+  `binding_publish_*` commands (`frontends/shell/src-tauri/src/publish.rs`), the UI surface for
+  which ADR-017's acceptance condition was discharged on 2026-08-17; and this crate's
+  `publish-bundle` binary, which ADR-017 keeps as developer/test tooling.
 - **At the command line the grant is self-minted, and in the default invocation it checks nothing** —
   both its halves are derived from the request it is authorizing. `--grant-destination` is the one
   part that is a real check. What gates a command-line publish is the approval and the audit record;
