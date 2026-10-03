@@ -14,14 +14,16 @@
 // folded; none allowed under NONE) and no Bash or PowerShell call appears. A missing or empty
 // transcript, or zero tool calls parsed, is VOID. Exit 0 PASS, 1 VOID, 2 usage error.
 // An agent id (a followed by 16 hex digits) resolves to
-// <home>/.claude/projects/<slug>/<session>/subagents/agent-<id>.jsonl; the slug is the repository
-// root path with every character outside [A-Za-z0-9] replaced by "-", and the session comes from
-// --session or CLAUDE_CODE_SESSION_ID.
+// <home>/.claude/projects/<slug>/<session>/subagents/agent-<id>.jsonl; the slug is the main
+// checkout's path (the parent of `git rev-parse --git-common-dir`, so a worktree resolves to its
+// main checkout; the script's own repository root if git fails) with every character outside
+// [A-Za-z0-9] replaced by "-", and the session comes from --session or CLAUDE_CODE_SESSION_ID.
 //
 // Does not: write anything, touch the network, export anything, or inspect git state (the
 // ruling's secondary checks stay the custodian's procedure). It cannot see a write made through a
 // shell, which is why any shell call voids the run.
 
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +53,14 @@ const [idOrPath, allowedArg] = positional;
 let transcript = idOrPath;
 if (/^a[0-9a-f]{16}$/.test(idOrPath)) {
   if (!session) usage();
-  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  let root = path.resolve(scriptDir, '..', '..');
+  try {
+    const common = execFileSync('git', ['rev-parse', '--git-common-dir'], { cwd: scriptDir, encoding: 'utf8' }).trim();
+    root = path.dirname(path.resolve(scriptDir, common));
+  } catch {
+    // git unavailable: keep the script's own repository root
+  }
   const slug = root.replace(/[^A-Za-z0-9]/g, '-');
   const home = process.env.USERPROFILE || process.env.HOME;
   transcript = path.join(home, '.claude', 'projects', slug, session, 'subagents', `agent-${idOrPath}.jsonl`);

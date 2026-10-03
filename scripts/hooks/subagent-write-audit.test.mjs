@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
 // Tests for scripts/hooks/subagent-write-audit.mjs, per
-// scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md (Tests+mutation line, T1-T7). Each test
+// scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md (Tests+mutation line, T1-T8). Each test
 // builds a synthetic transcript JSONL in a temp directory and removes it. Fixture paths are
 // invented.
 
@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -114,4 +114,32 @@ test('T6: PASS across slash and drive-letter case differences', () => {
 test('T7: exit 2 on a missing argument', () => {
   assert.equal(run('a0123456789abcdef').status, 2);
   assert.equal(run().status, 2);
+});
+
+// RECORDED MUTATION: M2, reverting the slug derivation in subagent-write-audit.mjs to the script's own
+// repository root made T8 fail by name ("T8: an agent id resolves under the main checkout's project
+// slug") when run from a worktree, observed at commit 8d296b9c by applying the edit, running T8
+// alone, and reverting it.
+test("T8: an agent id resolves under the main checkout's project slug", () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swa-home-'));
+  try {
+    const common = execFileSync('git', ['rev-parse', '--git-common-dir'], { cwd: here, encoding: 'utf8' }).trim();
+    const slug = path.dirname(path.resolve(here, common)).replace(/[^A-Za-z0-9]/g, '-');
+    const dir = path.join(home, '.claude', 'projects', slug, 'sess-1', 'subagents');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'agent-a0123456789abcdef.jsonl'),
+      jsonl([use('Read', { file_path: 'C:/repo/a.md' }), use('Write', { file_path: ALLOWED })]),
+    );
+    const r = spawnSync(process.execPath, [script, 'a0123456789abcdef', ALLOWED, '--session', 'sess-1'], {
+      encoding: 'utf8',
+      env: { ...process.env, USERPROFILE: home, HOME: home },
+    });
+    const report = JSON.parse(r.stdout);
+    assert.equal(r.status, 0);
+    assert.equal(report.verdict, 'PASS');
+    assert.deepEqual(report.toolCounts, { Read: 1, Write: 1 });
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
 });
