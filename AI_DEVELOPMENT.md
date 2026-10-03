@@ -743,3 +743,9 @@ patch-level bumps — is recorded as a precedent, not here: `PRECEDENTS.md` P-03
   - **Scope.** Words filed before this rule (entry 110; the 2026-09-25 cloud-hooks directive) stay as filed.
 - **The backstop.** The pre-commit check is the backstop, never the method.
 - **Refusals.** A refusal is never bypassed with `--no-verify`. A false refusal of an invented or machine name is resolved by adding the name to its list in a reviewed diff. A real account is never listed.
+
+## The data-path lead (pilot, from 2026-10-03)
+
+The human approved a pilot on 2026-10-03 (state/directives/, the lead-data pilot directive). The role `lead-data` (.claude/agents/lead-data.md, Opus, high) holds durable knowledge of engine/ and kernel/ through their owner's index sections. For a placed piece confined to those modules it drafts the preregistration in place of the architect's drafting consult; for a piece that crosses them it supplies an impact read before the architect drafts; after a merge it writes the owner's-index update, applied by a worker and checked by the reviewer. It drafts and advises only: it never approves, reviews, merges, places or orders work, never reviews its own draft, and escalates contract changes, altered guarantees, dependencies and red lines as questions. The custodian remains the single coordinator and the only writer of shared records; gates are unchanged. After each lead-data run the custodian checks that `git status --porcelain` shows only its report file. Acceptance, stop conditions and measurement: the pilot directive, §5.
+
+*Pointer (2026-10-03; question round 41, item 4): where the section above differs from the 2026-10-03 lead-data clarification (`state/directives/2026-10-03-lead-data-pilot-clarification.md`, C1 to C4) or from question round 41, item 3 (the write audit), those govern.*
