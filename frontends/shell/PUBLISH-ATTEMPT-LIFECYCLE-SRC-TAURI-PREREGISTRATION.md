@@ -313,3 +313,38 @@ Assertions only. No measurement. R1's checks are observations, not timings.
   A result of "no outcome (interrupted?)" together with a staging entry is the declared ceiling case. It is recorded as a deviation and routed, not passed. Row G9 (`frontends/shell/MANUAL-WALKTHROUGH.md:332` @ b43c0eb sha256:aeaf6de243e2326e2d642d13d32f9045c89862f4dc2f5e10b6e0060d325c1469) is unchanged.
 
 ## §10. Amendments (opens empty, append-only)
+
+### Amendment 1 — budget overrun, §7 not edited; correction round 1 after the merge (classes 8, 1 and 4)
+
+budget overrun, §7 not edited. Written after gate 1's results were seen and after the merge (a post-result amendment). References only.
+
+1. **The merge came first.** PR #163 merged on 2026-10-03 at 08:01:55Z as merge commit 4e3c8a8, at head 4d92733, while gate 1 ran.
+   - Both gate-1 reports then returned FAIL on the same S1, KNOWN-LIMITATIONS 30's ceiling case: `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-architect.md` and `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md`.
+   - This round lands by a second PR from the same branch.
+2. **The round (class 1).** Branch commit b125721 answers:
+   - both S1-1s and the reviewer's S2-6, in KNOWN-LIMITATIONS 30;
+   - the architect's S2-3 and the reviewer's N4, in row R1 and its "Before R1" notes;
+   - the architect's S2-1 and the reviewer's S2-2, S2-5, S2-7 and N1, in comments and docs.
+
+   It changes docs and comments only.
+3. **Class 4, T4.** Branch commit d0184eb changes T4 after gate 1 (the reviewer's S2-3): T4 joins the publish first and asserts the drain at a zero-length wait.
+   - M4 was observed again against the new T4, at d0184eb.
+   - 0391787 updates M4's recorded text, which is now a paraphrase (the reviewer's N2).
+   - The observation is in `state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-worker-report-2.md`.
+4. **Class 8, the line count.**
+   - **Declared:** §7 declares at most 700 changed lines over 5 files.
+   - **Final:** by §7's own command over ff57832...0391787, the figure is 715 lines (675 insertions, 40 deletions) over the same 5 files.
+   - **Reason:** this round adds 55 lines over 4 files to the 694 that gate 1 counted.
+   - §7 is not edited.
+5. **Routed.**
+   - The reviewer's S2-1, S2-4 and S2-8, with the architect's S2-2, go to the proposed node `publish-lifecycle-drain-followups`.
+   - On the reviewer's S2-9, the architect's gate-1 judgment on condition (c) stands.
+6. **The human's sight (§8 item 14).** KNOWN-LIMITATIONS 30, as revised, is shown in the second PR's body.
+7. **Superseded index.** Each is superseded as it stood at 4d92733:
+   - `KNOWN-LIMITATIONS.md` item 30, superseded at b125721;
+   - in `frontends/shell/MANUAL-WALKTHROUGH.md`, the "Before R1" notes and the last sentences of row R1's step cell, superseded at b125721;
+   - the comments and docs that b125721 changes in `frontends/shell/src-tauri/src/publish.rs` and `frontends/shell/src-tauri/src/commands.rs`, superseded at b125721;
+   - T4's drain assertion, superseded at d0184eb;
+   - M4's recorded text, superseded at 0391787.
+
+   No other line is superseded.
