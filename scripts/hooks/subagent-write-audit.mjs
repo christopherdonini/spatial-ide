@@ -12,7 +12,8 @@
 // {verdict, allowed, toolCounts, writeCalls, voids}. PASS iff every Write, Edit, MultiEdit and
 // NotebookEdit call targets exactly the allowed path (backslashes normalised to slashes, case
 // folded; none allowed under NONE) and no Bash or PowerShell call appears. A missing or empty
-// transcript, or zero tool calls parsed, is VOID. Exit 0 PASS, 1 VOID, 2 usage error.
+// transcript, zero tool calls parsed, an unparseable line, or a call to a tool on no list (the
+// write, shell and read-only lists) is VOID. Exit 0 PASS, 1 VOID, 2 usage error.
 // An agent id (a followed by 16 hex digits) resolves to
 // <home>/.claude/projects/<slug>/<session>/subagents/agent-<id>.jsonl; the slug is the main
 // checkout's path (the parent of `git rev-parse --git-common-dir`, so a worktree resolves to its
@@ -31,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 
 const WRITE_TOOLS = ['Write', 'Edit', 'MultiEdit', 'NotebookEdit'];
 const SHELL_TOOLS = ['Bash', 'PowerShell'];
+const READ_TOOLS = ['Read', 'Grep', 'Glob', 'SubagentHandback'];
 
 function usage() {
   console.error(
@@ -105,6 +107,8 @@ for (let n = 0; n < lines.length; n++) {
       if (allowed === null || target !== allowed) voids.push(`${item.name} targets ${target}`);
     } else if (SHELL_TOOLS.includes(item.name)) {
       voids.push(`${item.name} call (a shell can write anywhere)`);
+    } else if (!READ_TOOLS.includes(item.name)) {
+      voids.push(`${item.name} is on no tool list: the audit cannot see what it writes`);
     }
   }
 }

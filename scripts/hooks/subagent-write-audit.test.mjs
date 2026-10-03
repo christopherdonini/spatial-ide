@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 //
 // Tests for scripts/hooks/subagent-write-audit.mjs, per
-// scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md (Tests+mutation line, T1-T8). Each test
+// scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md (T1 to T7 are the form's Tests+mutation line; T8 to T10 come from its Amendments). Each test
 // builds a synthetic transcript JSONL in a temp directory and removes it. Fixture paths are
 // invented.
 
@@ -175,5 +175,14 @@ test('T9: VOID on an unparseable line, naming its line number', () => {
     assert.equal(status, 1);
     assert.equal(report.verdict, 'VOID');
     assert.match(report.voids.join(' '), /line 2 is not parseable/);
+  });
+});
+
+test('T10: VOID on a call to a tool on no list, naming it', () => {
+  withFixture(jsonl([use('Write', { file_path: ALLOWED }), use('Agent', { prompt: 'x' })]), (f) => {
+    const { status, report } = run(f, ALLOWED);
+    assert.equal(status, 1);
+    assert.equal(report.verdict, 'VOID');
+    assert.match(report.voids.join(' '), /Agent/);
   });
 });
