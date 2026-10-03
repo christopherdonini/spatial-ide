@@ -348,3 +348,17 @@ budget overrun, §7 not edited. Written after gate 1's results were seen and aft
    - M4's recorded text, superseded at 0391787.
 
    No other line is superseded.
+
+### Amendment 2 — record correction round 1 (class 3)
+
+Written after gate 2's results were seen (a post-result amendment). References only. This is record-correction round 1 of 2 under the record cap.
+
+1. **Amendment 1 item 4's Reason.**
+   - The Reason adds the round's own 55 lines to gate 1's 694, but that does not give §7's count. The round edits lines the piece had already added, so the count over ff57832 rose by 21, not 55.
+   - The corrected reference is the gate-2 reviewer's recount, S1-2 in `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-reviewer.md`.
+   - The proof is §7's own command over ff57832...4d92733 (657 insertions, 37 deletions) and over ff57832...0391787 (675 insertions, 40 deletions).
+2. **Amendment 1 item 7's walkthrough entry.**
+   - In `frontends/shell/MANUAL-WALKTHROUGH.md`, b125721 supersedes only the next-to-last sentence of row R1's Expected-outcome cell, as it stood at 4d92733.
+   - Row R1's step cell is unchanged, and the "Before R1" notes only gained a bullet.
+   - The source is the same report, S1-1.
+3. **Superseded index.** This amendment's items 1 and 2 supersede Amendment 1 item 4's Reason bullet and item 7's walkthrough bullet. Nothing else is superseded.
