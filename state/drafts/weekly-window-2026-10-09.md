@@ -176,3 +176,18 @@
   - CI and the independent gates remain authoritative;
   - a line copied into a tracked record passes the exposure scan and its CI backstop like any other text.
 - **State at the window.** `evidence-recorder-v0` is placed after `guardian-v0` and is not built, so no recorder line exists yet. The item is for the human's ruling on the rule, not on observed lines.
+- **The architect's consult** on the draft's questions 2 and 3 and on O-1's options, filed as `state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md`: 97,019 tokens, 29 tool uses, 380,185 ms. Write audit PASS (zero writes). C3 clean.
+  - **Q2:** confined, on one condition. It is confined if O-1 rules (i) or (ii); (iii) and (iv) make the piece crossing, and the architect drafts it under C2.
+  - **Q3:** (a) and (d) are conformance to ADR-021's Note 2026-09-30, so no ruling is needed.
+  - **O-1:** both drafted outcomes, (i) `conversion_rounds` and (ii) `conversion_can_fail`, are false of case (b). The consult recommends (iii), admitting (b) narrowly, with (iv), a sixth reason, as the honest fallback.
+  - **Two draft defects** it found:
+    - §0 F6's grep claim is false: three fixtures name `text_with_non_text`. The custodian confirmed this with `git grep`.
+    - §2.2's reasoning for (d) rests on the wrong conversion, and the order between Note items 1 and 2 is unstated.
+- **Correction 1, before commit: draft-caused** (C4). Both defects need a correction before the form can be committed, whichever way O-1 is ruled.
+  - **The precedent:** node 9's consult-driven draft 2 was counted the same way.
+  - **The stop condition.** This is the second of the four measured pieces on which the lead's draft adds a correction round, which is §5's stop condition (the pilot directive). The custodian applies it: drafting returns to the architect, from node 10's next draft on, and the human is told (the pilot direction, item 4).
+  - **Raised in the next question round,** with the alternative reading: the correction is not yet made, and under O-1 (iii) or (iv) the architect drafts anyway under C2.
+- **The pilot at the stop:** 2 of 4 pieces measured.
+  - Draft-caused correction rounds: node 9 two (draft 2; Amendment 1), node 10 one (pending the redraft).
+  - The index was updated in node 9's PR; node 10 has none yet. The gate index-wrong count is 0.
+  - No human intervention is attributable to the lead.
