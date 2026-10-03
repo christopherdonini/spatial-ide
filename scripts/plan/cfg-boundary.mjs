@@ -17,7 +17,7 @@
 // is portable.
 //
 // The allowlist is the table of the portability plan's section 2, as the preregistration carries
-// it. An entry is added only by an architect-reviewed change, never by the piece that needs it.
+// it. An entry is added only by an architect-reviewed change.
 //
 // Output, exit codes: see the preregistration's section 7. Node standard library only.
 

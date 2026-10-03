@@ -389,3 +389,20 @@ Written after E1's and E2's results were seen (a post-result amendment). Run ids
    - `cfg boundary (PORTABILITY R2)` is green. It prints 18 site lines and then `cfg-boundary: 18 sites in 6 files, 0 outside every boundary`.
    - The `node --test` step shows 415 pass and 0 fail.
 5. **Superseded index.** None.
+
+### Amendment 2 — correction round 1, after the merge (class 1)
+
+Written after gate 1's results were seen and after the merge (a post-result amendment). References only.
+
+1. **The merge came first.** PR #162 merged on 2026-10-03 at 08:01:40Z as merge commit 25b57c4, at head eddcb28, before this round. The round lands by a second PR from the same branch.
+2. **The round.** Branch commit 859375c answers gate 1:
+   - the architect's S2 items 1 to 3 (`state/consults/gates/2026-10-03-port-1-linux-l1-gate1-architect.md`);
+   - the reviewer's S2 items 1 to 3, which confirm them (`state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md`).
+
+   It changes comments only, in `scripts/plan/cfg-boundary.mjs` and `.github/workflows/product-ci-rust.yml`. In the workflow, the `Runner profile (Linux)` step moves above the build step's comment. No step body changes.
+3. **Routed.** The reviewer's S2 item 4 goes to the proposed node `cfg-boundary-read-errors`. Its S2 items 5 to 8 go to the closing record and to the template's next change.
+4. **§7.** By §7's own command, the round alone is 21 lines over 2 files, counted at 859375c against eddcb28. The piece's figure at its final head goes in the closing record.
+5. **Superseded index.**
+   - `scripts/plan/cfg-boundary.mjs` at 824d561: the header's clause on who adds an allowlist entry is superseded at 859375c.
+   - `.github/workflows/product-ci-rust.yml` at a886894: the runner-choice comment's pin and catch sentences, and the build step's comment position, are superseded at 859375c.
+   - No other line is superseded.

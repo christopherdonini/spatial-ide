@@ -35,11 +35,12 @@ name: Product CI — Rust workspace
 #
 # **Two matrix entries.** `windows-latest` is the reference profile in `CLAUDE.md` (Windows 10 /
 # MSVC / WebView2), and every claim this repository makes is scoped to it. `ubuntu-24.04` is pinned
-# to a version, not to `ubuntu-latest`, so that the image does not move under the entry; a profile
-# step reports the OS release and architecture on each run. The Linux entry catches path-separator
-# and case-sensitivity assumptions, which `publish/mod.rs`'s `replace('\\', "/")` and
-# `viewer_assets.rs`'s backslash rejection genuinely have surface for. The Windows check keeps its
-# name, since a rename would orphan anything that watches it.
+# to a version, not to `ubuntu-latest`: that pins the OS release only, and the image's contents can
+# still change from run to run. A profile step reports the OS release and architecture on each run.
+# The Linux entry catches only the path-separator and case-sensitivity assumptions the suite
+# exercises; `publish/mod.rs`'s `replace('\\', "/")` and
+# `viewer_assets.rs`'s backslash rejection are places where such assumptions have surface. The
+# Windows check keeps its name, since a rename would orphan anything that watches it.
 #
 # The Linux entry's ignores that Windows does not have are each named by a reason that cites its
 # owning boundary, and the list step prints them. What is and is not claimed for Linux lives in
@@ -209,14 +210,14 @@ jobs:
         with:
           key: ${{ matrix.os }}-workspace
 
-      # Split from the test step so a compile failure is reported as one, rather than as a test
-      # run that never started. `--tests` builds the integration targets too, including the
-      # `#[ignore]`d harnesses — they must keep *compiling* even though they never run here, or
-      # they would rot silently between measurement passes.
       - name: Runner profile (Linux)
         if: ${{ runner.os == 'Linux' }}
         run: grep -E '^(NAME|VERSION_ID)=' /etc/os-release && uname -m
 
+      # Split from the test step so a compile failure is reported as one, rather than as a test
+      # run that never started. `--tests` builds the integration targets too, including the
+      # `#[ignore]`d harnesses — they must keep *compiling* even though they never run here, or
+      # they would rot silently between measurement passes.
       - name: Build the workspace and every test target
         id: build
         run: cargo build --workspace --tests --locked
