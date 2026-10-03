@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a70c1d854960a738b5dbee911517ad41113988b927487dbd55808f4391f5937a`) at `2026-10-02T22:21:25.591Z`.
+Generated from `PLAN.yaml` (sha256 `c359534e13b92fbaf790790de7401f027ba8ff83eed60bc31f6c132ac63467ee`) at `2026-10-03T05:41:18.150Z`.
 
 ## 1. Next
 
-- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`)
+- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`)
 
 ## 2. Ready
 
+- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`, order 6, budget 90 min)
 - **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -28,7 +29,6 @@ Generated from `PLAN.yaml` (sha256 `a70c1d854960a738b5dbee911517ad41113988b92748
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
-- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — blocked by: skp-cancel-state-closed-set
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -36,8 +36,7 @@ Generated from `PLAN.yaml` (sha256 `a70c1d854960a738b5dbee911517ad41113988b92748
 
 ## 5. In progress
 
-- **skp-cancel-state-closed-set** — The cancel response's state held to SKP-V0's closed set on both sides, or the spec says a reader may accept others (wave-1 C-1) — evidence: branch `cut/skp-cancel-state-closed-set`
-- **stop-hook-stale-continuity** — The Stop hook refuses to end a turn while the SESSION-CONTINUITY block is stale (weekly window E) — evidence: branch `cut/stop-hook-stale-continuity`
+- (none)
 
 ## 6. Proposed / unscheduled
 

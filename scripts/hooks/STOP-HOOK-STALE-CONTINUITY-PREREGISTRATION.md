@@ -342,3 +342,32 @@ budget overrun, §7 not edited. Written after gate 1's results were seen (a post
 4. **Class 8, the figure.** By §7's own command at 7383018, merge base fe1e6b7, the count is 734 lines over the same 5 files: `AUTONOMY.md` 9, `scripts/hooks/README.md` 66, `scripts/hooks/hooks.test.mjs` 466, `scripts/hooks/session-resume.mjs` 5 and `scripts/hooks/stop-queue.mjs` 188. The declared ceiling is 650. The reason is Amendment 1 item 1's, plus T18 and T19.
 5. **Generation.** The node's generation bumps to 3 (`AUTONOMY.md` §15).
 6. **Superseded index.** Amendment 1 item 1's final figure (703 at 78681ec) is superseded by item 4's (734 at 7383018). Nothing else is superseded.
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece's results were seen and after its merge (a post-result amendment). References and hashes only, except item 5's reason, which §4's E2 asks for as received.
+
+1. **Merged.** PR #161 merged on 2026-10-03 at 05:32:38Z as merge commit 56264a6, at head b42c0dc. So 4b1f641, 2542233, 7383018 and b42c0dc stay reachable from main (§8 item 14).
+2. **§7's final figure.** By §7's own command at b42c0dc, merge base fe1e6b7, the figure is 734 lines over 5 files, as Amendment 2 item 4 records. The `AUTONOMY.md` section's final number is §30 (Amendment 1 item 3): main gained no section before the merge.
+3. **Mutations.**
+   - **M1 to M17** were observed at 4b1f641 with the change (`state/consults/2026-10-02-stop-hook-stale-continuity-worker-report-2.md`). The gate-1 reviewer re-observed them at 2542233 (`state/consults/gates/2026-10-02-stop-hook-stale-continuity-gate1-reviewer.md`, check 2).
+   - **M18 and M19** were observed by the gate-2 reviewer at b42c0dc (`state/consults/gates/2026-10-02-stop-hook-stale-continuity-gate2-reviewer.md`, check 2). All 19 observations are unit-only (`node --test`), with no harness run.
+4. **Tools,** each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202. The runs are read in the two gate-2 reports. A verify-mutation run is a tool run, not an observation.
+5. **E2, the live record** (§4):
+   - **Versions:** Claude Code 2.1.288, `git version 2.49.0.windows.1`, Node v24.18.1.
+   - **The entry-only commit:** 1130bee, a ledger entry with no flush.
+   - **The stop was blocked.** The reason as the model received it, byte-copied from the session transcript:
+
+     ```
+     stale SESSION-CONTINUITY: the newest commit touching state/CUT-STATE.md is 1130beea86157931a9687e594c6e1c2e78b2c5a1 (2026-10-03T07:35:15+02:00), and it does not rewrite the block's flushed_at (2026-10-02T22:28:32Z). Rewrite the block with scripts/hooks/flush.mjs from git and the ledger, commit it ledger-only, push, then stop.
+     ```
+   - **The flush that followed:** 29d43f2, ledger-only, written by `scripts/hooks/flush.mjs`.
+   - **The next stop's outcome:** the queue block naming `port-1-linux-l1`, not a stale block.
+
+   As §4 predicts, the stop was blocked with §7's reason and one ledger-only flush cleared it. I4 did not fire.
+6. **A disclosure** (the gate-1 reviewer's S2-4, widened by the gate-2 architect's item 4.6). Any failure of the third git call (the `<c>^1:` show), not only a timeout, reads as fresh with no stderr line. It fails open inside §2 item 2(c), and §8 item 4 is not engaged.
+7. **The failed-push reading** is §1's may-not-claim, already disclosed. It is not restated here.
+8. **Superseded index.**
+   - §7's timing sentence, `scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md:219` @ ca0abb5 sha256:d628ad9f33940e8b485ec4c822427fd0910d2a8d8dae9487f2f30a456f7a3e12 (three calls, 11 s), is superseded by the `CONTINUITY_GIT_TIMEOUT_MS` comment in `scripts/hooks/stop-queue.mjs` at 56264a6 (four calls, 13 s). §7 is not edited, and the declared 2000 ms holds.
+   - Amendment 2 item 2's observation commit for M18 and M19, `scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md:334` @ 56264a6 sha256:50af71f3f0bd85d088e7236bf461c325c2f7156c0e16f42226c90debda6b12ad, is superseded by item 3 above. The tests did not exist at 2542233.
+   - Nothing else is superseded.

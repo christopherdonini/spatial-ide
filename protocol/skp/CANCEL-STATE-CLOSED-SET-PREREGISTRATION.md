@@ -276,3 +276,28 @@ Written after gate 1's results were seen (a post-result amendment). References o
    - The SKP-V0 §8 note's parenthesis restating the entry-30 rule, as commit 190fd6b added it, is superseded by the reference to the entry-30 disposition at 92ed745.
    - In `protocol/skp/tests/conformance/DIVERGENCES.md` at 190fd6b, three things are superseded at 92ed745: the header's run lines naming the `skp/0.6` re-run, D1's three line cites and the Resolved line. They are replaced by the 5d4da4d run line, item names and the restated Resolved line.
    - No other line is superseded.
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece's results were seen and after its merge (a post-result amendment). References only.
+
+1. **Merged.** PR #160 merged on 2026-10-03 at 05:32:23Z as merge commit d3ecb9e, at head da110d0. So 2d835a9, 5d4da4d, 190fd6b, 8e4747e, 92ed745 and da110d0 stay reachable from main (§8 item 14).
+2. **The I6 reading, extended** (the gate-1 architect's S2-1). Amendment 1 item 1's reading covers four more test files, each building an in-set cancel response and compiling unchanged:
+   - `frontends/shell/src/admission/AdmissionPanel.test.ts`;
+   - `frontends/shell/src/streaming/tileViewportStreamManager.test.ts`;
+   - `frontends/shell/src/streaming/viewportStreamManager.test.ts`;
+   - `frontends/shell/src/residency/candidateArmSession.test.ts`.
+
+   They are referenced as files at 3f72519. No file outside §7 changed.
+3. **Mutations.** M1 to M5 were observed at 5d4da4d (`state/consults/2026-10-02-skp-cancel-state-closed-set-worker-report-1.md`). The gate-1 reviewer re-observed them at 8e4747e (`state/consults/gates/2026-10-02-skp-cancel-state-closed-set-gate1-reviewer.md`, check 3).
+4. **The suites §9 names,** each in the gate-1 reviewer's report:
+   - `cargo clippy --workspace --all-targets --locked` rc 0 at 8e4747e (check 7);
+   - F7 at C, 63/15/0 (check 4);
+   - `npm run verify` and the src-tauri build: product-ci-shell run 37053733955 (check 8);
+   - verify:plan: Governance CI run 37053733544 (check 8).
+
+   92ed745 and da110d0 touch text only. At da110d0, CI is green (`state/consults/gates/2026-10-02-skp-cancel-state-closed-set-gate2-reviewer.md`, check 6).
+5. **Amendment 1's class label.** Its first line carries class 1's post-result marker, and it is not relabelled (the gate-1 reviewer's S2-3; the gate-1 architect's N1).
+6. **Tools,** each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202. A verify-mutation run is a tool run, not an observation.
+7. **§7's final figure.** By §7's own command at da110d0, the figure is 243 lines over 13 files (the gate-2 reviewer's check 4).
+8. **Superseded index.** None. Amendment 2's index stands.

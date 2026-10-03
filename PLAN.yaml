@@ -2936,7 +2936,7 @@ nodes:
     kind: task
     lane: publish-viewer
     phase: prototype
-    status: blocked
+    status: ready
     order: 6
     depends_on: [skp-cancel-state-closed-set]
     needs_human: {kind: none, minutes: 0}
@@ -3043,19 +3043,19 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: in-progress
+    status: done
     order: 9
     depends_on: [audit-reader-char-boundary, workspace-rustfmt]
     needs_human: {kind: none, minutes: 0}
     gate: protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/skp-cancel-state-closed-set}
+    evidence: {pr: 160}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule: real but bounded, recorded as a PLAN note); still present at main when triaged. CancelResponse.state is a free string in protocol/skp and in the shell's types while SKP-V0's §1 lists three values; which side is wrong is undetermined (state/cloud/wave1/C.md). It travels with PR #123's integration after the watcher (round 24, item 4), beside C's ambiguity list. Placed by question round 31, item 1 (RULED 2026-09-30): position 7 of 16 in the human's order, order 9 in its lane. It depends on audit-reader-char-boundary, position 6, so that the order holds across lanes. Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: its code waits for workspace-rustfmt, so that no Rust branch is open while the formatting pass runs. Question round 38 (RULED 2026-10-02), item 1: the reader is wrong, no literal bump; the full-form preregistration is protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md), full gating (wire; a property under test)."
-    dates: {opened: 2026-09-26, done: null}
+    dates: {opened: 2026-09-26, done: 2026-10-03}
 
   - id: suites-and-toolchain-beyond-windows
     title: "The default Rust suites and the shell's install run beyond Windows (wave-1 D-1 to D-4)"
@@ -3472,18 +3472,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 12
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md
-    evidence: {branch: cut/stop-hook-stale-continuity}
+    evidence: {pr: 161}
     budget_minutes: 180
     generation: 3
     felt_verdict: false
     entries: []
     summary: "Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 4: adopted as described in state/drafts/weekly-window-2026-10-02.md, section E: the check runs before the background-tasks allow, counts inside the existing continuation caps, and milestone refreshes are ledger-only; the PreCompact block stays as the backstop. Also carries item 5's tooling half: scripts/hooks/session-resume.mjs prints its own copy of AUTONOMY.md section 0's reading order, which gains state/directives/ (AUTONOMY.md section 26). Preregistration before any code, the reviewer, and the architect if section 21a applies; the section 3 and 7 texts get a dated amendment appended at the end of AUTONOMY.md."
-    dates: {opened: 2026-10-02, done: null}
+    dates: {opened: 2026-10-02, done: 2026-10-03}
   - id: questions-mirror-item-count
     title: "questions-mirror.mjs's countItems counts one item high on a round file with a header rule, so a document send's summary names one item too many"
     kind: task
