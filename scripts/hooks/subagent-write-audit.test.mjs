@@ -134,12 +134,12 @@ test('T7: exit 2 on a missing argument', () => {
   assert.equal(run().status, 2);
 });
 
+// M2 fails T8 only when the suite runs from a worktree: in the main checkout and in CI the common
+// directory's parent equals the script's own root, so the mutated derivation gives the same slug.
 // RECORDED MUTATION: M2, reverting the slug derivation in subagent-write-audit.mjs to the script's own
 // repository root made T8 fail by name ("T8: an agent id resolves under the main checkout's project
 // slug") when run from a worktree, observed at commit 8d296b9c by applying the edit, running T8
 // alone, and reverting it.
-// M2 fails T8 only when the suite runs from a worktree: in the main checkout and in CI the common
-// directory's parent equals the script's own root, so the mutated derivation gives the same slug.
 test("T8: an agent id resolves under the main checkout's project slug", () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swa-home-'));
   try {
