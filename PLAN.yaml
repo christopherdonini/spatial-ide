@@ -3315,12 +3315,12 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 12
     depends_on: [filter-bind-admission-implicit-coercions, kernel-ticket-drop-followups]
     needs_human: {kind: none, minutes: 0}
     gate: engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/type-walk-null-literal-arithmetic}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
@@ -3816,12 +3816,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 17
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: tools/mods/GUARDIAN-V0-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/guardian-v0}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

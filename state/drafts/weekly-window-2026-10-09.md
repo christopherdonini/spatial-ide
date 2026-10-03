@@ -191,3 +191,9 @@
   - Draft-caused correction rounds: node 9 two (draft 2; Amendment 1), node 10 one (pending the redraft).
   - The index was updated in node 9's PR; node 10 has none yet. The gate index-wrong count is 0.
   - No human intervention is attributable to the lead.
+
+## F. `AUTONOMY.md` §21a's ADR-021 label
+
+- **Source.** lead-data's node 10 draft (its §1 observation) and the architect's node 10 draft (its Q-4). Confirmed by the ADR file names.
+- **The gap.** §21a's security bullet labels ADR-021 "bundling / no-runtime-fetch". ADR-021 is the row-filter ADR (`docs/adr/ADR-021-row-filter-on-viewport-query.md`); the bundle format is ADR-017 (`docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md`).
+- **The proposal.** An appended dated note in `AUTONOMY.md`, naming the ADR the label means. No line above it moves (the governing-doc append rule). Nothing is applied before the human's answer.
