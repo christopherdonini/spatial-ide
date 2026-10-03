@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T09:36:24.764Z",
-  "plan_hash": "0d4ad6bb900b7f9560584af8eed32b2b3b15c0b0246139c0922142f63534ebf2",
+  "generated_at": "2026-10-03T10:08:44.781Z",
+  "plan_hash": "6c87e0ebeb558369f427d8a58adecbc778973894e94f404f152dba352753a6ad",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1321,6 +1321,44 @@
         "done": null
       },
       "summary": "Routed by PR #163 gate-1 reviewer (state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md), S2 items 1, 4 and 8, and the gate-1 architect S2-2: (1) cancel_all runs once, so an execute dispatched before the close that reaches try_insert after it is not cancelled (suggested: try_insert refuses or cancels at once once a drain has begun); (4) the Park/Settle helpers hang thread::scope if the controlling thread panics while the execute is parked (suggested: a release-on-drop guard on the controlling side); (8) run_exclusive skips its removal if the body panics or is dropped, and under the drain a leaked key now costs the 30 s ceiling (suggested: RAII removal). Item 1 is a behaviour change (class 9 inside node 8, so routed here). Full form; worker-high; R1-R6 apply."
+    },
+    {
+      "id": "kernel-composed-ceiling-projected-stream",
+      "title": "The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Routed by lead-data report 1, question 1 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md, edit C5): kernel/README.md's composed table multiplies (MAX_QUEUED_BATCHES + 1) by MAX_BATCH_BYTES, but a live projected stream (viewport_query with columns, ADR-023) also holds attribute buffers that engine/src/stream.rs bounds separately (MAX_QUEUED_BATCHES, MAX_ATTRIBUTE_RETENTION_FACTOR). The custodian took C5, which narrows the README's table to streams with no projected attributes and claims no figure for the projected case; recomposing a figure is a declared-ceiling decision, routed here. Full form; a lead-drafted candidate once placed (engine/ and kernel/ only, unless the recomposition changes a contract)."
+    },
+    {
+      "id": "module-docs-stale-statements",
+      "title": "Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form."
     }
   ],
   "unscheduled": [

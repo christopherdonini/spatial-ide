@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0d4ad6bb900b7f9560584af8eed32b2b3b15c0b0246139c0922142f63534ebf2`) at `2026-10-03T09:36:24.764Z`.
+Generated from `PLAN.yaml` (sha256 `6c87e0ebeb558369f427d8a58adecbc778973894e94f404f152dba352753a6ad`) at `2026-10-03T10:08:44.781Z`.
 
 ## 1. Next
 
@@ -91,6 +91,8 @@ Generated from `PLAN.yaml` (sha256 `0d4ad6bb900b7f9560584af8eed32b2b3b15c0b02461
 - **shell-macos-last-window-convention** — The shell honours macOS convention that closing the last window does not quit (RunEvent::Reopen and window recreation) (phase `prototype`) — never queued until placed
 - **cfg-boundary-read-errors** — cfg-boundary skips any tracked file it cannot read, not only a missing one, so an unreadable file passes unscanned (phase `prototype`) — never queued until placed
 - **publish-lifecycle-drain-followups** — Exit drain follow-ups -- an execute that registers after the drain began is not cancelled; Park/Settle can hang if the controlling test thread panics; run_exclusive removal is not RAII (phase `prototype`) — never queued until placed
+- **kernel-composed-ceiling-projected-stream** — The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6) (phase `prototype`) — never queued until placed
+- **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

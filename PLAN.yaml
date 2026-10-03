@@ -3724,3 +3724,37 @@ nodes:
     entries: []
     summary: "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file."
     dates: {opened: 2026-10-03, done: null}
+  - id: kernel-composed-ceiling-projected-stream
+    title: "The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6)"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [lead-data-pilot-setup]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by lead-data report 1, question 1 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md, edit C5): kernel/README.md's composed table multiplies (MAX_QUEUED_BATCHES + 1) by MAX_BATCH_BYTES, but a live projected stream (viewport_query with columns, ADR-023) also holds attribute buffers that engine/src/stream.rs bounds separately (MAX_QUEUED_BATCHES, MAX_ATTRIBUTE_RETENTION_FACTOR). The custodian took C5, which narrows the README's table to streams with no projected attributes and claims no figure for the projected case; recomposing a figure is a declared-ceiling decision, routed here. Full form; a lead-drafted candidate once placed (engine/ and kernel/ only, unless the recomposition changes a contract)."
+    dates: {opened: 2026-10-03, done: null}
+  - id: module-docs-stale-statements
+    title: "Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [lead-data-pilot-setup]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form."
+    dates: {opened: 2026-10-03, done: null}
