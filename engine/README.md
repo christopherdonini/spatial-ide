@@ -514,9 +514,10 @@ the same limit `docs/07` places on ADR-003.
   - Test support behind the `fixture` feature → `spatial_engine::fixture`, `spatial_engine::layout`, `engine/examples/make-fixture.rs`
 - **Consumed from other modules:** none (`engine/Cargo.toml` declares no path dependency on another module)
 - **Governed by:**
-  - ADRs: ADR-004, ADR-005, ADR-006, ADR-007, ADR-010, ADR-013, ADR-015, ADR-016, ADR-017, ADR-018, ADR-021, ADR-023, ADR-026, ADR-032, ADR-033, ADR-035
+  - accepted ADRs: ADR-004, ADR-005, ADR-006, ADR-007, ADR-010, ADR-013, ADR-015, ADR-016, ADR-017, ADR-018, ADR-021, ADR-026, ADR-032, ADR-033, ADR-035
   - preregistrations in this module: `engine/ADMISSION-PREREGISTRATION.md`, `engine/B1-PROJECTION-PREREGISTRATION.md`, `engine/CANCEL-BEFORE-EXECUTE-PREREGISTRATION.md`, `engine/CORPUS-REPRODUCIBILITY-PREREGISTRATION.md`, `engine/EXTENSION-AUTOLOAD-PREREGISTRATION.md`, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`, `engine/LOD-PREREGISTRATION.md`, `engine/LOD-RELEASE-GUARD-PREREGISTRATION.md`, `engine/SOURCE-WATCHER-PREREGISTRATION.md` (§2a), `engine/SUITES-BEYOND-WINDOWS-PREREGISTRATION.md`, `engine/TESTS-CONFIGURED-CONNECTIONS-PREREGISTRATION.md`, `engine/WATCHER-FIRST-READ-PREREGISTRATION.md`
   - measurement passes over this module's code: `kernel/PROBE-PREREGISTRATION.md`, `kernel/IMPORT-LAYOUT-PREREGISTRATION.md`, `kernel/SCALE-PASS-PREREGISTRATION.md`
+- **Proposed ADRs, binding nothing:** ADR-023
 - **Declared limits:** KNOWN-LIMITATIONS 2, 3, 9, 11, 19, 20, 22, 23, 24, 25, 26, 27
 - **Ceilings:**
   - `MAX_BATCH_BYTES`, `TARGET_BATCH_BYTES`, `FIRST_TARGET_BATCH_BYTES`, `MIN_BATCH_BYTES`, `BATCH_GROWTH_FACTOR`, `MAX_ROWS_PER_BATCH`, `MAX_QUEUED_BATCHES`, `MAX_ATTRIBUTE_RETENTION_FACTOR`, `PUBLISH_PARTITION_TARGET_BYTES`, `PUBLISH_PARTITION_ROWS`, `MAX_PUBLISH_PARTITIONS` (`engine/src/stream.rs`)
