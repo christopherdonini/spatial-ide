@@ -3365,6 +3365,243 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
     }
 
+    // `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4: the unwind half of the registry's
+    // no-drop-under-guard invariant. Q's cancel panics; P is swept or retired before it does.
+
+    /// Test-only `BatchSource`: `synthetic_source` in `tests` is private to that module.
+    struct EmptySource;
+    impl BatchSource for EmptySource {
+        fn next_into(
+            &mut self,
+            _out: &mut Vec<u8>,
+        ) -> Option<Result<spatial_data_plane::transport::BatchMeta, String>> {
+            None
+        }
+    }
+
+    /// Test-only `SourceCancel` whose `cancel` panics with a message naming the test that planted it.
+    struct PanickingCancel(&'static str);
+    impl SourceCancel for PanickingCancel {
+        fn cancel(&self) {
+            panic!("{}: SourceCancel::cancel panics on purpose", self.0);
+        }
+    }
+
+    /// Q (`Redeemed`, never cancelled, never attributed to a generation, so the unwind's generation
+    /// end never cancels it a second time) and P (`Pending`, real source, generation opened but the
+    /// ticket not yet attributed), both in registries this struct holds.
+    struct UnwindSetup {
+        tickets: Arc<StreamRegistry>,
+        generations: Arc<GenerationRegistry>,
+        p: String,
+        p_dataset: String,
+        q: String,
+    }
+
+    impl UnwindSetup {
+        fn new(test: &'static str, stem: &str, p_dataset: &str, q_dataset: &str) -> Self {
+            let tickets = StreamRegistry::new();
+            let generations = GenerationRegistry::new();
+            // Q first, so no sweep can remove P before the call under test.
+            let q = tickets
+                .mint(
+                    q_dataset,
+                    Box::new(EmptySource),
+                    Arc::new(PanickingCancel(test)),
+                )
+                .expect("mint Q");
+            tickets.redeem(q.as_str()).expect("redeem Q");
+            let path = fixture(stem);
+            let (stream, cancel) = drained_stream_with_a_recorded_change(&path);
+            let reuses = spatial_engine::Dataset::open(&path)
+                .expect("reopen for connection config")
+                .connections()
+                .config()
+                .reuses_connections();
+            let invalidator = SessionInvalidator::new(
+                generations.clone(),
+                tickets.clone(),
+                discard_session_end_events(),
+            );
+            let (source, source_cancel) = crate::wrap_for_data_plane(
+                stream,
+                cancel,
+                p_dataset.to_string(),
+                reuses,
+                None,
+                Some(invalidator),
+            );
+            generations.mint_for_open(p_dataset, SessionRef::mint());
+            let p = tickets
+                .mint(p_dataset, source, source_cancel)
+                .expect("mint P");
+            Self {
+                tickets,
+                generations,
+                p: p.as_str().to_string(),
+                p_dataset: p_dataset.to_string(),
+                q: q.as_str().to_string(),
+            }
+        }
+
+        /// Seed P past `TICKET_TTL` under the lock, as
+        /// `sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang` does.
+        fn backdate_p(&self) {
+            let expired = std::time::Instant::now()
+                .checked_sub(TICKET_TTL + Duration::from_secs(1))
+                .expect(
+                    "system uptime exceeds TICKET_TTL; re-run once the machine has been up longer",
+                );
+            let mut map = self
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let Some(TicketState::Pending { built, dataset, .. }) = map.remove(&self.p) else {
+                panic!("UnwindSetup did not leave a Pending entry for P");
+            };
+            map.insert(
+                self.p.clone(),
+                TicketState::Pending {
+                    built,
+                    dataset,
+                    minted_at: expired,
+                },
+            );
+        }
+
+        /// Move P's entry to fresh keys, at most `MAX_REKEY_ATTEMPTS` times, until it precedes Q in
+        /// the map's iteration order; fail by name otherwise. Run before `attribute_p`.
+        fn put_p_before_q(&mut self, test: &str) {
+            const MAX_REKEY_ATTEMPTS: usize = 64;
+            let precedes = |m: &HashMap<String, TicketState>, p: &str, q: &str| {
+                m.keys().position(|k| k == p) < m.keys().position(|k| k == q)
+            };
+            let mut map = self
+                .tickets
+                .tickets
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let mut attempts = 0;
+            while !precedes(&map, &self.p, &self.q) && attempts < MAX_REKEY_ATTEMPTS {
+                let state = map.remove(&self.p).expect("P is in the map");
+                self.p = StreamHandle::mint().as_str().to_string();
+                map.insert(self.p.clone(), state);
+                attempts += 1;
+            }
+            let ok = precedes(&map, &self.p, &self.q);
+            drop(map);
+            assert!(
+                ok,
+                "{test}: P's key did not come before Q's in the map's iteration order within \
+                 {MAX_REKEY_ATTEMPTS} re-keys, so the test would not reach its retire-then-panic \
+                 order"
+            );
+        }
+
+        fn attribute_p(&self) {
+            assert!(self.generations.attribute_ticket(&self.p, &self.p_dataset));
+        }
+
+        /// Run `call` on a spawned thread inside `catch_unwind`. Asserts it returned within
+        /// `HANG_TIMEOUT`, that it unwound out of Q's panicking cancel, and that P's source was
+        /// dropped (`EndedBySourceChange`), not leaked.
+        fn call_unwinds_and_drops_p(
+            &self,
+            test: &'static str,
+            site: &'static str,
+            call: impl FnOnce(&StreamRegistry) + Send + 'static,
+        ) {
+            let tickets = self.tickets.clone();
+            let outcome = run_with_timeout(HANG_TIMEOUT, move || {
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| call(&tickets)))
+            })
+            .unwrap_or_else(|| {
+                panic!(
+                    "{test}: StreamRegistry::{site} did not return within {HANG_TIMEOUT:?} — the \
+                     unwind dropped a swept or retired EngineSource while the guard was held, and \
+                     its Drop re-locked the same Mutex (the spawned thread is leaked, not joined)"
+                )
+            });
+            let payload = outcome.expect_err("Q's cancel panics, so the call must unwind");
+            let message = payload
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| payload.downcast_ref::<&str>().map(|s| (*s).to_string()))
+                .unwrap_or_default();
+            assert!(message.contains(test), "unexpected panic: {message}");
+            assert_eq!(
+                self.generations.ticket_liveness(&self.p),
+                TicketLiveness::EndedBySourceChange,
+                "{test}: P's source was not dropped"
+            );
+        }
+    }
+
+    /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T1: an unwind out of `cancel` (Q's
+    /// panicking cancel) while P, expired and in another dataset, sits in `swept`.
+    ///
+    /// PLANNED MUTATION (M1, not yet observed): in `StreamRegistry::cancel`, declare `swept` after
+    /// the guard, the order at `c9f41126`. Expected failure: this test FAILS by timeout on its own
+    /// "did not return within" message; the two tests below pass.
+    #[test]
+    fn an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard() {
+        const T: &str = "an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard";
+        let s = UnwindSetup::new(T, "unwind-cancel-swept", "ds_p", "ds_q");
+        s.backdate_p();
+        s.attribute_p();
+        let q = s.q.clone();
+        s.call_unwinds_and_drops_p(T, "cancel", move |r| {
+            r.cancel(&q);
+        });
+    }
+
+    /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T2: as T1, through
+    /// `cancel_all_for_dataset` on Q's dataset.
+    ///
+    /// PLANNED MUTATION (M2, not yet observed): the same change in `cancel_all_for_dataset`.
+    /// Expected failure: this test FAILS by timeout on its own "did not return within" message; the
+    /// tests above and below pass, because T3's `swept` is empty.
+    #[test]
+    fn an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard() {
+        const T: &str = "an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard";
+        let s = UnwindSetup::new(T, "unwind-cancel-all-swept", "ds_p", "ds_q");
+        s.backdate_p();
+        s.attribute_p();
+        s.call_unwinds_and_drops_p(T, "cancel_all_for_dataset", |r| {
+            r.cancel_all_for_dataset("ds_q");
+        });
+    }
+
+    /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T3: P is not expired and shares
+    /// dataset D with Q; `cancel_all_for_dataset` on D retires P (into `retired`) before it reaches
+    /// Q's panicking cancel, which needs P's key to precede Q's in the map's iteration order
+    /// (`put_p_before_q`). The extra assertion checks P's entry is `CancelledBeforeRedeem`, so a
+    /// failed precondition fails by name and cannot pass vacuously.
+    ///
+    /// PLANNED MUTATION (M3, not yet observed): in `cancel_all_for_dataset`, declare `retired` after
+    /// the guard. Expected failure: this test FAILS by timeout on its own "did not return within"
+    /// message; the two tests above pass, because their `retired` is empty.
+    #[test]
+    fn an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard()
+    {
+        const T: &str = "an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard";
+        let mut s = UnwindSetup::new(T, "unwind-cancel-all-retired", "ds_d", "ds_d");
+        s.put_p_before_q(T);
+        s.attribute_p();
+        s.call_unwinds_and_drops_p(T, "cancel_all_for_dataset", |r| {
+            r.cancel_all_for_dataset("ds_d");
+        });
+        let map = s.tickets.tickets.lock().unwrap_or_else(|e| e.into_inner());
+        assert!(
+            matches!(
+                map.get(&s.p),
+                Some(TicketState::CancelledBeforeRedeem { .. })
+            ),
+            "{T}: P was not retired before Q's cancel panicked"
+        );
+    }
+
     // ---------------------------------------------------------------------------------------------
     // E5, E7, E8 (`SOURCE-WATCHER-PREREGISTRATION.md` §4) — in-crate, reusing this module's own
     // helpers, per the doc's own placement note.
