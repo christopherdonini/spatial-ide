@@ -81,12 +81,15 @@ if (!fs.existsSync(transcript) || fs.statSync(transcript).size === 0) {
 const toolCounts = {};
 const writeCalls = [];
 const voids = [];
-for (const line of fs.readFileSync(transcript, 'utf8').split('\n')) {
+const lines = fs.readFileSync(transcript, 'utf8').split('\n');
+for (let n = 0; n < lines.length; n++) {
+  const line = lines[n];
   if (!line.trim()) continue;
   let obj;
   try {
     obj = JSON.parse(line);
   } catch {
+    voids.push(`line ${n + 1} is not parseable JSON: the audit cannot see what it carried`);
     continue;
   }
   const content = obj?.message?.content;

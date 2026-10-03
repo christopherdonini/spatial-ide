@@ -152,3 +152,14 @@ test("T8: an agent id resolves under the main checkout's project slug", () => {
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('T9: VOID on an unparseable line, naming its line number', () => {
+  const good = JSON.stringify(use('Write', { file_path: ALLOWED }));
+  const truncated = JSON.stringify(use('Write', { file_path: 'C:/repo/other.md' })).slice(0, -6);
+  withFixture([good, truncated, ''].join('\n'), (f) => {
+    const { status, report } = run(f, ALLOWED);
+    assert.equal(status, 1);
+    assert.equal(report.verdict, 'VOID');
+    assert.match(report.voids.join(' '), /line 2 is not parseable/);
+  });
+});
