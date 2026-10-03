@@ -3169,7 +3169,8 @@ mod ticket_drop_under_lock_regression {
     /// test FAILED by timeout, on the "did not return within" message below — and so did
     /// `after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name`,
     /// which drives the same `StreamRegistry::cancel` call on a similarly-seeded ticket (correcting
-    /// this preregistration's Results section, which had said only this test failed).
+    /// `kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md`'s Results section, which had said only
+    /// this test failed).
     ///
     /// RECORDED MUTATION (B, reviewer should-fix, PR #116 attempt 1): replace the same line with
     /// `std::mem::forget(std::mem::replace(state, TicketState::CancelledBeforeRedeem { .. }))` —
@@ -3316,8 +3317,9 @@ mod ticket_drop_under_lock_regression {
     /// no mutation of its own, but two of `cancel`'s RECORDED MUTATIONs above also fail it when
     /// reintroduced, both observed once on this branch and reverted: (A) (drop-in-place under the
     /// lock, the original hang) hangs this test's own `cancel` call exactly as it hangs
-    /// `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` — correcting this
-    /// preregistration's Results section, which said only that test failed; (B) (forgetting the
+    /// `cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang` — correcting
+    /// `kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md`'s Results section, which said only that
+    /// test failed; (B) (forgetting the
     /// retired value) fails this test at its `expect_err` call below, where `viewport_query`
     /// returns `Ok` so the `refused.code` assertion is never reached: a forgotten `EngineSource`
     /// never ends the generation this test's `viewport_query` depends on refusing against.
