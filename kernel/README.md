@@ -168,7 +168,8 @@ its terminal (or, best-effort, on its drop), or the source watcher's signal. The
 is recorded; then, once per ended generation, one `DatasetSessionEnded` is offered to a bounded
 channel (`session_end_channel`, `SESSION_END_EVENT_QUEUE_BOUND`) that the shell drains into the
 `dataset_session_ended` event; then the generation's tickets are cancelled through
-`StreamRegistry::cancel`, the path a data-plane CANCEL reaches. The event is advisory: a full queue
+`StreamRegistry::cancel`. For a redeemed ticket, that call and a data-plane CANCEL converge at the
+producer's own `CancelToken`, each by its own route. The event is advisory: a full queue
 loses it and never blocks the end. The refusal is the authority: until the dataset is closed, every
 later `viewport_query` on it refuses with the end's own code (`engine.source_changed` or
 `engine.source_coverage_lost`), and so does the redemption of one of its tickets while the
@@ -233,10 +234,12 @@ that with a scan over this crate's own source.
 [`PERMISSION-BOUNDARY.md`](PERMISSION-BOUNDARY.md).** Three things from it are worth repeating here,
 because each is a place this table could be read as claiming more than is true:
 
-- **Nothing is exposed.** No SKP message is defined, nothing in `protocol/` is touched, and no
-  served surface reaches the operation. Whether ADR-017's "developer/test tooling until then" has
-  lapsed now that the machinery exists is a question flagged for the custodian, not one this cut
-  answers.
+- **No SKP message reaches it.** No SKP message is defined and nothing in `protocol/` is touched.
+  Two product callers reach the operation, both through `permission/boundary.rs`: this crate's
+  `publish-bundle` binary, and the shell's binding-local `binding_publish_*` commands
+  (`frontends/shell/src-tauri/src/publish.rs`). Whether ADR-017's "developer/test tooling until
+  then" has lapsed now that the machinery exists is a question flagged for the custodian, not one
+  this cut answers.
 - **At the command line the grant is self-minted, and in the default invocation it checks nothing** —
   both its halves are derived from the request it is authorizing. `--grant-destination` is the one
   part that is a real check. What gates a command-line publish is the approval and the audit record;
