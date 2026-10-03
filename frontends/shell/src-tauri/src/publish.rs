@@ -2612,4 +2612,131 @@ mod tests {
         assert!(ds.content_pin().is_none());
         assert_eq!(store.len(), 0);
     }
+
+    // ---------------------------------------------------------------------------------------
+    // publish-attempt-lifecycle-src-tauri: the grants lock, the registry, the exit drain
+    // ---------------------------------------------------------------------------------------
+
+    use std::sync::atomic::Ordering::SeqCst;
+
+    /// Holds one execute inside `publish_prepared` -- at its first `verifying-source` event, after
+    /// staging exists and before the first cancel check -- on a two-party barrier. No sleep, no
+    /// timing: the controlling side calls [`Park::wait_parked`], looks, then [`Park::release`].
+    struct Park {
+        barrier: std::sync::Barrier,
+        parked: std::sync::atomic::AtomicBool,
+    }
+
+    /// Dropped by the executing thread: if the execute ended (or panicked) without ever parking,
+    /// it takes both rendezvous itself, so the controlling side can never hang.
+    struct Settle<'a>(&'a Park);
+
+    impl Park {
+        fn new() -> Self {
+            Self {
+                barrier: std::sync::Barrier::new(2),
+                parked: std::sync::atomic::AtomicBool::new(false),
+            }
+        }
+        fn progress(&self, attempt_id: &str) -> impl publish::PublishProgress + '_ {
+            EventProgress::new(attempt_id.to_string(), move |e: PublishProgressEvent| {
+                if e.phase == "verifying-source" && !self.parked.swap(true, SeqCst) {
+                    self.barrier.wait();
+                    self.barrier.wait();
+                }
+            })
+        }
+        fn settle(&self) -> Settle<'_> {
+            Settle(self)
+        }
+        fn wait_parked(&self) {
+            self.barrier.wait();
+        }
+        fn release(&self) {
+            self.barrier.wait();
+        }
+        fn reached(&self) -> bool {
+            self.parked.load(SeqCst)
+        }
+    }
+
+    impl Drop for Settle<'_> {
+        fn drop(&mut self) {
+            if !self.0.parked.swap(true, SeqCst) {
+                self.0.barrier.wait();
+                self.0.barrier.wait();
+            }
+        }
+    }
+
+    /// F1 + F2: while publish A is parked inside `publish_prepared`, the shared grants mutex is
+    /// free, and a concurrent prepare of an unrelated dataset (F2, a second fixture in a
+    /// sub-directory) completes. The barrier is released before any assertion, and `prepare` is
+    /// called only after `try_lock` has proved the mutex free, so no mutation can hang this test.
+    #[test]
+    fn a_concurrent_prepare_is_not_held_behind_a_running_publishs_grant_lock() {
+        let _guard = env_lock();
+        let d = workspace("park-grants-lock");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let (grants, store, attempt_id, phrase) = prepared(&d, "park");
+        let second_dir = d.join("second");
+        std::fs::create_dir_all(&second_dir).unwrap();
+        let second_ds = fixture(&second_dir, 50);
+
+        let park = Park::new();
+        let progress = park.progress(&attempt_id);
+        let (lock_free, second, first) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let cancel = CancelToken::new();
+                execute_with_progress(
+                    &grants,
+                    &store,
+                    &attempt_id,
+                    &phrase,
+                    &cancel,
+                    Some(&progress),
+                )
+            });
+            park.wait_parked();
+            let lock_free = grants.try_lock().is_ok();
+            let second = lock_free.then(|| {
+                prepare(
+                    &grants,
+                    &store,
+                    second_ds,
+                    "parcels".into(),
+                    STYLE.into(),
+                    PublishScope::WholeFile,
+                    false,
+                    viewer(),
+                    viewer_license(),
+                    second_dir.join("out-second"),
+                    "2026-08-16T10:00:00Z".into(),
+                )
+            });
+            park.release();
+            (lock_free, second, a.join().unwrap())
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert!(
+            lock_free,
+            "try_lock found the shared grants mutex held while publish_prepared ran"
+        );
+        assert!(
+            matches!(second, Some(PrepareOutcome::Prompt { .. })),
+            "got {second:?}"
+        );
+        assert!(
+            matches!(first, ExecuteOutcome::Success { .. }),
+            "got {first:?}"
+        );
+    }
 }
