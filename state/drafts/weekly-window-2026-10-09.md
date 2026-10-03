@@ -119,6 +119,17 @@
   - **Amendment 1** (`lead-data` as its own type): 113,476 tokens, 25 tool uses, 352,242 ms. Write audit PASS, by the tracked script's first live use. C3 clean.
     - It makes T3's precondition deterministic by an in-place swap, and it is appended verbatim at 8195789b.
     - The custodian accepted class 1 for the re-declared setup.
+  - **Correction round 1** (the worker-high): 217,960 tokens, 26 tool uses, 987,140 ms. Every repetition passed: T3 100 of 100, P1 5 of 5, M1 to M3 15 of 15. The figure is 310 of 320.
+  - **Gate 2 (gate-log 375 and 376): PASS and PASS.**
+    - The architect confirms class 1 and class 2, and draft-caused. The Stop list does not engage: this is piece 1 of 4, and a further round on the same piece would not raise the count.
+    - The architect also records its own gate-1 miss of the assumption, as a gate miss and not a C4 class.
+    - Costs: the architect 103,407 tokens, 28 tool uses, 228,390 ms; the reviewer 104,682 tokens, 62 tool uses, 2,608,664 ms.
+  - **Node 9's measures so far:**
+    - lead-drafted;
+    - correction rounds: 1 before commit (draft 2) and 1 after gate 1, both draft-caused;
+    - index updated in its PR: yes (C1);
+    - index-wrong gate count: 0;
+    - human interventions attributable to the lead: none.
 - **`subagent-write-audit-script` (not a lead piece).**
   - Worker report 1 recorded verify-mutation at rc 0, but it was rc 1 at its commit.
   - The custodian's live check found the agent-id resolution failing from a worktree; the fix is at 47fe9e54.
