@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a99263e8ba49c668bc0ce9ace54924866950c653445e3c1d4343e7dcbe56cea4`) at `2026-10-03T08:17:52.331Z`.
+Generated from `PLAN.yaml` (sha256 `fae7cb2ac08585f5f25485a0ba08c89d6e992f1cf1222e6f1037e23ef243fea0`) at `2026-10-03T09:11:16.861Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update (lane `governance`, order 15, budget 120 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +23,7 @@ Generated from `PLAN.yaml` (sha256 `a99263e8ba49c668bc0ce9ace54924866950c653445e
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri
+- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri, lead-data-pilot-setup
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups

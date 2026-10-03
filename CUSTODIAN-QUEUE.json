@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-03T08:17:52.331Z",
-  "plan_hash": "a99263e8ba49c668bc0ce9ace54924866950c653445e3c1d4343e7dcbe56cea4",
+  "generated_at": "2026-10-03T09:11:16.861Z",
+  "plan_hash": "fae7cb2ac08585f5f25485a0ba08c89d6e992f1cf1222e6f1037e23ef243fea0",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "lead-data-pilot-setup",
+    "title": "The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 15,
+    "budget_minutes": 120,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-10-03",
+      "done": null
+    },
+    "summary": "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file."
+  },
+  "ready": [
+    {
+      "id": "lead-data-pilot-setup",
+      "title": "The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 15,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -161,9 +199,10 @@
         "opened": "2026-09-24",
         "done": null
       },
-      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes.",
+      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts.",
       "blocked_by": [
-        "publish-attempt-lifecycle-src-tauri"
+        "publish-attempt-lifecycle-src-tauri",
+        "lead-data-pilot-setup"
       ]
     },
     {
