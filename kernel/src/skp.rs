@@ -222,8 +222,9 @@ impl StreamRegistry {
     /// Without an entry point reachable *before* the lease, that lockout would be permanent rather
     /// than bounded by `TICKET_TTL`. Called at the top of `viewport_query`, before it leases.
     pub fn sweep_expired(&self) {
+        let swept;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        let swept = Self::sweep_locked(&mut tickets);
+        swept = Self::sweep_locked(&mut tickets);
         // Entry 132: release the lock before `swept`'s entries drop.
         drop(tickets);
         drop(swept);
@@ -237,8 +238,9 @@ impl StreamRegistry {
         source: Box<dyn BatchSource>,
         cancel: Arc<dyn SourceCancel>,
     ) -> Result<StreamHandle, SkpError> {
+        let swept;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        let swept = Self::sweep_locked(&mut tickets);
+        swept = Self::sweep_locked(&mut tickets);
         let pending_for_dataset = tickets
             .values()
             .filter(|s| matches!(s, TicketState::Pending { dataset: d, .. } if d == dataset))
@@ -270,8 +272,9 @@ impl StreamRegistry {
         &self,
         handle: &str,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+        let swept;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        let swept = Self::sweep_locked(&mut tickets);
+        swept = Self::sweep_locked(&mut tickets);
         let result = match tickets.get(handle) {
             None => Err(format!(
                 "ticket `{handle}` is unknown: never minted, already redeemed and gone, or \
@@ -310,14 +313,15 @@ impl StreamRegistry {
 
     /// Cancel one ticket by its [`StreamHandle`] string.
     pub fn cancel(&self, handle: &str) -> CancelOutcome {
+        let swept;
+        let mut retired: Option<TicketState> = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        let swept = Self::sweep_locked(&mut tickets);
+        swept = Self::sweep_locked(&mut tickets);
         // Entry 132: the retired `Pending` state (if any) is moved out here via `mem::replace`
         // rather than dropped by `*state = ..`'s implicit drop of the old value — the old value may
         // be a real `EngineSource` whose `Drop` re-enters this same method (through
         // `SessionInvalidator::end_generation`) when its post-check found a source change, and doing
         // that under this call's own lock is exactly entry 132's hang.
-        let mut retired: Option<TicketState> = None;
         let outcome = match tickets.get_mut(handle) {
             None => CancelOutcome::Unknown,
             Some(TicketState::CancelledBeforeRedeem { .. }) => CancelOutcome::AlreadyTerminal,
@@ -356,11 +360,12 @@ impl StreamRegistry {
 
     /// Cancel every ticket — pending or redeemed — for one dataset. Returns how many were.
     pub fn cancel_all_for_dataset(&self, dataset: &str) -> u32 {
+        let swept;
+        let mut retired: Vec<TicketState> = Vec::new();
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        let swept = Self::sweep_locked(&mut tickets);
+        swept = Self::sweep_locked(&mut tickets);
         // Entry 132: every retired `Pending` state is moved out here, for the same reason `cancel`
         // above moves its single one out — see that method's comment.
-        let mut retired: Vec<TicketState> = Vec::new();
         let mut n = 0u32;
         for state in tickets.values_mut() {
             match state {
