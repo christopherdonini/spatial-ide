@@ -3042,8 +3042,8 @@ mod tests {
     /// the release A takes the kernel's own cancelled `Err` arm: no staging entry, no destination,
     /// and the audit holds exactly the kernel's intent and a cancelled outcome. S2: cancel into
     /// staging and the audit outcome. The barrier is released before any assertion.
-    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b: an empty cancel_all.
-    // It failed at its Refused assertion, "got Some(Success { .. })": the publish ran to completion. Reverted.
+    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b and observed again at d0184eb, against the T4 that joins first: an empty cancel_all.
+    // At d0184eb it failed at its Refused assertion. The panic message begins with got Some(Success and goes on to print the publish's summary struct, so the publish ran to completion. Reverted.
     #[test]
     fn exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed() {
         let _guard = env_lock();
