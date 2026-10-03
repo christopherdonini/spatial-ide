@@ -518,3 +518,32 @@ Assertions only:
   - the custodian records E0 to E6.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index). Amendment 1 is P0b's record (§0.4); nothing precedes it.
+
+### Amendment 1 — P0b: the types read (class 1)
+
+Written after the read, before any code (a post-result amendment, §0.4). References only. The file read is `<skill-root>/types/claude-code.d.ts`, sha256 36af9e4799354bf878a91d1ea7c4632d0eca7c620b4557ace6afc8a87647cdb1, checked equal to §0.1's before the read. `claude --version` printed 2.1.288 (Claude Code), so I2 did not fire. No finding contradicts §2, so I1 did not fire.
+
+- **(i) PowerShell: typed.**
+  - The union is built per tool name from the built-in table: `<skill-root>/types/claude-code.d.ts:836-838`, `<skill-root>/types/claude-code.d.ts:11951`, `<skill-root>/types/claude-code.d.ts:11961`.
+  - Its entry is `<skill-root>/types/claude-code.d.ts:15440-15442`: the command field is `command`, a string, as Bash's is (`<skill-root>/types/claude-code.d.ts:15177-15179`).
+  - §2.2 and §2.0 therefore add `tool.call{tool=PowerShell}` and §4's T9 applies.
+- **(ii) MultiEdit: not typed. NotebookEdit: typed.**
+  - The string `MultiEdit` occurs nowhere in the file (a search over the file whose sha256 is the one above). The table's entries run from `<skill-root>/types/claude-code.d.ts:15414` (Monitor) to `<skill-root>/types/claude-code.d.ts:15427` (NotebookEdit) with no entry between them.
+  - NotebookEdit's entry is `<skill-root>/types/claude-code.d.ts:15427-15429`, and its path field is `notebook_path`. Edit's and Write's path field is `file_path`: `<skill-root>/types/claude-code.d.ts:15265-15271` and `<skill-root>/types/claude-code.d.ts:15752-15757`.
+  - §2.10's extension applies to NotebookEdit alone. No MultiEdit registration is written. G2, G3, G4 and G6 treat a NotebookEdit as an Edit that is not append-shaped, on `notebook_path`. T34 is written over NotebookEdit (fixture F9 through NotebookEdit; mutation: drop the NotebookEdit registration), because §4 names MultiEdit only as the case the extension would cover.
+- **(iii) The row type of `$.session.messages`.**
+  - A row is `{ role, text, toolUses }`, with `toolResults` optional on a user row: `<skill-root>/types/claude-code.d.ts:10449-10475`.
+  - With `{ agentId }` the call resolves the rows or `{ deny }`, and the doc says the newest 4096 entries come back: `<skill-root>/types/claude-code.d.ts:2535-2551`, `<skill-root>/types/claude-code.d.ts:10579-10586`.
+  - The types do not say the first row is the Agent call's prompt. §2.7's first-row reading is therefore the form's own, and E5 settles it live. G6 reads a `{ deny }` result, an empty list and a first row with no matching line alike as no REPORT PATH line, which refuses.
+- **(iv) The `context` field.**
+  - Its doc lines are `<skill-root>/types/claude-code.d.ts:12019-12027`: text the model reads after the tool's result and the user never sees, none from core, kept whole from `next`, no entry empty, cut past 100,000 (200,000 together).
+  - N1 appends one non-empty entry to the array it received, as §2.8 states.
+- **(v) The test kit, and the summary breakdown.**
+  - A test's `on` hooks sit beneath every plugin, and an unanswered event throws at the bottom: `<skill-root>/types/claude-code.d.ts:14915-14922`.
+  - `fs.stat`, `agent.list` and `session.messages` are each a call on `$` served as an event, whose hooks answer `{ value }` or `{ deny }` (the caller's promise then rejects: `<skill-root>/types/claude-code.d.ts:13698-13699`): the arguments at `<skill-root>/types/claude-code.d.ts:6633-6636`, `<skill-root>/types/claude-code.d.ts:6534` and `<skill-root>/types/claude-code.d.ts:6474`; the values at `<skill-root>/types/claude-code.d.ts:6820`, `<skill-root>/types/claude-code.d.ts:6789` and `<skill-root>/types/claude-code.d.ts:6761`; the result shape at `<skill-root>/types/claude-code.d.ts:6734-6737`.
+  - `fs.read`, `process.run` and `session.usage` are served the same way: `<skill-root>/types/claude-code.d.ts:6606-6609`, `<skill-root>/types/claude-code.d.ts:6706` and `<skill-root>/types/claude-code.d.ts:6496`.
+  - `{ breakdown: "summary" }` estimates locally and sends no request: `<skill-root>/types/claude-code.d.ts:11048-11056`.
+  - The breakdown carries `percentage`, `totalTokens` over `rawMaxTokens`, the compaction window: `<skill-root>/types/claude-code.d.ts:10195-10209`. It is present only when the call passed `breakdown` and a session is bound: `<skill-root>/types/claude-code.d.ts:10282-10288`.
+  - §2.8's summary-breakdown route applies, and `p` is `breakdown.percentage`. When `breakdown` is absent `p` is absent, and N1 returns `ran`. The plain `context.percent` route is not used, so the README carries no disclosure about it.
+
+**Superseded index.** None.
