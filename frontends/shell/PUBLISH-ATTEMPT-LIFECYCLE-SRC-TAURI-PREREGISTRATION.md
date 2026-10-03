@@ -369,3 +369,34 @@ Written after gate 3's results were seen (a post-result amendment). References o
 
 1. **In place of Amendment 2 item 1.** Amendment 1 item 4's Reason does not give §7's count. The corrected reference is S1-2 of `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-reviewer.md`. The proof is §7's own command over the ranges ff57832...4d92733 and ff57832...0391787.
 2. **Superseded index.** Amendment 2 item 1 is superseded by item 1 above. Nothing else is superseded.
+
+### Amendment 4 — the closing record (classes 1 and 3, references and hashes only)
+
+Written after the piece's results were seen and after its last merge (a post-result amendment). References and hashes only.
+
+1. **Merges.** Both are merge commits, so every branch commit is reachable from main.
+   - PR #163 merged on 2026-10-03 at 08:01:55Z as merge commit 4e3c8a8, at head 4d92733, before any gate report was filed.
+   - PR #165 merged at 10:01:20Z as merge commit 25d7507, at head f73befc.
+2. **Gate reports,** under `state/consults/gates/`, gates 1 to 4 for both roles: `2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-architect.md` and `...-gate1-reviewer.md`, and the same names for gates 2, 3 and 4.
+3. **§7:** Amendment 1 item 4, read through Amendment 3 item 1.
+4. **Mutations:**
+   - M1 to M6: the worker at c92b17b (`state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-worker-report-1.md`), and the gate-1 reviewer at 4d92733 (its report);
+   - M4 again: the worker at d0184eb (`state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-worker-report-2.md`), and the gate-2 reviewer at bfd68af (its report);
+   - P0: the worker and the gate-1 reviewer, at 6035fe7.
+5. **Class 3, M4's recorded test text** (round 14's test-text exception):
+   - superseded: `frontends/shell/src-tauri/src/publish.rs:3040-3041` @ 4d92733 sha256:5ab2119107877445acfece059e609c5ff94ecc33fd0ad1c045ee3b5ca6472ec4;
+   - replacement: `frontends/shell/src-tauri/src/publish.rs:3045-3046` @ 0391787 sha256:cecd692a6175192473604535a79fad60717cf7cb3dd674b98a2966afe5384524.
+6. **The reviewer's gate-2 S2-2 and S2-3:** `state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-reviewer.md`, findings S2-2 and S2-3.
+7. **KNOWN-LIMITATIONS 30 under §8 item 14.** The human's sight is asked as a question-round item: the OPEN 2026-10-03 entry in `DECISIONS-PENDING.md`. No merge is read as sight.
+8. **Row R1** is queued and unrun, as PLAN node `sitting-part-r-row-r1`. Neither the S3 seam nor Part R is discharged until its result log is filled.
+9. **Routed nodes:**
+   - `publish-lifecycle-drain-followups`, which also carries the gate-2 architect's S2-3 and S2-4;
+   - `audit-unknown-outcome-at-exit`;
+   - `shell-macos-last-window-convention`;
+   - `prepare-cancel-key-per-dataset`.
+10. **Tools,** each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202. A verify-mutation run is a tool run, not an observation.
+11. **Superseded index.**
+    - Amendment 1 item 3's statement of what T4 asserts is read through item 6 above.
+    - Amendment 1 item 7's T4 entry is read through item 6 above.
+    - Amendment 1 item 7's M4 entry is pinned by item 5 above.
+    - Nothing else is superseded.

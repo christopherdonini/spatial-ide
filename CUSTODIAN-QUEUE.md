@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6c87e0ebeb558369f427d8a58adecbc778973894e94f404f152dba352753a6ad`) at `2026-10-03T10:08:44.781Z`.
+Generated from `PLAN.yaml` (sha256 `9cd19ceead028b9c8ac46a963ad4dd875432b2bd2ee6c68a61bc993b62cbdc1c`) at `2026-10-03T10:13:22.803Z`.
 
 ## 1. Next
 
@@ -23,7 +23,7 @@ Generated from `PLAN.yaml` (sha256 `6c87e0ebeb558369f427d8a58adecbc778973894e94f
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: publish-attempt-lifecycle-src-tauri, lead-data-pilot-setup
+- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: lead-data-pilot-setup
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
@@ -35,7 +35,6 @@ Generated from `PLAN.yaml` (sha256 `6c87e0ebeb558369f427d8a58adecbc778973894e94f
 
 ## 5. In progress
 
-- **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — evidence: branch `cut/publish-attempt-lifecycle-src-tauri`
 - **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update — evidence: branch `cut/lead-data-pilot-setup`
 
 ## 6. Proposed / unscheduled
@@ -93,6 +92,7 @@ Generated from `PLAN.yaml` (sha256 `6c87e0ebeb558369f427d8a58adecbc778973894e94f
 - **publish-lifecycle-drain-followups** — Exit drain follow-ups -- an execute that registers after the drain began is not cancelled; Park/Settle can hang if the controlling test thread panics; run_exclusive removal is not RAII (phase `prototype`) — never queued until placed
 - **kernel-composed-ceiling-projected-stream** — The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6) (phase `prototype`) — never queued until placed
 - **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
+- **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

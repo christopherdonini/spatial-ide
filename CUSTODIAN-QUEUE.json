@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T10:08:44.781Z",
-  "plan_hash": "6c87e0ebeb558369f427d8a58adecbc778973894e94f404f152dba352753a6ad",
+  "generated_at": "2026-10-03T10:13:22.803Z",
+  "plan_hash": "9cd19ceead028b9c8ac46a963ad4dd875432b2bd2ee6c68a61bc993b62cbdc1c",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -163,7 +163,6 @@
       },
       "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts.",
       "blocked_by": [
-        "publish-attempt-lifecycle-src-tauri",
         "lead-data-pilot-setup"
       ]
     },
@@ -345,28 +344,6 @@
     }
   ],
   "in_progress": [
-    {
-      "id": "publish-attempt-lifecycle-src-tauri",
-      "title": "Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2)",
-      "lane": "publish-viewer",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 6,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/publish-attempt-lifecycle-src-tauri"
-      },
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling).",
-      "evidence_label": "branch `cut/publish-attempt-lifecycle-src-tauri`"
-    },
     {
       "id": "lead-data-pilot-setup",
       "title": "The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update",
@@ -1320,7 +1297,7 @@
         "opened": "2026-10-03",
         "done": null
       },
-      "summary": "Routed by PR #163 gate-1 reviewer (state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md), S2 items 1, 4 and 8, and the gate-1 architect S2-2: (1) cancel_all runs once, so an execute dispatched before the close that reaches try_insert after it is not cancelled (suggested: try_insert refuses or cancels at once once a drain has begun); (4) the Park/Settle helpers hang thread::scope if the controlling thread panics while the execute is parked (suggested: a release-on-drop guard on the controlling side); (8) run_exclusive skips its removal if the body panics or is dropped, and under the drain a leaked key now costs the 30 s ceiling (suggested: RAII removal). Item 1 is a behaviour change (class 9 inside node 8, so routed here). Full form; worker-high; R1-R6 apply."
+      "summary": "Routed by PR #163 gate-1 reviewer (state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md), S2 items 1, 4 and 8, and the gate-1 architect S2-2: (1) cancel_all runs once, so an execute dispatched before the close that reaches try_insert after it is not cancelled (suggested: try_insert refuses or cancels at once once a drain has begun); (4) the Park/Settle helpers hang thread::scope if the controlling thread panics while the execute is parked (suggested: a release-on-drop guard on the controlling side); (8) run_exclusive skips its removal if the body panics or is dropped, and under the drain a leaked key now costs the 30 s ceiling (suggested: RAII removal). Item 1 is a behaviour change (class 9 inside node 8, so routed here). Full form; worker-high; R1-R6 apply. Also carries PR #165's gate-2 architect S2-3 (KNOWN-LIMITATIONS 30 is silent on an execute that registers after the drain began; the fix's preregistration lists item 30 among the sentences it makes exact, or adds the case) and S2-4 (the HTML comment under item 30 attributes a phrase to the form in quotation marks; cite section 2 item 5, R5, without quotation marks) (state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate2-architect.md)."
     },
     {
       "id": "kernel-composed-ceiling-projected-stream",
@@ -1359,6 +1336,25 @@
         "done": null
       },
       "summary": "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form."
+    },
+    {
+      "id": "sitting-part-r-row-r1",
+      "title": "Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c))",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "sitting",
+        "minutes": 20
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "The queue entry for row R1 of frontends/shell/MANUAL-WALKTHROUGH.md, Part R (publish-attempt-lifecycle-src-tauri's operator row; question round 40, item 3: the exit seam is proved by the source read plus R1). Committed with a blank result log; Windows; the normal build. Accepting its result is the human's (a red line). Until its log is filled, neither the S3 seam nor Part R is discharged (node 8's closing record, the form Amendment 4). Its scheduling is the human's, in the batched operator sittings."
     }
   ],
   "unscheduled": [
