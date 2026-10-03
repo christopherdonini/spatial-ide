@@ -239,6 +239,7 @@ impl StreamRegistry {
         cancel: Arc<dyn SourceCancel>,
     ) -> Result<StreamHandle, SkpError> {
         let swept;
+        let mut prev = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
         swept = Self::sweep_locked(&mut tickets);
         let pending_for_dataset = tickets
@@ -249,7 +250,7 @@ impl StreamRegistry {
             Err(SkpError::too_many_pending_streams(MAX_PENDING_TICKETS))
         } else {
             let handle = StreamHandle::mint();
-            tickets.insert(
+            prev = tickets.insert(
                 handle.as_str().to_string(),
                 TicketState::Pending {
                     built: PendingBuilt { source, cancel },
@@ -262,6 +263,7 @@ impl StreamRegistry {
         // Entry 132: release the lock before `swept` (and, on the refusal arm, the un-inserted
         // `source`/`cancel` this call was passed) drop.
         drop(tickets);
+        debug_assert!(prev.is_none(), "mint: a fresh key displaced an entry");
         drop(swept);
         result
     }
@@ -273,6 +275,7 @@ impl StreamRegistry {
         handle: &str,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
         let swept;
+        let mut prev = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
         swept = Self::sweep_locked(&mut tickets);
         let result = match tickets.get(handle) {
@@ -293,7 +296,7 @@ impl StreamRegistry {
                 };
                 // Not a drop-under-lock: `built.source`/`built.cancel` are moved out into `result`
                 // below, owned by this function's caller once it unlocks — never dropped here.
-                tickets.insert(
+                prev = tickets.insert(
                     handle.to_string(),
                     TicketState::Redeemed {
                         dataset,
@@ -307,6 +310,7 @@ impl StreamRegistry {
         };
         // Entry 132: release the lock before `swept`'s entries drop.
         drop(tickets);
+        debug_assert!(prev.is_none(), "redeem: the re-insert displaced an entry");
         drop(swept);
         result
     }
