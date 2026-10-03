@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `469939a2277b06e686c5280766b8471627f9c2fcd2fb5f2e8f5ab31b6132ae35`) at `2026-10-03T06:19:32.873Z`.
+Generated from `PLAN.yaml` (sha256 `0890709d0c640638d08db92327f1ea2dd185bbbb290b86aa5997551ccd48486a`) at `2026-10-03T08:09:59.462Z`.
 
 ## 1. Next
 
@@ -89,6 +89,7 @@ Generated from `PLAN.yaml` (sha256 `469939a2277b06e686c5280766b8471627f9c2fcd2fb
 - **prepare-cancel-key-per-dataset** — Prepare cancel tokens are keyed by dataset handle, so two concurrent prepares on one dataset would replace and remove each other token (phase `prototype`) — never queued until placed
 - **audit-unknown-outcome-at-exit** — An explicit unknown audit outcome when a publish is cut off at the exit-drain ceiling (kernel and audit schema) (phase `prototype`) — never queued until placed
 - **shell-macos-last-window-convention** — The shell honours macOS convention that closing the last window does not quit (RunEvent::Reopen and window recreation) (phase `prototype`) — never queued until placed
+- **cfg-boundary-read-errors** — cfg-boundary skips any tracked file it cannot read, not only a missing one, so an unreadable file passes unscanned (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

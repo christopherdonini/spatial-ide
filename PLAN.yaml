@@ -3672,3 +3672,20 @@ nodes:
     entries: []
     summary: "Routed by publish-attempt-lifecycle-src-tauri revised drafting consult (state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-architect-draft-2.md, open point 1): the pinned tauri sources show the last-window close exits the app on every OS, macOS included; honouring the macOS keep-running convention (question round 40 item 1 condition (a) names it) needs a macOS-only RunEvent::Reopen path and window recreation, which is OS-keyed logic under portability R2 and a user-visible behaviour change: the human types the ruling at placement."
     dates: {opened: 2026-10-03, done: null}
+  - id: cfg-boundary-read-errors
+    title: "cfg-boundary skips any tracked file it cannot read, not only a missing one, so an unreadable file passes unscanned"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [port-1-linux-l1]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by PR #162 gate-1 reviewer, S2 item 4 (state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md): scripts/plan/cfg-boundary.mjs catches every read error of a listed file and continues, so an unreadable tracked file is skipped silently and the check can be green without scanning it. Narrowing the catch to a missing file needs a new stderr line, which PORT-1's section 7 does not declare, so it is a later piece, not a fix inside PORT-1. Short form; one script and its test; R1-R6 apply."
+    dates: {opened: 2026-10-03, done: null}
