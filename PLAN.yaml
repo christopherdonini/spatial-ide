@@ -3331,13 +3331,13 @@ nodes:
     kind: task
     lane: platform
     phase: prototype
-    status: ready
+    status: in-progress
     order: 2
     depends_on: [filter-bind-admission-implicit-coercions, workspace-rustfmt]
     needs_human: {kind: none, minutes: 0}
     gate: PORT-1-LINUX-L1-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/port-1-linux-l1}
     budget_minutes: 180
     generation: 1
     felt_verdict: false

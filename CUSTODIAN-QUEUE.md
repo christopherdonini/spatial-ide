@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c359534e13b92fbaf790790de7401f027ba8ff83eed60bc31f6c132ac63467ee`) at `2026-10-03T05:41:18.150Z`.
+Generated from `PLAN.yaml` (sha256 `712ea3dd6c92649a66fc7beb35f1534384d949c666ed3e3a3ef88a25205fd058`) at `2026-10-03T05:43:46.238Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `c359534e13b92fbaf790790de7401f027ba8ff83eed6
 ## 2. Ready
 
 - **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) (lane `publish-viewer`, order 6, budget 90 min)
-- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template (lane `platform`, order 2, budget 180 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -36,7 +35,7 @@ Generated from `PLAN.yaml` (sha256 `c359534e13b92fbaf790790de7401f027ba8ff83eed6
 
 ## 5. In progress
 
-- (none)
+- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — evidence: branch `cut/port-1-linux-l1`
 
 ## 6. Proposed / unscheduled
 
