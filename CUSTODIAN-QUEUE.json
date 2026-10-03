@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T05:43:46.238Z",
-  "plan_hash": "712ea3dd6c92649a66fc7beb35f1534384d949c666ed3e3a3ef88a25205fd058",
+  "generated_at": "2026-10-03T06:08:34.390Z",
+  "plan_hash": "694b517285ef893bd15514e9b8bccf5088109e246937ea35d690f03ac82f23b0",
   "priorities_approved": true,
   "next": {
     "id": "publish-attempt-lifecycle-src-tauri",
@@ -1241,6 +1241,25 @@
         "done": null
       },
       "summary": "Routed by port-1-linux-l1 drafting consult (state/consults/2026-10-02-port-1-linux-l1-architect-draft.md, point 6; its intake table): publish-bundle (kernel/src/bin/publish-bundle.rs) has no SIGTERM handling on unix (state/cloud/wave3/W3-A.md, observation 3). New cancellation behaviour under ADR-018, so out of port-1; placement is the human."
+    },
+    {
+      "id": "prepare-cancel-key-per-dataset",
+      "title": "Prepare cancel tokens are keyed by dataset handle, so two concurrent prepares on one dataset would replace and remove each other token",
+      "lane": "publish-viewer",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Found by publish-attempt-lifecycle-src-tauri drafting consult (state/consults/2026-10-03-publish-attempt-lifecycle-src-tauri-architect-draft.md, point Q4): with_registered_cancel keys the prepare token by prepare:<dataset_handle> (frontends/shell/src-tauri/src/publish.rs), so two concurrent prepares on one dataset would have node 8 defect 1 shape (replace and remove). Not verified whether the panel can issue two at once; verify first. A fix likely needs a new refusal string. Question round 40, item 4: recorded as its own proposed node; placement is the human."
     }
   ],
   "unscheduled": [

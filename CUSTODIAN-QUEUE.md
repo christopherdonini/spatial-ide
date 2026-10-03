@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `712ea3dd6c92649a66fc7beb35f1534384d949c666ed3e3a3ef88a25205fd058`) at `2026-10-03T05:43:46.238Z`.
+Generated from `PLAN.yaml` (sha256 `694b517285ef893bd15514e9b8bccf5088109e246937ea35d690f03ac82f23b0`) at `2026-10-03T06:08:34.390Z`.
 
 ## 1. Next
 
@@ -85,6 +85,7 @@ Generated from `PLAN.yaml` (sha256 `712ea3dd6c92649a66fc7beb35f1534384d949c666ed
 - **skp-closed-domain-response-strings** — Other SKP response fields with a closed value domain are still typed String on the reader (crs.source, identity.class, sanity.level and others) (phase `prototype`) — never queued until placed
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (phase `prototype`) — never queued until placed
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (phase `prototype`) — never queued until placed
+- **prepare-cancel-key-per-dataset** — Prepare cancel tokens are keyed by dataset handle, so two concurrent prepares on one dataset would replace and remove each other token (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
