@@ -95,3 +95,17 @@
 - **The question.** When lead-data drafts a five-line form, its Out-of-scope line decides between the single-gate route and the full route. `AUTONOMY.md` §21d makes that line the custodian's written claim. The human confirms that it stays so.
 - **Proposed reading.** It stays the custodian's claim. lead-data's draft line is a draft, which the custodian adopts or corrects before committing the form.
 - **Question round 42, item 2:** the setup is excluded from §5. The index-wrong count starts at 0 with node 9, the first measured piece. #166's gate-1 S1-1 stays above as a setup finding.
+- **Measured piece 1: node 9, `kernel-ticket-drop-followups`. Lead-drafted.**
+  - **Draft 1.** The `lead-data` agent type was not loaded when the draft was dispatched, so it ran as a general agent on opus under the agent file's body. The type became available mid-session, after main fast-forwarded past #166.
+    - Cost: 243,571 subagent tokens, 82 tool uses, 1,068,966 ms.
+    - Its files read are in its section 4.
+    - Write audit PASS. C3 clean.
+  - **The architect's consult** on the draft's three questions: 61,384 tokens, 19 tool uses, 134,698 ms. Write audit PASS.
+    - Q3: not crossing (C2), so the piece stays lead-drafted.
+    - Q2: the residual windows are acceptable, but the draft's list was incomplete, with two sites missed, and its headline lacked the qualifier.
+  - **Correction 1, before commit: draft-caused.** It counts against the lead under §5. The revision is draft 2, by `lead-data` as its own agent type.
+  - **Index-wrong count:** 0.
+- **`subagent-write-audit-script` (not a lead piece).**
+  - Worker report 1 recorded verify-mutation at rc 0, but it was rc 1 at its commit.
+  - The custodian's live check found the agent-id resolution failing from a worktree; the fix is at 47fe9e54.
+  - The final figure is 264 lines, against 250 declared (class 8).
