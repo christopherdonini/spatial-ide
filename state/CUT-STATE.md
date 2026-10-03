@@ -2012,3 +2012,8 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
     - The architect's write audit is PASS. Its C3 is clean of the architect: the one worktree difference was the parallel reviewer's mutation in progress.
   - **Worker report 3** is filed.
   - **After the merge:** the closing record, to the gate-2 architect's list. It references only: the reachable commits, the P1 branch named but not pinned, the gates, the observations and their CI runs, the size and the route.
+- 2026-10-03T17:52Z - **The 2026-10-03 Guardian v0 direction is filed** (the human's message at 17:49:41Z; RULED 2026-10-03).
+  - The brief, `state/directives/MODS-GUARDIAN-V0-2026-10-03.md`, is byte-identical to the source (sha256 6d156511…).
+  - `guardian-v0` is placed: governance, order 17, ready, beside node 10. P0 comes first, and the preregistration is architect-drafted.
+  - Installing it is a red line: it waits for the human's typed approval after both gates, and the human installs it.
+  - The human merged #168 at 17:48:00Z, as merge commit 844865e6. Node 9's close follows (step 2).

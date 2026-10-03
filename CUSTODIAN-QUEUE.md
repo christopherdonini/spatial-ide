@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a5db5023b1b4cd3c56716a2715631a50e74416ea33ffb0ff0513aa09eda8b385`) at `2026-10-03T16:33:12.238Z`.
+Generated from `PLAN.yaml` (sha256 `a89229ac66f60748cf8ff82d12504467fa3c3d91e996144d3c9b0351b56ed6c4`) at `2026-10-03T17:51:43.748Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`, order 17, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
 

@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-03T16:33:12.238Z",
-  "plan_hash": "a5db5023b1b4cd3c56716a2715631a50e74416ea33ffb0ff0513aa09eda8b385",
+  "generated_at": "2026-10-03T17:51:43.748Z",
+  "plan_hash": "a89229ac66f60748cf8ff82d12504467fa3c3d91e996144d3c9b0351b56ed6c4",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "guardian-v0",
+    "title": "Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
+    "lane": "governance",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 17,
+    "budget_minutes": 240,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-10-03",
+      "done": null
+    },
+    "summary": "Placed by the 2026-10-03 Guardian v0 direction (state/directives/2026-10-03-guardian-v0-direction.md; RULED 2026-10-03): governance, beside node 10 under the two-pieces limit. The brief is state/directives/MODS-GUARDIAN-V0-2026-10-03.md. P0 first: its section 3 questions answered against the installed build, recorded in the preregistration's section 0, before any code; rules the build cannot support are dropped from v0 as the brief says. Architect-drafted preregistration (the piece is not engine/ or kernel/ confined), full form and gates reviewer plus architect, with the claude plugin validate output in the PR body. Installing it is a security-posture change and a red line: it waits for the human's typed approval after both gates, and the human installs it."
+  },
+  "ready": [
+    {
+      "id": "guardian-v0",
+      "title": "Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 17,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Placed by the 2026-10-03 Guardian v0 direction (state/directives/2026-10-03-guardian-v0-direction.md; RULED 2026-10-03): governance, beside node 10 under the two-pieces limit. The brief is state/directives/MODS-GUARDIAN-V0-2026-10-03.md. P0 first: its section 3 questions answered against the installed build, recorded in the preregistration's section 0, before any code; rules the build cannot support are dropped from v0 as the brief says. Architect-drafted preregistration (the piece is not engine/ or kernel/ confined), full form and gates reviewer plus architect, with the claude plugin validate output in the PR body. Installing it is a security-posture change and a red line: it waits for the human's typed approval after both gates, and the human installs it."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
