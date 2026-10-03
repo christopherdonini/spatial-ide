@@ -152,3 +152,17 @@
   - Reviewers wrote theirs through the shell once the brief said so; one, before that, declined.
   - Architect reports stay messages: four this session, each saved from its hand-back.
 - **A finding for the window, not the trial: generation bumps lapsed.** §15 bumps a node's generation on any preregistration amendment. Recent pieces with several amendments stayed at generation 1, node 8 among them. #167's gate-2 architect (N-2) caught it on `subagent-write-audit-script`, which is now at 4; node 9 is at 2.
+
+### B1, continued (session 874d0083)
+
+- **The hand-over, 2026-10-03.** Session e12d1b11 handed over at the human's word at 18:06Z, and the human cleared the context. Session 874d0083 took the lease at 18:19Z. This is a hand-over, not a compaction, so it ends the interval running since 13:30Z (about 4.6 h) without a compaction; that interval is censored at the hand-over.
+- **Two pieces at once, from 18:23Z:** node 10 (engine; `engine/` paths) and `guardian-v0` (governance; `tools/mods/`). Disjoint paths. Neither touches `protocol/`, a wire fixture or a lockfile.
+- **The P0 worker's report goes to the custodian's scratchpad,** not the repository. The custodian files it, so that a lead-data or architect run's C3 snapshot of the checkout carries no parallel worker's file.
+
+### B2, continued — measured piece 2: node 10, `type-walk-null-literal-arithmetic`. Lead-drafted.
+
+- **Draft 1** (`lead-data` as its own agent type): 181,856 subagent tokens, 42 tool uses, 514,372 ms, from the harness's task notification. Its files read are in its section 4: 17 files by range, plus 4 grep-only reads, with the index cited instead of re-read for six named items.
+  - Write audit PASS (one Write, to its path). C3 clean (before 18:23:08Z, after 18:32:28Z).
+  - It proposes the full form, and reads the piece as confined by contract (C2), asking the custodian to confirm.
+  - **One blocking question, O-1:** whether the `conversion_can_fail` sentence is true for case (b). The node excludes a sixth reason and does not place admitting (b). It is a question about a human-typed string's truth, so it is not counted as a draft-caused correction.
+- **Index-wrong gate count:** 0.
