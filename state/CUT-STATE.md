@@ -1764,3 +1764,6 @@ Previous ledger: `state/cut-archive/CUT-STATE-2026-09-24-post-tag-arc.md` (the p
 - 2026-10-02T22:28Z - **#161's gate 2 is PASS on both sides at b42c0dc,** with CI green. It is ready for the human's click, merge commit only, and its PR body is updated.
   - **The filing.** The gate-2 reports are filed, and the gate-log holds 348 records.
   - **#160 and #161 both await the click.**
+- 2026-10-03T05:35Z - **#160 and #161 are merged** by the human: #160 at 05:32:23Z as merge commit d3ecb9e, and #161 at 05:32:38Z as merge commit 56264a6.
+  - **Main.** It carries `AUTONOMY.md` §30, and the Stop hook's continuity step is live from the main checkout.
+  - **This entry is deliberately entry-only,** with no flush, for #161's E2. The custodian ends the turn after pushing it, and the stop is predicted blocked with the stale-continuity reason.
