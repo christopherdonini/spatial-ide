@@ -292,7 +292,10 @@ mod tests {
 
     /// Two spellings of one destination normalize to one string, which is what makes two records
     /// of the same publish comparable.
-    #[cfg(windows)]
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only"
+    )]
     #[test]
     fn case_differences_collapse_on_windows() {
         assert_eq!(norm(r"c:\users\SOMEONE\out"), "<user-home>/out");

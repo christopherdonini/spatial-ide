@@ -64,7 +64,7 @@ const NONE = "cfg-boundary: 0 sites in 0 files, 0 outside every boundary\n";
 
 test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site", () => {
   // RECORDED MUTATION: the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_site
-  // (M1, engine/src/lod.rs dropped from the allowlist): TO BE RECORDED
+  // (M1, engine/src/lod.rs dropped from the allowlist): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/lod.rs:927 outside every boundary. Observed at 824d561.
   const r = run(ROOT);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.equal(r.stderr, "");
@@ -91,7 +91,7 @@ test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_sit
 
 test("a_planted_cfg_windows_in_a_shared_engine_module_fails_by_path", () => {
   // RECORDED MUTATION: a_planted_cfg_windows_in_a_shared_engine_module_fails_by_path
-  // (M2, attribute forms are not matched, only cfg!): TO BE RECORDED
+  // (M2, attribute forms are not matched, only cfg!): the first assertion, status 1 on the planted file, failed: actual 0, expected 1. Observed at 824d561.
   const original = fromHead("engine/src/predicate.rs");
   const lines = original.split("\n");
   const at = lines.findIndex((l) => /^pub (fn|struct|enum) /.test(l));
@@ -110,7 +110,7 @@ test("a_planted_cfg_windows_in_a_shared_engine_module_fails_by_path", () => {
 
 test("a_cfg_inside_a_cfg_test_module_is_test_code_and_one_after_it_is_not", () => {
   // RECORDED MUTATION: a_cfg_inside_a_cfg_test_module_is_test_code_and_one_after_it_is_not
-  // (M3, the test-module exclusion is removed): TO BE RECORDED
+  // (M3, the test-module exclusion is removed): the first assertion, status 0 on boundary.rs as read from HEAD, failed: actual 1 with the message cfg-boundary: kernel/src/permission/boundary.rs:537 outside every boundary. Observed at 824d561.
   const path = "kernel/src/permission/boundary.rs";
   const original = fromHead(path);
   withRepo({ [path]: original }, (dir) => {
@@ -133,7 +133,7 @@ test("a_cfg_inside_a_cfg_test_module_is_test_code_and_one_after_it_is_not", () =
 
 test("cfg_text_in_comments_and_string_literals_is_not_a_site", () => {
   // RECORDED MUTATION: cfg_text_in_comments_and_string_literals_is_not_a_site
-  // (M4, blanking is skipped): TO BE RECORDED
+  // (M4, blanking is skipped): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/shared.rs:1 outside every boundary. Observed at 824d561.
   const src = [
     "/// Docs may say #[cfg(windows)] and cfg!(unix) freely.",
     "// So may a line comment: #[cfg(target_os = \"linux\")]",
@@ -155,7 +155,7 @@ test("cfg_text_in_comments_and_string_literals_is_not_a_site", () => {
 
 test("every_cfg_form_naming_an_os_is_a_site", () => {
   // RECORDED MUTATION: every_cfg_form_naming_an_os_is_a_site
-  // (M5, target_os is removed from the token set): TO BE RECORDED
+  // (M5, target_os is removed from the token set): the stdout equality failed, the output lacking the cfg! line 2 and reporting 3 sites in place of 4. Observed at 824d561.
   const src = [
     "fn a() -> bool {",
     "    cfg!(target_os = \"macos\")",
@@ -183,7 +183,7 @@ test("every_cfg_form_naming_an_os_is_a_site", () => {
 
 test("test_targets_and_excluded_crates_are_not_scanned", () => {
   // RECORDED MUTATION: test_targets_and_excluded_crates_are_not_scanned
-  // (M6, the tests/ segment exclusion is removed): TO BE RECORDED
+  // (M6, the tests/ segment exclusion is removed): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/tests/x.rs:1 outside every boundary. Observed at 824d561.
   const planted = "#[cfg(windows)]\nfn x() {}\n";
   withRepo(
     {
@@ -202,7 +202,7 @@ test("test_targets_and_excluded_crates_are_not_scanned", () => {
 
 test("a_missing_file_list_or_an_argument_exits_2_with_the_fact_line", () => {
   // RECORDED MUTATION: a_missing_file_list_or_an_argument_exits_2_with_the_fact_line
-  // (M7, a failed git ls-files is read as an empty list): TO BE RECORDED
+  // (M7, a failed git ls-files is read as an empty list): the first assertion, status 2 outside a repository, failed: actual 0, expected 2. Observed at 824d561.
   const dir = mkdtempSync(join(tmpdir(), "cfg-boundary-norepo-"));
   try {
     const r = run(dir, [], { GIT_CEILING_DIRECTORIES: dirname(dir) });

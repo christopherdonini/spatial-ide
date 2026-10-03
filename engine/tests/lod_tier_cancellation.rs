@@ -131,7 +131,7 @@ fn cancel_from_another_thread<'a>(
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn cancel_observed_within_the_declared_ceiling() {
     let path = polygons_100k();

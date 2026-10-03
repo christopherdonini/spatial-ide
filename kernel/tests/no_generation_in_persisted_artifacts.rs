@@ -415,7 +415,7 @@ fn every_typed_string_a_session_log_line_can_carry_around_a_detected_change_has_
 #[test]
 #[cfg_attr(
     not(windows),
-    ignore = "needs the Windows-only LOD tier root (%LOCALAPPDATA%)"
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
 )]
 fn a_built_lod_tier_sets_manifest_and_tier_files_carry_no_generation_substring() {
     let d = workspace("lod-tiers");

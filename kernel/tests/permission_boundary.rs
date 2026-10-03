@@ -1054,7 +1054,7 @@ fn an_intent_without_an_outcome_is_a_readable_state_not_a_missing_record() {
 /// (`--release`, the same reason `kernel/tests/scale_pass.rs` needs it — a multi-million-row write
 /// on a debug build is not the point of this test).
 #[test]
-#[ignore]
+#[ignore = "release-only: needs a source above MAX_FEATURES rows; run by hand with --release -- --ignored"]
 fn an_adr_025_reader_ceiling_refusal_at_preflight_produces_no_audit_record() {
     let c = ceilings::reader_ceilings();
     let d = workspace("reader-ceiling-no-audit");
