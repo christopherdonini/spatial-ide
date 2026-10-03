@@ -149,16 +149,31 @@ enum TicketState {
 /// to each.
 #[derive(Default)]
 pub struct StreamRegistry {
-    /// **Invariant (architect, PR #116 attempt 1, S1): no `TicketState` is ever dropped while this
-    /// guard is held.** Every method below that removes or replaces an entry (`sweep_locked`,
-    /// `cancel`'s and `cancel_all_for_dataset`'s `Pending` arms) moves the retired value out —
-    /// `sweep_locked` into its returned `Vec`, `cancel`/`cancel_all_for_dataset` via
-    /// `mem::replace` — and every caller drops that moved-out value only after this guard is
-    /// released, before the method itself returns (see each method's own `// Entry 132` comment).
-    /// `mint` and `redeem` also call `insert` under this guard: `mint` always inserts a
-    /// freshly-minted [`StreamHandle`]'s key, and `redeem` inserts only immediately after removing
-    /// the same key — both calls' returned `Option<TicketState>` is therefore always `None`, so
-    /// neither call drops a live value via `insert`'s return.
+    /// **Invariant (architect, PR #116 attempt 1, S1; widened by
+    /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §2): no `TicketState`, and no other value
+    /// that owns an `EngineSource`, is dropped while this guard is held, on the return path or on an
+    /// unwind out of `SourceCancel::cancel` or `StreamHandle::mint`.** The values, by site:
+    /// - `sweep_locked`'s removed entries, moved into the `Vec` it returns (`swept` in each caller);
+    /// - the `Pending` state `cancel` or `cancel_all_for_dataset` retires, moved out by
+    ///   `mem::replace` (`retired`);
+    /// - the `Pending` entry `redeem` removes: its `built.source` and `built.cancel` move into
+    ///   `redeem`'s `Ok(..)` value, which its caller owns once the guard is released;
+    /// - `insert`'s return in `mint` and `redeem` (`prev`): `None` by construction (`mint` inserts a
+    ///   freshly minted [`StreamHandle`]'s key; `redeem` re-inserts the key it removed under the same
+    ///   guard), and `debug_assert`ed only after the guard is released;
+    /// - `mint`'s `source` and `cancel` when [`MAX_PENDING_TICKETS`] refuses them: parameters, which
+    ///   drop after every local of the body, the guard included.
+    ///
+    /// Each method declares those of `swept`, `retired` and `prev` it uses. It declares them before
+    /// it takes the guard, and locals drop in reverse order of declaration, so an unwind releases the
+    /// guard first. On the return path each method calls `drop(tickets)` before any of them drops.
+    /// The unwinds covered start in `SourceCancel::cancel`, the only call made under this guard
+    /// through a trait object, or in `StreamHandle::mint`, which `mint` calls while `source` is still
+    /// a parameter. Not covered: an unwind out of a std call while a value that owns an
+    /// `EngineSource` is in flight, as in `sweep_locked`'s `filter_map(..).collect()`,
+    /// `cancel_all_for_dataset`'s `retired.push(mem::replace(..))`, `redeem`'s `Pending` arm between
+    /// its `remove` and its `Ok(..)`, or `mint`'s `insert` call once `source` has moved into its
+    /// argument.
     tickets: Mutex<HashMap<String, TicketState>>,
 }
 
