@@ -42,6 +42,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -56,6 +57,7 @@ use spatial_kernel::publish::{
     self, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishRequest,
     ViewerAssets, ViewerLicenseInput, OPERATION_CLASS, REVERSIBILITY_CLASS,
 };
+use tokio::sync::watch;
 
 /// The declared bound on a **prepared** attempt's own lifecycle (ADR-010 rule 6: a ceiling with no
 /// number is not declared). **Not** the grant's own 20-minute ceiling
@@ -663,6 +665,22 @@ fn prepare_with_query(
 // execute
 // -------------------------------------------------------------------------------------------
 
+/// The grants one `boundary::execute` reads: a call-local copy of the found grant, or the shared set
+/// under its guard (the no-grant path — see [`execute_with_progress`]).
+enum Authority<'a> {
+    Local(GrantSet),
+    Shared(std::sync::MutexGuard<'a, GrantSet>),
+}
+
+impl Authority<'_> {
+    fn set(&self) -> &GrantSet {
+        match self {
+            Self::Local(set) => set,
+            Self::Shared(held) => held,
+        }
+    }
+}
+
 /// Take the pending attempt (single-use), open a **fresh** audit log for it alone (F-9), and run it
 /// through `permission::boundary::execute` with a [`ShellApproval`] carrying `typed_phrase`.
 /// `publish::publish_unguarded` is never referenced (`tests/sole_caller_scan.rs` asserts it crate-wide).
@@ -769,12 +787,35 @@ pub fn execute_with_progress(
     };
 
     let approval = ShellApproval::new(typed_phrase);
-    let held = grants.lock().unwrap_or_else(|e| e.into_inner());
-    let grantset: &GrantSet = &held;
+
+    // **The shared mutex is not held while `publish_prepared` runs** (invariant I2). One critical
+    // section finds this attempt's grant, copies it into a call-local set and removes it from the
+    // shared one; `boundary::execute` then runs against the local copy. If the shell's facts find no
+    // grant, the guard stays held and the boundary runs against the shared set, exactly as before:
+    // with equal facts it refuses at step 4, before `publish_prepared`, with the same error, audit
+    // `error_kind` and message.
+    let mut shared = grants.lock().unwrap_or_else(|e| e.into_inner());
+    let local = shared
+        .find(&facts, Instant::now())
+        .ok()
+        .cloned()
+        .and_then(|grant| {
+            let mut one = GrantSet::new();
+            one.add(grant).ok()?;
+            Some(one)
+        });
+    let authority = match local {
+        Some(one) => {
+            shared.remove_matching(&facts);
+            drop(shared);
+            Authority::Local(one)
+        }
+        None => Authority::Shared(shared),
+    };
 
     let attempt = PublishAttempt {
         request: &request,
-        grants: grantset,
+        grants: authority.set(),
         approval: &approval,
         principal: &pending.principal,
         audit: &audit,
@@ -786,10 +827,11 @@ pub fn execute_with_progress(
     // own — [`execute`] above supplies a throwaway token and `None`; `binding_publish_execute`
     // supplies the real [`RunningPublishes`]-registered token and an [`EventProgress`] sink.
     let boundary_outcome = boundary::execute(&attempt, cancel, progress);
-    // Release the read borrow before re-locking (mutably) to remove -- `held`/`grantset` are not
-    // used again below.
-    drop(held);
-    consume_grant();
+    // The `Shared` path consumes the grant under the guard it already holds; the `Local` path
+    // consumed it above, in the critical section that found it.
+    if let Authority::Shared(mut held) = authority {
+        held.remove_matching(&facts);
+    }
 
     match boundary_outcome {
         Ok(outcome) => ExecuteOutcome::Success {
@@ -979,15 +1021,52 @@ pub fn prepare_cancel_key(dataset_handle: &str) -> String {
     format!("{PREPARE_CANCEL_KEY_PREFIX}{dataset_handle}")
 }
 
-/// The registry `binding_publish_cancel` reaches into — a running publish's own [`CancelToken`],
-/// keyed by `attempt_id`, live only for the duration of one `execute_with_progress` call.
+/// The registry `binding_publish_cancel` reaches into — a running operation's own [`CancelToken`],
+/// keyed by `attempt_id` for an execute and by [`prepare_cancel_key`] for the prepare phase.
 /// **Not** [`PendingAttempts`]: that store holds an attempt BEFORE it starts running (single-use,
-/// consumed by `take`); this one holds a token WHILE it runs, inserted by the Tauri command
-/// wrapper immediately before the blocking call and removed immediately after, regardless of
-/// outcome — so a stale entry never outlives the call it belongs to.
-#[derive(Default)]
+/// consumed by `take`); this one holds a token WHILE it runs.
+///
+/// An execute key is registered by [`run_exclusive`] only if it is absent and removed only by the
+/// call that inserted it, so a second execute under a running attempt's id can neither replace nor
+/// remove the running token. The prepare key is registered by [`with_registered_cancel`], whose
+/// insert replaces. The entry count is also published on a `watch` channel, updated under the same
+/// mutex as every change, so [`Self::wait_idle`] loses no wakeup in any order.
 pub struct RunningPublishes {
     inner: Mutex<HashMap<String, CancelToken>>,
+    count: watch::Sender<usize>,
+    drain_begun: AtomicBool,
+}
+
+impl Default for RunningPublishes {
+    fn default() -> Self {
+        Self {
+            inner: Mutex::new(HashMap::new()),
+            count: watch::channel(0).0,
+            drain_begun: AtomicBool::new(false),
+        }
+    }
+}
+
+/// The declared ceiling on the wall time between `prevent_exit` and `app.exit` when the last window
+/// closes with a publish registered (the 2026-10-03 exit-drain ruling: 30 s; ADR-010 rule 6). A
+/// declared ceiling, not a measured bound: it does not bound the publish's own quiescence
+/// (ADR-018 §2), only how long the process waits for it.
+pub const EXIT_DRAIN_CEILING: Duration = Duration::from_secs(30);
+
+/// What [`RunningPublishes::on_exit_requested`] tells the event callback to do.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExitAction {
+    Proceed,
+    /// Every registered token was cancelled; the caller prevents the exit, waits on
+    /// [`RunningPublishes::wait_idle`] and then exits.
+    PreventAndDrain,
+}
+
+/// How [`RunningPublishes::wait_idle`] ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DrainOutcome {
+    Drained,
+    TimedOut,
 }
 
 impl RunningPublishes {
@@ -995,14 +1074,30 @@ impl RunningPublishes {
         Self::default()
     }
 
+    /// Registers `token`, replacing whatever is under the key. Only the prepare phase uses this
+    /// (see [`with_registered_cancel`]); an execute registers through [`Self::try_insert`].
     pub fn insert(&self, attempt_id: String, token: CancelToken) {
         let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         g.insert(attempt_id, token);
+        self.count.send_replace(g.len());
+    }
+
+    /// Registers `token` only if the key is absent; `false` leaves the registered token untouched.
+    /// The check and the insert are one critical section.
+    pub fn try_insert(&self, attempt_id: String, token: CancelToken) -> bool {
+        let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        if g.contains_key(&attempt_id) {
+            return false;
+        }
+        g.insert(attempt_id, token);
+        self.count.send_replace(g.len());
+        true
     }
 
     pub fn remove(&self, attempt_id: &str) {
         let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         g.remove(attempt_id);
+        self.count.send_replace(g.len());
     }
 
     /// `true` iff a running publish was found and cancelled. A miss (already finished, or an
@@ -1019,14 +1114,75 @@ impl RunningPublishes {
         }
     }
 
+    /// Cancels every registered token; returns how many were registered.
+    pub fn cancel_all(&self) -> usize {
+        let g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        g.values().for_each(CancelToken::cancel);
+        g.len()
+    }
+
+    /// Resolves once the registry is empty, or at `ceiling`. Reads the count through the `watch`
+    /// channel, so it returns at once on an already-empty registry and wakes on the last removal.
+    pub async fn wait_idle(&self, ceiling: Duration) -> DrainOutcome {
+        let mut rx = self.count.subscribe();
+        let idle = tokio::time::timeout(ceiling, rx.wait_for(|n| *n == 0)).await;
+        if idle.is_ok_and(|r| r.is_ok()) {
+            DrainOutcome::Drained
+        } else {
+            DrainOutcome::TimedOut
+        }
+    }
+
+    /// The last window closed. `Proceed` when nothing is registered or a drain has already begun;
+    /// otherwise cancels every registered token, records that a drain has begun and answers
+    /// `PreventAndDrain` — once per process.
+    pub fn on_exit_requested(&self) -> ExitAction {
+        let nothing_running = self
+            .inner
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty();
+        if nothing_running || self.drain_begun.swap(true, Ordering::SeqCst) {
+            return ExitAction::Proceed;
+        }
+        self.cancel_all();
+        ExitAction::PreventAndDrain
+    }
+
     #[cfg(test)]
     fn len(&self) -> usize {
         self.inner.lock().unwrap_or_else(|e| e.into_inner()).len()
     }
 }
 
+/// Register a fresh [`CancelToken`] under `key` only if the key is absent, run `body` with it and
+/// remove the key this call inserted. `None` — the key is registered by a running call — runs
+/// nothing and removes nothing: the running token stays the one `binding_publish_cancel` reaches.
+///
+/// An execute is single-use (`PendingAttempts::take`), so a second execute under a running attempt's
+/// id can only end as `UnknownAttempt`; refusing here leaves the frontend's Cancel, addressed by
+/// `attempt_id`, pointing at the run that exists. The check and the insert are one critical section
+/// ([`RunningPublishes::try_insert`]).
+pub async fn run_exclusive<T, Fut>(
+    running: &RunningPublishes,
+    key: &str,
+    body: impl FnOnce(CancelToken) -> Fut,
+) -> Option<T>
+where
+    Fut: std::future::Future<Output = T>,
+{
+    let cancel = CancelToken::new();
+    if !running.try_insert(key.to_string(), cancel.clone()) {
+        return None;
+    }
+    let out = body(cancel).await;
+    running.remove(key);
+    Some(out)
+}
+
 /// Register a fresh [`CancelToken`] under `key`, run `body` with it, and remove the key
-/// **unconditionally** afterwards, whatever `body` produced.
+/// **unconditionally** afterwards, whatever `body` produced. **The prepare phase only** — its insert
+/// replaces; an execute registers through [`run_exclusive`], which removes only the key it inserted.
 ///
 /// **M4, this batch's reviewer gate.** `binding_publish_prepare` hand-wrote this
 /// insert/await/remove sequence, and the removal — the thing that keeps a finished publish's token
@@ -2611,5 +2767,396 @@ mod tests {
         assert!(!rest.starts_with("publish."));
         assert!(ds.content_pin().is_none());
         assert_eq!(store.len(), 0);
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // publish-attempt-lifecycle-src-tauri: the grants lock, the registry, the exit drain
+    // ---------------------------------------------------------------------------------------
+
+    use std::sync::atomic::Ordering::SeqCst;
+
+    /// Holds one execute inside `publish_prepared` -- at its first `verifying-source` event, after
+    /// staging exists and before the first cancel check -- on a two-party barrier. No sleep, no
+    /// timing: the controlling side calls [`Park::wait_parked`], looks, then [`Park::release`].
+    struct Park {
+        barrier: std::sync::Barrier,
+        parked: std::sync::atomic::AtomicBool,
+    }
+
+    /// Dropped by the executing thread: if the execute ended (or panicked) without ever parking,
+    /// it takes both rendezvous itself, so the controlling side can never hang.
+    struct Settle<'a>(&'a Park);
+
+    impl Park {
+        fn new() -> Self {
+            Self {
+                barrier: std::sync::Barrier::new(2),
+                parked: std::sync::atomic::AtomicBool::new(false),
+            }
+        }
+        fn progress(&self, attempt_id: &str) -> impl publish::PublishProgress + '_ {
+            EventProgress::new(attempt_id.to_string(), move |e: PublishProgressEvent| {
+                if e.phase == "verifying-source" && !self.parked.swap(true, SeqCst) {
+                    self.barrier.wait();
+                    self.barrier.wait();
+                }
+            })
+        }
+        fn settle(&self) -> Settle<'_> {
+            Settle(self)
+        }
+        fn wait_parked(&self) {
+            self.barrier.wait();
+        }
+        fn release(&self) {
+            self.barrier.wait();
+        }
+        fn reached(&self) -> bool {
+            self.parked.load(SeqCst)
+        }
+    }
+
+    impl Drop for Settle<'_> {
+        fn drop(&mut self) {
+            if !self.0.parked.swap(true, SeqCst) {
+                self.0.barrier.wait();
+                self.0.barrier.wait();
+            }
+        }
+    }
+
+    /// F1 + F2: while publish A is parked inside `publish_prepared`, the shared grants mutex is
+    /// free, and a concurrent prepare of an unrelated dataset (F2, a second fixture in a
+    /// sub-directory) completes. The barrier is released before any assertion, and `prepare` is
+    /// called only after `try_lock` has proved the mutex free, so no mutation can hang this test.
+    // RECORDED MUTATION: a_concurrent_prepare_is_not_held_behind_a_running_publishs_grant_lock, M2, observed at c92b17b: in execute_with_progress, the guard held across boundary::execute (the base shape).
+    // It failed at its try_lock assertion, "try_lock found the shared grants mutex held while publish_prepared ran". Reverted.
+    // P0: at the base, ff57832, it failed at the same assertion (commit 6035fe7).
+    #[test]
+    fn a_concurrent_prepare_is_not_held_behind_a_running_publishs_grant_lock() {
+        let _guard = env_lock();
+        let d = workspace("park-grants-lock");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let (grants, store, attempt_id, phrase) = prepared(&d, "park");
+        let second_dir = d.join("second");
+        std::fs::create_dir_all(&second_dir).unwrap();
+        let second_ds = fixture(&second_dir, 50);
+
+        let park = Park::new();
+        let progress = park.progress(&attempt_id);
+        let (lock_free, second, first) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let cancel = CancelToken::new();
+                execute_with_progress(
+                    &grants,
+                    &store,
+                    &attempt_id,
+                    &phrase,
+                    &cancel,
+                    Some(&progress),
+                )
+            });
+            park.wait_parked();
+            let lock_free = grants.try_lock().is_ok();
+            let second = lock_free.then(|| {
+                prepare(
+                    &grants,
+                    &store,
+                    second_ds,
+                    "parcels".into(),
+                    STYLE.into(),
+                    PublishScope::WholeFile,
+                    false,
+                    viewer(),
+                    viewer_license(),
+                    second_dir.join("out-second"),
+                    "2026-08-16T10:00:00Z".into(),
+                )
+            });
+            park.release();
+            (lock_free, second, a.join().unwrap())
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert!(
+            lock_free,
+            "try_lock found the shared grants mutex held while publish_prepared ran"
+        );
+        assert!(
+            matches!(second, Some(PrepareOutcome::Prompt { .. })),
+            "got {second:?}"
+        );
+        assert!(
+            matches!(first, ExecuteOutcome::Success { .. }),
+            "got {first:?}"
+        );
+    }
+
+    /// F4: while a call holds an attempt id, a second `run_exclusive` under it returns `None`, runs
+    /// no body and removes nothing; the registered token is still the first call's.
+    // RECORDED MUTATION: a_second_execute_under_a_running_attempt_id_is_unknown_and_leaves_the_running_token_registered, M1, observed at c92b17b: in run_exclusive, an unconditional insert (the base shape) in place of try_insert.
+    // It failed at its first assertion, "the second call must be refused". Reverted.
+    #[tokio::test]
+    async fn a_second_execute_under_a_running_attempt_id_is_unknown_and_leaves_the_running_token_registered(
+    ) {
+        let running = RunningPublishes::new();
+        let second_body_ran = AtomicBool::new(false);
+        let (registry, ran) = (&running, &second_body_ran);
+        let first = run_exclusive(&running, "att_1", |first_token| async move {
+            let second = run_exclusive(registry, "att_1", |_| async move {
+                ran.store(true, Ordering::SeqCst);
+            })
+            .await;
+            let registered = registry.len();
+            let reachable = registry.cancel("att_1");
+            (second, registered, reachable, first_token.is_cancelled())
+        })
+        .await;
+
+        let (second, registered, reachable, first_token_cancelled) =
+            first.expect("the first call registers");
+        assert!(second.is_none(), "the second call must be refused");
+        assert!(
+            !second_body_ran.load(Ordering::SeqCst),
+            "a refused call must not run its body"
+        );
+        assert_eq!(registered, 1, "the running token must still be registered");
+        assert!(
+            reachable,
+            "the running token must still be reachable by key"
+        );
+        assert!(
+            first_token_cancelled,
+            "the key must still reach the FIRST call's token, not a replacement"
+        );
+        assert_eq!(running.len(), 0, "the first call removes its own key");
+    }
+
+    /// F1 + F3: attempts A and C are prepared against one destination, C while A is parked inside
+    /// `publish_prepared`. A's execute consumes A's grant in the critical section that found it, so
+    /// C's grant survives and C proceeds past the grant check to the kernel's own refusal that the
+    /// destination now exists. Same discipline as T2: the barrier is released before any assertion,
+    /// and C is prepared only after `try_lock` has proved the mutex free.
+    // RECORDED MUTATION: a_grant_added_while_a_publish_runs_survives_that_publishs_consumption, M3, observed at c92b17b: on the Ok path, remove_matching moved to after the boundary.
+    // It failed at its last assertion, "C's grant must have survived A's consumption", C being refused with "no grant authorizes". Reverted.
+    #[test]
+    fn a_grant_added_while_a_publish_runs_survives_that_publishs_consumption() {
+        let _guard = env_lock();
+        let d = workspace("park-grant-survives");
+        std::env::set_var(
+            spatial_kernel::permission::AUDIT_LOG_ENV,
+            d.join("audit.jsonl"),
+        );
+        let ds = fixture(&d, 50);
+        let dest = d.join("out-shared");
+        let grants = Mutex::new(GrantSet::new());
+        let store = PendingAttempts::new();
+        let prepare_one = || {
+            let outcome = prepare(
+                &grants,
+                &store,
+                ds.clone(),
+                "parcels".into(),
+                STYLE.into(),
+                PublishScope::WholeFile,
+                false,
+                viewer(),
+                viewer_license(),
+                dest.clone(),
+                "2026-08-16T10:00:00Z".into(),
+            );
+            let PrepareOutcome::Prompt { attempt_id, .. } = outcome else {
+                panic!("expected a prompt, got {outcome:?}")
+            };
+            attempt_id
+        };
+        let phrase = "out-shared";
+        let id_a = prepare_one();
+
+        let park = Park::new();
+        let progress = park.progress(&id_a);
+        let (lock_free, id_c, first) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let cancel = CancelToken::new();
+                execute_with_progress(&grants, &store, &id_a, phrase, &cancel, Some(&progress))
+            });
+            park.wait_parked();
+            let lock_free = grants.try_lock().is_ok();
+            let id_c = lock_free.then(&prepare_one);
+            park.release();
+            (lock_free, id_c, a.join().unwrap())
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert!(
+            lock_free,
+            "try_lock found the shared grants mutex held while publish_prepared ran"
+        );
+        assert!(
+            matches!(first, ExecuteOutcome::Success { .. }),
+            "got {first:?}"
+        );
+        let second = execute(&grants, &store, &id_c.expect("C was prepared"), phrase);
+        let ExecuteOutcome::Refused { message } = second else {
+            panic!("got {second:?}")
+        };
+        assert!(
+            message.starts_with("publish.destination_exists: "),
+            "C's grant must have survived A's consumption: {message}"
+        );
+    }
+
+    /// The `.<name>.staging-<hex>` entries the kernel has created beside `dest_name` in `parent`.
+    fn staging_entries(parent: &Path, dest_name: &str) -> usize {
+        let prefix = format!(".{dest_name}.staging-");
+        std::fs::read_dir(parent)
+            .unwrap()
+            .filter(|e| {
+                e.as_ref()
+                    .unwrap()
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(&prefix)
+            })
+            .count()
+    }
+
+    /// F1, registered through `run_exclusive`: while publish A is parked inside `publish_prepared`
+    /// (its staging directory exists, the positive control), `on_exit_requested` cancels it. After
+    /// the release A takes the kernel's own cancelled `Err` arm: no staging entry, no destination,
+    /// and the audit holds exactly the kernel's intent and a cancelled outcome. S2: cancel into
+    /// staging and the audit outcome. The barrier is released before any assertion.
+    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b: an empty cancel_all.
+    // It failed at its Refused assertion, "got Some(Success { .. })": the publish ran to completion. Reverted.
+    #[test]
+    fn exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed() {
+        let _guard = env_lock();
+        let d = workspace("exit-drain");
+        let log = d.join("audit.jsonl");
+        std::env::set_var(spatial_kernel::permission::AUDIT_LOG_ENV, &log);
+        let (grants, store, attempt_id, phrase) = prepared(&d, "exit");
+        let running = RunningPublishes::new();
+        let park = Park::new();
+        let progress = park.progress(&attempt_id);
+        let drain_rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .build()
+            .unwrap();
+
+        let (while_parked, registered, action, outcome, drained) = std::thread::scope(|s| {
+            let a = s.spawn(|| {
+                let _settle = park.settle();
+                let (g, st, id, ph, pr) = (&grants, &store, &attempt_id, &phrase, &progress);
+                tokio::runtime::Builder::new_current_thread()
+                    .build()
+                    .unwrap()
+                    .block_on(run_exclusive(&running, id, |cancel| async move {
+                        execute_with_progress(g, st, id, ph, &cancel, Some(pr))
+                    }))
+            });
+            park.wait_parked();
+            let while_parked = staging_entries(&d, "out-exit");
+            let registered = running.len();
+            let action = running.on_exit_requested();
+            park.release();
+            let drained = drain_rt.block_on(running.wait_idle(Duration::from_secs(60)));
+            (while_parked, registered, action, a.join().unwrap(), drained)
+        });
+
+        assert!(
+            park.reached(),
+            "the execute never reached its parking point"
+        );
+        assert_eq!(
+            while_parked, 1,
+            "positive control: staging exists while parked"
+        );
+        assert_eq!(
+            registered, 1,
+            "the running publish is registered while parked"
+        );
+        assert_eq!(action, ExitAction::PreventAndDrain);
+        let Some(ExecuteOutcome::Refused { message }) = outcome else {
+            panic!("got {outcome:?}")
+        };
+        assert!(message.starts_with("publish.cancelled: "), "{message}");
+        assert_eq!(drained, DrainOutcome::Drained);
+        assert_eq!(
+            staging_entries(&d, "out-exit"),
+            0,
+            "staging was left behind"
+        );
+        assert!(
+            !d.join("out-exit").exists(),
+            "a cancelled publish leaves no destination"
+        );
+        let raw = std::fs::read_to_string(&log).unwrap();
+        let records: Vec<serde_json::Value> = raw
+            .lines()
+            .map(|l| serde_json::from_str(l).unwrap())
+            .collect();
+        assert_eq!(
+            records.len(),
+            2,
+            "only the kernel's intent and outcome: {raw}"
+        );
+        assert_eq!(records[1]["phase"], "outcome", "{raw}");
+        assert_eq!(records[1]["outcome"], "cancelled", "{raw}");
+    }
+
+    /// F4: the drain returns when the registry empties, whichever of the last removal and the wait
+    /// comes first, and at its ceiling otherwise.
+    // RECORDED MUTATION: the_exit_drain_returns_when_the_registry_empties_and_at_its_ceiling_otherwise, M5, observed at c92b17b: wait_idle returns Drained without reading the count.
+    // It failed at its first assertion, "one entry left at a zero ceiling" (left: Drained, right: TimedOut). Reverted.
+    #[tokio::test]
+    async fn the_exit_drain_returns_when_the_registry_empties_and_at_its_ceiling_otherwise() {
+        let running = RunningPublishes::new();
+        running.insert("a".into(), CancelToken::new());
+        let at_ceiling = running.wait_idle(Duration::ZERO).await;
+        running.remove("a");
+        let remove_first = running.wait_idle(Duration::from_secs(60)).await;
+        running.insert("b".into(), CancelToken::new());
+        let (wait_first, ()) = tokio::join!(running.wait_idle(Duration::from_secs(60)), async {
+            tokio::task::yield_now().await;
+            running.remove("b");
+        });
+
+        assert_eq!(
+            at_ceiling,
+            DrainOutcome::TimedOut,
+            "one entry left at a zero ceiling"
+        );
+        assert_eq!(remove_first, DrainOutcome::Drained);
+        assert_eq!(wait_first, DrainOutcome::Drained);
+    }
+
+    /// F4: exit is prevented once, and only while something is registered.
+    // RECORDED MUTATION: exit_requested_prevents_exit_once_and_only_while_something_is_registered, M6, observed at c92b17b: the once-flag dropped from on_exit_requested.
+    // It failed at its last assertion, "a drain has already begun" (left: PreventAndDrain, right: Proceed). Reverted.
+    #[test]
+    fn exit_requested_prevents_exit_once_and_only_while_something_is_registered() {
+        let running = RunningPublishes::new();
+        let empty = running.on_exit_requested();
+        let token = CancelToken::new();
+        running.insert("a".into(), token.clone());
+        let first = running.on_exit_requested();
+        let cancelled = token.is_cancelled();
+        let second = running.on_exit_requested();
+
+        assert_eq!(empty, ExitAction::Proceed, "nothing registered");
+        assert_eq!(first, ExitAction::PreventAndDrain);
+        assert!(cancelled, "the registered token must be cancelled");
+        assert_eq!(second, ExitAction::Proceed, "a drain has already begun");
     }
 }

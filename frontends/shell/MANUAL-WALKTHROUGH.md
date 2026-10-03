@@ -1524,3 +1524,35 @@ Fill in after running the rows above.
 - **Last amendment read (its number):**
 - **Q1:**
 - **Q2:**
+
+---
+
+## Part R — closing the window during a publish, then relaunching at once (publish-attempt-lifecycle-src-tauri)
+
+This Part is the operator gate of `frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md` §9 (row R1), and the only proof of the exit seam in a running app (question round 40, item 3). It is discharged only once it has been run and its result log filled in. Windows only: nothing is claimed off Windows (§2 item 5, R5). **No duration is measured in any row or expected outcome** (`docs/08_Testing.md`; ADR-018): the 30 s wait is the declared ceiling, not a timing.
+
+**Before R1:**
+- Use the normal build, not the measure build (`npm run build:measure`), whose fixed CDP port two processes would contend for.
+- Build `npx tauri build --debug --no-bundle` and run the executable directly from `frontends/shell/src-tauri/target/debug/spatial-ide-shell.exe`, as Part M's M12 does for its mode 2, both times. Do not use `npm run tauri dev`: its dev server binds a fixed port (`strictPort`), so a second `tauri dev` started while the first is still alive would fail for a reason unrelated to this row.
+- Part H's 5 GB fixture and Part A's 100k fixture must exist (their fixture tables).
+- Show hidden items in File Explorer.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| R1 | **1.** Open `parcels-5gb.parquet` (Part H's H1). **2.** Click **Publish…**, choose **Current view** after sizing the viewport as H6 does (about 1/8 × 1/8 of the layer's extent, under about 300k rows: **Whole dataset** is refused before the pin at this size, Part M's M10), pick a fresh destination under `C:\dev\spatial-ide\target\`, and confirm. **3.** While the phase line reads `verifying-source` or `writing-partitions`, close the window with its close button. **4.** Relaunch the app at once, the same way it was launched. **5.** In the relaunched window, open `100k-happy-path.parquet` (Part A). **6.** Wait at least 30 s after the close. | **(i)** The relaunched app starts with no startup-refusal dialog, admits the 100k fixture and draws it (the data plane works). **(ii)** After the wait, only one instance of the app's process (`spatial-ide-shell.exe`) remains. **(iii)** The destination is absent, and with hidden items shown its parent holds no `.<name>.staging-*` entry. **(iv)** From `C:\dev\spatial-ide`, `target\debug\publish-bundle.exe --audit-show` reads that attempt as CANCELLED (Part H's H9 runs the same command), not as "no outcome (interrupted?)", and no line is reported corrupt. **(v)** `%LOCALAPPDATA%\dev.spatialide.shell\logs` holds two distinct `session-*.log` files for this sitting, one per process. A result of "no outcome (interrupted?)" together with a staging entry is the declared ceiling case (KNOWN-LIMITATIONS 30): record it as a deviation, never as a pass. If step 3's publish finished before the window could be closed, record that and repeat with a larger viewport. Row G9 is unchanged. |
+
+**If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. In R1, the deviations this row exists to catch are a refusal dialog or a failed draw in the relaunched app (i), a surviving or second process (ii), a leftover staging entry (iii), an attempt read as no outcome (iv), and a missing second session log (v).
+
+**Sitting estimate (scheduling only, not a claim about the app):** one sitting, a few minutes plus the 30 s wait.
+
+---
+
+## Result log
+
+Fill in after running the row above.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **R1:**
