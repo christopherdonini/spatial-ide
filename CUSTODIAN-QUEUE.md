@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a8c071d728bc700f8b28f91b87a5656a8a4157c8f2db6bfff1f3488e45896908`) at `2026-10-03T11:14:38.046Z`.
+Generated from `PLAN.yaml` (sha256 `39d7769e50b5c85f2369042af3110eb0777506574c758c812d1a878fc917b79e`) at `2026-10-03T11:49:25.154Z`.
 
 ## 1. Next
 
@@ -32,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `a8c071d728bc700f8b28f91b87a5656a8a4157c8f2db
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
+- **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) — blocked by: lead-data-pilot-setup
 
 ## 5. In progress
 
@@ -93,7 +94,6 @@ Generated from `PLAN.yaml` (sha256 `a8c071d728bc700f8b28f91b87a5656a8a4157c8f2db
 - **kernel-composed-ceiling-projected-stream** — The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6) (phase `prototype`) — never queued until placed
 - **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
-- **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

@@ -3756,7 +3756,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form."
+    summary: "Noted by lead-data report 1, section 6 (state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md), outside the setup's Scope. The lib.rs exposure statement waits on the OPEN 2026-10-03 entry on edit C8 (the publish-exposure bullet), which is the human's because the ADR-017 exposure-surface review is a red line. Docs only; a short form. Also, by PR #166's gate-2 architect N1 (state/consults/gates/2026-10-03-lead-data-pilot-setup-gate2-architect.md): kernel/PERMISSION-BOUNDARY.md's body and kernel/src/lib.rs's module doc still state the exposure position the kernel README's bullet corrects (question round 42, item 1: the shell's binding_publish_* commands are the UI surface ADR-017's acceptance condition was discharged for on 2026-08-17; publish-bundle stays developer/test tooling); the C8 wait is resolved."
     dates: {opened: 2026-10-03, done: null}
   - id: sitting-part-r-row-r1
     title: "Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c))"
@@ -3780,9 +3780,9 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
-    order: null
-    depends_on: []
+    status: blocked
+    order: 16
+    depends_on: [lead-data-pilot-setup]
     needs_human: {kind: none, minutes: 0}
     gate: none
     evidence: null
@@ -3790,5 +3790,5 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate."
+    summary: "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate. Placed by question round 42, item 3 (RULED 2026-10-03): governance order 16, after lead-data-pilot-setup in the same lane (the trial two-pieces rule bars two pieces in one lane); it runs beside node 9 once #166 merges."
     dates: {opened: 2026-10-03, done: null}
