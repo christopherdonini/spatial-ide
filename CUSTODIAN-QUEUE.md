@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `66e9fc8927fd48fe05971e3054f051f6e434feb31ed84dcf7ef55492a1804c7f`) at `2026-10-03T19:24:59.115Z`.
+Generated from `PLAN.yaml` (sha256 `73bd87c241fea88d57cb9b52be9648070231b85aa90ba9ae32aa2b4941291d02`) at `2026-10-03T19:45:25.282Z`.
 
 ## 1. Next
 
@@ -94,6 +94,7 @@ Generated from `PLAN.yaml` (sha256 `66e9fc8927fd48fe05971e3054f051f6e434feb31ed8
 - **module-docs-stale-statements** — Module docs that lag the tree -- engine/README.md calls ADR-013, ADR-015 and ADR-016 Proposed though their Status lines read Accepted; kernel/src/lib.rs's module doc carries the scope, only-place and exposure statements the kernel README now corrects (phase `prototype`) — never queued until placed
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
 - **profile-path-scan-stdin-mode** — The profile-path scanner gains a stdin mode, so a mod can run the scanner's own matcher on content not yet on disk (guardian-v0's G5, left out of v0 by round 43, item 3) (phase `prototype`) — never queued until placed
+- **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

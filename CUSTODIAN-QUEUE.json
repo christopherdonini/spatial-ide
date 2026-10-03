@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T19:24:59.115Z",
-  "plan_hash": "66e9fc8927fd48fe05971e3054f051f6e434feb31ed84dcf7ef55492a1804c7f",
+  "generated_at": "2026-10-03T19:45:25.282Z",
+  "plan_hash": "73bd87c241fea88d57cb9b52be9648070231b85aa90ba9ae32aa2b4941291d02",
   "priorities_approved": true,
   "next": {
     "id": "type-walk-null-literal-arithmetic",
@@ -1386,6 +1386,25 @@
         "done": null
       },
       "summary": "Proposed by question round 43, item 3 (RULED 2026-10-03): guardian-v0's G5 (refuse a Write or Edit whose new content holds a user-profile path, with the existing scanner's own matcher) leaves v0, because a mod cannot import scripts/hooks/profile-path-scan.mjs and the scanner reads content only from a file (state/consults/2026-10-03-guardian-v0-p0-report.md, section 7; state/consults/2026-10-03-guardian-v0-architect-draft.md, section 2.6 option a). The scanner's change is its own piece, under scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md; G5 then joins Guardian by its own amendment. Never queued until the human places it."
+    },
+    {
+      "id": "type-walk-rule2-residual-reasons",
+      "title": "Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
     }
   ],
   "unscheduled": [
