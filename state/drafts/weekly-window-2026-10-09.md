@@ -113,6 +113,12 @@
   - **Gate 1, the architect (#168, gate-log 372):** PASS, with no S1. It found the index update correct and complete, so the index-wrong gate count stays at 0.
     - Draft-caused items it would have caught at drafting, under C4: N1 (the doc paragraph running on), S2-1 (§5's README reasoning), S2-2 (no place named for O1's record) and N2 (a words-form pin). None is blocking, and none causes a correction round.
     - Cost: 127,157 tokens, 38 tool uses, 313,712 ms. Write audit PASS, C3 clean.
+  - **Gate 1, the reviewer (#168, gate-log 374):** FAIL. S1-1: T3 is flaky. Its re-key-P-only precondition fails about one run in four, so invalidator I4 fires.
+    - **Draft-caused** (C4): the precondition and its 2^-64 assumption were lead-data's drafted text. This is the lead's first draft-caused correction round. The stop rule is the lead's draft adding a correction round on two of four pieces.
+    - Reviewer cost: 130,926 tokens, 52 tool uses, 2,392,561 ms.
+  - **Amendment 1** (`lead-data` as its own type): 113,476 tokens, 25 tool uses, 352,242 ms. Write audit PASS, by the tracked script's first live use. C3 clean.
+    - It makes T3's precondition deterministic by an in-place swap, and it is appended verbatim at 8195789b.
+    - The custodian accepted class 1 for the re-declared setup.
 - **`subagent-write-audit-script` (not a lead piece).**
   - Worker report 1 recorded verify-mutation at rc 0, but it was rc 1 at its commit.
   - The custodian's live check found the agent-id resolution failing from a worktree; the fix is at 47fe9e54.

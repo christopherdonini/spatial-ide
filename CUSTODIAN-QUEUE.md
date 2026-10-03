@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fff9a426c31652784a28d6f5c04d1f0e37f336172aa85a8b19556daabc850d3e`) at `2026-10-03T15:26:06.653Z`.
+Generated from `PLAN.yaml` (sha256 `1d946d85ee6708a2790de10eced5dc41a369a638da706fac67daeba5419d9679`) at `2026-10-03T15:31:49.775Z`.
 
 ## 1. Next
 
-- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges (lane `governance`, order null, budget 15 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
