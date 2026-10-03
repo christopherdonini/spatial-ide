@@ -183,7 +183,7 @@ fn tna_named(
 
 /// Section 3's corpus, as amended (section 10 Amendments 1 and 3). One row per predicate; a row
 /// with several predicates in section 3's own table becomes several entries here, one per
-/// predicate, all carrying that row's own label for the report. Rows C39 to C46 are
+/// predicate, all carrying that row's own label for the report. Rows C39 to C47 are
 /// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3.
 fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
     use Predicted::Admitted;
@@ -340,7 +340,7 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
         ("C37", "i64 BETWEEN u64 AND 0.000000000000000001", Admitted),
         ("C38", "i16 BETWEEN i32 AND f64", Admitted),
         // `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3, rows C39 to
-        // C46 (C47 is open under that form's section 2.4, O-2, and is not here).
+        // C47 (C47 is O-2, ruled yes by question round 45, item 1).
         ("C39", "NULL + NULL > 0", Admitted),
         ("C40", "NULL - 0.5 > 0", Admitted),
         (
@@ -386,13 +386,15 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
             "NULL = 170141183460469231731687303715884105728",
             Admitted,
         ),
+        ("C47", "-(NULL - 0.5) > 0", Admitted),
+        ("C47", "NULL + (NULL - 0.5) > 0", Admitted),
     ]
 }
 
 /// B-T3 (section 4, as amended by section 10 Amendment 4). Section 3's table, cell by cell. C25
 /// also asserts `RejectedByBinder` with Display's prefix unchanged, and C27 asserts that
 /// `construct` names CAST. Mutation: `MAX_INTEGER_LITERAL_DIGITS` = 21. It fails by name on C14.
-/// Rows C39 to C46 are `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3;
+/// Rows C39 to C47 are `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3;
 /// its section 4 names mutations M1 to M5 for them.
 #[test]
 fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types() {
@@ -978,8 +980,8 @@ const BOUNDARY_MAGNITUDES: &[&str] = &[
 /// `BETWEEN` lists with `0.5` and with a scale-18 literal -- 8 columns x 8 literals x 5 forms = 320
 /// cases. It also carries the two Amendment 4 hypothesis pins whose own discriminator is named
 /// "B-T1 (i)": C32's second case (`-NULL > 0`, no column at all) and C37 (an integer `BETWEEN` a
-/// `UBIGINT` column bound and a decimal literal) -- 323 cases -- and the seven admitted pins of
-/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3 -- 330 cases in all.
+/// `UBIGINT` column bound and a decimal literal) -- 323 cases -- and the nine admitted pins of
+/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3 -- 332 cases in all.
 fn boundary_literal_cases() -> Vec<Case> {
     let int_cols: Vec<&str> = COLS
         .iter()
@@ -1038,8 +1040,8 @@ fn boundary_literal_cases() -> Vec<Case> {
         arith_op: None,
     });
     // `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3, B-T1 pins: the
-    // admitted new shapes C39, C40 and C44 (five), each with `arith_op` set as for C32's pin.
-    // C47's two pins are not here (that form's section 2.4, O-2, is open).
+    // admitted new shapes C39, C40, C44 (five) and C47 (two; O-2 ruled yes by question round 45,
+    // item 1), each with `arith_op` set as for C32's pin.
     for (label, predicate, arith_op) in [
         ("C39: NULL + NULL > 0", "NULL + NULL > 0", "+"),
         ("C40: NULL - 0.5 > 0", "NULL - 0.5 > 0", "-"),
@@ -1051,6 +1053,12 @@ fn boundary_literal_cases() -> Vec<Case> {
             "C44e: i64 BETWEEN NULL - 0.5 AND 1",
             "i64 BETWEEN NULL - 0.5 AND 1",
             "-",
+        ),
+        ("C47a: -(NULL - 0.5) > 0", "-(NULL - 0.5) > 0", "-"),
+        (
+            "C47b: NULL + (NULL - 0.5) > 0",
+            "NULL + (NULL - 0.5) > 0",
+            "+",
         ),
     ] {
         cases.push(Case {
@@ -1114,7 +1122,7 @@ fn between_triple_cases() -> Vec<Case> {
 /// B-T1 (section 4, as amended by section 10 Amendment 4). The enumeration is five parts, each
 /// counted and asserted separately: the probe set (7,620); discriminators.txt's N-ARY lists (18);
 /// the boundary literals with their negatives, bare and in mixed lists, plus the C32/C37 pins
-/// and the NULL-literal-arithmetic pins (330); the C23-shaped rows (16); and `BETWEEN` over every
+/// and the NULL-literal-arithmetic pins (332); the C23-shaped rows (16); and `BETWEEN` over every
 /// ordered triple of FX-1's twelve columns (1,728). FX-1 carries inf, -inf, nan and the maximum for both REAL and DOUBLE by
 /// construction (`FILTER_WITNESS_F32`/`FILTER_WITNESS_F64`). Amendment 4 moves check (ii) (the
 /// walk's arithmetic result type against the plan's `return_type`) to B-T1b
@@ -1154,7 +1162,7 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     let part3 = boundary_literal_cases();
     assert_eq!(
         part3.len(),
-        330,
+        332,
         "B-T1 enumeration part 3: boundary literals"
     );
     let part4 = c23_shaped_cases();
@@ -1173,7 +1181,7 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
         .chain(part4)
         .chain(part5)
         .collect();
-    assert_eq!(cases.len(), 9_712, "B-T1's five parts together");
+    assert_eq!(cases.len(), 9_714, "B-T1's five parts together");
 
     let mut admitted = 0usize;
     let mut refused = 0usize;

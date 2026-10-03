@@ -1962,12 +1962,13 @@ fn type_of_arithmetic(
     match admitted_arithmetic_result(&left, &right) {
         Some(ty) => {
             // section 2.2: a binary result is within bounds exactly when both operands are.
-            // section 2.3: a NULL literal beside a decimal literal within bounds is the one pair
-            // whose result counts as that decimal literal.
+            // section 2.3, as ruled by question round 45, item 1 (O-2): a NULL literal beside a
+            // decimal literal within bounds, or beside a result that already counts as one, is
+            // the pair whose result counts as that decimal literal.
             let is_decimal_literal_within_bounds = |t: &Typed| {
                 matches!(t.ty, EngineType::Decimal(..))
-                    && t.kind == OperandKind::Literal
-                    && t.within_bounds
+                    && ((t.kind == OperandKind::Literal && t.within_bounds)
+                        || t.counts_as_decimal_literal)
             };
             let counts_as_decimal_literal = (left.ty == EngineType::Null
                 && is_decimal_literal_within_bounds(&right))
