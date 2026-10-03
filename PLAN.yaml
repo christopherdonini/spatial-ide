@@ -3689,3 +3689,20 @@ nodes:
     entries: []
     summary: "Routed by PR #162 gate-1 reviewer, S2 item 4 (state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md): scripts/plan/cfg-boundary.mjs catches every read error of a listed file and continues, so an unreadable tracked file is skipped silently and the check can be green without scanning it. Narrowing the catch to a missing file needs a new stderr line, which PORT-1's section 7 does not declare, so it is a later piece, not a fix inside PORT-1. Short form; one script and its test; R1-R6 apply."
     dates: {opened: 2026-10-03, done: null}
+  - id: publish-lifecycle-drain-followups
+    title: "Exit drain follow-ups -- an execute that registers after the drain began is not cancelled; Park/Settle can hang if the controlling test thread panics; run_exclusive removal is not RAII"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [publish-attempt-lifecycle-src-tauri]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed by PR #163 gate-1 reviewer (state/consults/gates/2026-10-03-publish-attempt-lifecycle-src-tauri-gate1-reviewer.md), S2 items 1, 4 and 8, and the gate-1 architect S2-2: (1) cancel_all runs once, so an execute dispatched before the close that reaches try_insert after it is not cancelled (suggested: try_insert refuses or cancels at once once a drain has begun); (4) the Park/Settle helpers hang thread::scope if the controlling thread panics while the execute is parked (suggested: a release-on-drop guard on the controlling side); (8) run_exclusive skips its removal if the body panics or is dropped, and under the drain a leaked key now costs the 30 s ceiling (suggested: RAII removal). Item 1 is a behaviour change (class 9 inside node 8, so routed here). Full form; worker-high; R1-R6 apply."
+    dates: {opened: 2026-10-03, done: null}

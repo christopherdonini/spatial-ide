@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0890709d0c640638d08db92327f1ea2dd185bbbb290b86aa5997551ccd48486a`) at `2026-10-03T08:09:59.462Z`.
+Generated from `PLAN.yaml` (sha256 `a99263e8ba49c668bc0ce9ace54924866950c653445e3c1d4343e7dcbe56cea4`) at `2026-10-03T08:17:52.331Z`.
 
 ## 1. Next
 
@@ -90,6 +90,7 @@ Generated from `PLAN.yaml` (sha256 `0890709d0c640638d08db92327f1ea2dd185bbbb290b
 - **audit-unknown-outcome-at-exit** — An explicit unknown audit outcome when a publish is cut off at the exit-drain ceiling (kernel and audit schema) (phase `prototype`) — never queued until placed
 - **shell-macos-last-window-convention** — The shell honours macOS convention that closing the last window does not quit (RunEvent::Reopen and window recreation) (phase `prototype`) — never queued until placed
 - **cfg-boundary-read-errors** — cfg-boundary skips any tracked file it cannot read, not only a missing one, so an unreadable file passes unscanned (phase `prototype`) — never queued until placed
+- **publish-lifecycle-drain-followups** — Exit drain follow-ups -- an execute that registers after the drain began is not cancelled; Park/Settle can hang if the controlling test thread panics; run_exclusive removal is not RAII (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
