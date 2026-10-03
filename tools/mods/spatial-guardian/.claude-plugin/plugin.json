@@ -1,0 +1,7 @@
+{
+  "name": "spatial-guardian",
+  "description": "Guardian v0: a refuse-only mod for the Spatial IDE repository. It never approves a call, rewrites a call or makes a request, and every refusing hook fails closed.",
+  "author": {
+    "name": "Spatial IDE"
+  }
+}
