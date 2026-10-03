@@ -133,7 +133,7 @@ test("a_cfg_inside_a_cfg_test_module_is_test_code_and_one_after_it_is_not", () =
 
 test("cfg_text_in_comments_and_string_literals_is_not_a_site", () => {
   // RECORDED MUTATION: cfg_text_in_comments_and_string_literals_is_not_a_site
-  // (M4, blanking is skipped): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/src/shared.rs:1 outside every boundary. Observed at 824d561.
+  // (M4, blanking is skipped): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: the planted shared.rs reported outside every boundary at its line 1. Observed at 824d561.
   const src = [
     "/// Docs may say #[cfg(windows)] and cfg!(unix) freely.",
     "// So may a line comment: #[cfg(target_os = \"linux\")]",
@@ -183,7 +183,7 @@ test("every_cfg_form_naming_an_os_is_a_site", () => {
 
 test("test_targets_and_excluded_crates_are_not_scanned", () => {
   // RECORDED MUTATION: test_targets_and_excluded_crates_are_not_scanned
-  // (M6, the tests/ segment exclusion is removed): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: engine/tests/x.rs:1 outside every boundary. Observed at 824d561.
+  // (M6, the tests/ segment exclusion is removed): the first assertion, status 0, failed: actual 1 with the message cfg-boundary: the planted tests/x.rs reported outside every boundary at its line 1. Observed at 824d561.
   const planted = "#[cfg(windows)]\nfn x() {}\n";
   withRepo(
     {
