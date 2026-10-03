@@ -115,7 +115,9 @@ const bash = (command: string) => ({ tool: 'Bash', command })
 // G1
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the short-option cluster check dropped from pushArgumentsRefuse (the
+// `/^-[A-Za-z0-9]*[fd]/` line) -> fails: `G1 refuses --force, -f and a short-flag cluster holding f`.
+// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G1 refuses --force, -f and a short-flag cluster holding f', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --force', 'git push -f', 'git push -uf origin x']) {
@@ -123,7 +125,9 @@ test('G1 refuses --force, -f and a short-flag cluster holding f', async ($, on) 
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the --force-with-lease check matching only the bare spelling (the `=value` form
+// dropped) -> fails: `G1 refuses --force-with-lease, bare and with a value`. Observed at 54eba872 with
+// this change, claude --version 2.1.288 (Claude Code).
 test('G1 refuses --force-with-lease, bare and with a value', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --force-with-lease', 'git push --force-with-lease=main:abc']) {
@@ -131,19 +135,24 @@ test('G1 refuses --force-with-lease, bare and with a value', async ($, on) => {
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the `+` refspec check dropped from pushArgumentsRefuse -> fails: `G1 refuses a
+// refspec that begins with +`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude
+// Code).
 test('G1 refuses a refspec that begins with +', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push origin +main')), G1_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the `--mirror` check dropped from pushArgumentsRefuse -> fails: `G1 refuses
+// --mirror`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G1 refuses --mirror', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push --mirror')), G1_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the `:` refspec check dropped from pushArgumentsRefuse -> fails: `G1 refuses a
+// push that deletes a remote ref`. Observed at 54eba872 with this change, claude --version 2.1.288
+// (Claude Code).
 test('G1 refuses a push that deletes a remote ref', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --delete origin x', 'git push -d origin x', 'git push origin :x', 'git push --prune origin']) {
@@ -151,7 +160,10 @@ test('G1 refuses a push that deletes a remote ref', async ($, on) => {
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the nested rescan of a quoted token dropped from pushRefused (the
+// `pushRefused(token.value, depth + 1)` line) -> fails: `G1 finds the push after git global options
+// and inside a quoted command string`. Observed at 54eba872 with this change, claude --version 2.1.288
+// (Claude Code).
 test('G1 finds the push after git global options and inside a quoted command string', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git -C sub -c a=b push -f', 'bash -c "git push --force"']) {
@@ -159,13 +171,18 @@ test('G1 finds the push after git global options and inside a quoted command str
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: an unbalanced-quote segment that holds `push` read as no push (the
+// `text.includes('push')` line dropped) -> fails: `G1 refuses a push segment it cannot tokenise`.
+// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G1 refuses a push segment it cannot tokenise', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push "origin')), G1_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: pushRefused scanning the whole command as one segment (`for (const text of
+// [command])` in place of splitSegments) -> fails: `G1 allows an ordinary push and a force flag that
+// belongs to another command`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude
+// Code).
 test('G1 allows an ordinary push and a force flag that belongs to another command', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push -u origin b', 'git push && rm -f x', 'git commit -m "push -f"']) {
@@ -174,7 +191,9 @@ test('G1 allows an ordinary push and a force flag that belongs to another comman
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the PowerShell registration dropped from register() -> fails: `G1 refuses a
+// force-push through the PowerShell tool`. Observed at 54eba872 with this change, claude --version
+// 2.1.288 (Claude Code).
 test('G1 refuses a force-push through the PowerShell tool', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, { tool: 'PowerShell', command: 'git push --force' }), G1_REASON, probe)
@@ -188,7 +207,10 @@ test('G1 refuses a force-push through the PowerShell tool', async ($, on) => {
 
 const same = (path: string) => path
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G2's suffix compare made case-sensitive (it tests placed.real with separators
+// normalised but not lower-cased) -> fails: `G2 refuses a Write and an Edit to docs/01_Principles.md
+// in every spelling`, `G2 to G4 cover NotebookEdit`. Observed at 54eba872 with this change, claude
+// --version 2.1.288 (Claude Code).
 test('G2 refuses a Write and an Edit to docs/01_Principles.md in every spelling', async ($, on) => {
   const probe = arm(on, { stat: same })
   for (const file_path of ['C:\\r\\docs\\01_Principles.md', 'c:/r/DOCS/01_principles.md', 'C:/r\\docs/01_PRINCIPLES.MD']) {
@@ -197,7 +219,10 @@ test('G2 refuses a Write and an Edit to docs/01_Principles.md in every spelling'
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G2 matching on the `/docs/` segment (`norm.includes('/docs/')`) in place of the
+// suffix -> fails: `G2 allows a Write beside docs/01_Principles.md`, `G3 refuses an Edit to an
+// accepted ADR`, `G3 allows an Edit to a Proposed ADR and to an untracked preregistration`, `G2 to G4
+// cover NotebookEdit`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G2 allows a Write beside docs/01_Principles.md', async ($, on) => {
   const probe = arm(on, { stat: same })
   const input = { tool: 'Write', file_path: 'C:/r/docs/02_Architecture.md', content: 'x' }
@@ -223,14 +248,18 @@ function filesWorld(files: Record<string, string>, filed = 0): World {
   }
 }
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: an ADR protected only on a literal `Accepted —` in its text, in place of
+// isProposed -> fails: `G3 refuses an Edit to an accepted ADR`, `G2 to G4 cover NotebookEdit`.
+// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G3 refuses an Edit to an accepted ADR', async ($, on) => {
   const probe = arm(on, filesWorld({ [ADR_PATH]: ADR_ACCEPTED }))
   const input = { tool: 'Edit', file_path: ADR_PATH, old_string: 'Body.', new_string: 'Rewritten.' }
   expectRefused(await call($, input), G3_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G3's Write check using `includes` in place of `startsWith` -> fails: `G3 refuses
+// a Write that does not start with a filed preregistration's current bytes`. Observed at 54eba872 with
+// this change, claude --version 2.1.288 (Claude Code).
 test("G3 refuses a Write that does not start with a filed preregistration's current bytes", async ($, on) => {
   const probe = arm(on, filesWorld({ [PREREG_PATH]: PREREG }))
   // The new content holds the current bytes, but not at its start.
@@ -238,14 +267,19 @@ test("G3 refuses a Write that does not start with a filed preregistration's curr
   expectRefused(await call($, { tool: 'Write', file_path: PREREG_PATH, content: 'replaced\n' }), G3_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G3 refusing every Write to a protected file (`return true` in the write branch)
+// -> fails: `G3 allows a pure-append Write to a filed preregistration`, `G3 refuses when the current
+// bytes cannot be read`, `every process call is git and carries the declared timeout`. Observed at
+// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G3 allows a pure-append Write to a filed preregistration', async ($, on) => {
   const probe = arm(on, filesWorld({ [PREREG_PATH]: PREREG }))
   const input = { tool: 'Write', file_path: PREREG_PATH, content: `${PREREG}appended\n` }
   expectPassed(await call($, input), probe, input)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G3 ignoring cat-file's exit code (`isProtected = true`) -> fails: `G3 allows an
+// Edit to a Proposed ADR and to an untracked preregistration`. Observed at 54eba872 with this change,
+// claude --version 2.1.288 (Claude Code).
 test('G3 allows an Edit to a Proposed ADR and to an untracked preregistration', async ($, on) => {
   const proposedPath = 'C:\\r\\docs\\adr\\ADR-098-example.md'
   const probe = arm(on, filesWorld({ [proposedPath]: ADR_PROPOSED, [PREREG_PATH]: PREREG }, 128))
@@ -255,7 +289,9 @@ test('G3 allows an Edit to a Proposed ADR and to an untracked preregistration', 
   expectPassed(await call($, untracked), probe, untracked)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G3 catching the current-bytes read error and reading '' (the read's rejection
+// swallowed) -> fails: `G3 refuses when the current bytes cannot be read`. Observed at 54eba872 with
+// this change, claude --version 2.1.288 (Claude Code).
 test('G3 refuses when the current bytes cannot be read', async ($, on) => {
   const world = filesWorld({ [PREREG_PATH]: PREREG })
   world.read = () => undefined
@@ -263,7 +299,9 @@ test('G3 refuses when the current bytes cannot be read', async ($, on) => {
   expectRefused(await call($, { tool: 'Write', file_path: PREREG_PATH, content: `${PREREG}appended\n` }), CATCH_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the `text.endsWith(old)` check dropped from the Edit append test -> fails: `G3
+// allows an Edit that only appends at the end of a filed preregistration`. Observed at 54eba872 with
+// this change, claude --version 2.1.288 (Claude Code).
 test('G3 allows an Edit that only appends at the end of a filed preregistration', async ($, on) => {
   const probe = arm(on, filesWorld({ [PREREG_PATH]: PREREG }))
   const append = { tool: 'Edit', file_path: PREREG_PATH, old_string: 'last line\n', new_string: 'last line\nan addition\n' }
@@ -281,14 +319,18 @@ test('G3 allows an Edit that only appends at the end of a filed preregistration'
 
 const DIRECTIVE = 'C:\\r\\state\\directives\\x.md'
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G4 refusing an Edit only (the `placed.exists` Write branch dropped) -> fails: `G4
+// refuses a Write to an existing directive and any Edit under state/directives/`. Observed at 54eba872
+// with this change, claude --version 2.1.288 (Claude Code).
 test('G4 refuses a Write to an existing directive and any Edit under state/directives/', async ($, on) => {
   const probe = arm(on, { stat: (path) => (path === DIRECTIVE ? path : undefined) })
   expectRefused(await call($, { tool: 'Write', file_path: DIRECTIVE, content: 'x' }), G4_REASON, probe)
   expectRefused(await call($, { tool: 'Edit', file_path: DIRECTIVE, old_string: 'a', new_string: 'b' }), G4_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G4 refusing on the `/state/directives/` segment alone (the Write-creates-new-file
+// allowance dropped) -> fails: `G4 allows a Write that creates a new directive`. Observed at 54eba872
+// with this change, claude --version 2.1.288 (Claude Code).
 test('G4 allows a Write that creates a new directive', async ($, on) => {
   const probe = arm(on, newFileWorld(['C:\\r\\state\\directives'], {}))
   const input = { tool: 'Write', file_path: 'C:\\r\\state\\directives\\y.md', content: 'new' }
@@ -299,7 +341,9 @@ test('G4 allows a Write that creates a new directive', async ($, on) => {
 // Placement
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: an unplaceable path treated as unprotected (`return next(e)` in place of the
+// UNPLACEABLE deny) -> fails: `Write and Edit refuse a path that cannot be placed`. Observed at
+// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('Write and Edit refuse a path that cannot be placed', async ($, on) => {
   // No file system answer is registered: an unplaceable spelling makes no call.
   const probe = arm(on, {})
@@ -333,7 +377,9 @@ function newFileWorld(folders: string[], extra: Partial<World>): World {
 
 const asSubagent = (input: Record<string, unknown>, agentId: string) => ({ ...input, agentId }) as never
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G6 comparing basenames only -> fails: `G6 refuses a lead-data Write outside its
+// declared REPORT PATH`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude
+// Code).
 test('G6 refuses a lead-data Write outside its declared REPORT PATH', async ($, on) => {
   const probe = arm(
     on,
@@ -348,7 +394,9 @@ test('G6 refuses a lead-data Write outside its declared REPORT PATH', async ($, 
   }
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G6 comparing the placed paths case-sensitively (the normalise call dropped from
+// the compare) -> fails: `G6 allows a lead-data Write to its declared REPORT PATH`. Observed at
+// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G6 allows a lead-data Write to its declared REPORT PATH', async ($, on) => {
   const probe = arm(
     on,
@@ -361,7 +409,9 @@ test('G6 allows a lead-data Write to its declared REPORT PATH', async ($, on) =>
   expectPassed(await call($, asSubagent(input, 'a1')), probe, input)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: a brief with no REPORT PATH line read as allow (zero matches return undefined) ->
+// fails: `G6 refuses every Write by an architect run whose brief declares no REPORT PATH`. Observed at
+// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G6 refuses every Write by an architect run whose brief declares no REPORT PATH', async ($, on) => {
   const probe = arm(
     on,
@@ -373,7 +423,9 @@ test('G6 refuses every Write by an architect run whose brief declares no REPORT 
   expectRefused(await call($, asSubagent({ tool: 'Write', file_path: REPORT, content: 'x' }, 'a2')), G6_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: G6 applied to every listed agent type (the report-only type check dropped) ->
+// fails: `G6 leaves other subagents, unlisted agent ids and the main loop to the other rules`.
+// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G6 leaves other subagents, unlisted agent ids and the main loop to the other rules', async ($, on) => {
   // No messages answer is registered: G6 reads a brief only for a listed report-only type.
   const probe = arm(on, newFileWorld(['C:\\r\\notes'], { agents: [agentRow('a3', 'worker')] }))
@@ -389,14 +441,20 @@ test('G6 leaves other subagents, unlisted agent ids and the main loop to the oth
 // Fail closed
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the Write registration's `.catch` removed -> fails: `G3 refuses when the current
+// bytes cannot be read`, `a refusing hook that throws is refused by its catch`, `a refusing hook whose
+// process call times out is refused`. Observed at 54eba872 with this change, claude --version 2.1.288
+// (Claude Code).
 test('a refusing hook that throws is refused by its catch', async ($, on) => {
   // process.run is not answered, so G3's filed-preregistration check throws.
   const probe = arm(on, { stat: same, read: () => PREREG })
   expectRefused(await call($, { tool: 'Write', file_path: PREREG_PATH, content: `${PREREG}appended\n` }), CATCH_REASON, probe)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the Write registration's `.catch` returning undefined (`.catch(() => undefined)`)
+// -> fails: `G3 refuses when the current bytes cannot be read`, `a refusing hook that throws is
+// refused by its catch`, `a refusing hook whose process call times out is refused`. Observed at
+// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('a refusing hook whose process call times out is refused', async ($, on) => {
   const probe = arm(on, { stat: same, read: () => PREREG, proc: () => undefined })
   expectRefused(await call($, { tool: 'Write', file_path: PREREG_PATH, content: `${PREREG}appended\n` }), CATCH_REASON, probe)
@@ -425,7 +483,9 @@ function gitWorld(state: { c: string; p?: string }, catFile = 0): (argv: readonl
 
 const N1_LINE = (n: string) => `Context at ${n}%: flush the continuity block now (rewrite, commit, push), then continue.`
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: `timeoutMs` dropped from N1's git adapter (`$.process.run(['git', ...args])`) ->
+// fails: `every process call is git and carries the declared timeout`. Observed at 54eba872 with this
+// change, claude --version 2.1.288 (Claude Code).
 test('every process call is git and carries the declared timeout', async ($, on) => {
   const state = { c: FLUSH_A, p: FLUSH_A }
   const world: World = { stat: same, read: () => PREREG, proc: gitWorld(state), percent: 85 }
@@ -456,7 +516,9 @@ async function bashAt($: any, world: World, percent: number | undefined) {
   return call($, bash('git status'))
 }
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: `<=` in place of `<` in N1's threshold test (a fill of exactly 80 reads as below)
+// -> fails: `N1 appends no line below 80 percent and one line at 80 percent on a stale block`.
+// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('N1 appends no line below 80 percent and one line at 80 percent on a stale block', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -467,7 +529,9 @@ test('N1 appends no line below 80 percent and one line at 80 percent on a stale 
   expect(at.context).toEqual([N1_LINE('80')])
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: N1 never recording a shown band (`shownBands.add(band)` dropped) -> fails: `N1
+// appends at most one line per 10-point band`. Observed at 54eba872 with this change, claude --version
+// 2.1.288 (Claude Code).
 test('N1 appends at most one line per 10-point band', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -477,7 +541,10 @@ test('N1 appends at most one line per 10-point band', async ($, on) => {
   expect(lines).toEqual([[N1_LINE('81')], undefined, undefined, [N1_LINE('90')]])
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: N1 skipping judgeContinuity and treating every block as stale (`const verdict = {
+// judged: true, stale: true }`) -> fails: `every process call is git and carries the declared
+// timeout`, `N1 appends nothing on a fresh block`. Observed at 54eba872 with this change, claude
+// --version 2.1.288 (Claude Code).
 test('N1 appends nothing on a fresh block', async ($, on) => {
   const state: { c: string; p?: string } = { c: FLUSH_B, p: FLUSH_A } // a flush-only ledger commit
   const world: World = { proc: gitWorld(state) }
@@ -488,7 +555,9 @@ test('N1 appends nothing on a fresh block', async ($, on) => {
   expect((await bashAt($, world, 85)).context).toBeUndefined()
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the `agentId` check dropped from N1's early return -> fails: `N1 appends nothing
+// for a subagent call or a refused call`. Observed at 54eba872 with this change, claude --version
+// 2.1.288 (Claude Code).
 test('N1 appends nothing for a subagent call or a refused call', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }), percent: 85 }
   const probe = arm(on, world)
@@ -501,7 +570,9 @@ test('N1 appends nothing for a subagent call or a refused call', async ($, on) =
   expect(probe.procs.length).toBe(0)
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: N1 never clearing shownBands below the threshold (`shownBands.clear()` dropped)
+// -> fails: `N1 clears its bands after the fill falls below 80 percent`. Observed at 54eba872 with
+// this change, claude --version 2.1.288 (Claude Code).
 test('N1 clears its bands after the fill falls below 80 percent', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -511,7 +582,9 @@ test('N1 clears its bands after the fill falls below 80 percent', async ($, on) 
   expect(lines).toEqual([[N1_LINE('85')], undefined, [N1_LINE('85')]])
 })
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: an unrounded percent in N1_TEXT (`Math.round(p)` replaced by `p`) -> fails: `N1's
+// line is the declared text with the integer percent`. Observed at 54eba872 with this change, claude
+// --version 2.1.288 (Claude Code).
 test("N1's line is the declared text with the integer percent", async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -523,7 +596,8 @@ test("N1's line is the declared text with the integer percent", async ($, on) =>
 // NotebookEdit
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: the NotebookEdit registration dropped from register() -> fails: `G2 to G4 cover
+// NotebookEdit`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
 test('G2 to G4 cover NotebookEdit', async ($, on) => {
   const files = { [ADR_PATH]: ADR_ACCEPTED, [DIRECTIVE]: 'x', 'C:\\r\\docs\\01_Principles.md': 'x' }
   const probe = arm(on, filesWorld(files))

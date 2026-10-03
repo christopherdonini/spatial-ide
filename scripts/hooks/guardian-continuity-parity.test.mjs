@@ -307,7 +307,15 @@ after(() => {
   for (const dir of dirs) fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
 });
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: continuity.mjs reading a failed `git log` as judged fresh (`if (c === null)
+// return { judged: true, stale: false }`) -> fails: `PS4a`, `guardian parity: the mod's stale-block
+// check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
+// this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
+// RECORDED MUTATION: in the working tree only and reverted, never committed: stop-queue.mjs's
+// judgeContinuity comparison inverted (`stale: current.flushedAt !== parent.flushedAt`) -> fails:
+// `PS1`, `PS2`, `PS3`, `PS5`, `PS6`, `PS8`, `PS9`, `PS10`, `guardian parity: the mod's stale-block
+// check and the Stop hook's stale-continuity check agree on every fixture`. Observed at 54eba872 with
+// this change, node --version v24.18.1 and git --version 2.49.0.windows.1.
 test("guardian parity: the mod's stale-block check and the Stop hook's stale-continuity check agree on every fixture", async (t) => {
   assert.deepEqual(
     FIXTURES.map((fx) => fx.id),
@@ -326,7 +334,10 @@ test("guardian parity: the mod's stale-block check and the Stop hook's stale-con
   }
 });
 
-// RECORDED MUTATION: PENDING
+// RECORDED MUTATION: every fixture's build replaced by PS7's (`fx.build(dir)` replaced by
+// `FIXTURES.find((f) => f.id === 'PS7').build(dir)`) -> fails: `guardian parity: the fixture set
+// reaches stale, fresh and not judged on the Stop hook`. Observed at 54eba872 with this change, node
+// --version v24.18.1 and git --version 2.49.0.windows.1.
 test('guardian parity: the fixture set reaches stale, fresh and not judged on the Stop hook', async () => {
   const results = await computeAll();
   const reached = new Set([...results.values()].map((r) => r.stop));
