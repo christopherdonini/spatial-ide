@@ -801,6 +801,8 @@ pub fn execute_with_progress(
         .cloned()
         .and_then(|grant| {
             let mut one = GrantSet::new();
+            // `add` refuses only at the kernel's grant ceiling, and a fresh set is below it, so
+            // the `None` here is unreachable and the `Shared` fallback below is not taken from it.
             one.add(grant).ok()?;
             Some(one)
         });
@@ -1062,7 +1064,8 @@ pub enum ExitAction {
     PreventAndDrain,
 }
 
-/// How [`RunningPublishes::wait_idle`] ended.
+/// How [`RunningPublishes::wait_idle`] ended. Only tests read it: the product caller in `lib.rs`
+/// discards the value and exits either way.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DrainOutcome {
     Drained,
@@ -1135,7 +1138,9 @@ impl RunningPublishes {
 
     /// The last window closed. `Proceed` when nothing is registered or a drain has already begun;
     /// otherwise cancels every registered token, records that a drain has begun and answers
-    /// `PreventAndDrain` — once per process.
+    /// `PreventAndDrain` — once per process. While a drain is in progress the drain's own exit is
+    /// the only permitted caller of an exit: a second exit request answers `Proceed` and goes
+    /// through.
     pub fn on_exit_requested(&self) -> ExitAction {
         let nothing_running = self
             .inner
