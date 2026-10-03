@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T12:50:14.077Z",
-  "plan_hash": "67f01bbe64635a3519a41e439dc6e413392f1104b8cdea74fbb4ca1680509ec7",
+  "generated_at": "2026-10-03T12:54:55.369Z",
+  "plan_hash": "3267888c7dc3e3341424aa0f7f4d5f23bf8f54674137bcba5d01c0307dd8d611",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6082,7 +6082,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 16,
       "depends_on": [
         "lead-data-pilot-setup"
@@ -6091,8 +6091,10 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md",
+      "evidence": {
+        "branch": "cut/subagent-write-audit-script"
+      },
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,

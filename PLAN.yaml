@@ -3780,12 +3780,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 16
     depends_on: [lead-data-pilot-setup]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md
+    evidence: {branch: cut/subagent-write-audit-script}
     budget_minutes: 60
     generation: 1
     felt_verdict: false

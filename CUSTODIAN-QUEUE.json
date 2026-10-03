@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T12:50:13.915Z",
-  "plan_hash": "67f01bbe64635a3519a41e439dc6e413392f1104b8cdea74fbb4ca1680509ec7",
+  "generated_at": "2026-10-03T12:54:55.208Z",
+  "plan_hash": "3267888c7dc3e3341424aa0f7f4d5f23bf8f54674137bcba5d01c0307dd8d611",
   "priorities_approved": true,
   "next": {
     "id": "kernel-ticket-drop-followups",
@@ -40,25 +40,6 @@
         "done": null
       },
       "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts."
-    },
-    {
-      "id": "subagent-write-audit-script",
-      "title": "The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 16,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-03",
-        "done": null
-      },
-      "summary": "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate. Placed by question round 42, item 3 (RULED 2026-10-03): governance order 16, after lead-data-pilot-setup in the same lane (the trial two-pieces rule bars two pieces in one lane); it runs beside node 9 once #166 merges."
     }
   ],
   "waiting_on_human": {
@@ -378,7 +359,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "subagent-write-audit-script",
+      "title": "The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 16,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/subagent-write-audit-script"
+      },
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate. Placed by question round 42, item 3 (RULED 2026-10-03): governance order 16, after lead-data-pilot-setup in the same lane (the trial two-pieces rule bars two pieces in one lane); it runs beside node 9 once #166 merges.",
+      "evidence_label": "branch `cut/subagent-write-audit-script`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
