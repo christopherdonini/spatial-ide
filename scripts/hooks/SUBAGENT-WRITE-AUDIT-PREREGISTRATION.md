@@ -81,3 +81,17 @@ Amendment: classes 9, 3 and 1 -- scope addition on AUTONOMY.md §14 (the sibling
 - **Follow-ups, for the closing record:**
   - N-2, a read error other than ENOENT exits 1 without JSON;
   - the gate-2 reviewer's N-2: verify-mutation's 500-character window constrains the order of comments.
+
+Amendment: classes 1, 3 and 6 -- budget deviation, Scope not edited; the record reduced to references by the architect under the record cap, item 3 (`state/directives/2026-09-18-record-cap.md`), after correction round 2. Written after gate 3 (a post-result amendment). References only.
+- **Defects named by gate 3:** D1, the third Amendment's test-text correction names its span without a commit id (round 25, item 2 (d)); D2, its superseded index is incomplete (round 12 (e)); D3, its S2-5 discharge names no record (round 7). Source: `state/consults/gates/2026-10-03-subagent-write-audit-script-gate3-architect.md`, S1.
+- **Class 3, test text (D1).** Superseded: line 5 of `scripts/hooks/subagent-write-audit.test.mjs` at 8173b1e6. Replaced by: line 5 of the same file at f1e39550. The hash pin follows on main after the merge, as round 25, item 2 (d) orders.
+- **Class 6, the final figure.** Declared 250; final 309 (118 and 191) over the same 2 files at f1e39550, by §21c's counting rule, this form excluded. Reason: the first Amendment's, the third Amendment's Corrections, and the third Amendment's class 9. Count: `state/consults/gates/2026-10-03-subagent-write-audit-script-gate3-reviewer.md`.
+- **S2-5 (D3):** `state/consults/gates/2026-10-03-subagent-write-audit-script-gate2-reviewer.md`, Checklist results item 1; at head, `state/consults/2026-10-03-subagent-write-audit-script-worker-report-5.md`, Live runs, and the gate-3 reviewer's report.
+- **Gate 3:** `state/gate-log.json`, node subagent-write-audit-script, attempt 3, architect and reviewer.
+- **Superseded index (D2), completing the third Amendment's:**
+  - the Change line's PASS condition: by the third Amendment's class 9;
+  - the second Amendment's "Final: 293 lines": by this Amendment's class 6;
+  - line 5 of the test file at 8173b1e6: by this Amendment's class 3;
+  - the third Amendment's "Nothing else is superseded" and its S2-5 sentences: by this Amendment.
+- **Routed:** the first Amendment's "Mutations added", `DECISIONS-PENDING.md` entry "OPEN 2026-10-03 — the write-audit form's unclassed "Mutations added" bullet".
+- **Follow-ups:** the third Amendment's two; the class-3 hash pin, carried by its PLAN node.
