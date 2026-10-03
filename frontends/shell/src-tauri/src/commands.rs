@@ -246,9 +246,10 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 ///
 /// **RELEASE-0.1 item 10's own wiring.** A fresh [`CancelToken`] is minted and registered in
 /// [`RunningPublishes`] under [`publish::prepare_cancel_key`] BEFORE the blocking call starts and
-/// removed unconditionally after, whatever the outcome — the SAME `RunningPublishes` precedent
-/// `binding_publish_execute` below established for the execute phase, written once as
-/// [`publish::with_registered_cancel`]. Pin progress crosses as the SAME
+/// removed unconditionally after, whatever the outcome, written once as
+/// [`publish::with_registered_cancel`]. The execute phase does not share that shape:
+/// `binding_publish_execute` below registers only when the key is absent and removes only the key
+/// it inserted ([`publish::run_exclusive`]). Pin progress crosses as the SAME
 /// [`publish::PUBLISH_PROGRESS_EVENT`] via a [`publish::PublishProgressEvent`] carrying
 /// [`publish::PIN_PHASE_LABEL`] and the bytes-hashed fraction, `attempt_id` set to the prepare key
 /// (no real `attempt_id` exists yet at this point — `publish::prepare_cancel_key`'s own doc

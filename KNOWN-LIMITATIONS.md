@@ -316,13 +316,18 @@ header above describes. They move into the next release's list when that release
 30. **A publish interrupted by an exit the app does not drain can leave a hidden staging directory
     beside its destination, and the audit then shows the attempt with no outcome.** When the last
     window is closed while a publish is running, the app cancels it and waits for it to stop, for at
-    most 30 seconds; the publish removes its own staging directory and the audit records an outcome of
-    cancelled. The app does not do that, and the publish is not cancelled, in these cases: the
-    application menu's Quit on macOS, a SIGTERM, a logout or shutdown, a forced kill or power loss,
-    and a publish that has not stopped when the 30 seconds end. After any of them a directory named
-    `.<destination name>.staging-<hex>` can remain in the destination's parent folder; nothing removes
-    it, and it is safe to delete. The audit then shows the attempt as its intent with no outcome,
-    which `--audit-show` prints as "no outcome (interrupted?)", because the app cannot yet record
-    "unknown" explicitly. Only Windows has been exercised. On macOS and Linux the app also quits when
-    its last window closes; it does not follow macOS's convention of staying running.
-    <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md §1 "May not claim", its last bullet and the paragraph beneath it; §2 item 4; §2 item 5's R3 table, its Exit rows). Authority: the 2026-10-03 exit-drain ruling, condition (b) (state/directives/2026-10-03-exit-drain-ruling.md); question round 40, item 1. The macOS and Linux sentence is the form's own "not verified" for those platforms (§2 item 5, R5), not a measurement. -->
+    most 30 seconds. If it stops within that time, the publish removes its own staging directory and
+    the audit records an outcome of cancelled. The audit does not always record cancelled: a cancel
+    that arrives after the publish's last cancel check lets the publish finish, and the audit then
+    records its normal outcome. The app does not drain, and the publish is not cancelled, in these
+    cases: the application menu's Quit on macOS, a SIGTERM, a logout or shutdown, and a forced kill
+    or power loss. A separate case is a publish that has not stopped when the 30 seconds end. That
+    publish was cancelled; it had not finished stopping, and the process exits anyway. After any of
+    these a directory named `.<destination name>.staging-<hex>` can remain in the destination's parent
+    folder; nothing removes it, and it is safe to delete. The audit then shows the attempt as its
+    intent with no outcome, which `--audit-show` prints as "no outcome (interrupted?)", because the
+    app cannot yet record "unknown" explicitly. Only Windows has been exercised. The Tauri shell has
+    no support level on macOS or Linux (item 1). What follows is a reading of the pinned Tauri
+    sources, not an observation: on macOS and Linux the app also quits when its last window closes;
+    it does not follow macOS's convention of staying running.
+    <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md §1 "May not claim", its last bullet and the paragraph beneath it; §2 item 4; §2 item 5's R3 table, its Exit rows). Authority: the 2026-10-03 exit-drain ruling, condition (b) (state/directives/2026-10-03-exit-drain-ruling.md); question round 40, item 1. The macOS and Linux sentence is the form's own "not verified" for those platforms (§2 item 5, R5), not a measurement. Round-1 revision (the correction round after the gate-1 reports on PR #163): the 30-second case is its own sentence and no longer in the list of exits where the publish is not cancelled; the cancel-after-last-check case is stated; the macOS and Linux sentence is marked as a reading of the source. -->

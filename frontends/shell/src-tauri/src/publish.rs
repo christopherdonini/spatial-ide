@@ -801,6 +801,8 @@ pub fn execute_with_progress(
         .cloned()
         .and_then(|grant| {
             let mut one = GrantSet::new();
+            // `add` refuses only at the kernel's grant ceiling, and a fresh set is below it, so
+            // the `None` here is unreachable and the `Shared` fallback below is not taken from it.
             one.add(grant).ok()?;
             Some(one)
         });
@@ -1062,7 +1064,8 @@ pub enum ExitAction {
     PreventAndDrain,
 }
 
-/// How [`RunningPublishes::wait_idle`] ended.
+/// How [`RunningPublishes::wait_idle`] ended. Only tests read it: the product caller in `lib.rs`
+/// discards the value and exits either way.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DrainOutcome {
     Drained,
@@ -1135,7 +1138,9 @@ impl RunningPublishes {
 
     /// The last window closed. `Proceed` when nothing is registered or a drain has already begun;
     /// otherwise cancels every registered token, records that a drain has begun and answers
-    /// `PreventAndDrain` — once per process.
+    /// `PreventAndDrain` — once per process. While a drain is in progress the drain's own exit is
+    /// the only permitted caller of an exit: a second exit request answers `Proceed` and goes
+    /// through.
     pub fn on_exit_requested(&self) -> ExitAction {
         let nothing_running = self
             .inner
@@ -3037,8 +3042,8 @@ mod tests {
     /// the release A takes the kernel's own cancelled `Err` arm: no staging entry, no destination,
     /// and the audit holds exactly the kernel's intent and a cancelled outcome. S2: cancel into
     /// staging and the audit outcome. The barrier is released before any assertion.
-    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b: an empty cancel_all.
-    // It failed at its Refused assertion, "got Some(Success { .. })": the publish ran to completion. Reverted.
+    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b and observed again at d0184eb, against the T4 that joins first: an empty cancel_all.
+    // At d0184eb it failed at its Refused assertion. The panic message begins with got Some(Success and goes on to print the publish's summary struct, so the publish ran to completion. Reverted.
     #[test]
     fn exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed() {
         let _guard = env_lock();
@@ -3070,8 +3075,11 @@ mod tests {
             let registered = running.len();
             let action = running.on_exit_requested();
             park.release();
-            let drained = drain_rt.block_on(running.wait_idle(Duration::from_secs(60)));
-            (while_parked, registered, action, a.join().unwrap(), drained)
+            // Join first: `run_exclusive` removes its key before it returns, so the registry is
+            // empty here and the zero-length wait asserts no value that depends on a wall clock.
+            let outcome = a.join().unwrap();
+            let drained = drain_rt.block_on(running.wait_idle(Duration::ZERO));
+            (while_parked, registered, action, outcome, drained)
         });
 
         assert!(
