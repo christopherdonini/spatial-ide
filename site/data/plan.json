@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T14:36:06.143Z",
-  "plan_hash": "d6c0631824da85ceab831f13391b138e54199b190beee5b83d56f2878465c38c",
+  "generated_at": "2026-10-03T14:56:00.974Z",
+  "plan_hash": "3fc8eaf0089e2755bf7d9e037d36e09e0bbbc6c5e5ec2c2eb7e61ebe67bf38bd",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2692,6 +2692,7 @@
         "minutes": 0
       },
       "gate": "kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": {
         "branch": "cut/kernel-ticket-drop-followups"
       },
@@ -2701,7 +2702,7 @@
       "entries": [
         132
       ],
-      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts. Lead-drafted (the lead-data pilot, measured piece 1): the full form is kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md, lead-data draft 2 revised to the architect consult (state/consults/2026-10-03-kernel-ticket-drop-followups-architect-consult.md; Q3 not crossing), pins hashed by the custodian. Implemented at 4d487d51 by the worker-high (P1 to P4 held; 316 of 320 lines); lead-data's C1 index update applied at 86774b06 (write audit PASS, C3 clean). PR #168 is open; gates reviewer plus architect.",
+      "summary": "Deferred at PR #116's landing (state/gate-log.json indices 173 and 174 and the architect's attempt-3 re-read, index 176): state the invariant over any value owning an EngineSource (mint's refused source too) and declare swept/retired before the guard is taken so an unwind drops them after it; a debug_assert that mint's and redeem's insert returns None, with prev kept alive past drop(tickets) so a firing assert cannot drop under the guard; the invariant's enumeration naming redeem's remove (the architect's drafted text); the test doc comments naming kernel/TICKET-DROP-UNDER-LOCK-PREREGISTRATION.md. Full gating: the unwind reordering changes drop order on a never-block path (AUTONOMY section 21a). Placed by question round 31, item 1 (RULED 2026-09-30): position 9 of 16 in the human's order, order 10 in its lane. It depends on publish-attempt-lifecycle-src-tauri, position 8, so that the order holds across lanes. It also depends on lead-data-pilot-setup, placed ahead of node 9 by the human direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot), so that the pilot setup lands before its drafting starts. Lead-drafted (the lead-data pilot, measured piece 1): the full form is kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md, lead-data draft 2 revised to the architect consult (state/consults/2026-10-03-kernel-ticket-drop-followups-architect-consult.md; Q3 not crossing), pins hashed by the custodian. Implemented at 4d487d51 by the worker-high (P1 to P4 held; 316 of 320 lines); lead-data's C1 index update applied at 86774b06 (write audit PASS, C3 clean). PR #168 is open; gates reviewer plus architect. Gate 1 architect (gate-log 372): PASS, no S1; four draft-caused items, none blocking (the trial log, item B2). The reviewer runs.",
       "dates": {
         "opened": "2026-09-24",
         "done": null
@@ -6094,6 +6095,7 @@
         "minutes": 0
       },
       "gate": "scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": {
         "branch": "cut/subagent-write-audit-script"
       },
@@ -6101,7 +6103,34 @@
       "generation": 4,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate. Placed by question round 42, item 3 (RULED 2026-10-03): governance order 16, after lead-data-pilot-setup in the same lane (the trial two-pieces rule bars two pieces in one lane); it runs beside node 9 once #166 merges. Gate 1 (reviewer, PR #167, gate-log 367): FAIL. The Scope declared 250 lines, already over AUTONOMY section 21c's 150-line bound at dispatch (a custodian error); under section 21b's mid-piece clause the single-gate route closes, the overrun is class 6, and the architect gate is taken; the short form stays. Correction round 1: a worker fixes S1-2 and S1-3. Gate 2 (gate-log 368 and 369): FAIL and FAIL, on the missing superseded index and the reason given for S2-4. The third Amendment (ef3734af) declares the tool allow-list before its code (class 9, by section 14's sibling search) and indexes rounds 1 and 2; correction round 2 is the last under the record cap. The generation is 4, after three amendments (section 15).",
+      "summary": "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate. Placed by question round 42, item 3 (RULED 2026-10-03): governance order 16, after lead-data-pilot-setup in the same lane (the trial two-pieces rule bars two pieces in one lane); it runs beside node 9 once #166 merges. Gate 1 (reviewer, PR #167, gate-log 367): FAIL. The Scope declared 250 lines, already over AUTONOMY section 21c's 150-line bound at dispatch (a custodian error); under section 21b's mid-piece clause the single-gate route closes, the overrun is class 6, and the architect gate is taken; the short form stays. Correction round 1: a worker fixes S1-2 and S1-3. Gate 2 (gate-log 368 and 369): FAIL and FAIL, on the missing superseded index and the reason given for S2-4. The third Amendment (ef3734af) declares the tool allow-list before its code (class 9, by section 14's sibling search) and indexes rounds 1 and 2; correction round 2 is the last under the record cap. The generation is 4, after three amendments (section 15). Gate 3 (gate-log 370 and 371): architect PASS on conditions C1-C5, reviewer FAIL on two record defects only; under the record cap, item 3, the architect's reduction to references is appended to the form as written and the piece lands with it. The post-merge class-3 hash pin is carried by subagent-write-audit-post-merge-pin (round 25, item 2 (d)).",
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      }
+    },
+    {
+      "id": "subagent-write-audit-post-merge-pin",
+      "title": "The write-audit test file's superseded header line pinned at a main commit after PR #167 merges",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [
+        "subagent-write-audit-script"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 15,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Round 25, item 2 (d) (docs/PREREGISTRATION-TEMPLATE.md, a test-text span on an unmerged branch); PR #167's gate-3 architect, D1 and C4 (state/consults/gates/2026-10-03-subagent-write-audit-script-gate3-architect.md): the form's reduction names line 5 of scripts/hooks/subagent-write-audit.test.mjs at 8173b1e6 in words. Once the merge makes 8173b1e6 reachable from main, append to scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md the class-3 row scripts/hooks/subagent-write-audit.test.mjs:5 @ 8173b1e6 sha256:<hex>, the hash computed from git show 8173b1e6:./scripts/hooks/subagent-write-audit.test.mjs, line 5, LF bytes.",
       "dates": {
         "opened": "2026-10-03",
         "done": null

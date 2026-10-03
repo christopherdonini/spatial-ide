@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d6c0631824da85ceab831f13391b138e54199b190beee5b83d56f2878465c38c`) at `2026-10-03T14:36:05.888Z`.
+Generated from `PLAN.yaml` (sha256 `3fc8eaf0089e2755bf7d9e037d36e09e0bbbc6c5e5ec2c2eb7e61ebe67bf38bd`) at `2026-10-03T14:56:00.768Z`.
 
 ## 1. Next
 
@@ -30,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `d6c0631824da85ceab831f13391b138e54199b190bee
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
+- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges — blocked by: subagent-write-audit-script
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress

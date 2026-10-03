@@ -32,7 +32,7 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 **OPEN 2026-10-03 — the write-audit form's unclassed "Mutations added" bullet (PR #167's gate-1 reviewer, S2-3; narrowed by the gate-2 architect's Judgment 3); for the next batched question round:**
 - **Context.**
   - The first Amendment of `scripts/hooks/SUBAGENT-WRITE-AUDIT-PREREGISTRATION.md` carries two bullets with no class. "Mutations added" records M3 to M5, added before any gate on the custodian's own verify-mutation check. "A record finding" records that worker report 1 gave verify-mutation's rc as 0, when it is rc 1 at that commit.
-  - The template's section 10 routes a case that fits no class to the human, rather than to a new freeform amendment. Class 4 needs a gate finding, and class 2 needs a §3/§5 prediction, which a five-line form does not have.
+  - The template's section 10 routes a case that fits no class to the human, rather than to a new freeform amendment. Class 4 needs a gate finding.
   - The form's second Amendment routes the two bullets here, and does not re-class them.
   - **Narrowed.** The gate-2 architect (Judgment 3, `state/consults/gates/2026-10-03-subagent-write-audit-script-gate2-architect.md`) places "A record finding" in class 1, and the third Amendment records it there. It also notes that the template lets a short form use the same classes, so class 2 is not barred. Only "Mutations added" remains: class 4 needs a gate finding, and none had run.
 - **Recommendation.** Let "Mutations added" stand unclassed, as a record of fact, with this ruling as its reference. Its false clause is marked by the third Amendment's superseded index. No new class.
