@@ -3392,9 +3392,6 @@ mod ticket_drop_under_lock_regression {
         assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
     }
 
-    // `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4: the unwind half of the registry's
-    // no-drop-under-guard invariant. Q's cancel panics; P is swept or retired before it does.
-
     /// Test-only `BatchSource`: `synthetic_source` in `tests` is private to that module.
     struct EmptySource;
     impl BatchSource for EmptySource {
@@ -3568,9 +3565,10 @@ mod ticket_drop_under_lock_regression {
     /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T1: an unwind out of `cancel` (Q's
     /// panicking cancel) while P, expired and in another dataset, sits in `swept`.
     ///
-    /// PLANNED MUTATION (M1, not yet observed): in `StreamRegistry::cancel`, declare `swept` after
-    /// the guard, the order at `c9f41126`. Expected failure: this test FAILS by timeout on its own
-    /// "did not return within" message; the two tests below pass.
+    /// RECORDED MUTATION (M1): in `StreamRegistry::cancel`, declare `swept` after the guard again,
+    /// the order at `c9f41126`. Observed at commit 1c8cea2207e2 (applied, run, reverted): this test
+    /// FAILED by timeout (its name, then `: StreamRegistry::cancel did not return within 5s`); the
+    /// two tests below passed.
     #[test]
     fn an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard() {
         const T: &str = "an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard";
@@ -3586,9 +3584,10 @@ mod ticket_drop_under_lock_regression {
     /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T2: as T1, through
     /// `cancel_all_for_dataset` on Q's dataset.
     ///
-    /// PLANNED MUTATION (M2, not yet observed): the same change in `cancel_all_for_dataset`.
-    /// Expected failure: this test FAILS by timeout on its own "did not return within" message; the
-    /// tests above and below pass, because T3's `swept` is empty.
+    /// RECORDED MUTATION (M2): the same change in `cancel_all_for_dataset`. Observed at commit
+    /// 1c8cea2207e2 (applied, run, reverted): this test FAILED by timeout (its name, then
+    /// `: StreamRegistry::cancel_all_for_dataset did not return within 5s`); the tests above and
+    /// below passed, because T3's `swept` is empty.
     #[test]
     fn an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard() {
         const T: &str = "an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard";
@@ -3606,9 +3605,10 @@ mod ticket_drop_under_lock_regression {
     /// (`put_p_before_q`). The extra assertion checks P's entry is `CancelledBeforeRedeem`, so a
     /// failed precondition fails by name and cannot pass vacuously.
     ///
-    /// PLANNED MUTATION (M3, not yet observed): in `cancel_all_for_dataset`, declare `retired` after
-    /// the guard. Expected failure: this test FAILS by timeout on its own "did not return within"
-    /// message; the two tests above pass, because their `retired` is empty.
+    /// RECORDED MUTATION (M3): in `cancel_all_for_dataset`, declare `retired` after the guard
+    /// again. Observed at commit 1c8cea2207e2 (applied, run, reverted): this test FAILED by timeout
+    /// (its name, then `: StreamRegistry::cancel_all_for_dataset did not return within 5s`); the
+    /// two tests above passed, because their `retired` is empty.
     #[test]
     fn an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard()
     {
