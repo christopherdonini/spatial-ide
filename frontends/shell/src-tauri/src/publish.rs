@@ -2829,6 +2829,9 @@ mod tests {
     /// free, and a concurrent prepare of an unrelated dataset (F2, a second fixture in a
     /// sub-directory) completes. The barrier is released before any assertion, and `prepare` is
     /// called only after `try_lock` has proved the mutex free, so no mutation can hang this test.
+    // RECORDED MUTATION: a_concurrent_prepare_is_not_held_behind_a_running_publishs_grant_lock, M2, observed at c92b17b: in execute_with_progress, the guard held across boundary::execute (the base shape).
+    // It failed at its try_lock assertion, "try_lock found the shared grants mutex held while publish_prepared ran". Reverted.
+    // P0: at the base, ff57832, it failed at the same assertion (commit 6035fe7).
     #[test]
     fn a_concurrent_prepare_is_not_held_behind_a_running_publishs_grant_lock() {
         let _guard = env_lock();
@@ -2898,6 +2901,8 @@ mod tests {
 
     /// F4: while a call holds an attempt id, a second `run_exclusive` under it returns `None`, runs
     /// no body and removes nothing; the registered token is still the first call's.
+    // RECORDED MUTATION: a_second_execute_under_a_running_attempt_id_is_unknown_and_leaves_the_running_token_registered, M1, observed at c92b17b: in run_exclusive, an unconditional insert (the base shape) in place of try_insert.
+    // It failed at its first assertion, "the second call must be refused". Reverted.
     #[tokio::test]
     async fn a_second_execute_under_a_running_attempt_id_is_unknown_and_leaves_the_running_token_registered(
     ) {
@@ -2939,6 +2944,8 @@ mod tests {
     /// C's grant survives and C proceeds past the grant check to the kernel's own refusal that the
     /// destination now exists. Same discipline as T2: the barrier is released before any assertion,
     /// and C is prepared only after `try_lock` has proved the mutex free.
+    // RECORDED MUTATION: a_grant_added_while_a_publish_runs_survives_that_publishs_consumption, M3, observed at c92b17b: on the Ok path, remove_matching moved to after the boundary.
+    // It failed at its last assertion, "C's grant must have survived A's consumption", C being refused with "no grant authorizes". Reverted.
     #[test]
     fn a_grant_added_while_a_publish_runs_survives_that_publishs_consumption() {
         let _guard = env_lock();
@@ -3030,6 +3037,8 @@ mod tests {
     /// the release A takes the kernel's own cancelled `Err` arm: no staging entry, no destination,
     /// and the audit holds exactly the kernel's intent and a cancelled outcome. S2: cancel into
     /// staging and the audit outcome. The barrier is released before any assertion.
+    // RECORDED MUTATION: exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed, M4, observed at c92b17b: an empty cancel_all.
+    // It failed at its Refused assertion, "got Some(Success { .. })": the publish ran to completion. Reverted.
     #[test]
     fn exit_requested_cancels_a_running_publish_and_its_staging_directory_is_removed() {
         let _guard = env_lock();
@@ -3108,6 +3117,8 @@ mod tests {
 
     /// F4: the drain returns when the registry empties, whichever of the last removal and the wait
     /// comes first, and at its ceiling otherwise.
+    // RECORDED MUTATION: the_exit_drain_returns_when_the_registry_empties_and_at_its_ceiling_otherwise, M5, observed at c92b17b: wait_idle returns Drained without reading the count.
+    // It failed at its first assertion, "one entry left at a zero ceiling" (left: Drained, right: TimedOut). Reverted.
     #[tokio::test]
     async fn the_exit_drain_returns_when_the_registry_empties_and_at_its_ceiling_otherwise() {
         let running = RunningPublishes::new();
@@ -3131,6 +3142,8 @@ mod tests {
     }
 
     /// F4: exit is prevented once, and only while something is registered.
+    // RECORDED MUTATION: exit_requested_prevents_exit_once_and_only_while_something_is_registered, M6, observed at c92b17b: the once-flag dropped from on_exit_requested.
+    // It failed at its last assertion, "a drain has already begun" (left: PreventAndDrain, right: Proceed). Reverted.
     #[test]
     fn exit_requested_prevents_exit_once_and_only_while_something_is_registered() {
         let running = RunningPublishes::new();
