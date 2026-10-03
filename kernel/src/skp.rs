@@ -3494,32 +3494,26 @@ mod ticket_drop_under_lock_regression {
             );
         }
 
-        /// Move P's entry to fresh keys, at most `MAX_REKEY_ATTEMPTS` times, until it precedes Q in
-        /// the map's iteration order; fail by name otherwise. Run before `attribute_p`.
-        fn put_p_before_q(&mut self, test: &str) {
-            const MAX_REKEY_ATTEMPTS: usize = 64;
-            let precedes = |m: &HashMap<String, TicketState>, p: &str, q: &str| {
-                m.keys().position(|k| k == p) < m.keys().position(|k| k == q)
-            };
+        /// Require exactly P's and Q's entries (else fail by name). If P's key is not first in the
+        /// map's iteration order, swap the two entries' values in place and the test's names for
+        /// their keys with them: no key is removed or inserted, so the order does not move. Run
+        /// before `attribute_p`.
+        fn put_p_first(&mut self, test: &str) {
             let mut map = self
                 .tickets
                 .tickets
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
-            let mut attempts = 0;
-            while !precedes(&map, &self.p, &self.q) && attempts < MAX_REKEY_ATTEMPTS {
-                let state = map.remove(&self.p).expect("P is in the map");
-                self.p = StreamHandle::mint().as_str().to_string();
-                map.insert(self.p.clone(), state);
-                attempts += 1;
+            let two = map.len() == 2 && map.contains_key(&self.p) && map.contains_key(&self.q);
+            if two && map.keys().next() != Some(&self.p) {
+                let mut values = map.values_mut();
+                std::mem::swap(values.next().unwrap(), values.next().unwrap());
+                std::mem::swap(&mut self.p, &mut self.q);
             }
-            let ok = precedes(&map, &self.p, &self.q);
             drop(map);
             assert!(
-                ok,
-                "{test}: P's key did not come before Q's in the map's iteration order within \
-                 {MAX_REKEY_ATTEMPTS} re-keys, so the test would not reach its retire-then-panic \
-                 order"
+                two,
+                "{test}: the map does not hold exactly P's and Q's entries"
             );
         }
 
@@ -3601,8 +3595,8 @@ mod ticket_drop_under_lock_regression {
 
     /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §4, T3: P is not expired and shares
     /// dataset D with Q; `cancel_all_for_dataset` on D retires P (into `retired`) before it reaches
-    /// Q's panicking cancel, which needs P's key to precede Q's in the map's iteration order
-    /// (`put_p_before_q`). The extra assertion checks P's entry is `CancelledBeforeRedeem`, so a
+    /// Q's panicking cancel, which needs P's key first in the map's iteration order
+    /// (`put_p_first`). The extra assertion checks P's entry is `CancelledBeforeRedeem`, so a
     /// failed precondition fails by name and cannot pass vacuously.
     ///
     /// RECORDED MUTATION (M3): in `cancel_all_for_dataset`, declare `retired` after the guard
@@ -3614,7 +3608,7 @@ mod ticket_drop_under_lock_regression {
     {
         const T: &str = "an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard";
         let mut s = UnwindSetup::new(T, "unwind-cancel-all-retired", "ds_d", "ds_d");
-        s.put_p_before_q(T);
+        s.put_p_first(T);
         s.attribute_p();
         s.call_unwinds_and_drops_p(T, "cancel_all_for_dataset", |r| {
             r.cancel_all_for_dataset("ds_d");
