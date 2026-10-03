@@ -166,3 +166,13 @@
   - It proposes the full form, and reads the piece as confined by contract (C2), asking the custodian to confirm.
   - **One blocking question, O-1:** whether the `conversion_can_fail` sentence is true for case (b). The node excludes a sixth reason and does not place admitting (b). It is a question about a human-typed string's truth, so it is not counted as a draft-caused correction.
 - **Index-wrong gate count:** 0.
+
+## E. Recorder lines as citable evidence
+
+- **Source.** The 2026-10-03 mods-roadmap ruling, item 3 (`state/directives/2026-10-03-evidence-recorder-ruling.md`): whether recorder lines may be cited as evidence goes to this window. The brief's §5 calls it an evidence-rule change (`state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md`).
+- **The question.** May a record (a form's amendment, a worker report, a gate report, a closing record) cite an Evidence Recorder line as the evidence that a command ran at a revision, on a stated dirty-tree identity, with a stated outcome?
+- **Bounds the brief already sets** (its §1 and §2):
+  - a recorder line records that a command ran; it does not prove that a test's assertions establish a claim, and it is not a mutation observation;
+  - CI and the independent gates remain authoritative;
+  - a line copied into a tracked record passes the exposure scan and its CI backstop like any other text.
+- **State at the window.** `evidence-recorder-v0` is placed after `guardian-v0` and is not built, so no recorder line exists yet. The item is for the human's ruling on the rule, not on observed lines.

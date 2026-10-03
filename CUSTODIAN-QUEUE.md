@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f064dbad8354c02c8f8662d1bbce7775b66dfca4ab035f3bec022e38e467306d`) at `2026-10-03T17:56:30.853Z`.
+Generated from `PLAN.yaml` (sha256 `a0743043f550b2f8eb36b0d28e6c0c13a77afcac3fc226e09558c4e896e8c265`) at `2026-10-03T18:50:09.322Z`.
 
 ## 1. Next
 
@@ -31,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `f064dbad8354c02c8f8662d1bbce7775b66dfca4ab03
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
+- **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — blocked by: guardian-v0
 
 ## 5. In progress
 
@@ -111,3 +112,5 @@ Generated from `PLAN.yaml` (sha256 `f064dbad8354c02c8f8662d1bbce7775b66dfca4ab03
 - **plugin-ecosystem-seed** — Plugin ecosystem seed (docs, templates, example clients) (phase `v1`) — ambition, never queued
 - **basic-editing-plugin** — Basic editing plugin (ADR-002 amended, ADR-007) — scheduled last in 1.0 (phase `v1`) — ambition, never queued
 - **data-plane-crate-fmt** — spatial-data-plane made rustfmt-clean in one mechanical piece (round 26, item 4 (a)) (phase `prototype`) — ambition, never queued
+- **mod-workboard** — Workboard -- a read-only pane mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
+- **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued

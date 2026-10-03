@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T17:56:30.853Z",
-  "plan_hash": "f064dbad8354c02c8f8662d1bbce7775b66dfca4ab035f3bec022e38e467306d",
+  "generated_at": "2026-10-03T18:50:09.322Z",
+  "plan_hash": "a0743043f550b2f8eb36b0d28e6c0c13a77afcac3fc226e09558c4e896e8c265",
   "priorities_approved": true,
   "next": {
     "id": "type-walk-null-literal-arithmetic",
@@ -353,6 +353,28 @@
       "summary": "Behind the product work and the generated-output decision (the human, 2026-09-22): waits on governance-ci-built-site. Placed by the human on 2026-09-14 (a governance node, low priority, after the drill); the brief is DRAFT-4, copied into the tree byte-for-byte (LF); reviewer-gated; the generator's tests updated for the new structure; verify:plan unchanged",
       "blocked_by": [
         "governance-ci-built-site"
+      ]
+    },
+    {
+      "id": "evidence-recorder-v0",
+      "title": "Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 18,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Placed by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 1 and step 2; RULED 2026-10-03): governance lane, after guardian-v0, which it depends on. The brief is state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md. It observes only: it never refuses, rewrites or answers a tool call, adds nothing the model reads, and returns every result exactly as next(e) produced it. P0 first (the brief's section 3: the Bash result fields, turn.complete usage and agentId, the approved-command list as this repository invokes it, the dirty-tree identity's cost, the local log path, the chain order with Guardian, and validate's hooks and calls lines), recorded before any code. Gates: the reviewer and the architect, with the validate output in the PR body. Installing it is a security-posture change and a red line: the human's typed approval after its own gates (item 2), and the human installs it. Whether recorder lines may be cited as evidence is an item on the 2026-10-09 window (item 3). Its budget is the custodian's estimate, equal to guardian-v0's.",
+      "blocked_by": [
+        "guardian-v0"
       ]
     }
   ],
@@ -1653,6 +1675,44 @@
         "done": null
       },
       "summary": "RULED 2026-09-26, question round 26, item 4 (a): seven files of spatial-data-plane are not rustfmt-clean on main under rustfmt 1.9.0-stable (8bab26f4f6), and CI runs no fmt step; one mechanical cargo fmt piece, no behaviour change. A CI fmt step is a process proposal for the 2026-10-02 weekly window. Found by data-plane-stream-registry-bound's gates (state/consults/2026-09-26-stream-registry-bound-gate2-architect.md). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 1: SUPERSEDED by workspace-rustfmt, which formats the whole workspace and src-tauri and adds the CI check; this node is closed without work. CORRECTION 2026-10-02 (DECISIONS-PENDING.md, the round 33 RULED block, its correction line): round 33 item 1 is a red-line item asked with preset options, against AUTONOMY.md section 4, so the selection is not a red-line ruling; it is re-asked for typed text in question round 34, item 1. If item 1 is held or refused, this node returns to proposed. Question round 34 (RULED 2026-10-02, DECISIONS-PENDING.md), item 1, typed: closes as superseded by workspace-rustfmt."
+    },
+    {
+      "id": "mod-workboard",
+      "title": "Workboard -- a read-only pane mod (deferred by the 2026-10-03 mods-roadmap ruling)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "unscheduled",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Deferred by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 4); tracked per state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md section 5. Revisit condition: once the Evidence Recorder exists to feed its observed column."
+    },
+    {
+      "id": "mod-worktree-resource-protection",
+      "title": "Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "unscheduled",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Deferred by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 4); tracked per state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md section 5. Revisit condition: once worktree ownership is recorded machine-readably; advisory first."
     }
   ]
 }
