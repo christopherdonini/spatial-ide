@@ -86,6 +86,9 @@ test('T3: VOID on any Bash call', () => {
   });
 });
 
+// RECORDED MUTATION: M7, letting NONE accept any target (allowed !== null && target !== allowed) in subagent-write-audit.mjs made T4 fail by
+// name ("T4: VOID under NONE with one Edit") at its status assertion (0 !== 1), observed at commit
+// 1202bf4e by applying the edit, running T4 alone, and reverting it.
 test('T4: VOID under NONE with one Edit', () => {
   withFixture(jsonl([use('Edit', { file_path: ALLOWED })]), (f) => {
     const { status, report } = run(f, 'NONE');
@@ -112,6 +115,9 @@ test('T5: VOID on an empty file and on a transcript with zero tool calls', () =>
   });
 });
 
+// RECORDED MUTATION: M8, dropping the case-fold from the path comparison in subagent-write-audit.mjs made T6 fail by
+// name ("T6: PASS across slash and drive-letter case differences") at its status assertion (1 !== 0), observed at commit
+// 1202bf4e by applying the edit, running T6 alone, and reverting it.
 test('T6: PASS across slash and drive-letter case differences', () => {
   withFixture(jsonl([use('Write', { file_path: 'c:\\REPO\\state\\consults\\X.md' })]), (f) => {
     const { status, report } = run(f, ALLOWED);
@@ -120,6 +126,9 @@ test('T6: PASS across slash and drive-letter case differences', () => {
   });
 });
 
+// RECORDED MUTATION: M9, exiting 1 instead of 2 on the usage path in subagent-write-audit.mjs made T7 fail by
+// name ("T7: exit 2 on a missing argument") at its first status assertion (1 !== 2), observed at commit
+// 1202bf4e by applying the edit, running T7 alone, and reverting it.
 test('T7: exit 2 on a missing argument', () => {
   assert.equal(run('a0123456789abcdef').status, 2);
   assert.equal(run().status, 2);
@@ -129,6 +138,8 @@ test('T7: exit 2 on a missing argument', () => {
 // repository root made T8 fail by name ("T8: an agent id resolves under the main checkout's project
 // slug") when run from a worktree, observed at commit 8d296b9c by applying the edit, running T8
 // alone, and reverting it.
+// M2 fails T8 only when the suite runs from a worktree: in the main checkout and in CI the common
+// directory's parent equals the script's own root, so the mutated derivation gives the same slug.
 test("T8: an agent id resolves under the main checkout's project slug", () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'swa-home-'));
   try {
@@ -153,6 +164,9 @@ test("T8: an agent id resolves under the main checkout's project slug", () => {
   }
 });
 
+// RECORDED MUTATION: M6, restoring the silent skip of an unparseable line in subagent-write-audit.mjs made T9 fail by
+// name ("T9: VOID on an unparseable line, naming its line number") at its status assertion (0 !== 1), observed at commit
+// 1202bf4e by applying the edit, running T9 alone, and reverting it.
 test('T9: VOID on an unparseable line, naming its line number', () => {
   const good = JSON.stringify(use('Write', { file_path: ALLOWED }));
   const truncated = JSON.stringify(use('Write', { file_path: 'C:/repo/other.md' })).slice(0, -6);

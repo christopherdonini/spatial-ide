@@ -19,8 +19,9 @@
 // main checkout; the script's own repository root if git fails) with every character outside
 // [A-Za-z0-9] replaced by "-", and the session comes from --session or CLAUDE_CODE_SESSION_ID.
 //
-// Does not: write anything, touch the network, export anything, or inspect git state (the
-// ruling's secondary checks stay the custodian's procedure). It cannot see a write made through a
+// Does not: write anything, touch the network, or export anything. It reads the repository layout
+// through `git rev-parse --git-common-dir` and never git status or refs (the ruling's secondary
+// checks stay the custodian's procedure). It cannot see a write made through a
 // shell, which is why any shell call voids the run.
 
 import { execFileSync } from 'node:child_process';
