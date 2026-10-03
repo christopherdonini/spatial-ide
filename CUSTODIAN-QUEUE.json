@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T09:11:16.861Z",
-  "plan_hash": "fae7cb2ac08585f5f25485a0ba08c89d6e992f1cf1222e6f1037e23ef243fea0",
+  "generated_at": "2026-10-03T09:31:02.024Z",
+  "plan_hash": "cf7a00f9e7d3f115a50e5ad89ae19710bf0d1a9d4bead4a95e97621f245fa2d4",
   "priorities_approved": true,
   "next": {
     "id": "lead-data-pilot-setup",
@@ -404,28 +404,6 @@
       },
       "summary": "Split out of publish-refusal-codes-and-attempt-lifecycle by the human's answer to question round 31, item 2 (RULED 2026-09-30): the shell hold covers the frontend screens the migration replaces, not bug fixes in frontends/shell/src-tauri, and portability R1-R6 apply to this piece (state/directives/PORTABILITY-2026-09-30.md, section 2). Wave-1 S2 record (state/cloud/wave1-prompts.md, the S2 rule). A1 observation 1: RunningPublishes is keyed by a caller-supplied attempt id, so a second execute replaces the running publish's cancel token. A1 observation 2 (also A2 observation 3): the grants mutex is held across the whole publish, delaying a concurrent prepare's cancellation (state/cloud/wave1/A1.md). A5-2: closing the window mid-publish leaves a per-attempt staging directory (state/cloud/wave1/A5.md). Placed by question round 31, item 1 (RULED 2026-09-30): position 8 of 16 in the human's order, order 6 in its lane. It depends on skp-cancel-state-closed-set, position 7, so that the order holds across lanes. Question round 40 (RULED 2026-10-03): item 1, a red line, typed (state/directives/2026-10-03-exit-drain-ruling.md), approves the exit drain with a 30 s declared ceiling on conditions (a)-(c); items 2-4 by label (shell-only grants lock; source read plus walkthrough row R1; the prepare-key sibling routed). The full-form preregistration is frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md (architect-drafted, revised for the ruling).",
       "evidence_label": "branch `cut/publish-attempt-lifecycle-src-tauri`"
-    },
-    {
-      "id": "port-1-linux-l1",
-      "title": "PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 2,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/port-1-linux-l1"
-      },
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 6 (scope and acceptance). Placement guidance, the human's line: port-1 after B-1 (B-1 is done). Stays proposed until the human answers PORTABILITY section 7, because port-1 needs the runner-minutes decision (item 1); to be asked in question round 33 on 2026-10-02 (renumbered by the 2026-09-30 placement-round directive, then by the round-32 answers). Claims Linux L1 for the workspace only: not the shell, not L2, not L3 (R5). No new dependency. Wave-3 intake (state/cloud/wave3/W3-B.md and W3-A.md, custodian fields): on Linux at the baseline a023546 the workspace ran 777 passed, 0 failed, 54 ignored (W3-B); the 14 off-Windows ignore reasons name the mechanism, not section 2's boundary label; the unused WATCH_BUFFER_BYTES warning off Windows (W3-B WAVE3-1) matters if the job denies warnings; three all-platform ignores carry no reason string (WAVE3-2); two Windows-only test assertions are compiled out with cfg(windows) rather than ignored (W3-A observation 4); EDQUOT and EPERM in publish's unix error tables and SIGTERM handling in publish-bundle (W3-A observations 1 and 3). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes now (PORT-2 after PORT-1 is green), so it is placed, platform order 2; it also waits for workspace-rustfmt, since it touches Rust files and the pass runs only while no Rust branch is open. Item 7 adopts the support profiles of state/questions/round-33.md item 7 (Windows 10/11 x64 the reference; macOS 14 or later on Apple Silicon for CI, plus the 2019 Intel MacBook for L2 and L3; Ubuntu 24.04 x64 with WebKitGTK 4.1; nothing else claimed); they bind its per-platform levels in KNOWN-LIMITATIONS 1. Question round 39 (RULED 2026-10-02), item 1: the Linux entry is pinned to ubuntu-24.04. The full-form preregistration is PORT-1-LINUX-L1-PREREGISTRATION.md (architect-drafted; consult state/consults/2026-10-02-port-1-linux-l1-architect-draft.md); it is dispatched after skp-cancel-state-closed-set (PR #160) merges.",
-      "evidence_label": "branch `cut/port-1-linux-l1`"
     }
   ],
   "proposed": [
@@ -1111,7 +1089,7 @@
         "opened": "2026-09-30",
         "done": null
       },
-      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes once PORT-1 is green; item 7 adopts the support profiles (macOS 14 or later on Apple Silicon for CI). It stays proposed under the human's placement line above."
+      "summary": "Filed on state/directives/2026-09-30-portability-and-handoff.md (the human's direction line and Fable's item 1) and state/directives/PORTABILITY-2026-09-30.md, section 3. Carries section 1c item 1 (the audit log and the LOD tier root resolve application directories differently) and section 1c item 2 as a candidate to verify (case sensitivity keyed on the OS, not the filesystem; read from code, not observed on a Mac). Placement guidance, the human's line: port-2 when convenient, not ahead of the shell migration or B2. Needs runner minutes (section 7, item 1). No new dependency. Wave-3 intake (state/cloud/wave3/W3-A.md, custodian fields): finding A-3, an empty or relative XDG_DATA_HOME gives a working-directory-relative audit log (proven on Linux); section 1c-1's correction that the LOD tier root reads LOCALAPPDATA with no cfg; section 1c-2's correction that case-insensitive Linux mounts share macOS's gap; the audit log's POSIX file mode (W3-A observation 2). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33): item 6 approves its runner minutes once PORT-1 is green; item 7 adopts the support profiles (macOS 14 or later on Apple Silicon for CI). It stays proposed under the human's placement line above. Notes for this piece's form from PORT-1's gates (state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md, S2-6; state/consults/gates/2026-10-03-port-1-linux-l1-gate1-architect.md, N4 and N5): T1 of scripts/plan/cfg-boundary.test.mjs pins the tree's site counts per file, so an architect-approved boundary edit updates T1 in the same PR; derive P3 from a sorted --list set difference at P1, not from greps of test targets."
     },
     {
       "id": "port-3-shell-l1",

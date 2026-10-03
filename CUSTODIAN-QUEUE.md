@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `fae7cb2ac08585f5f25485a0ba08c89d6e992f1cf1222e6f1037e23ef243fea0`) at `2026-10-03T09:11:16.861Z`.
+Generated from `PLAN.yaml` (sha256 `cf7a00f9e7d3f115a50e5ad89ae19710bf0d1a9d4bead4a95e97621f245fa2d4`) at `2026-10-03T09:31:02.024Z`.
 
 ## 1. Next
 
@@ -36,7 +36,6 @@ Generated from `PLAN.yaml` (sha256 `fae7cb2ac08585f5f25485a0ba08c89d6e992f1cf122
 ## 5. In progress
 
 - **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — evidence: branch `cut/publish-attempt-lifecycle-src-tauri`
-- **port-1-linux-l1** — PORT-1 -- Linux L1 for the Cargo workspace: ubuntu-latest in product-ci-rust, the cfg boundary check, the stale runner comment, per-platform levels in KNOWN-LIMITATIONS 1, and R3 in the preregistration template — evidence: branch `cut/port-1-linux-l1`
 
 ## 6. Proposed / unscheduled
 

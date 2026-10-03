@@ -30,3 +30,14 @@
   - each conflict: a merge conflict, a regeneration, a wait for overlapping paths, or a stale continuity block;
   - each time the human was asked or interrupted because two pieces ran at once.
 - **The known gap.** The architect cannot write a file (no write tool), so its reports stay messages. The report says what that cost.
+
+## C. Appended template lines open their own paragraph
+
+- **Source.** PORT-1's gate-1 reports: the reviewer's S2-5 and the architect's N3, in `state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md` and `state/consults/gates/2026-10-03-port-1-linux-l1-gate1-architect.md`.
+- **The gap.** PORT-1 appended the R3 line to `docs/PREREGISTRATION-TEMPLATE.md` with no blank line before it. A blank line would have been a second appended line, which PORT-1's §8 forbade. In rendered Markdown, the R3 line reads as part of round 25 (e)'s paragraph, under that paragraph's attribution.
+- **The proposal.** It rides with item A's one-line append:
+  - one blank line before the R3 line;
+  - one blank line before item A's line.
+
+  No line above the R3 line moves. No record cites the R3 line yet.
+- **Not proposed:** any rewording.

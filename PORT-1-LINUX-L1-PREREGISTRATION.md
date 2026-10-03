@@ -406,3 +406,39 @@ Written after gate 1's results were seen and after the merge (a post-result amen
    - `scripts/plan/cfg-boundary.mjs` at 824d561: the header's clause on who adds an allowlist entry is superseded at 859375c.
    - `.github/workflows/product-ci-rust.yml` at a886894: the runner-choice comment's pin and catch sentences, and the build step's comment position, are superseded at 859375c.
    - No other line is superseded.
+
+### Amendment 3 — the closing record (class 1, references only)
+
+Written after the piece's results were seen and after its last merge (a post-result amendment). References only.
+
+1. **Merges.** Both were merged by merge commit.
+   - PR #162 merged on 2026-10-03 at 08:01:40Z as merge commit 25b57c4, at head eddcb28.
+   - PR #164 merged at 09:05:51Z as merge commit e863d15, at head 483661b.
+   - From 25b57c4 to e863d15, main carried the comments as they stood at eddcb28.
+2. **E1 and E2:** Amendment 1, items 1 and 4.
+3. **E3a and E3b:**
+   - runs 37103210808 and 37103232248, on probe commits e03da5f and 840f93b;
+   - the probe branch is deleted;
+   - sources: `state/consults/2026-10-03-port-1-linux-l1-worker-report-1.md` and `state/consults/gates/2026-10-03-port-1-linux-l1-gate1-reviewer.md`, item 3.
+4. **E4,** the first push after #162's merge, at 25b57c4:
+   - product-ci-rust run 37108309616, green on both entries;
+   - governance-ci run 37108309670, with `cfg boundary (PORTABILITY R2)` green (job 111161064418).
+
+   At e863d15:
+   - governance-ci run 37111896369, green;
+   - product-ci-rust run 37111896297, green on both entries (Linux job 111171261035, Windows job 111171261145).
+5. **§7's final figure:** 601 lines over 13 files over b43c0eb...483661b, with the base named explicitly. The figure is the gate-2 reviewer's recount, `state/consults/gates/2026-10-03-port-1-linux-l1-gate2-reviewer.md`, item 4. There is no overrun.
+6. **Mutations M1 to M7:**
+   - the worker observed them at 824d561 (the test file's RECORDED MUTATION comments);
+   - the gate-1 reviewer observed them at eddcb28 (its report, item 2).
+7. **P1 (§2 item 0):** hand-back 1 in `state/consults/2026-10-03-port-1-linux-l1-worker-report-1.md`, filed at e2bba91.
+8. **Amendment 1 item 3's owed report.** The unlisted compile-out was reported to the human in the custodian's session reports of 2026-10-03, with no question item. Both gate-1 reports find nothing owed beyond it.
+9. **Gate reports,** under `state/consults/gates/`:
+   - `2026-10-03-port-1-linux-l1-gate1-architect.md` and `2026-10-03-port-1-linux-l1-gate1-reviewer.md` at eddcb28;
+   - `2026-10-03-port-1-linux-l1-gate2-architect.md` and `2026-10-03-port-1-linux-l1-gate2-reviewer.md` at 483661b.
+10. **Routed items:**
+    - the PLAN node `cfg-boundary-read-errors`;
+    - the template's blank separator, as `state/drafts/weekly-window-2026-10-09.md`, item C;
+    - the T1 coupling and the P3 set-difference method, as notes in the PLAN node `port-2-macos-l1-and-app-dirs`.
+11. **Tools,** each at its last change: verify-cites 522e448, verify-quotes f9444a4, verify-test-claims e9735d4, verify-mutation 7d24ed1, verify:plan 2607202, and `cfg-boundary.mjs` 859375c. A verify-mutation run is a tool run, not an observation.
+12. **Superseded index.** None. Amendment 2's index stands.
