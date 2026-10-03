@@ -517,3 +517,12 @@ The human's rule is `state/directives/2026-10-02-rustfmt-notes.md:15-18` @ f5c87
 - **The merge commit.** The rule's placeholder, the rustfmt merge commit, is 51ed3b2. That is PR #157, PLAN node `workspace-rustfmt`, merged 2026-10-02 at 17:43:24Z. Its first parent is b598784.
 - **The custodian's instantiation, not a quotation.** An unpinned `path:line` reference in a record dated before 51ed3b2 resolves against b598784. A pinned reference resolves at its pin, as before. No record is edited.
 - **The closing record** is `WORKSPACE-RUSTFMT-PREREGISTRATION.md`, Amendment 2.
+
+## §30. The Stop hook refuses to stop on a stale SESSION-CONTINUITY block (the human, 2026-10-02, round 33, items 4 and 5; appended after §29 so that no line a record cites above it moves)
+
+Round 33, items 4 and 5 are cited by round and item and not reproduced. The record is PLAN node `stop-hook-stale-continuity`, and the governing form is `scripts/hooks/STOP-HOOK-STALE-CONTINUITY-PREREGISTRATION.md`. §3, §7, §24 and §26 are not edited in place. From the merge of that piece:
+
+- **§3's decision order is:** (1) the override or the halt switch (§18); (2) the lease check (§24); (3) continuity; (4) `background_tasks`; (5) onward, §3's steps 3 to 6 as before.
+- **Continuity.** The block is stale when the newest commit on `HEAD` that touches `state/CUT-STATE.md` leaves the block's `flushed_at` as its first parent had it. A stale block blocks the stop inside §3's continuation caps, with `HEAD` as its progress signal. Its reason names that commit, its time and the block's `flushed_at`, and the step: rewrite the block with `scripts/hooks/flush.mjs` from git and the ledger, commit it ledger-only, push, then stop. When git cannot be read, the step is skipped.
+- **§7.** The milestone refresh of the 2026-09-29 flush directive, item 5 (`state/directives/2026-09-29-flush-mirror-and-milestone-refresh.md`), is a ledger-only commit with no `chore(site): health refresh` before it. §7's health-refresh-first bullet holds for handoffs and the pre-compaction flush. The PreCompact hook is unchanged and remains the backstop.
+- **§26's tooling half is done:** `READING_ORDER` carries the step. Proof: the test `session-resume: the reading order names state/directives/ after DECISIONS-PENDING.md and before PRECEDENTS.md (AUTONOMY.md §26)`.
