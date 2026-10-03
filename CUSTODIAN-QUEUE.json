@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T10:13:22.803Z",
-  "plan_hash": "9cd19ceead028b9c8ac46a963ad4dd875432b2bd2ee6c68a61bc993b62cbdc1c",
+  "generated_at": "2026-10-03T11:14:38.046Z",
+  "plan_hash": "a8c071d728bc700f8b28f91b87a5656a8a4157c8f2db6bfff1f3488e45896908",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1355,6 +1355,25 @@
         "done": null
       },
       "summary": "The queue entry for row R1 of frontends/shell/MANUAL-WALKTHROUGH.md, Part R (publish-attempt-lifecycle-src-tauri's operator row; question round 40, item 3: the exit seam is proved by the source read plus R1). Committed with a blank result log; Windows; the normal build. Accepting its result is the human's (a red line). Until its log is filled, neither the S3 seam nor Part R is discharged (node 8's closing record, the form Amendment 4). Its scheduling is the human's, in the batched operator sittings."
+    },
+    {
+      "id": "subagent-write-audit-script",
+      "title": "The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-03",
+        "done": null
+      },
+      "summary": "Ruled by question round 41, item 3 (RULED 2026-10-03; state/directives/2026-10-03-write-audit-ruling.md): the transcript audit is the primary, scripted check for lead-data and architect runs. The custodian runs it from its session scratchpad; this node lands it under scripts/hooks/ with tests, so a new session has it. Behaviour as run on 2026-10-03: an agent id resolves to the canonical transcript under the project's session subagents directory (a hand-back's tasks output file can be empty); Write, Edit, MultiEdit and NotebookEdit must target exactly the allowed report path (none for the architect); any Bash or PowerShell call voids the run; a missing or empty transcript, or zero tool calls parsed, voids the run (an audit that sees nothing never passes). Five-line form; reviewer gate."
     }
   ],
   "unscheduled": [

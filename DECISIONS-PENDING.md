@@ -29,7 +29,21 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
-**OPEN 2026-10-03 — KNOWN-LIMITATIONS 30, the human's sight (node 8's form, §8 item 14); for the next batched question round:**
+**RULED 2026-10-03 — question round 41 (AskUserQuestion, four items in one call, answered at 11:10:31Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-41.md` at 10:35:18Z, and the hook's log reads `ok: true`. Item 1 is a red line, ruled in typed words; item 3 is typed; items 2 and 4 are by option label, verbatim):**
+- **Item 1 — RED LINE** (next to the ADR-017 exposure review): `kernel/README.md`'s publish-exposure bullet, lead-data edit C8. Typed: **"Take C8"**.
+  - Applied: C8 goes in #166's correction round 1.
+  - The OPEN entry on C8 is closed.
+- **Item 2 — KNOWN-LIMITATIONS 30, the human's sight** (node 8's §8 item 14): **"Sighted, keep it (Recommended)"**.
+  - Applied: recorded as the sight, which answers node 8's closing record, item 7.
+  - The OPEN entry on item 30 is closed.
+- **Item 3 — guarding lead-data's writes.** Typed, and filed verbatim as `state/directives/2026-10-03-write-audit-ruling.md`, lines 7-9 (sha256 daefdaf76ddfcc7b9939ce722999c95d1f049238f4f69ca2f38058ac7747676c at the commit that adds it). Applied:
+  - **The primary check** is the transcript audit, for lead-data and architect runs. Every write-capable call must target exactly the brief's report path; for the architect, no write-capable call is allowed. Anything else voids the run.
+  - **Secondary checks:** the status, dirty-file hash and refs snapshots.
+  - **First runs.** The audit ran on lead-data dispatches 1 and 2 and on the trial-era architect runs, and all pass.
+  - **The script** runs from the custodian's session for now. The proposed node `subagent-write-audit-script` lands it in the repository.
+- **Item 4 — a pointer after `AI_DEVELOPMENT.md`'s lead-data section:** **"Append a pointer (Recommended)"**. Applied: one line, appended in #166's correction round 1.
+
+**CLOSED 2026-10-03 (question round 41, item 2) — KNOWN-LIMITATIONS 30, the human's sight (node 8's form, §8 item 14); for the next batched question round:**
 - **Context.**
   - Item 30 is draft wording, as its trailing comment says. It merged with #163 at 4d92733 and was revised by #165 (merge commit 25d7507). Each PR's body showed its text for the human's sight.
   - The gates read no merge click as sight, so the sight is asked as a question item (node 8's closing record, the form's Amendment 4, item 7).
@@ -37,7 +51,7 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 - **Recommendation.** Sighted, keep the wording. Otherwise the human gives the changes, and a follow-up applies them.
 - **Applying it touches** nothing if the wording is kept, and item 30 of `KNOWN-LIMITATIONS.md` otherwise.
 
-**OPEN 2026-10-03 — `kernel/README.md`'s publish-exposure bullet (lead-data report 1, edit C8); for the next batched question round:**
+**CLOSED 2026-10-03 (question round 41, item 1) — `kernel/README.md`'s publish-exposure bullet (lead-data report 1, edit C8); for the next batched question round:**
 - **Context.**
   - The kernel README says nothing is exposed. In fact two product callers reach publish through the permission boundary: the `publish-bundle` binary and the shell's `binding_publish_*` commands, shipped since v0.1.0 (KNOWN-LIMITATIONS 5).
   - Edit C8 in `state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md`, section 3, states those two callers. It keeps the README's sentence that routes ADR-017's "developer/test tooling until then" question to the custodian.
