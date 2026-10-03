@@ -3560,7 +3560,7 @@ mod ticket_drop_under_lock_regression {
     /// panicking cancel) while P, expired and in another dataset, sits in `swept`.
     ///
     /// RECORDED MUTATION (M1): in `StreamRegistry::cancel`, declare `swept` after the guard again,
-    /// the order at `c9f41126`. Observed at commit 1c8cea2207e2 (applied, run, reverted): this test
+    /// the order at `c9f41126`. Observed at commit ca005fe0f3a2 (applied, run, reverted): this test
     /// FAILED by timeout (its name, then `: StreamRegistry::cancel did not return within 5s`); the
     /// two tests below passed.
     #[test]
@@ -3579,7 +3579,7 @@ mod ticket_drop_under_lock_regression {
     /// `cancel_all_for_dataset` on Q's dataset.
     ///
     /// RECORDED MUTATION (M2): the same change in `cancel_all_for_dataset`. Observed at commit
-    /// 1c8cea2207e2 (applied, run, reverted): this test FAILED by timeout (its name, then
+    /// ca005fe0f3a2 (applied, run, reverted): this test FAILED by timeout (its name, then
     /// `: StreamRegistry::cancel_all_for_dataset did not return within 5s`); the tests above and
     /// below passed, because T3's `swept` is empty.
     #[test]
@@ -3600,7 +3600,7 @@ mod ticket_drop_under_lock_regression {
     /// failed precondition fails by name and cannot pass vacuously.
     ///
     /// RECORDED MUTATION (M3): in `cancel_all_for_dataset`, declare `retired` after the guard
-    /// again. Observed at commit 1c8cea2207e2 (applied, run, reverted): this test FAILED by timeout
+    /// again. Observed at commit ca005fe0f3a2 (applied, run, reverted): this test FAILED by timeout
     /// (its name, then `: StreamRegistry::cancel_all_for_dataset did not return within 5s`); the
     /// two tests above passed, because their `retired` is empty.
     #[test]
