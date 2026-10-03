@@ -149,31 +149,16 @@ enum TicketState {
 /// to each.
 #[derive(Default)]
 pub struct StreamRegistry {
-    /// **Invariant (architect, PR #116 attempt 1, S1; widened by
-    /// `kernel/TICKET-DROP-FOLLOWUPS-PREREGISTRATION.md` §2): no `TicketState`, and no other value
-    /// that owns an `EngineSource`, is dropped while this guard is held, on the return path or on an
-    /// unwind out of `SourceCancel::cancel` or `StreamHandle::mint`.** The values, by site:
-    /// - `sweep_locked`'s removed entries, moved into the `Vec` it returns (`swept` in each caller);
-    /// - the `Pending` state `cancel` or `cancel_all_for_dataset` retires, moved out by
-    ///   `mem::replace` (`retired`);
-    /// - the `Pending` entry `redeem` removes: its `built.source` and `built.cancel` move into
-    ///   `redeem`'s `Ok(..)` value, which its caller owns once the guard is released;
-    /// - `insert`'s return in `mint` and `redeem` (`prev`): `None` by construction (`mint` inserts a
-    ///   freshly minted [`StreamHandle`]'s key; `redeem` re-inserts the key it removed under the same
-    ///   guard), and `debug_assert`ed only after the guard is released;
-    /// - `mint`'s `source` and `cancel` when [`MAX_PENDING_TICKETS`] refuses them: parameters, which
-    ///   drop after every local of the body, the guard included.
-    ///
-    /// Each method declares those of `swept`, `retired` and `prev` it uses. It declares them before
-    /// it takes the guard, and locals drop in reverse order of declaration, so an unwind releases the
-    /// guard first. On the return path each method calls `drop(tickets)` before any of them drops.
-    /// The unwinds covered start in `SourceCancel::cancel`, the only call made under this guard
-    /// through a trait object, or in `StreamHandle::mint`, which `mint` calls while `source` is still
-    /// a parameter. Not covered: an unwind out of a std call while a value that owns an
-    /// `EngineSource` is in flight, as in `sweep_locked`'s `filter_map(..).collect()`,
-    /// `cancel_all_for_dataset`'s `retired.push(mem::replace(..))`, `redeem`'s `Pending` arm between
-    /// its `remove` and its `Ok(..)`, or `mint`'s `insert` call once `source` has moved into its
-    /// argument.
+    /// **Invariant (architect, PR #116 attempt 1, S1): no `TicketState` is ever dropped while this
+    /// guard is held.** Every method below that removes or replaces an entry (`sweep_locked`,
+    /// `cancel`'s and `cancel_all_for_dataset`'s `Pending` arms) moves the retired value out —
+    /// `sweep_locked` into its returned `Vec`, `cancel`/`cancel_all_for_dataset` via
+    /// `mem::replace` — and every caller drops that moved-out value only after this guard is
+    /// released, before the method itself returns (see each method's own `// Entry 132` comment).
+    /// `mint` and `redeem` also call `insert` under this guard: `mint` always inserts a
+    /// freshly-minted [`StreamHandle`]'s key, and `redeem` inserts only immediately after removing
+    /// the same key — both calls' returned `Option<TicketState>` is therefore always `None`, so
+    /// neither call drops a live value via `insert`'s return.
     tickets: Mutex<HashMap<String, TicketState>>,
 }
 
@@ -189,8 +174,7 @@ impl StreamRegistry {
     /// caller below still holds when it calls this, would re-lock that same `Mutex` on the same
     /// thread and hang. Every caller drops the returned `Vec` only after releasing its guard (each
     /// one calls `drop(tickets)` before its own return path, and the swept entries fall out of scope
-    /// after that). Each caller declares `swept` before it takes its guard, so an unwind also
-    /// releases the guard first.
+    /// after that).
     #[must_use]
     fn sweep_locked(tickets: &mut HashMap<String, TicketState>) -> Vec<TicketState> {
         let expired: Vec<String> = tickets
@@ -223,9 +207,8 @@ impl StreamRegistry {
     /// Without an entry point reachable *before* the lease, that lockout would be permanent rather
     /// than bounded by `TICKET_TTL`. Called at the top of `viewport_query`, before it leases.
     pub fn sweep_expired(&self) {
-        let swept;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        swept = Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         // Entry 132: release the lock before `swept`'s entries drop.
         drop(tickets);
         drop(swept);
@@ -239,10 +222,8 @@ impl StreamRegistry {
         source: Box<dyn BatchSource>,
         cancel: Arc<dyn SourceCancel>,
     ) -> Result<StreamHandle, SkpError> {
-        let swept;
-        let mut prev = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        swept = Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         let pending_for_dataset = tickets
             .values()
             .filter(|s| matches!(s, TicketState::Pending { dataset: d, .. } if d == dataset))
@@ -251,7 +232,7 @@ impl StreamRegistry {
             Err(SkpError::too_many_pending_streams(MAX_PENDING_TICKETS))
         } else {
             let handle = StreamHandle::mint();
-            prev = tickets.insert(
+            tickets.insert(
                 handle.as_str().to_string(),
                 TicketState::Pending {
                     built: PendingBuilt { source, cancel },
@@ -264,7 +245,6 @@ impl StreamRegistry {
         // Entry 132: release the lock before `swept` (and, on the refusal arm, the un-inserted
         // `source`/`cancel` this call was passed) drop.
         drop(tickets);
-        debug_assert!(prev.is_none(), "mint: a fresh key displaced an entry");
         drop(swept);
         result
     }
@@ -275,10 +255,8 @@ impl StreamRegistry {
         &self,
         handle: &str,
     ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
-        let swept;
-        let mut prev = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        swept = Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         let result = match tickets.get(handle) {
             None => Err(format!(
                 "ticket `{handle}` is unknown: never minted, already redeemed and gone, or \
@@ -297,7 +275,7 @@ impl StreamRegistry {
                 };
                 // Not a drop-under-lock: `built.source`/`built.cancel` are moved out into `result`
                 // below, owned by this function's caller once it unlocks — never dropped here.
-                prev = tickets.insert(
+                tickets.insert(
                     handle.to_string(),
                     TicketState::Redeemed {
                         dataset,
@@ -311,22 +289,20 @@ impl StreamRegistry {
         };
         // Entry 132: release the lock before `swept`'s entries drop.
         drop(tickets);
-        debug_assert!(prev.is_none(), "redeem: the re-insert displaced an entry");
         drop(swept);
         result
     }
 
     /// Cancel one ticket by its [`StreamHandle`] string.
     pub fn cancel(&self, handle: &str) -> CancelOutcome {
-        let swept;
-        let mut retired: Option<TicketState> = None;
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        swept = Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         // Entry 132: the retired `Pending` state (if any) is moved out here via `mem::replace`
         // rather than dropped by `*state = ..`'s implicit drop of the old value — the old value may
         // be a real `EngineSource` whose `Drop` re-enters this same method (through
         // `SessionInvalidator::end_generation`) when its post-check found a source change, and doing
         // that under this call's own lock is exactly entry 132's hang.
+        let mut retired: Option<TicketState> = None;
         let outcome = match tickets.get_mut(handle) {
             None => CancelOutcome::Unknown,
             Some(TicketState::CancelledBeforeRedeem { .. }) => CancelOutcome::AlreadyTerminal,
@@ -365,12 +341,11 @@ impl StreamRegistry {
 
     /// Cancel every ticket — pending or redeemed — for one dataset. Returns how many were.
     pub fn cancel_all_for_dataset(&self, dataset: &str) -> u32 {
-        let swept;
-        let mut retired: Vec<TicketState> = Vec::new();
         let mut tickets = self.tickets.lock().unwrap_or_else(|e| e.into_inner());
-        swept = Self::sweep_locked(&mut tickets);
+        let swept = Self::sweep_locked(&mut tickets);
         // Entry 132: every retired `Pending` state is moved out here, for the same reason `cancel`
         // above moves its single one out — see that method's comment.
+        let mut retired: Vec<TicketState> = Vec::new();
         let mut n = 0u32;
         for state in tickets.values_mut() {
             match state {
@@ -3002,7 +2977,7 @@ mod tests {
 /// dropping its `PendingBuilt.source` right there. `EngineSource::drop` calls
 /// `end_session_if_source_changed`, which — if the stream's post-check has already recorded a
 /// change (`StreamStats::source_changed_detail`, set by the producer thread before any terminal is
-/// sent, via `record_source_changed`) — calls `SessionInvalidator::end_generation`, which
+/// sent, `engine/src/stream.rs:1190-1195`) — calls `SessionInvalidator::end_generation`, which
 /// calls `GenerationRegistry::invalidate` (a **different** `Mutex`, no conflict) and then, for
 /// every ticket handle that generation held, `StreamRegistry::cancel` again — **the same `Mutex`,
 /// on the same thread, already held**. `std::sync::Mutex` is not reentrant: the second `lock()`
@@ -3013,7 +2988,7 @@ mod tests {
 /// (`GenerationState`, above). `OpenRegistry`'s `Mutex` holds `engine::CancelToken`s, whose `Drop`
 /// (`engine/src/cancel.rs`) is the default (no user impl) and touches nothing beyond its own
 /// `Arc<Inner>`. `StreamRegistry::cancel`'s and `cancel_all_for_dataset`'s `Redeemed` arms call
-/// `cancel.cancel()` (`EngineCancel` in `kernel/src/lib.rs` → `CancelToken::cancel`), which
+/// `cancel.cancel()` (`EngineCancel` → `CancelToken::cancel`, `kernel/src/lib.rs:571-575`), which
 /// sets an atomic flag and interrupts DuckDB — it does not drop the `TicketState`, and neither arm
 /// takes a registry lock beyond the one its own call already holds. `StreamRegistry::redeem`
 /// removes a `Pending` entry too, but **moves** its
