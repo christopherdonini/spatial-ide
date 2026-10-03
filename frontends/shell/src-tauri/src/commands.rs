@@ -390,10 +390,13 @@ pub async fn binding_publish_prepare(
 ///
 /// **P2's progress + cancel wiring** (`NEXT-CUT.md` item 3 — P1 left this at `None` progress on a
 /// token nothing outside the call could reach, `publish.rs`'s own module docs). A fresh
-/// [`CancelToken`] is minted here and registered in [`RunningPublishes`] BEFORE the blocking call
-/// starts (so `binding_publish_cancel` can reach it for the whole run) and removed unconditionally
-/// after, whatever the outcome — never leaked across attempts. Progress crosses as
-/// [`publish::PUBLISH_PROGRESS_EVENT`] via [`EventProgress`], phases only (no percentage/ETA).
+/// [`CancelToken`] is minted by [`publish::run_exclusive`] and registered in [`RunningPublishes`]
+/// BEFORE the blocking call starts (so `binding_publish_cancel` can reach it for the whole run) and
+/// removed after it, by the call that inserted it and by no other. If a call under this `attempt_id`
+/// is already running, nothing is registered, replaced or removed and the answer is
+/// [`ExecuteOutcome::UnknownAttempt`] — the attempt is single-use, so a second execute can only end
+/// there. Progress crosses as [`publish::PUBLISH_PROGRESS_EVENT`] via [`EventProgress`], phases
+/// only (no percentage/ETA).
 #[tauri::command]
 pub async fn binding_publish_execute(
     app: tauri::AppHandle,
@@ -407,9 +410,6 @@ pub async fn binding_publish_execute(
     let attempts = attempts.inner().clone();
     let running = running.inner().clone();
 
-    let cancel = CancelToken::new();
-    running.insert(attempt_id.clone(), cancel.clone());
-
     let progress_app = app.clone();
     let progress = EventProgress::new(attempt_id.clone(), move |event| {
         // Best-effort: this is an instrument stream (module docs, "phases only"), never a side
@@ -419,23 +419,26 @@ pub async fn binding_publish_execute(
     });
 
     let exec_attempt_id = attempt_id.clone();
-    let result = tokio::task::spawn_blocking(move || {
-        publish::execute_with_progress(
-            &grants,
-            &attempts,
-            &exec_attempt_id,
-            &typed_phrase,
-            &cancel,
-            Some(&progress),
-        )
+    let result = publish::run_exclusive(&running, &attempt_id, |cancel: CancelToken| async move {
+        tokio::task::spawn_blocking(move || {
+            publish::execute_with_progress(
+                &grants,
+                &attempts,
+                &exec_attempt_id,
+                &typed_phrase,
+                &cancel,
+                Some(&progress),
+            )
+        })
+        .await
     })
     .await;
 
-    // Unconditional: whether the call above succeeded, refused, or the blocking task itself
-    // panicked, this attempt is no longer running and must not linger in the registry.
-    running.remove(&attempt_id);
-
-    result.map_err(|e| format!("binding_publish_execute panicked: {e}"))
+    // `None`: this id is already running under another call, which keeps its own token.
+    match result {
+        None => Ok(ExecuteOutcome::UnknownAttempt),
+        Some(joined) => joined.map_err(|e| format!("binding_publish_execute panicked: {e}")),
+    }
 }
 
 /// The Cancel-publish control's own seam (`NEXT-CUT.md` P2 item 3: "wires to the CancelToken seam

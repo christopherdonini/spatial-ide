@@ -42,6 +42,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -56,6 +57,7 @@ use spatial_kernel::publish::{
     self, CorrespondingSource, CorrespondingSourceKind, OperatorLicense, PublishRequest,
     ViewerAssets, ViewerLicenseInput, OPERATION_CLASS, REVERSIBILITY_CLASS,
 };
+use tokio::sync::watch;
 
 /// The declared bound on a **prepared** attempt's own lifecycle (ADR-010 rule 6: a ceiling with no
 /// number is not declared). **Not** the grant's own 20-minute ceiling
@@ -979,15 +981,52 @@ pub fn prepare_cancel_key(dataset_handle: &str) -> String {
     format!("{PREPARE_CANCEL_KEY_PREFIX}{dataset_handle}")
 }
 
-/// The registry `binding_publish_cancel` reaches into — a running publish's own [`CancelToken`],
-/// keyed by `attempt_id`, live only for the duration of one `execute_with_progress` call.
+/// The registry `binding_publish_cancel` reaches into — a running operation's own [`CancelToken`],
+/// keyed by `attempt_id` for an execute and by [`prepare_cancel_key`] for the prepare phase.
 /// **Not** [`PendingAttempts`]: that store holds an attempt BEFORE it starts running (single-use,
-/// consumed by `take`); this one holds a token WHILE it runs, inserted by the Tauri command
-/// wrapper immediately before the blocking call and removed immediately after, regardless of
-/// outcome — so a stale entry never outlives the call it belongs to.
-#[derive(Default)]
+/// consumed by `take`); this one holds a token WHILE it runs.
+///
+/// An execute key is registered by [`run_exclusive`] only if it is absent and removed only by the
+/// call that inserted it, so a second execute under a running attempt's id can neither replace nor
+/// remove the running token. The prepare key is registered by [`with_registered_cancel`], whose
+/// insert replaces. The entry count is also published on a `watch` channel, updated under the same
+/// mutex as every change, so [`Self::wait_idle`] loses no wakeup in any order.
 pub struct RunningPublishes {
     inner: Mutex<HashMap<String, CancelToken>>,
+    count: watch::Sender<usize>,
+    drain_begun: AtomicBool,
+}
+
+impl Default for RunningPublishes {
+    fn default() -> Self {
+        Self {
+            inner: Mutex::new(HashMap::new()),
+            count: watch::channel(0).0,
+            drain_begun: AtomicBool::new(false),
+        }
+    }
+}
+
+/// The declared ceiling on the wall time between `prevent_exit` and `app.exit` when the last window
+/// closes with a publish registered (the 2026-10-03 exit-drain ruling: 30 s; ADR-010 rule 6). A
+/// declared ceiling, not a measured bound: it does not bound the publish's own quiescence
+/// (ADR-018 §2), only how long the process waits for it.
+pub const EXIT_DRAIN_CEILING: Duration = Duration::from_secs(30);
+
+/// What [`RunningPublishes::on_exit_requested`] tells the event callback to do.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExitAction {
+    Proceed,
+    /// Every registered token was cancelled; the caller prevents the exit, waits on
+    /// [`RunningPublishes::wait_idle`] and then exits.
+    PreventAndDrain,
+}
+
+/// How [`RunningPublishes::wait_idle`] ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DrainOutcome {
+    Drained,
+    TimedOut,
 }
 
 impl RunningPublishes {
@@ -995,14 +1034,30 @@ impl RunningPublishes {
         Self::default()
     }
 
+    /// Registers `token`, replacing whatever is under the key. Only the prepare phase uses this
+    /// (see [`with_registered_cancel`]); an execute registers through [`Self::try_insert`].
     pub fn insert(&self, attempt_id: String, token: CancelToken) {
         let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         g.insert(attempt_id, token);
+        self.count.send_replace(g.len());
+    }
+
+    /// Registers `token` only if the key is absent; `false` leaves the registered token untouched.
+    /// The check and the insert are one critical section.
+    pub fn try_insert(&self, attempt_id: String, token: CancelToken) -> bool {
+        let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        if g.contains_key(&attempt_id) {
+            return false;
+        }
+        g.insert(attempt_id, token);
+        self.count.send_replace(g.len());
+        true
     }
 
     pub fn remove(&self, attempt_id: &str) {
         let mut g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         g.remove(attempt_id);
+        self.count.send_replace(g.len());
     }
 
     /// `true` iff a running publish was found and cancelled. A miss (already finished, or an
@@ -1019,14 +1074,75 @@ impl RunningPublishes {
         }
     }
 
+    /// Cancels every registered token; returns how many were registered.
+    pub fn cancel_all(&self) -> usize {
+        let g = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        g.values().for_each(CancelToken::cancel);
+        g.len()
+    }
+
+    /// Resolves once the registry is empty, or at `ceiling`. Reads the count through the `watch`
+    /// channel, so it returns at once on an already-empty registry and wakes on the last removal.
+    pub async fn wait_idle(&self, ceiling: Duration) -> DrainOutcome {
+        let mut rx = self.count.subscribe();
+        let idle = tokio::time::timeout(ceiling, rx.wait_for(|n| *n == 0)).await;
+        if idle.is_ok_and(|r| r.is_ok()) {
+            DrainOutcome::Drained
+        } else {
+            DrainOutcome::TimedOut
+        }
+    }
+
+    /// The last window closed. `Proceed` when nothing is registered or a drain has already begun;
+    /// otherwise cancels every registered token, records that a drain has begun and answers
+    /// `PreventAndDrain` — once per process.
+    pub fn on_exit_requested(&self) -> ExitAction {
+        let nothing_running = self
+            .inner
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty();
+        if nothing_running || self.drain_begun.swap(true, Ordering::SeqCst) {
+            return ExitAction::Proceed;
+        }
+        self.cancel_all();
+        ExitAction::PreventAndDrain
+    }
+
     #[cfg(test)]
     fn len(&self) -> usize {
         self.inner.lock().unwrap_or_else(|e| e.into_inner()).len()
     }
 }
 
+/// Register a fresh [`CancelToken`] under `key` only if the key is absent, run `body` with it and
+/// remove the key this call inserted. `None` — the key is registered by a running call — runs
+/// nothing and removes nothing: the running token stays the one `binding_publish_cancel` reaches.
+///
+/// An execute is single-use (`PendingAttempts::take`), so a second execute under a running attempt's
+/// id can only end as `UnknownAttempt`; refusing here leaves the frontend's Cancel, addressed by
+/// `attempt_id`, pointing at the run that exists. The check and the insert are one critical section
+/// ([`RunningPublishes::try_insert`]).
+pub async fn run_exclusive<T, Fut>(
+    running: &RunningPublishes,
+    key: &str,
+    body: impl FnOnce(CancelToken) -> Fut,
+) -> Option<T>
+where
+    Fut: std::future::Future<Output = T>,
+{
+    let cancel = CancelToken::new();
+    if !running.try_insert(key.to_string(), cancel.clone()) {
+        return None;
+    }
+    let out = body(cancel).await;
+    running.remove(key);
+    Some(out)
+}
+
 /// Register a fresh [`CancelToken`] under `key`, run `body` with it, and remove the key
-/// **unconditionally** afterwards, whatever `body` produced.
+/// **unconditionally** afterwards, whatever `body` produced. **The prepare phase only** — its insert
+/// replaces; an execute registers through [`run_exclusive`], which removes only the key it inserted.
 ///
 /// **M4, this batch's reviewer gate.** `binding_publish_prepare` hand-wrote this
 /// insert/await/remove sequence, and the removal — the thing that keeps a finished publish's token
@@ -2738,5 +2854,43 @@ mod tests {
             matches!(first, ExecuteOutcome::Success { .. }),
             "got {first:?}"
         );
+    }
+
+    /// F4: while a call holds an attempt id, a second `run_exclusive` under it returns `None`, runs
+    /// no body and removes nothing; the registered token is still the first call's.
+    #[tokio::test]
+    async fn a_second_execute_under_a_running_attempt_id_is_unknown_and_leaves_the_running_token_registered(
+    ) {
+        let running = RunningPublishes::new();
+        let second_body_ran = AtomicBool::new(false);
+        let (registry, ran) = (&running, &second_body_ran);
+        let first = run_exclusive(&running, "att_1", |first_token| async move {
+            let second = run_exclusive(registry, "att_1", |_| async move {
+                ran.store(true, Ordering::SeqCst);
+            })
+            .await;
+            let registered = registry.len();
+            let reachable = registry.cancel("att_1");
+            (second, registered, reachable, first_token.is_cancelled())
+        })
+        .await;
+
+        let (second, registered, reachable, first_token_cancelled) =
+            first.expect("the first call registers");
+        assert!(second.is_none(), "the second call must be refused");
+        assert!(
+            !second_body_ran.load(Ordering::SeqCst),
+            "a refused call must not run its body"
+        );
+        assert_eq!(registered, 1, "the running token must still be registered");
+        assert!(
+            reachable,
+            "the running token must still be reachable by key"
+        );
+        assert!(
+            first_token_cancelled,
+            "the key must still reach the FIRST call's token, not a replacement"
+        );
+        assert_eq!(running.len(), 0, "the first call removes its own key");
     }
 }
