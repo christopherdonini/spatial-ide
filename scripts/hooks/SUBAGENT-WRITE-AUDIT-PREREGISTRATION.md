@@ -23,3 +23,21 @@ Amendment: classes 2 and 8 -- budget overrun, Scope not edited. Written after th
   - Reason: T8, M2 to M5, and the common-directory resolution.
   - Scope is not edited.
 - **Seam proof** (an observation, worker report 2). At 47fe9e54, run from this worktree with `--session`, the script resolved three real agent ids: two PASS, and one VOID (its Bash calls), as expected.
+
+Amendment: classes 6 and 4 -- budget deviation, Scope not edited; mutations added after a gate finding. Written after gate 1 (a post-result amendment). References only.
+- **Gate 1:** reviewer FAIL at 7a9784cb (`state/consults/gates/2026-10-03-subagent-write-audit-script-gate1-reviewer.md`; `state/gate-log.json` record 367).
+- **Class 6 (S1-1).**
+  - Declared: at most 250 changed lines over 2 files. Final: 293 lines (114 and 179) over the same 2 files, at c656076e, this form excluded, by §21c's counting rule.
+  - The declared 250 was already over §21c's 150-line bound at dispatch, which is the custodian's error. The single-gate route closes as §21b's mid-piece clause says, and the architect gate is taken. The short form stays.
+  - This line supersedes the first Amendment's "class 8" label, since class 8 is the full form's class. The Out-of-scope line's single-gate claim no longer holds, and the line is not rewritten. The Scope line is not edited.
+- **Class 4 (S1-2, S1-3).**
+  - T4, T6 and T7 now have mutations of their own: M7, M8 and M9, observed at 1202bf4e and recorded at aed61535.
+  - An unparseable transcript line now voids the run, naming its line (1202bf4e). T9 tests it, with M6 observed at 1202bf4e and recorded at aed61535.
+  - All four mutations are unit-only.
+- **The first Amendment, corrected (S2-1, S2-2).**
+  - Its fallback is the script's repository root, not the script's directory.
+  - M2 fails T8 only when the suite runs from a worktree, and the clause above M2's comment says so (c656076e). M2's comment names 8d296b9c, the base its edit was applied on before the fix committed at 47fe9e54. The gate-1 reviewer re-observed M2 at 7a9784cb.
+- **Routed to the human (S2-3).** The first Amendment's "Mutations added" and "A record finding" bullets fit no class in the template's section 10. They are routed to the human (`DECISIONS-PENDING.md`, OPEN 2026-10-03), and are not re-classed here.
+- **Not taken in this piece:** S2-4 (an allow-list of read-only tools) and N-2 (a read error other than ENOENT exits 1 without JSON, and cannot PASS). The Change line defines the verdict by the write and shell tools, and no granted tool list reaches another tool today. Both go to the closing record's follow-ups.
+- **N-1:** the header is reworded at aed61535.
+- **Worker report 4:** `state/consults/2026-10-03-subagent-write-audit-script-worker-report-4.md`. Its third Deviations bullet is imprecise: the reworded header keeps "export anything".
