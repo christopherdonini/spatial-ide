@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3fc8eaf0089e2755bf7d9e037d36e09e0bbbc6c5e5ec2c2eb7e61ebe67bf38bd`) at `2026-10-03T14:56:00.768Z`.
+Generated from `PLAN.yaml` (sha256 `fff9a426c31652784a28d6f5c04d1f0e37f336172aa85a8b19556daabc850d3e`) at `2026-10-03T15:26:06.653Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges (lane `governance`, order null, budget 15 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -30,13 +30,11 @@ Generated from `PLAN.yaml` (sha256 `3fc8eaf0089e2755bf7d9e037d36e09e0bbbc6c5e5ec
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
-- **subagent-write-audit-post-merge-pin** — The write-audit test file's superseded header line pinned at a main commit after PR #167 merges — blocked by: subagent-write-audit-script
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
 
 ## 5. In progress
 
 - **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — evidence: branch `cut/kernel-ticket-drop-followups`
-- **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) — evidence: branch `cut/subagent-write-audit-script`
 
 ## 6. Proposed / unscheduled
 

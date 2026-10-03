@@ -95,3 +95,14 @@ Amendment: classes 1, 3 and 6 -- budget deviation, Scope not edited; the record 
   - the third Amendment's "Nothing else is superseded" and its S2-5 sentences: by this Amendment.
 - **Routed:** the first Amendment's "Mutations added", `DECISIONS-PENDING.md` entry "OPEN 2026-10-03 — the write-audit form's unclassed "Mutations added" bullet".
 - **Follow-ups:** the third Amendment's two; the class-3 hash pin, carried by its PLAN node.
+
+Amendment: class 1, the closing record, written after the merge (a post-result amendment), with the class-3 hash pin that round 25, item 2 (d) orders after the merge. References and hashes only.
+- **(a) Merged:** PR #167 merged on 2026-10-03 at 15:22:53Z as merge commit cb4d3283, at head 20526b86.
+- **(b) The record:** the fourth Amendment, the gate-3 architect's reduction to references (the record cap, item 3), with which the piece lands.
+- **(c) Gates:** `state/gate-log.json` records 367 to 371 and 373, node subagent-write-audit-script.
+- **(d) Class 3, test text (the fourth Amendment's D1 row):** `scripts/hooks/subagent-write-audit.test.mjs:5 @ 8173b1e6 sha256:5e66689f636253abb931e40686a157e204f171666956814751be89817c8f9752`, superseded by line 5 of the same file at f1e39550.
+- **(e) Routed:** the first Amendment's "Mutations added" bullet, `DECISIONS-PENDING.md` entry "OPEN 2026-10-03 — the write-audit form's unclassed "Mutations added" bullet".
+- **(f) Follow-ups:**
+  - the third Amendment's two;
+  - the gate-3 architect's N-1 (`server_tool_use` items) and N-4 (a general-agent lead-data run voids on a tool such as `TodoWrite`).
+- **(g) Record rounds:** 2.
