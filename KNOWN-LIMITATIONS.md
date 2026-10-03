@@ -298,3 +298,17 @@ header above describes. They move into the next release's list when that release
     query issued against that dataset — this line names only that the event itself, as a live update,
     is best-effort, never that the end goes unenforced.
     <!-- engine/SOURCE-WATCHER-PREREGISTRATION.md §2b ("The emission never waits and takes no lock of `GenerationRegistry` or `StreamRegistry`. A full queue loses the event and never skips or blocks the end (Decision 2 keeps that safe).", byte-exact -- advisory 4: an earlier revision of this note elided "of `GenerationRegistry` or `StreamRegistry`", the round-11 elision rule's forbidden dropped qualifier; restored) and §7 (`SESSION_END_EVENT_QUEUE_BOUND` | 64 | "events enqueued and not yet emitted; each open ends at most once"); kernel/src/skp.rs (`SessionInvalidator::enqueue`'s `try_send`) -->
+
+30. **A publish interrupted by an exit the app does not drain can leave a hidden staging directory
+    beside its destination, and the audit then shows the attempt with no outcome.** When the last
+    window is closed while a publish is running, the app cancels it and waits for it to stop, for at
+    most 30 seconds; the publish removes its own staging directory and the audit records an outcome of
+    cancelled. The app does not do that, and the publish is not cancelled, in these cases: the
+    application menu's Quit on macOS, a SIGTERM, a logout or shutdown, a forced kill or power loss,
+    and a publish that has not stopped when the 30 seconds end. After any of them a directory named
+    `.<destination name>.staging-<hex>` can remain in the destination's parent folder; nothing removes
+    it, and it is safe to delete. The audit then shows the attempt as its intent with no outcome,
+    which `--audit-show` prints as "no outcome (interrupted?)", because the app cannot yet record
+    "unknown" explicitly. Only Windows has been exercised. On macOS and Linux the app also quits when
+    its last window closes; it does not follow macOS's convention of staying running.
+    <!-- DRAFT wording for the human's sight, not the human's own wording (frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC-TAURI-PREREGISTRATION.md §1 "May not claim", its last bullet and the paragraph beneath it; §2 item 4; §2 item 5's R3 table, its Exit rows). Authority: the 2026-10-03 exit-drain ruling, condition (b) (state/directives/2026-10-03-exit-drain-ruling.md); question round 40, item 1. The macOS and Linux sentence is the form's own "not verified" for those platforms (§2 item 5, R5), not a measurement. -->
