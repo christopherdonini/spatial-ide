@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cf7a00f9e7d3f115a50e5ad89ae19710bf0d1a9d4bead4a95e97621f245fa2d4`) at `2026-10-03T09:31:02.024Z`.
+Generated from `PLAN.yaml` (sha256 `0d4ad6bb900b7f9560584af8eed32b2b3b15c0b0246139c0922142f63534ebf2`) at `2026-10-03T09:36:24.764Z`.
 
 ## 1. Next
 
-- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update (lane `governance`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update (lane `governance`, order 15, budget 120 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -36,6 +36,7 @@ Generated from `PLAN.yaml` (sha256 `cf7a00f9e7d3f115a50e5ad89ae19710bf0d1a9d4bea
 ## 5. In progress
 
 - **publish-attempt-lifecycle-src-tauri** — Publish attempt lifecycle in src-tauri -- a second execute no longer replaces a running publish's cancel token, the grants mutex is not held across a whole publish, and closing the window mid-publish leaves no staging directory (wave-1 A1 observations 1-2, A5-2) — evidence: branch `cut/publish-attempt-lifecycle-src-tauri`
+- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update — evidence: branch `cut/lead-data-pilot-setup`
 
 ## 6. Proposed / unscheduled
 

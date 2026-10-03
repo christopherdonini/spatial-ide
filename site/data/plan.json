@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T09:31:02.197Z",
-  "plan_hash": "cf7a00f9e7d3f115a50e5ad89ae19710bf0d1a9d4bead4a95e97621f245fa2d4",
+  "generated_at": "2026-10-03T09:36:24.956Z",
+  "plan_hash": "0d4ad6bb900b7f9560584af8eed32b2b3b15c0b0246139c0922142f63534ebf2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5973,16 +5973,18 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 15,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "LEAD-DATA-PILOT-SETUP-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/lead-data-pilot-setup"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,

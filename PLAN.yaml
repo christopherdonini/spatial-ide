@@ -3711,13 +3711,13 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 15
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: LEAD-DATA-PILOT-SETUP-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/lead-data-pilot-setup}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
