@@ -392,6 +392,31 @@ describe("SKP v0 shared fixtures", () => {
     expect(res.state).toBe("requested");
   });
 
+  // RECORDED MUTATION (M3), observed at commit 5d4da4d: `CancelState` widened to `string`;
+  // `npm run typecheck` fails with TS2578 (unused directive) at the directive in this test.
+  it("a cancel response state outside the closed set does not typecheck", () => {
+    // @ts-expect-error SKP-V0.md section 1: `state` is one of three strings, never "cancelled".
+    const bad: CancelResponse = { state: "cancelled" };
+    expect(bad.state).toBe("cancelled");
+  });
+
+  // RECORDED MUTATION (M5), observed at commit 5d4da4d: `already_terminal` dropped from
+  // `CancelState`; `npm run typecheck` fails with TS2322 at the array in this test.
+  it("each shared cancel response fixture carries one of the three states", () => {
+    const states: CancelResponse["state"][] = ["requested", "unknown", "already_terminal"];
+    const files: Record<string, CancelResponse["state"]> = {
+      "v0-cancel-response": "requested",
+      "v0-cancel-response-unknown": "unknown",
+      "v0-cancel-response-already_terminal": "already_terminal",
+    };
+    for (const [name, state] of Object.entries(files)) {
+      const res = loadFixture<CancelResponse>(name);
+      assertExactKeys(res, ["state"], name);
+      expect(states).toContain(res.state);
+      expect(res.state).toBe(state);
+    }
+  });
+
   it("close_dataset request/response", () => {
     const req = loadFixture<CloseDatasetRequest>("v0-close_dataset-request");
     assertExactKeys(req, ["skp", "dataset"], "close_dataset request");

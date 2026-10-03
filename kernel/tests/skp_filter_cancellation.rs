@@ -241,7 +241,10 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
         skp: SKP_VERSION.to_string(),
         handle: stream_handle.as_str().to_string(),
     });
-    assert_eq!(outcome.unwrap().state, "requested");
+    assert_eq!(
+        outcome.unwrap().state,
+        spatial_skp::v0::CancelState::Requested
+    );
 
     // Drain to a terminal, whatever it is -- some of the tail rows may have already been produced
     // and delivered before the cancel landed, or none may have; either is consistent with this

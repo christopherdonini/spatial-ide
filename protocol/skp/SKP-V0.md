@@ -120,6 +120,11 @@ this reaches the producer's own `CancelToken` (ADR-019's Consequences: the SKP `
 data-plane `TAG_CANCEL` frame converge on the same token); for an unredeemed ticket it marks the
 ticket cancelled so a later redemption is refused, closing the cancel-then-redeem race.
 
+The `state` set is closed. Under this version an object whose `state` is outside the three values
+is not a cancel response, and no tolerant reader accepts it (§4 item 13). `protocol/skp` refuses
+such a value when it deserializes; the shell's TypeScript mirror is a closed union checked at
+compile time only, as is every response type there.
+
 ### `close_dataset`
 
 ```
@@ -960,6 +965,16 @@ sides' fixtures for the literal (`protocol/skp/tests/data/*.json`, `protocol/skp
 and `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixture
 (`v0-error-filter_type_not_admitted.json`) together; plain `==` comparison retained;
 `deny_unknown_fields` kept both directions. `skp/1` stays RESERVED.
+
+> **Dated note, no literal change (2026-10-02; PLAN node `skp-cancel-state-closed-set`, question
+> round 38, item 1).** A sentence was added in place to §1's `cancel`, stating that `state` is a
+> closed set and that no tolerant reader accepts a value outside it. The literal stays `skp/0.8`:
+> no key, value, code or command is added or removed, and the kernel's serialized response for each
+> outcome is unchanged: no new key and no value-domain widening, per the entry-30 addendum's
+> versioning disposition (§8, entry 30). Two shared cancel-response fixtures
+> (`v0-cancel-response-unknown.json`, `v0-cancel-response-already_terminal.json`) landed with both
+> sides' tests in one commit. The conformance harness's one reported divergence (D1) is resolved.
+> `protocol/data-plane/` has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
 

@@ -26,12 +26,12 @@ use spatial_engine::{
     TypeRefusalReason, ViewportQuery, WatchSignal, WatchSink,
 };
 use spatial_skp::v0::{
-    CancelKey, CancelRequest, CancelResponse, CheckComponent, ChecksState, CloseDatasetRequest,
-    CloseDatasetResponse, CoverageState, CrsInfo, CrsUnit, DatasetHandle, DatasetSessionEnded,
-    DecU64, DescribeRequest, DescribeResponse, EndReason as WireEndReason, Extent, FieldInfo,
-    GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest, OpenDatasetResponse, RowCount,
-    SessionRef, SkpError, SourceChecks, SourceCoverage, SourceInfo, StreamHandle,
-    ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
+    CancelKey, CancelRequest, CancelResponse, CancelState, CheckComponent, ChecksState,
+    CloseDatasetRequest, CloseDatasetResponse, CoverageState, CrsInfo, CrsUnit, DatasetHandle,
+    DatasetSessionEnded, DecU64, DescribeRequest, DescribeResponse, EndReason as WireEndReason,
+    Extent, FieldInfo, GeometryInfo, IdentityInfo, LicenseInfo, OpenDatasetRequest,
+    OpenDatasetResponse, RowCount, SessionRef, SkpError, SourceChecks, SourceCoverage, SourceInfo,
+    StreamHandle, ViewportQueryRequest, ViewportQueryResponse, SKP_VERSION,
 };
 
 use crate::{open_engine_stream, wrap_for_data_plane, Catalog};
@@ -68,6 +68,16 @@ fn end_reason_of(r: SessionEndReason) -> WireEndReason {
     }
 }
 
+/// The wire's `CancelState` is the projection `cancel_state_of` makes of [`CancelOutcome`]: an
+/// exhaustive `match`, so a new outcome cannot reach the wire without a wire value.
+fn cancel_state_of(o: CancelOutcome) -> CancelState {
+    match o {
+        CancelOutcome::Requested => CancelState::Requested,
+        CancelOutcome::Unknown => CancelState::Unknown,
+        CancelOutcome::AlreadyTerminal => CancelState::AlreadyTerminal,
+    }
+}
+
 /// ADR-019: an unredeemed ticket is swept and its slot freed.
 pub const TICKET_TTL: Duration = Duration::from_secs(30);
 /// ADR-019, ADR-010 rule 6 (declared, not discovered): `viewport_query` mints tickets at gesture
@@ -93,22 +103,13 @@ pub const MAX_PENDING_TICKETS: usize = 8;
 /// this registry.
 pub const TERMINAL_ENTRY_MAX_AGE: Duration = Duration::from_secs(300);
 
-/// `state` in a [`CancelResponse`] (SKP-V0.md §1) — no timestamp, counter or duration attaches to
-/// it (ADR-004 Amendment 4).
+/// `state` in a [`CancelResponse`] (SKP-V0.md §1), projected onto the wire's closed
+/// [`CancelState`] by `cancel_state_of` — no timestamp, counter or duration attaches to it
+/// (ADR-004 Amendment 4).
 pub enum CancelOutcome {
     Requested,
     Unknown,
     AlreadyTerminal,
-}
-
-impl CancelOutcome {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Requested => "requested",
-            Self::Unknown => "unknown",
-            Self::AlreadyTerminal => "already_terminal",
-        }
-    }
 }
 
 struct PendingBuilt {
@@ -1521,7 +1522,7 @@ impl SkpHost {
             Err(_) => self.opens.cancel(&req.handle),
         };
         Ok(CancelResponse {
-            state: outcome.as_str().to_string(),
+            state: cancel_state_of(outcome),
         })
     }
 
@@ -2342,6 +2343,64 @@ mod tests {
             Box::new(Empty),
             Arc::new(NoopCancel(std::sync::atomic::AtomicBool::new(false))),
         )
+    }
+
+    /// T4 (`protocol/skp/CANCEL-STATE-CLOSED-SET-PREREGISTRATION.md` §4): the seam is the response
+    /// JSON the kernel writes and the shell and `protocol/skp` read. Each of `cancel`'s three
+    /// outcomes comes through the real `SkpHost::cancel` — an unminted `sh_` handle (`unknown`), a
+    /// minted ticket cancelled once (`requested`), a minted, redeemed ticket cancelled twice
+    /// (`already_terminal`) — is serialized, and is compared with the shared fixture both sides'
+    /// tests read; same real-shape discipline as
+    /// `the_real_describe_crs_shape_matches_the_shared_fixture`.
+    ///
+    /// RECORDED MUTATION (M4), observed at commit 5d4da4d: `cancel_state_of` maps `AlreadyTerminal` to
+    /// `Unknown`. This test fails at the `already_terminal` comparison (left `unknown`).
+    #[test]
+    fn the_real_cancel_responses_match_the_shared_fixtures() {
+        let tickets = StreamRegistry::new();
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            tickets.clone(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let cancel = |handle: &str| {
+            serde_json::to_value(
+                host.cancel(CancelRequest {
+                    skp: SKP_VERSION.to_string(),
+                    handle: handle.to_string(),
+                })
+                .expect("cancel answers"),
+            )
+            .unwrap()
+        };
+        let fixture = |name: &str| -> serde_json::Value {
+            let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .expect("workspace root")
+                .join(format!("protocol/skp/tests/data/{name}.json"));
+            let raw = std::fs::read_to_string(&path).expect("read shared fixture");
+            serde_json::from_str(&raw).expect("shared fixture is valid JSON")
+        };
+
+        // F6, Unknown.
+        assert_eq!(
+            cancel("sh_00000000000000000000000000000000"),
+            fixture("v0-cancel-response-unknown")
+        );
+        // F6, Requested: a minted, never-redeemed ticket cancelled once.
+        let (s, c) = synthetic_source();
+        let pending = tickets.mint("d", s, c).unwrap();
+        assert_eq!(cancel(pending.as_str()), fixture("v0-cancel-response"));
+        // F6, AlreadyTerminal: minted, redeemed, cancelled twice.
+        let (s, c) = synthetic_source();
+        let redeemed = tickets.mint("d", s, c).unwrap();
+        tickets.redeem(redeemed.as_str()).unwrap();
+        assert_eq!(cancel(redeemed.as_str()), fixture("v0-cancel-response"));
+        assert_eq!(
+            cancel(redeemed.as_str()),
+            fixture("v0-cancel-response-already_terminal")
+        );
     }
 
     #[test]

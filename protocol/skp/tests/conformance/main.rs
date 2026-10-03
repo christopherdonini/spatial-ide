@@ -12,7 +12,7 @@ use spatial_skp::v0::*;
 /// Divergences observed and reported in `DIVERGENCES.md` (fixture ids). The run asserts the
 /// observed set equals this one in both directions: a new divergence fails, and so does a reported
 /// one that stops diverging — either way the report must be updated, never silently absorbed.
-const REPORTED_DIVERGENCES: &[&str] = &["rej-resp-cancel-bad-state"];
+const REPORTED_DIVERGENCES: &[&str] = &[];
 
 #[derive(Debug)]
 enum Outcome {
