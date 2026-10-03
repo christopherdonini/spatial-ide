@@ -3075,8 +3075,11 @@ mod tests {
             let registered = running.len();
             let action = running.on_exit_requested();
             park.release();
-            let drained = drain_rt.block_on(running.wait_idle(Duration::from_secs(60)));
-            (while_parked, registered, action, a.join().unwrap(), drained)
+            // Join first: `run_exclusive` removes its key before it returns, so the registry is
+            // empty here and the zero-length wait asserts no value that depends on a wall clock.
+            let outcome = a.join().unwrap();
+            let drained = drain_rt.block_on(running.wait_idle(Duration::ZERO));
+            (while_parked, registered, action, outcome, drained)
         });
 
         assert!(
