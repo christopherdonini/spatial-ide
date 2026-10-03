@@ -1,14 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0e1784e6e290816760c7465055a074a608f4963b781519527f411194abdf1ac4`) at `2026-10-03T12:12:06.457Z`.
+Generated from `PLAN.yaml` (sha256 `67f01bbe64635a3519a41e439dc6e413392f1104b8cdea74fbb4ca1680509ec7`) at `2026-10-03T12:50:13.915Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) (lane `kernel-protocol`, order 10, budget 90 min)
+- **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) (lane `governance`, order 16, budget 60 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -23,7 +24,6 @@ Generated from `PLAN.yaml` (sha256 `0e1784e6e290816760c7465055a074a608f4963b7815
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **kernel-ticket-drop-followups** — StreamRegistry tickets -- the no-drop-under-guard invariant made unwind-safe and checkable (PR #116's deferred items) — blocked by: lead-data-pilot-setup
 - **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
@@ -32,11 +32,10 @@ Generated from `PLAN.yaml` (sha256 `0e1784e6e290816760c7465055a074a608f4963b7815
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **subagent-write-audit-script** — The write audit as a tracked script -- every write-capable call in a lead-data or architect transcript must target exactly the brief's report path (the 2026-10-03 write-audit ruling) — blocked by: lead-data-pilot-setup
 
 ## 5. In progress
 
-- **lead-data-pilot-setup** — The data-path lead pilot's setup -- .claude/agents/lead-data.md (Part 2, byte for byte), the AI_DEVELOPMENT.md section (Part 3), and the owner's-index sections of engine/README.md and kernel/README.md (Part 4), filled by lead-data's first dispatch with the kernel README's update — evidence: branch `cut/lead-data-pilot-setup`
+- (none)
 
 ## 6. Proposed / unscheduled
 

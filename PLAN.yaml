@@ -1560,7 +1560,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 10
     depends_on: [kernel-ticket-drop-under-registry-lock, publish-attempt-lifecycle-src-tauri, lead-data-pilot-setup]
     needs_human: {kind: none, minutes: 0}
@@ -3711,19 +3711,19 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 15
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: LEAD-DATA-PILOT-SETUP-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/lead-data-pilot-setup}
+    evidence: {pr: 166}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file."
-    dates: {opened: 2026-10-03, done: null}
+    summary: "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file. DONE 2026-10-03: PR #166 merged as merge commit ab70bf87 (head 11c3fe62); the closing record is the form third Amendment line."
+    dates: {opened: 2026-10-03, done: 2026-10-03}
   - id: kernel-composed-ceiling-projected-stream
     title: "The kernel's composed per-stream ceilings do not cover a live projected stream's attribute buffers -- recompose and declare that bound (ADR-010 rule 6)"
     kind: task
@@ -3780,7 +3780,7 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 16
     depends_on: [lead-data-pilot-setup]
     needs_human: {kind: none, minutes: 0}

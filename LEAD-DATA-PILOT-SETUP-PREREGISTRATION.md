@@ -42,3 +42,35 @@ Amendment: class 1, correction round 2, written after question round 42's result
 - **Superseded index.**
   - The publish-exposure bullet as c18f87f9 applied it is superseded at f59c3566.
   - Nothing else is superseded.
+Amendment: class 1, the closing record, written after the merge (a post-result amendment). References and hashes only.
+- **(a) Merged:** PR #166 merged on 2026-10-03 at 12:45:15Z as merge commit ab70bf87, at head 11c3fe62.
+- **(b) The form:** this five-line block, and its first and second Amendment lines (correction rounds 1 and 2).
+- **(c) Authority:** the Authority line above; question round 41, items 1 to 4; question round 42, items 1 to 3.
+- **(d) Applied text:**
+  - `engine/README.md:495-527` @ ab70bf87 sha256:a9d21c9e0f5fc118439240b35ad7c4800cb73e70220f298b561dcce4de77da43
+  - `kernel/README.md:346-382` @ ab70bf87 sha256:0b26f5054068eed46f1485abff1eaf29fcb5a8759883e27061cb0acfd8c8ac5d
+  - `kernel/README.md:237-241` @ ab70bf87 sha256:cf5c6d24fa4bef4b588070acde755149fc387564371f0aa67b37c2d16513902b. This is the publish-exposure bullet, and it is cited by this pin, not as a byte copy of question round 42's description.
+  - The agent file and the `AI_DEVELOPMENT.md` section are the gate-1 reviewer's byte checks.
+- **(e) Reports.** Each filing note carries the report's hash of record.
+  - `state/consults/2026-10-03-lead-data-pilot-setup-lead-data-report-1.md` and `-lead-data-report-2.md`
+  - `state/consults/2026-10-03-lead-data-pilot-setup-worker-report-1.md`, `-worker-report-2.md` and `-worker-report-3.md`
+- **(f) Gate reports:** `state/consults/gates/2026-10-03-lead-data-pilot-setup-gate1-architect.md` and `-gate1-reviewer.md`, and the same names for gates 2 and 3.
+- **(g) The Scope figure:** the second Amendment line's figure, recounted by the gate-3 reviewer.
+- **(h) Category touches:** C5 by the first Amendment line, C8 by the second.
+- **(i) Write audit:** question round 41, item 3, Applied, "First runs"; and the gate-2 and gate-3 architect runs, by their filing notes.
+- **(j) Trial log:** the gate-1 architect's S1-1 is a setup finding, excluded by question round 42, item 2.
+- **(k) Record rounds:** 2.
+- **(l) Follow-ups:**
+  - `module-docs-stale-statements`;
+  - `kernel-composed-ceiling-projected-stream`;
+  - `subagent-write-audit-script`;
+  - lead-data dispatched as its own agent type (the gate-2 architect's N3).
+- **(m) The reviewers' record notes:**
+  - gate-1 S2-2: C8 is ruled by question round 41, item 1 and question round 42, item 1. C5 was taken, though lead-data report 1 had held it.
+  - gate-1 S2-4: report 1's section 4 line references are pinned to af40bbf, and the merge moves them.
+  - gate-2 S2-1: see the index below.
+  - gate-2 S2-2: the audit result is cited as in (i). Dispatch 1's "no shell call" is evidence in `state/drafts/weekly-window-2026-10-09.md`, item B2, not Authority.
+  - gate-2 S2-3: settled by the gate-2 architect's Judgment 4.
+- **Superseded index.**
+  - `kernel/README.md`'s pre-piece bullet "Nothing is exposed", as at af40bbf, was superseded at c18f87f9, and that text in turn at f59c3566.
+  - Nothing else is superseded.

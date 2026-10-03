@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-03T12:12:06.625Z",
-  "plan_hash": "0e1784e6e290816760c7465055a074a608f4963b781519527f411194abdf1ac4",
+  "generated_at": "2026-10-03T12:50:14.077Z",
+  "plan_hash": "67f01bbe64635a3519a41e439dc6e413392f1104b8cdea74fbb4ca1680509ec7",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2680,7 +2680,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 10,
       "depends_on": [
         "kernel-ticket-drop-under-registry-lock",
@@ -5973,7 +5973,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 15,
       "depends_on": [],
       "needs_human": {
@@ -5983,16 +5983,16 @@
       "gate": "LEAD-DATA-PILOT-SETUP-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/lead-data-pilot-setup"
+        "pr": 166
       },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file.",
+      "summary": "Placed by the human's direction of 2026-10-03 (RULED 2026-10-03, the data-path lead pilot; state/directives/2026-10-03-lead-data-pilot-direction.md, with the pilot document state/directives/LEAD-DATA-PILOT-2026-10-03.md): the next free slot under the two-pieces limit, ahead of node 9 (kernel-ticket-drop-followups depends on it). Scope: the pilot document, section 5. Short-form preregistration before any code; gates reviewer and architect (the architect checks gate independence); after each lead-data run, git status --porcelain shows only its report file. DONE 2026-10-03: PR #166 merged as merge commit ab70bf87 (head 11c3fe62); the closing record is the form third Amendment line.",
       "dates": {
         "opened": "2026-10-03",
-        "done": null
+        "done": "2026-10-03"
       }
     },
     {
@@ -6082,7 +6082,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 16,
       "depends_on": [
         "lead-data-pilot-setup"
