@@ -11,7 +11,10 @@ name: Product CI — Rust workspace
 #
 # ## What a green run here means, stated narrowly
 #
-# It means: the workspace compiles on the reference profile and its ordinary test suite passes.
+# It means, per matrix entry: the workspace compiles on that entry's runner and its ordinary test
+# suite passes. The Windows entry is the reference profile. The ubuntu-24.04 entry is Linux L1 for
+# the Cargo workspace only, as PORT-1-LINUX-L1-PREREGISTRATION.md defines it, and every run of either
+# entry prints the tests it ignores in its own step.
 #
 # It does **not** mean any of the following, and must never be cited for them:
 #
@@ -21,26 +24,29 @@ name: Product CI — Rust workspace
 #     that drifts between and within sessions, which the bake-off README §21/§22 records as
 #     asymmetric and uncancellable by ratio. A number taken here would not be a smaller number, it
 #     would not be a measurement. Nothing in this workflow may fill a results table.
-#   - **Nothing about macOS or Linux.** It runs on the Windows reference profile only — see the
-#     runner note below.
+#   - **Nothing about macOS, and nothing about Linux beyond L1 for the workspace.** Not the Tauri
+#     shell or any excluded crate, not L2 or L3, and no other distribution or architecture. The
+#     file watcher's own test targets are compiled out off Windows and do not run on Linux.
 #   - **Nothing about the ADR-003 hardware-validation gate** (`docs/07`), which is about native
 #     WebView integration, frame pacing, GPU behaviour and picking latency on real hardware. No
 #     amount of green here advances it.
 #
 # ## Runner choice
 #
-# **`windows-latest`.** The reference profile in `CLAUDE.md` is Windows 10 / MSVC / WebView2, every
-# claim this repository makes is scoped to it, and it is the platform the workspace suite is actually
-# known to pass on. Running the only job somewhere else would mean CI covering a platform the
-# constitution makes no claims for while leaving the one it does claim untested, and would do it on
-# a platform nothing has yet verified the suite on.
+# **Two matrix entries.** `windows-latest` is the reference profile in `CLAUDE.md` (Windows 10 /
+# MSVC / WebView2), and every claim this repository makes is scoped to it. `ubuntu-24.04` is pinned
+# to a version, not to `ubuntu-latest`, so that the image does not move under the entry; a profile
+# step reports the OS release and architecture on each run. The Linux entry catches path-separator
+# and case-sensitivity assumptions, which `publish/mod.rs`'s `replace('\\', "/")` and
+# `viewer_assets.rs`'s backslash rejection genuinely have surface for. The Windows check keeps its
+# name, since a rename would orphan anything that watches it.
 #
-# Adding `ubuntu-latest` to the matrix below is a line, and is worth doing: it would catch
-# path-separator and case-sensitivity assumptions, which `publish/mod.rs`'s `replace('\\', "/")` and
-# `viewer_assets.rs`'s backslash rejection genuinely have surface for. It is not added here because
-# **nothing has yet established that the suite passes on Linux** — see the note below on why that
-# could not be settled — and a matrix entry that has never run is a red build waiting to happen
-# rather than coverage.
+# The Linux entry's ignores that Windows does not have are each named by a reason that cites its
+# owning boundary, and the list step prints them. What is and is not claimed for Linux lives in
+# `KNOWN-LIMITATIONS.md` item 1, and its premise is PORT-1-LINUX-L1-PREREGISTRATION.md.
+#
+# The notes below were written before the Linux entry existed and are kept as they were: a lifted
+# caveat whose evidence has been erased cannot be checked.
 #
 # > **Unverified by CI as of 2026-08-06, and the reason is environmental — not this file.** No run
 # > of either product workflow on that date was ever assigned a GitHub-hosted runner. Three runs,
@@ -179,14 +185,15 @@ concurrency:
 
 jobs:
   workspace:
-    name: cargo test --workspace
+    name: ${{ matrix.job_name }}
     strategy:
       fail-fast: false
       matrix:
-        # One entry today — the reference profile. It stays a matrix rather than a bare `runs-on`
-        # precisely because adding `ubuntu-latest` should be a line here and not a restructure; see
-        # the runner note above for what has to be true first.
-        os: [windows-latest]
+        include:
+          - os: windows-latest
+            job_name: "cargo test --workspace (windows-latest)"
+          - os: ubuntu-24.04
+            job_name: "L1 portable correctness · cargo test --workspace (ubuntu-24.04)"
     runs-on: ${{ matrix.os }}
     # The vendored DuckDB build dominates a cold run. Bounded so a hung job is killed rather than
     # burning the default six hours.
@@ -206,7 +213,12 @@ jobs:
       # run that never started. `--tests` builds the integration targets too, including the
       # `#[ignore]`d harnesses — they must keep *compiling* even though they never run here, or
       # they would rot silently between measurement passes.
+      - name: Runner profile (Linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: grep -E '^(NAME|VERSION_ID)=' /etc/os-release && uname -m
+
       - name: Build the workspace and every test target
+        id: build
         run: cargo build --workspace --tests --locked
 
       # **No `--ignored`, deliberately.** `cargo test` skips `#[ignore]`d tests by default, which is
@@ -219,3 +231,9 @@ jobs:
       # artifact.
       - name: Run the ordinary suite
         run: cargo test --workspace --locked
+
+      # PORTABILITY R6: each run prints the tests it does not run, so a skip is visible rather than
+      # absent. Runs after a successful build even when the suite step failed.
+      - name: List the ignored tests (PORTABILITY R6)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: cargo test --workspace --locked -- --list --ignored
