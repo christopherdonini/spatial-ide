@@ -2,7 +2,7 @@
 
 The first Spatial IDE mod: a refuse-only plugin of function hooks for sessions in this repository. It never approves a call, rewrites a call's arguments, submits a prompt, calls a model, makes a network request or writes a file. Every refusing hook fails closed: it carries a catch that denies, so a hook that throws or overruns refuses the call instead of being skipped. The form is `tools/mods/GUARDIAN-V0-PREREGISTRATION.md`, and it governs this folder.
 
-Built and tested against Claude Code 2.1.288 on Windows. Nothing here is claimed for another build, for macOS, or for Linux.
+Built and tested against Claude Code 2.1.289 on Windows. The reads of the build's type declarations behind the hooks were made at 2.1.288 and are claims about that build only. Nothing here is claimed for another build, for macOS, or for Linux.
 
 ## What it refuses
 
@@ -10,11 +10,11 @@ Each reason Guardian returns starts with `spatial-guardian`, states Guardian's o
 
 | Rule | Refuses | Ruling it enforces |
 |---|---|---|
-| G1 | A `git push` that force-pushes (`--force`, `-f`, a short-option cluster holding `f`, `--force-with-lease`, a `+` refspec, `--mirror`) or deletes a remote ref (`--delete`, `-d`, a `:` refspec, `--prune`), found through git's global options and inside a quoted command string. A segment holding `push` that cannot be tokenised is refused. Bash and PowerShell. | question round 34, item 3 |
+| G1 | A `git push` that force-pushes (`--force`, `-f`, a short-option cluster holding `f`, `--force-with-lease`, a `+` refspec, `--mirror`) or deletes a remote ref (`--delete`, `-d`, a `:` refspec, `--prune`), found through git's global options and inside a quoted command string. A segment holding `push` that cannot be tokenised is refused. Bash and PowerShell. Each command is read twice, and refused when either reading refuses: once split at the shell's separators, and once also split at parentheses, braces and backticks, so a push inside a subshell, a substitution, a backtick pair or a brace block is found. | question round 34, item 3 |
 | G2 | A Write or an Edit to `docs/01_Principles.md`, in any spelling of its path. | the project instructions: docs/01 is never edited |
 | G3 | A change to an accepted ADR (any ADR whose status line is not Proposed, or has none) or to a filed preregistration (a `*PREREGISTRATION.md` that `git cat-file -e HEAD:./<name>` finds), except as a pure append. A Write must start with the file's current bytes. An Edit must have an `old_string` that occurs once, at the end of the file, and a `new_string` that starts with it. | ADRs are append-only, as are preregistrations; question round 44, item 1 (O-8) |
 | G4 | An Edit under `state/directives/`, and a Write over a file that exists there. A Write that creates a new file is allowed. | directives are filed verbatim, once |
-| G6 | For a subagent of type architect, lead-data or evidence-reader: a Write or Edit outside the path its brief declares on a line of the form `REPORT PATH: <absolute path>`. A brief with no such line, or several, refuses every write. | question round 41, item 3; question round 43, item 4 |
+| G6 | For a subagent of type architect, lead-data or evidence-reader: a Write or Edit outside the path its brief declares on a line of the form `REPORT PATH: <absolute path>`. A brief with no such line, or several, refuses every write. On the PowerShell route, every PowerShell call by such a subagent is refused whatever its command, because a shell call carries no path to place; its Bash calls are not touched by G6. | question round 41, item 3; question round 43, item 4 |
 | N1 | Nothing. When the main conversation's context passes 80 percent and the continuity block is stale, a tool result gets one appended line for the model, at most once per 10-point band. | AUTONOMY section 7 (the flush) |
 
 G2, G3, G4 and G6 guard Write and Edit, and NotebookEdit on its `notebook_path` as an Edit that is never an append. MultiEdit is not a tool in build 2.1.288, so nothing is registered for it. A path that cannot be placed (drive-relative, `\\` or `//`, an empty, `.` or `..` name, a name holding a drive, or one the file system cannot resolve) is refused. Paths are matched on the resolved path with both separators and ASCII case ignored, on every platform alike, so a case-sensitive volume can see a refusal a stricter match would not.
@@ -26,14 +26,20 @@ N1's percentage is the compaction-window percentage from the local summary break
 ## What it does not claim
 
 - Nothing live before its E-row in the form (section 4): `agentId` on a live subagent's calls, `context` reaching the model, the `realPath` spellings the engine returns, the live percent figure.
-- Writes by Bash, PowerShell or any tool other than the ones registered here. A restore done with git is unseen by G3.
-- For G1: aliases, scripts, configured `+` refspecs and environment variables. G1 reads the command string only.
+- Writes by Bash, PowerShell or any tool other than the ones registered here, except that G6 refuses every PowerShell call by a report-only subagent. G2, G3 and G4 read no shell command, on either shell, so a shell write (a redirect, `tee`, `sed -i`, `Set-Content`) to a protected path is not refused by them. A restore done with git is unseen by G3. There is no live probe of G6's shell refusal, because no report-only agent definition holds a shell tool.
+- For G1: aliases, scripts, configured `+` refspecs and environment variables. G1 reads the command string only. Also brace expansion, variable expansion, `eval` of a variable, and PowerShell's backtick escape and line continuation: G1 reads every command, PowerShell's included, by bash-shaped rules.
+- G1's over-refusals. It refuses text that is never run when that text holds a force-push spelling: a commit message or an `echo` string (even single-quoted), a heredoc body line, or a shell comment. A bare spelling (`echo git push -f`) is refused, and since the second reading so is one inside parentheses, a substitution, backticks or braces. A long-option abbreviation is refused too, because git accepts one. Write record text (ledger rows, reports, notes) with the Write tool and not with a shell command, so that G1 does not read it.
+- A Write that creates a new file passes only when the engine's rejection for a missing path names ENOENT. If the live rejection does not, every such Write is refused (an over-refusal, never a fail-open) until E4, one live new-file Write after install, shows the real shape.
 - A case alias of a filed preregistration or of an accepted ADR on a case-insensitive volume may keep its own spelling, so git's lookup of it can miss.
 - Parity for a history shape outside the parity fixtures, or for a ledger blob of 4194304 bytes or more (above that size the engine cuts the stream and the mod reads not judged).
 - Parity for a session whose working directory differs from the Stop hook's project root.
 - Cloud sessions and edits made on GitHub. CI and the gates stay.
 - That the installed copy is isolated from later changes to this folder (E0 records whether an install copies or references it).
-- Any build other than 2.1.288, any latency figure.
+- Any build other than 2.1.289 for the tested behaviour (the type reads are 2.1.288's), any latency figure.
+
+## The shell route
+
+The shell route is PowerShell, and Guardian registers G1 and G6 on it. The custodian's own session, on 2.1.288, holds a PowerShell tool. The 2.1.288 type reads name that tool with a string `command` field, and at 2.1.289 `claude plugin validate` lists the PowerShell registration. Not established at 2.1.289: that build's own type declarations, whether a 2.1.289 session exposes the tool, and which subagent types receive it. None of the three report-only agent definitions lists a shell tool, so G6's closure of this route is defensive today.
 
 ## Install (the human's alone)
 
@@ -62,7 +68,7 @@ A false refusal is logged in the ledger and the rule is narrowed through the usu
 
 ## The REPORT PATH convention
 
-A lead-data brief carries one line of the form `REPORT PATH: <absolute path>` (question round 43, item 4). G6 reads it from the first message of the subagent's conversation. The write audit (`scripts/hooks/subagent-write-audit.mjs`) stays the primary check until E5 passes, and the backstop after it.
+A lead-data brief carries one line of the form `REPORT PATH: <absolute path>` (question round 43, item 4). G6 reads it from the first message of the subagent's conversation, taken from the newest 4096 rows, so a lead-data run longer than that loses its line and every write it makes is refused. The write audit (`scripts/hooks/subagent-write-audit.mjs`) stays the primary check until E5 passes, and the backstop after it.
 
 ## Files
 
