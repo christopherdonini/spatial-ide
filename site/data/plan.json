@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T18:20:46.304Z",
-  "plan_hash": "5a131131678b6943e78d8b6d262e7a17afbcd95b1c6492d022c7c6e3c86a1ea4",
+  "generated_at": "2026-10-04T20:16:06.175Z",
+  "plan_hash": "6bb2c65bd5f33e6ae35712b9b2326799646b3b472189f8f53f95c6967bc96798",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6409,6 +6409,33 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Proposed on Fable 2026-10-04 advice, item 4 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md). tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 2, C2-d: recorder_ms before + after + write is a lower bound, because the line serialisation, its digest, the file name and the write call fall outside it; a p95 at or under the bound does not establish section 1 claim 7 until an amendment names how the write latency is measured. The human install approval of 2026-10-04 (state/directives/2026-10-04-recorder-install-approval.md) reads E5 that way: it can fire the overhead stop, and it establishes neither claim 7 nor the brief overhead acceptance measure. The piece: a new E-row with its own sample, declared in a form amendment before that sample is taken (one candidate, from the gate-1 architect S1-1: the record file mtime minus ended_at, added to before), so that the acceptance evaluation (two weeks after install, or the next six gated pieces) can read the overhead. E5 stays a lower bound. Never queued until the human places it.",
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      }
+    },
+    {
+      "id": "data-plane-terminal-without-credit",
+      "title": "Data plane: a producer failure reaches the client as a terminal frame without waiting for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R)",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "timing-tests-assert-property-not-budget"
+      ],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 15
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within 60 s in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-04",
         "done": null

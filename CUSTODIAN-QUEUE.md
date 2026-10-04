@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `5a131131678b6943e78d8b6d262e7a17afbcd95b1c6492d022c7c6e3c86a1ea4`) at `2026-10-04T18:20:46.122Z`.
+Generated from `PLAN.yaml` (sha256 `6bb2c65bd5f33e6ae35712b9b2326799646b3b472189f8f53f95c6967bc96798`) at `2026-10-04T20:16:06.003Z`.
 
 ## 1. Next
 
@@ -94,6 +94,7 @@ Generated from `PLAN.yaml` (sha256 `5a131131678b6943e78d8b6d262e7a17afbcd95b1c64
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (phase `prototype`) — never queued until placed
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — never queued until placed
+- **data-plane-terminal-without-credit** — Data plane: a producer failure reaches the client as a terminal frame without waiting for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
