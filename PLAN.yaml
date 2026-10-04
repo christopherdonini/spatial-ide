@@ -3834,12 +3834,13 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: 18
     depends_on: [guardian-v0]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md
+    merge: merge-commit
+    evidence: {branch: cut/evidence-recorder-v0}
     budget_minutes: 240
     generation: 1
     felt_verdict: false

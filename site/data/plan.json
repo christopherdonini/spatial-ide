@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T12:37:40.922Z",
-  "plan_hash": "07b16041a16c613192fbf895c1d2b231520229427a4146bf636dc9f03a6578a5",
+  "generated_at": "2026-10-04T12:49:36.004Z",
+  "plan_hash": "1736984203c1711a46571007ff35d6a4f7110cee4867bb55e6f0850b6e62ed3a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6173,7 +6173,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 18,
       "depends_on": [
         "guardian-v0"
@@ -6182,8 +6182,11 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md",
+      "merge": "merge-commit",
+      "evidence": {
+        "branch": "cut/evidence-recorder-v0"
+      },
       "budget_minutes": 240,
       "generation": 1,
       "felt_verdict": false,
