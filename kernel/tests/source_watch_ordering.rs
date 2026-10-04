@@ -371,6 +371,77 @@ fn a_signal_between_arming_and_admission_refuses_the_open() {
 }
 
 // -------------------------------------------------------------------------------------------
+// GS1, GS2 — a signal recorded before a `ChecksOnly` outcome refuses the open
+// (`kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md` §4)
+// -------------------------------------------------------------------------------------------
+
+/// The shared body of GS1 and GS2: `path` arms as `ChecksOnly` after `signal` was delivered to the
+/// sink inside `arm()` (the product's ordering, §0 item 2). The open must refuse with `code`, leave
+/// no catalog entry, emit no event; a second open (checks-only, nothing queued) admits as K8 does.
+fn a_checks_only_open_refuses_a_recorded_signal(name: &str, signal: WatchSignal, code: &str) {
+    let arm = injected_watch::InjectedArm::new();
+    let (tx, rx) = session_end_channel();
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        StreamRegistry::new(),
+        arm.clone(),
+        tx,
+    );
+    let path = fixture(name);
+    arm.mark_checks_only(&path, "test: the grandparent directory could not be opened");
+    arm.fire_on_next_arm(&path, signal);
+
+    let refused = host
+        .open_dataset(open_req(&path, name))
+        .expect_err("refused before admission, whichever arm outcome followed the signal");
+    assert_eq!(refused.code, code, "{}", refused.message);
+
+    assert!(
+        host.catalog().names().is_empty(),
+        "a refused open must leave no catalog entry behind"
+    );
+    assert!(
+        rx.recv_timeout(std::time::Duration::from_millis(100))
+            .is_err(),
+        "an open refused before admission must never emit"
+    );
+
+    let open = host
+        .open_dataset(open_req(&path, &format!("{name}-clean")))
+        .expect("a checks-only open with no recorded signal still admits");
+    let d = host.describe(describe_req(open.dataset)).expect("describe");
+    assert_eq!(d.coverage.state, CoverageState::ChecksOnly);
+}
+
+/// RECORDED MUTATION: in `SkpHost::open_dataset`'s `ChecksOnly` arm, skip the latch read and admit
+/// unconditionally (the 38bb2d63 body). Expected failure: `open_dataset` returns `Ok`, so the
+/// helper's `expect_err` panics.
+// Mutation: see the RECORDED MUTATION above (the `ChecksOnly` arm admits without reading the latch).
+#[test]
+fn a_signal_recorded_before_a_checks_only_outcome_refuses_the_open() {
+    a_checks_only_open_refuses_a_recorded_signal(
+        "gs1",
+        WatchSignal::Change { action: "modified" },
+        "engine.source_changed",
+    );
+}
+
+/// RECORDED MUTATION: in the `ChecksOnly` arm's refusal, map every recorded signal to
+/// `EngineError::SourceChanged`. Expected failure: the code assertion fails
+/// (`engine.source_changed` where `engine.source_coverage_lost` is expected); GS1 stays green.
+// Mutation: see the RECORDED MUTATION above (the `ChecksOnly` refusal maps every signal to SourceChanged).
+#[test]
+fn a_coverage_loss_recorded_before_a_checks_only_outcome_refuses_with_its_own_code() {
+    a_checks_only_open_refuses_a_recorded_signal(
+        "gs2",
+        WatchSignal::CoverageLost {
+            cause: "overflow".to_string(),
+        },
+        "engine.source_coverage_lost",
+    );
+}
+
+// -------------------------------------------------------------------------------------------
 // K7 — the first reason wins and is the emitted reason
 // -------------------------------------------------------------------------------------------
 

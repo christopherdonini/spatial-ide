@@ -55,7 +55,9 @@ pub enum ArmOutcome {
     Watching(Box<dyn ArmedWatch>),
     /// No watch could be armed. `reason` names the step that failed and the OS error's text —
     /// engine facts only. Never a refusal: the caller falls back to checks (the pre-check/
-    /// post-check descriptor comparison) alone.
+    /// post-check descriptor comparison) alone. A watch thread started before a later arming
+    /// step failed may already have delivered a signal to the sink; every such delivery returns
+    /// before `arm` does.
     ChecksOnly { reason: String },
 }
 

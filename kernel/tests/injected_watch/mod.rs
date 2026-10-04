@@ -84,6 +84,12 @@ impl InjectedArm {
 impl SourceWatchArm for InjectedArm {
     fn arm(&self, path: &Path, sink: WatchSink) -> ArmOutcome {
         if let Some(reason) = self.checks_only.lock().unwrap().get(path) {
+            // The product's ordering (`kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md`
+            // §0 item 2): a watch thread started before a later arming step failed may already
+            // have called the sink, and that call returns before `arm` does.
+            if let Some(signal) = self.fire_on_next_arm.lock().unwrap().remove(path) {
+                sink(signal);
+            }
             return ArmOutcome::ChecksOnly {
                 reason: reason.clone(),
             };
