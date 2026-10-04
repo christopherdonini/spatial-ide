@@ -41,6 +41,8 @@ N1's percentage is the compaction-window percentage from the local summary break
 
 The shell route is PowerShell, and Guardian registers G1 and G6 on it. The custodian's own session, on 2.1.288, holds a PowerShell tool. The 2.1.288 type reads name that tool with a string `command` field, and at 2.1.289 `claude plugin validate` lists the PowerShell registration. Not established at 2.1.289: that build's own type declarations, whether a 2.1.289 session exposes the tool, and which subagent types receive it. None of the three report-only agent definitions lists a shell tool, so G6's closure of this route is defensive today.
 
+R11. G6's refusal of a report-only subagent's shell call is a backstop, not the guard those agents rely on. Their definitions (architect, lead-data and evidence-reader) grant no shell tool, and those tool lists are the guard, with the write audit as the primary check of their runs. G6 covers the PowerShell tool today. It does not cover the Bash tool. If any report-only definition gains Bash or PowerShell, G6 must cover that tool before the definition change merges; for Bash that means a G6 change, declared by its own amendment or piece, landing first.
+
 ## Install (the human's alone)
 
 Installing a mod is a security-posture change. It needs the human's typed approval after both gates, and he installs it himself. Nothing in this repository installs, enables or loads it.
