@@ -117,8 +117,9 @@ const bash = (command: string) => ({ tool: 'Bash', command })
 // ---------------------------------------------------------------------------------------------
 
 // RECORDED MUTATION: the short-option cluster check dropped from pushArgumentsRefuse (the
-// `/^-[A-Za-z0-9]*[fd]/` line) -> fails: `G1 refuses --force, -f and a short-flag cluster holding f`.
-// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
+// `/^-[A-Za-z0-9]*[fd]/` line) -> fails: `G1 refuses --force, -f and a short-flag cluster holding f`, `G1
+// keeps every refusal it made before the second reading`. Observed at 71db3d7d with this change, claude
+// --version 2.1.289 (Claude Code).
 test('G1 refuses --force, -f and a short-flag cluster holding f', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --force', 'git push -f', 'git push -uf origin x']) {
@@ -127,8 +128,8 @@ test('G1 refuses --force, -f and a short-flag cluster holding f', async ($, on) 
 })
 
 // RECORDED MUTATION: the --force-with-lease check matching only the bare spelling (the `=value` form
-// dropped) -> fails: `G1 refuses --force-with-lease, bare and with a value`. Observed at 54eba872 with
-// this change, claude --version 2.1.288 (Claude Code).
+// dropped) -> fails: `G1 refuses --force-with-lease, bare and with a value`. Observed at 71db3d7d with
+// this change, claude --version 2.1.289 (Claude Code).
 test('G1 refuses --force-with-lease, bare and with a value', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --force-with-lease', 'git push --force-with-lease=main:abc']) {
@@ -137,23 +138,23 @@ test('G1 refuses --force-with-lease, bare and with a value', async ($, on) => {
 })
 
 // RECORDED MUTATION: the `+` refspec check dropped from pushArgumentsRefuse -> fails: `G1 refuses a
-// refspec that begins with +`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude
-// Code).
+// refspec that begins with +`, `G1 keeps every refusal it made before the second reading`. Observed at
+// 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 refuses a refspec that begins with +', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push origin +main')), G1_REASON, probe)
 })
 
 // RECORDED MUTATION: the `--mirror` check dropped from pushArgumentsRefuse -> fails: `G1 refuses
-// --mirror`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
+// --mirror`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 refuses --mirror', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push --mirror')), G1_REASON, probe)
 })
 
-// RECORDED MUTATION: the `:` refspec check dropped from pushArgumentsRefuse -> fails: `G1 refuses a
-// push that deletes a remote ref`. Observed at 54eba872 with this change, claude --version 2.1.288
-// (Claude Code).
+// RECORDED MUTATION: the `:` refspec check dropped from pushArgumentsRefuse -> fails: `G1 refuses a push
+// that deletes a remote ref`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude
+// Code).
 test('G1 refuses a push that deletes a remote ref', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git push --delete origin x', 'git push -d origin x', 'git push origin :x', 'git push --prune origin']) {
@@ -161,10 +162,10 @@ test('G1 refuses a push that deletes a remote ref', async ($, on) => {
   }
 })
 
-// RECORDED MUTATION: the nested rescan of a quoted token dropped from pushRefused (the
-// `pushRefused(token.value, depth + 1)` line) -> fails: `G1 finds the push after git global options
-// and inside a quoted command string`. Observed at 54eba872 with this change, claude --version 2.1.288
-// (Claude Code).
+// RECORDED MUTATION: the nested rescan of a quoted token dropped from readingRefuses (the
+// `pushRefused(token.value, depth + 1)` line) -> fails: `G1 finds the push after git global options and
+// inside a quoted command string`, `G1 finds a force-push inside a subshell, a substitution, backticks or
+// a brace block`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 finds the push after git global options and inside a quoted command string', async ($, on) => {
   const probe = arm(on, {})
   for (const command of ['git -C sub -c a=b push -f', 'bash -c "git push --force"']) {
@@ -174,15 +175,16 @@ test('G1 finds the push after git global options and inside a quoted command str
 
 // RECORDED MUTATION: an unbalanced-quote segment that holds `push` read as no push (the
 // `text.includes('push')` line dropped) -> fails: `G1 refuses a push segment it cannot tokenise`.
-// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
+// Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 refuses a push segment it cannot tokenise', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, bash('git push "origin')), G1_REASON, probe)
 })
 
-// RECORDED MUTATION: pushRefused scanning the whole command as one segment (`for (const text of
-// [command])` in place of splitSegments) -> fails: `G1 allows an ordinary push and a force flag that
-// belongs to another command`. Observed at 54eba872 with this change, claude --version 2.1.288 (Claude
+// RECORDED MUTATION: readingRefuses scanning the whole command as one segment (`for (const text of
+// [command])` in place of `splitSegments(command, atGroups)`) -> fails: `G1 allows an ordinary push and a
+// force flag that belongs to another command`, `G1 finds a force-push inside a subshell, a substitution,
+// backticks or a brace block`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude
 // Code).
 test('G1 allows an ordinary push and a force flag that belongs to another command', async ($, on) => {
   const probe = arm(on, {})
@@ -193,8 +195,10 @@ test('G1 allows an ordinary push and a force flag that belongs to another comman
 })
 
 // RECORDED MUTATION: the PowerShell registration dropped from register() -> fails: `G1 refuses a
-// force-push through the PowerShell tool`. Observed at 54eba872 with this change, claude --version
-// 2.1.288 (Claude Code).
+// force-push through the PowerShell tool`, `G1 finds a force-push inside a subshell, a substitution,
+// backticks or a brace block`, `G6 refuses every PowerShell call by a report-only subagent and leaves
+// other subagents to G1`, `G6 makes no engine call on a main-loop PowerShell call`. Observed at 71db3d7d
+// with this change, claude --version 2.1.289 (Claude Code).
 test('G1 refuses a force-push through the PowerShell tool', async ($, on) => {
   const probe = arm(on, {})
   expectRefused(await call($, { tool: 'PowerShell', command: 'git push --force' }), G1_REASON, probe)
@@ -202,9 +206,10 @@ test('G1 refuses a force-push through the PowerShell tool', async ($, on) => {
   expectPassed(await call($, input), probe, input)
 })
 
-// RECORDED MUTATION: the second reading dropped from pushRefused (`readingRefuses(command, depth,
-// true)` removed, so only the first reading runs) -> expected to fail: `G1 finds a force-push inside a
-// subshell, a substitution, backticks or a brace block`. Observation pending.
+// RECORDED MUTATION: the second reading dropped from pushRefused (`readingRefuses(command, depth, true)`
+// removed, so only the first reading runs) -> fails: `G1 finds a force-push inside a subshell, a
+// substitution, backticks or a brace block`. Observed at 71db3d7d with this change, claude --version
+// 2.1.289 (Claude Code).
 test('G1 finds a force-push inside a subshell, a substitution, backticks or a brace block', async ($, on) => {
   const probe = arm(on, {})
   for (const command of [
@@ -222,8 +227,8 @@ test('G1 finds a force-push inside a subshell, a substitution, backticks or a br
 })
 
 // RECORDED MUTATION: the first reading dropped from pushRefused (`return readingRefuses(command, depth,
-// true)`, so only the second reading runs) -> expected to fail: `G1 keeps every refusal it made before
-// the second reading`. Observation pending.
+// true)`, so only the second reading runs) -> fails: `G1 keeps every refusal it made before the second
+// reading`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 keeps every refusal it made before the second reading', async ($, on) => {
   const probe = arm(on, {})
   for (const command of [
@@ -240,11 +245,12 @@ test('G1 keeps every refusal it made before the second reading', async ($, on) =
   }
 })
 
-// RECORDED MUTATION: the second reading refusing every segment that holds git then push, with no
-// argument check (in readingRefuses, `segmentPushRefused(tokens)` replaced by `atGroups ? tokens.some((t)
-// => isGit(t.value)) && tokens.some((t) => t.value === 'push') : segmentPushRefused(tokens)`) ->
-// expected to fail: `G1 allows an ordinary push inside a subshell and a substitution that does not push`.
-// Observation pending.
+// RECORDED MUTATION: the second reading refusing every segment that holds git then push, with no argument
+// check (in readingRefuses, `segmentPushRefused(tokens)` replaced by `atGroups ? tokens.some((t) =>
+// isGit(t.value)) && tokens.some((t) => t.value === 'push') : segmentPushRefused(tokens)`) -> fails: `G1
+// allows an ordinary push and a force flag that belongs to another command`, `G1 refuses a force-push
+// through the PowerShell tool`, `G1 allows an ordinary push inside a subshell and a substitution that
+// does not push`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G1 allows an ordinary push inside a subshell and a substitution that does not push', async ($, on) => {
   const probe = arm(on, {})
   for (const command of [
@@ -467,8 +473,9 @@ test('G6 allows a lead-data Write to its declared REPORT PATH', async ($, on) =>
 })
 
 // RECORDED MUTATION: a brief with no REPORT PATH line read as allow (zero matches return undefined) ->
-// fails: `G6 refuses every Write by an architect run whose brief declares no REPORT PATH`. Observed at
-// 54eba872 with this change, claude --version 2.1.288 (Claude Code).
+// fails: `G6 refuses every Write by an architect run whose brief declares no REPORT PATH`, `G6 refuses
+// every PowerShell call by a report-only subagent and leaves other subagents to G1`. Observed at 71db3d7d
+// with this change, claude --version 2.1.289 (Claude Code).
 test('G6 refuses every Write by an architect run whose brief declares no REPORT PATH', async ($, on) => {
   const probe = arm(
     on,
@@ -480,9 +487,10 @@ test('G6 refuses every Write by an architect run whose brief declares no REPORT 
   expectRefused(await call($, asSubagent({ tool: 'Write', file_path: REPORT, content: 'x' }, 'a2')), G6_REASON, probe)
 })
 
-// RECORDED MUTATION: G6 applied to every listed agent type (the report-only type check dropped) ->
-// fails: `G6 leaves other subagents, unlisted agent ids and the main loop to the other rules`.
-// Observed at 54eba872 with this change, claude --version 2.1.288 (Claude Code).
+// RECORDED MUTATION: G6 applied to every listed agent type (the report-only type check dropped) -> fails:
+// `G6 leaves other subagents, unlisted agent ids and the main loop to the other rules`, `G6 refuses every
+// PowerShell call by a report-only subagent and leaves other subagents to G1`. Observed at 71db3d7d with
+// this change, claude --version 2.1.289 (Claude Code).
 test('G6 leaves other subagents, unlisted agent ids and the main loop to the other rules', async ($, on) => {
   // No messages answer is registered: G6 reads a brief only for a listed report-only type.
   const probe = arm(on, newFileWorld(['C:\\r\\notes'], { agents: [agentRow('a3', 'worker')] }))
@@ -497,8 +505,8 @@ test('G6 leaves other subagents, unlisted agent ids and the main loop to the oth
 const ps = (command: string) => ({ tool: 'PowerShell', command })
 
 // RECORDED MUTATION: the PowerShell registration's hook set back to `refuseForcePush` (G6 dropped from
-// it) -> expected to fail: `G6 refuses every PowerShell call by a report-only subagent and leaves other
-// subagents to G1`. Observation pending.
+// it) -> fails: `G6 refuses every PowerShell call by a report-only subagent and leaves other subagents to
+// G1`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G6 refuses every PowerShell call by a report-only subagent and leaves other subagents to G1', async ($, on) => {
   const probe = arm(
     on,
@@ -523,9 +531,10 @@ test('G6 refuses every PowerShell call by a report-only subagent and leaves othe
   expect(probe.reached.length).toBe(reached)
 })
 
-// RECORDED MUTATION: the `agentId` condition dropped from guardPowerShell (`if (true)`), so G6 runs on
-// a main-loop call -> expected to fail: `G6 makes no engine call on a main-loop PowerShell call`.
-// Observation pending.
+// RECORDED MUTATION: the `agentId` condition dropped from guardPowerShell (`if (true)`), so G6 runs on a
+// main-loop call -> fails: `G1 refuses a force-push through the PowerShell tool`, `G1 finds a force-push
+// inside a subshell, a substitution, backticks or a brace block`, `G6 makes no engine call on a main-loop
+// PowerShell call`. Observed at 71db3d7d with this change, claude --version 2.1.289 (Claude Code).
 test('G6 makes no engine call on a main-loop PowerShell call', async ($, on) => {
   // No agent.list, session.messages or fs answer is registered: a `$` call from the hook would throw.
   const probe = arm(on, {})
