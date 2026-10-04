@@ -733,3 +733,13 @@ Scope addition, by the 2026-10-04 G6-backstop ruling (`state/directives/2026-10-
 **§9, added.** Architect and reviewer: R11 and §1's addition against this amendment and the G6-backstop ruling.
 
 **Superseded index.** None.
+
+### Amendment 6 — budget overrun, §7 not edited (class 8)
+
+Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the custodian after correction round 1's count was seen. 7fa2a67e below is 7fa2a67e3a36bd024f4e97676294e143b8e65a3f, a branch commit, named in words with no hash (round 15 (e)).
+- **Declared:** at most 1650 changed lines over at most 10 files (§7, as Amendment 2 and Amendment 4 left it, unedited).
+- **Final:** 1700 changed lines (1700 insertions, 0 deletions) over 10 files, by §7's own counting command at 7fa2a67e, against the merge base with main a30108a1. That is 50 lines over the line bound, and the file count is within its bound.
+- **Reason:** three scope additions on standing rules, each declared under class 9 before its code: Amendment 2 (G1's second reading, its tests and the README limits; round 46, item 1), Amendment 4 (G6 on the PowerShell route, its tests and the README lines; the 2026-10-04 shell-route ruling) and Amendment 5 (README item R11; the 2026-10-04 G6-backstop ruling). At adfcb857, before them, the figure was 1555. Amendment 4's §7 predicted the overrun.
+- §7's line is not edited.
+
+**Superseded index.** None.
