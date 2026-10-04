@@ -1257,6 +1257,20 @@ impl SkpHost {
             }
             ArmOutcome::ChecksOnly { reason } => {
                 let mut guard = latch.lock().unwrap_or_else(|e| e.into_inner());
+                // `kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md` §2b: a signal a
+                // watch thread delivered before a later arming step failed is recorded in the
+                // latch like any other, so this arm refuses on it exactly as the `Watching` arm
+                // does (`SOURCE-WATCHER-PREREGISTRATION.md` §2b admission step 1). Every such
+                // delivery returned before `arm` did, so nothing can still call the sink.
+                if let LatchState::PreAdmission {
+                    recorded: Some(signal),
+                } = &*guard
+                {
+                    let signal = signal.clone();
+                    drop(guard);
+                    self.catalog.remove(handle.as_str());
+                    return Err(error_of(&engine_error_of_pre_admission_signal(signal)));
+                }
                 let session = SessionRef::mint();
                 self.generations
                     .mint_for_open(handle.as_str(), session.clone());
