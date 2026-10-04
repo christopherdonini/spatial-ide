@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b8f84cfb9cfb1c294c87da958465fbab7079971ccb03df826cbf841df37b18b0`) at `2026-10-04T10:14:24.032Z`.
+Generated from `PLAN.yaml` (sha256 `079f4008478176d2ead6744e5f930204203e35bfb7a855f8a65212a4da1c399c`) at `2026-10-04T11:14:41.557Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`)
 
 ## 2. Ready
 
-- (none)
+- **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`, order 18, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -30,12 +30,10 @@ Generated from `PLAN.yaml` (sha256 `b8f84cfb9cfb1c294c87da958465fbab7079971ccb03
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — blocked by: guardian-v0
 
 ## 5. In progress
 
 - **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) — evidence: branch `cut/type-walk-null-literal-arithmetic`
-- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — evidence: branch `cut/guardian-v0`
 
 ## 6. Proposed / unscheduled
 

@@ -743,3 +743,24 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
 - §7's line is not edited.
 
 **Superseded index.** None.
+
+### Amendment 7 — closing record (references and hashes only; the record cap)
+
+*Written by the custodian after PR #169 merged, as merge commit bcf3b5b4 (parents 9056b583 and 1d057c79; never a squash), at 2026-10-04T11:01:20Z. It follows the gate-2 architect's closing-record list (`state/consults/gates/2026-10-04-guardian-v0-gate2-architect.md`). Every commit named below is reachable from main through bcf3b5b4.*
+
+1. **Mutation observations:** T1 to T9, T22, T23 and T37 to T41 by the worker at 71db3d7d (2.1.289); T10 to T21 and T24 to T34 at 54eba872 (2.1.288); all 39 plugin-test mutations by the reviewer at 1d057c79 (2.1.289; gate 2b); and M35a, M35b and M36 at 1d057c79, under node v24.18.1 and git 2.49.0.windows.1 (gate 2).
+2. **§7:** Amendment 6 (class 8), 1700 of 1650 over 10 files at 7fa2a67e. The reviewer recounted at 1d057c79.
+3. **README R1 to R11**, at main bcf3b5b4:
+   - `tools/mods/spatial-guardian/README.md:13 @ bcf3b5b4 sha256:5aa1ee48b2cb1a9ea72a326b1acab6c96829fbd4d84dbc47521bd08339f5c85d`;
+   - `tools/mods/spatial-guardian/README.md:17 @ bcf3b5b4 sha256:2578e62269b6d09a2be0f5a8d6cd957e5ee3d6896b30ec8859a686b0ba7f2148`;
+   - `tools/mods/spatial-guardian/README.md:29-33 @ bcf3b5b4 sha256:5b3c0a8d95b6d77e4e9bbeff7f83bcbb5e1de2f6771226713a3f00865c56194f`;
+   - `tools/mods/spatial-guardian/README.md:42 @ bcf3b5b4 sha256:c9bc927ef0ca0279a1789ffe2af089b1ead32c579d5e58601b204b88607be64c`;
+   - `tools/mods/spatial-guardian/README.md:44 @ bcf3b5b4 sha256:65ec3b1de87cc875b3d4aa44a831614ee45a338c9034ff78d921e89e2d970dc3`;
+   - `tools/mods/spatial-guardian/README.md:73 @ bcf3b5b4 sha256:23eafd0e0ce5206a4732920031c5ceeed21a8c9d57a47ac093e3c63c1cd292f6`.
+   The gate-2 architect's S2-1 (line 44 without §2.7's until-E5 condition) is disposed by a sight note to the human before the install approval, `state/drafts/guardian-v0-install-sight.md`. Line 73 and §2.7 govern.
+4. **The rulings:** question round 46, items 1 and 2; round 47; round 48; `state/directives/2026-10-04-guardian-shell-route-ruling.md:6-9 @ bcf3b5b4 sha256:d01f6c204e6e80eab36831902d0b7d29d48dfbee46960313ed3a60d33b24687c`; `state/directives/2026-10-04-guardian-g6-backstop-ruling.md:6-8 @ bcf3b5b4 sha256:5617d45ce4a07a763f1dbc1f66bfff910e08bf6e2c00bd7e17b3e85e9b54adef`.
+5. **Readings by reference:** §8 item 23 and Amendment 4's F35 falsification are read as scoped to the PowerShell hook (gate-2 architect S2-2, gate-2 reviewer S2-1). Amendment 5's missing invalidator is bounded by its §5 (gate-2 architect N-2, gate-2 reviewer S2-3). Amendment 4's superseded index omits one Amendment 2 bullet (gate-2 architect N-3).
+6. **Gates:** gate-log 377 (architect gate 1, PASS), 378 (reviewer gate 1, FAIL, evidence), 381 (architect gate 2, PASS), 382 (reviewer gate 2, FAIL, evidence) and 383 (reviewer gate 2b, PASS).
+7. **Tools, each with its commit:** verify-cites 522e448d, verify-quotes f9444a4d, verify-test-claims e9735d47, verify.mjs 26072022. verify-mutation is not relied on.
+8. **The validate outputs,** text and `--json`, are in the PR body (worker report 3); the reviewer's were taken at the head.
+9. **Install:** not done. It waits for the human's typed approval, naming the E-rows (§9 Operator), and the human installs it.
