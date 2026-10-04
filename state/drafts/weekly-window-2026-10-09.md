@@ -191,3 +191,15 @@
   - Draft-caused correction rounds: node 9 two (draft 2; Amendment 1), node 10 one (pending the redraft).
   - The index was updated in node 9's PR; node 10 has none yet. The gate index-wrong count is 0.
   - No human intervention is attributable to the lead.
+
+## F. `AUTONOMY.md` §21a's ADR-021 label
+
+- **Source.** lead-data's node 10 draft (its §1 observation) and the architect's node 10 draft (its Q-4). Confirmed by the ADR file names.
+- **The gap.** §21a's security bullet labels ADR-021 "bundling / no-runtime-fetch". ADR-021 is the row-filter ADR (`docs/adr/ADR-021-row-filter-on-viewport-query.md`); the bundle format is ADR-017 (`docs/adr/ADR-017-static-bundle-format-and-publish-semantics.md`).
+- **The proposal.** An appended dated note in `AUTONOMY.md`, naming the ADR the label means. No line above it moves (the governing-doc append rule). Nothing is applied before the human's answer.
+- **2026-10-03, evening: the two pieces' implementations ran together.** Node 10's worker-high and guardian-v0's worker-high ran from about 19:58Z, in separate worktrees. Node 10's target was on D:.
+  - **Conflicts:** none in paths.
+  - **A ruling that arrived late.** Round 45, answered at 21:42Z after both workers had finished, carried node 10's O-2. The worker was resumed by message to apply it. The custodian's first message gave the ruling's time as an estimate ("about 20:00Z"), which was corrected by a second message.
+  - **Reports to files.** Node 10's worker wrote its report file. Guardian's worker was refused its Write by the harness ("Subagents should return findings as text, not write report files"), did not work around it, and returned the report as its message. The custodian filed it by mechanical extraction from the transcript. The refusal was not uniform across two runs of the same agent type.
+  - **The human's attention:** three question rounds this session (43, 44, 45), and typed rulings on round 44 item 1 and round 45 item 2. They arose from the pieces' own OPEN items, not from running two at once.
+  - **Costs:** node 10's worker-high, round 1: 106,207 tokens, 48 tool uses, 3,789,091 ms. guardian-v0's worker-high: 330,199 tokens, 117 tool uses, 2,420,319 ms. The architect drafts: node 10 213,452 tokens, 42 tool uses, 751,713 ms; guardian draft 2 186,454 tokens, 42 tool uses, 693,869 ms.

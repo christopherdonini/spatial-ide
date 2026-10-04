@@ -329,3 +329,62 @@ Full gating (`AUTONOMY.md:321-332 @ 1bb94e19 sha256:5c75dae11897d37bea0b078e4bac
 - **Record:** the gate reports are the observation of record. A closing amendment is references and hashes only (the record cap).
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — 2026-10-04, written after gate 1's results on PR #170 (head c6809d0c): §2.1 falsified and replaced; touches §1, §2.1, §2.6, §3, §4, §5, §8 and §9
+
+*Class 1, post-result. Written after gate 1's results were seen. The reviewer's S1-1 (`state/consults/gates/2026-10-04-type-walk-null-literal-arithmetic-gate1-reviewer.md:14-36 @ 2bab186a sha256:e8036be44ebda0dff97aaab877c0ad4e7a3ea9bb6c7f20b74d1d9dc1dee45699`) met §5's Falsification clause for §2.1's own shape at a VARCHAR or BOOLEAN junction; the architect's gate-1 N1 (`state/consults/gates/2026-10-04-type-walk-null-literal-arithmetic-gate1-architect.md:95-101 @ 2bab186a sha256:45a13ad0c0780e28db747ee85abcf6fac98180d7353144181cb6446fe4321573`) is withdrawn by it. It invalidates §2.1's typing of the result as NULL and §2.1's claim that the result takes C32's path. No row C1 to C47, mutation M1 to M5, reason, wire value, sentence or Display changes. Where a section is restated, the text is this form's new wording; nothing here is a quotation.*
+
+- **The result.** At DuckDB v1.5.5 (§0's crate pin), §2.1's NULL-typed result passed comparison rule 2 against VARCHAR and BOOLEAN partners; the plan cast the file column to BIGINT, outside the predecessor's §7 set, and one such shape ended its stream in a conversion error naming a file value (the reviewer's evidence, pinned above). The observed casts show that the binder does not treat a NULL-valued `+`, `-` or `*` as the NULL literal that ADR-021's admitted class names (`docs/adr/ADR-021-row-filter-on-viewport-query.md:255 @ 2bab186a sha256:4a4898e23ea42b6cf4d6f501509e8b39ea9f111448eaabbd6f90d84b185845f9`).
+- **§2.1, replaced.**
+  - A NULL-typed operand beside a NULL-typed operand in `+`, `-`, `*` is admitted. The walk types the result as the binder types it, as P-0 observes (H-3 predicts BIGINT), kind expression, within bounds.
+  - The result is then judged by that type under the predecessor's rules, unchanged. It is not a NULL literal, as the Note 2026-10-03, item 2 already holds for the decimal case (`docs/adr/ADR-021-row-filter-on-viewport-query.md:274 @ 2bab186a sha256:38266c5affad4b76a79899edd251680e52edfeed29d45ee40db525c5ed319a76`). Against VARCHAR it refuses `text_with_non_text`, against BOOLEAN `boolean_conversion` (precedence items 1 and 2); against an integer it is admitted by comparison rule 3 (`docs/adr/ADR-021-row-filter-on-viewport-query.md:256 @ 2bab186a sha256:a7f7029f9d64d3e7e0dff7fc43295b6f75ec93e0b78b72d1eafb62fa84324c59`); against a decimal literal within bounds, by rule 4.
+  - Inside `+`, `-`, `*` it is an integer expression: beside an integer, admitted by rule 3; beside a decimal literal, refused `conversion_can_fail` (`docs/adr/ADR-021-row-filter-on-viewport-query.md:263 @ 2bab186a sha256:c0eafbcdfb26cf1039898501861dcd3a276125b1de126587439f9a5a084da7d3`), as an integer literal beside a decimal literal already is.
+  - §2.1's third bullet stands.
+  - §2.3's set condition is unchanged in code. A NULL-typed operand there is a NULL literal or a unary `-` over one; the latter is outside this amendment.
+- **H-3 and P-0, before any code of this amendment.** H-3: at v1.5.5 the binder types `NULL + NULL`, `NULL - NULL`, `NULL * NULL` and `-NULL` as BIGINT; consistent with S1-1's observed column casts to BIGINT, not proven by them. P-0: the worker runs a throwaway test, never committed, on B-T1's oracle connection, printing `typeof` of the four expressions, and records the printout with the commit it ran at and the DuckDB version, as evidence. Predicted: BIGINT for all four. A different numeric type: STOP, no code, return to the custodian; the type names here are corrected by a further amendment, never edited. A NULL or non-numeric type: STOP; this remedy is void and the route returns to the architect.
+- **§3, new B-T3 rows,** appended after C47 in this order:
+
+| # | Predicate | Predicted |
+|---|---|---|
+| C48 | `zone = NULL + NULL`; `flag = NULL + NULL`; `zone = NULL - NULL`; `zone IS DISTINCT FROM NULL + NULL`; `zone BETWEEN NULL * NULL AND NULL` | TNA `=`, `VARCHAR; BIGINT expression`, `text_with_non_text`; TNA `=`, `BOOLEAN; BIGINT expression`, `boolean_conversion`; TNA `=`, `VARCHAR; BIGINT expression`, `text_with_non_text`; TNA `IS DISTINCT FROM`, `VARCHAR; BIGINT expression`, `text_with_non_text`; TNA `BETWEEN`, `VARCHAR; BIGINT expression`, `text_with_non_text` |
+| C49 | `flag AND NULL + NULL` | TNA `AND`, `BIGINT expression`, `boolean_conversion` |
+| C50 | `i64 BETWEEN NULL + NULL AND 1`; `u8 = NULL * NULL` | admitted (rule 3) |
+
+  - C48's first four are S1-1's observed shapes; its fifth reaches `BETWEEN` and `*`. C49 is the boolean junction. C50 is the integer path. Each refusal's sentence is true of its shape: the binder converts the text or BOOLEAN operand to the integer type.
+  - H-4: the surrogate prepare binds C48's fifth predicate and C49 at v1.5.5. A `rejected_by_binder` outcome is a class-2 result.
+  - The type names in C48 and C49 are P-0's; H-3's BIGINT is the prediction.
+  - C39 keeps its prediction; it is now admitted by rule 3.
+- **B-T1 pins.** Appended to part 3: C48 (five), C49, C50 (two), and `f32 > NULL * NULL` (refused; no B-T3 row, §5 below). Part 3 goes from 332 to 341 cases, the total from 9,714 to 9,723.
+- **§4.** B-T3 gains C48 to C50. New mutation M6: §2.1's arm types its result NULL (the arm as at c6809d0c). Fails on C48's first predicate: expected `TypeNotAdmitted`, got `Ok`. M1 to M5 stand; M1 still fails on C39. B-T1 claims no new mutation. B-T1b is unchanged at 2,083 (F5).
+- **§5.**
+  - P-1 covers C48 to C50 as tabled.
+  - P-3 is restated: at the head, B-T1's refused tally equals the merge base's plus this amendment's seven refused pins; its admitted tally equals the base's plus eleven (§3's nine and C50's two); B-T1b's checked count is equal at both.
+  - Declared changes outside §3, not rows: a NULL-op-NULL result against a REAL or DOUBLE column or a double literal refuses at the comparison with the residual reason (rules 5 and 7 by bit width), as F7's example does; beside a decimal literal in `+`, `-`, `*` it refuses `conversion_can_fail` at that operator. Both shapes were refused at the merge base, by the inner operator; only the construct, the operand types and the reason move. They join F7's routing.
+  - New invalidators: P-0 differs from H-3 (stop as above); a C48 or C49 shape admitted.
+- **§8.** New item 20: §2.1's result typed other than as P-0 observed, or code of this amendment before P-0's record. Item 7's second bullet is read with the O-2 disjunct's read of the partner as a fourth named place (question round 45, item 1); the field's doc comment and the comment at the set condition are corrected in the code to say so (the reviewer's S2-1).
+- **§9.** Reviewer: P-0's record; M6 observed by name at a commit, then reverted; P-3's two runs. Architect: §2.1 as replaced against the Note 2026-09-30, item 2 and the Note 2026-10-03, item 2.
+- **§2.6, what a client sees.** The C48 and C49 shapes are refused `filter_type_not_admitted` with the tabled reasons; at the merge base they were refused with `conversion_rounds` at the inner operator, and at c6809d0c they were admitted.
+- **§7.** Unchanged. Estimated with this amendment: 220 to 240 of 300, over the same 2 files. An overrun is class 8, and §7 is not edited.
+
+### Amendment 2 — 2026-10-04, scope addition (question round 49, item 1): unary `-` over a NULL literal typed as the binder types it (the reviewer's N-1)
+
+*Class 9, scope addition, on the human's ruling of question round 49, item 1, cited and not reproduced. Written after gate 1's results; declared before any of its code. The defect is the reviewer's N-1 (`state/consults/gates/2026-10-04-type-walk-null-literal-arithmetic-gate1-reviewer.md:48 @ 2bab186a sha256:2f1fb814b9207a310b36c3a0d303bc5f99fc20674eba0d75f6d35082489dda3b`), pre-existing on main in the predecessor's §2.5(b) as amended (`engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md:384 @ 2bab186a sha256:ead68a0bfc29a36e606ee8f9fe4893520b106be095cf17d64638c66cd522de85`) and its C32 (`engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md:389 @ 2bab186a sha256:6ad5eb7ec3a024f88257a04e8cd6036845a74300d8014e215a984331fe286849`).*
+
+- **§2.9 (new).** Unary `-` over a NULL literal is admitted, typed as P-0 observes for `-NULL` (H-3: BIGINT), kind expression, within bounds. Over a numeric operand the unary arm is unchanged and carries every attribute but kind, §2.3's field included (C47). With Amendment 1, no path of the walk produces the NULL type except a NULL literal. So comparison rule 2, arithmetic rule 2, the BOOLEAN-or-NULL junction test, the pattern test, the reason precedence and §2.3's set condition each test a NULL literal, as the Note 2026-09-30, item 2 (`docs/adr/ADR-021-row-filter-on-viewport-query.md:255 @ 2bab186a sha256:4a4898e23ea42b6cf4d6f501509e8b39ea9f111448eaabbd6f90d84b185845f9`) and the Note 2026-10-03, item 1 (`docs/adr/ADR-021-row-filter-on-viewport-query.md:273 @ 2bab186a sha256:9f02c28706a01d3dde1f78f300863128f5bfd10fc948feeb5e6411dc367eef5e`) name it. None of them changes in code.
+- **§3, new B-T3 row,** appended after C50:
+
+| # | Predicate | Predicted |
+|---|---|---|
+| C51 | `zone = -NULL`; `flag = -NULL`; `zone IS DISTINCT FROM -NULL`; `flag AND -NULL` | TNA `=`, `VARCHAR; BIGINT expression`, `text_with_non_text`; TNA `=`, `BOOLEAN; BIGINT expression`, `boolean_conversion`; TNA `IS DISTINCT FROM`, `VARCHAR; BIGINT expression`, `text_with_non_text`; TNA `AND`, `BIGINT expression`, `boolean_conversion` |
+
+  - The first three are N-1's observed shapes; the fourth is the boolean junction, under H-4. C32 keeps its prediction (admitted), now by rule 3; its B-T1 pin stands.
+- **B-T1 pins.** Appended to part 3: C51 (four) and `f32 > -NULL` (refused; no B-T3 row). Part 3 goes from 341 to 346 cases, the total from 9,723 to 9,728.
+- **§4.** New mutation M7: the unary arm keeps the NULL type over a NULL literal (its behaviour on main at 2bab186a). Fails on C51's first predicate: expected `TypeNotAdmitted`, got `Ok`.
+- **§5.**
+  - P-3's refused pins become twelve; its admitted pins stay eleven.
+  - Declared changes outside §3, admitted at the merge base and refused after, not rows, routed with F7: `-NULL` against a REAL or DOUBLE column or a double literal (residual reason); `-NULL` beside a REAL or DOUBLE column or a double literal in `+`, `-`, `*` (residual reason); `-NULL` beside a decimal literal in `+`, `-`, `*` (`conversion_can_fail`), which also ends c6809d0c's admission of `(-NULL) - 0.5 > 0`. §1's claim that no other admission outcome changes is narrowed to exclude these and C51.
+  - New invalidators: a C51 shape admitted; an existing B-T3 row moves.
+- **§8.** New item 21: the NULL type produced by anything but a NULL literal.
+- **§9.** Reviewer: M7 observed by name at a commit, then reverted. Architect: the NULL-literal reading at each of §2.9's readers.
+- **§2.6, crossing under C2.** C51's shapes move from admitted (an empty stream, or for `zone IS DISTINCT FROM -NULL` a stream error naming a file value) to `filter_type_not_admitted` with the tabled reasons; the degenerate shapes in §5 above move from admitted to refused. No code under `kernel/`, `protocol/`, `frontends/` or `renderer/`.
+- **§7.** Unchanged. Estimated with Amendment 1: 250 to 275 of 300, over the same 2 files. An overrun is class 8, and §7 is not edited.

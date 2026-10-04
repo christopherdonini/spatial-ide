@@ -29,6 +29,71 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-04 — question round 49 (AskUserQuestion, two items in one call, answered at 10:12:35Z by the transcript; mirrored by the round-mirror hook as `state/questions/round-49.md` at 10:09:10Z, and the hook's log reads `ok: true`; by option label, verbatim; context `state/consults/2026-10-04-type-walk-null-literal-arithmetic-architect-remedy.md`):**
+- **Item 1 — the pre-existing unary `-NULL` defect on main** (#170 gate-1 reviewer, N-1): **"Fold into node 10 (Recommended)"**. Applied:
+  - Node 10's form gains Amendment 2 (class 9), with this ruling as its class-9 authority. It covers the unary arm over a NULL literal, typed as the binder types it, with row C51 and mutation M7.
+  - It goes in the same correction round as Amendment 1, the class-1 replacement of §2.1 by remedy B, with probe P-0 first.
+- **Item 2 — the degenerate constant-NULL shapes against REAL, DOUBLE or a double literal:** **"Refuse by type (Recommended)"**. Applied:
+  - They are judged by the binder's type and refused by bit width, with the residual reason. They are pinned as refused in B-T1, and their reason sentence joins F7's routing (proposed node `type-walk-rule2-residual-reasons`).
+  - This is a user-visible change for the shapes main admits today, ruled here. No ADR-021 Note is owed.
+
+**RULED 2026-10-04 — the G6-backstop ruling for guardian-v0 (the human, typed, mid-turn, received at 09:44:41Z by the transcript; recorded verbatim at `state/directives/2026-10-04-guardian-g6-backstop-ruling.md`, lines 6-8 (their sha256 5617d45ce4a07a763f1dbc1f66bfff910e08bf6e2c00bd7e17b3e85e9b54adef at the commit that adds it)):**
+- **The ruling** is the typed text, referenced and not restated.
+- **Applied:**
+  - A class-9 Amendment 5, written by the custodian from the ruling, is appended on `cut/guardian-v0` before its README line. It adds the backstop statement and the condition on definition changes to the form's §1, and README item R11.
+  - The correction round now running carries R11.
+  - G6 covers the PowerShell tool by Amendment 4. Its Bash route stays outside G6, as round 48 chose. So under this ruling, a report-only definition gaining Bash would first need G6 to cover Bash.
+
+**RULED 2026-10-04 — question round 48 (AskUserQuestion, one item, answered at 2026-10-04T09:44:38.896Z by the transcript; mirrored by the round-mirror hook as `state/questions/round-48.md`, and the hook's log reads `ok: true`; by option label, verbatim):**
+- **guardian-v0, the PowerShell route** under the 2026-10-04 shell-route ruling, as the form's Amendment 4 reads it: **"A: G6 closes it (Recommended)"**. Applied:
+  - Amendment 4 stands as appended. G6 refuses every PowerShell call by a report-only subagent without reading the command.
+  - G2 to G4 read no shell command on either shell, and §2.10's limit names both shells.
+  - No Amendment 5 is due. Amendment 4's §8 item 22 hold is released for the reading taken.
+  - Gate 2 cites this ruling.
+
+**RULED 2026-10-04 — the shell-route ruling for guardian-v0 (the human, typed, mid-turn, received at 09:20:13Z by the transcript; recorded verbatim at `state/directives/2026-10-04-guardian-shell-route-ruling.md`, lines 6-9 (their sha256 d01f6c204e6e80eab36831902d0b7d29d48dfbee46960313ed3a60d33b24687c at the commit that adds it)):**
+- **The ruling** is the typed text, referenced and not restated.
+- **Applied:**
+  - **The check's answer is yes.** The build types a PowerShell tool, with the command field `command` (the form's Amendment 1, item (i), read at 2.1.288). This machine's session exposes it: the custodian's own session holds a PowerShell tool.
+  - G1 already hooks it (`tool.call{tool=PowerShell}`, T9).
+  - The architect drafts a class-9 amendment, before any code of it, for G2 to G4 and G6 to hook that tool wherever they guard writes, as a route. It also records the answer in the form's §1, and the build change (§5 I2, 2.1.288 to 2.1.289).
+  - The same correction round as Amendment 2 carries the code.
+
+**RULED 2026-10-04 — question round 47 (AskUserQuestion, one item, answered at 09:20:10Z by the transcript; mirrored by the round-mirror hook as `state/questions/round-47.md` at 09:18:01Z, and the hook's log reads `ok: true`; by option label, verbatim):**
+- **Guardian's two remaining G1 spelling families** (PowerShell's backtick escape and line continuation; bash brace expansion): **"Disclose in v0 (Recommended)"**.
+  - Applied: Amendment 2 lands as drafted, with both families stated as limits in the README and §1, to be narrowed later through the usual process.
+  - The shell-route ruling above is a separate matter: a route, not a spelling.
+
+**RULED 2026-10-04 — question round 46 (AskUserQuestion, four items in one call, asked 2026-10-03 and answered at 2026-10-04T08:55:13Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-46.md` at 2026-10-03T22:09:16Z, and the hook's log reads `ok: true`. Items 1 and 2 are by option label; items 3 and 4 are typed, verbatim):**
+- **Item 1 — guardian-v0's G1 gap** (#169 gate 1, both gates): **"Fix in this PR (Recommended)"**. Applied:
+  - The architect drafts a class-9 amendment to the form's §2.2, so that a push inside `( )`, `$( )` or backticks, or after `{`, is found and refused. It is appended on `cut/guardian-v0` before any code.
+  - A worker correction round follows: the fix, its tests and mutations, and the README's remaining limits (the gates' S2-2).
+  - Then both gates re-run.
+- **Item 2 — E4:** **"Add E4 (Recommended)"**. Applied:
+  - A class-7 amendment adds E4: after install, a main-loop Write that creates a new file, predicted to pass.
+  - It runs only if the human's typed install approval names it.
+- **Item 3 — RED LINE, the ADR-021 Note's rendering:** typed **"Land it"**. Applied:
+  - The Note is appended to `docs/adr/ADR-021-row-filter-on-viewport-query.md`, byte-identical to the confirmed rendering, by the custodian's own docs commit 1445eaf3 (2026-10-04T08:56:43Z): `docs/adr/ADR-021-row-filter-on-viewport-query.md:269-275` @ 1445eaf3 sha256:412038b1b662c46e2aba202767632a47c808ee5c835a1a6c8edd4bc6dda579b8.
+  - The diff is a pure append (8 insertions, 0 deletions). The ADR index check is PASS.
+  - Node 10's §8 item 17 condition is met.
+- **Item 4 — the hooks-modules rollout switch** (#169 gate-1 reviewer, S1-1): typed **"I've just done it"**. Applied:
+  - The custodian re-ran `claude plugin test tools/mods/spatial-guardian` in the guardian worktree at about 08:56Z: 34 pass, exit 0.
+  - The reviewer's S1-1 is discharged in the re-gate after the correction round.
+
+**RULED 2026-10-03 — question round 45 (AskUserQuestion, two items in one call, answered at 21:42:27Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-45.md` at 19:56:23Z, and the hook's log reads `ok: true`. Item 1 is by option label, verbatim; item 2 is a red line, ruled in typed words):**
+- **Item 1 — node 10's O-2** (the form's §2.4): **"Yes, carry it (Recommended)"**. Applied:
+  - §2.4 is applied as recommended. The unary arm carries the field. One disjunct is added to §2.3's set condition. Row C47 and its two B-T1 pins are added, so B-T1 part 3 has 332 cases and the total is 9,714.
+  - The worker-high applied it on `cut/type-walk-null-literal-arithmetic` (c6809d0c).
+  - O-2's §8 item 1 hold is released.
+- **Item 2 — RED LINE, the dated ADR-021 Note** (node 10's Q-1). The ruling is typed and filed verbatim as `state/directives/2026-10-03-adr-021-note-acceptance.md`, lines 6-8 (their sha256 4b3c2092b551215704c40cad7d848bded60f10d76cb3429c6bfd0facbbdbf2ec at the commit that adds it), referenced and not restated. Applied:
+  - **The accepted text is rendered** in `state/drafts/adr-021-note-2026-10-03-rendered.md`. The Note text begins at its line 7, sha256 412038b1b662c46e2aba202767632a47c808ee5c835a1a6c8edd4bc6dda579b8.
+  - **The two rendering choices are disclosed in that file:**
+    - the heading's `<date>` is filled as plain 2026-10-03, without the draft's backticks, as every existing Note heading reads;
+    - the bracketed clause replaces its bracket, with its first word capitalised.
+  - The custodian asks the human to confirm the rendering in typed words before it lands, because the ruling says byte-identical.
+  - **Then it lands** byte-identical, by the custodian's own docs commit appending it to `docs/adr/ADR-021-row-filter-on-viewport-query.md`.
+  - Node 10's PR does not merge before that (its form's §8 item 17).
+
 **RULED 2026-10-03 — question round 44 (AskUserQuestion, two items in one call, answered at 19:22:28Z by the transcript; mirrored to Telegram by the round-mirror hook as `state/questions/round-44.md` at 19:20:06Z, and the hook's log reads `ok: true`. Item 1 is typed; item 2 is by option label, verbatim):**
 - **Item 1 — guardian-v0's O-3 to O-8.** The option chosen was **"I'll rule them one by one"**, and the ruling followed in typed words at 19:23:08Z. It is filed verbatim as `state/directives/2026-10-03-guardian-o3-o8-ruling.md`, lines 6-8 (their sha256 c8120e627ef205c7b4b52194cf1ec75946293229ed7f93c4db7a1b6f90ae19e0 at the commit that adds it), referenced and not restated. Applied:
   - O-3 and O-5 to O-8 are taken as the architect's draft recommends (`state/consults/2026-10-03-guardian-v0-architect-draft.md`, its OPEN list).

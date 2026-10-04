@@ -265,3 +265,11 @@ item 2).
 4. **The arithmetic set is unchanged.** The two named function sets (Consequences; What this ADR does not decide) stand. An integer overflow in `+`, `-`, `*` or unary `-` involves no conversion and is not decided here.
 5. **Where it runs.** In stage 3, after the surrogate prepare and its BOOLEAN check. A predicate the binder refuses keeps `filter_rejected_by_binder`.
 6. **Decision 8 gains a twelfth code:** `filter_type_not_admitted`, with fields `construct` (the operator), `operand_types` (the engine's type names) and `reason` (one of five fixed values). It is refused synchronously, before any lease or mint, and carries no value read from the file. Decision 8's exhaustive mapping applies to the twelve. The Note of 2026-09-24 spoke to its own item, and this Note does not change it.
+
+## Note 2026-10-03 — a NULL-valued `+`, `-` or `*` beside a decimal literal (the Note 2026-09-30, item 2)
+
+*Appended under the human's ruling of 2026-10-03 (question round 43, item 1). The text above is unchanged, the Status line and the earlier Notes included. Implementation: `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`.*
+
+1. A `+`, `-` or `*` whose operands are a NULL literal and a decimal literal within the bounds has a NULL value. Wherever it is compared, it counts as that decimal literal under the Note 2026-09-30, item 2, third, sixth and seventh bullets. So do its negation by unary `-`, and a `+`, `-` or `*` of a NULL literal with such a result.
+2. It does not count as a NULL literal. Against text, against BOOLEAN, or against an integer the third bullet does not admit, it is refused as that decimal literal would be. Inside `+`, `-` and `*`, nothing changes.
+3. No code, field or reason value changes. Decision 8's twelve codes stand.
