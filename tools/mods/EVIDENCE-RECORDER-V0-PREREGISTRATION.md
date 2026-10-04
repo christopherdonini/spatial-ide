@@ -476,3 +476,21 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
 - The worker's readings where the form is silent, R1 to R7 in the report's §9, are not amendments. They are for the gates.
 
 **Superseded index.** None.
+
+### Amendment 2 — 2026-10-04, correction round 1 of 2: gate 1's record findings (class 2)
+
+*Class 2, written by the custodian after gate 1 (gate-log 390 and 391; the reports are `state/consults/gates/2026-10-04-evidence-recorder-v0-gate1-architect.md` and `state/consults/gates/2026-10-04-evidence-recorder-v0-gate1-reviewer.md`). This is correction round 1 of 2 under the record cap. No prediction is edited, and `hooks/register.js` and the tests are unchanged. 9acc86b8 below is 9acc86b8c55956d679f14c0df98981c80137d9ef, a branch commit, named in words with no hash (round 15 (e)). Nothing below is a quotation.*
+
+- **C2-d, `recorder_ms.write` is a lower bound** (§2.3's `recorder_ms` and §7's `RECORDER_P95_BOUND_MS`; the architect's S1-1 and the reviewer's N-1; worker report 1, §9, R3).
+  - The result: `write` is timed from just before the log-root lookup to the end of the record's assembly. The line's digest and the `$.fs.write` call come after it, because a record cannot hold its own write time.
+  - So before + after + write is a lower bound on the recorder's work on the call path. A p95 of that sum over §7's bound fires §9's overhead stop. A p95 at or under the bound does not establish §1 claim 7 until an amendment, made before E5, names how the write's latency is measured.
+- **C2-e, `validate`'s calls line** (§5's `validate` prediction; the architect's S1-2 (a) and the reviewer's S1-2).
+  - The result at 2.1.289: the calls line differs from §2.0's declared line only by three annotations, `(via agentTypeOf)`, `(via writeRecord)` and `(via gitRun)` (worker report 1, §7; the reviewer's check 4).
+  - §5 classes a difference confined to a `(via …)` annotation as class 2, so I3 did not fire.
+- **Corrections to Amendment 1:**
+  - **C2-a** (the architect's S1-2 (d) and the reviewer's S2-3). Its last sentence names a row that does not exist: no §4 E-row, E0 to E7, records the live path, so the sentence is withdrawn and the live path stays unclaimed. The comment its second bullet describes is on line 89 of `test/recorder.test.ts`, unchanged since 9acc86b8.
+  - **C2-b** (the architect's S1-2 (b), and the reviewer's S1-1 and S2-1). The log-root lookup is §2.7's, in its first bullet, not §2.4's. The kit's refusal is narrower than C2-b's first bullet states: at 2.1.289 the gate-1 reviewer saw a function declared by name inside `register` and passed by name refused at load, while an inline async arrow passed to `on` loaded and passed. The code's top-level declarations are within what the kit accepts.
+  - **C2-c** (the architect's S1-2 (c)). The never-asked counters cover six names: `fs.read`, `fs.list`, `fs.stat`, `fs.exists`, `session.root` and `session.cwd` (the test file's counter loop, unchanged since 9acc86b8). The rest of §8 item 3's set, and `$.process.spawn`, are ruled out by `validate`'s calls line, not by a counter.
+  - **What it touches** (Amendment 1's fourth bullet): the class-2 results are now C2-a to C2-e. Every other outcome stands as Amendment 1 records it.
+
+**Superseded index.** Amendment 1: C2-a's last sentence; C2-b's section cite and its statement of the kit's rule; C2-c's statement of what the counters cover; and the fourth bullet's count of three results. Each is superseded by this amendment's correction of it.
