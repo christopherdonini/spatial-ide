@@ -203,3 +203,63 @@
   - **Reports to files.** Node 10's worker wrote its report file. Guardian's worker was refused its Write by the harness ("Subagents should return findings as text, not write report files"), did not work around it, and returned the report as its message. The custodian filed it by mechanical extraction from the transcript. The refusal was not uniform across two runs of the same agent type.
   - **The human's attention:** three question rounds this session (43, 44, 45), and typed rulings on round 44 item 1 and round 45 item 2. They arose from the pieces' own OPEN items, not from running two at once.
   - **Costs:** node 10's worker-high, round 1: 106,207 tokens, 48 tool uses, 3,789,091 ms. guardian-v0's worker-high: 330,199 tokens, 117 tool uses, 2,420,319 ms. The architect drafts: node 10 213,452 tokens, 42 tool uses, 751,713 ms; guardian draft 2 186,454 tokens, 42 tool uses, 693,869 ms.
+
+### B1, continued (session 874d0083, 2026-10-04)
+
+- **The compaction:** 2026-10-04T11:19:22Z, automatic. The transcript's record: 767,403 tokens before, 15,354 after, 86,010 ms.
+  - It is the first in session 874d0083, 17.0 h after the lease was taken at 2026-10-03T18:19Z.
+  - The interval includes the overnight idle: no human turn from round 45's answer (21:42:27Z) to round 46's (08:55:13Z).
+  - At compaction one piece was in flight, #170's CI; guardian-v0 had merged at 11:01:20Z.
+- **Two pieces at once, the morning of 2026-10-04.** #169 (guardian-v0) and #170 (node 10) were gated side by side from about 09:23Z, with separate worktrees and disjoint paths. Conflicts: none in paths.
+- **Reports to files:**
+  - Reviewers wrote their reports through their shell: #170 gates 1 and 2, #169 gates 2 and 2b.
+  - Architects returned messages, extracted mechanically from the transcript.
+  - One instruction to a running worker to append an amendment from a scratch file was denied by the harness as instruction poisoning. The worker did not work around it, and the custodian appended the amendment itself (#169 Amendment 5).
+- **The human's attention, 2026-10-04:**
+  - question rounds 46 to 49;
+  - the shell-route ruling (09:20:13Z) and the G6-backstop ruling (09:44:41Z), both typed;
+  - #169's merge click (11:01:20Z);
+  - the Guardian install approval (11:25:14Z), and the install and reload (11:28Z to 11:31Z).
+  - These arose from the pieces' own OPEN items and gates, not from running two at once.
+- **After the compaction:**
+  - The freed slot went to `evidence-recorder-v0`'s P0, beside #170's gate 2.
+  - Guardian's install put the custodian's own shell commands under G1, and G1 refused two record commands. In each, an apostrophe in heredoc text came before the word push. Nothing ran.
+  - Record text is now written with the Write tool, and commit and push run as separate calls.
+- **Costs, 2026-10-04, from the harness's task notifications** (subagent tokens, tool uses, ms):
+
+| Run | Tokens | Tools | ms |
+|---|---|---|---|
+| architect: #169 Amendments 2 and 3 | 125,704 | 14 | 420,857 |
+| worker-high: #169 correction round 1 (first run) | 98,525 | 19 | 84,282 |
+| architect: #169 Amendment 4 | 136,063 | 18 | 498,065 |
+| worker-high: #169 correction round 1 | 190,064 | 66 | 669,217 |
+| worker: Guardian README R11 | 25,787 | 8 | 69,023 |
+| #169 gate 2 architect | 169,558 | 37 | 368,681 |
+| #169 gate 2 reviewer | 191,853 | 57 | 862,970 |
+| #169 gate 2b reviewer | 97,649 | 26 | 559,061 |
+| lead-data: E5 probe | 12,737 | 2 | 23,473 |
+| worker: evidence-recorder-v0 P0 | 236,363 | 96 | 1,234,077 |
+
+### B2, continued — node 10 after the stop (measured piece 2)
+
+Drafting returned to the architect at the stop. The rows below are the piece's later rounds, each classed under C4; none counts against the lead.
+
+- **Gate 1** (head c6809d0c). The reviewer: FAIL. Its S1-1 falsified §2.1 at DuckDB v1.5.5 (a NULL-op-NULL result passed comparison rule 2 and cast a file column). The architect's report was filed alongside.
+  - **Correction round 1, draft-caused, by the architect's crossing draft** (§2.1's shape), not the lead's: Amendment 1, class 1, remedy B.
+  - **Changed scope:** Amendment 2, class 9 (round 49, item 1, the unary `-NULL` fold).
+  - **The round's own class-2 result:** Amendment 3.
+- **Gate 2** (head 3074e9a0). The architect: PASS. The reviewer: FAIL. Its S1-1 is a test comment stating a binder refusal without DuckDB's version; the architect's N1 named the same comment as non-blocking.
+  - **Correction round 2, implementation defect:** one comment line.
+- **The index:** updated in its PR before the final gate (a5325ad4; last verified at 8efcde9). Gate 2's architect found §2.7 present and matching. Index-wrong gate count: 0.
+- **The human's interventions** were rulings on OPEN items and gate findings (rounds 45, 46 and 49), not attributable to the lead's draft.
+- **Costs** (subagent tokens, tool uses, ms):
+
+| Run | Tokens | Tools | ms |
+|---|---|---|---|
+| worker-high: implementation (resumed for O-2) | 118,518 | 14 | 1,847,896 |
+| gate 1 architect | 118,199 | 44 | 315,096 |
+| gate 1 reviewer | 120,051 | 50 | 1,585,239 |
+| architect: the S1-1 remedy consult | 164,804 | 28 | 679,027 |
+| worker-high: correction round 1 | 135,984 | 53 | 2,638,318 |
+| gate 2 architect | 158,183 | 53 | 406,371 |
+| gate 2 reviewer | 159,466 | 57 | 1,622,765 |
