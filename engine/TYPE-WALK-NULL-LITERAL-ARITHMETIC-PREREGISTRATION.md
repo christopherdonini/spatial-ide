@@ -388,3 +388,13 @@ Full gating (`AUTONOMY.md:321-332 @ 1bb94e19 sha256:5c75dae11897d37bea0b078e4bac
 - **§9.** Reviewer: M7 observed by name at a commit, then reverted. Architect: the NULL-literal reading at each of §2.9's readers.
 - **§2.6, crossing under C2.** C51's shapes move from admitted (an empty stream, or for `zone IS DISTINCT FROM -NULL` a stream error naming a file value) to `filter_type_not_admitted` with the tabled reasons; the degenerate shapes in §5 above move from admitted to refused. No code under `kernel/`, `protocol/`, `frontends/` or `renderer/`.
 - **§7.** Unchanged. Estimated with Amendment 1: 250 to 275 of 300, over the same 2 files. An overrun is class 8, and §7 is not edited.
+
+### Amendment 3 — 2026-10-04, written after correction round 1's results: one class-2 result (H-4)
+
+*Class 2, a deviation recorded after results, written by the custodian after worker report 3 was seen. The prediction is not edited. 8efcde98 below is 8efcde986e5822048d77e29e8fd5b1ddbe20430f, a branch commit, named in words with no hash (round 15 (e)).*
+
+- **The prediction:** Amendment 1's §3 tables C48's fifth predicate, `zone BETWEEN NULL * NULL AND NULL`, as TypeNotAdmitted with `text_with_non_text`. Amendment 1's H-4 declares a `rejected_by_binder` outcome as a class-2 result.
+- **The result:** at DuckDB v1.5.5 the surrogate prepare refuses that predicate before the type walk runs, so its outcome is `skp.filter_rejected_by_binder`. The worker observed it at 8efcde98 and pinned the observed outcome in that predicate's B-T3 entry. The merge base also refused the shape. The evidence is worker report 3, `state/consults/2026-10-04-type-walk-null-literal-arithmetic-worker-report-3.md`, its class-2 item.
+- **What it touches:** C48's fifth predicate only. Every other C48 to C51 outcome came out as tabled. P-3 holds: the head shows eleven more admitted and twelve more refused than the merge base, and B-T1b is equal at both. No invalidator fired.
+
+**Superseded index.** None.

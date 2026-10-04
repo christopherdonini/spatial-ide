@@ -1490,6 +1490,16 @@ struct Typed {
     /// type" -- the same question DuckDB's own binder asks (observed at v1.5.5: `i8 + 1` keeps
     /// TINYINT, `i8 + 300` promotes to INTEGER).
     literal_int_value: Option<i128>,
+    /// A rule-2 result over a NULL operand and a decimal literal within bounds counts as that
+    /// decimal literal for comparison rules 4 and 6 and for [`determine_reason`]'s decimal-literal
+    /// test (`engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 2.3, question
+    /// round 43, item 1). Private; `false` at every constructor and in every [`literal_typed`]
+    /// arm; set only in [`type_of_arithmetic`]'s binary arm, where the NULL-typed operand is a
+    /// NULL literal and the partner is a decimal literal within bounds or a result that already
+    /// counts (question round 45, item 1, O-2); read in exactly three places for comparison and
+    /// refusal, and a fourth time by that set condition on the partner (section 8 item 7 as read
+    /// by section 10 Amendment 1).
+    counts_as_decimal_literal: bool,
 }
 
 impl Typed {
@@ -1499,6 +1509,7 @@ impl Typed {
             kind: OperandKind::Column,
             within_bounds: true,
             literal_int_value: None,
+            counts_as_decimal_literal: false,
         }
     }
 
@@ -1508,6 +1519,7 @@ impl Typed {
             kind: OperandKind::Expression,
             within_bounds: true,
             literal_int_value: None,
+            counts_as_decimal_literal: false,
         }
     }
 
@@ -1725,6 +1737,7 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
             kind: OperandKind::Literal,
             within_bounds: true,
             literal_int_value: None,
+            counts_as_decimal_literal: false,
         });
     }
     let ty = value
@@ -1746,6 +1759,7 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
                 kind: OperandKind::Literal,
                 within_bounds: digits <= MAX_INTEGER_LITERAL_DIGITS,
                 literal_int_value: Some(v),
+                counts_as_decimal_literal: false,
             })
         }
         "DECIMAL" => {
@@ -1761,6 +1775,7 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
                 within_bounds: scale <= MAX_DECIMAL_LITERAL_SCALE
                     && integer_digits <= MAX_INTEGER_LITERAL_DIGITS,
                 literal_int_value: None,
+                counts_as_decimal_literal: false,
             })
         }
         "DOUBLE" => Ok(Typed {
@@ -1768,12 +1783,14 @@ fn literal_typed(node: &Value) -> Result<Typed, FilterError> {
             kind: OperandKind::Literal,
             within_bounds: true,
             literal_int_value: None,
+            counts_as_decimal_literal: false,
         }),
         "VARCHAR" => Ok(Typed {
             ty: EngineType::Varchar,
             kind: OperandKind::Literal,
             within_bounds: true,
             literal_int_value: None,
+            counts_as_decimal_literal: false,
         }),
         other => Err(FilterError::ConstructNotAdmitted {
             construct: format!("a literal of type `{other}`"),
@@ -1922,8 +1939,9 @@ fn type_of_division(
 }
 
 /// `+`, `-`, `*`'s own admission and result type (section 2.5(a)). Unary `-` (one child) is
-/// admitted for any numeric operand or a NULL literal, with the operand's own type (section
-/// 2.5(b), as amended by section 10 Amendment 4).
+/// admitted for any numeric operand with the operand's own type, or for a NULL literal typed
+/// BIGINT (section 2.5(b), as amended by section 10 Amendment 4; the NULL literal's type by
+/// `TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 10 Amendment 2).
 fn type_of_arithmetic(
     op: &str,
     children: &[Value],
@@ -1931,7 +1949,13 @@ fn type_of_arithmetic(
 ) -> Result<Typed, FilterError> {
     if children.len() == 1 {
         let operand = type_of_value(&children[0], namespace)?;
-        if is_numeric(&operand) || operand.ty == EngineType::Null {
+        if operand.ty == EngineType::Null {
+            // section 10 Amendment 2, section 2.9: unary `-` over a NULL literal is typed as the
+            // binder types it (BIGINT, observed at DuckDB v1.5.5), not as NULL, so no path of the
+            // walk but a NULL literal produces the NULL type.
+            return Ok(Typed::expression(EngineType::BigInt));
+        }
+        if is_numeric(&operand) {
             return Ok(Typed {
                 kind: OperandKind::Expression,
                 ..operand
@@ -1947,7 +1971,26 @@ fn type_of_arithmetic(
     let left = type_of_value(&children[0], namespace)?;
     let right = type_of_value(&children[1], namespace)?;
     match admitted_arithmetic_result(&left, &right) {
-        Some(ty) => Ok(Typed::expression(ty)),
+        Some(ty) => {
+            // section 2.2: a binary result is within bounds exactly when both operands are.
+            // section 2.3, as ruled by question round 45, item 1 (O-2): a NULL-typed operand (a
+            // NULL literal, the only path to the NULL type) beside a decimal literal within
+            // bounds, or beside a result that already counts as one, is the pair whose result
+            // counts as that decimal literal. This reads the field on the partner.
+            let is_decimal_literal_within_bounds = |t: &Typed| {
+                matches!(t.ty, EngineType::Decimal(..))
+                    && ((t.kind == OperandKind::Literal && t.within_bounds)
+                        || t.counts_as_decimal_literal)
+            };
+            let counts_as_decimal_literal = (left.ty == EngineType::Null
+                && is_decimal_literal_within_bounds(&right))
+                || (right.ty == EngineType::Null && is_decimal_literal_within_bounds(&left));
+            Ok(Typed {
+                within_bounds: left.within_bounds && right.within_bounds,
+                counts_as_decimal_literal,
+                ..Typed::expression(ty)
+            })
+        }
         None => {
             let is_arith_decimal = is_decimal_arithmetic_pair(&left, &right);
             let reason = determine_reason(&left, &right, is_arith_decimal);
@@ -1997,6 +2040,12 @@ fn admitted_arithmetic_result(l: &Typed, r: &Typed) -> Option<EngineType> {
     // itself numeric -- the walk gives the result the other operand's own type (the walk's rule,
     // not a claim about the plan). Guarded on `is_numeric` for the same reason rule 1 is scoped
     // above: section 2.5(a)'s string/boolean refusals apply regardless of a NULL partner.
+    if l.ty == EngineType::Null && r.ty == EngineType::Null {
+        // section 10 Amendment 1, section 2.1 as replaced: NULL beside NULL is admitted, typed as
+        // the binder types it (BIGINT, observed at DuckDB v1.5.5), so the result is judged as an
+        // integer expression and not as a NULL literal.
+        return Some(EngineType::BigInt);
+    }
     if l.ty == EngineType::Null && is_numeric(r) {
         return Some(r.ty.clone());
     }
@@ -2085,13 +2134,17 @@ fn is_admitted_comparison(l: &Typed, r: &Typed) -> bool {
 
     let is_int = |t: &Typed| int_bits_signed(&t.ty).is_some() && t.within_bounds;
     let is_int_literal = |t: &Typed| is_int(t) && t.kind == OperandKind::Literal;
+    // read of `counts_as_decimal_literal`, 1 of 3 (section 2.3): stands in for kind literal.
     let is_decimal_literal = |t: &Typed| {
-        matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal && t.within_bounds
+        matches!(t.ty, EngineType::Decimal(..))
+            && (t.kind == OperandKind::Literal || t.counts_as_decimal_literal)
+            && t.within_bounds
     };
     let is_double_literal =
         |t: &Typed| t.ty == EngineType::Double && t.kind == OperandKind::Literal;
+    // read of `counts_as_decimal_literal`, 2 of 3 (section 2.3): stands in for kind literal.
     let is_numeric_literal_within_bounds = |t: &Typed| {
-        t.kind == OperandKind::Literal
+        (t.kind == OperandKind::Literal || t.counts_as_decimal_literal)
             && t.within_bounds
             && (int_bits_signed(&t.ty).is_some()
                 || matches!(t.ty, EngineType::Decimal(..) | EngineType::Double))
@@ -2200,8 +2253,11 @@ fn determine_reason(l: &Typed, r: &Typed, is_arithmetic: bool) -> TypeRefusalRea
     // integer side to 64 bits, so an arithmetic result wider than that (a HUGEINT/UHUGEINT
     // expression) beside a decimal literal is refused for that reason, not the residual
     // `ConversionRounds`.
-    let is_decimal_lit =
-        |t: &Typed| matches!(t.ty, EngineType::Decimal(..)) && t.kind == OperandKind::Literal;
+    // read of `counts_as_decimal_literal`, 3 of 3 (section 2.3): stands in for kind literal.
+    let is_decimal_lit = |t: &Typed| {
+        matches!(t.ty, EngineType::Decimal(..))
+            && (t.kind == OperandKind::Literal || t.counts_as_decimal_literal)
+    };
     let is_wide_int = |t: &Typed| {
         t.kind != OperandKind::Literal
             && int_bits_signed(&t.ty).map(|(b, _)| b > 64).unwrap_or(false)
