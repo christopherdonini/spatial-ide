@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-04T13:22:01.800Z",
-  "plan_hash": "22a273cfbbaf7a8f7d2cc49e49e23bba69c34748def2bacbd56d987d80432bb0",
+  "generated_at": "2026-10-04T13:38:52.784Z",
+  "plan_hash": "1bc266db2516c41888bd08f017b90de43a37ee5a8a77738ec192e1e55892dc37",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "watch-grandparent-spawn-signal",
+    "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
+    "lane": "kernel-protocol",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 11,
+    "budget_minutes": 45,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-27",
+      "done": null
+    },
+    "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes."
+  },
+  "ready": [
+    {
+      "id": "watch-grandparent-spawn-signal",
+      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 11,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -120,28 +158,6 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
-      ]
-    },
-    {
-      "id": "watch-grandparent-spawn-signal",
-      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 11,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes.",
-      "blocked_by": [
-        "type-walk-null-literal-arithmetic"
       ]
     },
     {
@@ -301,28 +317,6 @@
   ],
   "in_progress": [
     {
-      "id": "type-walk-null-literal-arithmetic",
-      "title": "Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1)",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 12,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/type-walk-null-literal-arithmetic"
-      },
-      "dates": {
-        "opened": "2026-09-30",
-        "done": null
-      },
-      "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes. Drafted by lead-data (the pilot's piece 2; state/consults/2026-10-03-type-walk-null-literal-arithmetic-lead-data-draft.md), with an architect consult (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md). RULED 2026-10-03, question round 43: item 1 admits case (b), NULL - 0.5 > 0, narrowly (option iii: a rule-2 result over an in-bounds decimal literal counts as that literal for comparison rules 4 and 6), with no sentence or wire change; the piece is therefore crossing under the lead-data clarification's C2, and the architect drafts it; item 2 keeps the pilot's section 5 stop, so drafting returns to the architect in any case.",
-      "evidence_label": "branch `cut/type-walk-null-literal-arithmetic`"
-    },
-    {
       "id": "evidence-recorder-v0",
       "title": "Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",
       "lane": "governance",
@@ -343,28 +337,6 @@
       },
       "summary": "Placed by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 1 and step 2; RULED 2026-10-03): governance lane, after guardian-v0, which it depends on. The brief is state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md. It observes only: it never refuses, rewrites or answers a tool call, adds nothing the model reads, and returns every result exactly as next(e) produced it. P0 first (the brief's section 3: the Bash result fields, turn.complete usage and agentId, the approved-command list as this repository invokes it, the dirty-tree identity's cost, the local log path, the chain order with Guardian, and validate's hooks and calls lines), recorded before any code. Gates: the reviewer and the architect, with the validate output in the PR body. Installing it is a security-posture change and a red line: the human's typed approval after its own gates (item 2), and the human installs it. Whether recorder lines may be cited as evidence is an item on the 2026-10-09 window (item 3). Its budget is the custodian's estimate, equal to guardian-v0's.",
       "evidence_label": "branch `cut/evidence-recorder-v0`"
-    },
-    {
-      "id": "claude-md-stale-facts",
-      "title": "CLAUDE.md stale facts -- the current focus after v0.1.0, the spike-results wording, and the prompt audit's other class-(d) findings in CLAUDE.md, restated as facts with no rule changed (the 2026-10-04 prompt-audit instruction, item 3)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 19,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/claude-md-stale-facts"
-      },
-      "dates": {
-        "opened": "2026-10-04",
-        "done": null
-      },
-      "summary": "Placed by the 2026-10-04 prompt-audit instruction, item 3 (state/directives/2026-10-04-prompt-audit-instruction.md; RULED 2026-10-04), beside the current work and outside the two-pieces trial count by the human's word. Findings H2, H4, M1, M3, F2 and F3 of state/consults/2026-10-04-prompt-audit.md, triaged class (d) in the 2026-10-09 window draft, item H. CLAUDE.md lines 8, 23, 24, 28 and 38 replaced in place; lines 12-17 (cited as verbatim rulings in PRECEDENTS.md) untouched. Five-line form, single reviewer gate (AUTONOMY section 21b).",
-      "evidence_label": "branch `cut/claude-md-stale-facts`"
     }
   ],
   "proposed": [

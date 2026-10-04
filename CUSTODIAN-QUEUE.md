@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `22a273cfbbaf7a8f7d2cc49e49e23bba69c34748def2bacbd56d987d80432bb0`) at `2026-10-04T13:22:01.800Z`.
+Generated from `PLAN.yaml` (sha256 `1bc266db2516c41888bd08f017b90de43a37ee5a8a77738ec192e1e55892dc37`) at `2026-10-04T13:38:52.784Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) (lane `kernel-protocol`, order 11, budget 45 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -22,7 +22,6 @@ Generated from `PLAN.yaml` (sha256 `22a273cfbbaf7a8f7d2cc49e49e23bba69c34748def2
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — blocked by: type-walk-null-literal-arithmetic
 - **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
@@ -33,9 +32,7 @@ Generated from `PLAN.yaml` (sha256 `22a273cfbbaf7a8f7d2cc49e49e23bba69c34748def2
 
 ## 5. In progress
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) — evidence: branch `cut/type-walk-null-literal-arithmetic`
 - **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — evidence: branch `cut/evidence-recorder-v0`
-- **claude-md-stale-facts** — CLAUDE.md stale facts -- the current focus after v0.1.0, the spike-results wording, and the prompt audit's other class-(d) findings in CLAUDE.md, restated as facts with no rule changed (the 2026-10-04 prompt-audit instruction, item 3) — evidence: branch `cut/claude-md-stale-facts`
 
 ## 6. Proposed / unscheduled
 

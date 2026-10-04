@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T13:22:01.986Z",
-  "plan_hash": "22a273cfbbaf7a8f7d2cc49e49e23bba69c34748def2bacbd56d987d80432bb0",
+  "generated_at": "2026-10-04T13:38:52.985Z",
+  "plan_hash": "1bc266db2516c41888bd08f017b90de43a37ee5a8a77738ec192e1e55892dc37",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4626,7 +4626,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 11,
       "depends_on": [
         "type-walk-null-literal-arithmetic"
@@ -5355,7 +5355,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 12,
       "depends_on": [
         "filter-bind-admission-implicit-coercions",
@@ -5367,7 +5367,7 @@
       },
       "gate": "engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/type-walk-null-literal-arithmetic"
+        "pr": 170
       },
       "budget_minutes": 90,
       "generation": 4,
@@ -5376,7 +5376,7 @@
       "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes. Drafted by lead-data (the pilot's piece 2; state/consults/2026-10-03-type-walk-null-literal-arithmetic-lead-data-draft.md), with an architect consult (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md). RULED 2026-10-03, question round 43: item 1 admits case (b), NULL - 0.5 > 0, narrowly (option iii: a rule-2 result over an in-bounds decimal literal counts as that literal for comparison rules 4 and 6), with no sentence or wire change; the piece is therefore crossing under the lead-data clarification's C2, and the architect drafts it; item 2 keeps the pilot's section 5 stop, so drafting returns to the architect in any case.",
       "dates": {
         "opened": "2026-09-30",
-        "done": null
+        "done": "2026-10-04"
       }
     },
     {
@@ -6203,7 +6203,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 19,
       "depends_on": [],
       "needs_human": {
@@ -6213,7 +6213,7 @@
       "gate": "CLAUDE-MD-STALE-FACTS-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/claude-md-stale-facts"
+        "pr": 171
       },
       "budget_minutes": 30,
       "generation": 1,
@@ -6222,7 +6222,7 @@
       "summary": "Placed by the 2026-10-04 prompt-audit instruction, item 3 (state/directives/2026-10-04-prompt-audit-instruction.md; RULED 2026-10-04), beside the current work and outside the two-pieces trial count by the human's word. Findings H2, H4, M1, M3, F2 and F3 of state/consults/2026-10-04-prompt-audit.md, triaged class (d) in the 2026-10-09 window draft, item H. CLAUDE.md lines 8, 23, 24, 28 and 38 replaced in place; lines 12-17 (cited as verbatim rulings in PRECEDENTS.md) untouched. Five-line form, single reviewer gate (AUTONOMY section 21b).",
       "dates": {
         "opened": "2026-10-04",
-        "done": null
+        "done": "2026-10-04"
       }
     },
     {

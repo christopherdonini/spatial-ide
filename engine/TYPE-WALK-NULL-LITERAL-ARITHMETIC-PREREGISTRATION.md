@@ -398,3 +398,27 @@ Full gating (`AUTONOMY.md:321-332 @ 1bb94e19 sha256:5c75dae11897d37bea0b078e4bac
 - **What it touches:** C48's fifth predicate only. Every other C48 to C51 outcome came out as tabled. P-3 holds: the head shows eleven more admitted and twelve more refused than the merge base, and B-T1b is equal at both. No invalidator fired.
 
 **Superseded index.** None.
+
+### Amendment 4 — closing record (references and hashes only; the record cap)
+
+*Written by the custodian after PR #170 merged, as merge commit db35c53f (parents ff7b9f85 and 1484b5ba; never a squash), at 2026-10-04T13:28:59Z. It follows the gate-2 architect's closing-record list (`state/consults/gates/2026-10-04-type-walk-null-literal-arithmetic-gate2-architect.md`). Every commit named below is reachable from main through db35c53f.*
+
+1. **Merge commit:** db35c53f. 8efcde98 (the code, last verified 8efcde9) and every other branch commit are reachable.
+2. **Mutations and runs:**
+   - M1 to M7 were observed by the worker at 8efcde98 (worker report 3), and by the gate-2 reviewer at 3074e9a0, whose engine code is 8efcde98's.
+   - P-0's printout: DuckDB v1.5.5, all four BIGINT, at 013a3eb4, before code (worker report 3; gate-2 reviewer N-1).
+   - P-3: +11 admitted and +12 refused, with B-T1b equal at 897.
+3. **Ancestry:**
+   - 8786ff6a, which carries Amendments 1 and 2, is an ancestor of 8efcde98.
+   - The form's lines 1-390 at db35c53f are byte-identical to 8786ff6a's, so Amendment 3 is a pure append.
+4. **The other-module stat:** `git diff --stat 8786ff6a 1484b5ba -- kernel/ protocol/ frontends/ renderer/` is empty.
+5. **§7:** 270 of 300 over 2 files (`engine/src/predicate.rs` 64 and 8, `engine/tests/filter_type_admission.rs` 192 and 6), by §7's own command, from the merge base 8786ff6a to 1484b5ba.
+6. **The owner's index:** `engine/README.md:499 @ db35c53f sha256:4b3b31d103ae830a84b95f4516c8b0074079ba2a53b8a0f170d4c93f7ae7002a`.
+7. **ADR-021's Note 2026-10-03:** `docs/adr/ADR-021-row-filter-on-viewport-query.md:269-275 @ db35c53f sha256:412038b1b662c46e2aba202767632a47c808ee5c835a1a6c8edd4bc6dda579b8`. This equals the accepted rendering's sha256.
+8. **The rulings:** question rounds 43, 45, 46 and 49 (their RULED blocks in `DECISIONS-PENDING.md`).
+9. **Gates:**
+   - gate-log 379 (architect gate 1, PASS) and 380 (reviewer gate 1, FAIL, §2.1 falsified);
+   - 384 (architect gate 2, PASS) and 385 (reviewer gate 2, FAIL, a comment naming no DuckDB version);
+   - 386 and 387 (gate 2b, both PASS at 1484b5ba).
+10. **Tools, each with its commit:** verify-cites 522e448d, verify-quotes f9444a4d, verify-test-claims e9735d47, verify.mjs 26072022. verify-mutation is not relied on.
+11. **Routed, not owed here:** the degenerate REAL/DOUBLE shapes' reason sentence joins F7's node `type-walk-rule2-residual-reasons` (round 49, item 2; gate-2 architect N4).
