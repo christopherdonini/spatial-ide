@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T09:46:32.572Z",
-  "plan_hash": "217e5fcf9b0b483c30144a00621f5f9b2c210c7da7d0893f79f12426f54e37e3",
+  "generated_at": "2026-10-04T10:14:24.196Z",
+  "plan_hash": "b8f84cfb9cfb1c294c87da958465fbab7079971ccb03df826cbf841df37b18b0",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5370,7 +5370,7 @@
         "branch": "cut/type-walk-null-literal-arithmetic"
       },
       "budget_minutes": 90,
-      "generation": 2,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [],
       "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes. Drafted by lead-data (the pilot's piece 2; state/consults/2026-10-03-type-walk-null-literal-arithmetic-lead-data-draft.md), with an architect consult (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md). RULED 2026-10-03, question round 43: item 1 admits case (b), NULL - 0.5 > 0, narrowly (option iii: a rule-2 result over an in-bounds decimal literal counts as that literal for comparison rules 4 and 6), with no sentence or wire change; the piece is therefore crossing under the lead-data clarification's C2, and the architect drafts it; item 2 keeps the pilot's section 5 stop, so drafting returns to the architect in any case.",
