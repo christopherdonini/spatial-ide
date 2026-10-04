@@ -1,0 +1,14 @@
+{
+  "name": "spatial-ide-mods",
+  "owner": {
+    "name": "Spatial IDE"
+  },
+  "description": "Mods for the Spatial IDE repository's own sessions. Installed by the human, at user scope, from a checkout on main.",
+  "plugins": [
+    {
+      "name": "spatial-guardian",
+      "source": "./spatial-guardian",
+      "description": "Guardian v0: refuses force-pushes, edits to docs/01, rewrites of accepted ADRs, filed preregistrations and filed directives, and writes by a report-only subagent outside its report path. It only refuses."
+    }
+  ]
+}
