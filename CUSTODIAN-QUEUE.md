@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `09945357ec9e6ca1a065d81ab778dfa32d5ed66241c76935a4f1867ee36b2477`) at `2026-10-04T16:51:55.861Z`.
+Generated from `PLAN.yaml` (sha256 `ade1f8739cd63ce354a7bb4325706a6ad48858a8c89f6288f7dd85d96894d399`) at `2026-10-04T17:18:03.001Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) (lane `kernel-protocol`, order 12, budget 60 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -22,7 +22,6 @@ Generated from `PLAN.yaml` (sha256 `09945357ec9e6ca1a065d81ab778dfa32d5ed66241c7
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) — blocked by: watch-grandparent-spawn-signal
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -32,8 +31,7 @@ Generated from `PLAN.yaml` (sha256 `09945357ec9e6ca1a065d81ab778dfa32d5ed66241c7
 
 ## 5. In progress
 
-- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — evidence: branch `cut/watch-grandparent-spawn-signal`
-- **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — evidence: branch `cut/evidence-recorder-v0`
+- (none)
 
 ## 6. Proposed / unscheduled
 
@@ -93,8 +91,9 @@ Generated from `PLAN.yaml` (sha256 `09945357ec9e6ca1a065d81ab778dfa32d5ed66241c7
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
 - **profile-path-scan-stdin-mode** — The profile-path scanner gains a stdin mode, so a mod can run the scanner's own matcher on content not yet on disk (guardian-v0's G5, left out of v0 by round 43, item 3) (phase `prototype`) — never queued until placed
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (phase `prototype`) — never queued until placed
-- **pre-admission-change-detail-braces** — The pre-admission Change refusal's detail is a P6 placeholder wrapped in literal braces, which reach the operator's message (phase `prototype`) — never queued until placed
+- **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (phase `prototype`) — never queued until placed
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
+- **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

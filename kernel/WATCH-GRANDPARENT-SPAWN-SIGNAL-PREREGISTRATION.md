@@ -160,3 +160,19 @@ Assertions only: typed refusal codes, catalog names, event absence and coverage 
 - **Owner's index:** the PR edits `kernel/README.md`'s Owner's index (pointer under Watcher arming and admission; the module's preregistration list; Last verified at). `engine/README.md` is unchanged, because no pointer or pinning test of its own changes.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — closing record (references and hashes only; the record cap)
+
+*Written by the custodian after PR #173 merged, as merge commit f3426ba8348fa16bf27231da3d5d0c55e342c1d4 (parents a8cb80d4 and f0e89280; never a squash), at 2026-10-04T17:08:43Z. It follows the gate-1 architect's closing-record list (`state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-architect.md`). Every commit named below is reachable from main through f3426ba8. The evidence for items 1 to 3 and 6 is worker report 1, `state/consults/2026-10-04-watch-grandparent-spawn-signal-worker-report-1.md`.*
+
+1. **P-1:** at base 4c91a76e, with §2c and §4 applied and uncommitted (`git diff` sha256 95e5cea2af21d98c8435a11c7e8bc62fe2fc3e35b110e06f5621bbf4a488f348), GS1 and GS2 each failed at the `expect_err` at `kernel/tests/source_watch_ordering.rs:396 @ f3426ba8 sha256:5a52856ff0a837a4f021d40a62518f3848bfee354f4c1bb4fea48aba4e46dbd6`, with the open returning `Ok`. The test file is identical at f25aef60 and f3426ba8.
+2. **P-2,** at f25aef60:
+   - `source_watch_ordering`: 16 passed, 0 failed;
+   - `spatial-kernel`: 323 passed, 0 failed, 28 ignored;
+   - `spatial-engine`: 383 passed, 0 failed, 12 ignored.
+3. **Mutations,** observed at f25aef60. GS1's mutation failed GS1 at `expect_err`. GS2's mutation failed GS2 at its code assertion, with GS1 green. The gate-1 reviewer observed both again at f0e89280.
+4. **P-3:** the gate-1 reviewer's S2-1, from Product CI runs 37206457047 (at 38bb2d63) and 37215720603 (at f0e89280).
+5. **The cfg-boundary site count, declared unchanged:** 18 sites in 6 files, 0 outside every boundary, at f0e89280 and at f3426ba8, by `scripts/plan/cfg-boundary.mjs` at 859375c9 (the custodian's runs).
+6. **§7:** 95 of 160 lines over 4 files.
+7. **Gates:** gate-log 396 (architect, gate 1, PASS) and 397 (reviewer, gate 1, PASS). The reports are `state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-architect.md` and `state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md`.
+8. **PLAN:** done, with evidence `{pr: 173}` set in this commit.

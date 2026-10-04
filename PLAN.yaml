@@ -2496,7 +2496,7 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: blocked
+    status: ready
     order: 12
     depends_on: [catalog-open-drop-reproduction, watch-grandparent-spawn-signal]
     needs_human: {kind: none, minutes: 0}
@@ -2834,19 +2834,19 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: in-progress
+    status: done
     order: 11
     depends_on: [type-walk-null-literal-arithmetic]
     needs_human: {kind: none, minutes: 0}
     gate: kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/watch-grandparent-spawn-signal}
+    evidence: {pr: 173}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
     entries: []
     summary: "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes."
-    dates: {opened: 2026-09-27, done: null}
+    dates: {opened: 2026-09-27, done: 2026-10-04}
   - id: b1-engine-kernel-half-followups
     title: "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3"
     kind: task
@@ -3835,19 +3835,19 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 18
     depends_on: [guardian-v0]
     needs_human: {kind: none, minutes: 0}
     gate: tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/evidence-recorder-v0}
+    evidence: {pr: 172}
     budget_minutes: 240
     generation: 4
     felt_verdict: false
     entries: []
     summary: "Placed by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 1 and step 2; RULED 2026-10-03): governance lane, after guardian-v0, which it depends on. The brief is state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md. It observes only: it never refuses, rewrites or answers a tool call, adds nothing the model reads, and returns every result exactly as next(e) produced it. P0 first (the brief's section 3: the Bash result fields, turn.complete usage and agentId, the approved-command list as this repository invokes it, the dirty-tree identity's cost, the local log path, the chain order with Guardian, and validate's hooks and calls lines), recorded before any code. Gates: the reviewer and the architect, with the validate output in the PR body. Installing it is a security-posture change and a red line: the human's typed approval after its own gates (item 2), and the human installs it. Whether recorder lines may be cited as evidence is an item on the 2026-10-09 window (item 3). Its budget is the custodian's estimate, equal to guardian-v0's."
-    dates: {opened: 2026-10-03, done: null}
+    dates: {opened: 2026-10-03, done: 2026-10-04}
 
   - id: claude-md-stale-facts
     title: "CLAUDE.md stale facts -- the current focus after v0.1.0, the spike-results wording, and the prompt audit's other class-(d) findings in CLAUDE.md, restated as facts with no rule changed (the 2026-10-04 prompt-audit instruction, item 3)"
@@ -3939,7 +3939,7 @@ nodes:
     summary: "Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
     dates: {opened: 2026-10-03, done: null}
   - id: pre-admission-change-detail-braces
-    title: "The pre-admission Change refusal's detail is a P6 placeholder wrapped in literal braces, which reach the operator's message"
+    title: "Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag"
     kind: task
     lane: kernel-protocol
     phase: prototype
@@ -3953,7 +3953,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md): kernel/src/skp.rs engine_error_of_pre_admission_signal gives the Change arm a detail string that opens and closes with brace characters around its P6 placeholder text, and the braces reach the message as literal characters. Pre-existing and identical at the base; PR 173's section 8 item 2 kept every string out of that piece. The final wording is the human's (a P6 placeholder), so the node carries a ruling. Never queued until the human places it."
+    summary: "Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md); widened by Fable 2026-10-04 advice, item 2 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), checked by the custodian at f3426ba8: four detail literals open with a brace before the P6 placeholder tag and close with a brace, at kernel/src/skp.rs lines 1024 (the pre-admission Change refusal), 1445 and 1521, and kernel/src/lib.rs line 528; two others in skp.rs (1233 and 1329) are unbraced. engine/SOURCE-WATCHER-PREREGISTRATION.md section 7 (its placeholder row) declares that each new operator string starts with the bracketed tag. Two scopes for the human to choose between at placement: (i) braces only, removing the two brace characters from each of the four literals so they match the declared form, with no new wording; (ii) the final wording of the placeholder strings, which is the human ruling P6 reserves. Never queued until the human places it."
     dates: {opened: 2026-10-04, done: null}
   - id: verify-offline-note-test-flake
     title: "scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown"
@@ -3970,5 +3970,22 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the test named runVerify offline note (scripts/plan/verify.test.mjs, its assertion that no failure string contains pr) failed once; the re-run of the failed job passed, the push run at the same head passed, and it passed locally three times on main and twice on the merged tree. The assertion has no message, so the failing string is not in the log. A first step is to print the failures in the assertion message, then to read which run-dependent check produced a string containing pr. Never queued until the human places it."
+    summary: "Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the offline-note test in scripts/plan/verify.test.mjs failed once and passed on a re-run. Likely cause, from Fable 2026-10-04 advice, item 1 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), and confirmed by one local probe run by the custodian: the test copies only the fixture PLAN.yaml into a mkdtemp folder, so runVerify returns five queue and site drift failures that each carry that folder path, and the assertion that no failure contains the substring pr fails whenever the six random characters of the folder name contain pr. With the prefix verify-offline-note-pr- all five failures contain pr; with the test prefix, none did in that run. The deterministic check for the node form: the same test body with a prefix containing pr fails every time. The fix would assert on the PR-evidence failure shapes, not on a substring. Never queued until the human places it."
+    dates: {opened: 2026-10-04, done: null}
+  - id: recorder-write-latency-measure
+    title: "Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [evidence-recorder-v0]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Proposed on Fable 2026-10-04 advice, item 4 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md). tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 2, C2-d: recorder_ms before + after + write is a lower bound, because the line serialisation, its digest, the file name and the write call fall outside it; a p95 at or under the bound does not establish section 1 claim 7 until an amendment names how the write latency is measured. The human install approval of 2026-10-04 (state/directives/2026-10-04-recorder-install-approval.md) reads E5 that way: it can fire the overhead stop, and it establishes neither claim 7 nor the brief overhead acceptance measure. The piece: a new E-row with its own sample, declared in a form amendment before that sample is taken (one candidate, from the gate-1 architect S1-1: the record file mtime minus ended_at, added to before), so that the acceptance evaluation (two weeks after install, or the next six gated pieces) can read the overhead. E5 stays a lower bound. Never queued until the human places it."
     dates: {opened: 2026-10-04, done: null}

@@ -503,3 +503,18 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
 - **The class of Amendment 2's C2-a correction** (class 1; the gate-2 architect's G2-N-1 and the gate-2 reviewer's S2-A). That correction withdraws a sentence, so it is a withdrawal row, class 1 by round 15 (g), and not class 2 as Amendment 2's heading gives the whole.
 
 **Superseded index.** Amendment 2: the C2-c correction's second sentence, and the class its heading gives the C2-a correction. Each is superseded by this amendment's correction of it.
+
+### Amendment 4 — closing record (references and hashes only; the record cap)
+
+*Written by the custodian after PR #172 merged, as merge commit a8cb80d4a0bbad671a668426b97505666b7d7887 (parents 93fba778 and 2d95575e; never a squash), at 2026-10-04T17:08:10Z. It follows the gate-3 architect's closing-record list (`state/consults/gates/2026-10-04-evidence-recorder-v0-gate3-architect.md`). Every commit named below is reachable from main through a8cb80d4.*
+
+1. **Branch commits:** 9acc86b8, 32fc334f, 976e64cd, d48bedc4, 609ab945, f7dd269e and 2d95575e.
+2. **Gates:** gate-log 390 (architect, gate 1, FAIL), 391 (reviewer, gate 1, FAIL), 392 (architect, gate 2, FAIL), 393 (reviewer, gate 2, PASS), 394 (architect, gate 3, PASS) and 395 (reviewer, gate 3, PASS). Entries 392 to 395 are record rounds: two, the cap's limit.
+3. **Gate reports,** under `state/consults/gates/`: `2026-10-04-evidence-recorder-v0-gate1-architect.md`, `2026-10-04-evidence-recorder-v0-gate1-reviewer.md`, `2026-10-04-evidence-recorder-v0-gate2-architect.md`, `2026-10-04-evidence-recorder-v0-gate2-reviewer.md`, `2026-10-04-evidence-recorder-v0-gate3-architect.md` and `2026-10-04-evidence-recorder-v0-gate3-reviewer.md`.
+4. **Amendments 1 to 3, pinned at the merge commit (round 15 (e)):**
+   - `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md:461-478 @ a8cb80d4 sha256:dc4b8a95f8711b006ba24413827e16e08620163346b42f061e902582e0579c83`;
+   - `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md:480-496 @ a8cb80d4 sha256:f6f12f5f8bc3cf7d194e4b4aff01087999ebd4d97f16859a8af71f97d4dd154e`;
+   - `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md:498-505 @ a8cb80d4 sha256:10ac22ede69a31656d24c26f97e7508ad36b9e0ce53561e0f17801306a710e10`.
+5. **At 2d95575e, by the gate-3 reviewer, at 2.1.289:** §7 at 1120 of 1400 over 7 files; plugin test 20 of 20; all 20 mutations observed.
+6. **The install approval and O-14:** the human's typed approval of 2026-10-04 (`state/directives/2026-10-04-recorder-install-approval.md`, and its RULED block in `DECISIONS-PENDING.md`). O-14 is ruled (a), so §4's E1 stands unchanged. The E-rows are recorded as later class 1 rows.
+7. **PLAN:** done, with evidence `{pr: 172}` set in this commit.
