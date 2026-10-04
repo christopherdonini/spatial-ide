@@ -714,3 +714,22 @@ T41 arms no `agent.list` answer, so under its mutation the unanswered call throw
 - §5, I2: its build of record is 2.1.289 (Part C).
 - Amendment 2, §5, its declared-unchanged sentence for `register.js`: it now makes an exception for Part B's hook.
 This amendment adds to §1, §2.7, §2.11, §3, §4, §5, §8 and §9, and replaces no other line.
+
+### Amendment 5 — scope addition: G6's shell refusal is a backstop (class 9)
+
+Scope addition, by the 2026-10-04 G6-backstop ruling (`state/directives/2026-10-04-guardian-g6-backstop-ruling.md`; RULED 2026-10-04, the G6-backstop block in `DECISIONS-PENDING.md`, cited by its heading and not by line), made after gate 1's outcomes were seen. It is written by the custodian from the ruling, and declared under class 9 before any code of the addition. Its README line lands in the same correction round as Amendments 2 and 4. Nothing below quotes the ruling; every restatement is a paraphrase.
+
+**§1, added: G6's shell refusal is a backstop.**
+- The report-only agents' definitions (architect, lead-data and evidence-reader) grant no shell tool (Amendment 4, Part A). G6's refusal of a report-only subagent's PowerShell call (Amendment 4, Part B) is therefore a backstop, not the guard those agents rely on. Their definitions' tool lists are that guard, and the write audit stays the primary check of their runs (§2.7).
+- G6 covers the PowerShell tool today. It does not cover the Bash tool (round 48, option A).
+- Under the ruling, if any report-only definition gains Bash or PowerShell, G6 must cover that tool before the definition change merges. For Bash that means a G6 change, declared by its own amendment or piece, landing first.
+
+**§2.11, the README adds, in words, with no quotation:** R11, the backstop statement and the condition on definition changes above, including that G6 does not cover Bash today.
+
+**§5, added.** Declared unchanged: every code path and test. This amendment adds no code, test, mutation, hook, call, reason or §7 value. Estimate: README 4 lines.
+
+**§8, added.** 25. A README or §1 text that presents G6's shell refusal as the primary guard for report-only agents, or that omits the condition on definition changes.
+
+**§9, added.** Architect and reviewer: R11 and §1's addition against this amendment and the G6-backstop ruling.
+
+**Superseded index.** None.
