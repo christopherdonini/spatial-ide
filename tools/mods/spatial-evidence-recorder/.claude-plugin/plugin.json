@@ -1,0 +1,7 @@
+{
+  "name": "spatial-evidence-recorder",
+  "description": "Evidence Recorder v0: an observe-only mod for the Spatial IDE repository. It records one line per approved test command and one per subagent turn, and it never refuses, rewrites or answers a call.",
+  "author": {
+    "name": "Spatial IDE"
+  }
+}

@@ -457,3 +457,49 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
   - **Stop and uninstall** (`state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:61-64 @ 884fc727 sha256:648fffdd48a3f672d0938ba1bb2b7e581cb0f2bcee47c0a9aefefd823e238714`): any tool result altered; the overhead's p95 over §7's bound; `unavailable` over `UNAVAILABLE_STOP`. The custodian reports a stop to the human, who uninstalls.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — 2026-10-04, written after the build's results: three class-2 results
+
+*Class 2, deviations recorded after results. Written by the custodian after worker report 1 was seen; no prediction is edited. 9acc86b8 and 32fc334f below are 9acc86b8c55956d679f14c0df98981c80137d9ef and 32fc334f43ec3667bb0d5474ece34bbb1f32cf67, branch commits, named in words with no hash (round 15 (e)). The evidence is worker report 1, `state/consults/2026-10-04-evidence-recorder-v0-worker-report-1.md`, its §9, observed at 2.1.289. Nothing below is a quotation.*
+
+- **C2-a, the written path's spelling** (§3, F1 and F14). The prediction is a record path spelled with forward slashes.
+  - The result: `register.js` builds the path with forward slashes, but the test kit hands the `fs.write` stub the path with Windows separators.
+  - The tests compare the written path with separators normalised, and say so in a comment.
+  - What the live engine passes to its writer is not claimed. An E-row shows it.
+- **C2-b, the hooks module's shape** (§2.4's log-root lookup, once per module load, cached on success).
+  - The result: the engine's dispatch in `claude plugin test` refuses a hook that is not a function declared at the module's top level. So the two hooks are top-level declarations, and the log-root cache is a module-level variable.
+  - That is the form's once-per-load reading, taken literally. In the kit each test loads the module fresh.
+- **C2-c, `process.spawn` in the kit** (§4's never-asked counters).
+  - The result: the kit takes a `process.spawn` stub only as an async generator, so the never-asked counters cover the other forbidden calls but not `process.spawn`.
+  - `validate`'s calls line, which names no `$.process.spawn`, is the evidence for that one.
+- **What it touches:** these three only. Every other §3 outcome came out as predicted: 20 of 20 tests pass at 32fc334f, and each of the 20 mutations was observed failing its named test at 9acc86b8. No invalidator fired; I2 (a) did not fire, and `claude --version` read 2.1.289 throughout. §7's count is 1109 of 1400 over 7 files.
+- The worker's readings where the form is silent, R1 to R7 in the report's §9, are not amendments. They are for the gates.
+
+**Superseded index.** None.
+
+### Amendment 2 — 2026-10-04, correction round 1 of 2: gate 1's record findings (class 2)
+
+*Class 2, written by the custodian after gate 1 (gate-log 390 and 391; the reports are `state/consults/gates/2026-10-04-evidence-recorder-v0-gate1-architect.md` and `state/consults/gates/2026-10-04-evidence-recorder-v0-gate1-reviewer.md`). This is correction round 1 of 2 under the record cap. No prediction is edited, and `hooks/register.js` and the tests are unchanged. 9acc86b8 below is 9acc86b8c55956d679f14c0df98981c80137d9ef, a branch commit, named in words with no hash (round 15 (e)). Nothing below is a quotation.*
+
+- **C2-d, `recorder_ms.write` is a lower bound** (§2.3's `recorder_ms` and §7's `RECORDER_P95_BOUND_MS`; the architect's S1-1 and the reviewer's N-1; worker report 1, §9, R3).
+  - The result: `write` is timed from just before the log-root lookup to the end of the record's assembly. The line's digest and the `$.fs.write` call come after it, because a record cannot hold its own write time.
+  - So before + after + write is a lower bound on the recorder's work on the call path. A p95 of that sum over §7's bound fires §9's overhead stop. A p95 at or under the bound does not establish §1 claim 7 until an amendment, made before E5, names how the write's latency is measured.
+- **C2-e, `validate`'s calls line** (§5's `validate` prediction; the architect's S1-2 (a) and the reviewer's S1-2).
+  - The result at 2.1.289: the calls line differs from §2.0's declared line only by three annotations, `(via agentTypeOf)`, `(via writeRecord)` and `(via gitRun)` (worker report 1, §7; the reviewer's check 4).
+  - §5 classes a difference confined to a `(via …)` annotation as class 2, so I3 did not fire.
+- **Corrections to Amendment 1:**
+  - **C2-a** (the architect's S1-2 (d) and the reviewer's S2-3). Its last sentence names a row that does not exist: no §4 E-row, E0 to E7, records the live path, so the sentence is withdrawn and the live path stays unclaimed. The comment its second bullet describes is on line 89 of `test/recorder.test.ts`, unchanged since 9acc86b8.
+  - **C2-b** (the architect's S1-2 (b), and the reviewer's S1-1 and S2-1). The log-root lookup is §2.7's, in its first bullet, not §2.4's. The kit's refusal is narrower than C2-b's first bullet states: at 2.1.289 the gate-1 reviewer saw a function declared by name inside `register` and passed by name refused at load, while an inline async arrow passed to `on` loaded and passed. The code's top-level declarations are within what the kit accepts.
+  - **C2-c** (the architect's S1-2 (c)). The never-asked counters cover six names: `fs.read`, `fs.list`, `fs.stat`, `fs.exists`, `session.root` and `session.cwd` (the test file's counter loop, unchanged since 9acc86b8). The rest of §8 item 3's set, and `$.process.spawn`, are ruled out by `validate`'s calls line, not by a counter.
+  - **What it touches** (Amendment 1's fourth bullet): the class-2 results are now C2-a to C2-e. Every other outcome stands as Amendment 1 records it.
+
+**Superseded index.** Amendment 1: C2-a's last sentence; C2-b's section cite and its statement of the kit's rule; C2-c's statement of what the counters cover; and the fourth bullet's count of three results. Each is superseded by this amendment's correction of it.
+
+### Amendment 3 — 2026-10-04, correction round 2 of 2: gate 2's record findings
+
+*Written by the custodian after gate 2 (gate-log 392 and 393; the reports are `state/consults/gates/2026-10-04-evidence-recorder-v0-gate2-architect.md` and `state/consults/gates/2026-10-04-evidence-recorder-v0-gate2-reviewer.md`). This is correction round 2 of 2 under the record cap, the last. No prediction is edited, and `hooks/register.js` and the tests are unchanged. Nothing below is a quotation.*
+
+- **Amendment 2's C2-c correction, its second sentence** (class 2; the gate-2 architect's G2-S1-1). It names `validate`'s calls line as what rules out the rest of §8 item 3's set, but that set includes a network call, and the calls line lists `$` members only. A network call is ruled out by reading `hooks/register.js`, which imports nothing and makes none (the gate-1 reviewer's reading of §8 item 3), and every `$` member outside §2.0 by the calls line at 2.1.289.
+- **The class of Amendment 2's C2-a correction** (class 1; the gate-2 architect's G2-N-1 and the gate-2 reviewer's S2-A). That correction withdraws a sentence, so it is a withdrawal row, class 1 by round 15 (g), and not class 2 as Amendment 2's heading gives the whole.
+
+**Superseded index.** Amendment 2: the C2-c correction's second sentence, and the class its heading gives the C2-a correction. Each is superseded by this amendment's correction of it.
