@@ -2492,21 +2492,22 @@ nodes:
     dates: {opened: 2026-09-26, done: 2026-09-26}
 
   - id: timing-tests-assert-property-not-budget
-    title: "The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a))"
+    title: "Reproduce the skp_admission cancel-test stall (H-S, a credit-gated terminal) in scratch and route it; the publish half closed (was: the two CI timing flakes assert the property, not an undeclared budget)"
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 12
     depends_on: [catalog-open-drop-reproduction, watch-grandparent-spawn-signal]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md
+    merge: merge-commit
+    evidence: {branch: cut/timing-tests-assert-property-not-budget}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five). Placed by question round 31, item 1 (RULED 2026-09-30): position 12 of 16 in the human's order, order 12 in its lane. It depends on watch-grandparent-spawn-signal, position 11, so that the order holds across lanes."
+    summary: "Scope since question round 51 (RULED 2026-10-04): the node reproduces the skp_admission cancel-test stall (H-S) in scratch, files the Phase R consult, and routes the result; on S1 a proposed full-form protocol/data-plane node, on S2 a class-1 amendment redrafting the skp half; the publish half is closed by round 51, item 3, and the piece commits no code (kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md, the architect draft 2). Before: RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five). Placed by question round 31, item 1 (RULED 2026-09-30): position 12 of 16 in the human's order, order 12 in its lane. It depends on watch-grandparent-spawn-signal, position 11, so that the order holds across lanes."
     dates: {opened: 2026-09-26, done: null}
 
   - id: verify-mutation-test-temp-dirs

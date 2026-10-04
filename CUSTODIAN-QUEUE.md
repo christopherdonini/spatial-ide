@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ade1f8739cd63ce354a7bb4325706a6ad48858a8c89f6288f7dd85d96894d399`) at `2026-10-04T17:18:03.001Z`.
+Generated from `PLAN.yaml` (sha256 `5a131131678b6943e78d8b6d262e7a17afbcd95b1c6492d022c7c6e3c86a1ea4`) at `2026-10-04T18:20:46.122Z`.
 
 ## 1. Next
 
-- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **timing-tests-assert-property-not-budget** — The two CI timing flakes assert the property and its ordering, not an undeclared budget (weekly window (a)) (lane `kernel-protocol`, order 12, budget 60 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -31,7 +31,7 @@ Generated from `PLAN.yaml` (sha256 `ade1f8739cd63ce354a7bb4325706a6ad48858a8c89f
 
 ## 5. In progress
 
-- (none)
+- **timing-tests-assert-property-not-budget** — Reproduce the skp_admission cancel-test stall (H-S, a credit-gated terminal) in scratch and route it; the publish half closed (was: the two CI timing flakes assert the property, not an undeclared budget) — evidence: branch `cut/timing-tests-assert-property-not-budget`
 
 ## 6. Proposed / unscheduled
 
