@@ -613,3 +613,104 @@ Sight-list addition (class 7, `docs/PREREGISTRATION-TEMPLATE.md:132 @ 257827d1 s
 - §9's Operator line (E0 to E6) and §5's E-row prediction already cover E4. §1's first may-not-claim bullet keeps the live rejection shape unclaimed until E4 runs.
 
 **Superseded index.** None.
+
+### Amendment 4 — scope addition: the PowerShell route for G6, the shell-route answer in §1, and I2's build record (class 9; Part C is class 1)
+
+Scope addition, by the 2026-10-04 shell-route ruling (`state/directives/2026-10-04-guardian-shell-route-ruling.md:6-9 @ d55458c5 sha256:d01f6c204e6e80eab36831902d0b7d29d48dfbee46960313ed3a60d33b24687c`; RULED 2026-10-04, the shell-route block in `DECISIONS-PENDING.md`, cited by its heading and not by line), made after gate 1's outcomes and worker report 2's I2 stop were seen (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:26 @ d55458c5 sha256:639f069479db3b86d7e20a2ad99ef165a14eae388aa4e988ba898a0798402775`). It is declared under class 9 (`docs/PREREGISTRATION-TEMPLATE.md:170 @ d55458c5 sha256:42297d7cc39d169c3b8c86e5faf21d1cad61a7e6db2a002da9c2dd567b8545f4`) before any code of the addition, and its code lands in the same correction round as Amendment 2's. de6a2c02 below is de6a2c0212cb5026f7d71d08557eb36078793257, a branch commit, named in words with no hash (round 15 (e); round 25, item 2 (d)).
+
+**Part A — §1, added: the shell-route answer.** The ruling asks for it in §1, either way. **The answer is yes: PowerShell.**
+- The build types it, with the string field `command`: Amendment 1 (P0b), item (i), read at 2.1.288.
+- This machine's session exposes it: the custodian observes that the custodian's own session, running 2.1.288, holds a PowerShell tool (the RULED block above).
+- At 2.1.289, `claude plugin validate` lists `tool.call{tool=PowerShell}` on its hooks line at the unchanged head (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:53 @ d55458c5 sha256:2995eafe0c672fd73df5d56fede99a97149eb95ebf26e934733ab802979a0139`). That shows the registration is read, and not that the tool is typed or exposed at 2.1.289.
+- **Not established at 2.1.289:** the PowerShell entry and its `command` field in 2.1.289's types, which are not readable here without loading a skill in a 2.1.289 process (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:1 @ d55458c5 sha256:e334ba99407e90973ffeafa22f129b304a4971b3fa3f9729a290b855c32a710b`); whether a 2.1.289 session exposes the tool; which subagent types receive it. None of the three report-only definitions lists a shell tool (`.claude/agents/architect.md`, `.claude/agents/evidence-reader.md` and `.claude/agents/lead-data.md`, line 4 of each at d55458c5, named in words as §0.3 names them).
+
+**Part B — the route (class 9).**
+
+*The reading taken.*
+- G1 hooks the PowerShell tool already: its registration is line 433 of `tools/mods/spatial-guardian/hooks/register.js` at de6a2c02, and T9 (lines 194-202 of `tools/mods/spatial-guardian/test/guardian.test.ts` at de6a2c02) proves it.
+- G2 to G4 guard writes by a tool's path field (§2.1(d)), and they guard no shell write on Bash (§2.10). A shell call carries no path field. On this reading G2 to G4 hook nothing on the PowerShell tool, and §2.10's limit names both shells.
+- G6 guards a report-only run's writes. A shell call by such a run is a write route that no path can place, and the write audit already voids any Bash or PowerShell call by such a run (`scripts/hooks/subagent-write-audit.mjs:11-16 @ d55458c5 sha256:5d86d6268af40459a1daab001a4fdc830765d840fdf3462f2d9d31d2e7087c92`). G6 therefore closes that route on the PowerShell tool without reading the command.
+- This reading is the architect's, and the custodian puts it to the human as a question. Every option offered keeps the G6 code below, so that code does not wait. Gate 2 waits on the answer, and any option that adds code is declared by a further class 9 amendment before any of it.
+
+**§2.7, added: the shell route.**
+- The PowerShell registration's hook runs G6, then G1, then `next(e)`. It replaces `refuseForcePush` as that registration's hook (line 433 of `register.js` at de6a2c02). The registration's filter and its `.catch` are unchanged.
+- G6: with `e.agentId` unset, it makes no `$` call. Otherwise it calls `g6Refusal` (lines 342-358 of `register.js` at de6a2c02), unchanged, with no placed target, because a shell call has none. A report-only row therefore always ends in `G6_REASON`, or in `CATCH_REASON` when a read rejects, whatever the command. Any other row, or no row, goes on. The command string is not read.
+- G1: `refuseForcePush`, as §2.2 and Amendment 2 state.
+- Its reads are `$.agent.list`, and for a report-only row `$.session.messages` and `$.fs.stat` on the declared path. All are in §2.0.
+- **§2.1(g), added:** the order in the PowerShell hook is G6 (when `agentId` is set), then G1, then `next(e)`.
+- Unchanged: `g6Refusal`, `refuseForcePush`, `pushRefused`, the Bash registration, the Write, Edit and NotebookEdit guard, and every reason. No hook, call, option, export, flag, reason or file is added.
+
+**§2.10, third bullet, replaced:** G2 to G4 read no shell command, on Bash or PowerShell, so a shell write (`sed -i`, a redirect, `tee`, `Set-Content`) to a protected path is not refused by them. G6 refuses every PowerShell call by a report-only subagent. A report-only subagent's Bash call is untouched by G6, as before.
+
+**§1, may not claim, the Bash-and-PowerShell writes bullet, replaced:** writes by Bash or PowerShell, except that G6 refuses every PowerShell call by a report-only subagent; and any live G6 shell refusal, because no report-only definition holds a shell tool (Part A), so there is no E-row for it.
+
+**Over-refusals this adds.**
+- A report-only subagent's PowerShell call is refused even when it only reads or writes its own REPORT PATH. Its route is the Write tool. No such definition holds the tool today (Part A), so this is defensive.
+- Any other subagent's PowerShell call is refused by the catch when `$.agent.list` rejects (fail closed, §2.1(b)).
+- None on the main loop, where the hook makes no `$` call (T41).
+
+**§3, added.**
+
+| # | Call | Engine answers | Predicted |
+|---|---|---|---|
+| F33 | lead-data, brief declaring a REPORT PATH: PowerShell `Get-Content C:\r\x.md`, and `Set-Content -Path <its REPORT PATH> -Value y`; architect, brief with no line: PowerShell `Get-Location` | list, messages, stat | refused, G6 |
+| F34 | a `worker` row: PowerShell `git status`; an unlisted id: PowerShell `git status`; a `worker` row: PowerShell `git push --force` | list | `next(e)`; `next(e)`; refused, G1 |
+| F35 | main loop: PowerShell `Set-Content C:\r\notes.md x`, then `git push -f` | none | `next(e)`; refused, G1 |
+
+**§4, added**, in `tools/mods/spatial-guardian/test/guardian.test.ts`, run and observed as §4 states:
+
+| # | Test | Fixture | Mutation |
+|---|---|---|---|
+| T40 | `G6 refuses every PowerShell call by a report-only subagent and leaves other subagents to G1` | F33, F34 | the PowerShell registration's hook set back to `refuseForcePush` (G6 dropped from it) |
+| T41 | `G6 makes no engine call on a main-loop PowerShell call` | F35 | the `agentId` condition dropped, so G6 runs on a main-loop call |
+
+T41 arms no `agent.list` answer, so under its mutation the unanswered call throws and the catch refuses. The `agentId` cast follows §4's. The worker also re-observes T22's and T23's mutations at the observation commit, because `g6Refusal` gains a caller and both mutations are predicted to fail T40 as well, and records that commit in each comment.
+
+**§5, added.**
+- Predictions: T40 and T41 pass at the head, and each fails under its mutation. Every F1 to F32 outcome and every T1 to T39 result is unchanged. `validate`'s hooks line is unchanged and its calls line names the same six calls. A difference confined to a `(via …)` annotation is recorded as class 2, not I3.
+- Declared unchanged: what Part B's §2.7 lists, every §7 value, and §7's file list. Amendment 2's §5 sentence that declares everything outside G1's code in `register.js` unchanged now makes an exception for this hook.
+- Invalidator: **I11**, the shell route needs a change to `g6Refusal`, a hook or call outside §2.0, a new reason or §7 value, or a file outside §7's list.
+- Falsification: an F33 call reaches `next(e)`; an F34 or F35 call that does not force-push is refused; an F35 call makes a `$` call.
+
+**§8, added.**
+22. G2, G3 or G4 code on a shell registration, or a G6 check that reads a shell command, before the human's answer to the custodian's question and, for any option other than the reading taken, its class 9 amendment.
+23. Any `$` call on a PowerShell call whose `agentId` is unset.
+24. Under this amendment: a change to `g6Refusal`, `refuseForcePush`, the Bash registration or the Write, Edit and NotebookEdit guard; or a new reason, hook, call, option, export or §7 value.
+
+**§9, added.**
+- Architect: this amendment against the shell-route ruling and its RULED block; Part A against its sources; the human's answer filed and cited by round and item, and any further amendment before its code; §8 items 22 to 24; Part C against the correction head's runs; §7's count, and class 8 if it is due.
+- Reviewer: the T40, T41, T22 and T23 mutations, observed at the gated head; `claude --version` reading 2.1.289 on every run of record.
+
+**§2.11, the README adds, in words, with no quotation:**
+- R7: Part A's answer.
+- R8: the G6 row names the PowerShell route.
+- R9: the shell-write limit as §2.10 now states it.
+- R10: lines 5 and 36 of `tools/mods/spatial-guardian/README.md` at de6a2c02 name 2.1.289 for the tested behaviour and 2.1.288 for the type reads.
+
+**§7.**
+- The size line stands and is not edited.
+- Estimate for this addition: `register.js` 12, plugin tests 55 (the T22 and T23 comments included), README 10, no new file.
+- With Amendment 2's estimate of 85 and the 1555 lines its §7 records at adfcb857, the combined figure is about 1717. That is over 1650, so an overrun is predicted.
+- The worker runs §7's command at the correction head and records the figure. If it exceeds 1650 lines or 10 files, a class 8 amendment (`docs/PREREGISTRATION-TEMPLATE.md:169 @ d55458c5 sha256:8c7ea33dc2f3661d0f6f93e9e0fe89c4d1f2f523ff73b759105cfce86d511716`) records the declared figure, the final figure at the named commit and the reason, before gate 2.
+
+**Part C — I2's record (class 1).** Post-result record, written after worker report 2's I2 stop was seen (class 1, `docs/PREREGISTRATION-TEMPLATE.md:103-105 @ d55458c5 sha256:bf67639cc8f151ef4bd47156a7421ec9b89bf85e602bbb8e20575c02edbf54ed`).
+- **The change.** `claude --version` read 2.1.288 at every run of record through adfcb857 (Amendment 1's opening paragraph; the observation comments). It read 2.1.289 at correction round 1's first run of record (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:26 @ d55458c5 sha256:639f069479db3b86d7e20a2ad99ef165a14eae388aa4e988ba898a0798402775`). The installed binary was replaced after the human's restart on 2026-10-04, and the custodian's running session stays 2.1.288 (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:1 @ d55458c5 sha256:e334ba99407e90973ffeafa22f129b304a4971b3fa3f9729a290b855c32a710b`).
+- **How the 2.1.288 claims stand.** §0.1, §0.2 and Amendment 1 (P0b) are claims about build 2.1.288 (round 15 (c)). They are true of that build, and none is read as current for 2.1.289. The round does not re-read the types; Part A says why. At 2.1.289 the code relies on them only as far as the correction head's runs prove: the test kit, the engine's dispatch and `.catch` path (§0.2 items 5 and 6), and `validate`'s two lines (item 7). E0 records `claude --version` at install.
+- **The unchanged head at 2.1.289.** 34 pass, and both `validate` targets exit 0, text and `--json`, with §2.0's hooks and calls (`state/consults/2026-10-04-guardian-v0-worker-report-2.md:27-31 @ d55458c5 sha256:feeeb20f7947fc1a0ff97a354d55f6e41ea7edad512a4281db582411718cbb6f`). This is evidence about de6a2c02 only, not about the correction head.
+- **What the round re-runs and records at 2.1.289, at the correction head:**
+  - `claude --version`;
+  - `claude plugin test tools/mods/spatial-guardian`, T1 to T34 and T37 to T41;
+  - `claude plugin validate` on `tools/mods/spatial-guardian` and on `tools/mods`, text and `--json`;
+  - the node suites and §6's tools, each tool named with its commit;
+  - at the observation commit, every mutation whose code or failing set this round changes: T1 to T9 (Amendment 2), T22 and T23, and T37 to T41.
+  The other mutation comments keep their 54eba872 observations at 2.1.288. Those stay true as records of that commit and are not edited. The reviewer observes every mutation at the gated head (§9), and the closing record names each observation's commit and build.
+- **From this amendment, 2.1.289 is the build of record.** §5 I2's line is not edited, and a run of record at any build other than 2.1.289 fires I2 again. §1's may-claim items 1 and 4 hold at 2.1.289 once the correction head's runs pass. §1's build bullet now reads: any build other than 2.1.289 for the tested behaviour; the type reads remain 2.1.288's.
+
+**Superseded index.**
+- §1, may claim, items 1 and 4: the build is 2.1.289 (Part C).
+- §1, may not claim: the build bullet (Part C), and the Bash-and-PowerShell writes bullet (Part B).
+- §2.1(g): the PowerShell hook's order is added (Part B).
+- §2.10, third bullet: replaced (Part B).
+- §5, I2: its build of record is 2.1.289 (Part C).
+- Amendment 2, §5, its declared-unchanged sentence for `register.js`: it now makes an exception for Part B's hook.
+This amendment adds to §1, §2.7, §2.11, §3, §4, §5, §8 and §9, and replaces no other line.
