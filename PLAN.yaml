@@ -3823,7 +3823,7 @@ nodes:
     gate: tools/mods/GUARDIAN-V0-PREREGISTRATION.md
     evidence: {branch: cut/guardian-v0}
     budget_minutes: 240
-    generation: 4
+    generation: 5
     felt_verdict: false
     entries: []
     summary: "Placed by the 2026-10-03 Guardian v0 direction (state/directives/2026-10-03-guardian-v0-direction.md; RULED 2026-10-03): governance, beside node 10 under the two-pieces limit. The brief is state/directives/MODS-GUARDIAN-V0-2026-10-03.md. P0 first: its section 3 questions answered against the installed build, recorded in the preregistration's section 0, before any code; rules the build cannot support are dropped from v0 as the brief says. Architect-drafted preregistration (the piece is not engine/ or kernel/ confined), full form and gates reviewer plus architect, with the claude plugin validate output in the PR body. Installing it is a security-posture change and a red line: it waits for the human's typed approval after both gates, and the human installs it."
