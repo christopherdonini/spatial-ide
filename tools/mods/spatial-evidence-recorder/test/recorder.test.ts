@@ -147,9 +147,12 @@ const RUN_KEYS = [
 // The run record
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: the after-snapshot skipped (snapshotAfter returning its all-unavailable value on every
-// call) -> fails: `an approved command produces one complete run record`. Observed at COMMIT-T1 with this
-// change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the after-snapshot skipped (snapshotAfter returning its all-unavailable value on
+// every call) -> fails: `an approved command produces one complete run record`, `a failing or timed-out
+// git call gives unavailable fields and leaves the result unchanged`, `an edit or a commit during the run
+// sets tree_changed_during_run`, `a leading absolute cd sets the tree, and any other cd leaves it
+// unresolved`, `every process call is git with no optional locks, a listed subcommand and the declared
+// timeout`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('an approved command produces one complete run record', async ($, on) => {
   const w = arm(on)
   expect(await bash($, w, CARGO)).toEqual(ANSWER)
@@ -180,8 +183,8 @@ test('an approved command produces one complete run record', async ($, on) => {
 
 // RECORDED MUTATION: A4 matching any `verify-*.mjs` script (the VERIFY_SCRIPTS compare replaced by
 // `/^verify[-a-z]*\.mjs$/.test(script.split('/').pop())`) -> fails: `a command outside the approved list
-// produces no record and makes no engine call`. Observed at COMMIT-T2 with this change, claude --version
-// 2.1.289 (Claude Code).
+// produces no record and makes no engine call`. Observed at 9acc86b8c559 with this change, claude
+// --version 2.1.289 (Claude Code).
 test('a command outside the approved list produces no record and makes no engine call', async ($, on) => {
   const w = arm(on)
   const commands = [
@@ -197,8 +200,8 @@ test('a command outside the approved list produces no record and makes no engine
 })
 
 // RECORDED MUTATION: env assignments not stripped (the ENV_ASSIGNMENT branch dropped from normalise) ->
-// fails: `every approved spelling in the matcher table produces one record`. Observed at COMMIT-T3 with
-// this change, claude --version 2.1.289 (Claude Code).
+// fails: `every approved spelling in the matcher table produces one record`. Observed at 9acc86b8c559
+// with this change, claude --version 2.1.289 (Claude Code).
 test('every approved spelling in the matcher table produces one record', async ($, on) => {
   const w = arm(on)
   const commands = [
@@ -216,9 +219,9 @@ test('every approved spelling in the matcher table produces one record', async (
   }
 })
 
-// RECORDED MUTATION: the `try` around the before-snapshot removed (`before = await snapshotBefore($, plan)`
-// unguarded) -> fails: `a failing or timed-out git call gives unavailable fields and leaves the result
-// unchanged`. Observed at COMMIT-T4 with this change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the `try` around the before-snapshot removed (`before = await snapshotBefore($,
+// plan)` unguarded) -> fails: `a failing or timed-out git call gives unavailable fields and leaves the
+// result unchanged`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('a failing or timed-out git call gives unavailable fields and leaves the result unchanged', async ($, on) => {
   const w = arm(on)
   const rev = (r: any) => [r.toplevel, r.head, r.head_after]
@@ -251,8 +254,9 @@ test('a failing or timed-out git call gives unavailable fields and leaves the re
 })
 
 // RECORDED MUTATION: only the diff hashes compared (treeChanged over the diff pair alone) -> fails: `an
-// edit or a commit during the run sets tree_changed_during_run`. Observed at COMMIT-T5 with this change,
-// claude --version 2.1.289 (Claude Code).
+// edit or a commit during the run sets tree_changed_during_run`, `a failing or timed-out git call gives
+// unavailable fields and leaves the result unchanged`, `an unavailable side reads tree_changed_during_run
+// unavailable`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('an edit or a commit during the run sets tree_changed_during_run', async ($, on) => {
   const w = arm(on)
   const changes: Array<(t: Tree) => void> = [
@@ -270,9 +274,12 @@ test('an edit or a commit during the run sets tree_changed_during_run', async ($
   }
 })
 
-// RECORDED MUTATION: an unavailable side read as unchanged (treeChanged returning false where a pair holds
-// an unavailable value) -> fails: `an unavailable side reads tree_changed_during_run unavailable`.
-// Observed at COMMIT-T6 with this change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: an unavailable side read as unchanged (treeChanged returning false where a pair
+// holds an unavailable value) -> fails: `an unavailable side reads tree_changed_during_run unavailable`,
+// `a failing or timed-out git call gives unavailable fields and leaves the result unchanged`, `a leading
+// absolute cd sets the tree, and any other cd leaves it unresolved`, `an auto-backgrounded result records
+// backgrounded_after_ms with after fields unavailable`. Observed at 9acc86b8c559 with this change, claude
+// --version 2.1.289 (Claude Code).
 test('an unavailable side reads tree_changed_during_run unavailable', async ($, on) => {
   const w = arm(on, { mode: { kind: 'status', how: 'reject', side: 'after' } })
   expect(await bash($, w, CARGO)).toEqual(ANSWER)
@@ -286,10 +293,9 @@ test('an unavailable side reads tree_changed_during_run unavailable', async ($, 
 // Outcome fields
 // ---------------------------------------------------------------------------------------------
 
-// RECORDED MUTATION: the errored arm reading `result.stdout` and `result.stderr` (the early return in
-// outcomeOf replaced by the answered arm's reads) -> fails: `the errored arm records the tool's error flag
-// and the text fields, never stdout or stderr`. Observed at COMMIT-T7 with this change, claude --version
-// 2.1.289 (Claude Code).
+// RECORDED MUTATION: the errored arm's stdout and stderr fields read from `ran.result` in outcomeOf ->
+// fails: `the errored arm records the tool's error flag and the text fields, never stdout or stderr`.
+// Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test("the errored arm records the tool's error flag and the text fields, never stdout or stderr", async ($, on) => {
   const message = 'Exit code 101\nERR-TEXT\n'
   const w = arm(on)
@@ -307,9 +313,9 @@ test("the errored arm records the tool's error flag and the text fields, never s
   }
 })
 
-// RECORDED MUTATION: the `persistedOutputPath` check dropped from outcomeOf -> fails: `persisted output
-// gives unavailable stdout and stderr fields`. Observed at COMMIT-T8 with this change, claude --version
-// 2.1.289 (Claude Code).
+// RECORDED MUTATION: the `persistedOutputPath` check dropped from outcomeOf (`persisted` fixed to false)
+// -> fails: `persisted output gives unavailable stdout and stderr fields`. Observed at 9acc86b8c559 with
+// this change, claude --version 2.1.289 (Claude Code).
 test('persisted output gives unavailable stdout and stderr fields', async ($, on) => {
   const w = arm(on)
   w.bottom = { ...ANSWER, result: { ...ANSWER.result, persistedOutputPath: 'C:/o/out.txt', returnCodeInterpretation: 'no matches' } }
@@ -320,9 +326,9 @@ test('persisted output gives unavailable stdout and stderr fields', async ($, on
   expect(r.return_code_interpretation).toBe('no matches')
 })
 
-// RECORDED MUTATION: the deny check dropped from recordRun (the `ran.deny !== undefined` clause removed) ->
-// fails: `a refused call produces no record`. Observed at COMMIT-T9 with this change, claude --version
-// 2.1.289 (Claude Code).
+// RECORDED MUTATION: the deny check dropped from recordRun (the `ran.deny !== undefined` clause removed)
+// -> fails: `a refused call produces no record`. Observed at 9acc86b8c559 with this change, claude
+// --version 2.1.289 (Claude Code).
 test('a refused call produces no record', async ($, on) => {
   const w = arm(on, { bottom: { deny: 'spatial-guardian: refused.' } })
   expect(await bash($, w, CARGO)).toEqual({ deny: 'spatial-guardian: refused.' })
@@ -330,7 +336,7 @@ test('a refused call produces no record', async ($, on) => {
 })
 
 // RECORDED MUTATION: the `run_in_background` check dropped from recordRun -> fails: `a background call
-// passes with no engine call`. Observed at COMMIT-T10 with this change, claude --version 2.1.289
+// passes with no engine call`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289
 // (Claude Code).
 test('a background call passes with no engine call', async ($, on) => {
   const w = arm(on)
@@ -346,9 +352,9 @@ const USAGE = { input_tokens: 10, output_tokens: 20, cache_read_input_tokens: 30
 const turn = ($: any, extra: Record<string, unknown>) =>
   $.turn.complete({ answer: 'done', durationMs: 5, isAborted: false, turnId: 't1', reason: 'answer', ...extra })
 
-// RECORDED MUTATION: the `$.agent.list` lookup dropped from agentTypeOf (the type read as unavailable) ->
-// fails: `a subagent's turn end produces one usage record`, `a subagent's approved run records its listed
-// type`. Observed at COMMIT-T11 with this change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the `$.agent.list` lookup dropped from recordUsage (`agent_type: UNAVAILABLE`) ->
+// fails: `a subagent's turn end produces one usage record`. Observed at 9acc86b8c559 with this change,
+// claude --version 2.1.289 (Claude Code).
 test("a subagent's turn end produces one usage record", async ($, on) => {
   const w = arm(on, { agents: [{ id: 'ag1', description: 'd', type: 'Explore', status: 'completed' }] })
   expect(await turn($, { agentId: 'ag1', usage: USAGE })).toEqual({ text: 'done', usage: USAGE })
@@ -362,7 +368,7 @@ test("a subagent's turn end produces one usage record", async ($, on) => {
 
 // RECORDED MUTATION: the main-loop check dropped from recordUsage (`if (e.agentId === undefined) return
 // out` removed) -> fails: `the main loop's turn end writes nothing, and missing values read unavailable`.
-// Observed at COMMIT-T12 with this change, claude --version 2.1.289 (Claude Code).
+// Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test("the main loop's turn end writes nothing, and missing values read unavailable", async ($, on) => {
   const w = arm(on)
   expect(await turn($, {})).toEqual({ text: 'done' })
@@ -373,9 +379,18 @@ test("the main loop's turn end writes nothing, and missing values read unavailab
   expect([r.agent_id, r.agent_type, r.usage]).toEqual(['ghost', UNAVAILABLE, UNAVAILABLE])
 })
 
-// RECORDED MUTATION: the Bash hook returning `{ ...ran, context: ["x"] }` (a copy with a context of its
-// own) -> fails: `every hook returns what next produced, byte for byte`. Observed at COMMIT-T13 with this
-// change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the Bash hook returning `{ ...ran, context: ["x"] }` at the end of recordRun (a copy
+// with a context of its own) -> fails: `every hook returns what next produced, byte for byte`, `an
+// approved command produces one complete run record`, `every approved spelling in the matcher table
+// produces one record`, `a failing or timed-out git call gives unavailable fields and leaves the result
+// unchanged`, `an edit or a commit during the run sets tree_changed_during_run`, `an unavailable side
+// reads tree_changed_during_run unavailable`, `the errored arm records the tool's error flag and the text
+// fields, never stdout or stderr`, `persisted output gives unavailable stdout and stderr fields`, `a
+// leading absolute cd sets the tree, and any other cd leaves it unresolved`, `the log root comes from
+// git's common directory, one new file per record, with no read`, `the before-side git calls are issued
+// together`, `a subagent's approved run records its listed type`, `an auto-backgrounded result records
+// backgrounded_after_ms with after fields unavailable`, `a record carries no output, status or diff
+// text`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('every hook returns what next produced, byte for byte', async ($, on) => {
   const w = arm(on, { agents: [{ id: 'ag1', description: 'd', type: 'Explore', status: 'completed' }] })
   const same = (got: unknown, want: unknown) => {
@@ -401,8 +416,9 @@ test('every hook returns what next produced, byte for byte', async ($, on) => {
 // ---------------------------------------------------------------------------------------------
 
 // RECORDED MUTATION: `cwd` not passed (gitRun building its init without the directory) -> fails: `a
-// leading absolute cd sets the tree, and any other cd leaves it unresolved`. Observed at COMMIT-T14 with
-// this change, claude --version 2.1.289 (Claude Code).
+// leading absolute cd sets the tree, and any other cd leaves it unresolved`, `the log root comes from
+// git's common directory, one new file per record, with no read`. Observed at 9acc86b8c559 with this
+// change, claude --version 2.1.289 (Claude Code).
 test('a leading absolute cd sets the tree, and any other cd leaves it unresolved', async ($, on) => {
   const w = arm(on, { common: 'C:/x/main/.git' })
   expect(await bash($, w, 'cd C:/x/wt/a && cargo test -p k')).toEqual(ANSWER)
@@ -437,10 +453,13 @@ test('a leading absolute cd sets the tree, and any other cd leaves it unresolved
   expect(treeCalls(w).length).toBe(before)
 })
 
-// RECORDED MUTATION: the log root taken from the toplevel (the common-directory lookup replaced by `rev-parse
-// --show-toplevel` and its first line) -> fails: `the log root comes from git's common directory, one new
-// file per record, with no read`. Observed at COMMIT-T15 with this change, claude --version 2.1.289
-// (Claude Code).
+// RECORDED MUTATION: the log root taken from the toplevel (resolveLogRoot running `rev-parse
+// --show-toplevel` and appending `/.git` to its first line, in place of the common-directory lookup) ->
+// fails: `the log root comes from git's common directory, one new file per record, with no read`, `a
+// failing or timed-out git call gives unavailable fields and leaves the result unchanged`, `a leading
+// absolute cd sets the tree, and any other cd leaves it unresolved`, `an auto-backgrounded result records
+// backgrounded_after_ms with after fields unavailable`. Observed at 9acc86b8c559 with this change, claude
+// --version 2.1.289 (Claude Code).
 test("the log root comes from git's common directory, one new file per record, with no read", async ($, on) => {
   const w = arm(on)
   const lookups = () => w.procs.filter((p) => p.argv.includes('--git-common-dir')).length
@@ -472,7 +491,7 @@ test("the log root comes from git's common directory, one new file per record, w
 })
 
 // RECORDED MUTATION: the before-side git calls issued one after another (each awaited before the next is
-// started) -> fails: `the before-side git calls are issued together`. Observed at COMMIT-T16 with this
+// started) -> fails: `the before-side git calls are issued together`. Observed at 9acc86b8c559 with this
 // change, claude --version 2.1.289 (Claude Code).
 test('the before-side git calls are issued together', async ($, on) => {
   const w = arm(on, { hold: true })
@@ -481,10 +500,10 @@ test('the before-side git calls are issued together', async ($, on) => {
   expect(w.writes.length).toBe(1)
 })
 
-// RECORDED MUTATION: `timeoutMs` dropped from the after-side diff (the call in snapshotAfter made directly
-// as `$.process.run(['git', '--no-optional-locks', 'diff', 'HEAD', '--binary'], { cwd: plan.cwd })`) ->
-// fails: `every process call is git with no optional locks, a listed subcommand and the declared timeout`.
-// Observed at COMMIT-T17 with this change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: `timeoutMs` dropped from the after-side diff (the call in snapshotAfter made
+// directly as `$.process.run(['git', '--no-optional-locks', 'diff', 'HEAD', '--binary'], { cwd: plan.cwd
+// })`) -> fails: `every process call is git with no optional locks, a listed subcommand and the declared
+// timeout`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('every process call is git with no optional locks, a listed subcommand and the declared timeout', async ($, on) => {
   const w = arm(on, { common: 'C:/x/main/.git', agents: [{ id: 'ag1', description: 'd', type: 'worker', status: 'running' }] })
   await bash($, w, CARGO)
@@ -502,8 +521,8 @@ test('every process call is git with no optional locks, a listed subcommand and 
   expect([...kinds].sort()).toEqual(['diff', 'rev-parse', 'status'])
 })
 
-// RECORDED MUTATION: `$.agent.list` not called for run records (agentTypeOf returning unavailable for a
-// subagent's run) -> fails: `a subagent's approved run records its listed type`. Observed at COMMIT-T18
+// RECORDED MUTATION: `$.agent.list` not called for run records (recordRun reading a subagent's agent type
+// as unavailable) -> fails: `a subagent's approved run records its listed type`. Observed at 9acc86b8c559
 // with this change, claude --version 2.1.289 (Claude Code).
 test("a subagent's approved run records its listed type", async ($, on) => {
   const w = arm(on, { agents: [{ id: 'ag2', description: 'd', type: 'worker', status: 'running' }] })
@@ -517,9 +536,9 @@ test("a subagent's approved run records its listed type", async ($, on) => {
   expect(w.listed).toBe(2) // the main loop's run asks for no listing
 })
 
-// RECORDED MUTATION: the `timedOutAfterMs` check dropped from outcomeOf -> fails: `an auto-backgrounded
-// result records backgrounded_after_ms with after fields unavailable`. Observed at COMMIT-T19 with this
-// change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the `timedOutAfterMs` check dropped from outcomeOf (`backgroundedAfterMs` fixed to
+// undefined) -> fails: `an auto-backgrounded result records backgrounded_after_ms with after fields
+// unavailable`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
 test('an auto-backgrounded result records backgrounded_after_ms with after fields unavailable', async ($, on) => {
   const w = arm(on)
   w.bottom = { ...ANSWER, result: { ...ANSWER.result, timedOutAfterMs: 120000, backgroundTaskId: 'b1' } }
@@ -532,8 +551,9 @@ test('an auto-backgrounded result records backgrounded_after_ms with after field
 })
 
 // RECORDED MUTATION: stdout copied into the record (an extra `stdout_text: result.stdout` field in
-// outcomeOf) -> fails: `a record carries no output, status or diff text`. Observed at COMMIT-T20 with this
-// change, claude --version 2.1.289 (Claude Code).
+// outcomeOf) -> fails: `a record carries no output, status or diff text`, `an approved command produces
+// one complete run record`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude
+// Code).
 test('a record carries no output, status or diff text', async ($, on) => {
   const w = arm(on, { tree: { head: HEAD_A, status: ' M MARK-ST\0', diff: 'MARK-DF\n' } })
   w.bottom = { ref: 9, result: { stdout: 'MARK-OUT\n', stderr: 'MARK-ERR\n', interrupted: false }, text: 'MARK-TX\n' }
