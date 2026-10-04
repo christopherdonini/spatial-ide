@@ -9,6 +9,11 @@
       "name": "spatial-guardian",
       "source": "./spatial-guardian",
       "description": "Guardian v0: refuses force-pushes, edits to docs/01, rewrites of accepted ADRs, filed preregistrations and filed directives, and writes by a report-only subagent outside its report path. It only refuses."
+    },
+    {
+      "name": "spatial-evidence-recorder",
+      "source": "./spatial-evidence-recorder",
+      "description": "Evidence Recorder v0: records one line per approved test command and one per subagent turn, outside the repository. It only observes."
     }
   ]
 }
