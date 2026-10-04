@@ -1,4 +1,5 @@
-// Guardian v0's plugin tests (GUARDIAN-V0-PREREGISTRATION.md section 4, T1 to T34), run by
+// Guardian v0's plugin tests (GUARDIAN-V0-PREREGISTRATION.md section 4 and Amendments 2 and 4, T1 to
+// T34 and T37 to T41), run by
 // `claude plugin test tools/mods/spatial-guardian`. A test answers the engine's events beneath the
 // plugin with `on`; an event it does not answer throws at the bottom, which is how a test shows a rule
 // makes no call, or that a refusing hook fails closed. T35 and T36 are in
@@ -199,6 +200,62 @@ test('G1 refuses a force-push through the PowerShell tool', async ($, on) => {
   expectRefused(await call($, { tool: 'PowerShell', command: 'git push --force' }), G1_REASON, probe)
   const input = { tool: 'PowerShell', command: 'git push -u origin b' }
   expectPassed(await call($, input), probe, input)
+})
+
+// RECORDED MUTATION: the second reading dropped from pushRefused (`readingRefuses(command, depth,
+// true)` removed, so only the first reading runs) -> expected to fail: `G1 finds a force-push inside a
+// subshell, a substitution, backticks or a brace block`. Observation pending.
+test('G1 finds a force-push inside a subshell, a substitution, backticks or a brace block', async ($, on) => {
+  const probe = arm(on, {})
+  for (const command of [
+    '(git push -f origin main)',
+    'x=$(git push --force origin main)',
+    'echo `git push -f`',
+    'echo "$(git push -f)"',
+    'cat <(git push --force)',
+  ]) {
+    expectRefused(await call($, bash(command)), G1_REASON, probe)
+  }
+  for (const command of ['& {git push -f}', '$(git push --force)']) {
+    expectRefused(await call($, { tool: 'PowerShell', command }), G1_REASON, probe)
+  }
+})
+
+// RECORDED MUTATION: the first reading dropped from pushRefused (`return readingRefuses(command, depth,
+// true)`, so only the second reading runs) -> expected to fail: `G1 keeps every refusal it made before
+// the second reading`. Observation pending.
+test('G1 keeps every refusal it made before the second reading', async ($, on) => {
+  const probe = arm(on, {})
+  for (const command of [
+    '{ git push -f; }',
+    'f() { git push -f; }',
+    'sudo git push -f',
+    'env GIT_X=1 git push --force',
+    'git push origin main --force',
+    'git push $(echo -f)',
+    'git push origin $(echo +main)',
+    'git push `echo -f`',
+  ]) {
+    expectRefused(await call($, bash(command)), G1_REASON, probe)
+  }
+})
+
+// RECORDED MUTATION: the second reading refusing every segment that holds git then push, with no
+// argument check (in readingRefuses, `segmentPushRefused(tokens)` replaced by `atGroups ? tokens.some((t)
+// => isGit(t.value)) && tokens.some((t) => t.value === 'push') : segmentPushRefused(tokens)`) ->
+// expected to fail: `G1 allows an ordinary push inside a subshell and a substitution that does not push`.
+// Observation pending.
+test('G1 allows an ordinary push inside a subshell and a substitution that does not push', async ($, on) => {
+  const probe = arm(on, {})
+  for (const command of [
+    '(cd sub && git push -u origin b)',
+    'x=$(git rev-parse HEAD) && git push origin "$x"',
+    'echo `git log -1`',
+    'git commit -m "fix (scope)"',
+  ]) {
+    const input = bash(command)
+    expectPassed(await call($, input), probe, input)
+  }
 })
 
 // ---------------------------------------------------------------------------------------------
@@ -435,6 +492,50 @@ test('G6 leaves other subagents, unlisted agent ids and the main loop to the oth
     expect(result.deny).toBeUndefined()
   }
   expect(probe.reached.length).toBe(3)
+})
+
+const ps = (command: string) => ({ tool: 'PowerShell', command })
+
+// RECORDED MUTATION: the PowerShell registration's hook set back to `refuseForcePush` (G6 dropped from
+// it) -> expected to fail: `G6 refuses every PowerShell call by a report-only subagent and leaves other
+// subagents to G1`. Observation pending.
+test('G6 refuses every PowerShell call by a report-only subagent and leaves other subagents to G1', async ($, on) => {
+  const probe = arm(
+    on,
+    newFileWorld(['C:\\r\\state\\consults'], {
+      agents: [agentRow('a1', 'lead-data'), agentRow('a2', 'architect'), agentRow('a3', 'worker')],
+      messages: {
+        a1: brief([`REPORT PATH: ${REPORT}`]),
+        a2: brief(['Review the draft.']),
+      },
+    }),
+  )
+  // A lead-data run's read and its write to its own REPORT PATH, and an architect run with no line.
+  expectRefused(await call($, asSubagent(ps('Get-Content C:\\r\\x.md'), 'a1')), G6_REASON, probe)
+  expectRefused(await call($, asSubagent(ps(`Set-Content -Path ${REPORT} -Value y`), 'a1')), G6_REASON, probe)
+  expectRefused(await call($, asSubagent(ps('Get-Location'), 'a2')), G6_REASON, probe)
+  // A worker row and an unlisted id are left to G1.
+  const status = ps('git status')
+  expectPassed(await call($, asSubagent(status, 'a3')), probe, status)
+  expectPassed(await call($, asSubagent(status, 'unlisted')), probe, status)
+  const reached = probe.reached.length
+  expect((await call($, asSubagent(ps('git push --force'), 'a3'))).deny).toBe(G1_REASON)
+  expect(probe.reached.length).toBe(reached)
+})
+
+// RECORDED MUTATION: the `agentId` condition dropped from guardPowerShell (`if (true)`), so G6 runs on
+// a main-loop call -> expected to fail: `G6 makes no engine call on a main-loop PowerShell call`.
+// Observation pending.
+test('G6 makes no engine call on a main-loop PowerShell call', async ($, on) => {
+  // No agent.list, session.messages or fs answer is registered: a `$` call from the hook would throw.
+  const probe = arm(on, {})
+  const notes = ps('Set-Content C:\\r\\notes.md x')
+  expectPassed(await call($, notes), probe, notes)
+  expect(probe.stats.length).toBe(0)
+  expect(probe.procs.length).toBe(0)
+  const reached = probe.reached.length
+  expect((await call($, ps('git push -f'))).deny).toBe(G1_REASON)
+  expect(probe.reached.length).toBe(reached)
 })
 
 // ---------------------------------------------------------------------------------------------

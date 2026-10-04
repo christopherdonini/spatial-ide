@@ -49,8 +49,9 @@ const GIT_GLOBAL_WITH_VALUE = new Set(['-C', '-c', '--git-dir', '--work-tree', '
 const FORCING_LONG_OPTIONS = ['force', 'force-with-lease', 'mirror', 'delete', 'prune'];
 
 // Splits a command at ; && || | & and newlines outside quotes. The last segment reports an
-// unbalanced quote.
-function splitSegments(command) {
+// unbalanced quote. The second reading (`atGroups`) also splits at ( ) { } and the backtick, each
+// outside quotes and not escaped by a backslash.
+function splitSegments(command, atGroups = false) {
   const segments = [];
   let current = '';
   let quote = null;
@@ -85,6 +86,11 @@ function splitSegments(command) {
       segments.push(current);
       current = '';
       if ((ch === '&' || ch === '|') && command[i + 1] === ch) i += 1;
+      continue;
+    }
+    if (atGroups && (ch === '(' || ch === ')' || ch === '{' || ch === '}' || ch === '`')) {
+      segments.push(current);
+      current = '';
       continue;
     }
     current += ch;
@@ -201,8 +207,10 @@ function segmentPushRefused(tokens) {
   return false;
 }
 
-function pushRefused(command, depth = 0) {
-  for (const text of splitSegments(command)) {
+// One reading of a command: split it (at the second reading's extra boundaries when `atGroups`),
+// then each segment goes through the per-segment steps.
+function readingRefuses(command, depth, atGroups) {
+  for (const text of splitSegments(command, atGroups)) {
     const { tokens, unbalanced } = tokenise(text);
     if (unbalanced) {
       if (text.includes('push')) return true;
@@ -217,6 +225,14 @@ function pushRefused(command, depth = 0) {
     if (segmentPushRefused(tokens)) return true;
   }
   return false;
+}
+
+// G1 reads a command twice and refuses when either reading refuses: the first reading splits at
+// ; && || | & and newlines, the second also at ( ) { } and the backtick. The first alone would
+// miss a push written flush against a bracket; the second alone would move a forcing argument that
+// a substitution supplies out of its push segment.
+function pushRefused(command, depth = 0) {
+  return readingRefuses(command, depth, false) || readingRefuses(command, depth, true);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -390,6 +406,17 @@ async function refuseForcePush($, e, next) {
   return pushRefused(String(e.command ?? '')) ? { deny: G1_REASON } : next(e);
 }
 
+// The PowerShell registration's hook: G6 (a subagent's call only; the main loop makes no `$` call),
+// then G1, then next. A shell call has no path to place, so a report-only subagent's PowerShell
+// call is refused whatever its command, which G6 never reads.
+async function guardPowerShell($, e, next) {
+  if (e.agentId !== undefined) {
+    const refusal = await g6Refusal($, e.agentId, undefined);
+    if (refusal !== undefined) return { deny: refusal };
+  }
+  return refuseForcePush($, e, next);
+}
+
 // ---------------------------------------------------------------------------------------------
 // N1: the one nudge. The compaction-window percentage from the summary breakdown, which estimates
 // locally and sends nothing; absent when no breakdown comes back.
@@ -430,7 +457,7 @@ async function nudge($, e, next) {
 export function register(on) {
   on('tool.call', nudge);
   on('tool.call', { tool: 'Bash' }, refuseForcePush).catch(() => ({ deny: CATCH_REASON }));
-  on('tool.call', { tool: 'PowerShell' }, refuseForcePush).catch(() => ({ deny: CATCH_REASON }));
+  on('tool.call', { tool: 'PowerShell' }, guardPowerShell).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'Write' }, guardWrite).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'Edit' }, guardEdit).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'NotebookEdit' }, guardNotebookEdit).catch(() => ({ deny: CATCH_REASON }));
