@@ -1,15 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8284670854df82db800df0c1113f616e935c10dce01a664f58af8538f4aa193c`) at `2026-10-03T19:49:29.250Z`.
+Generated from `PLAN.yaml` (sha256 `f85f63c1b052f0429c7c5892f4667b63733f428d3309339728d4839040cb91a5`) at `2026-10-04T09:13:59.444Z`.
 
 ## 1. Next
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) (lane `engine`, order 12, budget 90 min)
-- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) (lane `governance`, order 17, budget 240 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -35,7 +34,8 @@ Generated from `PLAN.yaml` (sha256 `8284670854df82db800df0c1113f616e935c10dce01a
 
 ## 5. In progress
 
-- (none)
+- **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) — evidence: branch `cut/type-walk-null-literal-arithmetic`
+- **guardian-v0** — Guardian v0 -- the first Spatial IDE mod: a refuse-only plugin at tools/mods/spatial-guardian/ (G1 to G6, the N1 nudge), built and gated; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — evidence: branch `cut/guardian-v0`
 
 ## 6. Proposed / unscheduled
 
