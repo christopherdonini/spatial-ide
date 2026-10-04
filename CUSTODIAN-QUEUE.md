@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1101f7fdb0f0bf2eafb500db68d6575af2cfcc4d4862450c5bfb17f1a8ee556e`) at `2026-10-04T21:39:40.760Z`.
+Generated from `PLAN.yaml` (sha256 `f9754f488bdd57f1a9356f5f7c025168644c572bea8f05fe54ae45e167161af5`) at `2026-10-04T21:57:55.427Z`.
 
 ## 1. Next
 
-- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (lane `engine`, order 13, budget 45 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -30,7 +30,7 @@ Generated from `PLAN.yaml` (sha256 `1101f7fdb0f0bf2eafb500db68d6575af2cfcc4d4862
 
 ## 5. In progress
 
-- (none)
+- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone — evidence: branch `cut/timing-assertions-under-contention`
 
 ## 6. Proposed / unscheduled
 

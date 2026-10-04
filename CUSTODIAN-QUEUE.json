@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-04T21:39:40.760Z",
-  "plan_hash": "1101f7fdb0f0bf2eafb500db68d6575af2cfcc4d4862450c5bfb17f1a8ee556e",
+  "generated_at": "2026-10-04T21:57:55.427Z",
+  "plan_hash": "f9754f488bdd57f1a9356f5f7c025168644c572bea8f05fe54ae45e167161af5",
   "priorities_approved": true,
-  "next": {
-    "id": "timing-assertions-under-contention",
-    "title": "Two latency assertions fail under concurrent build load and pass alone",
-    "lane": "engine",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 13,
-    "budget_minutes": 45,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-27",
-      "done": null
-    },
-    "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes."
-  },
-  "ready": [
-    {
-      "id": "timing-assertions-under-contention",
-      "title": "Two latency assertions fail under concurrent build load and pass alone",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 13,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -271,7 +233,30 @@
       ]
     }
   ],
-  "in_progress": [],
+  "in_progress": [
+    {
+      "id": "timing-assertions-under-contention",
+      "title": "Two latency assertions fail under concurrent build load and pass alone",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 13,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/timing-assertions-under-contention"
+      },
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Form committed 2026-10-04 (kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md, the architect draft): Phase R in scratch first; OPEN-1 (slice.rs, a docs/08 row, red line) and OPEN-3 (the sibling h2 test, a scope change, red line) are the human typed rulings; OPEN-2 (the h2_a reading) and OPEN-4 (the harness node) by option. Budget raised under the form section 0.10 (Phase R cold and load builds); budget_minutes carries the figure. Before: Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
+      "evidence_label": "branch `cut/timing-assertions-under-contention`"
+    }
+  ],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
