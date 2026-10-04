@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `f9754f488bdd57f1a9356f5f7c025168644c572bea8f05fe54ae45e167161af5`) at `2026-10-04T21:57:55.427Z`.
+Generated from `PLAN.yaml` (sha256 `93bb45d32f75e848ddd93b366934f38d12c962564c0e2b1ebbaf1a08cccffff2`) at `2026-10-04T22:47:26.774Z`.
 
 ## 1. Next
 
@@ -94,6 +94,7 @@ Generated from `PLAN.yaml` (sha256 `f9754f488bdd57f1a9356f5f7c025168644c572bea8f
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — never queued until placed
 - **data-plane-terminal-without-credit** — Data plane: a producer failure reaches the client as a terminal frame without waiting for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) (phase `prototype`) — never queued until placed
+- **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

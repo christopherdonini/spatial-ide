@@ -260,3 +260,15 @@ Falsification: §0.5's custodian step resolving either failure to a different as
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the ruling rows for OPEN-2 to OPEN-4 (class 5; D-3)
+
+*Written by the custodian before Phase R's outcome, after question round 52 was answered (its RULED block in `DECISIONS-PENDING.md`). Class 5: each ruling narrows this form's conditional branches to the one it selects. Every part selected here is already declared in full in §2, §4 and §7, so no undeclared work is added (not class 9). Rulings are cited by round and item. The one typed ruling is referenced by its filed path, not reproduced.*
+
+- **OPEN-2, round 52, item 2:** No, h2_a's assertion is not docs/08:8's row. Part A1 is selected. The branch in which h2_a joins OPEN-1 is closed.
+- **OPEN-3, round 52, item 3:** a red-line item, ruled in the human's typed words, filed at `state/directives/2026-10-04-round-52-open-3-ruling.md`. Its condition (OPEN-2 is No) is met. Part A2 is selected, with the function name kept and the one-line comment §2 declares. The branch excluding the sibling test is closed.
+- **OPEN-4, round 52, item 4:** option (1). The harness node is appended to PLAN as proposed, by id `slice-budgets-cancel-cells-on-trace-pair`, depending on this node. No code lands under this form (§7, unchanged).
+- **OPEN-1, round 52, item 1:** held for Phase R. This is a hold, not a ruling. Part B stays unselected, slice.rs is unchanged, and the row follows its typed ruling.
+- **Unchanged:** Phase R, §5's predictions and routing, and §8. Part A1 and Part A2 code still waits for Phase R's consult and its routing record, and lands on no STOP (§8 item 2).
+
+**Superseded index.** None.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T21:57:55.547Z",
-  "plan_hash": "f9754f488bdd57f1a9356f5f7c025168644c572bea8f05fe54ae45e167161af5",
+  "generated_at": "2026-10-04T22:47:27.217Z",
+  "plan_hash": "93bb45d32f75e848ddd93b366934f38d12c962564c0e2b1ebbaf1a08cccffff2",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5657,7 +5657,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged.",
+      "summary": "Routed by round-mirror-pretooluse-hook's drafting consult (state/consults/2026-10-02-round-mirror-hook-architect-draft.md, item (c), first bullet): countItems and buildSummary count the --- rules plus one, so a round file with a header rule reads one item high; round 33's eleven items would be summarized as twelve. Not fixed in that piece, whose invalidator I2 keeps mirrorRound and buildSummary unchanged. Also, per Fable round-52 advice item 1 (state/directives/2026-10-04-fable-advice-round-52.md), confirmed by the custodian: the round file header miscounts red-line items, since state/questions/round-52.md reads RED LINE items: none while its items 1 and 3 were red-line items offered as holds only; the same piece should derive that header count from the items.",
       "dates": {
         "opened": "2026-10-02",
         "done": null
@@ -6439,6 +6439,33 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it.",
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      }
+    },
+    {
+      "id": "slice-budgets-cancel-cells-on-trace-pair",
+      "title": "The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "timing-assertions-under-contention"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Appended by question round 52, item 4 (RULED 2026-10-04), option (1), from kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md OPEN-4: kernel/tests/slice_budgets.rs scores its docs/08 cancellation p95 on the client pre-send to data-plane adapter receipt interval, not on ADR-018's pair (cancel_requested to PRODUCER_CANCELLED, on the producer's clock). The piece takes its own full form when placed: re-aim the harness cancellation cells to the engine trace pair, in a release build on reference hardware, and keep the adapter interval as a reported figure. Per ADR-018's no-retroactive-rescoring clause, nothing measured before is rescored. Per Fable's round-52 advice, item 2 (state/directives/2026-10-04-fable-advice-round-52.md), the form says how kernel/RESULTS.md's existing met rows for the cancellation budget are read: they name their interval (client pre-send to the adapter's receipt), which is not ADR-018's pair, so each gets a dated note beside it, never a rescoring. A docs/08 row's verdict is the human's (AI_DEVELOPMENT.md's red lines). Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-04",
         "done": null
