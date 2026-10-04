@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `079f4008478176d2ead6744e5f930204203e35bfb7a855f8a65212a4da1c399c`) at `2026-10-04T11:14:41.557Z`.
+Generated from `PLAN.yaml` (sha256 `07b16041a16c613192fbf895c1d2b231520229427a4146bf636dc9f03a6578a5`) at `2026-10-04T12:37:40.807Z`.
 
 ## 1. Next
 
@@ -34,6 +34,7 @@ Generated from `PLAN.yaml` (sha256 `079f4008478176d2ead6744e5f930204203e35bfb7a8
 ## 5. In progress
 
 - **type-walk-null-literal-arithmetic** — Type walk: NULL-literal arithmetic -- admit NULL with NULL, and NULL with an in-bounds decimal literal where that literal would be admitted (round 43, item 1); carry a literal's bound flag through a NULL-typed result; give the remaining constant-NULL refusals true reasons (B-1 N1) — evidence: branch `cut/type-walk-null-literal-arithmetic`
+- **claude-md-stale-facts** — CLAUDE.md stale facts -- the current focus after v0.1.0, the spike-results wording, and the prompt audit's other class-(d) findings in CLAUDE.md, restated as facts with no rule changed (the 2026-10-04 prompt-audit instruction, item 3) — evidence: branch `cut/claude-md-stale-facts`
 
 ## 6. Proposed / unscheduled
 

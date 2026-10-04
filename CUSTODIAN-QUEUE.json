@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T11:14:41.557Z",
-  "plan_hash": "079f4008478176d2ead6744e5f930204203e35bfb7a855f8a65212a4da1c399c",
+  "generated_at": "2026-10-04T12:37:40.807Z",
+  "plan_hash": "07b16041a16c613192fbf895c1d2b231520229427a4146bf636dc9f03a6578a5",
   "priorities_approved": true,
   "next": {
     "id": "evidence-recorder-v0",
@@ -359,6 +359,28 @@
       },
       "summary": "Proposed by the architect's scoped confirmation on PR #145 (state/consults/gates/2026-09-30-b-1-code-reduction1-architect.md, item 3), from the reviewer's gate-attempt-3 N1 (state/consults/gates/2026-09-30-b-1-code-gate2-reviewer.md): NULL + NULL refused conversion_rounds although rule 2 admits it; NULL beside a decimal refused with an imprecise reason; an out-of-bounds literal beside NULL admitted because the bound flag is lost. All are constant-NULL expressions carrying no file value, ruled non-blocking for B-1. Scope: admitted_arithmetic_result's rule 2 and the bound flag through Typed in engine/src/predicate.rs, with B-T3 rows for the four cases; no wire change and no new reason. Placed by question round 31, item 1 (RULED 2026-09-30): position 10 of 16 in the human's order, order 12 in its lane. It depends on kernel-ticket-drop-followups, position 9, so that the order holds across lanes. Drafted by lead-data (the pilot's piece 2; state/consults/2026-10-03-type-walk-null-literal-arithmetic-lead-data-draft.md), with an architect consult (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-consult.md). RULED 2026-10-03, question round 43: item 1 admits case (b), NULL - 0.5 > 0, narrowly (option iii: a rule-2 result over an in-bounds decimal literal counts as that literal for comparison rules 4 and 6), with no sentence or wire change; the piece is therefore crossing under the lead-data clarification's C2, and the architect drafts it; item 2 keeps the pilot's section 5 stop, so drafting returns to the architect in any case.",
       "evidence_label": "branch `cut/type-walk-null-literal-arithmetic`"
+    },
+    {
+      "id": "claude-md-stale-facts",
+      "title": "CLAUDE.md stale facts -- the current focus after v0.1.0, the spike-results wording, and the prompt audit's other class-(d) findings in CLAUDE.md, restated as facts with no rule changed (the 2026-10-04 prompt-audit instruction, item 3)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 19,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/claude-md-stale-facts"
+      },
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "Placed by the 2026-10-04 prompt-audit instruction, item 3 (state/directives/2026-10-04-prompt-audit-instruction.md; RULED 2026-10-04), beside the current work and outside the two-pieces trial count by the human's word. Findings H2, H4, M1, M3, F2 and F3 of state/consults/2026-10-04-prompt-audit.md, triaged class (d) in the 2026-10-09 window draft, item H. CLAUDE.md lines 8, 23, 24, 28 and 38 replaced in place; lines 12-17 (cited as verbatim rulings in PRECEDENTS.md) untouched. Five-line form, single reviewer gate (AUTONOMY section 21b).",
+      "evidence_label": "branch `cut/claude-md-stale-facts`"
     }
   ],
   "proposed": [

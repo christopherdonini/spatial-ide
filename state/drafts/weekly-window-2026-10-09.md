@@ -263,3 +263,47 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 | worker-high: correction round 1 | 135,984 | 53 | 2,638,318 |
 | gate 2 architect | 158,183 | 53 | 406,371 |
 | gate 2 reviewer | 159,466 | 57 | 1,622,765 |
+
+## G. Guardian's G1 over-refuses text that leaves a quote open before the word push
+
+- **Source.** Question round 50, item 3 (RULED 2026-10-04): a window item. The two refusals are recorded in Guardian's Amendment 8 (`tools/mods/GUARDIAN-V0-PREREGISTRATION.md`), at 11:33:53Z and 11:42:00Z.
+- **The gap.** G1 refuses any Bash call in which an apostrophe leaves a quote open before the word push (§2.2's unbalanced-quote rule, F7). That includes heredoc record text that runs no push at all. The README's over-refusal list (line 31) names text that holds a force-push spelling; it does not name this shape.
+- **The workaround in use:** record text is written with the Write tool, and commit and push run as separate calls.
+- **The proposal, two parts, each by its own amendment or piece:**
+  1. A README limit line naming the shape and the workaround.
+  2. Later, whether G1 should change, for example by reading heredoc bodies as text.
+- Nothing changes in Guardian before the human's answer.
+
+## H. The 2026-10-04 prompt audit: the triage, and classes (a) to (c)
+
+- **Source.** The 2026-10-04 prompt-audit instruction (`state/directives/2026-10-04-prompt-audit-instruction.md`), items 1 and 2. The audit is filed as Evidence at `state/consults/2026-10-04-prompt-audit.md`. Its finding ids (H1 to H6, M1 to M6, F1 to F4, P1) are used below.
+- **The classes,** as the instruction sets them, paraphrased:
+  - (a) a verbatim human ruling: never deleted or paraphrased, and only moved into a referenced file, with the human's approval and an architect check;
+  - (b) ordinary prose that is not a ruling: rewritable;
+  - (c) an instruction that compensates for a model weakness: a candidate for a measured trial, not for deletion;
+  - (d) a stale fact.
+- **The custodian's triage:**
+
+| Finding | Where | Class | Route |
+|---|---|---|---|
+| F1 | the ~10 KB ruling block on `.claude/agents/architect.md:11`, `reviewer.md:25` and `worker.md:25` | (a) | this item |
+| M2 | `CLAUDE.md:38`, the commit-style line: an instruction, not a ruling. History mostly uses `<type>(<scope>):`, and test, ci and style are in use, so a rewrite changes a stated convention. | (b) | this item |
+| M4 | `CLAUDE.md:8`, the 2026-09-07 note: a dated correction of record written by the custodian (914ef9f6). Its facts still hold. | (b) | this item |
+| M6 | `.claude/agents/worker.md:29`, the report cap of about 20 lines | (c) | this item |
+| H2, H4, M1, M3, F2, F3 | `CLAUDE.md:8`, `:23`, `:24`, `:28`, `:38` | (d) | the CLAUDE.md stale-facts piece (instruction item 3) |
+| H1, H3, H5, H6, M5 | `.claude/agents/tester.md:12`, `architect.md:11`, `reviewer.md:25`, `worker.md:25`, `reviewer.md:16` | (d) | listed for placement; outside item 3, which names CLAUDE.md only |
+| F4 | the CLAUDE.md copy in `.claude/worktrees/verify-mutation-header-token/` | (d), a drifting duplicate | listed: disposing of that worktree is the human's call (the continuity block's inspect-before-removing list) |
+| P1 | a pinned model id in an account-synced skill | provided content | no action: it is outside the repository |
+
+  - Two notes on the triage:
+    - H3, H5 and H6 sit on the same lines as F1's ruling text, but outside its byte-copied spans (the audit, §3). Editing them still runs verify-quotes' hash scan and governance CI.
+    - Not raised by the audit: `CLAUDE.md:12-17`, the non-negotiables, are cited as verbatim rulings in `PRECEDENTS.md` (by path and line). In effect they are (a), and they bind the stale-facts piece to in-place replacement with no line moved.
+- **For the human, as one item:**
+  - **(a) F1.** The audit's options:
+    - keep the reproduction, one ruling per paragraph, with the operative sentence first;
+    - put the shared gate rules in one file the three agents read;
+    - reduce the agent text to operative rules cited by round and item.
+    Under class (a), only a move into a referenced file is open, with the human's approval and an architect check. Each byte-copy marker must stay on the line of its reproduction (verify-quotes).
+  - **(b) M2 and M4.** Rewritable on the human's word. M2 changes a stated convention, so it is a rule change, not a fact.
+  - **(c) M6.** A measured trial in place of deletion: the same small piece dispatched to a worker with and without the cap, comparing whether each hand-back keeps every required item (the audit's §4 probe).
+  - **(d) outside CLAUDE.md:** H1, H3, H5, H6 and M5 in the agent definitions, and F4, are each for the human to place.
