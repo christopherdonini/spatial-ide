@@ -38,13 +38,14 @@ The mod never deletes. At the weekly window, the custodian prunes by hand the da
 
 ## What it does not claim
 
-- That any recorder line is citable evidence. It is not, in v0, and a record is never a mutation observation. CI and the gates stay authoritative.
+- That any recorder line is citable evidence. It is not, in v0. A record does not show that a test's assertions establish a claim, and it is never a mutation observation. CI and the gates stay authoritative.
 - A numeric exit status. The record carries the tool's error flag, and whether a non-zero exit sets it is unproven before the live row E2.
 - That the tree identified is the tree the command ran in, beyond `tree_basis`: MSYS spellings, a shell directory kept from an earlier `cd`, and a subagent's own worktree with no leading `cd` are not covered.
 - What the identity misses: untracked file content, ignored files, a change made and restored inside the run, and metadata.
 - Coverage. Not recorded: the PowerShell tool, wrappers, scripts, loops, background calls, CI, cloud sessions, commands a script launches inside, and this mod's own `claude plugin test` and `validate` runs. Every form in the form's §2.2 not-approved table is also not recorded: `cargo test --no-run` and `--list`, `verify-mutation.mjs`, builds and checks, wrappers, background calls, unbalanced quotes and the PowerShell tool.
-- Live behaviour before its E-row: the chain order with Guardian (E1), subagent usage (E3), and the listing of an agent at its turn end (E3).
-- That no record is lost, and any latency figure before the live row E5.
+- Live behaviour before its E-row: the chain order with Guardian (E1, and only if E1's refused call is approved under the form's §2.2), subagent usage (E3), and the listing of an agent at its turn end (E3).
+- That no record is lost. A rejected write drops its record.
+- Latency: any docs/08 row, and any latency figure before the live row E5.
 - Any build other than 2.1.289, and macOS and Linux.
 - That an installed copy is isolated from later changes to this folder in the main checkout.
 - That `claude plugin test` or `validate` loads the mod into a session.
@@ -67,6 +68,8 @@ Installing a mod is a security-posture change. It needs the human's typed approv
 ## Acceptance and stop
 
 The acceptance conditions are the brief's: `state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:55-59 @ 884fc727 sha256:d3c294b2624a53bd2b4042cf8ebe609e63161f657ebf0113ef762cf6c00a6225`. The stop conditions are the brief's: `state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:61-64 @ 884fc727 sha256:648fffdd48a3f672d0938ba1bb2b7e581cb0f2bcee47c0a9aefefd823e238714`.
+
+The bounds the evaluation uses are declared in the form, in its §9 (Operator) and its §7.
 
 ## Uninstall
 
