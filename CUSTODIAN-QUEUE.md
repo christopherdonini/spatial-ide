@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6bb2c65bd5f33e6ae35712b9b2326799646b3b472189f8f53f95c6967bc96798`) at `2026-10-04T20:16:06.003Z`.
+Generated from `PLAN.yaml` (sha256 `1101f7fdb0f0bf2eafb500db68d6575af2cfcc4d4862450c5bfb17f1a8ee556e`) at `2026-10-04T21:39:40.760Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone (lane `engine`, order 13, budget 45 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -18,7 +18,6 @@ Generated from `PLAN.yaml` (sha256 `6bb2c65bd5f33e6ae35712b9b2326799646b3b472189
 
 ## 4. Blocked on dependencies
 
-- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone — blocked by: timing-tests-assert-property-not-budget
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
@@ -31,7 +30,7 @@ Generated from `PLAN.yaml` (sha256 `6bb2c65bd5f33e6ae35712b9b2326799646b3b472189
 
 ## 5. In progress
 
-- **timing-tests-assert-property-not-budget** — Reproduce the skp_admission cancel-test stall (H-S, a credit-gated terminal) in scratch and route it; the publish half closed (was: the two CI timing flakes assert the property, not an undeclared budget) — evidence: branch `cut/timing-tests-assert-property-not-budget`
+- (none)
 
 ## 6. Proposed / unscheduled
 

@@ -1,9 +1,47 @@
 {
-  "generated_at": "2026-10-04T20:16:06.003Z",
-  "plan_hash": "6bb2c65bd5f33e6ae35712b9b2326799646b3b472189f8f53f95c6967bc96798",
+  "generated_at": "2026-10-04T21:39:40.760Z",
+  "plan_hash": "1101f7fdb0f0bf2eafb500db68d6575af2cfcc4d4862450c5bfb17f1a8ee556e",
   "priorities_approved": true,
-  "next": null,
-  "ready": [],
+  "next": {
+    "id": "timing-assertions-under-contention",
+    "title": "Two latency assertions fail under concurrent build load and pass alone",
+    "lane": "engine",
+    "phase": "prototype",
+    "status": "ready",
+    "order": 13,
+    "budget_minutes": 45,
+    "needs_human": {
+      "kind": "none",
+      "minutes": 0
+    },
+    "evidence": null,
+    "dates": {
+      "opened": "2026-09-27",
+      "done": null
+    },
+    "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes."
+  },
+  "ready": [
+    {
+      "id": "timing-assertions-under-contention",
+      "title": "Two latency assertions fail under concurrent build load and pass alone",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 13,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes."
+    }
+  ],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -34,28 +72,6 @@
     }
   },
   "blocked_on_dependencies": [
-    {
-      "id": "timing-assertions-under-contention",
-      "title": "Two latency assertions fail under concurrent build load and pass alone",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 13,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
-      "blocked_by": [
-        "timing-tests-assert-property-not-budget"
-      ]
-    },
     {
       "id": "b1-engine-kernel-half-followups",
       "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
@@ -255,30 +271,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "timing-tests-assert-property-not-budget",
-      "title": "Reproduce the skp_admission cancel-test stall (H-S, a credit-gated terminal) in scratch and route it; the publish half closed (was: the two CI timing flakes assert the property, not an undeclared budget)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 12,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/timing-tests-assert-property-not-budget"
-      },
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "Scope since question round 51 (RULED 2026-10-04): the node reproduces the skp_admission cancel-test stall (H-S) in scratch, files the Phase R consult, and routes the result; on S1 a proposed full-form protocol/data-plane node, on S2 a class-1 amendment redrafting the skp half; the publish half is closed by round 51, item 3, and the piece commits no code (kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md, the architect draft 2). Before: RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five). Placed by question round 31, item 1 (RULED 2026-09-30): position 12 of 16 in the human's order, order 12 in its lane. It depends on watch-grandparent-spawn-signal, position 11, so that the order holds across lanes.",
-      "evidence_label": "branch `cut/timing-tests-assert-property-not-budget`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",
@@ -1380,7 +1373,7 @@
         "opened": "2026-10-04",
         "done": null
       },
-      "summary": "Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within 60 s in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it."
+      "summary": "Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it."
     }
   ],
   "unscheduled": [

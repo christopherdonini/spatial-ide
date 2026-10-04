@@ -201,3 +201,14 @@ All printed figures are reports, not measurements: no p50/p95, no docs/08 datase
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — closing record (class 1; references and hashes only; the record cap)
+
+*Written after Phase R's outcome was seen, by the custodian, after PR #174 merged as merge commit 95500097639acdd37689ffd7e0302c64ee1f593e (parents 7ca971f5 and b73e65d0; never a squash) at 2026-10-04T21:37:09Z. It follows the gate-1 architect's closing-record list (`state/consults/gates/2026-10-04-timing-tests-assert-property-not-budget-gate1-architect.md`). Every commit named below is on main.*
+
+1. **D-1, the Phase R consult:** `state/consults/2026-10-04-timing-tests-reproduction.md` @ 3831d4a9edcdf7cf64a43eab4bc4d02664b62313, whole-file sha256 df0253b1c13f40e4f346ac7627ba156355d6d9cafaedcc60dd540c478a8d440d. Phase R ran at 1c71ebaf.
+2. **D-2, the routing: S1.** The proposed PLAN node `data-plane-terminal-without-credit`, by node id, appended at 3831d4a9.
+3. **D-3, the publish half:** closed by §2's publish paragraph, done at e582d79f085b7e391b636b7094ad47418fddc309.
+4. **The PR:** #174, merged as 95500097. `kernel/README.md` is at that merge commit.
+5. **Gates:** gate-log 398 (architect, gate 1, PASS) and 399 (reviewer, gate 1, PASS). The reports are `state/consults/gates/2026-10-04-timing-tests-assert-property-not-budget-gate1-architect.md` and `state/consults/gates/2026-10-04-timing-tests-assert-property-not-budget-gate1-reviewer.md`. The reviewer's report records 41 of 41 pins recomputed at 1c71ebaf (its S2-1), and the architect's N-4 reads §5's invalidator 2 as not engaged.
+6. **PLAN:** done, with evidence `{pr: 174}` set in this commit.
