@@ -518,3 +518,64 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
 5. **At 2d95575e, by the gate-3 reviewer, at 2.1.289:** §7 at 1120 of 1400 over 7 files; plugin test 20 of 20; all 20 mutations observed.
 6. **The install approval and O-14:** the human's typed approval of 2026-10-04 (`state/directives/2026-10-04-recorder-install-approval.md`, and its RULED block in `DECISIONS-PENDING.md`). O-14 is ruled (a), so §4's E1 stands unchanged. The E-rows are recorded as later class 1 rows.
 7. **PLAN:** done, with evidence `{pr: 172}` set in this commit.
+
+### Amendment 5 — the E-rows, live after install (class 1)
+
+*Class 1, post-result rows, recorded by the custodian on main as §4's E-rows direct, after the human's typed install approval (`state/directives/2026-10-04-recorder-install-approval.md`, and its RULED block in `DECISIONS-PENDING.md`). The approval names E0 and E2 to E7. E1 is recorded at the first natural Guardian refusal. Times are 2026-10-04 UTC, from the session transcript or from the records' own fields. Every block marked byte-copied was copied by script from its source. Folders outside the repository are named in words.*
+
+- **The build of every row below: 2.1.289. I2 (b) does not fire.**
+  - The session's process was created at 14:08:34Z, after the binary at its install path was last modified at 08:53:06Z. `claude --version` prints `2.1.289 (Claude Code)`, and the session's environment names its agent `claude-code_2-1-289_agent`. The bundled-skill folder named for this build, 2.1.289, is present.
+  - The install record reads 18:24:22Z, at user scope. The reload in this session ran at 18:27:49Z. Its output, byte-copied from the transcript:
+
+```text
+Reloaded: 5 plugins · 9 skills · 15 agents · 0 hooks · 9 plugin MCP servers · 1 plugin LSP server
+`spatial-evidence-recorder@spatial-ide-mods` re-read from its folder: `tools\mods\spatial-evidence-recorder`
+```
+
+- **E0.**
+  - **The `/plugin` lines,** as the human reported them, byte-copied from `state/directives/2026-10-04-recorder-plugin-line-report.md`:
+    - the mods line: `2 mods active spatial-guardian, spatial-evidence-recorder`;
+    - an error line for a plugin that is not one of the project's mods:
+
+```text
+plugin:rust-analyzer-lsp:rust-analyzer — LSP server plugin: rust-analyzer-lsp:rust-analyzer crashed
+with exit code 1
+```
+
+  - **The error line is recorded as a fact.** That plugin is enabled at user scope in the user's own settings. Neither project settings file names it, and the prompt audit lists it as installed. Nothing was fixed, installed or disabled for it.
+  - **`claude plugin list`,** at 19:22:57Z, for the two mods, byte-copied:
+
+```text
+  ❯ spatial-evidence-recorder@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-evidence-recorder
+    Scope: user
+    Status: ✔ enabled
+  ❯ spatial-guardian@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-guardian
+    Scope: user
+    Status: ✔ enabled
+```
+
+  - **The marketplace:** no refresh was recorded. The user's marketplace record still dates its last update to 11:28:23Z, Guardian's install, and the recorder's install succeeded at 18:24:22Z.
+  - **Guardian** is still enabled, and its Read-from line is unchanged from Guardian's Amendment 8, E0.
+- **E2.** `node --test` on a scratch passing file and then on a scratch failing file, both in the session scratchpad. The records end at 18:35:04Z and 18:35:09Z.
+  - `tool_is_error` reads false, then true. As predicted.
+  - Both records: `tree_basis` session-default, `toplevel` the main checkout, `head` and `head_after` e582d79f, and `tree_changed_during_run` false.
+- **E3.** One `Explore` subagent, spawned once (its turn's usage record at 18:38:36Z) and resumed once (19:21:14Z).
+  - Two usage records, each typed `Explore`, each with the four counts and the model, and none for the main loop. As predicted.
+- **E4.**
+  - **(a)** The same subagent ran `cd <the clean throwaway worktree, absolute> && node --test <scratch>`. Its run record ends at 18:38:34Z: typed `Explore`, `tree_basis` leading-cd, `toplevel` the worktree, `head` 0f3310e2, and `tree_changed_during_run` false. As predicted.
+  - **(b)** In the main loop, `cd <that worktree>`, then `node --test <scratch>`, then `pwd`, each in its own call.
+    - The tool reset the shell's directory to the main checkout after the `cd`, and `pwd` printed the main checkout. So session-default is not shown fallible here, and no README limit follows.
+    - The run's record ends at 18:37:50Z, with `tree_basis` session-default. Its `toplevel`, `head` and `tree_changed_during_run` read `unavailable`, and `recorder_ms.before` reads 4276: the git calls overran the 2000 ms timeout.
+    - Two later timings of the same three git calls in the main checkout took about 100 ms each.
+    - This is a recorded result, consistent with §1 claim 3. It counts in E5's sample and toward `UNAVAILABLE_STOP`.
+- **E6,** at 18:36Z. A background `node --test <scratch>` completed with exit 0, and no record was written: the day folder held two records before and after. As predicted.
+- **E7.** For E2's two runs, the record's text hash was compared by script with the transcript's stored tool result, and they are equal both times: 151 bytes with sha256 f8e32347fd32a02e97d04432d81164c53c644b1824c2c7b82ece6799e7e43a69, and 1028 bytes with sha256 0d4b8ae82b8d2f792d269637cd8361b50c496d52bbf2b1174baf817c4e9fa233. As predicted.
+- **E5:** accruing, with four approved runs recorded so far in this 2.1.289-engine session (E2's two, and E4 (a) and (b)). It is recorded once the twentieth is in, and read under Amendment 2's C2-d and the install approval.
+- **E1:** not yet. It is recorded at the first natural Guardian refusal of a Bash call.
+- **Porcelain:** the main checkout's porcelain held only its two pre-existing untracked items before (18:34:57Z) and after (19:21:31Z) the rows. No probe wrote into the repository.
+
+**Superseded index.** None.
