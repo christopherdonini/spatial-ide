@@ -29,6 +29,20 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-04 — the G6-backstop ruling for guardian-v0 (the human, typed, mid-turn, received at 09:44:41Z by the transcript; recorded verbatim at `state/directives/2026-10-04-guardian-g6-backstop-ruling.md`, lines 6-8 (their sha256 5617d45ce4a07a763f1dbc1f66bfff910e08bf6e2c00bd7e17b3e85e9b54adef at the commit that adds it)):**
+- **The ruling** is the typed text, referenced and not restated.
+- **Applied:**
+  - A class-9 Amendment 5, written by the custodian from the ruling, is appended on `cut/guardian-v0` before its README line. It adds the backstop statement and the condition on definition changes to the form's §1, and README item R11.
+  - The correction round now running carries R11.
+  - G6 covers the PowerShell tool by Amendment 4. Its Bash route stays outside G6, as round 48 chose. So under this ruling, a report-only definition gaining Bash would first need G6 to cover Bash.
+
+**RULED 2026-10-04 — question round 48 (AskUserQuestion, one item, answered at 2026-10-04T09:44:38.896Z by the transcript; mirrored by the round-mirror hook as `state/questions/round-48.md`, and the hook's log reads `ok: true`; by option label, verbatim):**
+- **guardian-v0, the PowerShell route** under the 2026-10-04 shell-route ruling, as the form's Amendment 4 reads it: **"A: G6 closes it (Recommended)"**. Applied:
+  - Amendment 4 stands as appended. G6 refuses every PowerShell call by a report-only subagent without reading the command.
+  - G2 to G4 read no shell command on either shell, and §2.10's limit names both shells.
+  - No Amendment 5 is due. Amendment 4's §8 item 22 hold is released for the reading taken.
+  - Gate 2 cites this ruling.
+
 **RULED 2026-10-04 — the shell-route ruling for guardian-v0 (the human, typed, mid-turn, received at 09:20:13Z by the transcript; recorded verbatim at `state/directives/2026-10-04-guardian-shell-route-ruling.md`, lines 6-9 (their sha256 d01f6c204e6e80eab36831902d0b7d29d48dfbee46960313ed3a60d33b24687c at the commit that adds it)):**
 - **The ruling** is the typed text, referenced and not restated.
 - **Applied:**
