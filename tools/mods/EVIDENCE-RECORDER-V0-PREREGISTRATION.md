@@ -457,3 +457,22 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
   - **Stop and uninstall** (`state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:61-64 @ 884fc727 sha256:648fffdd48a3f672d0938ba1bb2b7e581cb0f2bcee47c0a9aefefd823e238714`): any tool result altered; the overhead's p95 over §7's bound; `unavailable` over `UNAVAILABLE_STOP`. The custodian reports a stop to the human, who uninstalls.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — 2026-10-04, written after the build's results: three class-2 results
+
+*Class 2, deviations recorded after results. Written by the custodian after worker report 1 was seen; no prediction is edited. 9acc86b8 and 32fc334f below are 9acc86b8c55956d679f14c0df98981c80137d9ef and 32fc334f43ec3667bb0d5474ece34bbb1f32cf67, branch commits, named in words with no hash (round 15 (e)). The evidence is worker report 1, `state/consults/2026-10-04-evidence-recorder-v0-worker-report-1.md`, its §9, observed at 2.1.289. Nothing below is a quotation.*
+
+- **C2-a, the written path's spelling** (§3, F1 and F14). The prediction is a record path spelled with forward slashes.
+  - The result: `register.js` builds the path with forward slashes, but the test kit hands the `fs.write` stub the path with Windows separators.
+  - The tests compare the written path with separators normalised, and say so in a comment.
+  - What the live engine passes to its writer is not claimed. An E-row shows it.
+- **C2-b, the hooks module's shape** (§2.4's log-root lookup, once per module load, cached on success).
+  - The result: the engine's dispatch in `claude plugin test` refuses a hook that is not a function declared at the module's top level. So the two hooks are top-level declarations, and the log-root cache is a module-level variable.
+  - That is the form's once-per-load reading, taken literally. In the kit each test loads the module fresh.
+- **C2-c, `process.spawn` in the kit** (§4's never-asked counters).
+  - The result: the kit takes a `process.spawn` stub only as an async generator, so the never-asked counters cover the other forbidden calls but not `process.spawn`.
+  - `validate`'s calls line, which names no `$.process.spawn`, is the evidence for that one.
+- **What it touches:** these three only. Every other §3 outcome came out as predicted: 20 of 20 tests pass at 32fc334f, and each of the 20 mutations was observed failing its named test at 9acc86b8. No invalidator fired; I2 (a) did not fire, and `claude --version` read 2.1.289 throughout. §7's count is 1109 of 1400 over 7 files.
+- The worker's readings where the form is silent, R1 to R7 in the report's §9, are not amendments. They are for the gates.
+
+**Superseded index.** None.
