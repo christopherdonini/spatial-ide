@@ -272,3 +272,15 @@ Falsification: §0.5's custodian step resolving either failure to a different as
 - **Unchanged:** Phase R, §5's predictions and routing, and §8. Part A1 and Part A2 code still waits for Phase R's consult and its routing record, and lands on no STOP (§8 item 2).
 
 **Superseded index.** None.
+
+### Amendment 2 — Phase R's routing record (D-2) and its class-2 results
+
+*Written after Phase R's outcome was seen, by the custodian. The evidence is the Phase R consult, `state/consults/2026-10-04-timing-assertions-under-contention-reproduction.md` (whole-file sha256 9a29dda13266c301b5e3f783d92418159be027f4140c1d67e76e6b50ab65ef71, run at 201f833e, whose code trees equal 61f7e64b). It is cited by section, and nothing below is a quotation.*
+
+- **The routing (§5), class 1:** STOP, W and C are all not triggered (the consult's §7), so no node arises from Phase R. The deciding rows are R-1 to R-4 for STOP, and R-4 for W and C, where no run reached 100 ms.
+- **R-2, class 2:** its count prediction is missed. Under L, 0 of 20 runs failed, against a prediction of at least 1, so the line clause has no failure to bind to. §5 classes such a miss without STOP as class 2. The recorded failures in §0.5 were not reproduced under this one load, and that is not evidence that they cannot recur (§1).
+- **R-4's H-W clause, class 2:** untested, because no run reached 100 ms; the largest client pre-send to adapter receipt was 43.529 ms, in a run with registry_empty true. H-W stays a reading of the code, neither confirmed nor refuted.
+- **R-5 to R-7 route nothing (§2).** They are OPEN-1's evidence. The budgeted pair stayed in microseconds in all 40 single-test runs, alone and under load. The unmodified assertion passed in all 5 whole-binary runs under load.
+- **Unchanged:** Part A1 and Part A2, selected by Amendment 1, may now be written (§8 item 2: the consult and this routing record are filed, and there is no STOP). Part B waits for OPEN-1's typed ruling.
+
+**Superseded index.** None.
