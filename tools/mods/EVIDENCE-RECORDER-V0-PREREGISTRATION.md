@@ -494,3 +494,12 @@ One measurement: E5's p50 and p95 of `recorder_ms`, on the named sample. It is n
   - **What it touches** (Amendment 1's fourth bullet): the class-2 results are now C2-a to C2-e. Every other outcome stands as Amendment 1 records it.
 
 **Superseded index.** Amendment 1: C2-a's last sentence; C2-b's section cite and its statement of the kit's rule; C2-c's statement of what the counters cover; and the fourth bullet's count of three results. Each is superseded by this amendment's correction of it.
+
+### Amendment 3 — 2026-10-04, correction round 2 of 2: gate 2's record findings
+
+*Written by the custodian after gate 2 (gate-log 392 and 393; the reports are `state/consults/gates/2026-10-04-evidence-recorder-v0-gate2-architect.md` and `state/consults/gates/2026-10-04-evidence-recorder-v0-gate2-reviewer.md`). This is correction round 2 of 2 under the record cap, the last. No prediction is edited, and `hooks/register.js` and the tests are unchanged. Nothing below is a quotation.*
+
+- **Amendment 2's C2-c correction, its second sentence** (class 2; the gate-2 architect's G2-S1-1). It names `validate`'s calls line as what rules out the rest of §8 item 3's set, but that set includes a network call, and the calls line lists `$` members only. A network call is ruled out by reading `hooks/register.js`, which imports nothing and makes none (the gate-1 reviewer's reading of §8 item 3), and every `$` member outside §2.0 by the calls line at 2.1.289.
+- **The class of Amendment 2's C2-a correction** (class 1; the gate-2 architect's G2-N-1 and the gate-2 reviewer's S2-A). That correction withdraws a sentence, so it is a withdrawal row, class 1 by round 15 (g), and not class 2 as Amendment 2's heading gives the whole.
+
+**Superseded index.** Amendment 2: the C2-c correction's second sentence, and the class its heading gives the C2-a correction. Each is superseded by this amendment's correction of it.
