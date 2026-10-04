@@ -415,7 +415,7 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
                 &["VARCHAR", "BIGINT expression"],
             ),
         ),
-        // H-4's class-2 result, observed at the run of this commit: the surrogate prepare refuses
+        // H-4's class-2 result, observed at DuckDB v1.5.5 at commit 8efcde98: the surrogate prepare refuses
         // this shape (`Cannot mix values of type VARCHAR and BIGINT in BETWEEN clause`) before
         // the type walk is reached, where the form's table predicted a `TypeNotAdmitted` of
         // `BETWEEN` and `text_with_non_text`.
