@@ -1,6 +1,6 @@
 # spatial-evidence-recorder (Evidence Recorder v0)
 
-The second Spatial IDE mod: an observe-only plugin for sessions in this repository. It writes one line for each approved test command and one for each subagent turn. It never refuses, rewrites or answers a call, makes no model call and no network request, and writes nothing inside the repository. Every hook calls the next link once, with the event it received, and returns that call's own value. The form is `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md`, and it governs this folder.
+The second Spatial IDE mod: an observe-only plugin for sessions in this repository. It writes one line for each approved test command and, by design, one for each subagent turn; that subagent behaviour is unclaimed as live behaviour before its E-row E3. It never refuses, rewrites or answers a call, makes no model call and no network request, and writes nothing inside the repository. Every hook calls the next link once, with the event it received, and returns that call's own value. The form is `tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md`, and it governs this folder.
 
 Built and tested against Claude Code 2.1.289 on Windows. The reads of the build's type declarations behind the hooks were made at 2.1.288 and are claims about that build only. Nothing here is claimed for another build, for macOS or for Linux.
 
@@ -34,7 +34,7 @@ The log root is derived from git's common directory: the main working tree's par
 
 ## Pruning, by hand
 
-The mod never deletes. At the weekly window, the custodian prunes the old day folders by hand.
+The mod never deletes. At the weekly window, the custodian prunes by hand the day folders older than 30 days.
 
 ## What it does not claim
 
@@ -42,10 +42,12 @@ The mod never deletes. At the weekly window, the custodian prunes the old day fo
 - A numeric exit status. The record carries the tool's error flag, and whether a non-zero exit sets it is unproven before the live row E2.
 - That the tree identified is the tree the command ran in, beyond `tree_basis`: MSYS spellings, a shell directory kept from an earlier `cd`, and a subagent's own worktree with no leading `cd` are not covered.
 - What the identity misses: untracked file content, ignored files, a change made and restored inside the run, and metadata.
-- Coverage. Not recorded: the PowerShell tool, wrappers, scripts, loops, background calls, CI, cloud sessions, commands a script launches inside, and this mod's own `claude plugin test` and `validate` runs.
+- Coverage. Not recorded: the PowerShell tool, wrappers, scripts, loops, background calls, CI, cloud sessions, commands a script launches inside, and this mod's own `claude plugin test` and `validate` runs. Every form in the form's §2.2 not-approved table is also not recorded: `cargo test --no-run` and `--list`, `verify-mutation.mjs`, builds and checks, wrappers, background calls, unbalanced quotes and the PowerShell tool.
+- Live behaviour before its E-row: the chain order with Guardian (E1), subagent usage (E3), and the listing of an agent at its turn end (E3).
 - That no record is lost, and any latency figure before the live row E5.
 - Any build other than 2.1.289, and macOS and Linux.
 - That an installed copy is isolated from later changes to this folder in the main checkout.
+- That `claude plugin test` or `validate` loads the mod into a session.
 
 ## Install (the human's alone)
 
@@ -59,6 +61,12 @@ Installing a mod is a security-posture change. It needs the human's typed approv
 ## Turning it off
 
 `claude plugin disable spatial-evidence-recorder --scope user`, or disable it in `/plugin`.
+
+`disableAllHooks` is not the way to turn it off. It also stops the repository's settings hooks, which are not this mod's.
+
+## Acceptance and stop
+
+The acceptance conditions are the brief's: `state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:55-59 @ 884fc727 sha256:d3c294b2624a53bd2b4042cf8ebe609e63161f657ebf0113ef762cf6c00a6225`. The stop conditions are the brief's: `state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md:61-64 @ 884fc727 sha256:648fffdd48a3f672d0938ba1bb2b7e581cb0f2bcee47c0a9aefefd823e238714`.
 
 ## Uninstall
 
