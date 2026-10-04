@@ -1,47 +1,9 @@
 {
-  "generated_at": "2026-10-04T14:24:08.783Z",
-  "plan_hash": "1afe4df1350ef7cb1acf07239c848699eeca73cc80a7ff64310ff9e95ed98b60",
+  "generated_at": "2026-10-04T14:44:16.291Z",
+  "plan_hash": "95e560c9f150b33f9bf07bf3baa14179bae8741de93c9ba4c4406f6e10db02ee",
   "priorities_approved": true,
-  "next": {
-    "id": "watch-grandparent-spawn-signal",
-    "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
-    "lane": "kernel-protocol",
-    "phase": "prototype",
-    "status": "ready",
-    "order": 11,
-    "budget_minutes": 45,
-    "needs_human": {
-      "kind": "none",
-      "minutes": 0
-    },
-    "evidence": null,
-    "dates": {
-      "opened": "2026-09-27",
-      "done": null
-    },
-    "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes."
-  },
-  "ready": [
-    {
-      "id": "watch-grandparent-spawn-signal",
-      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 11,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes."
-    }
-  ],
+  "next": null,
+  "ready": [],
   "waiting_on_human": {
     "total_minutes": 20,
     "by_kind": {
@@ -316,6 +278,28 @@
     }
   ],
   "in_progress": [
+    {
+      "id": "watch-grandparent-spawn-signal",
+      "title": "A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 11,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/watch-grandparent-spawn-signal"
+      },
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Declared out of kernel-generation-close-races by its preregistration (section 0 item 5): it concerns open_dataset's arming, not a close race. Source: state/consults/2026-09-26-source-watcher-gate2-reviewer.md, Suggestions, S1. Placed by question round 31, item 1 (RULED 2026-09-30): position 11 of 16 in the human's order, order 11 in its lane. It depends on type-walk-null-literal-arithmetic, position 10, so that the order holds across lanes.",
+      "evidence_label": "branch `cut/watch-grandparent-spawn-signal`"
+    },
     {
       "id": "evidence-recorder-v0",
       "title": "Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03)",

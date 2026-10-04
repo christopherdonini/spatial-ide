@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1afe4df1350ef7cb1acf07239c848699eeca73cc80a7ff64310ff9e95ed98b60`) at `2026-10-04T14:24:08.783Z`.
+Generated from `PLAN.yaml` (sha256 `95e560c9f150b33f9bf07bf3baa14179bae8741de93c9ba4c4406f6e10db02ee`) at `2026-10-04T14:44:16.291Z`.
 
 ## 1. Next
 
-- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) (lane `kernel-protocol`, order 11, budget 45 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -32,6 +32,7 @@ Generated from `PLAN.yaml` (sha256 `1afe4df1350ef7cb1acf07239c848699eeca73cc80a7
 
 ## 5. In progress
 
+- **watch-grandparent-spawn-signal** — A grandparent spawn failure leaves a signal the watcher's ChecksOnly arm ignores (watcher gate-2 reviewer S1) — evidence: branch `cut/watch-grandparent-spawn-signal`
 - **evidence-recorder-v0** — Evidence Recorder v0 -- the second Spatial IDE mod: an observe-only plugin recording approved test runs (agent, worktree, HEAD, dirty-tree identity before and after, command, exit, output hashes) and subagent usage to a local gitignored log; built and gated after guardian-v0; installing it waits for the human's typed approval (Fable's brief, 2026-10-03) — evidence: branch `cut/evidence-recorder-v0`
 
 ## 6. Proposed / unscheduled

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T14:24:09.011Z",
-  "plan_hash": "1afe4df1350ef7cb1acf07239c848699eeca73cc80a7ff64310ff9e95ed98b60",
+  "generated_at": "2026-10-04T14:44:16.576Z",
+  "plan_hash": "95e560c9f150b33f9bf07bf3baa14179bae8741de93c9ba4c4406f6e10db02ee",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4626,7 +4626,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 11,
       "depends_on": [
         "type-walk-null-literal-arithmetic"
@@ -4635,8 +4635,11 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
-      "evidence": null,
+      "gate": "kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md",
+      "merge": "merge-commit",
+      "evidence": {
+        "branch": "cut/watch-grandparent-spawn-signal"
+      },
       "budget_minutes": 45,
       "generation": 1,
       "felt_verdict": false,

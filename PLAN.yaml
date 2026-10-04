@@ -2834,12 +2834,13 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 11
     depends_on: [type-walk-null-literal-arithmetic]
     needs_human: {kind: none, minutes: 0}
-    gate: none
-    evidence: null
+    gate: kernel/WATCH-GRANDPARENT-SPAWN-SIGNAL-PREREGISTRATION.md
+    merge: merge-commit
+    evidence: {branch: cut/watch-grandparent-spawn-signal}
     budget_minutes: 45
     generation: 1
     felt_verdict: false
