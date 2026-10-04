@@ -272,6 +272,7 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **The proposal, two parts, each by its own amendment or piece:**
   1. A README limit line naming the shape and the workaround.
   2. Later, whether G1 should change, for example by reading heredoc bodies as text.
+  3. Added 2026-10-04, after E5 passed at 2.1.289 (Guardian's Amendment 9): narrow README line 44 (R11) to line 73's condition. The write audit was primary until E5 passed, and is the backstop now. This is the gate-2 architect's S2-1, and the install sight note's item 2. Drop the line's stray `R11.` label in the same edit. Part 1 and this part are both README edits, so one small piece can carry them.
 - Nothing changes in Guardian before the human's answer.
 
 ## H. The 2026-10-04 prompt audit: the triage, and classes (a) to (c)

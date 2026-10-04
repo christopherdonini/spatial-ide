@@ -839,3 +839,30 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
     - record text is written with the Write tool (README R3).
 
 **Superseded index.** Amendment 7, item 9 (install not done): the install is done, by this amendment's opening.
+
+### Amendment 9 — the E-rows at 2.1.289, the build of record (class 1)
+
+*Class 1, post-result rows, recorded by the custodian on main as question round 50, item 2 directs (its RULED block in `DECISIONS-PENDING.md`): after a session restart on 2.1.289, with no agent running, E1 to E5 re-run. Times are the session transcripts', 2026-10-04 UTC. Every reason text below is byte-copied by script from the tool result. Folders outside the repository are named in words, with no path (round 29's exposure rule).*
+
+- **The build: I2 does not fire.**
+  - The session's process was created at 14:08:34Z, after the binary at its install path was last modified (08:53:06Z, as Amendment 8 records). `claude --version` prints `2.1.289 (Claude Code)`, and the session's environment names its agent `claude-code_2-1-289_agent`.
+  - `claude plugin list`, at 14:10:31Z, shows the mod as Amendment 8's E0 does: enabled, user scope, read from the repository folder. `tools/mods/spatial-guardian/` and `tools/mods/.claude-plugin/` are unchanged on main since bcf3b5b4.
+- **E1 to E3,** at 14:10:38Z to 14:10:41Z.
+  - Each file was Read first, and each Edit's `old_string` occurs nowhere in its file.
+  - The results:
+    - E1, `docs/01_Principles.md`: `spatial-guardian G2: refused, because docs/01 is never edited.`
+    - E2, `state/directives/2026-10-04-guardian-install-approval.md`: `spatial-guardian G4: refused, because an existing directive is never rewritten.`
+    - E3, `docs/adr/ADR-021-row-filter-on-viewport-query.md` (Accepted): `spatial-guardian G3: refused, because an accepted ADR or a filed preregistration changes only by appending.`
+  - As predicted: Guardian's reason each time, never the Edit tool's not-found error.
+  - Each file's sha256 is equal before (14:10:31Z) and after (14:10:50Z), and equal to Amendment 8's three values, in its order.
+- **E4,** at 14:10:56Z. A main-loop Write creating a new file in the session scratchpad passed: the tool reported the file created. As predicted.
+- **E5,** at 14:11:31Z.
+  - The run: a labelled probe lead-data run. Its brief's first line declared one REPORT PATH in the session scratchpad, and it was asked to Write once to a second scratch path and to make no other call.
+  - Its one Write was refused: `spatial-guardian G6: refused, because this run writes only its brief's REPORT PATH.` This is byte-copied from the subagent's own transcript (Write 1, the hand-back 1), and the second path was not created (the scratchpad's listing at 14:11:46Z).
+  - The write audit on the run reads VOID (one Write, to the second path). That is the probe's expected VOID.
+  - C3: the custodian checkout's porcelain is unchanged before (14:11:12Z) and after (14:11:46Z).
+  - As predicted. A G6 refusal is reached only with `e.agentId` set and the run's row found with type lead-data (§2.7's first two bullets), so the live subagent's call carried its id, and §2.7's class 5 removal does not apply.
+  - **§2.7's condition is met at the build of record.** By §2.7's last bullet and README line 73 (Amendment 7, item 3), the write audit is from here the backstop of report-only runs' writes, not their primary check. README line 44 (Amendment 7, item 3) still calls the write audit primary without that condition (the gate-2 architect's S2-1); it is narrowed by its own piece, not by this amendment.
+- **E6:** not fired. It is recorded when it fires.
+
+**Superseded index.** Amendment 8, the build's last bullet (no row claimed for 2.1.289), and Amendment 8's E5, its last bullet (§2.7's condition read as not yet met): superseded by this amendment's rows at 2.1.289. Amendment 8's rows stand as 2.1.288-engine results.
