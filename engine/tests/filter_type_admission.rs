@@ -183,8 +183,9 @@ fn tna_named(
 
 /// Section 3's corpus, as amended (section 10 Amendments 1 and 3). One row per predicate; a row
 /// with several predicates in section 3's own table becomes several entries here, one per
-/// predicate, all carrying that row's own label for the report. Rows C39 to C47 are
-/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3.
+/// predicate, all carrying that row's own label for the report. Rows C39 to C51 are
+/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3 and its section 10
+/// Amendments 1 and 2.
 fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
     use Predicted::Admitted;
     use TypeRefusalReason::*;
@@ -388,14 +389,83 @@ fn corpus() -> Vec<(&'static str, &'static str, Predicted)> {
         ),
         ("C47", "-(NULL - 0.5) > 0", Admitted),
         ("C47", "NULL + (NULL - 0.5) > 0", Admitted),
+        // section 10 Amendment 1, rows C48 to C50 (section 2.1 as replaced: NULL beside NULL is a
+        // BIGINT expression, as P-0 observed at DuckDB v1.5.5).
+        (
+            "C48",
+            "zone = NULL + NULL",
+            tna_named("=", TextWithNonText, &["VARCHAR", "BIGINT expression"]),
+        ),
+        (
+            "C48",
+            "flag = NULL + NULL",
+            tna_named("=", BooleanConversion, &["BOOLEAN", "BIGINT expression"]),
+        ),
+        (
+            "C48",
+            "zone = NULL - NULL",
+            tna_named("=", TextWithNonText, &["VARCHAR", "BIGINT expression"]),
+        ),
+        (
+            "C48",
+            "zone IS DISTINCT FROM NULL + NULL",
+            tna_named(
+                "IS DISTINCT FROM",
+                TextWithNonText,
+                &["VARCHAR", "BIGINT expression"],
+            ),
+        ),
+        // H-4's class-2 result, observed at the run of this commit: the surrogate prepare refuses
+        // this shape (`Cannot mix values of type VARCHAR and BIGINT in BETWEEN clause`) before
+        // the type walk is reached, where the form's table predicted a `TypeNotAdmitted` of
+        // `BETWEEN` and `text_with_non_text`.
+        (
+            "C48",
+            "zone BETWEEN NULL * NULL AND NULL",
+            Predicted::Code("skp.filter_rejected_by_binder"),
+        ),
+        (
+            "C49",
+            "flag AND NULL + NULL",
+            tna_named("AND", BooleanConversion, &["BIGINT expression"]),
+        ),
+        ("C50", "i64 BETWEEN NULL + NULL AND 1", Admitted),
+        ("C50", "u8 = NULL * NULL", Admitted),
+        // section 10 Amendment 2, row C51 (section 2.9: unary `-` over a NULL literal is a BIGINT
+        // expression, question round 49, item 1).
+        (
+            "C51",
+            "zone = -NULL",
+            tna_named("=", TextWithNonText, &["VARCHAR", "BIGINT expression"]),
+        ),
+        (
+            "C51",
+            "flag = -NULL",
+            tna_named("=", BooleanConversion, &["BOOLEAN", "BIGINT expression"]),
+        ),
+        (
+            "C51",
+            "zone IS DISTINCT FROM -NULL",
+            tna_named(
+                "IS DISTINCT FROM",
+                TextWithNonText,
+                &["VARCHAR", "BIGINT expression"],
+            ),
+        ),
+        (
+            "C51",
+            "flag AND -NULL",
+            tna_named("AND", BooleanConversion, &["BIGINT expression"]),
+        ),
     ]
 }
 
 /// B-T3 (section 4, as amended by section 10 Amendment 4). Section 3's table, cell by cell. C25
 /// also asserts `RejectedByBinder` with Display's prefix unchanged, and C27 asserts that
 /// `construct` names CAST. Mutation: `MAX_INTEGER_LITERAL_DIGITS` = 21. It fails by name on C14.
-/// Rows C39 to C47 are `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3;
-/// its section 4 names mutations M1 to M5 for them.
+/// Rows C39 to C51 are `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md`'s section 3
+/// and its section 10 Amendments 1 and 2; its section 4 and those amendments name mutations M1 to
+/// M7 for them.
 #[test]
 fn each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types() {
     let fx = fixture();
@@ -980,8 +1050,10 @@ const BOUNDARY_MAGNITUDES: &[&str] = &[
 /// `BETWEEN` lists with `0.5` and with a scale-18 literal -- 8 columns x 8 literals x 5 forms = 320
 /// cases. It also carries the two Amendment 4 hypothesis pins whose own discriminator is named
 /// "B-T1 (i)": C32's second case (`-NULL > 0`, no column at all) and C37 (an integer `BETWEEN` a
-/// `UBIGINT` column bound and a decimal literal) -- 323 cases -- and the nine admitted pins of
-/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3 -- 332 cases in all.
+/// `UBIGINT` column bound and a decimal literal) -- 323 cases -- the nine admitted pins of
+/// `engine/TYPE-WALK-NULL-LITERAL-ARITHMETIC-PREREGISTRATION.md` section 3, its section 10
+/// Amendment 1's nine pins (seven refused, C50's two admitted) and Amendment 2's five (all
+/// refused) -- 346 cases in all.
 fn boundary_literal_cases() -> Vec<Case> {
     let int_cols: Vec<&str> = COLS
         .iter()
@@ -1060,6 +1132,39 @@ fn boundary_literal_cases() -> Vec<Case> {
             "NULL + (NULL - 0.5) > 0",
             "+",
         ),
+        // section 10 Amendment 1: C48 (five refused), C49 (refused), C50 (two admitted) and
+        // `f32 > NULL * NULL` (refused; no B-T3 row).
+        ("C48a: zone = NULL + NULL", "zone = NULL + NULL", "+"),
+        ("C48b: flag = NULL + NULL", "flag = NULL + NULL", "+"),
+        ("C48c: zone = NULL - NULL", "zone = NULL - NULL", "-"),
+        (
+            "C48d: zone IS DISTINCT FROM NULL + NULL",
+            "zone IS DISTINCT FROM NULL + NULL",
+            "+",
+        ),
+        (
+            "C48e: zone BETWEEN NULL * NULL AND NULL",
+            "zone BETWEEN NULL * NULL AND NULL",
+            "*",
+        ),
+        ("C49: flag AND NULL + NULL", "flag AND NULL + NULL", "+"),
+        (
+            "C50a: i64 BETWEEN NULL + NULL AND 1",
+            "i64 BETWEEN NULL + NULL AND 1",
+            "+",
+        ),
+        ("C50b: u8 = NULL * NULL", "u8 = NULL * NULL", "*"),
+        ("A1 pin: f32 > NULL * NULL", "f32 > NULL * NULL", "*"),
+        // section 10 Amendment 2: C51 (four refused) and `f32 > -NULL` (refused; no B-T3 row).
+        ("C51a: zone = -NULL", "zone = -NULL", "-"),
+        ("C51b: flag = -NULL", "flag = -NULL", "-"),
+        (
+            "C51c: zone IS DISTINCT FROM -NULL",
+            "zone IS DISTINCT FROM -NULL",
+            "-",
+        ),
+        ("C51d: flag AND -NULL", "flag AND -NULL", "-"),
+        ("A2 pin: f32 > -NULL", "f32 > -NULL", "-"),
     ] {
         cases.push(Case {
             label: label.to_string(),
@@ -1122,7 +1227,7 @@ fn between_triple_cases() -> Vec<Case> {
 /// B-T1 (section 4, as amended by section 10 Amendment 4). The enumeration is five parts, each
 /// counted and asserted separately: the probe set (7,620); discriminators.txt's N-ARY lists (18);
 /// the boundary literals with their negatives, bare and in mixed lists, plus the C32/C37 pins
-/// and the NULL-literal-arithmetic pins (332); the C23-shaped rows (16); and `BETWEEN` over every
+/// and the NULL-literal-arithmetic pins (346); the C23-shaped rows (16); and `BETWEEN` over every
 /// ordered triple of FX-1's twelve columns (1,728). FX-1 carries inf, -inf, nan and the maximum for both REAL and DOUBLE by
 /// construction (`FILTER_WITNESS_F32`/`FILTER_WITNESS_F64`). Amendment 4 moves check (ii) (the
 /// walk's arithmetic result type against the plan's `return_type`) to B-T1b
@@ -1162,7 +1267,7 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
     let part3 = boundary_literal_cases();
     assert_eq!(
         part3.len(),
-        332,
+        346,
         "B-T1 enumeration part 3: boundary literals"
     );
     let part4 = c23_shaped_cases();
@@ -1181,7 +1286,7 @@ fn the_type_walk_agrees_with_the_binder_over_the_p0_matrix() {
         .chain(part4)
         .chain(part5)
         .collect();
-    assert_eq!(cases.len(), 9_714, "B-T1's five parts together");
+    assert_eq!(cases.len(), 9_728, "B-T1's five parts together");
 
     let mut admitted = 0usize;
     let mut refused = 0usize;
