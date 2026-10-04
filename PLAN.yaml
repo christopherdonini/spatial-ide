@@ -3842,7 +3842,7 @@ nodes:
     merge: merge-commit
     evidence: {branch: cut/evidence-recorder-v0}
     budget_minutes: 240
-    generation: 1
+    generation: 2
     felt_verdict: false
     entries: []
     summary: "Placed by the 2026-10-03 mods-roadmap ruling (state/directives/2026-10-03-evidence-recorder-ruling.md, item 1 and step 2; RULED 2026-10-03): governance lane, after guardian-v0, which it depends on. The brief is state/directives/MODS-EVIDENCE-RECORDER-V0-2026-10-03.md. It observes only: it never refuses, rewrites or answers a tool call, adds nothing the model reads, and returns every result exactly as next(e) produced it. P0 first (the brief's section 3: the Bash result fields, turn.complete usage and agentId, the approved-command list as this repository invokes it, the dirty-tree identity's cost, the local log path, the chain order with Guardian, and validate's hooks and calls lines), recorded before any code. Gates: the reviewer and the architect, with the validate output in the PR body. Installing it is a security-posture change and a red line: the human's typed approval after its own gates (item 2), and the human installs it. Whether recorder lines may be cited as evidence is an item on the 2026-10-09 window (item 3). Its budget is the custodian's estimate, equal to guardian-v0's."
