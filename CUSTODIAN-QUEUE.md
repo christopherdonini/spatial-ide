@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4af7de8fa7b4a6a3f457cab0c8f671121e87a3d28c92d651919b5a98a03de86d`) at `2026-10-04T14:54:22.382Z`.
+Generated from `PLAN.yaml` (sha256 `09945357ec9e6ca1a065d81ab778dfa32d5ed66241c76935a4f1867ee36b2477`) at `2026-10-04T16:51:55.861Z`.
 
 ## 1. Next
 
@@ -93,6 +93,8 @@ Generated from `PLAN.yaml` (sha256 `4af7de8fa7b4a6a3f457cab0c8f671121e87a3d28c92
 - **sitting-part-r-row-r1** — Walkthrough Part R, row R1 -- close the window during a publish, relaunch at once, and check the two processes do not conflict (node 8; the exit-drain ruling's condition (c)) (phase `prototype`) — never queued until placed
 - **profile-path-scan-stdin-mode** — The profile-path scanner gains a stdin mode, so a mod can run the scanner's own matcher on content not yet on disk (guardian-v0's G5, left out of v0 by round 43, item 3) (phase `prototype`) — never queued until placed
 - **type-walk-rule2-residual-reasons** — Type walk: a rule-2 result over a column or an integer literal, refused by rule 7's bit-width bound, keeps the residual reason although its value is a constant NULL (for example f32 > NULL + 100000) (phase `prototype`) — never queued until placed
+- **pre-admission-change-detail-braces** — The pre-admission Change refusal's detail is a P6 placeholder wrapped in literal braces, which reach the operator's message (phase `prototype`) — never queued until placed
+- **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

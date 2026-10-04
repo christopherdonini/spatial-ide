@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T14:54:22.382Z",
-  "plan_hash": "4af7de8fa7b4a6a3f457cab0c8f671121e87a3d28c92d651919b5a98a03de86d",
+  "generated_at": "2026-10-04T16:51:55.861Z",
+  "plan_hash": "09945357ec9e6ca1a065d81ab778dfa32d5ed66241c76935a4f1867ee36b2477",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -1349,6 +1349,44 @@
         "done": null
       },
       "summary": "Proposed by node 10's architect draft (state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md, finding F7 and question Q-3): question round 43, item 1 admits only the decimal-literal shape, so comparisons of a rule-2 result over a column or an integer literal that rule 7's bit-width bound refuses keep the residual conversion_rounds sentence, which is false of a constant NULL. Never queued until the human places it."
+    },
+    {
+      "id": "pre-admission-change-detail-braces",
+      "title": "The pre-admission Change refusal's detail is a P6 placeholder wrapped in literal braces, which reach the operator's message",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "Proposed by PR 173 gate-1 reviewer, N-3 (state/consults/gates/2026-10-04-watch-grandparent-spawn-signal-gate1-reviewer.md): kernel/src/skp.rs engine_error_of_pre_admission_signal gives the Change arm a detail string that opens and closes with brace characters around its P6 placeholder text, and the braces reach the message as literal characters. Pre-existing and identical at the base; PR 173's section 8 item 2 kept every string out of that piece. The final wording is the human's (a P6 placeholder), so the node carries a ruling. Never queued until the human places it."
+    },
+    {
+      "id": "verify-offline-note-test-flake",
+      "title": "scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the test named runVerify offline note (scripts/plan/verify.test.mjs, its assertion that no failure string contains pr) failed once; the re-run of the failed job passed, the push run at the same head passed, and it passed locally three times on main and twice on the merged tree. The assertion has no message, so the failing string is not in the log. A first step is to print the failures in the assertion message, then to read which run-dependent check produced a string containing pr. Never queued until the human places it."
     }
   ],
   "unscheduled": [
