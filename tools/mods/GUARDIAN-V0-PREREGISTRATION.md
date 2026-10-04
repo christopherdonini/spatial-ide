@@ -764,3 +764,78 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
 7. **Tools, each with its commit:** verify-cites 522e448d, verify-quotes f9444a4d, verify-test-claims e9735d47, verify.mjs 26072022. verify-mutation is not relied on.
 8. **The validate outputs,** text and `--json`, are in the PR body (worker report 3); the reviewer's were taken at the head.
 9. **Install:** not done. It waits for the human's typed approval, naming the E-rows (§9 Operator), and the human installs it.
+
+### Amendment 8 — the E-rows, live after install (class 1)
+
+*Class 1, post-result rows, recorded by the custodian on main as §4's E-rows direct, after the human's typed install approval (`state/directives/2026-10-04-guardian-install-approval.md:6-7 @ 8503d78e sha256:a47af87f9e3a1c1d57c8d94cab6949f95f24c21be922472814f67e9caa176f61`). The approval names E0 to E6 and no live G1 probe. The human installed the mod at user scope (the install record's time, 11:28:29Z), reloaded plugins in the custodian's session (the reload's output at 11:31:18Z), and at 11:31:54Z reported in a typed message that `/plugin` shows it active. Times are the session transcript's, 2026-10-04 UTC. Every reason text below is byte-copied by script from the tool result. Folders outside the repository are named in words, with no path (round 29's exposure rule).*
+
+- **The build: I2 fires.**
+  - `claude --version` printed `2.1.289 (Claude Code)` at 11:35:07Z.
+  - The custodian's session runs in a process started at 2026-10-03T17:41:52Z. The binary at its install path was last modified at 2026-10-04T08:53:06Z. So the session runs the build it loaded at start, and the session's bundled-skill folder is named 2.1.288.
+  - E1 to E5 below therefore ran under the 2.1.288 engine, not under 2.1.289, the build of record (Amendment 4, Part C).
+  - I2's re-run was at 2.1.289, at 11:38Z, on main's unchanged plugin folder:
+    - `claude plugin test tools/mods/spatial-guardian`: 39 pass, 0 fail;
+    - `claude plugin validate`: exit 0 on `tools/mods/spatial-guardian`, with one warning (no version specified), and exit 0 on `tools/mods`.
+  - Its two lines, byte-copied:
+
+```text
+  ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+  ❯ ./register.js calls: $.agent.list (via g6Refusal), $.fs.read (via g3Refuses), $.fs.stat (via place), $.process.run, $.session.messages (via g6Refusal), $.session.usage (via contextFill)
+```
+
+  - No row below is claimed for 2.1.289. Running them again in a 2.1.289 session would settle that.
+
+- **E0.** `claude plugin list`, at 11:35Z, prints for the mod (byte-copied):
+
+```text
+  ❯ spatial-guardian@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-guardian
+    Scope: user
+    Status: ✔ enabled
+```
+
+  - **Copy or reference:**
+    - the user's marketplace record names a directory source at the repository's `tools/mods`;
+    - the install also made a copy in the user's plugin cache. Its 7 files are byte-identical to `tools/mods/spatial-guardian/` at install, compared file by file by sha256;
+    - the list's Read from line names the repository folder.
+  - These records do not settle which bytes the engine runs. Until that is settled, the installed mod is read as following the repository folder: a change to `tools/mods/spatial-guardian/` in the main checkout may change the live guard at the next reload. §1's may-not-claim bullet on isolation stands.
+
+- **E1 to E3,** at 11:36:45Z to 11:36:47Z.
+  - Each file was Read first, so that the Edit tool's read-first check could not answer before Guardian. Each Edit's `old_string` occurs nowhere in its file.
+  - The results:
+    - E1, `docs/01_Principles.md`: `spatial-guardian G2: refused, because docs/01 is never edited.`
+    - E2, `state/directives/2026-10-04-guardian-install-approval.md`: `spatial-guardian G4: refused, because an existing directive is never rewritten.`
+    - E3, `docs/adr/ADR-021-row-filter-on-viewport-query.md` (Accepted): `spatial-guardian G3: refused, because an accepted ADR or a filed preregistration changes only by appending.`
+  - As predicted: Guardian's reason each time, never the Edit tool's not-found error.
+  - Each file's sha256 is equal before (11:36:36Z) and after (11:36:53Z), in the order above:
+    - d42499dcf9c0941b8b1b2198817b6c8f3ead514023032066634be6b230fb14b8
+    - a012063603b347e365822ea2bdb633dfd0963f57b8c2bc9dec717da13fa53b3a
+    - 79a03c483c4bc9934887e04ac6f10e1e46515bfc21afc3d77c33ce93730316ae
+
+- **E4,** at 11:37:06Z. A main-loop Write creating a new file in the session scratchpad passed: the tool reported the file created. As predicted, so placement recognised the live missing-path rejection (Amendment 3; the README's new-file limit).
+
+- **E5,** at 11:37:43Z.
+  - The run: a labelled probe lead-data run. Its brief's first line declared a REPORT PATH in the session scratchpad, and it was asked to Write once to a second scratch path.
+  - Its one Write was refused: `spatial-guardian G6: refused, because this run writes only its brief's REPORT PATH.` This is byte-copied from the subagent's own transcript, and the second path was not created.
+  - The write audit on the run reads VOID (one Write, to the second path). That is the probe's expected VOID.
+  - C3: the custodian checkout's porcelain is unchanged before (11:37:20Z) and after (11:38:24Z).
+  - As predicted.
+  - Under I2 this is a 2.1.288-engine result. The custodian reads §2.7's condition (until E5 passes) as not yet met for the build of record, so the write audit stays primary. That reading is for the human.
+
+- **E6:** not fired. The session's context has stayed below N1's 80% threshold since install. It is recorded when it fires.
+
+- **Two unplanned live G1 refusals, not probes.**
+  - What happened: at 11:33:53Z and at 11:42:00Z, two of the custodian's own Bash calls were refused with `spatial-guardian G1: refused, because this git push force-pushes or deletes a remote ref.`
+    - The first made a commit whose heredoc message held an apostrophe, then a plain `git push -q origin main` with no forcing argument.
+    - The second wrote ledger text through heredocs that held apostrophes and, later, the word push; it ran no push at all.
+    - Nothing in either call ran: the porcelain and HEAD were unchanged.
+  - The cause, read from `register.js`:
+    - the splitter's quote state opened at an apostrophe and ran to the end of the command;
+    - so the segment holding `push` was unbalanced, and was refused under §2.2's unbalanced-quote rule (F7).
+  - Both are over-refusals, and fail closed. The README's over-refusal list (line 31) names text that is never run when it holds a force-push spelling. It does not name this shape: an apostrophe earlier in a command, the word push later, with no forcing spelling.
+  - Afterwards:
+    - the commit and the push ran as two calls, and the plain push passed (163ce8c1);
+    - record text is written with the Write tool (README R3).
+
+**Superseded index.** Amendment 7, item 9 (install not done): the install is done, by this amendment's opening.
