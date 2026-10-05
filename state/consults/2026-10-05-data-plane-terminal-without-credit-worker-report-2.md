@@ -1,4 +1,4 @@
-*Custodian's filing note (2026-10-05): the worker's report 2 for `data-plane-terminal-without-credit`, correction round 1 of PR #176 gate 1 (run 11:03Z to 11:06Z; 33,668 subagent tokens, 16 tool uses), written to the custodian's scratchpad and copied here byte-identical below the rule. Its sha256 as written, from this file's line 5 to the end, is abb80b6e87524980f40261689d4ac6c50649ed0a63fa84dbf9d04d88692c8953. The branch stands at 1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1, clean. Profile paths redacted at filing: none.
+*Custodian's filing note (2026-10-05): the worker's report 2 for `data-plane-terminal-without-credit`, correction round 1 of PR #176 gate 1 (run 11:05:13Z to 11:07:47Z; 33,668 subagent tokens, 16 tool uses), written to the custodian's scratchpad and copied here byte-identical below the rule. Its sha256 as written, from this file's line 5 to the end, is abb80b6e87524980f40261689d4ac6c50649ed0a63fa84dbf9d04d88692c8953. The branch stands at 1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1, clean. Profile paths redacted at filing: none.
 
 ---
 
