@@ -553,3 +553,17 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 - **§7:** row (e) adds no code. The estimate stays at about 841 lines, inside the ceiling of 1000 lines and 6 files.
 
 **Superseded index.** A2-1's OPEN-4 hold, and its I14 branch, are superseded by this row.
+
+### Amendment 4 — the build's class-2 results: the reading r1, the test method for clock calls, and `validate` on `tools/mods`
+
+*Written after the build's outcomes were seen, by the custodian. The evidence is worker report 1, `state/consults/2026-10-05-evidence-recorder-v0-1-worker-report-1.md`, cited by section. The branch commits are named by id until the merge (round 25, item 2 (d)). Nothing below is a quotation.*
+
+- **The reading r1 (Amendment 2, A2-1; Amendment 3):** typed at 2.1.288, aborting the signal rejects a pending `$.clock.sleep` at once (the report's §2). So the one calls-line entry is `$.clock.sleep (via beforeCeiling)`, and `$.clock.after` is not used. I13 did not fire.
+- **D2, class 2: the method for counting clock calls in tests.** Observed at 2.1.289 (the report's §2, r3): a test cannot register its own `clock.sleep` hook beside an armed mock clock; the module fails to load. So:
+  - T22 and T28 count and refuse `$.clock.sleep` on an unarmed mock, with their own hook;
+  - T24 and T26 advance the armed mock clock and count no clock calls.
+  - A2-1's fallback, checking by reading, is not needed: T22 counts zero clock calls for every F19 call. No claim changes.
+- **D3, class 2: `validate` on `tools/mods` prints no hooks or calls lines.** At 2.1.289 it reports only the marketplace manifest and its warnings, before this change (at c2d62c37) and after it (the report's §5). So §5's `validate` prediction, as A2-1 replaces it, cannot be compared on that path. On the plugin folder it holds: the hooks line is unchanged, and the calls line gained exactly the one entry, in the predicted position.
+- **The report's other deviations** (D1, D4 to D11) are left to the gates by reference. D7 names T27, and the translation keeps the drive letter's case as typed. That is for the gates to read against round 55's typed ruling.
+
+**Superseded index.** None.
