@@ -18,7 +18,7 @@
 use std::sync::Arc;
 
 use bytes::Bytes;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, watch};
 
 use crate::transport::{BatchSource, StreamState};
 use crate::wire;
@@ -30,7 +30,8 @@ pub(crate) enum PumpItem {
     Failed(String),
 }
 
-/// Spawn the pump. Returns the receiving half; the sending half lives on the pump thread.
+/// Spawn the pump. Returns the receiving half, and a notice that reads true once the source has
+/// failed; the sending halves live on the pump thread.
 ///
 /// **Thread-spawn failure is returned, not panicked.** It is reachable under thread or handle
 /// exhaustion, on a per-connection path, and a panic here unwinds the connection's task and leaves
@@ -43,8 +44,9 @@ pub(crate) fn spawn(
     handle: tokio::runtime::Handle,
     capacity: usize,
     max_frame_bytes: usize,
-) -> std::io::Result<mpsc::Receiver<PumpItem>> {
+) -> std::io::Result<(mpsc::Receiver<PumpItem>, watch::Receiver<bool>)> {
     let (tx, rx) = mpsc::channel::<PumpItem>(capacity);
+    let (failed_tx, failed_rx) = watch::channel(false);
 
     std::thread::Builder::new()
         .name("data-plane-pump".into())
@@ -68,6 +70,7 @@ pub(crate) fn spawn(
                     None => break, // the source is finished
                     Some(Err(e)) => {
                         permit.send(PumpItem::Failed(e));
+                        failed_tx.send_replace(true);
                         break;
                     }
                     Some(Ok(meta)) => {
@@ -78,10 +81,12 @@ pub(crate) fn spawn(
                                 buf.len() - wire::FRAME_PREFIX_LEN,
                                 max_frame_bytes
                             )));
+                            failed_tx.send_replace(true);
                             break;
                         }
                         if let Err(e) = wire::patch_len(&mut buf) {
                             permit.send(PumpItem::Failed(e));
+                            failed_tx.send_replace(true);
                             break;
                         }
                         state.note_generated(buf.len(), meta.rows);
@@ -91,5 +96,5 @@ pub(crate) fn spawn(
             }
         })?;
 
-    Ok(rx)
+    Ok((rx, failed_rx))
 }

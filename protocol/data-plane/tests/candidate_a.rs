@@ -35,16 +35,29 @@ struct Synthetic {
     cancel: Arc<Flag>,
 }
 
+/// The source's stop flag and its cancel. `cancel` sets the flag, runs the registered notice (as the
+/// kernel's cancel does), then sleeps `delay_ms` before it returns (T4's fixture delay).
 #[derive(Default)]
 struct Flag {
     cancelled: AtomicBool,
     cancel_calls: AtomicU64,
+    notify: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    delay_ms: AtomicU64,
 }
 
 impl SourceCancel for Flag {
     fn cancel(&self) {
         self.cancelled.store(true, Ordering::SeqCst);
         self.cancel_calls.fetch_add(1, Ordering::SeqCst);
+        let notify = self.notify.lock().unwrap().take();
+        if let Some(notify) = notify {
+            notify();
+        }
+        std::thread::sleep(Duration::from_millis(self.delay_ms.load(Ordering::SeqCst)));
+    }
+
+    fn on_cancel(&self, notify: Box<dyn FnOnce() + Send>) {
+        *self.notify.lock().unwrap() = Some(notify);
     }
 }
 
@@ -890,6 +903,80 @@ async fn a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_g
     );
     assert_eq!(r.batches, 0, "no batch was ever licensed");
     assert_eq!(state.resident_bytes(), 0, "nothing stays resident");
+    assert_eq!(
+        state.batches_discarded(),
+        3,
+        "the three queued batches were discarded"
+    );
+    assert_eq!(state.batches_discarded(), state.batches_generated());
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// Wait for a no-credit stream to work ahead into its window and stop; returns its state and its
+/// source's cancel handle (the factory's own clone).
+async fn at_the_plateau(
+    dp: &RunningDataPlane,
+    f: &SyntheticFactory,
+) -> (Arc<spatial_data_plane::transport::StreamState>, Arc<Flag>) {
+    let plateau = wait_for_plateau(Duration::from_secs(20), 25, || {
+        dp.registry
+            .snapshot()
+            .last()
+            .map(|s| s.batches_generated())
+            .unwrap_or(0)
+    })
+    .await;
+    assert!(plateau.is_some(), "the producer never reached a plateau");
+    let state = dp.registry.snapshot().last().cloned().expect("a stream");
+    let flag = f.last.lock().unwrap().last().cloned().expect("a source");
+    (state, flag)
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first() {
+    // The source's cancel runs the owner notice at once and then keeps this adapter's own receive
+    // half inside `cancel()` for 2 s, so the owner notice is raised long before the halt signal.
+    let f = factory(10_000, 4096, 0);
+    let dp = start(f.clone()).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let (_state, flag) = at_the_plateau(&dp, &f).await;
+    flag.delay_ms.store(2000, Ordering::SeqCst);
+
+    send_cancel(&mut c).await;
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_CANCELLED, "detail was: {detail}");
+    assert_eq!(r.batches, 0);
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+#[tokio::test]
+async fn an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted(
+) {
+    // Once its stop flag is set the source returns None, with no failure: the channel closes after
+    // batches were discarded, which is never `Completed`.
+    let f = factory(10_000, 4096, 0);
+    let dp = start(f.clone()).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let (state, flag) = at_the_plateau(&dp, &f).await;
+
+    flag.cancel();
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.starts_with("[P6 placeholder]") && !detail.contains(['{', '}']),
+        "the detail carries the placeholder mark and no brace: {detail}"
+    );
+    assert_eq!(r.batches, 0);
+    assert_eq!(state.resident_bytes(), 0, "nothing stays resident");
+    assert_eq!(state.batches_discarded(), state.batches_generated());
     c.close(None).await.ok();
     dp.shutdown().await;
 }

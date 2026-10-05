@@ -30,7 +30,8 @@
 //! ## Mechanism
 //!
 //! Backpressure is explicit application credit: the consumer grants credit as fixed-layout binary
-//! control frames, and the writer only takes a batch off the pump when it holds credit.
+//! control frames, and the writer sends a batch frame only against a credit it consumes. **Credit
+//! gates batch frames only**: a terminal frame never waits for it (see `README.md`).
 //! Cancellation is observed **through this adapter's own transport** — a CANCEL control frame, a
 //! peer close, or the receive half erroring — and is immediately propagated to the source, which is
 //! what makes the producer actually stop rather than merely be told.
@@ -67,10 +68,11 @@ fn note_if_json(counter: &AtomicU64, bytes: &[u8]) {
 /// recorded the resulting cancel-blind window as a real defect (§18 P1). The measurement point is
 /// therefore independent of send progress.
 #[allow(clippy::too_many_arguments)] // one call site; grouping these into a struct would only move
-                                     // the same eight values behind a name that adds nothing
+                                     // the same nine values behind a name that adds nothing
 pub(crate) async fn drive(
     socket: WebSocket,
     mut rx: mpsc::Receiver<PumpItem>,
+    mut pump_failed: watch::Receiver<bool>,
     state: Arc<StreamState>,
     source_cancel: Arc<dyn SourceCancel>,
     checkpoints: Arc<Checkpoints>,
@@ -82,6 +84,14 @@ pub(crate) async fn drive(
     let credit = Arc::new(Semaphore::new(0));
     let (halt_tx, mut halt_rx) = watch::channel::<Option<Terminal>>(None);
     let mut batches_sent: u64 = 0;
+
+    // The owner's cancel (SKP cancel, close_dataset, session end) reaches the source without passing
+    // through this adapter's transport. The source runs this notice once its cancel has taken
+    // effect; it only raises a flag, so it is safe under whatever lock the cancelling thread holds.
+    let (owner_tx, mut owner_cancelled) = watch::channel(false);
+    source_cancel.on_cancel(Box::new(move || {
+        owner_tx.send_replace(true);
+    }));
 
     // Announce the stream's identity in band, as opaque UTF-8. Not a URL segment, not a
     // subprotocol string, not a request id — those would make the identifier's representation
@@ -184,36 +194,9 @@ pub(crate) async fn drive(
             break t;
         }
 
-        // Only pull a batch when credit is actually held — and **consume** the credit rather than
-        // returning it.
-        //
-        // Two defects were fixed here, both inherited from the harness this was ported from:
-        //
-        // 1. **The permit must be forgotten, or credit is not credit.** `Semaphore::acquire` returns
-        //    a permit that returns itself to the semaphore when dropped, so acquiring without
-        //    `forget()` waits for a credit to *exist* and then hands it straight back. One grant
-        //    would license an unbounded number of batches, and the demand signal the consumer
-        //    thinks it is giving would do nothing. Bounded memory would then rest entirely on the
-        //    pump channel's capacity — which does hold — but "explicit application credit" would be
-        //    decoration.
-        // 2. **The wait must be interruptible by the halt signal.** With the receive half now
-        //    running past a CANCEL (so it can serve as the peer-drain), nothing else closes the
-        //    semaphore, and a writer parked here would never send its terminal frame. That deadlock
-        //    is what `h2_a_cancel_before_the_first_batch_still_stops_the_query` caught.
-        let permit = tokio::select! {
-            biased;
-            _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or_else(reader_ended_without_reason),
-            p = credit.acquire() => match p {
-                Ok(p) => p,
-                // The semaphore is closed by the reader when the peer is gone for good.
-                Err(_) => break halt_rx
-                    .borrow()
-                    .clone()
-                    .unwrap_or(Terminal::Cancelled("peer closed".into())),
-            },
-        };
-        permit.forget();
-
+        // **The next pump item comes first, and needs no credit.** The end of the stream is not a
+        // batch: a closed channel is completion and a failed item is the source's failure, and
+        // neither waits for a consumer that may never grant another credit.
         let item = tokio::select! {
             biased;
             _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or_else(reader_ended_without_reason),
@@ -227,6 +210,56 @@ pub(crate) async fn drive(
             PumpItem::Batch(b) => b,
             PumpItem::Failed(detail) => break Terminal::ProducerFailed(detail),
         };
+
+        // A batch waits for one credit, and **consumes** it rather than returning it.
+        //
+        // Two defects were fixed here, both inherited from the harness this was ported from:
+        //
+        // 1. **The permit must be forgotten, or credit is not credit.** `Semaphore::acquire` returns
+        //    a permit that returns itself to the semaphore when dropped, so acquiring without
+        //    `forget()` waits for a credit to *exist* and then hands it straight back. One grant
+        //    would license an unbounded number of batches, and the demand signal the consumer
+        //    thinks it is giving would do nothing. Bounded memory would then rest entirely on the
+        //    pump channel's capacity — which does hold, so "explicit application credit" would be
+        //    decoration.
+        // 2. **The wait must be interruptible by the halt signal.** With the receive half now
+        //    running past a CANCEL (so it can serve as the peer-drain), nothing else closes the
+        //    semaphore, and a writer parked here would never send its terminal frame. That deadlock
+        //    is what `h2_a_cancel_before_the_first_batch_still_stops_the_query` caught.
+        //
+        // **It is interruptible by the two notices as well**, because a consumer that granted
+        // nothing never frees this wait. The pump's failure, or the owner's cancel, ends the
+        // batches: the writer sends none further, drops the one it holds and every queued one, and
+        // ends on the source's own failure. Each notice's value is read before the wait, so one
+        // raised earlier is not missed.
+        let permit = tokio::select! {
+            biased;
+            _ = halt_rx.changed() => break halt_rx.borrow().clone().unwrap_or_else(reader_ended_without_reason),
+            _ = raised(&mut pump_failed) => {
+                break discard_queued(&mut rx, &mut halt_rx, &state, payload.len()).await
+            }
+            _ = raised(&mut owner_cancelled) => {
+                if state.is_cancelled() {
+                    // This adapter's own receive half cancelled first (it stamps `observe_cancel`
+                    // before it cancels the source), so the outcome is the halt signal's, which is
+                    // about to be sent. The owner path never calls `observe_cancel`: that would stop
+                    // the pump before it produced the source's own failure, and would change what
+                    // `observed_at` means.
+                    let _ = halt_rx.changed().await;
+                    break halt_rx.borrow().clone().unwrap_or_else(reader_ended_without_reason);
+                }
+                break discard_queued(&mut rx, &mut halt_rx, &state, payload.len()).await
+            }
+            p = credit.acquire() => match p {
+                Ok(p) => p,
+                // The semaphore is closed by the reader when the peer is gone for good.
+                Err(_) => break halt_rx
+                    .borrow()
+                    .clone()
+                    .unwrap_or(Terminal::Cancelled("peer closed".into())),
+            },
+        };
+        permit.forget();
 
         let len = payload.len();
         state.note_written(len);
@@ -313,6 +346,49 @@ pub(crate) async fn drive(
     }
 
     terminal
+}
+
+/// Resolves once a notice reads true, including one raised before this was called. If the notice's
+/// sender is gone and it never was true, it never resolves.
+async fn raised(notice: &mut watch::Receiver<bool>) {
+    if notice.wait_for(|up| *up).await.is_err() {
+        std::future::pending::<()>().await;
+    }
+}
+
+/// The batches stop: release the held batch, then receive and discard every queued one, without
+/// credit, until the source's own failure arrives. The halt signal wins, as in every wait.
+///
+/// The channel closing instead is **never** `Completed` once a batch was discarded: a consumer must
+/// not read a stream with batches missing as a whole one. This is reached holding a batch, which is
+/// counted first, so `Completed` is only the answer when nothing was discarded.
+async fn discard_queued(
+    rx: &mut mpsc::Receiver<PumpItem>,
+    halt_rx: &mut watch::Receiver<Option<Terminal>>,
+    state: &StreamState,
+    held_bytes: usize,
+) -> Terminal {
+    state.note_discarded(held_bytes);
+    let mut discarded = 1u64;
+    loop {
+        tokio::select! {
+            biased;
+            _ = halt_rx.changed() => {
+                return halt_rx.borrow().clone().unwrap_or_else(reader_ended_without_reason)
+            }
+            m = rx.recv() => match m {
+                Some(PumpItem::Batch(b)) => {
+                    state.note_discarded(b.len());
+                    discarded += 1;
+                }
+                Some(PumpItem::Failed(detail)) => return Terminal::ProducerFailed(detail),
+                None if discarded == 0 => return Terminal::Completed,
+                None => return Terminal::ProducerFailed(
+                    "[P6 placeholder] the source ended without reporting a failure after its owner cancelled the stream; batches already generated were discarded and not delivered".into(),
+                ),
+            },
+        }
+    }
 }
 
 /// The halt signal fired but carried no outcome — only reachable if the receive task ended without

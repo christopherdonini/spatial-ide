@@ -18,6 +18,7 @@ use std::time::{Duration, Instant};
 use futures_util::{SinkExt, StreamExt};
 use spatial_data_plane::server::DataPlaneConfig;
 use spatial_data_plane::session::SUBPROTOCOL;
+use spatial_data_plane::transport::StreamState;
 use spatial_data_plane::{wire, RunningDataPlane, MAX_INFLIGHT_BATCHES};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
 use spatial_engine::EngineError;
@@ -96,6 +97,7 @@ enum OwnerAct {
 }
 
 struct Outcome {
+    state: Arc<StreamState>,
     code: u8,
     detail: String,
     batches: usize,
@@ -223,6 +225,7 @@ async fn owner_ends_a_stream_with_no_credit_granted(name: &str, act: OwnerAct) -
     c.close(None).await.ok();
     dp.shutdown().await;
     Outcome {
+        state,
         code,
         detail,
         batches,
@@ -246,6 +249,12 @@ fn assert_the_engines_cancellation_arrived(o: &Outcome) {
     assert_eq!(
         o.batches, 0,
         "no credit was granted, so no batch may arrive"
+    );
+    assert_eq!(o.state.resident_bytes(), 0, "nothing stays resident");
+    assert_eq!(
+        o.state.batches_discarded(),
+        o.state.batches_generated(),
+        "every generated batch was discarded, none sent"
     );
 }
 
