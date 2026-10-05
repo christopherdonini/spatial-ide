@@ -310,3 +310,26 @@ Conditional rows: OPEN-1 (B) adds `frontends/shell/src/streaming/liveTicketSet.t
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — question round 59's rulings (OPEN-1 (B), class 9; OPEN-2 (A); OPEN-3 (A)); the product-first direction's placement
+
+*Written by the custodian after question round 59 was answered and before any code: no branch exists. The rulings are `state/directives/2026-10-05-round-59-rulings.md`, lines 6 to 8 (sha256 7e0d9047b48daeca52842ece54dc45073747a980fd39bc8cce68f596be1ec263, f3fab5a6f11323ce7c42e8cbb573c9fbe1731f3251d829a9f317d071d9ae0740 and df1d060380d870652992e177b987ac9486e2aee2e0cfa97b5541cc59d7fdec58, one per line, at the commit that adds it), with their RULED block in `DECISIONS-PENDING.md` under round 59, referenced and not restated. The placement is the 2026-10-05 product-first direction, with its fragments and clarification (their RULED block). Nothing below is a quotation.*
+
+1. **OPEN-1, (B), class 9.** `frontends/shell/src/streaming/liveTicketSet.ts` joins the piece, comments only:
+   - **C10.** Its single-site claim (the draft's OPEN-1, first bullet) is reworded as C8 rewords `formatTerminalRefusal.ts`'s doc. It names `kernel/src/skp.rs::terminal_detail_of` as the builder of the prefix, enumerates no site and states no count.
+   - Its stale cites into `kernel/src/skp.rs` (the draft's OPEN-1, first bullet) are repointed by item, with no line.
+   - §7's OPEN-1 (B) row applies: `liveTicketSet.ts` at most 16, and the total at most 168 over 7 files. §8 item 4's path list includes the file. §1's no-behaviour-change claim covers it.
+   - The stale line cites in the other files the draft's OPEN-1 lists are routed to the proposed node `skp-line-cites-outside-close-races`, and are not edited here.
+2. **OPEN-2, (A).** C9's in-place sentence and its note's item (ii) are binding, and no longer conditional.
+   - The second sentence of SKP-V0 §1's `close_dataset` paragraph is replaced by §1's may-claim reading and nothing more. The first sentence stays.
+   - The one dated §8 note records the correction and states item (iii).
+   - §8 item 10 applies.
+3. **OPEN-3, (A).** §4's declared-unchanged line for T1 to T3's recorded-mutation texts stands. Their re-observation is routed to the proposed node `session-generation-t1-t3-reobservation`. §7's OPEN-3 (B) row does not apply.
+4. **Placement.** The piece yields slot 1 to MP-1. In slot 2 it comes after the two context-flush pieces, and its branch starts only when its paths are disjoint from slot 1's piece. MP-1's form edits `kernel/src/skp.rs`, `protocol/skp/SKP-V0.md` and `kernel/README.md` (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, §2), which this piece also edits, so it waits while MP-1 holds slot 1.
+5. **Gates:** the 2026-10-05 product-first direction's section 2 (proportional gates) applies, by reference.
+6. **The owner's index:** lead-data's update for this piece (the second pilot's piece 3) stands, applied in the pull request before the final gate.
+
+**Superseded index.**
+- §2's parts conditional on OPEN-1 (B) and OPEN-2 (A) → items 1 and 2, binding.
+- §7's conditional rows → item 1. The OPEN-1 row applies, and the OPEN-3 row does not.
+- §9's gates → item 5 adds section 2, by reference.

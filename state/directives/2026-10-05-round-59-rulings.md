@@ -1,0 +1,10 @@
+# Directive — question round 59: kernel-close-races-followups OPEN-1 to OPEN-3, MP-1 OPEN-1, and the E10 reading (the human, verbatim)
+
+*Custodian's filing note (2026-10-05): question round 59, asked by AskUserQuestion in two sets and mirrored by the round-mirror hook as `state/questions/round-59.md` and `state/questions/round-60.md` (the hook numbered the second set as its own round). Items 1, 2 and 4 are red lines, offered as holds only and answered in the human's typed words at 20:15:13Z. Item 3 is answered by option label at 20:15:13Z, and item 5 by option label at 20:16:30Z. Below the rule are the five answers, one per line in item order (lines 6 to 10), byte-copied by script from the tool results in the session transcript, with nothing else. It gets a RULED block in `DECISIONS-PENDING.md` (§105).*
+
+---
+kernel-close-races-followups OPEN-1: (B). liveTicketSet.ts joins the piece for its single-place claim and its stale cites (about 16 lines, comments only). The stale line cites in the other files are routed to one proposed node and are not edited here.
+kernel-close-races-followups OPEN-2: (A). The second sentence of SKP-V0 section 1's close_dataset paragraph is replaced in place by the catalog form's reading and nothing more: a ticket's registry entry holds the dataset by name; a live stream holds no Arc<Dataset>; a pool lease in flight keeps the pool alive until it is released. The first sentence stays. One dated section 8 note records the correction and that no literal, key, value, code or command changes. This corrects a description; the wire behaviour is unchanged.
+Unchanged, routed (Recommended)
+MP-1 OPEN-1: (b1) and (c1). An absent geometry_types key takes the empty list's encoding (MultiPolygon), and declared_types is null on the wire, so the wire tells absent from []. I accept that this extends my acceptance item 1's loss to a second case: a projected, Polygon-only file with no key publishes today and is refused until B3. The KNOWN-LIMITATIONS row names both cases. A geometry_types member that is not a string is refused at open as engine.geo_metadata, with a P6-placeholder detail.
+Per run (Recommended)

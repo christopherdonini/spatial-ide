@@ -503,3 +503,20 @@ All quantities are assertions. None is a measurement.
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — question round 59, item 4: OPEN-1 ruled (b1) and (c1); the product-first direction's placement
+
+*Written by the custodian after question round 59 was answered and before any code: no branch exists. The ruling is `state/directives/2026-10-05-round-59-rulings.md`, line 9 (sha256 45dd049f7e11c3aa89ae88b6682364faf49e4e509335f82eab3fbd007945bfe4, at the commit that adds it), a red line answered in typed text, with its RULED block in `DECISIONS-PENDING.md` under round 59, referenced and not restated. The placement is the 2026-10-05 product-first direction, section 8.a. Nothing below is a quotation.*
+
+1. **OPEN-1: (b1) and (c1).** Every part marked **[OPEN-1]** holds as written for (b1) and (c1), and is no longer conditional.
+   - The human accepts that (b1) extends acceptance item 1's loss to a second case: a projected, Polygon-only file whose `geometry_types` key is absent, which publishes today, is refused at publish until B3.
+   - S-K2's KNOWN-LIMITATIONS row names both cases, the empty list and the absent key.
+   - The literal commit (§9, commit 4) now has its ruling, so I-7 cannot fire, and §8 item 13 no longer applies.
+2. **Placement:** MP-1 takes slot 1 now. Its branch is cut in its own commit.
+3. **Gates:** the product-first direction's section 2 (proportional gates) applies, by reference.
+4. **The owner's index:** lead-data's update for this piece (the second pilot's piece 4) is owed before the final gate, applied by a worker in the pull request. After it, the lead is not dispatched.
+
+**Superseded index.**
+- Every **[OPEN-1]** mark → item 1.
+- §8 item 13 → item 1.
+- §9's gates → item 3 adds section 2, by reference.

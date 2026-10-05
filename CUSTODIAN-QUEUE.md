@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb531a79ee4dec200456ef12`) at `2026-10-05T20:04:33.328Z`.
+Generated from `PLAN.yaml` (sha256 `bb22fec58063b0348164e0994a56ae8ed6e7026574334c6bd95cfc009dacd536`) at `2026-10-05T20:30:48.035Z`.
 
 ## 1. Next
 
@@ -10,6 +10,7 @@ Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb53
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`, order 6, budget 480 min)
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
+- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected (lane `governance`, order 22, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -17,19 +18,21 @@ Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb53
 
 ## 4. Blocked on dependencies
 
+- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — blocked by: geometry-types-beyond-polygons
+- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — blocked by: geometry-types-beyond-polygons, geometry-points-cut
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
+- **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation — blocked by: geometry-types-beyond-polygons, decision-adr-029-scan-progress-route, geometry-lines-cut
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected — blocked by: guardian-v1
 - **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check — blocked by: compaction-record-and-resume-line
 
 ## 5. In progress
 
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — evidence: branch `cut/guardian-v1`
+- (none)
 
 ## 6. Proposed / unscheduled
 
@@ -42,12 +45,9 @@ Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb53
 - **shell-redesign-map-studio** — Shell redesign -- the Map studio direction (the human's choice of 2026-09-23; a design reference, not Authority; the migration plan is to be ruled) (phase `prototype`) — never queued until placed
 - **release-v0-1-1** — v0.1.1 release (patch) — the human schedules it; static-CRT declined (69a stands), evidence-archive and SignPath draft ride it (phase `prototype`) — never queued until placed
 - **adr-032-decision** — ADR-032 — the GeoParquet non-x-first axis order decision (phase `prototype`) — never queued until placed
-- **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation (phase `prototype`) — never queued until placed
 - **briefb-b3-publish-v2** — Brief B, stage B3 — bundle v2 and CLI replay through the same publish implementation (phase `prototype`) — never queued until placed
 - **briefb-part-o-walkthrough** — Part O — the nine-step recipe walkthrough, after B3 only (phase `prototype`) — never queued until placed
 - **governance-ci-built-site** — Governance -- the site built by CI after merge, the design also addressing tracked-queue conflicts between sibling PRs (phase `prototype`) — never queued until placed
-- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (phase `prototype`) — never queued until placed
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (phase `prototype`) — never queued until placed
 - **b1-shell-half** — Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable) (phase `prototype`) — never queued until placed
 - **verify-mutation-test-temp-dirs** — verify-mutation's own tests remove their mkdtemp directories (weekly window (b)) (phase `prototype`) — never queued until placed
 - **extent-degenerate-zoom-doc** — extent.ts's doc matches its degenerate-zoom behaviour (weekly window (c)) (phase `prototype`) — never queued until placed
@@ -63,6 +63,9 @@ Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb53
 - **shell-session-log-line-framing** — The shell's session log keeps one line per record: level escaped, and carriage returns escaped in both fields (wave-1 A1-2) (phase `prototype`) — never queued until placed
 - **tile-issue-epoch-growth** — TileViewportStreamManager's issueEpoch map bounded within a dataset session (wave-1 A5 observation 5) (phase `prototype`) — never queued until placed
 - **audit-show-invalid-utf8-whole-refusal** — publish-bundle --audit-show refuses the whole audit log over one invalid UTF-8 byte, instead of reporting that line as CORRUPT (node 6 drafting consult) (phase `prototype`) — never queued until placed
+- **shell-migration-milestone-1** — Shell migration, milestone 1 -- the first milestone of Fable migration plan for the Map Studio direction (phase `prototype`) — never queued until placed
+- **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (phase `prototype`) — never queued until placed
+- **session-generation-t1-t3-reobservation** — kernel/tests/session_generation.rs T1 to T3 recorded mutations re-observed at a named commit, T1 describing the arm after #147 (phase `prototype`) — never queued until placed
 - **adr-035-close-races-note** — ADR-035 -- an appended, dated note recording what kernel-generation-close-races makes historical (Decision 3's no-session-reference case unreachable; invalidate marks only on a live removal; Decision 2's mint-race arm gone) (phase `prototype`) — never queued until placed
 - **adr-index-unknown-flag-writes** — frontends/shell/scripts/adrIndex.mjs writes docs/README.md when given an unknown flag; it should refuse any argument other than --check (phase `prototype`) — never queued until placed
 - **b1-session-ordinal-refusal-wording** — The projection_column_is_identity refusal says a session-ordinal identity is mapped from file_row_number -- the message states the identity's real class (wave-2 A1-1, S2) (phase `prototype`) — never queued until placed
@@ -116,3 +119,4 @@ Generated from `PLAN.yaml` (sha256 `65faca06331b08de4204d6d0cc9c4a02eed2185feb53
 - **mod-workboard** — Workboard -- a read-only pane mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (phase `prototype`) — ambition, never queued

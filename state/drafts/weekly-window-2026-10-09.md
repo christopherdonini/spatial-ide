@@ -530,3 +530,14 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **found wrong:** two readings, not pointers. One: the read says KNOWN-LIMITATIONS item 9 and a README line become untrue under MP-1, but both describe the v0.1.0 artifact and stay true. Two: the read gives a deck.gl version from a line that records an older version than the lock resolves; the architect calls the pointer accurate and the fact historical.
   - **missing:** the envelope's constructors and their call sites; the stream's `Pending` builder; the unordered streams' lack of reproducible cuts; the view query's covering-bbox refusal; the installed deck.gl version; more `.rings` sites, eight test files among them; the Tauri prepare-refusal precedent; that KNOWN-LIMITATIONS has no item 29; and the red-line list that makes question 1 the human's.
 - **Combined cost of piece 4** (read plus draft): 618,276 subagent tokens, 262 tool uses, 1,536,930 ms.
+
+## Reduced by the 2026-10-05 product-first direction
+
+- **The window is reduced** to section 6's measures and anything that blocks product work (`state/directives/2026-10-05-product-first-direction.md`, section 1, its last bullet). Every other item above waits for the first window after the freeze lifts. The freeze lifts when shell-migration milestone 1 and MP-1 have both merged.
+- **Section 6's measures, to be reported:**
+  - product pull requests merged against governance pull requests merged;
+  - question rounds per day;
+  - correction rounds caused by documentation against those caused by code;
+  - the days the critical path waited on a person.
+- **Section 3's won't-fix bar:** each use at triage is listed here.
+- **The lead-data second pilot** (B2 above) has run its four reads. Its result is judged when the freeze lifts, not at this window.
