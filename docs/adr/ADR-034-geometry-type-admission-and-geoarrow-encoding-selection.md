@@ -200,7 +200,7 @@ Not decided here:
 - **O3 to O8** (item 6): open for MP-1's preregistration. New operator wording ships as a P6 placeholder and is the human's at P6.
 - **MP-1's preregistration** may be written now (the directive's closing line).
 
-**The human's words, verbatim.** Appended under this section on the human's clarification of 2026-10-05 (`state/directives/2026-10-05-product-first-clarification.md`), the bullets above staying as they are. Byte-copied by script from `state/directives/2026-10-05-adr-034-acceptance.md`, lines 6-13 (sha256 f3a8c75f9833edef2853331bd70118b460774b26ceb849d44b7f7587984c9485, at the commit that adds it); the fence lines are not part of the words.
+**The human's words, verbatim.** Appended under this section on the human's clarification of 2026-10-05 (`state/directives/2026-10-05-product-first-clarification.md`), the bullets above staying as they are. The note opening this section, that nothing below it is a quotation, covers those bullets; the block below is the quotation. Byte-copied by script from `state/directives/2026-10-05-adr-034-acceptance.md:6-13 @ a1109023445211651627541a0c1f637690fe2f1d sha256:f3a8c75f9833edef2853331bd70118b460774b26ceb849d44b7f7587984c9485`; the fence lines are not part of the words.
 
 ```text
 ADR-034: accepted as merged, and architect-blockable as of acceptance. On what it puts to me:
