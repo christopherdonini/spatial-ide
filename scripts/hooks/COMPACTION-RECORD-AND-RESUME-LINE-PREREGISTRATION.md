@@ -287,3 +287,13 @@ Assertions only:
 4. **Noted, no change:** the mod API's compaction trigger type has two further values; the classic hook is not called with them in the callers read, and §2 item 1's rule (any value other than `manual` is non-manual) covers them anyway.
 
 **Superseded index.** None.
+
+### Amendment 2 — a correction of Amendment 1's report reference (class 3; the gate-1 architect's D-2)
+
+*Written by the custodian after PR #181's gate-1 architect report (`state/consults/gates/2026-10-05-compaction-record-and-resume-line-gate1-architect.md`, its D-2), under the proportional-gates rule: a record fix in the piece, with no re-gate. Nothing below is a quotation.*
+
+1. **The defect:** Amendment 1 names its report's hash by a line of that report, which the same commit adds.
+2. **The corrected reference:** `state/consults/2026-10-05-compaction-record-and-resume-line-p0-report.md:5-79 @ 9c2f046469613d3f544dd2ea6516c812132d4324 sha256:27c87d34013022a89ef79b52b28333b4a94ce07cb5ca6cfb454b1935add0b0e6`.
+3. **The proof:** that span, read at that commit, hashes to the value Amendment 1 states.
+
+**Superseded index.** Amendment 1's italic note, its report reference → item 2.
