@@ -1,5 +1,6 @@
 // Evidence Recorder v0's plugin tests (EVIDENCE-RECORDER-V0-PREREGISTRATION.md sections 3 and 4, T1
-// to T20), run by `claude plugin test tools/mods/spatial-evidence-recorder`. A test answers the
+// to T20; v0.1's T21 to T28 are EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md sections 3 and 4 and its
+// Amendments 1 and 2), run by `claude plugin test tools/mods/spatial-evidence-recorder`. A test answers the
 // engine's events beneath the plugin with `on`. There are no files on disk: git, the file write and the
 // agent listing are stubs, and a stub counts what the hook asked of it. The hooks swallow their own
 // failures (observe only), so a call the hook must not make is shown by a counter and never by a throw.
@@ -11,7 +12,7 @@
 //
 // The `agentId` of a subagent's call rides through a cast (`as never`): `$.tool.call`'s argument type
 // does not list it, though the hook receives it. The cast follows Guardian's tests.
-import { test, expect } from 'claude-code/testing'
+import { test, expect, mock } from 'claude-code/testing'
 
 const HEAD_A = 'a'.repeat(40)
 const HEAD_B = 'b'.repeat(40)
@@ -45,6 +46,14 @@ type World = {
   peak: number
   waiters: Array<() => void>
   timer?: any
+  clock: any // the mock clock beneath `$.clock`, when armed
+  sleeps: number[] // the `ms` of every `$.clock.sleep` the hook asked for
+  late: boolean // the before-side git answers wait for `lateGate`
+  lateGate?: Promise<void>
+  pending: number // before-side answers waiting on `lateGate`
+  onThree?: () => void
+  reached: number // how many times the bottom `tool.call` stub ran
+  writeDelayMs: number // how long `fs.write` takes to resolve
 }
 
 function release(w: World) {
@@ -56,7 +65,10 @@ function release(w: World) {
 
 const freshTree = (): Tree => ({ head: HEAD_A, status: ' M a.rs\0', diff: 'diff --git a/a.rs b/a.rs\n' })
 
-function arm(on: any, init: Partial<World> = {}): World {
+// `clock` 'mock' arms the kit's mock clock beneath `$.clock` (an unarmed `$.clock.sleep` throws at the
+// kit's bottom hook, and the mock takes the event's one registration, so no count is kept); 'rejecting'
+// answers `$.clock.sleep` itself with a refusal, counts it in `sleeps` and arms no clock.
+function arm(on: any, init: Partial<World> = {}, clock: 'mock' | 'rejecting' = 'mock'): World {
   const w: World = {
     bottom: ANSWER,
     common: 'C:/r/.git',
@@ -73,9 +85,24 @@ function arm(on: any, init: Partial<World> = {}): World {
     forbidden: [],
     peak: 0,
     waiters: [],
+    clock: undefined,
+    sleeps: [],
+    late: false,
+    pending: 0,
+    reached: 0,
+    writeDelayMs: 0,
     ...init,
   }
+  if (clock === 'mock') {
+    w.clock = mock.clock(on) // answers every `$.clock` event: a test cannot register its own beside it
+  } else {
+    on('clock.sleep', async (_$: any, e: any) => {
+      w.sleeps.push(e.ms)
+      return { deny: 'rejected' }
+    })
+  }
   on('tool.call', async () => {
+    w.reached += 1
     w.during?.(w.tree)
     w.phase = 'after'
     return w.bottom
@@ -88,6 +115,7 @@ function arm(on: any, init: Partial<World> = {}): World {
   on('fs.write', async (_$: any, e: any) => {
     // The kit hands the stub the path with Windows separators, whatever the hook spelled; the stub keeps it with slashes.
     w.writes.push({ path: String(e.path).split(String.fromCharCode(92)).join('/'), text: e.text })
+    if (w.writeDelayMs > 0) await new Promise<void>((resolve) => setTimeout(resolve, w.writeDelayMs))
     return w.rejectAll || w.writeFails ? { deny: 'EACCES: permission denied' } : { value: undefined }
   })
   for (const name of ['fs.read', 'fs.list', 'fs.stat', 'fs.exists', 'session.root', 'session.cwd']) {
@@ -123,6 +151,11 @@ function arm(on: any, init: Partial<World> = {}): World {
         else if (w.timer === undefined) w.timer = setTimeout(() => release(w), 500)
       })
     }
+    if (w.late && w.phase === 'before' && !common) {
+      w.pending += 1
+      if (w.pending === 3) w.onThree?.()
+      await w.lateGate
+    }
     return result({})
   })
   return w
@@ -141,6 +174,7 @@ const nothingAsked = (w: World) => w.procs.length + w.writes.length + w.listed +
 const RUN_KEYS = [
   'schema', 'kind', 'agent_id', 'agent_type', 'command', 'started_at', 'ended_at', 'tree_basis', 'toplevel', 'head', 'head_after',
   'before', 'after', 'tree_changed_during_run', 'tool_is_error', 'interrupted', 'stdout', 'stderr', 'text', 'recorder_ms',
+  'before_ceiling_reached', 'previous_write',
 ]
 
 // ---------------------------------------------------------------------------------------------
@@ -153,6 +187,15 @@ const RUN_KEYS = [
 // sets tree_changed_during_run`, `a leading absolute cd sets the tree, and any other cd leaves it
 // unresolved`, `every process call is git with no optional locks, a listed subcommand and the declared
 // timeout`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
+// Re-observed at ba42e6f76117 with the v0.1 change (the same mutation): fails `an approved command produces
+// one complete run record`, `a failing or timed-out git call gives unavailable fields and leaves the
+// result unchanged`, `an edit or a commit during the run sets tree_changed_during_run`, `a leading
+// absolute cd sets the tree, and any other cd leaves it unresolved`, `every process call is git with no
+// optional locks, a listed subcommand and the declared timeout`, `reaching the wait ceiling before a
+// command gives unavailable fields and runs the command at once`, `a leading cd in the Git Bash drive
+// spelling is read as the drive, and no other spelling is translated`, `a ceiling timer that cannot be
+// set leaves the before-fields set and reads the ceiling flag unavailable`. claude --version 2.1.289
+// (Claude Code).
 test('an approved command produces one complete run record', async ($, on) => {
   const w = arm(on)
   expect(await bash($, w, CARGO)).toEqual(ANSWER)
@@ -167,10 +210,10 @@ test('an approved command produces one complete run record', async ($, on) => {
   expect(m![2]).toBe(r.ended_at.slice(11, 23).replace(/[:.]/g, ''))
   expect(m![3]).toBe((await sha(text)).slice(0, 16))
   expect(Object.keys(r).sort()).toEqual([...RUN_KEYS].sort())
-  expect(JSON.stringify(r)).not.toContain(UNAVAILABLE)
+  expect(JSON.stringify({ ...r, previous_write: undefined })).not.toContain(UNAVAILABLE) // the first write of a load has no previous one
   const iso = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/
   expect(iso.test(r.started_at) && iso.test(r.ended_at) && r.started_at <= r.ended_at).toBe(true)
-  expect([r.schema, r.kind, r.agent_id, r.agent_type, r.command]).toEqual(['spatial-evidence-recorder/v0', 'run', 'main', 'main', CARGO])
+  expect([r.schema, r.kind, r.agent_id, r.agent_type, r.command]).toEqual(['spatial-evidence-recorder/v0.1', 'run', 'main', 'main', CARGO])
   expect([r.tree_basis, r.toplevel, r.head, r.head_after, r.tree_changed_during_run]).toEqual(['session-default', 'C:/r', HEAD_A, HEAD_A, false])
   const snap = { status_z_text_sha256: await sha(w.tree.status), diff_binary_text_sha256: await sha(w.tree.diff) }
   expect([r.before, r.after]).toEqual([snap, snap])
@@ -355,6 +398,8 @@ const turn = ($: any, extra: Record<string, unknown>) =>
 // RECORDED MUTATION: the `$.agent.list` lookup dropped from recordUsage (`agent_type: UNAVAILABLE`) ->
 // fails: `a subagent's turn end produces one usage record`. Observed at 9acc86b8c559 with this change,
 // claude --version 2.1.289 (Claude Code).
+// Re-observed at ba42e6f76117 with the v0.1 change (the same mutation): fails `a subagent's turn end
+// produces one usage record`. claude --version 2.1.289 (Claude Code).
 test("a subagent's turn end produces one usage record", async ($, on) => {
   const w = arm(on, { agents: [{ id: 'ag1', description: 'd', type: 'Explore', status: 'completed' }] })
   expect(await turn($, { agentId: 'ag1', usage: USAGE })).toEqual({ text: 'done', usage: USAGE })
@@ -362,7 +407,7 @@ test("a subagent's turn end produces one usage record", async ($, on) => {
   expect(w.writes[0].path).toMatch(/^C:\/r-local\/evidence\/\d{4}-\d\d-\d\d\/\d{9}-[0-9a-f]{16}\.json$/)
   const r = record(w)
   expect(Object.keys(r).sort()).toEqual(['agent_id', 'agent_type', 'kind', 'recorded_at', 'schema', 'turn_id', 'usage'])
-  expect([r.schema, r.kind, r.agent_id, r.agent_type, r.turn_id, r.usage]).toEqual(['spatial-evidence-recorder/v0', 'usage', 'ag1', 'Explore', 't1', USAGE])
+  expect([r.schema, r.kind, r.agent_id, r.agent_type, r.turn_id, r.usage]).toEqual(['spatial-evidence-recorder/v0.1', 'usage', 'ag1', 'Explore', 't1', USAGE])
   expect(w.forbidden).toEqual([])
 })
 
@@ -561,4 +606,254 @@ test('a record carries no output, status or diff text', async ($, on) => {
   expect(w.writes.length).toBe(1)
   expect(w.writes[0].text).not.toContain('MARK')
   expect(record(w).stdout).toEqual(await desc('MARK-OUT\n'))
+})
+
+// ---------------------------------------------------------------------------------------------
+// v0.1: the repeat-runner row (A5), the ceiling on the wait before a command, the previous write
+// ---------------------------------------------------------------------------------------------
+
+const RUNNER = 'node scripts/evidence/repeat.mjs'
+const RUNNER_CALLS: Array<[string, number]> = [
+  [`${RUNNER} 3 -- cargo test -p k`, 3],
+  ['node ./scripts/evidence/repeat.mjs 2 -- node --test "scripts/plan/*.test.mjs"', 2],
+  ['node scripts\\evidence\\repeat.mjs 5 -- node scripts/plan/verify-cites.mjs', 5],
+  ['node C:/r/scripts/evidence/repeat.mjs 1 -- npm test', 1],
+  ['CARGO_TARGET_DIR=D:/t timeout 900 node scripts/evidence/repeat.mjs 3 -- cargo test -p k -- --exact x', 3],
+  ['cd C:/x/wt/a && node scripts/evidence/repeat.mjs 3 -- cargo test', 3],
+  [`${RUNNER} 4 -- cargo test 2>&1 | tail -5`, 4],
+]
+const CEILING_MS = 2000 // BEFORE_CEILING_MS
+
+// Holds the before-side git answers until the gate is opened. `three` resolves once three are
+// pending. A run that never reaches the ceiling (a mutated one) is let go after three ceilings of real
+// time, so that it fails by assertion and does not hang; the passing path clears that timer.
+function holdBefore(w: World) {
+  let opened = false
+  let open = () => {}
+  w.late = true
+  w.pending = 0
+  w.lateGate = new Promise<void>((resolve) => {
+    open = () => {
+      opened = true
+      resolve()
+    }
+  })
+  const three = new Promise<void>((resolve) => {
+    w.onThree = resolve
+  })
+  const failsafe = setTimeout(open, 3 * CEILING_MS)
+  return { open, three, isOpen: () => opened, clear: () => clearTimeout(failsafe) }
+}
+
+// Once the hook has asked for its three before-side git answers, lets the mock clock settle (so the
+// timer is registered) and then moves it on by `ms`.
+async function moveClockOn(w: World, three: Promise<void>, ms: number) {
+  await three
+  await w.clock.settle()
+  await w.clock.advance(ms)
+}
+
+const sameAsNext = (got: unknown, want: unknown) => {
+  expect(got).toEqual(want)
+  expect(JSON.stringify(got)).toBe(JSON.stringify(want))
+}
+
+// RECORDED MUTATION: row A5 removed (`const n = undefined` in place of `repeatOf(s.normal)` in planFor)
+// -> fails: `the repeat-runner with an approved command produces one record`, `the record carries the
+// repeat count`, `every result passes through unchanged on the repeat-runner, ceiling and previous-write
+// paths`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('the repeat-runner with an approved command produces one record', async ($, on) => {
+  const w = arm(on)
+  for (const [i, [command]] of RUNNER_CALLS.entries()) {
+    expect(await bash($, w, command)).toEqual(ANSWER)
+    expect(w.writes.length).toBe(i + 1)
+    const r = record(w, i)
+    expect([r.schema, r.kind, r.command]).toEqual(['spatial-evidence-recorder/v0.1', 'run', command])
+    expect(r.tree_basis).toBe(command.startsWith('cd ') ? 'leading-cd' : 'session-default')
+  }
+})
+
+// RECORDED MUTATION: A5's tail check dropped (`return Number(t[2])` in place of the `isApproved` check
+// on the tail, so any tail is approved) -> fails: `the repeat-runner with any other command produces no
+// record and makes no engine call`, `the record carries the repeat count`. Observed at ba42e6f76117 with this
+// change, claude --version 2.1.289 (Claude Code).
+test('the repeat-runner with any other command produces no record and makes no engine call', async ($, on) => {
+  const w = arm(on, {}, 'rejecting')
+  const commands = [
+    ...['cargo build', 'node scripts/plan/verify-mutation.mjs', 'CARGO_TARGET_DIR=D:/t cargo test', 'timeout 900 cargo test', 'cargo test --no-run', 'npm run build'].map(
+      (tail) => `${RUNNER} 3 -- ${tail}`,
+    ),
+    ...['0', 'x', '3.0', '-1'].map((n) => `${RUNNER} ${n} -- cargo test`),
+    `${RUNNER} 3 cargo test`,
+    `${RUNNER} 3 --`,
+    'node scripts/plan/repeat.mjs 3 -- cargo test',
+    'node repeat.mjs 3 -- cargo test',
+    'node "$R" 3 -- cargo test',
+    RUNNER,
+  ]
+  for (const command of commands) expect(await bash($, w, command)).toEqual(ANSWER)
+  expect(nothingAsked(w)).toBe(true)
+  expect(w.sleeps).toEqual([])
+  expect(w.reached).toBe(commands.length)
+})
+
+// RECORDED MUTATION: `repeat` fixed at 1 (`counts[0]` replaced by `1` in planFor) -> fails: `the
+// record carries the repeat count`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('the record carries the repeat count', async ($, on) => {
+  const w = arm(on)
+  for (const [i, [command, n]] of RUNNER_CALLS.entries()) {
+    await bash($, w, command)
+    expect(record(w, i).repeat).toBe(n)
+  }
+  const next = RUNNER_CALLS.length
+  // Two runner calls in one command: the count cannot be told.
+  await bash($, w, `${RUNNER} 2 -- cargo test && ${RUNNER} 3 -- cargo test`)
+  expect(record(w, next).repeat).toBe(UNAVAILABLE)
+  // A runner segment that is not approved, beside an approved one: no count.
+  await bash($, w, `${RUNNER} 3 -- cargo build && cargo test`)
+  expect('repeat' in record(w, next + 1)).toBe(false)
+  await bash($, w, CARGO)
+  expect('repeat' in record(w, next + 2)).toBe(false)
+})
+
+// RECORDED MUTATION: the before stage awaited without the race (`await staged` for the `Promise.race`)
+// -> fails: `reaching the wait ceiling before a command gives unavailable fields and runs the command at
+// once`, `a ceiling timer that cannot be set leaves the before-fields set and reads the ceiling flag
+// unavailable`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('reaching the wait ceiling before a command gives unavailable fields and runs the command at once', { timeoutMs: 20000 }, async ($, on) => {
+  const w = arm(on)
+
+  // (i) The ceiling is reached with the git answers still held: the call runs and its result is back
+  // before any answer is released; the late answers change nothing.
+  let held = holdBefore(w)
+  let call = bash($, w, CARGO)
+  await moveClockOn(w, held.three, CEILING_MS)
+  expect(await call).toEqual(ANSWER)
+  const releasedBefore = held.isOpen()
+  held.clear()
+  expect(releasedBefore).toBe(false)
+  expect(w.reached).toBe(1)
+  expect(w.writes.length).toBe(1)
+  let r = record(w, 0)
+  expect([r.toplevel, r.head, r.before.status_z_text_sha256, r.before.diff_binary_text_sha256]).toEqual([UNAVAILABLE, UNAVAILABLE, UNAVAILABLE, UNAVAILABLE])
+  expect([r.before_ceiling_reached, r.head_after, r.tree_changed_during_run]).toEqual([true, HEAD_A, UNAVAILABLE])
+  held.open()
+  await w.clock.settle()
+  await new Promise<void>((resolve) => setTimeout(resolve, 50))
+  await w.clock.settle()
+  expect([w.writes.length, w.reached]).toEqual([1, 1])
+
+  // (ii) One millisecond short of the ceiling, then the answers are released: the stage won.
+  held = holdBefore(w)
+  call = bash($, w, CARGO)
+  await moveClockOn(w, held.three, CEILING_MS - 1)
+  held.open()
+  expect(await call).toEqual(ANSWER)
+  held.clear()
+  r = record(w, 1)
+  expect([r.before_ceiling_reached, r.toplevel, r.head, r.tree_changed_during_run]).toEqual([false, 'C:/r', HEAD_A, false])
+
+  // (iii) Prompt answers: the same.
+  w.late = false
+  expect(await bash($, w, CARGO)).toEqual(ANSWER)
+  r = record(w, 2)
+  expect([r.before_ceiling_reached, r.toplevel, r.head]).toEqual([false, 'C:/r', HEAD_A])
+  expect(w.reached).toBe(3)
+})
+
+// RECORDED MUTATION: the timer stopped before `$.fs.write` is awaited (`lastWrite` set on the line
+// above the awaited write in writeRecord) -> fails: `a run record carries the previous write's duration
+// and names that write`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test("a run record carries the previous write's duration and names that write", async ($, on) => {
+  const w = arm(on, { writeDelayMs: 50 })
+  const named = (i: number) => w.writes[i].path.split('/').slice(-2).join('/')
+  await bash($, w, CARGO)
+  expect(record(w, 0).previous_write).toBe(UNAVAILABLE)
+  await bash($, w, CARGO)
+  const second = record(w, 1).previous_write
+  expect(Object.keys(second).sort()).toEqual(['ms', 'record'])
+  expect(second.record).toBe(named(0))
+  expect(Number.isInteger(second.ms) && second.ms >= 50).toBe(true)
+  // A subagent's turn end writes a usage record, and the next run record names it.
+  await turn($, { agentId: 'ag1', usage: USAGE })
+  expect(JSON.parse(w.writes[2].text).kind).toBe('usage')
+  await bash($, w, CARGO)
+  expect(record(w, 3).previous_write.record).toBe(named(2))
+  // A refused write is not a previous write: the variable stays as it was.
+  w.writeFails = true
+  await bash($, w, CARGO)
+  w.writeFails = false
+  await bash($, w, CARGO)
+  expect(w.writes.length).toBe(6)
+  expect(record(w, 5).previous_write.record).toBe(named(3))
+})
+
+// RECORDED MUTATION: the Bash hook returning `{ ...ran, context: ['repeat'] }` on an A5 call (the last
+// line of recordRun) -> fails: `the repeat-runner with an approved command produces one record`, `every
+// result passes through unchanged on the repeat-runner, ceiling and previous-write paths`. Observed at
+// ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('every result passes through unchanged on the repeat-runner, ceiling and previous-write paths', { timeoutMs: 20000 }, async ($, on) => {
+  const w = arm(on)
+  const call = `${RUNNER} 3 -- cargo test`
+  const errored = { ref: 8, isError: true, result: 'Exit code 1', text: 'Exit code 1' }
+  for (const answer of [ANSWER, errored, { deny: 'refused' }]) {
+    w.bottom = answer
+    sameAsNext(await bash($, w, call), answer)
+  }
+  // The ceiling reached.
+  w.bottom = ANSWER
+  const held = holdBefore(w)
+  const slow = bash($, w, call)
+  await moveClockOn(w, held.three, CEILING_MS)
+  sameAsNext(await slow, ANSWER)
+  held.clear()
+  held.open()
+  w.late = false
+  // A later call in the same load names the previous write.
+  sameAsNext(await bash($, w, call), ANSWER)
+  expect(typeof record(w, w.writes.length - 1).previous_write).toBe('object')
+  // Every `$` call refused: no record, and the same value back.
+  w.rejectAll = true
+  sameAsNext(await bash($, w, call), ANSWER)
+  sameAsNext(await bash($, w, call, { agentId: 'ag1' }), ANSWER)
+})
+
+// RECORDED MUTATION: the translation dropped (`return dir` in place of the drive branch in
+// leadingCdDir) -> fails: `a leading cd in the Git Bash drive spelling is read as the drive, and no
+// other spelling is translated`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('a leading cd in the Git Bash drive spelling is read as the drive, and no other spelling is translated', async ($, on) => {
+  const w = arm(on)
+  const cases: Array<[string, string]> = [
+    ['cd /c/x && cargo test', 'c:/x'],
+    ['cd /c && cargo test', 'c:/'],
+    ['cd /tmp/x && cargo test', '/tmp/x'],
+    ['cd /home/x && cargo test', '/home/x'],
+    ['cd /cygdrive/c/x && cargo test', '/cygdrive/c/x'],
+    ['cd /mnt/c/x && cargo test', '/mnt/c/x'],
+  ]
+  for (const [i, [command, cwd]] of cases.entries()) {
+    expect(await bash($, w, command)).toEqual(ANSWER)
+    const r = record(w, i)
+    expect([r.tree_basis, r.toplevel]).toEqual(['leading-cd', cwd])
+    const calls = treeCalls(w).slice(i * 6, i * 6 + 6)
+    expect(calls.length).toBe(6)
+    for (const p of calls) expect(p.init.cwd).toBe(cwd)
+  }
+})
+
+// RECORDED MUTATION: a rejected sleep read as the ceiling reached (the rejection arm of the sleep
+// mapped to `ceiling` in raceBefore) -> fails: `a ceiling timer that cannot be set leaves the
+// before-fields set and reads the ceiling flag unavailable`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
+test('a ceiling timer that cannot be set leaves the before-fields set and reads the ceiling flag unavailable', async ($, on) => {
+  const w = arm(on, {}, 'rejecting')
+  expect(await bash($, w, CARGO)).toEqual(ANSWER)
+  expect(w.sleeps).toEqual([CEILING_MS])
+  expect(w.reached).toBe(1)
+  const r = record(w, 0)
+  expect([r.before_ceiling_reached, r.toplevel, r.head, r.tree_changed_during_run]).toEqual([UNAVAILABLE, 'C:/r', HEAD_A, false])
+  expect(r.before.status_z_text_sha256).toBe(await sha(w.tree.status))
+  // An unresolved plan asks for no timer, and its flag reads false.
+  expect(await bash($, w, 'cd "$W" && cargo test')).toEqual(ANSWER)
+  expect(w.sleeps.length).toBe(1)
+  expect(record(w, 1).before_ceiling_reached).toBe(false)
 })

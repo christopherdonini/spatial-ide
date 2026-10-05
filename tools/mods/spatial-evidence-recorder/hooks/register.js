@@ -7,11 +7,17 @@
 // dropped and the tool's result untouched.
 //
 // The only `$` calls: $.process.run (git, with no optional locks, rev-parse, status or diff, each
-// with a timeout), $.fs.write (one new file per record, under the log root) and $.agent.list.
+// with a timeout), $.fs.write (one new file per record, under the log root), $.agent.list and one
+// $.clock.sleep, made in beforeCeiling alone: the timer of the ceiling on the wait before a command
+// (v0.1, EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md section 2.5 and its Amendments 2 and 3). A hooks
+// module has no timers of its own, so the ceiling waits on the engine's clock.
 
-// Declared values (the form's section 7).
+// Declared values (the v0 form's section 7, and v0.1's).
 const PROCESS_TIMEOUT_MS = 2000;
-const SCHEMA = 'spatial-evidence-recorder/v0';
+// The ceiling across the before stage. It must stay below the hook budget (HookBudget.ms, 10_000 at
+// 2.1.288), which a $.clock wait counts against; the wait is stopped before next(e) is called.
+const BEFORE_CEILING_MS = 2000;
+const SCHEMA = 'spatial-evidence-recorder/v0.1';
 const LOG_SUFFIX = '-local/evidence';
 const UNAVAILABLE = 'unavailable';
 
@@ -176,16 +182,34 @@ function isApproved(t) {
   return false;
 }
 
+const RUNNER_SCRIPT = 'scripts/evidence/repeat.mjs';
+const REPEAT_COUNT = /^[1-9][0-9]*$/;
+
+// Row A5, on a normalised segment: `node <runner path> <n> -- <tail>` with a tail of one token or
+// more that rows A1 to A4 approve as it stands (not normalised). Gives n as a number, else undefined.
+function repeatOf(t) {
+  if (t[0] !== 'node' || t[1] === undefined || t[2] === undefined || t[3] !== '--' || t.length < 5) return undefined;
+  const script = t[1].replace(/\\/g, '/').replace(/^\.\//, '');
+  if (script !== RUNNER_SCRIPT && !script.endsWith(`/${RUNNER_SCRIPT}`)) return undefined;
+  if (!REPEAT_COUNT.test(t[2]) || !Number.isSafeInteger(Number(t[2]))) return undefined;
+  return isApproved(t.slice(4)) ? Number(t[2]) : undefined;
+}
+
 // The directory of a leading `cd <dir> &&`: exactly one argument, an absolute spelling holding no
-// $, backtick, ~, * or ?. The only place a drive spelling is read.
+// $, backtick, ~, * or ?. The only place a drive spelling is read, and the only place a Git Bash
+// spelling is translated: a leading slash, one ASCII letter, then a slash or the end, is that letter,
+// a colon and a slash, then the rest (/c/x is c:/x, a bare /c is c:/). Nothing else is translated.
 function leadingCdDir(tokens) {
   if (tokens.length !== 2) return undefined;
   const dir = tokens[1];
   if (!/^(?:\/|[A-Za-z]:[\\/])/.test(dir) || /[$`~*?]/.test(dir)) return undefined;
-  return dir;
+  const drive = /^\/([A-Za-z])(?:\/([\s\S]*))?$/.exec(dir);
+  return drive === null ? dir : `${drive[1]}:/${drive[2] ?? ''}`;
 }
 
-// The plan for a Bash command, or undefined when the call is not approved: { treeBasis, cwd? }.
+// The plan for a Bash command, or undefined when the call is not approved: { treeBasis, cwd?, repeat? }.
+// `repeat` is n when exactly one segment is a row A5 call, unavailable when more than one is, and
+// absent when none is.
 function planFor(command) {
   if (typeof command !== 'string') return undefined;
   const split = splitCommand(command);
@@ -197,18 +221,29 @@ function planFor(command) {
   }
   let approved = false;
   let cds = 0;
+  const counts = [];
   for (const s of segments) {
-    if (s.normal[0] === 'cd') cds += 1;
-    else if (isApproved(s.normal)) approved = true;
+    if (s.normal[0] === 'cd') {
+      cds += 1;
+      continue;
+    }
+    const n = repeatOf(s.normal);
+    if (n !== undefined) {
+      counts.push(n);
+      approved = true;
+    } else if (isApproved(s.normal)) {
+      approved = true;
+    }
   }
   if (!approved) return undefined;
-  if (cds === 0) return { treeBasis: 'session-default' };
+  const repeat = counts.length === 0 ? {} : { repeat: counts.length === 1 ? counts[0] : UNAVAILABLE };
+  if (cds === 0) return { treeBasis: 'session-default', ...repeat };
   const first = segments[0];
   if (cds === 1 && first.tokens[0] === 'cd' && first.sep === '&&') {
     const cwd = leadingCdDir(first.tokens);
-    if (cwd !== undefined) return { treeBasis: 'leading-cd', cwd };
+    if (cwd !== undefined) return { treeBasis: 'leading-cd', cwd, ...repeat };
   }
-  return { treeBasis: 'unresolved' };
+  return { treeBasis: 'unresolved', ...repeat };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -339,12 +374,20 @@ function logRootFrom(stdout) {
   return `${main.slice(0, cut)}/${name}${LOG_SUFFIX}`;
 }
 
+// The last resolved write of this load: { record: '<YYYY-MM-DD>/<file name>', ms }, or undefined. A
+// run record carries it as `previous_write` (the form's section 2.6); a rejected write leaves it as it was.
+let lastWrite;
+
 // Writes the record as one new file: <root>/<YYYY-MM-DD>/<HHMMSSmmm>-<16 hex of the line's sha256>.json.
+// The span timed, with Date.now(), runs from entry to the write's resolution.
 async function writeRecord($, root, record, stamp) {
+  const enteredAt = Date.now();
   const line = `${JSON.stringify(record)}\n`;
   const digest = await sha256Hex(encoder.encode(line));
+  const day = stamp.slice(0, 10);
   const name = `${stamp.slice(11, 23).replace(/[:.]/g, '')}-${digest.slice(0, 16)}.json`;
-  await $.fs.write(`${root}/${stamp.slice(0, 10)}/${name}`, line);
+  await $.fs.write(`${root}/${day}/${name}`, line);
+  lastWrite = { record: `${day}/${name}`, ms: Date.now() - enteredAt };
 }
 
 // The log root, found once per load and cached on success only.
@@ -354,6 +397,62 @@ async function resolveLogRoot($) {
   const stdout = textOf(await gitRun($, undefined, ['rev-parse', '--path-format=absolute', '--git-common-dir']));
   cachedRoot = stdout === undefined ? undefined : logRootFrom(stdout);
   return cachedRoot;
+}
+
+const NO_BEFORE = { toplevel: UNAVAILABLE, head: UNAVAILABLE, status: UNAVAILABLE, diff: UNAVAILABLE };
+const noop = () => {};
+
+// The ceiling's timer, and the only $.clock call of the mod: it resolves after BEFORE_CEILING_MS, and
+// rejects at once when the signal aborts. Called once per dispatch, on a resolved plan alone.
+function beforeCeiling($, signal) {
+  return $.clock.sleep(BEFORE_CEILING_MS, { signal });
+}
+
+// The before stage raced against the ceiling (the form's section 2.5, Amendment 2). Gives the
+// before-fields and `ceilingReached`: true when the timer won, false otherwise, unavailable when the
+// timer could not be used (the stage is then awaited alone). The sleep is aborted before this returns,
+// so none stays live during next(e). A stage that loses the race runs on and its late answers are
+// never read; every promise left behind carries a no-op rejection handler.
+async function raceBefore($, plan) {
+  if (plan.treeBasis === 'unresolved') return { before: await snapshotBefore($, plan), ceilingReached: false };
+  const staged = snapshotBefore($, plan).then((value) => ({ won: 'stage', value }));
+  staged.catch(noop);
+  let controller;
+  let sleep;
+  try {
+    controller = new AbortController();
+    sleep = beforeCeiling($, controller.signal);
+  } catch {
+    sleep = undefined;
+  }
+  try {
+    if (sleep === undefined || sleep === null || typeof sleep.then !== 'function') {
+      return { before: await stageAlone(staged), ceilingReached: UNAVAILABLE };
+    }
+    const slept = Promise.resolve(sleep).then(
+      () => ({ won: 'ceiling' }),
+      () => ({ won: 'sleep-failed' }),
+    );
+    const first = await Promise.race([staged, slept]);
+    if (first.won === 'ceiling') return { before: NO_BEFORE, ceilingReached: true };
+    if (first.won === 'sleep-failed') return { before: await stageAlone(staged), ceilingReached: UNAVAILABLE };
+    return { before: first.value, ceilingReached: false };
+  } finally {
+    try {
+      controller?.abort();
+    } catch {
+      // observe only: nothing more can be done for a sleep that cannot be stopped
+    }
+  }
+}
+
+// The stage's own answer, awaited as v0 awaited it: unavailable when it failed.
+async function stageAlone(staged) {
+  try {
+    return (await staged).value;
+  } catch {
+    return NO_BEFORE;
+  }
 }
 
 async function recordRun($, e, next) {
@@ -366,9 +465,10 @@ async function recordRun($, e, next) {
   if (plan === undefined) return next(e);
 
   const t0 = Date.now();
-  let before = { toplevel: UNAVAILABLE, head: UNAVAILABLE, status: UNAVAILABLE, diff: UNAVAILABLE };
+  let before = NO_BEFORE;
+  let ceilingReached = false;
   try {
-    before = await snapshotBefore($, plan);
+    ({ before, ceilingReached } = await raceBefore($, plan));
   } catch {
     // observe only: the before-fields stay unavailable and the call still runs
   }
@@ -398,6 +498,7 @@ async function recordRun($, e, next) {
       agent_id: e.agentId ?? 'main',
       agent_type: agentType,
       command: e.command,
+      ...(plan.repeat === undefined ? {} : { repeat: plan.repeat }),
       started_at: startedAt,
       ended_at: endedAt,
       tree_basis: plan.treeBasis,
@@ -412,6 +513,8 @@ async function recordRun($, e, next) {
         [before.diff, after.diff],
       ]),
       ...fields,
+      before_ceiling_reached: ceilingReached,
+      previous_write: lastWrite === undefined ? UNAVAILABLE : { record: lastWrite.record, ms: lastWrite.ms },
       recorder_ms: { before: beforeMs, after: afterMs, write: Date.now() - t2 },
     };
     await writeRecord($, root, record, endedAt);

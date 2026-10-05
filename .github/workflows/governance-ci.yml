@@ -19,7 +19,7 @@ name: Governance CI — plan, queue, site
 #
 # ## What a green run here means, stated narrowly (the other product workflows' own discipline)
 #
-# It means: every test under scripts/plan and scripts/hooks passes, every rooted (in-tree) path:line
+# It means: every test under scripts/plan, scripts/hooks and scripts/evidence passes, every rooted (in-tree) path:line
 # reference resolves against the tree (verify:cites), every quotation marked verbatim occurs in its
 # named file when a path:line cite introduces it, otherwise in the tracked tree's non-quotation text,
 # after presentation normalization -- or is a recorded, classified baseline entry (pending the human's
@@ -80,6 +80,7 @@ on:
       - "PLAN.yaml"
       - "scripts/plan/**"
       - "scripts/hooks/**"
+      - "scripts/evidence/**"
       - "tools/mods/**"
       - "site/**"
       - "CUSTODIAN-QUEUE.md"
@@ -96,6 +97,7 @@ on:
       - "PLAN.yaml"
       - "scripts/plan/**"
       - "scripts/hooks/**"
+      - "scripts/evidence/**"
       - "tools/mods/**"
       - "site/**"
       - "CUSTODIAN-QUEUE.md"
@@ -136,8 +138,8 @@ jobs:
         with:
           node-version: "24"
 
-      - name: node --test (scripts/plan, scripts/hooks)
-        run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs"
+      - name: node --test (scripts/plan, scripts/hooks, scripts/evidence)
+        run: node --test "scripts/plan/*.test.mjs" "scripts/hooks/*.test.mjs" "scripts/evidence/*.test.mjs"
 
       # Pre-gate self-checks (AUTONOMY.md Appendix A3): mechanical integrity so the semantic gates
       # below fail only on semantics. All three are pure Node over `git ls-files`, no network, no `gh`.
