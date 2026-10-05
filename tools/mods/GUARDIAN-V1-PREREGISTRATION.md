@@ -1147,3 +1147,20 @@ A.8 **§9.**
 - §8 item 20's third bullet → Part C, item 1 (its reading).
 - §1's G8 limit on Part H's unruled verbs → Part E.
 - §7's estimate (as amended by Amendment 2, Part K) → Part E. The size line is not edited.
+
+### Amendment 5 — the build, worker report 1: I9 fired, and `claude plugin test` will not run (class 1)
+
+*Written after the build worker's outcomes were seen, by the custodian. The record is the worker's report, `state/consults/2026-10-05-guardian-v1-worker-report-1.md` (sha256 from its line 5 e54826e8493505d27b8833634a1635da1b9cf1eb7745bb8959e7bfe843547ded), cited by section. Nothing is committed on `cut/guardian-v1`, and its worktree is clean at ccac14d2. Nothing below is a quotation.*
+
+1. **Step 1** (Amendment 4, Part B): `claude --version` read 2.1.289, and `claude --help` ran once, read-only. Its output is kept in the worker's scratch folder with its sha256 (the report's section 1). The README's list of top-level verbs is not yet written.
+2. **F36** (Amendment 1, item 4): the six commands, extracted and redacted by script, match P0b's sha256s (the report's section 2).
+3. **I9 fired** (§5). v0's T7 asserts that F7 is refused by G1. v0 refuses F7 only through the unbalanced-quote rule, and F7's words hold no forcing word, so §2.2's condition allows it. §1's may-claim 1 and §4's T7 row cannot both hold with §2.2 (the report's section 3). The piece stops before code and returns to the architect for an amendment. A change to T7's assertion is the human's (I9).
+4. **A blocker outside the form.** `claude plugin test` exits 1 on this machine, stating that hooks modules are turned off in its process by a saved rollout switch (the report's section 4). The remedy it names, starting `claude`, is the human's. No mutation can be observed until it clears.
+   - The custodian's observation, not the report's: this session's Recorder wrote records after the switch changed (the log folder, 19:15Z to 19:22Z), so the mods this session loaded still run. Whether a new session loads them is not known.
+5. **Rehearsal evidence,** a Node run of a scratch copy and not the engine (the report's section 5):
+   - a draft `register.js`, not committed, is kept in the worker's scratch folder with its sha256, and passes 212 smoke rows;
+   - the unchanged v0 test file, through a stand-in for the test kit, passes 38 of 39 when the kit's `arm` helper answers the env read, T7 alone failing. Without that answer, 11 more fail. That is a helper change, not an assertion change;
+   - the draft's `validate` calls line differs from §5's only in `(via …)` annotations (class 2, on a draft).
+6. **Size:** the draft `register.js` has 1048 lines, over Amendment 4, Part E's estimate for that file. An overrun at the gated head is class 8.
+
+**Superseded index.** None.
