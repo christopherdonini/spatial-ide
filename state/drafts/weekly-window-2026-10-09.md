@@ -392,3 +392,27 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **Reported separately, as Fable's item 1 names them: E and N1.** N1 went live at the Guardian install (11:28Z to 11:31Z on 2026-10-04), after the 11:19:22Z compaction, so that compaction counts for E alone.
 - **If the count is not zero:** the path that let the compaction through is named first. Then a small governance node is proposed for a resume-time line saying how many ledger commits the block is behind (Fable's item 2 (c), in `scripts/hooks/session-resume.mjs`).
 - **Not proposed** (Fable's items 2 and 3): Context Keeper v0, and the meter band.
+- **Agreed by the human, 2026-10-05** (`state/directives/2026-10-05-item-j-ruling-and-advisor-proposal.md`; RULED 2026-10-05). Nothing is built. Context Keeper v0 and the meter band are not approved. A count that is not zero goes to the human with the path that let the compaction through, before any proposal. The ideas advisor's proposal is filed in the same file.
+- **The count, 2026-10-05,** from existing records only:
+  - **The records used:**
+    - the PreCompact hook's block records (`lastBlockedAt`, one per session, under the checkout's Claude state folder);
+    - each automatic compaction's boundary in its session transcript;
+    - the commits that changed `state/CUT-STATE.md`, with each one's `flushed_at`.
+  - **The rule:** "stale" is the PreCompact hook's own rule, the one that blocks (`scripts/hooks/precompact-flush.mjs`, its header): `flushed_at` within 10 minutes and at or after the last ledger change, `tip` at HEAD, a clean porcelain, and HEAD pushed. A stale block is blocked once. A second PreCompact within 15 minutes of that block is allowed, whatever its state.
+  - **E** (the Stop-hook staleness check, merged as #161 at 2026-10-03T05:32:38Z): four automatic compactions since. Three went through after the hook had judged the block stale, with no flush between the block and the second call:
+
+    | Compaction (boundary) | Session | The block | The flush state |
+    |---|---|---|---|
+    | 2026-10-03T07:06:13Z | e12d1b11 | inferred, not on record: the session's record was overwritten by its later block at 13:26:16Z | last flush b6977ba9, `flushed_at` 06:19:50Z, 45 minutes earlier |
+    | 2026-10-04T11:19:22Z | 874d0083 | 11:17:44Z | flush commit c7d0b200 five seconds before the block (`flushed_at` 11:16:54Z). The block text was current; which other condition the hook found failing (tip, porcelain or the push) is not on record |
+    | 2026-10-05T00:18:31Z | 128d8fa3 | 00:16:52Z | last flush 4398a779 (`flushed_at` 00:00:40Z, 16 minutes earlier). The human's direction of 00:15:15Z was filed but uncommitted |
+
+    The fourth compaction (2026-10-03T13:30:18Z) went through after a flush: block at 13:26:16Z, then commit 4c50677c at 13:28:54Z (`flushed_at` 13:23:21Z), before the compaction started.
+  - **N1** (Guardian's nudge, live from 2026-10-04 11:28Z to 11:31Z): one automatic compaction since, at 2026-10-05T00:18:31Z, which went through stale as above.
+  - **E: 3. N1: 1.** The count is not zero.
+- **The path that let them through** (to the human before anything is proposed):
+  1. **The second-chance window.** After one block, the next PreCompact within 15 minutes is allowed whatever the block's state (`scripts/hooks/precompact-flush.mjs`, its header; AUTONOMY.md §7). The two whose blocks are on record started about 13 and 16 seconds after their blocks, by each boundary time less the compaction's recorded duration. The 2026-10-03T07:06Z compaction has no block on record.
+  2. **The block's reason reached nothing the model sees.** Neither transcript holds the hook's block message near its block. The hook's header says the message is shown to the user for a manual `/compact`, and an automatic compaction is skipped. So nothing prompted a flush inside the window.
+  3. **E and N1 judge staleness by a different rule:** a ledger commit that did not rewrite `flushed_at`. By that rule the block at 00:16Z was fresh: its last ledger commit, 4398a779, had rewritten `flushed_at`. The PreCompact hook's rule judged it stale.
+  4. **No N1 nudge text with a fill percentage appears** in either transcript. The automatic compactions ran at about 767k to 775k tokens, about 77% of a 1M window, which is below N1's threshold of 80. Whether that is why N1 stayed silent depends on which fill N1 reads (the Guardian form's §2.8 discloses the case). It is not settled here.
+- **Nothing is proposed** until the human has the path (the item J ruling).
