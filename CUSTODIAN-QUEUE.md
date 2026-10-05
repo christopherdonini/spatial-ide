@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a93551588972c56d295906472941fbb11116854d435e844f8802a8fb7cf5cc9c`) at `2026-10-05T13:01:04.747Z`.
+Generated from `PLAN.yaml` (sha256 `0099903720a12f9eec61da3b75cd5fbb6d4a893eeb2b76bdd41a0984ce4539ef`) at `2026-10-05T13:10:16.923Z`.
 
 ## 1. Next
 
-- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`, order 14, budget 90 min)
+- (none)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -30,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `a93551588972c56d295906472941fbb11116854d435e
 
 ## 5. In progress
 
+- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — evidence: branch `cut/b1-engine-kernel-half-followups`
 - **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) — evidence: branch `cut/evidence-recorder-v0-1`
 
 ## 6. Proposed / unscheduled

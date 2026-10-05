@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T13:01:04.912Z",
-  "plan_hash": "a93551588972c56d295906472941fbb11116854d435e844f8802a8fb7cf5cc9c",
+  "generated_at": "2026-10-05T13:10:17.069Z",
+  "plan_hash": "0099903720a12f9eec61da3b75cd5fbb6d4a893eeb2b76bdd41a0984ce4539ef",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4659,7 +4659,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 14,
       "depends_on": [
         "timing-assertions-under-contention"
@@ -4669,12 +4669,14 @@
         "minutes": 0
       },
       "gate": "engine/B1-FOLLOWUPS-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/b1-engine-kernel-half-followups"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM COMMITTED 2026-10-05 (engine/B1-FOLLOWUPS-PREREGISTRATION.md, the architect draft after lead-data's impact read, the second pilot's measured piece 2; full form and full gating from dispatch: about 350 changed lines with tests, a stated guarantee's proof and doc text, and one appended dated note at the end of protocol/skp/SKP-V0.md section 8 with no literal change; B1's form is closed to additions by its Amendment 12). It answers the routed items: T1 proves publish's flag through flush at the kernel's seam and kills S1; D2 and A9 need no edit at main; the recorded-mutation comments in kernel/tests/skp_projection.rs and engine/src/stream.rs are this node's, and kernel/tests/wire_bytes_invariant.rs stays with kernel-close-races-followups. No code before a slot frees (the two-pieces limit). Before: Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes.",
+      "summary": "IN PROGRESS 2026-10-05: the slot #176 freed; branch cut/b1-engine-kernel-half-followups from f75dff0e (worktree C:/dev/wt/b1f, target D:/wt-targets/b1f); the worker-high dispatched under the form. Before: FORM COMMITTED 2026-10-05 (engine/B1-FOLLOWUPS-PREREGISTRATION.md, the architect draft after lead-data's impact read, the second pilot's measured piece 2; full form and full gating from dispatch: about 350 changed lines with tests, a stated guarantee's proof and doc text, and one appended dated note at the end of protocol/skp/SKP-V0.md section 8 with no literal change; B1's form is closed to additions by its Amendment 12). It answers the routed items: T1 proves publish's flag through flush at the kernel's seam and kills S1; D2 and A9 need no edit at main; the recorded-mutation comments in kernel/tests/skp_projection.rs and engine/src/stream.rs are this node's, and kernel/tests/wire_bytes_invariant.rs stays with kernel-close-races-followups. No code before a slot frees (the two-pieces limit). Before: Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes.",
       "dates": {
         "opened": "2026-09-27",
         "done": null
