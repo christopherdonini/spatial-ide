@@ -258,12 +258,14 @@ fn assert_the_engines_cancellation_arrived(o: &Outcome) {
     );
 }
 
+/// RECORDED MUTATION (M1): delete the owner-cancel arm from the writer. It fails at `recv_by`.
 #[tokio::test(flavor = "multi_thread")]
 async fn an_skp_cancel_reaches_the_client_as_a_terminal_with_no_credit_granted() {
     let o = owner_ends_a_stream_with_no_credit_granted("cancel", OwnerAct::SkpCancel).await;
     assert_the_engines_cancellation_arrived(&o);
 }
 
+/// RECORDED MUTATION (M1): delete the owner-cancel arm from the writer. It fails at `recv_by`.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_close_dataset_reaches_the_client_as_a_terminal_with_no_credit_granted() {
     let o = owner_ends_a_stream_with_no_credit_granted("close", OwnerAct::CloseDataset).await;

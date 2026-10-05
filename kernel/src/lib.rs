@@ -758,6 +758,7 @@ mod cancel_notice_tests {
 
     /// T6 (`protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`, Amendment 2, row B): the
     /// registered notice runs exactly once, whichever of `on_cancel` and `cancel` comes first.
+    /// RECORDED MUTATION (M6): `on_cancel` always stores. It fails at order (ii)'s first count.
     #[test]
     fn engine_cancel_runs_the_registered_notice_once_in_either_order() {
         let runs = Arc::new(AtomicUsize::new(0));

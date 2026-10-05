@@ -838,6 +838,7 @@ async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATION (M2): the credit wait back above the pump receive. It fails at `recv_by`.
 #[tokio::test]
 async fn credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal() {
     // C1. Twelve batches, twelve credits: the terminal must not wait for a thirteenth.
@@ -865,6 +866,7 @@ async fn credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal(
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATION (M2): the credit wait back above the pump receive. It fails at `recv_by`.
 #[tokio::test]
 async fn a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_granted() {
     // C2. The first item is the failure; no credit is ever granted.
@@ -884,6 +886,8 @@ async fn a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_gra
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATIONS: M3 (delete the pump-failure arm) fails at `recv_by`; M7 (drop the
+/// `batches_discarded` increment) fails at the count assertion, 0 in place of 3.
 #[tokio::test]
 async fn a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted() {
     // C3. Three batches are queued ahead of the failure and no credit is ever granted.
@@ -936,6 +940,7 @@ async fn at_the_plateau(
     (state, flag)
 }
 
+/// RECORDED MUTATION (M4): delete the `is_cancelled` deferral. It fails at the code assertion.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first() {
     // The source's cancel runs the owner notice at once and then keeps this adapter's own receive
@@ -957,6 +962,8 @@ async fn a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_fi
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATIONS: M5 (the channel-closed branch sends `Completed`) and M8 (drop the
+/// `[P6 placeholder]` prefix) fail at the code and the prefix assertions.
 #[tokio::test]
 async fn an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted(
 ) {
