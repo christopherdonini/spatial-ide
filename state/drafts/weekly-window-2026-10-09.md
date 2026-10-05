@@ -369,3 +369,7 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **Correction rounds caused by a pointer:** none so far. The form had no correction round before commit.
   - **A report names something from the read that the form used:** yes. The draft's part 4 says all five questions are answered (Q1 by §2's path table and Part 2, Q2 by Part 3 and OPEN-2, Q3 by T1 with M0 and M1, Q4 by T2, Q5 by §0.7). It also lists the read's sections that drove §0.2, §0.4, §0.7, §2, §4, §5 and Part 4.
   - **The index update** is owed in the PR (the form's Part 4 and §8 item 18).
+- **Before code, two amendments.**
+  - Amendment 1 (class 5) records question round 54's typed rulings.
+  - Amendment 2 settles Fable's round-54 advice. The architect drafted it: 111,659 subagent tokens, 35 tool uses, 392,352 ms. With the read and the first draft, the drafting total is 620,316 tokens, 206 tool uses and 1,942,584 ms.
+  - Neither amendment was caused by a wrong or missing pointer of the impact read, so neither counts against the lead (the brief's §4). Amendment 2's four points came from Fable's reading of the form, not from the read.
