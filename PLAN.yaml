@@ -4062,3 +4062,20 @@ nodes:
     entries: []
     summary: "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
     dates: {opened: 2026-10-05, done: null}
+  - id: typed-terminal-codes-post-check-race
+    title: "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source"
+    kind: task
+    lane: kernel-protocol
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
+    dates: {opened: 2026-10-05, done: null}

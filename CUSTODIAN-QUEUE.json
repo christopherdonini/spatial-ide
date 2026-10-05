@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T04:36:01.636Z",
-  "plan_hash": "8215f4dd7db5ba67152b09ddeaac072041b4fc426e6ba8d4068b950ed8d9fbde",
+  "generated_at": "2026-10-05T05:12:53.012Z",
+  "plan_hash": "57b121e6a6202261c8b0bd0eac0103da8c80d6905448a1d3d0d7ff936e204c5e",
   "priorities_approved": true,
   "next": {
     "id": "evidence-recorder-v0-1",
@@ -1422,6 +1422,25 @@
         "done": null
       },
       "summary": "Appended by question round 52, item 4 (RULED 2026-10-04), option (1), from kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md OPEN-4: kernel/tests/slice_budgets.rs scores its docs/08 cancellation p95 on the client pre-send to data-plane adapter receipt interval, not on ADR-018's pair (cancel_requested to PRODUCER_CANCELLED, on the producer's clock). The piece takes its own full form when placed: re-aim the harness cancellation cells to the engine trace pair, in a release build on reference hardware, and keep the adapter interval as a reported figure. Per ADR-018's no-retroactive-rescoring clause, nothing measured before is rescored. Per Fable's round-52 advice, item 2 (state/directives/2026-10-04-fable-advice-round-52.md), the form says how kernel/RESULTS.md's existing met rows for the cancellation budget are read: they name their interval (client pre-send to the adapter's receipt), which is not ADR-018's pair, so each gets a dated note beside it, never a rescoring. A docs/08 row's verdict is the human's (AI_DEVELOPMENT.md's red lines). Never queued until the human places it."
+    },
+    {
+      "id": "typed-terminal-codes-post-check-race",
+      "title": "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
     }
   ],
   "unscheduled": [

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `8215f4dd7db5ba67152b09ddeaac072041b4fc426e6ba8d4068b950ed8d9fbde`) at `2026-10-05T04:36:01.636Z`.
+Generated from `PLAN.yaml` (sha256 `57b121e6a6202261c8b0bd0eac0103da8c80d6905448a1d3d0d7ff936e204c5e`) at `2026-10-05T05:12:53.012Z`.
 
 ## 1. Next
 
@@ -95,6 +95,7 @@ Generated from `PLAN.yaml` (sha256 `8215f4dd7db5ba67152b09ddeaac072041b4fc426e6b
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (phase `prototype`) — never queued until placed
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
+- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
