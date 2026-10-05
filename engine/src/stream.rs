@@ -89,17 +89,18 @@ pub const MAX_QUEUED_BATCHES: usize = 2;
 /// after the cut.
 ///
 /// **What "identical either way" now means, on the live projected stream.** H3's second clause is
-/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
-/// that is not a multiple of 8: the IPC bytes of the slice and of its compacted copy differ in the
-/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
-/// 5.1, R-E1's probe), and for a non-null `Boolean`'s values bitmap at offset/length 8/3, 0/10 and
-/// 40/20, with the bytes equal at the unaligned 3/5 (Amendment 8's class-2 row; pinned in the X6
-/// test `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`).
-/// So this narrows to **decoded equality** — values, and validity within the array's length — never byte
-/// identity, on this stream. **Every other plan (publish's included) never reaches this function's
-/// compacting branch at all**: it keeps main's own single-run arm, the slice with no copy, so its
-/// bytes equal main's by construction and no claim about IPC byte identity is made for it, needed,
-/// or at risk.
+/// false at `arrow-ipc` 58.4.0 for the cases observed, and no rule over offsets or lengths is
+/// claimed beyond them: the IPC bytes of the slice and of its compacted copy differed for a
+/// nullable `Utf8` slice carrying a NULL (Amendment 5, row 5.1, R-E1's probe) and for a non-null
+/// `Boolean`'s values bitmap at offset/length 8/3, 0/10 and 40/20, and were equal at 3/5
+/// (Amendment 8's class-2 row; pinned in the X6 test
+/// `publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes`).
+/// So this narrows to **decoded equality** — values, and validity within the array's length — never
+/// byte identity, on this stream. **Every other plan (publish's included) never reaches
+/// [`retain_or_compact_single_run`]'s compacting branch at all**: it keeps main's own single-run
+/// arm, the slice with no copy, so its bytes equal main's by construction and no claim about IPC
+/// byte identity is made for it, needed, or at risk. For publish that is proven through `flush` by
+/// T1, `a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush`.
 pub const MAX_ATTRIBUTE_RETENTION_FACTOR: usize = 2;
 
 /// **Publish partition ceilings — declared, not discovered (ADR-010 rule 6).**
@@ -583,10 +584,13 @@ pub(crate) struct StreamPlan {
     /// Whether each batch reports its own extent. See [`BatchInfo::xy_bounds`].
     pub(crate) report_bounds: bool,
     /// **`flush`'s retention rule (condition (3); §7), narrowed to the live projected stream alone
-    /// (Amendment 5, row 5.2 — route (a)).** H3's second clause is false for a nullable, non-8-
-    /// aligned run at `arrow-ipc` 58.4.0 (R-E1); a publish partition's bytes are declared unchanged
-    /// (§5) and must equal main's by construction, so `stream_for_publish`'s plan — and every other
-    /// plan — keeps main's own single-run arm (the slice, no copy) regardless of this flag. Only
+    /// (Amendment 5, row 5.2 — route (a)).** H3's second clause is false at `arrow-ipc` 58.4.0 where
+    /// a sliced bitmap's padding bits differ between the slice and its compacted copy: observed for
+    /// a nullable `Utf8` run carrying a NULL (Amendment 5, row 5.1, R-E1) and for a non-null
+    /// `Boolean`'s values bitmap (Amendment 8's class-2 row). A publish partition's bytes are
+    /// declared unchanged (§5) and must equal main's by construction, so `stream_for_publish`'s plan
+    /// — and every other plan — keeps main's own single-run arm (the slice, no copy) regardless of
+    /// this flag. Only
     /// [`Dataset::stream_projected_with_cancel`]'s plan sets this `true`.
     pub(crate) compact_attribute_retention: bool,
 }
@@ -2308,9 +2312,26 @@ fn buffer_count(data: &arrow::array::ArrayData) -> usize {
     n
 }
 
-/// `flush`'s retention rule (condition (3); §7; narrowed to the live projected stream alone, route
-/// (a), Amendment 5 row 5.2): a single-run attribute slice is kept as a slice — no copy — unless the
-/// buffers it retains exceed an allowance of `MAX_ATTRIBUTE_RETENTION_FACTOR` times its own memory,
+/// `flush`'s own single-run decision, extracted so a test can drive it directly with either plan's
+/// own declared `compact_attribute_retention` (X6; Amendment 5, row 5.2/5.6) without wiring a whole
+/// `Pending`/channel/envelope through `flush` itself. `compact` is the calling plan's own declared
+/// choice (`StreamPlan::compact_attribute_retention`'s own doc) — `false` for every plan but the
+/// live projected stream's. Those plans never enter [`retain_or_compact_single_run`]'s compacting
+/// branch at all, and so never risk the byte difference H3's second clause found (row 5.1); for
+/// publish, T1 (`a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush`) proves it
+/// through `flush`.
+fn single_run_retention(array: &ArrayRef, compact: bool) -> Result<ArrayRef> {
+    if compact {
+        retain_or_compact_single_run(array)
+    } else {
+        Ok(Arc::clone(array))
+    }
+}
+
+/// The retention rule `flush` applies to a single-run attribute slice, reached through
+/// [`single_run_retention`] and narrowed to the live projected stream alone (condition (3); §7;
+/// route (a), Amendment 5 row 5.2): the slice is kept as a slice — no copy — unless the buffers it
+/// retains exceed an allowance of `MAX_ATTRIBUTE_RETENTION_FACTOR` times its own memory,
 /// **plus 64 bytes per buffer it holds** (Amendment 5, row 5.3 — `arrow-buffer` 58.4.0's own
 /// `MutableBuffer` allocation-rounding multiple, confirmed by R-E2: a 1-row `Int64` run retains 64
 /// bytes against 8, and a 100-row `Boolean` run 64 against 13, neither of which the plain factor
@@ -2321,20 +2342,6 @@ fn buffer_count(data: &arrow::array::ArrayData) -> usize {
 /// whole: a run near the end of a large chunk retains little of it (offset near the chunk's end),
 /// while a run near the start of the same chunk retains almost all of it, so the ratio is a property
 /// of *this* run and cannot be precomputed before `run_start..row` is known.
-/// `flush`'s own single-run decision, extracted so a test can drive it directly with either plan's
-/// own declared `compact_attribute_retention` (X6; Amendment 5, row 5.2/5.6) without wiring a whole
-/// `Pending`/channel/envelope through `flush` itself. `compact` is the calling plan's own declared
-/// choice (`StreamPlan::compact_attribute_retention`'s own doc) — `false` for every plan but the
-/// live projected stream's, which never enters [`retain_or_compact_single_run`]'s compacting branch
-/// at all and so never risks the byte difference H3's second clause found (row 5.1).
-fn single_run_retention(array: &ArrayRef, compact: bool) -> Result<ArrayRef> {
-    if compact {
-        retain_or_compact_single_run(array)
-    } else {
-        Ok(Arc::clone(array))
-    }
-}
-
 fn retain_or_compact_single_run(array: &ArrayRef) -> Result<ArrayRef> {
     let data = array.to_data();
     let buffer_mem = data.get_buffer_memory_size();
@@ -2358,12 +2365,13 @@ fn retain_or_compact_single_run(array: &ArrayRef) -> Result<ArrayRef> {
 ///
 /// **Only ever called on the live projected stream** (route (a), Amendment 5 row 5.2 —
 /// [`retain_or_compact_single_run`]'s own `compact_attribute_retention` gate). H3's second clause is
-/// false at `arrow-ipc` 58.4.0 wherever a bitmap is sliced at a byte-aligned offset to a length
-/// that is not a multiple of 8: the slice and this compacted copy write different IPC bytes, in the
-/// bitmap's padding bits. Observed for a nullable `Utf8` slice carrying a NULL (Amendment 5, row
-/// 5.1) and for a non-null `Boolean`'s values bitmap (Amendment 8's class-2 row). The guarantee this function actually
-/// gives is **decoded equality** — the same values, and the same validity within the array's own
-/// length — never byte identity, and nothing on this stream claims the latter.
+/// false at `arrow-ipc` 58.4.0 for the cases observed, and no rule over offsets or lengths is
+/// claimed beyond them: the slice and this compacted copy wrote different IPC bytes for a nullable
+/// `Utf8` slice carrying a NULL (Amendment 5, row 5.1) and for a non-null `Boolean`'s values bitmap
+/// at offset/length 8/3, 0/10 and 40/20, and the same bytes at 3/5 (Amendment 8's class-2 row). The
+/// guarantee this function actually gives is **decoded equality** — the same values, and the same
+/// validity within the array's own length — never byte identity, and nothing on this stream claims
+/// the latter.
 fn compact_attribute_slice(array: &ArrayRef) -> ArrayRef {
     let data = array.to_data();
     let mut mutable = MutableArrayData::new(vec![&data], false, array.len());
@@ -2427,10 +2435,13 @@ fn flush(
         // `MAX_QUEUED_BATCHES`'s doc states.
         //
         // **Route (a) (Amendment 5, row 5.2): this compaction runs only on the live projected
-        // stream.** H3's second clause is false for a nullable, non-8-aligned run at `arrow-ipc`
-        // 58.4.0 (R-E1), so every other plan — publish's included — keeps main's own single-run
-        // arm (the slice, no copy) regardless of the factor: `compact_attribute_retention` is that
-        // plan's own declared choice (`StreamPlan`'s own doc), not a fact this function decides.
+        // stream.** H3's second clause is false at `arrow-ipc` 58.4.0 where a sliced bitmap's
+        // padding bits differ between the slice and its compacted copy — observed for a nullable
+        // `Utf8` run carrying a NULL (R-E1; row 5.1) and for a non-null `Boolean`'s values bitmap
+        // (Amendment 8's class-2 row) — so every other plan, publish's included, keeps main's own
+        // single-run arm (the slice, no copy) regardless of the factor:
+        // `compact_attribute_retention` is that plan's own declared choice (`StreamPlan`'s own
+        // doc), not a fact this function decides.
         .map(|runs| match runs.len() {
             1 => single_run_retention(&runs[0], compact_attribute_retention),
             _ => {
@@ -2754,15 +2765,20 @@ mod tests {
     }
 
     /// E-15: `a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes`. **Narrowed to a
-    /// non-null run** (Amendment 5, row 5.1 — H3's second clause is false for nullable columns at
-    /// `arrow-ipc` 58.4.0; this test's own `Int64` array carries no nulls, so byte identity is a
-    /// true claim for it specifically, never a claim about every attribute column). X6's own new
+    /// non-null run** (Amendment 5, row 5.1 and Amendment 8's class-2 row — H3's second clause is
+    /// false at `arrow-ipc` 58.4.0 where a sliced bitmap's padding bits differ, observed for a
+    /// nullable `Utf8` run carrying a NULL and for a non-null `Boolean`'s values bitmap; this test's
+    /// own non-null `Int64` array has no bitmap, so byte identity is a true claim for it
+    /// specifically, never a claim about every attribute column). X6's own new
     /// tests (`publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_
     /// bytes`, `a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included`) cover
     /// the nullable shape this one does not.
     /// Mutation: compact the whole chunk — if `compact_attribute_slice` copied the *source* array's
     /// full length rather than the retained run's own `offset..offset+len`, the compacted array's
     /// row count (and therefore its IPC bytes) would no longer match the 20-row run it replaces.
+    /// Recorded mutation (B1 gate 3's reviewer, row 9.6(a), observed at `c9ec02e`): a full-length
+    /// copy realized through `Buffer::ptr_offset`. This test fails by name at its length assertion,
+    /// left 5000, with the message "the whole chunk was compacted, not just the retained run".
     #[test]
     fn a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes() {
         let source: ArrayRef = Arc::new(arrow::array::Int64Array::from(
@@ -3094,6 +3110,11 @@ mod tests {
     /// [`retain_or_compact_single_run`] is not `Arc::ptr_eq` to the emitted array, so `flush` kept it
     /// as the uncompacted slice. A compacted or concatenated array is tight and would come back
     /// pointer-equal.
+    // RECORDED MUTATION (M-E2, B1 gate 3's S1), observed at
+    // 784a15c79bc818488b89fdc21008993ccadd6297: in `flush`'s single-run arm, pass `true` to
+    // `single_run_retention` in place of the plan's `compact_attribute_retention`. Observed: this
+    // test fails by name -- "no queued publish batch carries an over-allowance `zone` run: publish's
+    // `flush` compacted every one, or the fixture has no such run". Reverted.
     #[cfg(feature = "fixture")]
     #[test]
     fn a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush() {
