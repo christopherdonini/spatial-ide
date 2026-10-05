@@ -351,3 +351,21 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **Content:** pointers and five gap questions. The custodian's read found no draft text, design, recommendation or OPEN-item answer in it. Four pointers spot-checked by the custodian resolve and say what the read claims; that is not a gate finding.
   - **Found missing or inconsistent by the lead itself** (not by the architect or a gate): no ADR-014 file, which `protocol/data-plane/README.md` names as reserved; no KNOWN-LIMITATIONS item names the stall; `protocol/data-plane/README.md`'s ceiling list gives `START_TIMEOUT` as 10 s, against 120 s in `server.rs` and elsewhere in the same README.
 - **The architect's draft** follows, with the read's path in its brief. Its cost, the pointers it used, found wrong or found missing, the correction rounds and the index update are logged here as they happen.
+- **The architect's draft** is `state/consults/2026-10-05-data-plane-terminal-without-credit-architect-draft.md` (report sha256 ad52818b, extracted from the hand-back).
+  - **Cost** (the harness's task notification): 273,907 subagent tokens, 61 tool uses, 1,014,793 ms. The run lasted 00:49:09Z to 01:06:04Z. Write audit PASS: zero writes.
+  - **Combined, impact read plus draft:** 508,657 tokens, 171 tool uses, 1,550,232 ms. The baseline above averages about 211,000 tokens, 67 tool uses and 682,000 ms per draft. No threshold is set (the brief's §5); the human judges at the end.
+  - **The form** is committed at `protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`, 81 pins at 92a71c30.
+  - **Pointers found wrong, by the architect** (at drafting, not by a gate):
+    - W1: the read lists the attribution-race cancel as a Redeemed-arm caller. It meets the Pending arm, and no data-plane stream exists for it. The custodian confirmed this against the code.
+    - W2: the read says every kernel test client grants credit. h2_a and h3 in `kernel/tests/end_to_end.rs` grant none.
+  - **Pointers found missing, by the architect:** seven, its M-a to M-g:
+    - the ticket registry's lock around the Redeemed-arm cancel;
+    - the other `SourceCancel` implementors;
+    - the transport-leakage scan's forbidden-word list;
+    - the process-global trace;
+    - receive-first's effect on the memory bound;
+    - the shell's supersede order;
+    - `EngineCancel`'s construction site.
+  - **Correction rounds caused by a pointer:** none so far. The form had no correction round before commit.
+  - **A report names something from the read that the form used:** yes. The draft's part 4 says all five questions are answered (Q1 by §2's path table and Part 2, Q2 by Part 3 and OPEN-2, Q3 by T1 with M0 and M1, Q4 by T2, Q5 by §0.7). It also lists the read's sections that drove §0.2, §0.4, §0.7, §2, §4, §5 and Part 4.
+  - **The index update** is owed in the PR (the form's Part 4 and §8 item 18).
