@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b332e64c49c43068bbad3fc9da366ab56dfbdd11c4460a21df74f95b72755935`) at `2026-10-05T07:26:07.501Z`.
+Generated from `PLAN.yaml` (sha256 `4919ddd8b8ef1b86a85726b5f934561114375802ba006013f80d3e208a891734`) at `2026-10-05T08:17:32.044Z`.
 
 ## 1. Next
 
@@ -95,6 +95,7 @@ Generated from `PLAN.yaml` (sha256 `b332e64c49c43068bbad3fc9da366ab56dfbdd11c446
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
+- **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

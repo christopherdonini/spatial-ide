@@ -4035,14 +4035,14 @@ nodes:
     order: 20
     depends_on: [evidence-recorder-v0]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md
     merge: merge-commit
     evidence: null
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's."
+    summary: "FORM COMMITTED 2026-10-05 (tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md, the architect draft after the P0 report state/consults/2026-10-05-evidence-recorder-v0-1-p0-report.md; full form). OPEN-1 (POSIX-spelled cd plans) and OPEN-3 (an after-side ceiling) are red lines for the human typed rulings; OPEN-2 is the human starting claude once so that claude plugin test works. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's."
     dates: {opened: 2026-10-05, done: null}
   - id: guardian-v1
     title: "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)"
@@ -4078,4 +4078,21 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
+    dates: {opened: 2026-10-05, done: null}
+  - id: verify-quotes-dotted-paths
+    title: "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 45
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Seen 2026-10-05 committing tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md: scripts/plan/verify-quotes.mjs, HASH_REF_RE, requires a path to start with a letter, digit or underscore, so .github/workflows/governance-ci.yml:81-83 @ 17063904 sha256:<hex> binds as github/workflows/governance-ci.yml and fails as unresolvable. The form writes its three such hashes as unchecked, in words, so that no raw sha256 token is left unbound. The same pins in state/consults pass only because that folder is not scanned. Test-only plus a one-character-class change is the likely size. Never queued until the human places it."
     dates: {opened: 2026-10-05, done: null}
