@@ -42,6 +42,10 @@ function runner(...args) {
 const lines = (text) => text.split('\n').filter((l) => l !== '');
 const started = (file) => (existsSync(file) ? Number(readFileSync(file, 'utf8')) : 0);
 
+// RECORDED MUTATION: stop after the first failed run (`if (failed > 0) break;` after the per-run line)
+// -> fails: `the runner runs the command n times in order, reports each exit and never stops early`, `a
+// command that cannot start counts as a failed run and the runner carries on`. Observed at 7bb137242931
+// with this change, node v24.18.1.
 test('the runner runs the command n times in order, reports each exit and never stops early', () => {
   const file = join(dir, 'rf1.count');
   const ran = runner('3', '--', process.execPath, COUNTER, file, '0', '3', '0');
@@ -56,6 +60,10 @@ test('the runner runs the command n times in order, reports each exit and never 
   assert.equal(started(clean), 2);
 });
 
+// RECORDED MUTATION: `shell: true` in the spawnSync options -> fails: `the runner runs the command n
+// times in order, reports each exit and never stops early`, `the runner passes the arguments after the
+// separator to the command unchanged, with no shell`, `a command that cannot start counts as a failed run
+// and the runner carries on`. Observed at 7bb137242931 with this change, node v24.18.1.
 test('the runner passes the arguments after the separator to the command unchanged, with no shell', () => {
   const args = ['a b', '$HOME', '%PATH%', '*', '', '--', '--flag=1'];
   const ran = runner('1', '--', process.execPath, ECHO, ...args);
@@ -65,6 +73,9 @@ test('the runner passes the arguments after the separator to the command unchang
   assert.equal(ran.status, 0);
 });
 
+// RECORDED MUTATION: a null status read as 0 (`(ran.status ?? 0) !== 0` in the failed-run check) ->
+// fails: `a command that cannot start counts as a failed run and the runner carries on`. Observed at
+// 7bb137242931 with this change, node v24.18.1.
 test('a command that cannot start counts as a failed run and the runner carries on', () => {
   const ran = runner('2', '--', 'no-such-command-for-the-repeat-runner-test');
   assert.deepEqual(lines(ran.stdout), [
@@ -75,6 +86,8 @@ test('a command that cannot start counts as a failed run and the runner carries 
   assert.equal(ran.status, 1);
 });
 
+// RECORDED MUTATION: an n of 0 accepted (`N_PATTERN` as `/^[0-9]+$/`) -> fails: `a malformed call runs
+// nothing and exits 2`. Observed at 7bb137242931 with this change, node v24.18.1.
 test('a malformed call runs nothing and exits 2', () => {
   const file = join(dir, 'rf4.count');
   const child = [process.execPath, COUNTER, file];
