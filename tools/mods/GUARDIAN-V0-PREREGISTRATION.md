@@ -866,3 +866,13 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
 - **E6:** not fired. It is recorded when it fires.
 
 **Superseded index.** Amendment 8, the build's last bullet (no row claimed for 2.1.289), and Amendment 8's E5, its last bullet (§2.7's condition read as not yet met): superseded by this amendment's rows at 2.1.289. Amendment 8's rows stand as 2.1.288-engine results.
+
+### Amendment 10 — two more over-refusals, seen in a subagent run (class 1)
+
+*Class 1, observations recorded by the custodian, the same kind of row as Amendment 8's G1 row. Guardian v0 is unchanged. `guardian-v1` (placed 2026-10-05; the MODS-V1 brief, §2.1) carries the G1 fix, and its P0 reads this row. The reason texts are byte-copied by script from the tool results in the subagent's transcript.*
+
+- **G1, a third shape.** At 2026-10-05T07:45:36.618Z, a worker's Bash call that wrote a JavaScript file through a heredoc was refused: `spatial-guardian G1: refused, because this git push force-pushes or deletes a remote ref.` The word push appeared only as a method name in the JavaScript text. There was no force or delete spelling, and no git command followed it. It is an over-refusal, and it failed closed.
+- **A Write to a folder not yet created.** At 07:45:45.134Z, and again at 07:45:54.149Z, the same worker's Write calls were refused: `spatial-guardian: refused, because the path cannot be placed.` Each wrote a new file in the worker's own scratch folder, whose parent folder did not exist yet. The second attempt spelled the path in its long form. Once the folder existed, the Write succeeded. It is an over-refusal, and it failed closed. The README's over-refusal list does not name it.
+- **Source:** the P0 report of `evidence-recorder-v0-1`, its observations section (`state/consults/2026-10-05-evidence-recorder-v0-1-p0-report.md`). The times are from the subagent's transcript.
+
+**Superseded index.** None.

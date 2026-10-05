@@ -579,3 +579,17 @@ with exit code 1
 - **Porcelain:** the main checkout's porcelain held only its two pre-existing untracked items before (18:34:57Z) and after (19:21:31Z) the rows. No probe wrote into the repository.
 
 **Superseded index.** None.
+
+### Amendment 6 — E1, at the first natural Guardian refusal (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 E1 directs. Nothing was run for it (O-8; round 50, item 1). O-14 was ruled (a) on 2026-10-04 (the install approval's RULED block in `DECISIONS-PENDING.md`), so the row is read as §4 E1 already carries it.*
+
+- **The refusal.** At 2026-10-05T07:45:36.618Z (the tool result's stamp in the subagent's transcript), Guardian refused a Bash call in a worker's run: the P0 of `evidence-recorder-v0-1`, in this session, with the Recorder enabled. Its reason, byte-copied by script from the tool result: `spatial-guardian G1: refused, because this git push force-pushes or deletes a remote ref.`
+- **The engine build:** 2.1.289. `claude --version` read it at the start and the end of that run, as its report records.
+- **Approved under §2.2?** No, read by hand. The call began with a shell variable assignment and wrote a file through a heredoc. A heredoc makes `splitCommand` mark the call unsupported (`hooks/register.js`, that function), so no row applies.
+- **A record of it in the day folder?** None. At 07:57:55Z the 2026-10-05 day folder held 20 files. None carries that command, and none started in that minute.
+- **The porcelain** of the main checkout held only its two pre-existing untracked items before and after that run (the run's report, its commands section).
+- **Reading, under O-14 (a):** the refused call is not approved, so the row bears on no order. The chain order with Guardian stays unclaimed in v0 (§1).
+- **The same refusal is a false alarm of G1:** no force or delete spelling was present, and the word push sat in JavaScript text inside the heredoc. It is recorded on Guardian's side as that form's Amendment 10.
+
+**Superseded index.** None.
