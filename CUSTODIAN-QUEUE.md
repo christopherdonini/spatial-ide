@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b060d8d6fd4c04baa56d963279c098eefbdb06d7046dc176cbb4a380d984d84d`) at `2026-10-05T18:52:15.873Z`.
+Generated from `PLAN.yaml` (sha256 `935ee8522199fdc9ddb58b5f04174a132a7b1e3c023f529c682bd9d1c34c71de`) at `2026-10-05T19:01:12.171Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `b060d8d6fd4c04baa56d963279c098eefbdb06d7046d
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
-- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 21, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -31,7 +30,7 @@ Generated from `PLAN.yaml` (sha256 `b060d8d6fd4c04baa56d963279c098eefbdb06d7046d
 
 ## 5. In progress
 
-- (none)
+- **guardian-v1** — Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05) — evidence: branch `cut/guardian-v1`
 
 ## 6. Proposed / unscheduled
 
