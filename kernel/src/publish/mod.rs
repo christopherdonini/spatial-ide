@@ -481,6 +481,21 @@ fn preflight_pinless_parts(req: &PublishRequest<'_>) -> Result<PreflightPinless,
                 ),
         });
     }
+    // **The format's own geometry encoding** (ADR-034 Decision 10; MP-1 preregistration §2, K2).
+    // Third in this function, directly after the degrees check and before anything is resolved: a
+    // field read off the dataset, no IO, and — like the check above — one whose refusal no change
+    // to the rest of the request can fix. The dataset's encoding is compared with what
+    // `format_declaration` declares a version-1 bundle carries, so the refusal is owned by the
+    // format and moves with it; the declaration's value stays `geoarrow.polygon`. It is a format
+    // fact and never an engine failure, so it is its own variant and never `PublishError::Engine`.
+    let format = format_declaration();
+    let encoding = ds.geometry_encoding().as_str();
+    if encoding != format.geometry_encoding {
+        return Err(PublishError::GeometryEncodingNotPublishable {
+            encoding: encoding.to_string(),
+            carried: format.geometry_encoding,
+        });
+    }
     let logical_uri = dataset_logical_uri(req.dataset_name)?;
 
     // ---- license, before any work is spent on a bundle that may not be publishable -------------

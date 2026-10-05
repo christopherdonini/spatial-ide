@@ -1840,3 +1840,142 @@ fn a_projected_dataset_is_untouched_by_the_degrees_gate() {
         "an EPSG:2056 dataset must not reach boundary 8's refusal"
     );
 }
+
+/// MP-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §3, §4): a fixture of explicit WKB rows under a
+/// declared `geometry_types`, with no covering and no attribute column, in the given CRS.
+fn multipolygon_fixture(
+    dir: &Path,
+    declared: &str,
+    rows: Vec<Vec<u8>>,
+    crs_mode: CrsMode,
+    domain: CoordinateDomain,
+) -> PathBuf {
+    let path = dir.join("rows.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: spatial_engine::fixture::GeometryMode::Rows(rows),
+            with_covering_bbox: false,
+            declared_types: spatial_engine::fixture::DeclaredTypes::Json(declared.to_string()),
+            crs_mode,
+            domain,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    path
+}
+
+/// **K-2 (ADR-034 Decision 10; acceptance item 1).** A MultiPolygon-encoded dataset is a valid open
+/// that a version-1 bundle cannot carry, so publish refuses it at preflight, by name, typed as the
+/// format's refusal and not as an engine failure — before the pin, before any destination exists.
+/// F-1 (`["MultiPolygon"]`) and F-3 (an explicit `[]` over Polygon rows, the accepted loss) are the
+/// two ways in. The source is opened and deliberately **not** pinned: a refusal that waited for the
+/// pin would answer `SourceNotPinned` instead.
+///
+/// Mutation: delete the encoding check from `publish::preflight_pinless_parts`. Expected failure:
+/// this test fails by name (the request then falls through to a different refusal).
+///
+/// Observed over `1b978ee5` on the uncommitted tree of the kernel commit:
+/// `a_multipolygon_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write` FAILED
+/// with the mutation applied, then reverted.
+#[test]
+fn a_multipolygon_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write() {
+    use spatial_engine::fixture::{multipolygon_f1_rows, E_LO, N_LO};
+
+    let polygon_rows: Vec<Vec<u8>> = (0..3)
+        .map(|i| {
+            let x = E_LO + f64::from(i) * 100.0;
+            spatial_engine::wkb::encode_polygon(&[vec![
+                [x, N_LO],
+                [x + 50.0, N_LO],
+                [x + 50.0, N_LO + 50.0],
+                [x, N_LO],
+            ]])
+        })
+        .collect();
+    let cases = [
+        (
+            "f1",
+            r#"["MultiPolygon"]"#,
+            multipolygon_f1_rows([E_LO, N_LO], 10.0),
+        ),
+        ("f3", "[]", polygon_rows),
+    ];
+    for (name, declared, rows) in cases {
+        let d = workspace(&format!("mp1-k2-{name}"));
+        let path = multipolygon_fixture(
+            &d,
+            declared,
+            rows,
+            CrsMode::DeclaredLv95,
+            CoordinateDomain::Lv95Metres,
+        );
+        let fixture_sha_before = sha256_file(&path);
+        let ds = Dataset::open(&path).unwrap();
+        let v = viewer();
+        let dest = d.join("bundle");
+
+        let e = preflight_pinless(&request(&ds, &v, dest.clone())).unwrap_err();
+        match &e {
+            PublishError::GeometryEncodingNotPublishable { encoding, carried } => {
+                assert_eq!(encoding, "geoarrow.multipolygon", "{name}");
+                assert_eq!(carried, "geoarrow.polygon", "{name}");
+            }
+            other => panic!("{name}: expected GeometryEncodingNotPublishable, got {other}"),
+        }
+        assert_eq!(e.code(), "publish.geometry_encoding_not_publishable");
+        assert!(
+            e.to_string().starts_with("[P6 placeholder] "),
+            "a new operator string is a placeholder: {e}"
+        );
+        assert!(!dest.exists(), "{name}: a destination exists");
+        assert!(ds.content_pin().is_none(), "{name}: the source was pinned");
+
+        // The same refusal through the whole operation, and still nothing written.
+        match publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None) {
+            Err(PublishError::GeometryEncodingNotPublishable { .. }) => {}
+            other => panic!("{name}: publish_unguarded gave {other:?}"),
+        }
+        assert!(!dest.exists(), "{name}: a destination exists after publish");
+        assert_eq!(
+            sha256_file(&path),
+            fixture_sha_before,
+            "{name}: the fixture file changed"
+        );
+    }
+}
+
+/// **K-3 (ADR-034 Decision 10, ordering).** F-13 is F-1 written in CRS84 degrees: it is both
+/// degrees and MultiPolygon-encoded, and it refuses as `GeographicCrsNotPublishable`, because that
+/// check runs first. That keeps corpus rows #11 and #12 refusing as they do at publish today.
+///
+/// Mutation: move the encoding check above the degrees check in `preflight_pinless_parts`.
+/// Expected failure: this test fails by name (F-13 then refuses as the encoding).
+///
+/// Observed over `1b978ee5` on the uncommitted tree of the kernel commit:
+/// `a_degrees_multipolygon_dataset_still_refuses_as_the_degrees_dataset` FAILED with the mutation
+/// applied, then reverted.
+#[test]
+fn a_degrees_multipolygon_dataset_still_refuses_as_the_degrees_dataset() {
+    use spatial_engine::fixture::{multipolygon_f1_rows, LAT_LO, LON_LO};
+
+    let d = workspace("mp1-k3-f13");
+    let path = multipolygon_fixture(
+        &d,
+        r#"["MultiPolygon"]"#,
+        multipolygon_f1_rows([LON_LO, LAT_LO], 0.001),
+        CrsMode::DeclaredCrs84Degrees,
+        CoordinateDomain::Wgs84Degrees,
+    );
+    let ds = Dataset::open(&path).unwrap();
+    assert_eq!(
+        ds.geometry_encoding(),
+        spatial_engine::GeometryEncoding::MultiPolygon
+    );
+    let v = viewer();
+    match preflight_pinless(&request(&ds, &v, d.join("bundle"))) {
+        Err(PublishError::GeographicCrsNotPublishable { .. }) => {}
+        other => panic!("F-13 must refuse as the degrees dataset, got {other:?}"),
+    }
+}

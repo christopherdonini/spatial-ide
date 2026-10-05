@@ -176,9 +176,13 @@ fn computed() -> String {
 // RECORDED MUTATION (observed on the uncommitted tree over `ff6bdddc`, the branch base, with the
 // golden files as the only change; a golden commit cannot name its own id): in
 // `engine/src/stream.rs::estimate_bytes`, change `rows * 8` to `rows * 9`. The partition cuts
-// move, and `the_published_partitions_and_manifest_match_the_golden_file` fails by name. §4's own
-// mutation for this row (select MultiPolygon for `[Polygon]`) needs code the golden commit does
-// not have; it is observed in the engine commit and recorded there.
+// move, and `the_published_partitions_and_manifest_match_the_golden_file` fails by name.
+//
+// RECORDED MUTATION (§4's own for this row, which needs code the golden commit does not have;
+// observed over `1b978ee5`, the engine commit, on the uncommitted tree of the kernel commit): in
+// `engine/src/geoarrow.rs::encoding_for_declared_types`, select `MultiPolygon` where the all-
+// `Polygon` branch selects `Polygon`. `the_published_partitions_and_manifest_match_the_golden_file`
+// FAILED with the mutation applied, then it was reverted.
 #[test]
 fn the_published_partitions_and_manifest_match_the_golden_file() {
     let got = computed();

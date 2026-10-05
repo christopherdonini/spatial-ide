@@ -53,6 +53,9 @@
 //!   **`GeographicCrsNotPublishable`** (Brief A P3, boundary 8 — it runs second in
 //!   `preflight_pinless_parts`, before the destination is resolved, so it takes this same
 //!   no-audit-record shape for the same reason),
+//!   **`GeometryEncodingNotPublishable`** (MP-1, ADR-034 Decision 10 — it runs third in
+//!   `preflight_pinless_parts`, directly after the degrees check and before the destination is
+//!   resolved, so no record can carry this kind and the audit reader gains no arm for it),
 //!   `SourceNotPinned`, `LicenseDeclaredTwice`, `LicenseNotCarryable`, `OperatorLicenseEmpty`, the
 //!   three `ViewerLicense*` refusals, `CorrespondingSourceNotDurable`, `DatasetNameRejected`, and
 //!   any `Style` or `Engine` error — **including `ReaderCeilingExceeded`** (RELEASE-0.1 item 3e,
@@ -233,6 +236,7 @@ fn error_kind(e: &BoundaryError) -> &'static str {
             PublishError::DatasetNameRejected { .. } => "DatasetNameRejected",
             PublishError::RowFilterNotRecordable => "RowFilterNotRecordable",
             PublishError::GeographicCrsNotPublishable { .. } => "GeographicCrsNotPublishable",
+            PublishError::GeometryEncodingNotPublishable { .. } => "GeometryEncodingNotPublishable",
             PublishError::CeilingExceeded { .. } => "CeilingExceeded",
             PublishError::ReaderCeilingExceeded { .. } => "ReaderCeilingExceeded",
             PublishError::Cancelled => "Cancelled",
@@ -291,6 +295,9 @@ fn publish_outcome(e: &PublishError) -> Outcome {
         // The gate working, not a broken machine: the request describes a dataset this version
         // cannot publish honestly (Brief A boundary 8).
         | PublishError::GeographicCrsNotPublishable { .. }
+        // Likewise the gate working: the dataset is a valid open the format cannot yet carry
+        // (ADR-034 Decision 10), and the engine did not fail.
+        | PublishError::GeometryEncodingNotPublishable { .. }
         | PublishError::CeilingExceeded { .. }
         | PublishError::ReaderCeilingExceeded { .. } => Outcome::Refused,
         PublishError::DestinationNotWritable { .. }
