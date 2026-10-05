@@ -416,3 +416,25 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   3. **E and N1 judge staleness by a different rule:** a ledger commit that did not rewrite `flushed_at`. By that rule the block at 00:16Z was fresh: its last ledger commit, 4398a779, had rewritten `flushed_at`. The PreCompact hook's rule judged it stale.
   4. **No N1 nudge text with a fill percentage appears** in either transcript. The automatic compactions ran at about 767k to 775k tokens, about 77% of a 1M window, which is below N1's threshold of 80. Whether that is why N1 stayed silent depends on which fill N1 reads (the Guardian form's §2.8 discloses the case). It is not settled here.
 - **Nothing is proposed** until the human has the path (the item J ruling).
+
+### B2, second pilot, continued (2026-10-05)
+
+- **Piece 1, `data-plane-terminal-without-credit`, at the gates (#176):**
+  - Gates 1 to 3, both gates each time (gate-log 402, 403, 405, 406, 408 and 409): no gate found an impact-read pointer wrong.
+  - Two correction rounds, neither caused by a pointer (C4), so neither counts against the lead:
+    - round 1: an implementation defect (the identity sentences wider than the discard drain, an unreachable arm), plus the custodian's record (Amendment 3's as-written hash, the I-7 reading);
+    - round 2: the custodian's record (Amendment 4 item 1 over round 12 (d)'s ceiling).
+  - Both gates passed at gate 3; the PR waits for the human's click.
+- **Measured piece 2: `b1-engine-kernel-half-followups`.** It is placed (engine, order 14) but not in a slot: #176 and #177 hold both. As for piece 1, the read precedes the architect's draft, and no code starts before a slot frees.
+  - **The impact read** is `state/consults/2026-10-05-b1-engine-kernel-half-followups-impact-read.md`: 159 lines, sha256 64261f6e53d23208b75b0cb4e763332602756c581e5772efdba4bc769283b71b, filed byte-identical as lead-data wrote it, read at main e29c6f86.
+  - **Cost** (the harness's task notification): 163,461 subagent tokens, 80 tool uses, 345,992 ms. The run lasted 12:03:50Z to 12:09:36Z.
+  - **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 40, Grep 38, the hand-back 1).
+  - **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. There was no worktree.
+  - **Content:** pointers and five gap questions. The custodian's read found no draft text, design, recommendation or answer. verify-cites resolves every rooted pointer. Three spot-checks (ADR-023's Status line, the B1 form's line 783, the conformance header's lines 3-6) say what the read claims; that is not a gate finding.
+  - **Found by the lead itself** (not by the architect or a gate):
+    - its own §1.5 range `kernel/tests/skp_projection.rs:917-921` ends one line short (922), disclosed in its hand-back;
+    - D2 may be moot at main, because the conformance header now names the 5d4da4d run;
+    - B1's form is closed to further additions before B1's close;
+    - `kernel-close-races-followups` claims part of the same recorded-mutation cites;
+    - a third nullable-only doc site that no gate named.
+  - **The architect's draft** follows, with the read's path in its brief.
