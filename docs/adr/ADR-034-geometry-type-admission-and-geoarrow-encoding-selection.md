@@ -1,6 +1,6 @@
 # ADR-034 — Geometry type admission and GeoArrow encoding selection
 
-**Status:** Proposed 2026-09-27 — filed on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 7; entry 126). It binds nothing and is not architect-blockable; acceptance is the human's (a red line), and whether acceptance makes it architect-blockable is the human's to say at acceptance. MP-1's preregistration is written only after the human accepts this ADR (the 2026-09-27 session order, its MultiPolygon paragraph, `state/directives/2026-09-27-session-order.md` — paraphrase). This ADR reads that order as setting acceptance before MP-1's preregistration, earlier than decision 8's recommended timing (acceptance at MP-1's gate; paraphrase); the reading is listed for the human below. The ruling's two riders bind MP-1's preregistration (PLAN node `geometry-types-beyond-polygons`) through the ruling itself, whatever this ADR's status.
+**Status:** Accepted 2026-10-05 — on the human's word, as merged, and architect-blockable as of acceptance (`state/directives/2026-10-05-adr-034-acceptance.md`, with its RULED 2026-10-05 block in `DECISIONS-PENDING.md`). The human's answers to the items put at acceptance are recorded in the Acceptance section at the end. Filed Proposed 2026-09-27 on the human's ruling (`DECISIONS-PENDING.md`, RULED 2026-09-24 — question round 17, item 7; entry 126). MP-1's preregistration may now be written. The ruling's two riders bind MP-1's preregistration (PLAN node `geometry-types-beyond-polygons`) through the ruling itself.
 **Drafted by:** the architect agent on the custodian's brief, reconciling its own skeleton (`state/consults/2026-09-24-multipolygon-assessment.md` §4) with that assessment's §5 decisions as ruled and the ruling's two riders; redrafted after its first and second full gates (attempts 1 and 2) for PLAN node `geometry-types-beyond-polygons`. Every tree claim below was read at main `0ada14f`.
 **Related:** `docs/01` principles 7 and 8 · `docs/02` · `docs/08_Testing.md` · `docs/10` · ADR-004 · ADR-006 · ADR-010 rules 1, 2 and 6 · ADR-016 §5, §6 and §7 · ADR-017 §3 and §4 (Accepted; not amended here) · `protocol/skp/SKP-V0.md` §1 (`describe`), §4 item 13, §5, §8 · `engine/LOD-PREREGISTRATION.md` · `engine/ADMISSION-RESULTS.md` · `engine/compat-corpus/of-record/MANIFEST.json` · RULED 2026-09-24 (night) item (2) · RULED 2026-09-24 — question round 17, items 3 and 7 · the 2026-09-27 session order, its MultiPolygon paragraph and its holds.
 
@@ -186,3 +186,16 @@ Not decided here:
 - **Placeholder.** The Decision reads decision 4's bracketed placeholder as the declared list, rendered as today's message renders it.
 - **Blockability.** Whether acceptance makes this ADR architect-blockable is the human's to say. ADR-016 recorded the answer at acceptance; ADR-028 recorded that it was not raised.
 - **Open items.** O1 to O8 are open for MP-1's preregistration and are not settled here.
+
+## Acceptance (2026-10-05)
+
+*Recorded by the custodian in the acceptance commit, from `state/directives/2026-10-05-adr-034-acceptance.md`, lines 6-13 (their sha256 f3a8c75f9833edef2853331bd70118b460774b26ceb849d44b7f7587984c9485 at the commit that adds it), referenced by item and not restated as a quotation. Nothing below is a quotation. The Decision above is accepted as merged; nothing in it is changed.*
+
+- **Blockability:** architect-blockable as of acceptance (the directive's opening line).
+- **Decision 5's basis** (item 1): the human accepts the loss the ADR names (Consequences, "Undeclared Polygon-only datasets"), and a KNOWN-LIMITATIONS row names it.
+- **Timing** (item 2): the Status line's reading of the 2026-09-27 session order is confirmed. Acceptance comes before MP-1's preregistration.
+- **ADR-016 cite** (item 3): §5, as the Decision has it.
+- **Placeholder** (item 4): read as the declared list, rendered as today's message renders it, as the Decision reads it.
+- **O1 and O2** (item 5): ruled for MP-1 by that item, which keeps today's refusal by name. Counting a row as unread stays open for a later cut.
+- **O3 to O8** (item 6): open for MP-1's preregistration. New operator wording ships as a P6 placeholder and is the human's at P6.
+- **MP-1's preregistration** may be written now (the directive's closing line).

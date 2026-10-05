@@ -1,20 +1,19 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `935ee8522199fdc9ddb58b5f04174a132a7b1e3c023f529c682bd9d1c34c71de`) at `2026-10-05T19:01:12.171Z`.
+Generated from `PLAN.yaml` (sha256 `5d1671e15b6694a22e4269fee8090a524ebbb3278147d7a904bbaa40c8bf18f4`) at `2026-10-05T19:20:32.086Z`.
 
 ## 1. Next
 
-- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`)
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`)
 
 ## 2. Ready
 
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`, order 6, budget 480 min)
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 0 min)
 
-### ruling
-
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (20 min)
+- (none)
 
 ## 4. Blocked on dependencies
 

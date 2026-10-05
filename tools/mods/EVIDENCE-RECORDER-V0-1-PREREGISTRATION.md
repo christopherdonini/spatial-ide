@@ -605,3 +605,56 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 10. **Done:** PLAN marks the node done, with evidence `{pr: 177}`, in this amendment's commit. `guardian-v1` is unblocked. Evaluation rows (a) to (e) are read at the window's end; they are not closing items.
 
 **Superseded index.** Amendment 4's D3 reading on `tools/mods` is superseded by item 4. Amendment 5's entries stand.
+
+### Amendment 7 — E9, read: the overhead stop fires (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 E9 directs and Amendment 6, item 6 left pending. The human's typed merge approval names E9 (`state/directives/2026-10-05-pr177-merge-approval.md`). Nothing was run for it. The records are read from the recorder's log folder outside the repository, by script, on 2026-10-05.*
+
+- **The sample:** the first 20 paired schema-v0.1 run records, by `started_at`, in 2.1.289-engine sessions after the 12:55:52Z reload. Excluded before the twentieth: `2026-10-05/141545397-79ce1669b887e0ff.json` (unpaired); `2026-10-05/143410609-6b8fc23a12f5a3b6.json` (unpaired); `2026-10-05/145907311-e783c48f68f9642a.json` (unpaired); `2026-10-05/150343890-2f47786fe60cb568.json` (unpaired). Each record's engine is read from the session transcripts: the record's command is matched to the Bash or PowerShell call with the same text whose stamp is nearest its `started_at` (within 120 s), and that transcript line's `version` is taken.
+- **The records,** in milliseconds. `pw` is the `ms` of the record whose `previous_write.record` names this one; the sum is §2.6's. The mtime figure (P0 §3's, the file's mtime less `ended_at` less `recorder_ms.after`) is beside it and not scored.
+
+| Record | started_at | Agent | before | after | write | pw | Sum | mtime figure |
+|---|---|---|---|---|---|---|---|---|
+| `2026-10-05/125736380-6f03801f192ec30c.json` | 2026-10-05T12:57:34.455Z | main | 157 | 132 | 67 | 3 | 359 | 69 |
+| `2026-10-05/130310985-90f34027df23cf5c.json` | 2026-10-05T13:01:03.329Z | main | 144 | 184 | 0 | 5 | 333 | 4 |
+| `2026-10-05/132440759-997fceaf98cc7df0.json` | 2026-10-05T13:14:44.079Z | worker-high | 83 | 145 | 0 | 2 | 230 | 2 |
+| `2026-10-05/131706875-19393d1a73c62612.json` | 2026-10-05T13:15:05.183Z | main | 171 | 0 | 1 | 112 | 284 | 88 |
+| `2026-10-05/134212433-b18b50ab64b0fe32.json` | 2026-10-05T13:41:51.330Z | worker-high | 91 | 106 | 0 | 1 | 198 | 2 |
+| `2026-10-05/134235069-0b0ad6fd0a11c628.json` | 2026-10-05T13:42:16.217Z | worker-high | 99 | 123 | 0 | 1 | 223 | 1 |
+| `2026-10-05/135749523-bdb67b99502b7621.json` | 2026-10-05T13:57:29.206Z | worker-high | 112 | 93 | 0 | 2 | 207 | 2 |
+| `2026-10-05/141240420-9115c900c29ac6be.json` | 2026-10-05T14:12:04.207Z | worker-high | 95 | 276 | 0 | 7 | 378 | 5 |
+| `2026-10-05/141322002-48222331e5234621.json` | 2026-10-05T14:12:52.389Z | worker-high | 109 | 98 | 0 | 1 | 208 | 1 |
+| `2026-10-05/141402502-cab90d5bb81af6ce.json` | 2026-10-05T14:13:34.173Z | worker-high | 102 | 103 | 1 | 1 | 207 | 3 |
+| `2026-10-05/141430874-31682c87176b2270.json` | 2026-10-05T14:14:07.770Z | worker-high | 102 | 102 | 0 | 2 | 206 | 1 |
+| `2026-10-05/141458604-ead167bf21471383.json` | 2026-10-05T14:14:34.891Z | worker-high | 110 | 101 | 0 | 1 | 212 | 1 |
+| `2026-10-05/141620434-18a9ddeb35d931c7.json` | 2026-10-05T14:15:52.719Z | worker-high | 96 | 93 | 0 | 1 | 190 | 1 |
+| `2026-10-05/141651497-9071262d0247d316.json` | 2026-10-05T14:16:28.082Z | worker-high | 93 | 101 | 0 | 2 | 196 | 2 |
+| `2026-10-05/141720012-28dac835af070c89.json` | 2026-10-05T14:16:55.682Z | worker-high | 106 | 93 | 0 | 2 | 201 | 2 |
+| `2026-10-05/141711224-7ac605a8bff067be.json` | 2026-10-05T14:17:06.529Z | main | 167 | 107 | 0 | 2 | 276 | 2 |
+| `2026-10-05/141750725-5e457655d1adc5cf.json` | 2026-10-05T14:17:26.610Z | worker-high | 89 | 112 | 0 | 1 | 202 | 1 |
+| `2026-10-05/142707527-8a4e310c87e9f579.json` | 2026-10-05T14:19:27.264Z | worker-high | 312 | 2699 | 0 | 266 | 3277 | 260 |
+| `2026-10-05/143009504-834ad25e00d93c73.json` | 2026-10-05T14:20:39.886Z | main | 1391 | 1066 | 0 | 503 | 2960 | 426 |
+| `2026-10-05/150805211-1b83c372d22840b9.json` | 2026-10-05T15:06:04.899Z | main | 80 | 117 | 0 | 2 | 199 | 1 |
+
+- **p50 208 ms, p95 2960 ms** of §2.6's sum, against `RECORDER_P95_BOUND_MS` = 300. The mtime figure, beside it and not scored: p50 2 ms, p95 260 ms. Percentiles are nearest-rank over the 20 values: p50 is the 10th smallest, p95 the 19th. The forms declare no percentile method; under any common one, p95 on these 20 values lies between the 19th and 20th smallest.
+- **The p95 is over the bound, so §9's overhead stop fires** (§4 E9's prediction; §9's evaluation, its stop conditions, unchanged from v0's).
+- **What follows is the human's:** the custodian reports the stop to the human, who uninstalls (the v0 form's §9, its stop-and-uninstall bullet). Nothing is uninstalled, disabled or changed by the custodian.
+
+**Superseded index.** None.
+
+### Amendment 8 — the human's ruling after the stop: the Recorder kept; E10, a new bound over the next 20 approved runs, declared before its data (class 1)
+
+*Written after E5's and E9's outcomes were seen (Amendment 7, and the v0 form's Amendment 7), by the custodian, on the human's typed ruling: `state/directives/2026-10-05-recorder-stop-ruling.md`, lines 6-11 (their sha256 0d4fffd09ca8fef10dc894d5d7845a1a334e3854934949ef80436258dc73d7a1 at the commit that adds it), with its RULED block in `DECISIONS-PENDING.md`. The ruling is referenced and not restated as a quotation. Nothing below is a quotation. No E10 record had been read when this was written.*
+
+- **The stop** stands as fired and recorded (Amendment 7; the v0 form's Amendment 7). The human keeps the Recorder installed. The 300 ms absolute bound is replaced, for E10 only, by the ruling's bound. If E10 fails, the human uninstalls, with no further amendment.
+- **No code change** (the ruling's last sentence). The Recorder's code stays as merged at e29a725b. Nothing is installed, enabled, reloaded or changed by the custodian.
+- **E10, declared before its data:**
+  - **The sample:** the first 20 schema-v0.1 run records (approved runs) whose `started_at` is after the ruling's receive time, 2026-10-05T19:18:32.936Z, in 2.1.289-engine sessions, by `started_at`. The engine is read as in Amendment 7. A record from another engine, or one whose `recorder_ms`, `started_at` or `ended_at` cannot be read as a number or time, is excluded and named. Pairing is not required.
+  - **Per record:** the sum s = `recorder_ms.before` + `after` + `write` (the ruling's sum, the v0 form's E5 sum, not §2.6's). The command's own duration d = `ended_at` − `started_at` in milliseconds. That is the span around `next(e)`, which the v0 form's field list says includes any permission wait and any hooks beneath. The record's bound b = the larger of 300 ms and 2% of d.
+  - **The reading** of the ruling's p95, the custodian's, declared here before data: the nearest-rank p95 (the 19th smallest of 20) of the ratios s / b is at most 1. Equivalently, at most one of the 20 records has s over its own b. The human may correct this reading before the twentieth record. A correction is recorded as an amendment, and E10 is then read only under the corrected reading.
+  - **Also reported, not scored:** p50 and p95 of s and of d, and how many records have s over 300 ms.
+  - **Nothing is run on purpose for E10.** It is read by script from the log folder, and recorded as a class 1 row.
+- **The other stop conditions** (any tool result altered; the `unavailable` share over `UNAVAILABLE_STOP`) are unchanged.
+
+**Superseded index.**
+- §4 E9's prediction, and §7's `RECORDER_P95_BOUND_MS` as the overhead stop's bound → this amendment's E10 bound, for the Recorder's keep-or-uninstall decision. E5's and E9's recorded outcomes are unchanged.

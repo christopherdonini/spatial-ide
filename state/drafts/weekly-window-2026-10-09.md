@@ -499,3 +499,15 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **No gate found an index-update pointer wrong.**
   - **One correction round,** not caused by a pointer (C4): the worker kept a stale count in K-3's rewritten comment (an implementation defect). It does not count against the lead.
   - **The index was updated in the PR:** yes.
+
+### B2, second pilot — measured piece 3: `kernel-close-races-followups`
+
+- **The piece** took the product slot that #178 freed (kernel-protocol, order 13). Its read precedes the architect's draft, as for pieces 1 and 2. No branch exists yet.
+- **The impact read** is `state/consults/2026-10-05-kernel-close-races-followups-impact-read.md`: 137 lines, sha256 80a69e996b41cb0cc333f57db63daf8fda1b68019837110ba96997d47f661424, filed byte-identical as lead-data wrote it, read at main e32798ae.
+- **Cost** (the harness's task notification): 156,351 subagent tokens, 108 tool uses, 484,638 ms. The run lasted 19:07:23Z to 19:15:28Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 53, Grep 51, Glob 2, the hand-back 1). One Grep timed out at 19:11:32Z; that is not a write.
+- **C3:** before, the checkout held only its two pre-existing untracked items; after, those and the report. There was no worktree.
+- **Content:** 19 site rows, the consumers, the governing texts, five gap questions and one missing pointer. The custodian's read found no draft text, design, recommendation or answer. verify-cites and verify-quotes pass over it.
+- **Found by the lead itself** (not by the architect or a gate): its question 1 quotes a one-word span from the close-races worker report in lower case where the source line has a capital. The lead disclosed this in its hand-back and left it, because its brief allowed one write. It is a quoting defect, not a pointer, and not design text.
+- **Measured piece 4 is next in line:** `geometry-types-beyond-polygons` (MP-1). ADR-034 was accepted on 2026-10-05, and MP-1's preregistration may be written now. Its impact read comes before its architect's draft, before a slot frees.
+- **The architect's draft** of piece 3 follows, with the read's path in its brief.

@@ -593,3 +593,39 @@ with exit code 1
 - **The same refusal is a false alarm of G1:** no force or delete spelling was present, and the word push sat in JavaScript text inside the heredoc. It is recorded on Guardian's side as that form's Amendment 10.
 
 **Superseded index.** None.
+
+### Amendment 7 — E5, read: the overhead stop fires (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 E5 directs, under Amendment 2's C2-d and the human's install approval (`state/directives/2026-10-04-recorder-install-approval.md`), which says E5 can fire the overhead stop and establishes neither claim 7 nor the brief's overhead acceptance measure. Nothing was run for it. The records are read from the recorder's log folder outside the repository, by script, on 2026-10-05.*
+
+- **The sample:** the first 20 approved runs after install, by `started_at`, in 2.1.289-engine sessions. Excluded before the twentieth: none. Each record's engine is read from the session transcripts: the record's command is matched to the Bash or PowerShell call with the same text whose stamp is nearest its `started_at` (within 120 s), and that transcript line's `version` is taken.
+- **The records,** with `recorder_ms` in milliseconds:
+
+| Record | started_at | Agent | before | after | write | Sum |
+|---|---|---|---|---|---|---|
+| `2026-10-04/183504233-ab1baf8960a8945a.json` | 2026-10-04T18:35:03.197Z | main | 137 | 125 | 69 | 331 |
+| `2026-10-04/183509908-6da72ec9a2d76dac.json` | 2026-10-04T18:35:09.191Z | main | 146 | 121 | 0 | 267 |
+| `2026-10-04/183750425-ed5444587911cb78.json` | 2026-10-04T18:37:25.759Z | main | 4276 | 138 | 0 | 4414 |
+| `2026-10-04/183834016-5a3d1793c9af7b9b.json` | 2026-10-04T18:38:33.005Z | Explore | 178 | 161 | 0 | 339 |
+| `2026-10-04/201719984-adda9707005045a8.json` | 2026-10-04T20:16:05.263Z | main | 117 | 151 | 0 | 268 |
+| `2026-10-04/204824969-a640c08f6199a097.json` | 2026-10-04T20:47:05.434Z | reviewer | 166 | 139 | 0 | 305 |
+| `2026-10-04/205224435-728cbe77e7360e0d.json` | 2026-10-04T20:50:49.424Z | reviewer | 0 | 4 | 0 | 4 |
+| `2026-10-04/213932726-eeb7c27f04810946.json` | 2026-10-04T21:38:20.284Z | main | 82 | 107 | 0 | 189 |
+| `2026-10-04/214048905-a060e0a052c4f954.json` | 2026-10-04T21:39:40.151Z | main | 104 | 98 | 0 | 202 |
+| `2026-10-04/215745837-37a39501b66a12e9.json` | 2026-10-04T21:57:13.618Z | main | 87 | 91 | 0 | 178 |
+| `2026-10-04/215907305-97c3e6664cabf583.json` | 2026-10-04T21:57:54.792Z | main | 88 | 96 | 0 | 184 |
+| `2026-10-04/220109909-468245ca023e0ff5.json` | 2026-10-04T21:59:26.660Z | main | 98 | 112 | 0 | 210 |
+| `2026-10-04/224848003-547958552266531c.json` | 2026-10-04T22:47:24.902Z | main | 1112 | 226 | 0 | 1338 |
+| `2026-10-04/234146071-817dd24ee26aaf87.json` | 2026-10-04T23:41:41.594Z | worker-high | 123 | 120 | 0 | 243 |
+| `2026-10-04/234358236-27a22ad0381e7229.json` | 2026-10-04T23:43:27.696Z | worker-high | 104 | 129 | 0 | 233 |
+| `2026-10-04/234433202-d24004aac44a282a.json` | 2026-10-04T23:44:26.709Z | worker-high | 122 | 115 | 0 | 237 |
+| `2026-10-05/000020231-84b032735041abaf.json` | 2026-10-05T00:00:17.321Z | main | 133 | 119 | 0 | 252 |
+| `2026-10-05/002530482-fee54a8701b4117e.json` | 2026-10-05T00:24:54.787Z | reviewer | 9 | 7 | 0 | 16 |
+| `2026-10-05/002640749-8ec5414d36756607.json` | 2026-10-05T00:25:25.170Z | main | 148 | 149 | 0 | 297 |
+| `2026-10-05/002543140-d9853c5903f45e1f.json` | 2026-10-05T00:25:40.911Z | reviewer | 7 | 6 | 0 | 13 |
+
+- **p50 237 ms, p95 1338 ms** of before + after + write, against `RECORDER_P95_BOUND_MS` = 300. Percentiles are nearest-rank over the 20 values: p50 is the 10th smallest, p95 the 19th. The forms declare no percentile method; under any common one, p95 on these 20 values lies between the 19th and 20th smallest.
+- **The p95 is over the bound, so §9's overhead stop fires** (§9, its stop-and-uninstall bullet). The sum is a lower bound (C2-d), so the stop stands whatever the write's own latency.
+- **What follows is the human's:** the custodian reports the stop to the human, who uninstalls (§9). Nothing is uninstalled, disabled or changed by the custodian.
+
+**Superseded index.** None.
