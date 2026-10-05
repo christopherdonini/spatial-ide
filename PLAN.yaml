@@ -4124,14 +4124,14 @@ nodes:
     order: 22
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md
     merge: merge-commit
     evidence: null
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "SLOT 2 NEXT 2026-10-05 (the product-first direction, sections 1 and 8.f): no longer depends on guardian-v1; the architect drafts its form, alone. Before: PLACED 2026-10-05 by the human context-flush direction (state/directives/2026-10-05-human-direction-context-flush.md; RULED 2026-10-05), piece A of Fable brief CONTEXT-FLUSH-2026-10-05.md (state/directives/CONTEXT-FLUSH-2026-10-05.md, sha256 checked). It takes the second slot when guardian-v1 frees it, ahead of the second-slot queue. The PreCompact hook no longer blocks an automatic compaction: it records the call and its reason and lets it through; a manual /compact is blocked once, as today. It changes the human 2026-09-15 word in AUTONOMY section 7, whose text is corrected in the same pull request, with its freshness figure brought to the hook's own. The brief measure replaces window item J count from the first automatic compaction after this piece merges. Usual forms and gates."
+    summary: "FORM COMMITTED 2026-10-05 (scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md, the architect draft, drafted alone; full form and full gating: a property under test, size, new behaviour; OPEN-1, when the measure rows are first reported, for the next question round, no code waits on it; P0 read-only before code, recorded as Amendment 1). Before: SLOT 2 NEXT 2026-10-05 (the product-first direction, sections 1 and 8.f): no longer depends on guardian-v1; the architect drafts its form, alone. Before: PLACED 2026-10-05 by the human context-flush direction (state/directives/2026-10-05-human-direction-context-flush.md; RULED 2026-10-05), piece A of Fable brief CONTEXT-FLUSH-2026-10-05.md (state/directives/CONTEXT-FLUSH-2026-10-05.md, sha256 checked). It takes the second slot when guardian-v1 frees it, ahead of the second-slot queue. The PreCompact hook no longer blocks an automatic compaction: it records the call and its reason and lets it through; a manual /compact is blocked once, as today. It changes the human 2026-09-15 word in AUTONOMY section 7, whose text is corrected in the same pull request, with its freshness figure brought to the hook's own. The brief measure replaces window item J count from the first automatic compaction after this piece merges. Usual forms and gates."
     dates: {opened: 2026-10-05, done: null}
   - id: guardian-n1-before-auto-compaction
     title: "Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check"
