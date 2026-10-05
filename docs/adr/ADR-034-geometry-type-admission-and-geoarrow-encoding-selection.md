@@ -199,3 +199,16 @@ Not decided here:
 - **O1 and O2** (item 5): ruled for MP-1 by that item, which keeps today's refusal by name. Counting a row as unread stays open for a later cut.
 - **O3 to O8** (item 6): open for MP-1's preregistration. New operator wording ships as a P6 placeholder and is the human's at P6.
 - **MP-1's preregistration** may be written now (the directive's closing line).
+
+**The human's words, verbatim.** Appended under this section on the human's clarification of 2026-10-05 (`state/directives/2026-10-05-product-first-clarification.md`), the bullets above staying as they are. Byte-copied by script from `state/directives/2026-10-05-adr-034-acceptance.md`, lines 6-13 (sha256 f3a8c75f9833edef2853331bd70118b460774b26ceb849d44b7f7587984c9485, at the commit that adds it); the fence lines are not part of the words.
+
+```text
+ADR-034: accepted as merged, and architect-blockable as of acceptance. On what it puts to me:
+1. Decision 5's basis: I accept the loss it names. A projected, Polygon-only file with an empty geometry_types publishes today and is refused under point 10 until B3. A KNOWN-LIMITATIONS row names it.
+2. Timing: the Status line reads my session order correctly. Acceptance comes before MP-1's preregistration.
+3. The ADR-016 cite is section 5, as the Decision has it.
+4. The placeholder is read as the declared list, rendered as today's message renders it.
+5. O1 and O2, for MP-1: a row of a type the engine does not read is refused by name, as today. Counting it as unread stays open for a later cut.
+6. O3 to O8 stay open for MP-1's preregistration. New operator wording ships as a P6 placeholder and is mine at P6.
+MP-1's preregistration may be written now.
+```
