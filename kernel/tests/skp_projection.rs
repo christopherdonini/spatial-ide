@@ -370,7 +370,7 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
 // `"projection_column_is_identity"` (sharing `ColumnIsIdentity`'s code). Observed:
 // `every_projection_refusal_is_synchronous_typed_and_pre_mint` fails by name -- "geometry: wrong
 // code / left: \"skp.projection_column_is_identity\" / right: \"skp.projection_column_is_geometry\""
-// (the same test whose closing `codes.len() == 7` assertion is K-4's own claim). Reverted.
+// (the same test whose closing `codes.len() == 8` assertion is K-4's own claim). Reverted.
 /// One case in K-2's own table: a label, the declared `columns`, the expected wire code, and the
 /// expected exact field key set (a value where the value itself is a stable fact, `None` where
 /// only presence is checked — `detail` in particular, sighted at B1's close). A named alias, not
