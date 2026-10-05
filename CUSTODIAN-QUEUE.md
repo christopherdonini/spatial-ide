@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `35fbb4fbb87a59f3e5347b2fa597edf9c6d108614a8853a46d2e7e9588a28db3`) at `2026-10-05T21:00:21.613Z`.
+Generated from `PLAN.yaml` (sha256 `9e6544ec4cda4ba4adfe90776aad4d47678995088d182594d680e4b06d790455`) at `2026-10-05T21:22:33.982Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `35fbb4fbb87a59f3e5347b2fa597edf9c6d108614a88
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
-- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected (lane `governance`, order 22, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -32,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `35fbb4fbb87a59f3e5347b2fa597edf9c6d108614a88
 ## 5. In progress
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
+- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected — evidence: branch `cut/compaction-record-and-resume-line`
 
 ## 6. Proposed / unscheduled
 
