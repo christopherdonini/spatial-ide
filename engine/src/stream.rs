@@ -3085,6 +3085,79 @@ mod tests {
         );
     }
 
+    /// T1 (`b1-engine-kernel-half-followups` §2, E2): publish's `compact_attribute_retention: false`
+    /// proven **through `flush`**, not only at the constructor. Makes the kernel's own two calls
+    /// (`Dataset::resolve_projection`, `Dataset::stream_for_publish`) over a `MultiType` fixture's
+    /// `[zone, text]` projection and reads the producer's queued `Item`s in-module, before
+    /// `write_ipc_into` runs (decoded IPC cannot show retention — this file's own module doc). For
+    /// each column, at least one queued batch carries an array the live rule *would* compact: its
+    /// [`retain_or_compact_single_run`] is not `Arc::ptr_eq` to the emitted array, so `flush` kept it
+    /// as the uncompacted slice. A compacted or concatenated array is tight and would come back
+    /// pointer-equal.
+    #[cfg(feature = "fixture")]
+    #[test]
+    fn a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush() {
+        use crate::fixture::{write_geoparquet, AttributeMode, CrsMode, FixtureSpec};
+        use sha2::{Digest, Sha256};
+
+        let dir = std::env::temp_dir().join("spatial-engine-t1-publish-retention-tests");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("multitype-publish.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                features: 4_000,
+                avg_vertices: 100,
+                attributes: AttributeMode::MultiType,
+                crs_mode: CrsMode::DeclaredLv95,
+                ..Default::default()
+            },
+        )
+        .expect("fixture");
+        let sha = || {
+            format!(
+                "{:x}",
+                Sha256::digest(std::fs::read(&path).expect("read fixture"))
+            )
+        };
+        let fixture_sha_before = sha();
+
+        let ds = Dataset::open(&path).expect("open");
+        let projection = ds
+            .resolve_projection(&["zone".to_string(), "text".to_string()])
+            .expect("admitted projection");
+        let stream = ds
+            .stream_for_publish(&ViewportQuery::all(), &projection, CancelToken::new())
+            .expect("stream");
+
+        let mut rows_seen = 0usize;
+        let mut kept = std::collections::BTreeSet::new();
+        while let Ok(item) = stream.rx.recv() {
+            let rb = item.expect("stream failed").batch.record_batch().clone();
+            rows_seen += rb.num_rows();
+            for (field, col) in rb.schema().fields().iter().zip(rb.columns()).skip(2) {
+                if !Arc::ptr_eq(&retain_or_compact_single_run(col).unwrap(), col) {
+                    kept.insert(field.name().clone());
+                }
+            }
+        }
+        assert_eq!(rows_seen, 4_000, "every row must be seen exactly once");
+        for column in ["zone", "text"] {
+            assert!(
+                kept.contains(column),
+                "no queued publish batch carries an over-allowance `{column}` run: publish's `flush` \
+                 compacted every one, or the fixture has no such run"
+            );
+        }
+
+        drop(stream);
+        assert_eq!(
+            sha(),
+            fixture_sha_before,
+            "the fixture file must be unchanged by this run"
+        );
+    }
+
     // ---- lever A ------------------------------------------------------------------------------
 
     #[test]
