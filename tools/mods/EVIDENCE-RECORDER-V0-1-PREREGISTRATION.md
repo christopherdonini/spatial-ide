@@ -567,3 +567,12 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 - **The report's other deviations** (D1, D4 to D11) are left to the gates by reference. D7 names T27, and the translation keeps the drive letter's case as typed. That is for the gates to read against round 55's typed ruling.
 
 **Superseded index.** None.
+
+### Amendment 5 — gate 1's record correction: T24's built name (class 2; correction round 1 of 2)
+
+*Written after gate 1's outcomes were seen, by the custodian, from `state/consults/gates/2026-10-05-evidence-recorder-v0-1-gate1-reviewer.md` (FAIL: S1-1, its remedy (a); S2-1) and `state/consults/gates/2026-10-05-evidence-recorder-v0-1-gate1-architect.md` (PASS). The branch commits are named by id until the merge (round 25, item 2 (d)). Nothing below is a quotation.*
+
+1. The defect: T24 is built under a name §4's T24 row does not declare, differing in one word (`fields` for `before-fields`), and no record said so. The corrected reference: T24 is the test at `tools/mods/spatial-evidence-recorder/test/recorder.test.ts` line 698 at branch commit ba42e6f76117f4f579ff181f063492cfcdc1e631, line 723 at the head 05fc645d64c6c59b1f682f04f585e72243f8a272, with the mutation and observations recorded at ba42e6f7. The proof: the gate-1 reviewer's fixed-string search of both test files and its re-observation of T24's mutation at the head.
+2. Recorded, by reading (the reviewer's S2-1): §8 item 18's condition that the sleep is not left live into `next` holds by the abort in raceBefore's `finally` at the head, and no test detects that abort's removal (the reviewer's probe P-abort), so it is not claimed as tested.
+
+**Superseded index.** §4's T24 row name, for the built test, and A2-1's statement that T24's name is unchanged, are superseded by item 1.
