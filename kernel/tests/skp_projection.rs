@@ -148,14 +148,17 @@ fn base_request(dataset: DatasetHandle, columns: Option<Vec<String>>) -> Viewpor
 ///
 /// Mutation: `build_viewport_query` ignores `req.columns` — the schema would then carry no
 /// `area`/`zone` fields at all, and the field-order assertion below fails by name.
-// RECORDED MUTATION: in `kernel/src/skp.rs::build_viewport_query`, replace the `projection` match
-// with `let projection = None;`, ignoring `req.columns`. Observed: this test fails by name --
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/skp.rs::build_viewport_query`, replace the `projection` match with
+// `let projection = None;`, ignoring `req.columns`. Observed: this test fails by name --
 // "declared (request) order, id and geometry first / left: [\"id\", \"geometry\"] / right: [\"id\",
-// \"geometry\", \"area\", \"zone\"]" at `kernel/tests/skp_projection.rs`. Reverted.
-// RECORDED MUTATION (X11): in `stream.rs`'s chunk loop, slice each attribute run one row late
-// (`run_start + 1` instead of `run_start` at the cut, and `row + 2` instead of `row + 1` at the
-// final push). Observed: this test fails by name -- "area mismatch at id ..." (the DuckDB oracle
-// below), the emitted values shifted by one row against the independent read. Reverted.
+// \"geometry\", \"area\", \"zone\"]". Reverted.
+// RECORDED MUTATION (X11; observed at b438c58728d044e67466c438b35091f813e57be2): in `stream.rs`'s
+// chunk loop, slice each attribute run one row late (`run_start + 1` instead of `run_start` at the
+// cut, and `row + 2` instead of `row + 1` at the final push; applied as a shift of both slice
+// bounds, so the cut pushes `run_start + 1..row + 1`). Observed: this test fails by name -- "area
+// mismatch at id 0" (the DuckDB oracle below; left 1034.3331505478782, right 8267.067509130165),
+// the emitted values shifted by one row against the independent read. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_columns() {
     let fixture_json = std::fs::read_to_string(
@@ -362,12 +365,12 @@ async fn a_projected_viewport_query_from_the_wire_fixture_streams_the_declared_c
 /// a moved lease count). K-3 — map `Some([])` to `None` (then that one case admits instead of
 /// refusing). K-4 — two variants sharing a code (then the `BTreeSet` below has fewer than 8
 /// members).
-// RECORDED MUTATION (K-4): in `kernel/src/skp.rs::projection_error_of`, make the
-// `ColumnIsGeometry` arm return `"projection_column_is_identity"` (sharing `ColumnIsIdentity`'s
-// code). Observed: this test fails by name -- "geometry: wrong code / left:
-// \"skp.projection_column_is_identity\" / right: \"skp.projection_column_is_geometry\"" at
-// `kernel/tests/skp_projection.rs:275` (the same test whose closing `codes.len() == 7` assertion
-// is K-4's own claim). Reverted.
+// RECORDED MUTATION (K-4; observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/skp.rs::projection_error_of`, make the `ColumnIsGeometry` arm return
+// `"projection_column_is_identity"` (sharing `ColumnIsIdentity`'s code). Observed:
+// `every_projection_refusal_is_synchronous_typed_and_pre_mint` fails by name -- "geometry: wrong
+// code / left: \"skp.projection_column_is_identity\" / right: \"skp.projection_column_is_geometry\""
+// (the same test whose closing `codes.len() == 7` assertion is K-4's own claim). Reverted.
 /// One case in K-2's own table: a label, the declared `columns`, the expected wire code, and the
 /// expected exact field key set (a value where the value itself is a stable fact, `None` where
 /// only presence is checked — `detail` in particular, sighted at B1's close). A named alias, not
@@ -580,11 +583,11 @@ fn every_projection_refusal_is_synchronous_typed_and_pre_mint() {
 /// fixture files themselves).
 /// Mutation: rename `known_columns` to (say) `candidate_columns` in `projection_error_of`'s
 /// `ColumnUnknown` arm — the live refusal's key set then disagrees with the committed fixture's.
-// RECORDED MUTATION: in `kernel/src/skp.rs::projection_error_of`, rename the `ColumnUnknown` arm's
-// `"known_columns"` field key to `"candidate_columns"`. Observed: this test fails by name --
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/skp.rs::projection_error_of`, rename the `ColumnUnknown` arm's `"known_columns"`
+// field key to `"candidate_columns"`. Observed: this test fails by name --
 // "skp.projection_column_unknown: live field key set must match the committed fixture's / left:
-// {\"candidate_columns\", \"column\"} / right: {\"column\", \"known_columns\"}" at
-// `kernel/tests/skp_projection.rs`. Reverted.
+// {\"candidate_columns\", \"column\"} / right: {\"column\", \"known_columns\"}". Reverted.
 #[test]
 fn every_projection_refusal_matches_its_committed_error_fixture_shape() {
     let path = multitype_fixture("k-x9-fixture-shape", 40);
@@ -914,12 +917,14 @@ fn a_hostile_covering_refuses_a_bbox_query_before_the_mint_and_describe_reports_
 /// widened or stringified to make a column fit; a conversion the caller did not ask for is the
 /// silent conversion docs/01 principle 8 forbids".
 /// Mutation: the branch's placeholder final arm (`admit_attribute_type`'s `other` arm, before X1).
-// RECORDED MUTATION: in `engine/src/attributes.rs::admit_attribute_type`, restore the placeholder
-// text `"[B1 close placeholder] type is {other}, which is not in the admissible set for an
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `engine/src/attributes.rs::admit_attribute_type`, restore the placeholder text
+// `"[B1 close placeholder] type is {other}, which is not in the admissible set for an
 // attribute (utf8, boolean, the 8/16/32/64-bit integers, float32, float64, or a dictionary over one
-// of those)"` in the `other` arm. Observed: this test fails by name -- the `reason` field no longer
-// matches the byte-copied expected string (it carries the placeholder prefix and the live
-// admissible-set's own list instead) at `kernel/tests/skp_projection.rs`. Reverted.
+// of those)"` in the `other` arm. Observed: this test fails by name -- "assertion `left == right`
+// failed" (no message of its own): the `reason` field no longer matches the byte-copied expected
+// string; it carries the placeholder prefix and the live admissible-set's own list instead.
+// Reverted.
 #[test]
 fn a_filter_refusal_for_a_still_refused_type_keeps_todays_reason_byte_for_byte() {
     let path = multitype_fixture("x1-filter-refusal-text", 20);
@@ -1000,11 +1005,12 @@ fn columns_empty_list_is_refused_never_read_as_null() {
 /// as E-7 (`projectable` computed from `admit_attribute_type` alone, dropping the geometry/identity
 /// checks `admit_projection_column` also runs) — then a geometry or identity column would show
 /// `projectable: true` while `viewport_query` still refuses it, and the loop's assertion fails.
-// RECORDED MUTATION: in `kernel/src/skp.rs::describe_dataset`, compute `projectable` from
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/skp.rs::describe_dataset`, compute `projectable` from
 // `spatial_engine::attributes::admit_attribute_type(f.name(), f.data_type()).is_ok()` instead of
 // `admit_projection_column`. Observed: this test fails by name -- "column `id` marked
-// projectable, but viewport_query refused it: ... projection_column_is_identity ..." at
-// `kernel/tests/skp_projection.rs:384`. Reverted.
+// projectable, but viewport_query refused it: SkpError { code: \"skp.projection_column_is_identity\",
+// ..." (message elided). Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn describe_projectable_agrees_with_viewport_query_admission_for_every_column() {
     async fn check_one(
@@ -1244,10 +1250,11 @@ async fn projectable_and_admission_agree_on_a_nul_named_column() {
 /// K-7: `a_projection_composes_with_a_filter`. A request carrying both a valid `[f32]` projection
 /// and a valid `f32 > 0.1` filter admits and streams the projected column, over exactly the
 /// filtered row set. Mutation: the projection is dropped when a filter is present.
-// RECORDED MUTATION: in `kernel/src/skp.rs::build_viewport_query`, after computing `projection`,
-// add `let projection = if req.filter.is_some() { None } else { projection };`. Observed: this
-// test fails by name -- `left: ["id", "geometry"]` vs `right: ["id", "geometry", "f32"]` at
-// `kernel/tests/skp_projection.rs:479`. Reverted.
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/skp.rs::build_viewport_query`, after computing `projection`, add
+// `let projection = if req.filter.is_some() { None } else { projection };`. Observed: this test
+// fails by name -- "assertion `left == right` failed" (no message of its own), with
+// `left: ["id", "geometry"]` and `right: ["id", "geometry", "f32"]`. Reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn a_projection_composes_with_a_filter() {
     let path = multitype_fixture("k7-compose", 300);
@@ -1396,11 +1403,11 @@ fn viewer_license() -> ViewerLicenseInput {
 /// (`admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text`, O6).
 /// Nothing is written before the refusal (`preflight_pinless` never opens `req.destination`).
 /// Mutation: remove the restriction (`admit_bundle_format` admitting `Float32`).
-// RECORDED MUTATION: in `kernel/src/publish/mod.rs::admit_bundle_format`, remove the `D::Float32`
-// refusal arm (falls through to `_ => Ok(())`). Observed: this test fails by name -- "expected
-// AttributeUnpublishable naming Float32 at preflight, got Err(Style(MissingKey { at: \"$\", key:
-// \"style_version\" }))" at `kernel/tests/skp_projection.rs:578` (Float32 now admits, and
-// preflight proceeds to its next, unrelated refusal). Reverted.
+// RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+// `kernel/src/publish/mod.rs::admit_bundle_format`, remove the `D::Float32` refusal arm (falls
+// through to `_ => Ok(())`). Observed: this test fails by name -- "expected AttributeUnpublishable
+// naming Float32 at preflight, got Err(Style(MissingKey { at: \"$\", key: \"style_version\" }))"
+// (Float32 now admits, and preflight proceeds to its next, unrelated refusal). Reverted.
 #[test]
 fn publish_refuses_float32_and_dictionary_columns_at_preflight_as_a_bundle_format_restriction_with_todays_text(
 ) {

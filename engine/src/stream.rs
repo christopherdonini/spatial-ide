@@ -2609,10 +2609,10 @@ mod tests {
 
     /// A column that never arrived dictionary-encoded passes through unchanged (no copy, no
     /// panic) — the common case this function must not slow down or alter.
-    // RECORDED MUTATION: in `decode_dictionary_chunk_column`, replace the non-dictionary `else`
-    // arm's `Ok(col.clone())` with an unconditional `Err(..)`. Observed: this test fails by name --
-    // `unwrap()` panics on `Arrow("mutated: non-dictionary path refused")` at
-    // `engine/src/stream.rs:2419`. Reverted.
+    // RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+    // `decode_dictionary_chunk_column`, replace the non-dictionary `else` arm's `Ok(col.clone())`
+    // with an unconditional `Err(..)`. Observed: this test fails by name -- `unwrap()` panics on
+    // `Arrow("mutated: non-dictionary path refused")`. Reverted.
     #[test]
     fn a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged() {
         let col: ArrayRef = std::sync::Arc::new(arrow::array::Float32Array::from(vec![1.0f32]));
@@ -3014,10 +3014,11 @@ mod tests {
     /// Mutation: remove compaction (`flush`'s single-run arm always `Arc::clone`s), the same as
     /// E-14's own recorded mutation — the assertion below then fails on whichever queued item
     /// retains a `text` run near the tail of a large DuckDB chunk.
-    // RECORDED MUTATION: in `single_run_retention`, ignore `compact` and always
-    // `Ok(Arc::clone(array))`. Observed: this test fails by name -- "text run retained N bytes over
-    // its M-byte allowance" panics at `engine/src/stream.rs` (a `text` run near the tail of a large
-    // chunk retains far more than the declared bound once compaction never runs). Reverted.
+    // RECORDED MUTATION (observed at b438c58728d044e67466c438b35091f813e57be2): in
+    // `single_run_retention`, ignore `compact` and always `Ok(Arc::clone(array))`. Observed: this
+    // test fails by name -- "text run retained 2105348 bytes over its 84424-byte allowance" (a
+    // `text` run near the tail of a large chunk retains far more than the declared bound once
+    // compaction never runs). Reverted.
     #[cfg(feature = "fixture")]
     #[test]
     fn a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound(
