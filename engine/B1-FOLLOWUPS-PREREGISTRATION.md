@@ -267,3 +267,21 @@ All are assertions: a pointer identity over the retention decision, a row count,
 ## §10. Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing record (class 1)
+
+*Written after the outcomes were seen, by the custodian. PR #178 merged at 2026-10-05T18:28:39Z as merge commit f12a8eac3cdcf86262a7bed1791d8f9382aed89f, with parents cd539e7973af3d34e0abe2e1d966174dc7ae381b and bff3e21def3d57a238a87d305eae3e3fff094856. It follows the gate-1 architect's closing-record list, items 1 to 8, as filled at gate 2. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:** PR #178; the merge commit above; the reviewed head bff3e21def3d57a238a87d305eae3e3fff094856, after correction round 1 of 2.
+2. **The gate reports,** under `state/consults/gates/`: `2026-10-05-b1-engine-kernel-half-followups-gate1-architect.md`, `-gate1-reviewer.md`, `-gate2-architect.md` and `-gate2-reviewer.md`.
+3. **Worker report 1:** `state/consults/2026-10-05-b1-engine-kernel-half-followups-worker-report-1.md`, by section, its deviations 2 and 3 included. The index update, applied as 7b05dfd6685c031102b298a17ed85a658949f3b7, is `state/consults/2026-10-05-b1-engine-kernel-half-followups-index-update.md`. The correction is bff3e21d.
+4. **T1's observation commit** is 784a15c79bc818488b89fdc21008993ccadd6297, reachable through the merge commit. T1's recorded-mutation comment: `engine/src/stream.rs:3114-3118 @ f12a8eac3cdcf86262a7bed1791d8f9382aed89f sha256:50d7a94ccc87014240e40102d64b32c85c987829faef54a6c6f5de80dc732c18`.
+5. **P1, P2 and P3** are discharged by the gate-1 reviewer's rows, by name. §7's count is that report's row: 286 of 360.
+6. **The `kernel/tests/skp_projection.rs` half of `kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md`, Amendment 1, item 1.4** is discharged by rows K-1 to K-8 at the merge commit. The gate-1 reviewer's row table is the proof. It is recorded here, not in the close-races form.
+7. **Routed, one line each:**
+   - the Publish stream row's missing `Dataset::resolve_projection` (index item 1) goes to the next piece that touches `engine/README.md`'s index;
+   - `kernel/README.md`'s line for kernel halves filed elsewhere (index item 2, and the gate-1 architect's N-4) goes to `kernel-close-races-followups`;
+   - the gate-1 architect's N-5 goes to the next piece that touches `engine/src/stream.rs`.
+8. **Done:** PLAN marks the node done, with evidence `{pr: 178}`, in this amendment's commit.
+
+**Superseded index.** None.

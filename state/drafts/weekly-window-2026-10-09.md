@@ -494,3 +494,8 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - It went through on the second chance, as path item 1 describes.
   - No N1 nudge text appears in the transcript. The fill was about 77% of a 1M window, below N1's 80, as path item 4 describes.
 - **The count is now E: 4, N1: 2.** The human's 2026-10-05 context-flush direction, item 4, replaces this count by the brief's measure from the first automatic compaction after piece A merges.
+- **Piece 2 at the gates (#178), merged as f12a8eac:**
+  - **The impact read's pointers,** found by the gate-1 architect: the K-5 range (the lead had disclosed it); `engine/README.md:518` and `kernel/README.md:376` missing, the second of which flowed into the form's §2 wording (its N-4, routed); and §1.2's "only" claim, too wide for the path.
+  - **No gate found an index-update pointer wrong.**
+  - **One correction round,** not caused by a pointer (C4): the worker kept a stale count in K-3's rewritten comment (an implementation defect). It does not count against the lead.
+  - **The index was updated in the PR:** yes.
