@@ -341,3 +341,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **Excluded,** because their PRs change nothing under `engine/` or `kernel/`: `guardian-v0` (#169), `evidence-recorder-v0` (#172), `publish-attempt-lifecycle-src-tauri` (#165), `port-1-linux-l1` (#164), `stop-hook-stale-continuity` (#161), and the earlier 2026-10-02 governance forms.
 - **Per measured piece,** the log records the brief's §4 items: the impact read's cost and the architect's drafting cost; each wrong or missing pointer and who found it; each correction round, classed (C4), counted against the lead only when a pointer caused it; whether the index was updated in the PR; and whether a report names something from the impact read that the form used.
 - **C3 log:** for each lead-data dispatch, the custodian checkout's and the assigned worktree's `git status --porcelain`, before and after.
+
+### B2, second pilot — measured piece 1: `data-plane-terminal-without-credit`
+
+- **The impact read** is `state/consults/2026-10-05-data-plane-terminal-without-credit-impact-read.md`: 307 lines, sha256 dcb21e03e8bdc5bad32435a06aed164eb275bce56c62755a54cee030451a1941, filed byte-identical as lead-data wrote it, read at main c823bce5.
+  - **Cost** (the harness's task notification): 234,750 subagent tokens, 110 tool uses, 535,439 ms. The run lasted 00:36:12Z to 00:45:08Z.
+  - **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 53, Grep 47, Glob 8, the hand-back 1).
+  - **C3:** before (00:35:55Z), the checkout held only its two pre-existing untracked items. After (00:45:16Z), it held those and the report. Main moved from c823bce5 to 06200a1e during the run, by the custodian's own commit filing #175's gate-1 reviewer report.
+  - **Content:** pointers and five gap questions. The custodian's read found no draft text, design, recommendation or OPEN-item answer in it. Four pointers spot-checked by the custodian resolve and say what the read claims; that is not a gate finding.
+  - **Found missing or inconsistent by the lead itself** (not by the architect or a gate): no ADR-014 file, which `protocol/data-plane/README.md` names as reserved; no KNOWN-LIMITATIONS item names the stall; `protocol/data-plane/README.md`'s ceiling list gives `START_TIMEOUT` as 10 s, against 120 s in `server.rs` and elsewhere in the same README.
+- **The architect's draft** follows, with the read's path in its brief. Its cost, the pointers it used, found wrong or found missing, the correction rounds and the index update are logged here as they happen.
