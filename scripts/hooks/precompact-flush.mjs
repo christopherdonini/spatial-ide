@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // scripts/hooks/precompact-flush.mjs — the PreCompact hook (AUTONOMY.md §7).
 //
-// Verified PreCompact contract (Appendix B, quoted in scripts/hooks/README.md): matchers `manual`
-// (/compact) and `auto` (the auto-compact window); receives `trigger` and `custom_instructions`
-// on stdin; "Exit with code 2 to block compaction. For a manual /compact, the stderr message is
-// shown to the user. You can also block by returning JSON with 'decision': 'block'." Blocking a
-// proactive automatic compaction skips it (conversation continues uncompacted); blocking one
-// recovering from a context-limit error makes the current request fail — hence the second-chance
-// window below, so a context-limit recovery is never blocked twice.
+// The hook receives `trigger` and `custom_instructions` on stdin (Appendix B). Exit code 2 blocks
+// the compaction; any other exit lets it through. One rule, on every platform:
+//   - `trigger` is `manual` (a /compact): a stale ledger blocks once and records
+//     .claude/state/precompact-<session_id>.json; a second call within 15 minutes of that record is
+//     allowed whatever the freshness. A fresh ledger is allowed.
+//   - any other `trigger`, or none (an automatic compaction): judged for freshness, recorded, and
+//     always allowed. It never blocks, and it neither reads nor writes the block record above.
+// Every call that reaches the decision appends one line to .claude/state/precompact-<session_id>.jsonl
+// (at, trigger, decision, reason, flushed_at). A line that cannot be written leaves the decision as is.
 //
 // PATHS (human's second directive, item 17): the ledger now lives at state/CUT-STATE.md (tracked
 // on main since a40ccfe/252585b); nothing here reads the old root-level path.
@@ -18,9 +20,7 @@
 // lines up but whose timestamp predates the newest ledger change is stale) AND `tip` equal to the
 // current HEAD (or to HEAD's parent when HEAD is a ledger-only flush commit -- the one commit that
 // cannot cite its own hash) AND `git status --porcelain` shows no modified tracked file AND HEAD is
-// pushed (`git rev-parse @{u}` resolves and matches HEAD). Fresh -> allow. Stale -> block once,
-// recording .claude/state/precompact-<session_id>.json; a second PreCompact within 15 minutes of
-// that record is allowed whatever the freshness.
+// pushed (`git rev-parse @{u}` resolves and matches HEAD).
 //
 // Never throws to the shell: any unexpected error is caught and treated as allow, noted on stderr.
 
@@ -183,29 +183,86 @@ function writeJson(p, obj) {
   fs.writeFileSync(p, JSON.stringify(obj, null, 2), 'utf8');
 }
 
+function recordLogPath(projectRoot, sessionId) {
+  return path.join(projectRoot, '.claude', 'state', `precompact-${sessionId}.jsonl`);
+}
+
+// The block's flushed_at as the ledger states it, else null (any failure).
+function readFlushedAt(projectRoot) {
+  try {
+    const parsed = parseSessionContinuity(fs.readFileSync(cutStatePath(projectRoot), 'utf8'));
+    return parsed?.flushedAt ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Appends one record line (field order fixed). Its own try/catch: a failure is a stderr line, never
+// a change of decision.
+function appendRecord(projectRoot, sessionId, now, input, decision, reason) {
+  try {
+    const line = JSON.stringify({
+      at: now.toISOString(),
+      trigger: typeof input.trigger === 'string' ? input.trigger : null,
+      decision,
+      reason,
+      flushed_at: readFlushedAt(projectRoot),
+    });
+    const p = recordLogPath(projectRoot, sessionId);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.appendFileSync(p, `${line}
+`, 'utf8');
+    return null;
+  } catch (e) {
+    return `precompact-flush: could not append the record line (${e.message}); the decision stands.`;
+  }
+}
+
+function withNote(stderr, note) {
+  return note ? `${stderr}
+${note}` : stderr;
+}
+
 /** The decision core, injectable for tests (see checkFreshness's own `git` parameter). */
 export function decidePrecompact(input, { projectRoot, now = new Date(), git } = {}) {
   const sessionId = input.session_id ?? 'unknown-session';
+
+  if (input.trigger !== 'manual') {
+    const judged = checkFreshness(projectRoot, { now, ...(git ? { git } : {}) });
+    if (judged.fresh) {
+      const note = appendRecord(projectRoot, sessionId, now, input, 'allowed-fresh', null);
+      return { decision: 'allow', stderr: withNote('allow: state/CUT-STATE.md SESSION-CONTINUITY block is fresh.', note) };
+    }
+    const note = appendRecord(projectRoot, sessionId, now, input, 'recorded-only', judged.reason);
+    return {
+      decision: 'allow',
+      stderr: withNote(`allow: automatic compaction recorded, never blocked (${judged.reason}).`, note),
+    };
+  }
+
   const recordPath = statePath(projectRoot, sessionId);
   const state = readJson(recordPath, { lastBlockedAt: null });
 
   if (state.lastBlockedAt) {
     const elapsed = now.getTime() - new Date(state.lastBlockedAt).getTime();
     if (elapsed >= 0 && elapsed < SECOND_CHANCE_WINDOW_MS) {
+      const note = appendRecord(projectRoot, sessionId, now, input, 'allowed-second-chance', null);
       return {
         decision: 'allow',
-        stderr: 'allow: second PreCompact within 15 minutes of the last block — never blocked twice.',
+        stderr: withNote('allow: second PreCompact within 15 minutes of the last block — never blocked twice.', note),
       };
     }
   }
 
   const freshness = checkFreshness(projectRoot, { now, ...(git ? { git } : {}) });
   if (freshness.fresh) {
-    return { decision: 'allow', stderr: 'allow: state/CUT-STATE.md SESSION-CONTINUITY block is fresh.' };
+    const note = appendRecord(projectRoot, sessionId, now, input, 'allowed-fresh', null);
+    return { decision: 'allow', stderr: withNote('allow: state/CUT-STATE.md SESSION-CONTINUITY block is fresh.', note) };
   }
 
   writeJson(recordPath, { lastBlockedAt: now.toISOString() });
-  return { decision: 'block', reason: BLOCK_REASON, stderr: `block: ${freshness.reason}` };
+  const note = appendRecord(projectRoot, sessionId, now, input, 'blocked', freshness.reason);
+  return { decision: 'block', reason: BLOCK_REASON, stderr: withNote(`block: ${freshness.reason}`, note) };
 }
 
 function readStdin() {
@@ -241,8 +298,7 @@ async function main() {
 
   if (result.stderr) console.error(result.stderr);
   if (result.decision === 'block') {
-    // Appendix B: "Exit with code 2 to block compaction. For a manual /compact, the stderr
-    // message is shown to the user." No documented JSON "reason" field for PreCompact.
+    // Exit code 2 blocks; for a manual /compact the stderr message is shown to the user.
     console.error(result.reason);
     process.exit(2);
     return;
