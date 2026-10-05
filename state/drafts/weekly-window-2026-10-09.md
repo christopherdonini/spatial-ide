@@ -380,3 +380,15 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **Index updated in the PR: yes.**
   - lead-data also found that the form's Part 4 names an owner's-index update in `protocol/data-plane/README.md`, which has no Owner's index. It is left to the gates.
 - **The PR:** #176. The gates' findings on pointers are logged here when they report.
+
+## J. Compactions that went through with a stale continuity block (a proposed window measure)
+
+- **Source.** Fable's context-management evaluation, `state/directives/2026-10-05-fable-evaluation-context-management.md`, item 1. It is adopted as a window measure only if the human agrees. The proposal it evaluates is not in the repository.
+- **The measure,** from existing records only:
+  - the block records the pre-compaction hook writes, one file per session under the checkout's Claude state folder;
+  - each automatic compaction's boundary time in its session transcript;
+  - the times of the commits that flushed the block.
+  - Count the automatic compactions that went through while the block was stale.
+- **Reported separately, as Fable's item 1 names them: E and N1.** N1 went live at the Guardian install (11:28Z to 11:31Z on 2026-10-04), after the 11:19:22Z compaction, so that compaction counts for E alone.
+- **If the count is not zero:** the path that let the compaction through is named first. Then a small governance node is proposed for a resume-time line saying how many ledger commits the block is behind (Fable's item 2 (c), in `scripts/hooks/session-resume.mjs`).
+- **Not proposed** (Fable's items 2 and 3): Context Keeper v0, and the meter band.

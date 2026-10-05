@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c44c175dbf73afe17e53a64d6c86f701a3fe670d0474830316f65ace1e6d2043`) at `2026-10-05T10:06:56.409Z`.
+Generated from `PLAN.yaml` (sha256 `1f39c39eedaac43456b601e6effb6bdc7e8d691e59c89af19db3d2dfc4d73a00`) at `2026-10-05T10:26:25.789Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `c44c175dbf73afe17e53a64d6c86f701a3fe670d0474
 ## 2. Ready
 
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`, order 14, budget 90 min)
-- **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 20, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
 
@@ -32,6 +31,7 @@ Generated from `PLAN.yaml` (sha256 `c44c175dbf73afe17e53a64d6c86f701a3fe670d0474
 ## 5. In progress
 
 - **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) — evidence: branch `cut/data-plane-terminal-without-credit`
+- **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) — evidence: branch `cut/evidence-recorder-v0-1`
 
 ## 6. Proposed / unscheduled
 
