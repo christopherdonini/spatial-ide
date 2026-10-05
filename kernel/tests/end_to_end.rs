@@ -377,7 +377,12 @@ async fn h1_a_viewport_filter_selects_a_subset_and_it_still_decodes() {
 // H2 — producer-visible cancellation
 // ---------------------------------------------------------------------------------------------
 
+/// RECORDED MUTATION: in `adapter_ws.rs`'s `Some(Control::Cancel)` arm, stamp
+/// `Instant::now().checked_sub(Duration::from_secs(1)).unwrap()` instead of `Instant::now()`. Expected
+/// failure: the ordering assertion (`observed_at >= sent_at`).
+// Mutation: see the RECORDED MUTATION above (M-A1b, observed separately on this test).
 #[tokio::test]
+// The name predates the re-aim: no 100 ms budget is asserted here any more (round 52, item 3).
 async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
     let (path, _) = fixture("h2", 60_000);
     let dp = host(&path).await;
@@ -408,13 +413,16 @@ async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
 
     let states = dp.registry.snapshot();
     let state = states.last().expect("one stream");
-    let latency = state
-        .observed_at()
-        .expect("producer observed the cancel")
-        .duration_since(sent_at);
+    let observed_at = state.observed_at().expect("producer observed the cancel");
     assert!(
-        latency < Duration::from_millis(100),
-        "producer observed cancellation after {latency:?}; docs/08 budget is 100 ms"
+        observed_at >= sent_at,
+        "observed_at precedes the cancel this test sent: the observation cannot come first"
+    );
+    // REPORT, never asserted. It is not ADR-018's cancel_requested -> cancel_observed, which docs/08:8
+    // scores on the producer's clock.
+    println!(
+        "h2 REPORT: client pre-send -> adapter receipt (observed_at) = {:?}; not cancel_observed",
+        observed_at.saturating_duration_since(sent_at)
     );
     assert!(
         state.batches_after_cancel() <= 1,
@@ -428,10 +436,16 @@ async fn h2_cancellation_is_observed_by_the_producer_inside_the_budget() {
     dp.shutdown().await;
 }
 
+/// RECORDED MUTATION: (M-A1a) in `adapter_ws.rs`'s `Some(Control::Cancel)` arm, `tokio::time::sleep(
+/// std::time::Duration::from_secs(6)).await;` before `state.observe_cancel`: the liveness assertion
+/// fails. (M-A1b) the same arm stamps `Instant::now().checked_sub(Duration::from_secs(1)).unwrap()`
+/// instead of `Instant::now()`: the ordering assertion fails.
+// Mutation: see the RECORDED MUTATION above (M-A1a and M-A1b).
 #[tokio::test]
 async fn h2_a_cancel_before_the_first_batch_still_stops_the_query() {
     // The case a flag polled between batches cannot serve: a filter that scans before it emits.
-    // docs/08's budget is "any operation", which includes one that has produced nothing.
+    // The interval reported below starts at a client instant, before the cancel call, and ends at the
+    // adapter's receipt; docs/08:8 scores a different pair, on the producer's clock.
     let (path, _) = fixture("h2-early", 60_000);
     let dp = host(&path).await;
     let mut client = connect(&dp).await;
@@ -444,19 +458,27 @@ async fn h2_a_cancel_before_the_first_batch_still_stops_the_query() {
 
     let mut c = Collected::default();
     drain(&mut client, &mut c).await;
+    let to_terminal = sent_at.elapsed();
 
     assert_eq!(c.batches, 0, "nothing was ever delivered");
     assert_eq!(c.terminal.as_ref().unwrap().0, wire::TERM_CANCELLED);
+    assert!(
+        to_terminal < Duration::from_secs(5),
+        "client pre-send -> terminal took {to_terminal:?}: a liveness bound, not the docs/08 budget"
+    );
 
     let states = dp.registry.snapshot();
     let state = states.last().expect("one stream");
-    let latency = state
-        .observed_at()
-        .expect("observed")
-        .duration_since(sent_at);
+    let observed_at = state.observed_at().expect("observed");
     assert!(
-        latency < Duration::from_millis(100),
-        "observed after {latency:?}"
+        observed_at >= sent_at,
+        "observed_at precedes the cancel this test sent: the observation cannot come first"
+    );
+    // REPORT, never asserted. It is not ADR-018's cancel_requested -> cancel_observed, which docs/08:8
+    // scores on the producer's clock.
+    println!(
+        "h2_a REPORT: client pre-send -> adapter receipt (observed_at) = {:?}; not cancel_observed",
+        observed_at.saturating_duration_since(sent_at)
     );
     client.close(None).await.ok();
     dp.shutdown().await;
