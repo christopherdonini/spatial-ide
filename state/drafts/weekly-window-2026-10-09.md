@@ -453,3 +453,16 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **Correction rounds caused by a pointer:** none so far. The form had no correction round before commit.
   - **A report names something from the read that the form used:** yes. The draft's part 4 lists the pointers it used, from all six of the read's sections and all five questions.
   - **The index update** is owed in the PR (the form's §2, Owner's index: `engine/README.md` only).
+
+## K. The Stop hook does not know the two-pieces limit
+
+- **What happens.** The Stop hook (`scripts/hooks/stop-queue.mjs`) allows a stop only when the ready set is empty or holds only human-blocked nodes (its step 6). It does not count pieces in flight. So while two pieces wait on the human, a ready node held by the slot rule (the two-pieces trial; `state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md`, step d) is named as next at every stop.
+- **Observed on 2026-10-05,** from this session's transcript: eight blocks naming a held node. Two named `evidence-recorder-v0-1`, at 05:19Z and 05:23Z, while #175 and the data-plane piece held the slots. Six named `b1-engine-kernel-half-followups`, from 12:00Z to 12:51Z, while #176 and #177 held them. Each block is a continuation counted against the session cap (6 consecutive) and the daily cap (40).
+- **What the custodian did:** recorded the hold in the ledger once, at 05:22Z and at 11:59Z. During the second hold it used the wait for the held node's pre-slot drafting: the impact read and the architect's form, as for the data-plane form. It did not start code.
+- **For the human at the window, not proposed here:** whether the hook should treat a ready node as held when the in-progress count is at the limit. The limit is a trial's rule, not in `AUTONOMY.md`.
+
+## L. Operator strings shipped as P6 placeholders, waiting for the human's wording
+
+- **Source.** The data-plane form's closing record (`protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`, Amendment 6, item 5), on the #176 gate-1 architect's N-9: the form has no Operator gate, so the closing record names where the string waits.
+- **The string:** the new data-plane detail on an owner's cancel whose source then ends without failure. It ships beginning with `[P6 placeholder]`, at `protocol/data-plane/src/adapter_ws.rs:384 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:76179b19a3286a033c32089225c4395c94698037e3f1ca4ae044be87e976ab8e`.
+- **For the human:** its wording, at P6. Nothing waits on it; the string is shipped and marked as a placeholder.

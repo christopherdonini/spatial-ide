@@ -541,3 +541,41 @@ Changed lines are counted by §21c's rule (insertions plus deletions; this form 
 2. The fix commit of Amendment 4 items 3 to 5: `1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1`.
 
 **Superseded index.** Amendment 4 item 1 is superseded by item 1, which carries its pin unchanged. The data-plane half of §2 Part 4's owner's-index bullet is superseded by Amendment 4 item 6.
+
+### Amendment 6 — the closing record (class 1)
+
+*Written after the outcomes were seen, by the custodian. PR #176 merged at 2026-10-05T12:51:41Z as merge commit 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a, with parents c3e26821d7651f5448dc5f4abe25bef7b506e260 and 1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1. It follows the gate-1 architect's closing-record list, as amended at gates 2 and 3. References and hashes only. Every pin is at the merge commit, which is on main. Nothing below is a quotation.*
+
+1. **D-1:** Amendment 1.
+2. **D-2, M0:** worker report 1's M0 section, at Amendment 5 item 1's pin. P-1 is observed as to the deadline only (the report's deviation 6; the gate-1 architect's N-5).
+3. **D-3, the tests:**
+   - T1: `kernel/tests/skp_cancel_terminal_without_credit.rs:262-266 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:3ea7f18f500749415cc04d09d9132634ce7341ee52ce85a4d1f32a5c3e715702`
+   - T1b: `kernel/tests/skp_cancel_terminal_without_credit.rs:269-273 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:6b8f63dfe73b487ff861b84b403ff8652a29c855d81a6c973750ab27232d7320`
+   - T2: `protocol/data-plane/tests/candidate_a.rs:842-867 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:51bcba3b2a665ad9d3d52bb93f68669ec4a8301d1cae02deee77d396e1078a3f`
+   - T3a: `protocol/data-plane/tests/candidate_a.rs:870-887 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:280e9f1ec885aee281ac5e3b987a9cded97320370ed75ec8e7dbabb4f0fbfed0`
+   - T3b: `protocol/data-plane/tests/candidate_a.rs:891-921 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:ed3674e85e07506f0d289368a95c5287d787c60f34f1a2920a366c3f9108273f`
+   - T4, on two runtime workers: `protocol/data-plane/tests/candidate_a.rs:944-963 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:4d51cdc70f14031d454afa3f84c0d3ac32b06f0c98752f26ee2af4be8f7b711d`
+   - T5: `protocol/data-plane/tests/candidate_a.rs:967-992 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:3502fb121702bf88acec84233c7ee3be1469a16575f6f59aa31f404ea10ff4cc`
+   - T6: `kernel/src/lib.rs:762-791 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:8c12aaf418fafebddcb56c3dd318d4919f6f527c4111930d92937e7331f823cf`
+4. **D-3, the mutations,** by reference to worker report 1's mutation section:
+   - M1 and M6 at 237af6fed01c545c0b64b20ec662293deee472e0;
+   - M2 to M5, M7 and M8 at 8f5e622ef478a5b668225d7a741ac0097880fee5, with the repeat runs;
+   - M4's class 2 by Amendment 3;
+   - M4 and M5 also at 1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1: worker report 2's mutation section, and the gate-2 reviewer's re-observation.
+5. **Rows A to D:**
+   - the `batches_discarded()` doc: `protocol/data-plane/src/transport.rs:250-259 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:27bcab87390020c168a269537e21932363475eed629ee75987d09e3dc1ea7865`
+   - the `note_discarded` doc: `protocol/data-plane/src/transport.rs:227-232 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:281eadd5a28e82e7409b2a8c1f0e01051bcdbcaef1bb580a799de406c670a644`
+   - the README's discard paragraph: `protocol/data-plane/README.md:167-177 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:24a2e12f91054caebe59787c1df785c89ce5f5fbc3f36b16ca04bf22eb058f90`
+   - the placeholder literal (P-11): `protocol/data-plane/src/adapter_ws.rs:384 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:76179b19a3286a033c32089225c4395c94698037e3f1ca4ae044be87e976ab8e`. Its wording waits for the human at P6, listed in `state/drafts/weekly-window-2026-10-09.md`, item L.
+   - A known residual, with no code: a halt during the discard drain leaves sent plus discarded below generated (the gate-2 architect's S2-1, the gate-2 reviewer's S2-1).
+6. **D-4:** the kernel's owner's index, `kernel/README.md:346-383 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:588ebc56220cbbde06efb13d8d5b32812dbf3991da18a6c6a6751409728afb51`. Part 4's data-plane half is void by Amendment 4 item 6.
+7. **Part 4:**
+   - the README's new section: `protocol/data-plane/README.md:160-185 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:227ee2bee4753e940dc235f03e54ea85c1190ffe560cb151cebf3fd35059fcfd`
+   - its `START_TIMEOUT` line: `protocol/data-plane/README.md:95 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:116ef228dbc0b63a6f8b3a080107433494d7bddd92cc0ada2e38843952baa50a`
+8. **§7,** at the final head 1b2e53d4, by §7's own commands (the gate-2 reviewer's §7 section): product 256 of 310, tests 478 of 490, documentation 34 of 45, files 11 of 11. The must-print-nothing set printed nothing. No class 8.
+9. **Commits beyond the Order line:** 8f5e622e and d60a0bed by Amendment 3; 3f7b19492cf9df9fa076d84207031c337ac0464a, the owner's-index update; and the fix commit by Amendment 5 item 2. The merge commit keeps every branch commit reachable.
+10. **Correction rounds:** Amendment 4 items 2 to 6 and Amendment 5 items 1 and 2. The impact read as one token: `state/consults/2026-10-05-data-plane-terminal-without-credit-impact-read.md @ 92a71c30c2b44fe3dbdc17a1f47534d2d0181b89 sha256:dcb21e03e8bdc5bad32435a06aed164eb275bce56c62755a54cee030451a1941`.
+11. **The gate reports,** under `state/consults/gates/`: `2026-10-05-data-plane-terminal-without-credit-gate1-architect.md`, `-gate1-reviewer.md`, `-gate2-architect.md`, `-gate2-reviewer.md`, `-gate3-architect.md` and `-gate3-reviewer.md`.
+12. **Done:** PLAN marks the node done, with evidence `{pr: 176}`, in this amendment's commit.
+
+**Superseded index.** Amendment 4's two entries and Amendment 5's two entries stand. Nothing further is superseded.

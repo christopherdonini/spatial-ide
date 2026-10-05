@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a7fda68c70b070da474351fc30702b7af345692560cca59c96226374b883354b`) at `2026-10-05T12:26:23.013Z`.
+Generated from `PLAN.yaml` (sha256 `a93551588972c56d295906472941fbb11116854d435e844f8802a8fb7cf5cc9c`) at `2026-10-05T13:01:04.747Z`.
 
 ## 1. Next
 
@@ -30,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `a7fda68c70b070da474351fc30702b7af345692560cc
 
 ## 5. In progress
 
-- **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) — evidence: branch `cut/data-plane-terminal-without-credit`
 - **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) — evidence: branch `cut/evidence-recorder-v0-1`
 
 ## 6. Proposed / unscheduled
