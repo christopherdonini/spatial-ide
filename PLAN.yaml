@@ -3996,13 +3996,13 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: ready
+    status: in-progress
     order: 13
     depends_on: [timing-tests-assert-property-not-budget, timing-assertions-under-contention]
     needs_human: {kind: none, minutes: 0}
     gate: protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/data-plane-terminal-without-credit}
     budget_minutes: 120
     generation: 3
     felt_verdict: false

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T07:19:06.252Z",
-  "plan_hash": "c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87e5c5aeace2218e24206b",
+  "generated_at": "2026-10-05T07:26:07.643Z",
+  "plan_hash": "b332e64c49c43068bbad3fc9da366ab56dfbdd11c4460a21df74f95b72755935",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6423,7 +6423,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": 13,
       "depends_on": [
         "timing-tests-assert-property-not-budget",
@@ -6435,7 +6435,9 @@
       },
       "gate": "protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md",
       "merge": "merge-commit",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/data-plane-terminal-without-credit"
+      },
       "budget_minutes": 120,
       "generation": 3,
       "felt_verdict": false,

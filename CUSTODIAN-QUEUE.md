@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87e5c5aeace2218e24206b`) at `2026-10-05T07:19:06.056Z`.
+Generated from `PLAN.yaml` (sha256 `b332e64c49c43068bbad3fc9da366ab56dfbdd11c4460a21df74f95b72755935`) at `2026-10-05T07:26:07.501Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87
 ## 2. Ready
 
 - **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`, order 14, budget 90 min)
-- **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) (lane `kernel-protocol`, order 13, budget 120 min)
 - **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 20, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -32,7 +31,7 @@ Generated from `PLAN.yaml` (sha256 `c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87
 
 ## 5. In progress
 
-- (none)
+- **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) — evidence: branch `cut/data-plane-terminal-without-credit`
 
 ## 6. Proposed / unscheduled
 
