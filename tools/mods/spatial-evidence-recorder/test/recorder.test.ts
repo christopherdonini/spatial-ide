@@ -716,12 +716,10 @@ test('the record carries the repeat count', async ($, on) => {
   expect('repeat' in record(w, next + 2)).toBe(false)
 })
 
-// RECORDED MUTATION: the before stage awaited without the race (`const first = await staged` in place
-// of the `Promise.race` in raceBefore) -> fails: `reaching the wait ceiling before a command gives
-// unavailable fields and runs the command at once` (by assertion, after the real-time release at three
-// ceilings: the result arrived after the answers were released), `a ceiling timer that cannot be set
-// leaves the before-fields set and reads the ceiling flag unavailable`. Observed at ba42e6f76117 with this
-// change, claude --version 2.1.289 (Claude Code).
+// RECORDED MUTATION: the before stage awaited without the race (`await staged` for the `Promise.race`)
+// -> fails: `reaching the wait ceiling before a command gives unavailable fields and runs the command at
+// once`, `a ceiling timer that cannot be set leaves the before-fields set and reads the ceiling flag
+// unavailable`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('reaching the wait ceiling before a command gives unavailable fields and runs the command at once', { timeoutMs: 20000 }, async ($, on) => {
   const w = arm(on)
 
