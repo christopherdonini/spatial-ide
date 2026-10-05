@@ -466,3 +466,10 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **Source.** The data-plane form's closing record (`protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`, Amendment 6, item 5), on the #176 gate-1 architect's N-9: the form has no Operator gate, so the closing record names where the string waits.
 - **The string:** the new data-plane detail on an owner's cancel whose source then ends without failure. It ships beginning with `[P6 placeholder]`, at `protocol/data-plane/src/adapter_ws.rs:384 @ 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a sha256:76179b19a3286a033c32089225c4395c94698037e3f1ca4ae044be87e976ab8e`.
 - **For the human:** its wording, at P6. Nothing waits on it; the string is shipped and marked as a placeholder.
+- **Piece 2, the implementation and the index update:**
+  - The worker-high built it at 9c8e7930 (181,775 tokens, 138 tool uses, 6,292,916 ms). It is worker report 1.
+  - lead-data wrote the index update: 87,854 tokens, 38 tool uses, 188,654 ms. Write audit PASS (one Write, its report path). It is filed at `state/consults/2026-10-05-b1-engine-kernel-half-followups-index-update.md` (sha256 6954639d).
+  - It changes three `engine/README.md` lines (6 changed lines) and nothing in `kernel/README.md`. It lists two existing gaps, not changed: the Publish stream row does not name `resolve_projection`, and `kernel/README.md`'s line for kernel halves filed elsewhere does not name this form.
+  - A worker applied it in the PR as 7b05dfd6 (26,054 tokens, 6 tool uses). All three current lines matched.
+  - **Index updated in the PR: yes.**
+- **The PR:** #178. The gates' findings on pointers are logged here when they report.
