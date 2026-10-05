@@ -273,3 +273,17 @@ Assertions only:
 - **Merge:** a merge commit, the human's click. AUTONOMY §9's docs-only merge does not apply.
 
 ## §10. Amendments — opens empty, append-only
+
+### Amendment 1 — P0 (class 1)
+
+*Written after P0's outcomes were seen, by the custodian (§6, item 1). The record is the worker's report, `state/consults/2026-10-05-compaction-record-and-resume-line-p0-report.md` (sha256 from its line 5 27c87d34013022a89ef79b52b28333b4a94ce07cb5ca6cfb454b1935add0b0e6), cited by section. No code exists. Nothing below is a quotation.*
+
+1. **The build:** `claude --version` read 2.1.289 (the report's section 1). The installed `claude` is a native binary with no package declarations beside it.
+2. **The declared PreCompact input** (the report's section 2):
+   - typed at 2.1.288, in the plugin-authoring declarations, as the settings-hook stdin type: `trigger` is `manual` or `auto`, and `custom_instructions` is a string or null;
+   - read at 2.1.289, in the running binary's embedded text: the same schema, matcher metadata keyed on `trigger` with the same two values, and a runner whose callers pass `auto` (reactive and precomputed paths) or `manual` (the `/compact` path).
+   No SDK or package declaration was found elsewhere on the machine.
+3. **I1 does not fire** (the report's section 3). No declaration contradicts §0 items 1 to 3. These are declarations, not a live stdin observation, so E1 stays the live proof.
+4. **Noted, no change:** the mod API's compaction trigger type has two further values; the classic hook is not called with them in the callers read, and §2 item 1's rule (any value other than `manual` is non-manual) covers them anyway.
+
+**Superseded index.** None.
