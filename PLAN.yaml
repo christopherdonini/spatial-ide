@@ -4031,25 +4031,25 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: 20
     depends_on: [evidence-recorder-v0]
     needs_human: {kind: none, minutes: 0}
     gate: tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/evidence-recorder-v0-1}
+    evidence: {pr: 177}
     budget_minutes: 240
-    generation: 6
+    generation: 7
     felt_verdict: false
     entries: []
-    summary: "FORM COMMITTED 2026-10-05 (tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md, the architect draft after the P0 report state/consults/2026-10-05-evidence-recorder-v0-1-p0-report.md; full form). QUESTION ROUND 55 RULED 2026-10-05: OPEN-1 (b), typed (state/directives/2026-10-05-round-55-open-1-ruling.md), the one-letter drive translation inside leadingCdDir with T27, class 9 in the form Amendment 1; OPEN-2: the human starts claude once before the worker, whose first step is the plugin-test switch check; OPEN-3 (a), no after-side ceiling. Before code: the worker reading of the hook-module timer globals (I9), then the architect amendment on Fable round-55 advice items 3 and 4 (state/directives/2026-10-05-fable-advice-round-55.md). Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's."
-    dates: {opened: 2026-10-05, done: null}
+    summary: "DONE 2026-10-05: #177 merged as e29a725b (merge commit) on the human typed approval (E8 and E9; D7 as built; RULED); the human reloaded; E8 recorded as predicted; E9 pending (the first 20 paired v0.1 records); closing record Amendment 6; generation 7. Before: FORM COMMITTED 2026-10-05 (tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md, the architect draft after the P0 report state/consults/2026-10-05-evidence-recorder-v0-1-p0-report.md; full form). QUESTION ROUND 55 RULED 2026-10-05: OPEN-1 (b), typed (state/directives/2026-10-05-round-55-open-1-ruling.md), the one-letter drive translation inside leadingCdDir with T27, class 9 in the form Amendment 1; OPEN-2: the human starts claude once before the worker, whose first step is the plugin-test switch check; OPEN-3 (a), no after-side ceiling. Before code: the worker reading of the hook-module timer globals (I9), then the architect amendment on Fable round-55 advice items 3 and 4 (state/directives/2026-10-05-fable-advice-round-55.md). Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's."
+    dates: {opened: 2026-10-05, done: 2026-10-05}
   - id: guardian-v1
     title: "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)"
     kind: task
     lane: governance
     phase: prototype
-    status: blocked
+    status: ready
     order: 21
     depends_on: [guardian-v0, evidence-recorder-v0-1]
     needs_human: {kind: none, minutes: 0}
@@ -4060,7 +4060,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
+    summary: "UNBLOCKED 2026-10-05: evidence-recorder-v0-1 is done (#177). Its P0 and form come first (MODS-V1); the fourth G1 over-refusal is noted for the P0. Before: Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's."
     dates: {opened: 2026-10-05, done: null}
   - id: typed-terminal-codes-post-check-race
     title: "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source"

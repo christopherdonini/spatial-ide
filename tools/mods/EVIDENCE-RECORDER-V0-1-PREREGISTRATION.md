@@ -576,3 +576,32 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
 2. Recorded, by reading (the reviewer's S2-1): §8 item 18's condition that the sleep is not left live into `next` holds by the abort in raceBefore's `finally` at the head, and no test detects that abort's removal (the reviewer's probe P-abort), so it is not claimed as tested.
 
 **Superseded index.** §4's T24 row name, for the built test, and A2-1's statement that T24's name is unchanged, are superseded by item 1.
+
+### Amendment 6 — the closing record (class 1; claims 5 and 6 narrowed, class 2; E8 recorded)
+
+*Written after the outcomes were seen, by the custodian. PR #177 merged at 2026-10-05T12:54:38Z as merge commit e29a725bd2d4835dd14d1cbab1f31028f96f4f6c, with parents 0b7e1b62b9c7c4a9df2e5fb930a6c40288ae1f7a and 05fc645d64c6c59b1f682f04f585e72243f8a272. It follows the gate-1 architect's closing-record list, as changed at gate 2. References and hashes only. Nothing below is a quotation except item 5's fields, which are byte-copied by script.*
+
+1. **The merge commit** keeps 7bb137242931e3306051f3331c75ca129c3c50f3, ba42e6f76117f4f579ff181f063492cfcdc1e631, b90ed74c1d2c20013404cb094d0b4bda1527b4a3 and 05fc645d reachable, as the mutation comments and Amendment 5 item 1 name them.
+2. **The human's typed merge approval:** `state/directives/2026-10-05-pr177-merge-approval.md:6-8 @ f75dff0e17e2d58ea0fe0fde1e607742bd2ccea4 sha256:a5812c03a0b913793c27c9a96440cb44e31a2158599cee824e99dc9d44556f92`, with its RULED block of 2026-10-05 in `DECISIONS-PENDING.md`. It names E8 and E9, both. It accepts D7 as built.
+3. **§7:** the gate-1 reviewer's recount (base c2d62c37b4ec79f3eca7f8b794b9b85c04bf00fb, head 05fc645d): 633 of 1000 changed lines over 6 of 6 files. No class 8.
+4. **Class 2, the gate-1 architect's S2-1 and S2-2:**
+   - Claim 5 holds on F23 with every `$` call rejecting except the mock clock, by serialised equality (Amendment 4, D2). The clock-rejection path is shown only by T28, by deep equality: `tools/mods/spatial-evidence-recorder/test/recorder.test.ts:847-859 @ e29a725bd2d4835dd14d1cbab1f31028f96f4f6c sha256:73968218bd94ccff6043dfde1cc617ecd39995649225c619841844bd70add060`.
+   - Claim 6 is narrowed to the plugin folder (worker report 1, §5). On `tools/mods`, §5's `validate` prediction did not hold, before or after the change. Amendment 4's D3 reading that it could not be compared there is superseded by this item.
+5. **E8, class 1** (§4 E8; the human named it):
+   - **Build:** 2.1.289, read from this session's transcript and from `claude --version`.
+   - **The reload:** the human's `/reload-plugins` in the custodian's session at 12:55:52Z. Its Recorder line re-reads the plugin from its folder under `tools/mods`.
+   - **The Read-from line:** `claude plugin list` gives the same line as the v0 form's Amendment 5, E0, and so does Guardian's.
+   - **The call:** 12:57:34Z, from the main loop, in the foreground, with no `cd`, under a timeout of 120000 ms.
+   - **The record:** one new file in that day's folder, under the main tree's sibling `-local/evidence` root. The day folder went from 79 files to 80. Its fields, byte-copied by script, with the session scratchpad's profile path written as `<session scratchpad>`: `{"command":"node scripts/evidence/repeat.mjs 3 -- node --test <session scratchpad>/e8-pass.test.mjs","schema":"spatial-evidence-recorder/v0.1","repeat":3,"tool_is_error":false,"tree_basis":"session-default","tree_changed_during_run":false,"before_ceiling_reached":false}`. Each is as §4 predicts. `before_ceiling_reached` false is also the live clock seam's proof on the stage-won path (A2-1, the E8 read).
+   - **The tool result,** checked by script against the transcript and not reproduced: three run lines, each with exit 0, and the summary of three runs with none failed. There was no tool error.
+   - **The porcelain** was unchanged.
+6. **E9:** named and pending. It runs nothing. It reads the first 20 paired schema-v0.1 run records from 2.1.289 sessions after the 12:55:52Z reload. It is recorded as an appended class 1 row when they have accrued.
+7. **§8 item 18,** by Amendment 5 item 2. Its past-the-race half is also untested, by reading (the gate-2 architect's N3, the gate-2 reviewer's N-1).
+8. **§9 Operator, the brief rule:**
+   - The first worker brief after the merge, the `b1-engine-kernel-half-followups` worker-high dispatched at 13:13:13Z, omitted the rule.
+   - An addendum to that brief at 13:13:45Z carried it, referencing `state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md:16-22`.
+   - Every later worker and tester brief carries it at dispatch.
+9. **The gate reports,** under `state/consults/gates/`: `2026-10-05-evidence-recorder-v0-1-gate1-architect.md`, `-gate1-reviewer.md`, `-gate2-architect.md` and `-gate2-reviewer.md`.
+10. **Done:** PLAN marks the node done, with evidence `{pr: 177}`, in this amendment's commit. `guardian-v1` is unblocked. Evaluation rows (a) to (e) are read at the window's end; they are not closing items.
+
+**Superseded index.** Amendment 4's D3 reading on `tools/mods` is superseded by item 4. Amendment 5's entries stand.
