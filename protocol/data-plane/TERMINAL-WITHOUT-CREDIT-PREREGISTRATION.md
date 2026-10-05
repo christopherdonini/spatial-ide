@@ -369,3 +369,24 @@ Changed lines are counted by §21c's rule (insertions plus deletions; this form 
 ## §10. Amendments
 
 (opens empty)
+
+### Amendment 1 — the ruling rows for OPEN-1 and OPEN-2 (class 5; D-1)
+
+*Written by the custodian after question round 54 was answered (its RULED block in `DECISIONS-PENDING.md`), before any outcome of this piece: no test, M0 or code exists. Class 5: each ruling narrows this form's conditional branches to the one it selects. Both are red-line items ruled in the human's typed words, filed at `state/directives/2026-10-05-round-54-open-1-open-2-ruling.md` (OPEN-1 on its first line below the rule, OPEN-2 on its second), referenced and not reproduced. Nothing below is a quotation.*
+
+- **OPEN-1, round 54:** option A, discard.
+  - Part 2 is selected, with T1, T1b, T3b and T4 and the mutations M1, M3 and M4. Options B and C are closed.
+  - The ruling's further points map to this form as it stands:
+    - after a discard with no failure, the terminal is never TERM_COMPLETED (§2d; §8 item 10);
+    - the new detail string ships as a P6 placeholder, its wording the human's (§1; §2d);
+    - a data-plane CANCEL that arrived first still ends TERM_CANCELLED (§2d's deferral; T4; §8 item 9);
+    - the zero-credit plateau of 5 is accepted inside the declared MAX_INFLIGHT_BATCHES + 1 bound, and no ceiling changes (§0.6; §5 P-3 and I-1, unchanged).
+- **OPEN-2, round 54:** option (a), none.
+  - Part 3 is selected: no line under engine/ changes. The residual is stated in protocol/data-plane/README.md (Part 4), with no KNOWN-LIMITATIONS item.
+  - The ruling reads line 1's producer-failure clause from the instant the data plane's pump has received the failure, which is §1 C3's scope.
+  - Option (b) is not part of this piece and is not placed. §8 item 2's class-9 route, open only under (b), is closed.
+  - An engine line found necessary stops the piece and returns it to the human (§5 I-5).
+- **Unchanged:** §5's predictions and invalidators, §7 and §8. Code still waits for PR #175's merge (§8 item 1).
+- **Before code:** Fable's round-54 advice (`state/directives/2026-10-05-fable-advice-round-54.md`), four points, goes to the architect as amendment drafts (class 9 where they add scope).
+
+**Superseded index.** None.
