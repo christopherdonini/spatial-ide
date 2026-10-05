@@ -419,3 +419,26 @@ T24 asserts the property (unavailable fields, the flag, `next` reached once), no
     - **The stop conditions are unchanged:** any tool result altered; the overhead p95 over §7's bound; the total `unavailable` share over `UNAVAILABLE_STOP`.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index)
+
+### Amendment 1 — the ruling rows for OPEN-1 to OPEN-3 (OPEN-1 class 9; OPEN-3 class 5; OPEN-2 recorded)
+
+*Written by the custodian after question round 55 was answered (its RULED block in `DECISIONS-PENDING.md`), before any outcome of this piece: no code, test or live row exists. OPEN-1 is a red-line item ruled in the human's typed words, filed at `state/directives/2026-10-05-round-55-open-1-ruling.md` (its one line below the rule), referenced and not reproduced. Items 2 and 3 are by option label. Nothing below is a quotation.*
+
+- **OPEN-1, round 55: option (b). Scope addition, class 9, before any of its code (I12).**
+  - **§2.3, added.** Inside `leadingCdDir` only, a leading slash, one ASCII letter, then a slash or the end of the path, is read as that letter, a colon and a slash, followed by the rest. Nothing else is translated. The typed ruling names spellings that stay as they are; they include `/tmp`, `/home`, `/cygdrive/c` and `/mnt/c`. The rest of `leadingCdDir`'s checks are unchanged.
+  - **§2.9, added:** no OS branch, and no new `$` call. `validate`'s lines do not change because of it.
+  - **§4, added:** T27, in `test/recorder.test.ts`.
+    - Its cases: `/c/x` and a bare `/c`, each read as the drive spelling; and two spellings that must stay untranslated, chosen from the ruling's list.
+    - Its mutation: the translation dropped.
+  - **§2.7, added.** The README states that the translation assumes the Bash tool is Git Bash, and that off Windows a one-letter top-level directory reads `unavailable`.
+  - **§8, added:**
+    - 16. A translation outside the shape above, or of any spelling the ruling names as untranslated; an OS branch; a new `$` call made for it.
+  - **§7:** inside the declared ceiling of 1000 lines and 6 files. The files are already listed. The estimate rises by about 40 lines.
+  - **§9's evaluation (b):** the POSIX-spelled `cd` cause is reported until the merge, then reads zero for records after it.
+- **OPEN-2, round 55: the human starts `claude` once before the worker is dispatched.**
+  - The worker's first step runs `claude plugin test` on the unchanged v0 folder as the switch check.
+  - If the switched-off message returns after that start, I10 fires. Per the message's own last clause (Fable's round-55 advice, item 2), installed mods are then turned off remotely, so Guardian is not enforcing in new sessions. The custodian records that and tells the human.
+- **OPEN-3, round 55: option (a), class 5.** No after-side ceiling in this piece. §1's may-not-claim line on the after side stands.
+- **Unchanged:** every other section. The hook-module timer question (§2.8; I9) stays open for the worker's reading of record before any code. Fable's round-55 advice, items 3 and 4, is handled by a further amendment drafted after that reading.
+
+**Superseded index.** None.

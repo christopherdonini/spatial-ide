@@ -502,3 +502,20 @@ Changed lines are counted by §21c's rule (insertions plus deletions; this form 
 **Unchanged:** §1 (no claim is added); §5's P-1 to P-7 and I-1 to I-5; §7; §8 items 1 to 19. Code still waits for PR #175's merge (§8 item 1).
 
 **Superseded index.** None.
+
+### Amendment 3 — M4 passed at the remedy commit: a class-2 result, and its fixture fix
+
+*Written after the outcomes of M0, the remedy and the mutations had been seen, by the custodian. The evidence is worker report 1, `state/consults/2026-10-05-data-plane-terminal-without-credit-worker-report-1.md` (as written, sha256 38e650364d73d2228912b94daf74b1d4205da1484d5df1432af8e4b4ae56afca), cited by section. The branch commits are named by id until the merge (round 25, item 2 (d)). Nothing below is a quotation.*
+
+- **The miss (class 2).** At the remedy commit 237af6fed01c545c0b64b20ec662293deee472e0, M4 did not fail T4: the test passed under the mutation. That misses §5 P-7 and Amendment 2's P-10. It is not a §5 invalidator, and no prediction is edited.
+- **The cause, per the report's mutation section:** a fixture defect, not product code. T4's test SourceCancel ran the notice inside the runtime worker that its own cancel then blocked. So the halt signal always arrived first, whatever the writer's owner-cancel arm did, and T4 could not discriminate.
+- **The fix:** commit 8f5e622ef478a5b668225d7a741ac0097880fee5 runs the notice from its own thread. No product line changes. At that commit:
+  - M4 fails T4 at its terminal-code assertion, as §4 predicts;
+  - M2, M3, M5, M7 and M8 were re-observed, each failing as predicted;
+  - M1 and M6 stand at 237af6fe, whose tests and product code 8f5e622e does not change.
+- **Further commits beyond the Order line's two** (the report's deviation 2):
+  - 8f5e622e, above;
+  - d60a0bed4e96b8e92e3cbeefb848e46e2faac2a4, comment text only (the RECORDED MUTATION docs).
+- **The report's other deviations** (3 to 10) are left to the gates by reference. Deviation 5 states that §2d's Completed-after-no-discard branch is unreachable from the credit wait and has no test.
+
+**Superseded index.** None.
