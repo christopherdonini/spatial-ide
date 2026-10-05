@@ -51,7 +51,10 @@ impl SourceCancel for Flag {
         self.cancel_calls.fetch_add(1, Ordering::SeqCst);
         let notify = self.notify.lock().unwrap().take();
         if let Some(notify) = notify {
-            notify();
+            // From a thread of its own, as an owner's cancel arrives. A wake issued from inside the
+            // runtime worker this call then blocks would wait in that worker's local slot for the
+            // whole delay, and T4's owner notice would not be seen before its halt signal.
+            std::thread::spawn(notify).join().unwrap();
         }
         std::thread::sleep(Duration::from_millis(self.delay_ms.load(Ordering::SeqCst)));
     }
