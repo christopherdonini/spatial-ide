@@ -532,3 +532,12 @@ Changed lines are counted by §21c's rule (insertions plus deletions; this form 
 6. **Part 4's data-plane index half is void** (the reviewer's S2-1; the architect's Part 4 note; lead-data's finding; class 3). `protocol/data-plane/README.md` has no Owner's index section; the owner's indexes are the kernel's and the engine's (the pilot's §1 item 2). D-4 and §8 item 18 are discharged by `kernel/README.md`'s index alone.
 
 **Superseded index.** Amendment 3's parenthesis giving worker report 1's as-written hash is superseded by item 1. The header's Pilot-line pin at c823bce5 is superseded by item 2.
+
+### Amendment 5 — gate 2's record correction (correction round 2 of 2, the last)
+
+*Written after gate 2's outcomes were seen, by the custodian, from `state/consults/gates/2026-10-05-data-plane-terminal-without-credit-gate2-architect.md` and `state/consults/gates/2026-10-05-data-plane-terminal-without-credit-gate2-reviewer.md` (each one's S1-1; the architect's S2-2; the reviewer's S2-2). Nothing below is a quotation.*
+
+1. The defect: Amendment 4 item 1 exceeds round 12 (d)'s ceiling. The corrected reference: `state/consults/2026-10-05-data-plane-terminal-without-credit-worker-report-1.md @ 8f4874c184ac4b4d13546b47843c643e1fcdb5ec sha256:d58d34f9d1ce6c0d284733d3b1e25a042d04e320290a5cae96a43109dd43d86a`. The proof: `git show` of that path at that commit, recomputed by the gate-2 reviewer.
+2. The fix commit of Amendment 4 items 3 to 5: `1b2e53d4f9e8532fc46cc003c7555a5b5e907ea1`.
+
+**Superseded index.** Amendment 4 item 1 is superseded by item 1, which carries its pin unchanged. The data-plane half of §2 Part 4's owner's-index bullet is superseded by Amendment 4 item 6.
