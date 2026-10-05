@@ -187,6 +187,15 @@ const RUN_KEYS = [
 // sets tree_changed_during_run`, `a leading absolute cd sets the tree, and any other cd leaves it
 // unresolved`, `every process call is git with no optional locks, a listed subcommand and the declared
 // timeout`. Observed at 9acc86b8c559 with this change, claude --version 2.1.289 (Claude Code).
+// Re-observed at ba42e6f76117 with the v0.1 change (the same mutation): fails `an approved command produces
+// one complete run record`, `a failing or timed-out git call gives unavailable fields and leaves the
+// result unchanged`, `an edit or a commit during the run sets tree_changed_during_run`, `a leading
+// absolute cd sets the tree, and any other cd leaves it unresolved`, `every process call is git with no
+// optional locks, a listed subcommand and the declared timeout`, `reaching the wait ceiling before a
+// command gives unavailable fields and runs the command at once`, `a leading cd in the Git Bash drive
+// spelling is read as the drive, and no other spelling is translated`, `a ceiling timer that cannot be
+// set leaves the before-fields set and reads the ceiling flag unavailable`. claude --version 2.1.289
+// (Claude Code).
 test('an approved command produces one complete run record', async ($, on) => {
   const w = arm(on)
   expect(await bash($, w, CARGO)).toEqual(ANSWER)
@@ -389,6 +398,8 @@ const turn = ($: any, extra: Record<string, unknown>) =>
 // RECORDED MUTATION: the `$.agent.list` lookup dropped from recordUsage (`agent_type: UNAVAILABLE`) ->
 // fails: `a subagent's turn end produces one usage record`. Observed at 9acc86b8c559 with this change,
 // claude --version 2.1.289 (Claude Code).
+// Re-observed at ba42e6f76117 with the v0.1 change (the same mutation): fails `a subagent's turn end
+// produces one usage record`. claude --version 2.1.289 (Claude Code).
 test("a subagent's turn end produces one usage record", async ($, on) => {
   const w = arm(on, { agents: [{ id: 'ag1', description: 'd', type: 'Explore', status: 'completed' }] })
   expect(await turn($, { agentId: 'ag1', usage: USAGE })).toEqual({ text: 'done', usage: USAGE })
@@ -647,6 +658,10 @@ const sameAsNext = (got: unknown, want: unknown) => {
   expect(JSON.stringify(got)).toBe(JSON.stringify(want))
 }
 
+// RECORDED MUTATION: row A5 removed (`const n = undefined` in place of `repeatOf(s.normal)` in planFor)
+// -> fails: `the repeat-runner with an approved command produces one record`, `the record carries the
+// repeat count`, `every result passes through unchanged on the repeat-runner, ceiling and previous-write
+// paths`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('the repeat-runner with an approved command produces one record', async ($, on) => {
   const w = arm(on)
   for (const [i, [command]] of RUNNER_CALLS.entries()) {
@@ -658,6 +673,10 @@ test('the repeat-runner with an approved command produces one record', async ($,
   }
 })
 
+// RECORDED MUTATION: A5's tail check dropped (`return Number(t[2])` in place of the `isApproved` check
+// on the tail, so any tail is approved) -> fails: `the repeat-runner with any other command produces no
+// record and makes no engine call`, `the record carries the repeat count`. Observed at ba42e6f76117 with this
+// change, claude --version 2.1.289 (Claude Code).
 test('the repeat-runner with any other command produces no record and makes no engine call', async ($, on) => {
   const w = arm(on, {}, 'rejecting')
   const commands = [
@@ -678,6 +697,8 @@ test('the repeat-runner with any other command produces no record and makes no e
   expect(w.reached).toBe(commands.length)
 })
 
+// RECORDED MUTATION: `repeat` fixed at 1 (`counts[0]` replaced by `1` in planFor) -> fails: `the
+// record carries the repeat count`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('the record carries the repeat count', async ($, on) => {
   const w = arm(on)
   for (const [i, [command, n]] of RUNNER_CALLS.entries()) {
@@ -695,6 +716,12 @@ test('the record carries the repeat count', async ($, on) => {
   expect('repeat' in record(w, next + 2)).toBe(false)
 })
 
+// RECORDED MUTATION: the before stage awaited without the race (`const first = await staged` in place
+// of the `Promise.race` in raceBefore) -> fails: `reaching the wait ceiling before a command gives
+// unavailable fields and runs the command at once` (by assertion, after the real-time release at three
+// ceilings: the result arrived after the answers were released), `a ceiling timer that cannot be set
+// leaves the before-fields set and reads the ceiling flag unavailable`. Observed at ba42e6f76117 with this
+// change, claude --version 2.1.289 (Claude Code).
 test('reaching the wait ceiling before a command gives unavailable fields and runs the command at once', { timeoutMs: 20000 }, async ($, on) => {
   const w = arm(on)
 
@@ -736,6 +763,9 @@ test('reaching the wait ceiling before a command gives unavailable fields and ru
   expect(w.reached).toBe(3)
 })
 
+// RECORDED MUTATION: the timer stopped before `$.fs.write` is awaited (`lastWrite` set on the line
+// above the awaited write in writeRecord) -> fails: `a run record carries the previous write's duration
+// and names that write`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test("a run record carries the previous write's duration and names that write", async ($, on) => {
   const w = arm(on, { writeDelayMs: 50 })
   const named = (i: number) => w.writes[i].path.split('/').slice(-2).join('/')
@@ -760,6 +790,10 @@ test("a run record carries the previous write's duration and names that write", 
   expect(record(w, 5).previous_write.record).toBe(named(3))
 })
 
+// RECORDED MUTATION: the Bash hook returning `{ ...ran, context: ['repeat'] }` on an A5 call (the last
+// line of recordRun) -> fails: `the repeat-runner with an approved command produces one record`, `every
+// result passes through unchanged on the repeat-runner, ceiling and previous-write paths`. Observed at
+// ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('every result passes through unchanged on the repeat-runner, ceiling and previous-write paths', { timeoutMs: 20000 }, async ($, on) => {
   const w = arm(on)
   const call = `${RUNNER} 3 -- cargo test`
@@ -786,6 +820,9 @@ test('every result passes through unchanged on the repeat-runner, ceiling and pr
   sameAsNext(await bash($, w, call, { agentId: 'ag1' }), ANSWER)
 })
 
+// RECORDED MUTATION: the translation dropped (`return dir` in place of the drive branch in
+// leadingCdDir) -> fails: `a leading cd in the Git Bash drive spelling is read as the drive, and no
+// other spelling is translated`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('a leading cd in the Git Bash drive spelling is read as the drive, and no other spelling is translated', async ($, on) => {
   const w = arm(on)
   const cases: Array<[string, string]> = [
@@ -806,6 +843,9 @@ test('a leading cd in the Git Bash drive spelling is read as the drive, and no o
   }
 })
 
+// RECORDED MUTATION: a rejected sleep read as the ceiling reached (the rejection arm of the sleep
+// mapped to `ceiling` in raceBefore) -> fails: `a ceiling timer that cannot be set leaves the
+// before-fields set and reads the ceiling flag unavailable`. Observed at ba42e6f76117 with this change, claude --version 2.1.289 (Claude Code).
 test('a ceiling timer that cannot be set leaves the before-fields set and reads the ceiling flag unavailable', async ($, on) => {
   const w = arm(on, {}, 'rejecting')
   expect(await bash($, w, CARGO)).toEqual(ANSWER)
