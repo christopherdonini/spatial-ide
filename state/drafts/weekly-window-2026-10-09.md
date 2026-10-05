@@ -373,3 +373,10 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - Amendment 1 (class 5) records question round 54's typed rulings.
   - Amendment 2 settles Fable's round-54 advice. The architect drafted it: 111,659 subagent tokens, 35 tool uses, 392,352 ms. With the read and the first draft, the drafting total is 620,316 tokens, 206 tool uses and 1,942,584 ms.
   - Neither amendment was caused by a wrong or missing pointer of the impact read, so neither counts against the lead (the brief's §4). Amendment 2's four points came from Fable's reading of the form, not from the read.
+- **The index update (§1 item 2; C1):**
+  - lead-data wrote it: 120,891 subagent tokens, 52 tool uses, 210,264 ms. Write audit PASS; C3 clean. Filed at `state/consults/2026-10-05-data-plane-terminal-without-credit-index-update.md`.
+  - It changes three kernel index lines (5 changed lines). Engine's index is unchanged.
+  - A worker applied it in the PR as 3f7b1949 (26,425 tokens, 5 tool uses): all three current lines matched.
+  - **Index updated in the PR: yes.**
+  - lead-data also found that the form's Part 4 names an owner's-index update in `protocol/data-plane/README.md`, which has no Owner's index. It is left to the gates.
+- **The PR:** #176. The gates' findings on pointers are logged here when they report.
