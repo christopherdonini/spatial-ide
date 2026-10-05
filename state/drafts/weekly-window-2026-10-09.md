@@ -511,3 +511,18 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **Found by the lead itself** (not by the architect or a gate): its question 1 quotes a one-word span from the close-races worker report in lower case where the source line has a capital. The lead disclosed this in its hand-back and left it, because its brief allowed one write. It is a quoting defect, not a pointer, and not design text.
 - **Measured piece 4 is next in line:** `geometry-types-beyond-polygons` (MP-1). ADR-034 was accepted on 2026-10-05, and MP-1's preregistration may be written now. Its impact read comes before its architect's draft, before a slot frees.
 - **The architect's draft** of piece 3 follows, with the read's path in its brief.
+- **Piece 3, the architect's draft** (`state/consults/2026-10-05-kernel-close-races-followups-architect-draft.md`): 201,152 subagent tokens, 72 tool uses, 548,131 ms, from 19:25:32Z to 19:34:40Z. Write audit PASS, with zero write calls. Its files-read section reports the impact read's pointers as follows (the architect's findings, not a gate's):
+  - **used:** every §0 pointer, rows S1 to S9 and S11 to S19, the consumer list (which became OPEN-1), the governing texts, and Q1 to Q5;
+  - **found wrong:** Q1's case (the lead's own disclosure); S9's message span (it opens at 427, but the message runs from 429 to 431); S8's `touch_modification_time` line (the doc comment's start, not the `fn`; called imprecise);
+  - **missing:** nine, among them skp.rs's `TicketLiveness` doc misattributing a quotation (C4), `liveTicketSet.ts`'s same single-site claim, T1's assertion message naming a renamed function, T1 to T3's commit-less recorded mutations (OPEN-3), two precedents, AI_DEVELOPMENT §B's escalation rule (OPEN-2), that `gate:` names a form file, and two more index lines.
+- **Combined cost of piece 3** (read plus draft): 357,503 subagent tokens, 180 tool uses, 1,032,769 ms.
+
+### B2, second pilot — measured piece 4: `geometry-types-beyond-polygons` (MP-1)
+
+- **The piece** is ready (engine, order 6) since ADR-034's acceptance, and holds no slot: `guardian-v1` and `kernel-close-races-followups` hold both. As for pieces 1 and 2, the read precedes the architect's draft, and no code starts before a slot frees.
+- **The impact read** is `state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md`: 151 lines, sha256 6e4faa93fdfbe2541d0d9ae6bca20c82845848d5005d327fc4536a610d56a9df, filed byte-identical as lead-data wrote it, read at main 2d4fa886.
+- **Cost** (the harness's task notification): 244,737 subagent tokens, 140 tool uses, 500,623 ms. The run lasted 19:30:09Z to 19:38:30Z.
+- **Write audit PASS:** one Write, at its REPORT PATH line's path (Read 70, Grep 66, Glob 2, the hand-back 1).
+- **C3:** before, the checkout held only its two pre-existing untracked items. After, it held those, the report, and the custodian's own filings in progress: the `kernel-close-races-followups` form and its draft consult, `guardian-v1`'s Amendment 6 draft consult, PLAN and this file. Each of those paths is the custodian's, written by the custodian's scripts in this window.
+- **Content:** interfaces in nine groups, consumers, governing texts, five gap questions, and a list of stale pointers in existing records, recorded and not fixed. The custodian's read found no draft text, design, recommendation or answer.
+- **The architect's draft** of MP-1's form follows, with the read's path in its brief.
