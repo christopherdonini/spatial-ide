@@ -283,7 +283,7 @@ pub(crate) fn wrap_for_data_plane(
         invalidator,
         session_ended: false,
     };
-    (Box::new(source), Arc::new(EngineCancel(cancel)))
+    (Box::new(source), Arc::new(EngineCancel::new(cancel)))
 }
 
 /// Which of two admission paths `EngineSourceFactory::create` takes.
@@ -696,10 +696,97 @@ impl BatchSource for EngineSource {
     }
 }
 
-struct EngineCancel(CancelToken);
+/// The engine's cancel, plus the one notice the data plane's writer registers (`on_cancel`).
+///
+/// **One mutex guards the notice slot and the cancelled mark together.** With two, `on_cancel`
+/// could read the mark unset, `cancel` could then set it and find the slot empty, and `on_cancel`
+/// could store a notice nothing ever runs. The notice runs after the guard drops, and may run under
+/// the ticket registry's lock, so it only raises a flag and drops nothing that re-enters the kernel.
+struct EngineCancel {
+    token: CancelToken,
+    notice: std::sync::Mutex<CancelNotice>,
+}
+
+#[derive(Default)]
+struct CancelNotice {
+    cancelled: bool,
+    notify: Option<Box<dyn FnOnce() + Send>>,
+}
+
+impl EngineCancel {
+    fn new(token: CancelToken) -> Self {
+        Self {
+            token,
+            notice: std::sync::Mutex::new(CancelNotice::default()),
+        }
+    }
+}
 
 impl SourceCancel for EngineCancel {
     fn cancel(&self) {
-        self.0.cancel();
+        self.token.cancel();
+        let notify = {
+            let mut n = self.notice.lock().unwrap_or_else(|e| e.into_inner());
+            n.cancelled = true;
+            n.notify.take()
+        };
+        if let Some(notify) = notify {
+            notify();
+        }
+    }
+
+    fn on_cancel(&self, notify: Box<dyn FnOnce() + Send>) {
+        let run_now = {
+            let mut n = self.notice.lock().unwrap_or_else(|e| e.into_inner());
+            if n.cancelled {
+                Some(notify)
+            } else {
+                n.notify = Some(notify);
+                None
+            }
+        };
+        if let Some(notify) = run_now {
+            notify();
+        }
+    }
+}
+
+#[cfg(test)]
+mod cancel_notice_tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    /// T6 (`protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`, Amendment 2, row B): the
+    /// registered notice runs exactly once, whichever of `on_cancel` and `cancel` comes first.
+    /// RECORDED MUTATION (M6): `on_cancel` always stores. It fails at order (ii)'s first count.
+    #[test]
+    fn engine_cancel_runs_the_registered_notice_once_in_either_order() {
+        let runs = Arc::new(AtomicUsize::new(0));
+        let counter = || {
+            let runs = runs.clone();
+            Box::new(move || {
+                runs.fetch_add(1, Ordering::SeqCst);
+            }) as Box<dyn FnOnce() + Send>
+        };
+
+        let registered_first = EngineCancel::new(CancelToken::new());
+        registered_first.on_cancel(counter());
+        assert_eq!(runs.load(Ordering::SeqCst), 0, "not run at registration");
+        registered_first.cancel();
+        assert_eq!(runs.load(Ordering::SeqCst), 1, "run by the first cancel");
+        registered_first.cancel();
+        assert_eq!(runs.load(Ordering::SeqCst), 1, "not run by a second cancel");
+
+        runs.store(0, Ordering::SeqCst);
+        let cancelled_first = EngineCancel::new(CancelToken::new());
+        cancelled_first.cancel();
+        cancelled_first.on_cancel(counter());
+        assert_eq!(runs.load(Ordering::SeqCst), 1, "run at registration");
+        cancelled_first.cancel();
+        assert_eq!(
+            runs.load(Ordering::SeqCst),
+            1,
+            "not run again by a later cancel"
+        );
     }
 }

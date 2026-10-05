@@ -547,7 +547,7 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     let checkpoints = Arc::new(Checkpoints::default());
     let total = adapter_ws::total_or_unknown(source.total_batches());
 
-    let rx = match pump::spawn(
+    let (rx, pump_failed) = match pump::spawn(
         source,
         state.clone(),
         tokio::runtime::Handle::current(),
@@ -584,6 +584,7 @@ async fn handle(st: AppState, mut socket: WebSocket) {
     let terminal = adapter_ws::drive(
         socket,
         rx,
+        pump_failed,
         state,
         cancel,
         checkpoints,

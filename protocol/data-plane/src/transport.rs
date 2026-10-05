@@ -132,6 +132,16 @@ pub struct BatchMeta {
 /// makes reaching the producer structural rather than hoped for.
 pub trait SourceCancel: Send + Sync {
     fn cancel(&self);
+
+    /// Registers a notice the implementor runs once, after its own `cancel` has taken effect: from
+    /// `cancel()`, or at registration when `cancel` has already run. The notice never blocks, and may
+    /// run on whichever thread cancels, under that thread's own locks. The default drops it unrun.
+    ///
+    /// This is how the stream's writer learns that the stream's owner has cancelled it, so a
+    /// terminal never waits for credit the consumer may never grant.
+    fn on_cancel(&self, notify: Box<dyn FnOnce() + Send>) {
+        drop(notify);
+    }
 }
 
 /// What a factory hands back: the batches, and the handle that stops whatever produces them.
@@ -161,6 +171,7 @@ pub struct StreamState {
     peak_resident_bytes: AtomicUsize,
     batches_generated: AtomicU64,
     batches_after_cancel: AtomicU64,
+    batches_discarded: AtomicU64,
     bytes_emitted: AtomicU64,
     rows_emitted: AtomicU64,
 }
@@ -176,6 +187,7 @@ impl StreamState {
             peak_resident_bytes: AtomicUsize::new(0),
             batches_generated: AtomicU64::new(0),
             batches_after_cancel: AtomicU64::new(0),
+            batches_discarded: AtomicU64::new(0),
             bytes_emitted: AtomicU64::new(0),
             rows_emitted: AtomicU64::new(0),
         })
@@ -212,6 +224,17 @@ impl StreamState {
         self.bytes_emitted.fetch_add(bytes as u64, Ordering::SeqCst);
     }
 
+    /// A batch generated and then dropped unsent, because its stream ended first. It leaves
+    /// `resident_bytes` and is counted in `batches_discarded`; `bytes_emitted` counts written bytes
+    /// only, and `batches_generated` and `rows_emitted` keep counting at generation. It is called
+    /// on the discard drain only (an owner's cancel with no prior data-plane cancel, or a pump
+    /// failure); a data-plane cancel, a peer close, a malformed frame, a receive error and the
+    /// deferral drop queued batches without counting them.
+    pub fn note_discarded(&self, bytes: usize) {
+        self.resident_bytes.fetch_sub(bytes, Ordering::SeqCst);
+        self.batches_discarded.fetch_add(1, Ordering::SeqCst);
+    }
+
     pub fn resident_bytes(&self) -> usize {
         self.resident_bytes.load(Ordering::SeqCst)
     }
@@ -223,6 +246,19 @@ impl StreamState {
     }
     pub fn batches_after_cancel(&self) -> u64 {
         self.batches_after_cancel.load(Ordering::SeqCst)
+    }
+    /// Instrument accessor (round 5, item 4): its only caller is the test suite, namely
+    /// `an_skp_cancel_reaches_the_client_as_a_terminal_with_no_credit_granted`,
+    /// `a_close_dataset_reaches_the_client_as_a_terminal_with_no_credit_granted`,
+    /// `a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted` and
+    /// `an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted`.
+    /// The count must be proven of the shipped writer: no wire field may carry it, and the
+    /// terminal's detail is the source's own, unchanged. On the discard drain only (an owner's
+    /// cancel with no prior data-plane cancel, or a pump failure), sent batches plus this equal
+    /// `batches_generated` once a stream has ended; a data-plane cancel, a peer close, a malformed
+    /// frame, a receive error and the deferral drop queued batches without counting them.
+    pub fn batches_discarded(&self) -> u64 {
+        self.batches_discarded.load(Ordering::SeqCst)
     }
     pub fn bytes_emitted(&self) -> u64 {
         self.bytes_emitted.load(Ordering::SeqCst)

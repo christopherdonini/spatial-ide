@@ -92,7 +92,7 @@ counts batches.
 ## Declared ceilings (ADR-010 rule 6)
 
 `MAX_CONCURRENT_STREAMS` 4 · `MAX_INFLIGHT_BATCHES` 4 (credit window and pump capacity) ·
-`MAX_FRAME_BYTES` 16 MiB · `START_TIMEOUT` 10 s · `PEER_DRAIN_TIMEOUT` 30 s.
+`MAX_FRAME_BYTES` 16 MiB · `START_TIMEOUT` 120 s · `PEER_DRAIN_TIMEOUT` 30 s.
 
 A capacity slot is taken **after** the operation is read, and released as soon as the stream's last
 frame is handed to the transport. Both ends matter: taking it at connect would let
@@ -156,6 +156,33 @@ Deferred and named rather than skipped: the **OS keychain** (nothing persists ac
 in-memory ephemeral token is strictly stronger than a stored one) and **peer authentication on
 loopback** (ADR-012 open risk 8 — the token authenticates a session, not a process). This slice has
 **no capability-grant model** and claims none.
+
+## Credit gates batch frames only, so no terminal frame waits for credit
+
+The writer receives the next pump item first. A closed pump channel is `TERM_COMPLETED` and a failed
+item is `TERM_PRODUCER_FAILED`, each with no credit held; only a batch frame waits for one credit,
+consumed as before. Credit equal to the batch count therefore delivers every batch and then the
+terminal.
+
+**Queued batches are discarded, not delivered.** When the source fails behind queued batches, or its
+owner cancels the stream (`SourceCancel::on_cancel`: SKP cancel, `close_dataset`, session end), the
+writer sends no further batch. It drops the one it holds and every queued one, with no credit, until
+the source's own failure arrives. A source that ends instead gets a `TERM_PRODUCER_FAILED` whose detail
+is a P6 placeholder, never `TERM_COMPLETED` after a discard. A data-plane CANCEL that arrived first
+still ends `TERM_CANCELLED`. `StreamState::batches_discarded` counts each batch dropped, the held one
+included, and `resident_bytes` falls with it; `rows_emitted` and `batches_generated` still count at
+generation, so once a stream has ended on the discard drain (an owner's cancel with no prior
+data-plane cancel, or a pump failure), batches sent plus batches discarded equal batches generated.
+A data-plane cancel, a peer close, a malformed frame, a receive error and the deferral drop queued
+batches without counting them.
+
+The zero-credit plateau is `MAX_INFLIGHT_BATCHES` + 1, because the writer now holds one batch while it
+waits. That is inside the declared bound, and no ceiling changes.
+
+**Residual, stated rather than implied.** An engine failure the engine has not yet handed to the pump
+reaches the terminal only after credit moves the items ahead of it: it sits behind a full engine queue
+while the consumer withholds credit. The claim above starts at the instant the pump has received the
+failure. See `TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md`.
 
 ## Declared recovery policy (ADR-010 rule 7)
 

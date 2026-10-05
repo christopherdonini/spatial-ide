@@ -35,16 +35,32 @@ struct Synthetic {
     cancel: Arc<Flag>,
 }
 
+/// The source's stop flag and its cancel. `cancel` sets the flag, runs the registered notice (as the
+/// kernel's cancel does), then sleeps `delay_ms` before it returns (T4's fixture delay).
 #[derive(Default)]
 struct Flag {
     cancelled: AtomicBool,
     cancel_calls: AtomicU64,
+    notify: std::sync::Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    delay_ms: AtomicU64,
 }
 
 impl SourceCancel for Flag {
     fn cancel(&self) {
         self.cancelled.store(true, Ordering::SeqCst);
         self.cancel_calls.fetch_add(1, Ordering::SeqCst);
+        let notify = self.notify.lock().unwrap().take();
+        if let Some(notify) = notify {
+            // From a thread of its own, as an owner's cancel arrives. A wake issued from inside the
+            // runtime worker this call then blocks would wait in that worker's local slot for the
+            // whole delay, and T4's owner notice would not be seen before its halt signal.
+            std::thread::spawn(notify).join().unwrap();
+        }
+        std::thread::sleep(Duration::from_millis(self.delay_ms.load(Ordering::SeqCst)));
+    }
+
+    fn on_cancel(&self, notify: Box<dyn FnOnce() + Send>) {
+        *self.notify.lock().unwrap() = Some(notify);
     }
 }
 
@@ -98,7 +114,7 @@ impl SourceFactory for SyntheticFactory {
     }
 }
 
-async fn start(factory: Arc<SyntheticFactory>) -> RunningDataPlane {
+async fn start<F: SourceFactory>(factory: Arc<F>) -> RunningDataPlane {
     spatial_data_plane::serve(DataPlaneConfig {
         factory,
         static_dir: None,
@@ -116,6 +132,40 @@ fn factory(batches: usize, bytes: usize, per_batch_ms: u64) -> Arc<SyntheticFact
         last: std::sync::Mutex::new(Vec::new()),
         fail_with: None,
     })
+}
+
+/// The detail a [`FailsAfter`] source fails with: fixed, so a test can look for the source's own words.
+const FAILURE_DETAIL: &str = "synthetic scan failure: the source gave up";
+
+/// Test-only: a source that emits `ok` batches and then fails with [`FAILURE_DETAIL`].
+struct FailsAfter {
+    ok: usize,
+}
+
+impl BatchSource for FailsAfter {
+    fn next_into(&mut self, out: &mut Vec<u8>) -> Option<Result<BatchMeta, String>> {
+        if self.ok == 0 {
+            return Some(Err(FAILURE_DETAIL.to_string()));
+        }
+        self.ok -= 1;
+        out.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);
+        out.resize(out.len() + 4096, 0xAB);
+        Some(Ok(BatchMeta { rows: 1 }))
+    }
+}
+
+struct FailsAfterFactory(usize);
+
+impl SourceFactory for FailsAfterFactory {
+    fn create(
+        &self,
+        _request: &OpenRequest,
+    ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+        Ok((
+            Box::new(FailsAfter { ok: self.0 }),
+            Arc::new(Flag::default()),
+        ))
+    }
 }
 
 type Client =
@@ -784,6 +834,159 @@ async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own
     for mut s in spares {
         s.close(None).await.ok();
     }
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// RECORDED MUTATION (M2): the credit wait back above the pump receive. It fails at `recv_by`.
+#[tokio::test]
+async fn credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal() {
+    // C1. Twelve batches, twelve credits: the terminal must not wait for a thirteenth.
+    let dp = start(factory(12, 4096, 0)).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    grant(&mut c, 12).await;
+    let r = drain(&mut c).await;
+
+    assert!(r.opened, "the stream announces itself in band");
+    assert_eq!(r.batches, 12, "every batch arrives");
+    assert_eq!(
+        r.terminal.as_ref().map(|t| t.0),
+        Some(wire::TERM_COMPLETED),
+        "terminal was {:?}",
+        r.terminal
+    );
+    assert_eq!(
+        r.progress.last().map(|p| (p.0, p.2)),
+        Some((12, 12)),
+        "the last progress frame reads 12 of 12"
+    );
+    assert!(r.one_frame_per_message, "one frame per message");
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// RECORDED MUTATION (M2): the credit wait back above the pump receive. It fails at `recv_by`.
+#[tokio::test]
+async fn a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_granted() {
+    // C2. The first item is the failure; no credit is ever granted.
+    let dp = start(Arc::new(FailsAfterFactory(0))).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.contains(FAILURE_DETAIL),
+        "the source's own words survive: {detail}"
+    );
+    assert_eq!(r.batches, 0);
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// RECORDED MUTATIONS: M3 (delete the pump-failure arm) fails at `recv_by`; M7 (drop the
+/// `batches_discarded` increment) fails at the count assertion, 0 in place of 3.
+#[tokio::test]
+async fn a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted() {
+    // C3. Three batches are queued ahead of the failure and no credit is ever granted.
+    let dp = start(Arc::new(FailsAfterFactory(3))).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let produced = wait_until(Duration::from_secs(20), || {
+        dp.registry.snapshot().last().map(|s| s.batches_generated()) == Some(3)
+    })
+    .await;
+    assert!(produced, "the source never generated its 3 batches");
+    let state = dp.registry.snapshot().last().cloned().expect("a stream");
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.contains(FAILURE_DETAIL),
+        "the source's own words survive: {detail}"
+    );
+    assert_eq!(r.batches, 0, "no batch was ever licensed");
+    assert_eq!(state.resident_bytes(), 0, "nothing stays resident");
+    assert_eq!(
+        state.batches_discarded(),
+        3,
+        "the three queued batches were discarded"
+    );
+    assert_eq!(state.batches_discarded(), state.batches_generated());
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// Wait for a no-credit stream to work ahead into its window and stop; returns its state and its
+/// source's cancel handle (the factory's own clone).
+async fn at_the_plateau(
+    dp: &RunningDataPlane,
+    f: &SyntheticFactory,
+) -> (Arc<spatial_data_plane::transport::StreamState>, Arc<Flag>) {
+    let plateau = wait_for_plateau(Duration::from_secs(20), 25, || {
+        dp.registry
+            .snapshot()
+            .last()
+            .map(|s| s.batches_generated())
+            .unwrap_or(0)
+    })
+    .await;
+    assert!(plateau.is_some(), "the producer never reached a plateau");
+    let state = dp.registry.snapshot().last().cloned().expect("a stream");
+    let flag = f.last.lock().unwrap().last().cloned().expect("a source");
+    (state, flag)
+}
+
+/// RECORDED MUTATION (M4): delete the `is_cancelled` deferral. It fails at the code assertion.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first() {
+    // The source's cancel runs the owner notice at once and then keeps this adapter's own receive
+    // half inside `cancel()` for 2 s, so the owner notice is raised long before the halt signal.
+    let f = factory(10_000, 4096, 0);
+    let dp = start(f.clone()).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let (_state, flag) = at_the_plateau(&dp, &f).await;
+    flag.delay_ms.store(2000, Ordering::SeqCst);
+
+    send_cancel(&mut c).await;
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_CANCELLED, "detail was: {detail}");
+    assert_eq!(r.batches, 0);
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+/// RECORDED MUTATIONS: M5 (the channel-closed branch sends `Completed`) and M8 (drop the
+/// `[P6 placeholder]` prefix) fail at the code and the prefix assertions.
+#[tokio::test]
+async fn an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted(
+) {
+    // Once its stop flag is set the source returns None, with no failure: the channel closes after
+    // batches were discarded, which is never `Completed`.
+    let f = factory(10_000, 4096, 0);
+    let dp = start(f.clone()).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let (state, flag) = at_the_plateau(&dp, &f).await;
+
+    flag.cancel();
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.starts_with("[P6 placeholder]") && !detail.contains(['{', '}']),
+        "the detail carries the placeholder mark and no brace: {detail}"
+    );
+    assert_eq!(r.batches, 0);
+    assert_eq!(state.resident_bytes(), 0, "nothing stays resident");
+    assert_eq!(state.batches_discarded(), state.batches_generated());
     c.close(None).await.ok();
     dp.shutdown().await;
 }
