@@ -139,7 +139,7 @@ grant a second chance. When the ledger is not fresh, stderr carries
 
 **The record.** Every call that reaches the decision appends one line to
 `.claude/state/precompact-<session_id>.jsonl`, with these fields in this order: `at` (ISO-8601 UTC),
-`trigger` (as received, else `null`), `decision` (`allowed-fresh`, `allowed-second-chance`,
+`trigger` (a string as received, else `null`), `decision` (`allowed-fresh`, `allowed-second-chance`,
 `blocked` or `recorded-only`), `reason` (the freshness reason for `blocked` and `recorded-only`,
 else `null`) and `flushed_at` (the ledger block's value, else `null`). `custom_instructions` is
 never recorded. A line that cannot be written costs one stderr line
@@ -303,7 +303,8 @@ Nothing in this directory depends on any of the three.
 
 `hooks.test.mjs` covers all four hooks plus `telegram.mjs`, both as direct unit tests of the
 exported decision functions (`decide`, `checkHalt`, `decidePrecompact`, `checkFreshness`,
-`buildOutput`, `buildMessage`) and, for `stop-queue.mjs` and `precompact-flush.mjs`, as literal
+`buildOutput`, `buildMessage`) and, for `stop-queue.mjs`, `precompact-flush.mjs` and
+`session-resume.mjs`, as literal
 `spawnSync` CLI invocations piping representative stdin JSON — the dry run of §3 in script form:
 block on the two-node fixture's ready node; allow when only its human-blocked node remains; allow
 on non-empty `background_tasks`; allow via the environment override; allow on a local

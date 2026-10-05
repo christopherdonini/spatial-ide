@@ -31,7 +31,7 @@ import { pathToFileURL } from 'node:url';
 import { isCloudSession } from './cloud.mjs';
 
 export const FLUSH_FRESHNESS_MS = 10 * 60 * 1000; // §7, tightened 2026-09-15: "within the last 10 minutes"
-export const SECOND_CHANCE_WINDOW_MS = 15 * 60 * 1000; // §7: "a second PreCompact within 15 minutes is allowed"
+export const SECOND_CHANCE_WINDOW_MS = 15 * 60 * 1000; // §7, paraphrased: a second manual PreCompact within 15 minutes is allowed
 
 export const BLOCK_REASON =
   "PRE-COMPACTION FLUSH REQUIRED — write state/CUT-STATE.md's SESSION-CONTINUITY block (position, " +
@@ -210,8 +210,7 @@ function appendRecord(projectRoot, sessionId, now, input, decision, reason) {
     });
     const p = recordLogPath(projectRoot, sessionId);
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    fs.appendFileSync(p, `${line}
-`, 'utf8');
+    fs.appendFileSync(p, `${line}\n`, 'utf8');
     return null;
   } catch (e) {
     return `precompact-flush: could not append the record line (${e.message}); the decision stands.`;
@@ -219,8 +218,7 @@ function appendRecord(projectRoot, sessionId, now, input, decision, reason) {
 }
 
 function withNote(stderr, note) {
-  return note ? `${stderr}
-${note}` : stderr;
+  return note ? `${stderr}\n${note}` : stderr;
 }
 
 /** The decision core, injectable for tests (see checkFreshness's own `git` parameter). */
