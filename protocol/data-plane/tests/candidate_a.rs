@@ -98,7 +98,7 @@ impl SourceFactory for SyntheticFactory {
     }
 }
 
-async fn start(factory: Arc<SyntheticFactory>) -> RunningDataPlane {
+async fn start<F: SourceFactory>(factory: Arc<F>) -> RunningDataPlane {
     spatial_data_plane::serve(DataPlaneConfig {
         factory,
         static_dir: None,
@@ -116,6 +116,40 @@ fn factory(batches: usize, bytes: usize, per_batch_ms: u64) -> Arc<SyntheticFact
         last: std::sync::Mutex::new(Vec::new()),
         fail_with: None,
     })
+}
+
+/// The detail a [`FailsAfter`] source fails with: fixed, so a test can look for the source's own words.
+const FAILURE_DETAIL: &str = "synthetic scan failure: the source gave up";
+
+/// Test-only: a source that emits `ok` batches and then fails with [`FAILURE_DETAIL`].
+struct FailsAfter {
+    ok: usize,
+}
+
+impl BatchSource for FailsAfter {
+    fn next_into(&mut self, out: &mut Vec<u8>) -> Option<Result<BatchMeta, String>> {
+        if self.ok == 0 {
+            return Some(Err(FAILURE_DETAIL.to_string()));
+        }
+        self.ok -= 1;
+        out.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0xFF]);
+        out.resize(out.len() + 4096, 0xAB);
+        Some(Ok(BatchMeta { rows: 1 }))
+    }
+}
+
+struct FailsAfterFactory(usize);
+
+impl SourceFactory for FailsAfterFactory {
+    fn create(
+        &self,
+        _request: &OpenRequest,
+    ) -> Result<(Box<dyn BatchSource>, Arc<dyn SourceCancel>), String> {
+        Ok((
+            Box::new(FailsAfter { ok: self.0 }),
+            Arc::new(Flag::default()),
+        ))
+    }
 }
 
 type Client =
@@ -784,6 +818,78 @@ async fn an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own
     for mut s in spares {
         s.close(None).await.ok();
     }
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+#[tokio::test]
+async fn credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal() {
+    // C1. Twelve batches, twelve credits: the terminal must not wait for a thirteenth.
+    let dp = start(factory(12, 4096, 0)).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    grant(&mut c, 12).await;
+    let r = drain(&mut c).await;
+
+    assert!(r.opened, "the stream announces itself in band");
+    assert_eq!(r.batches, 12, "every batch arrives");
+    assert_eq!(
+        r.terminal.as_ref().map(|t| t.0),
+        Some(wire::TERM_COMPLETED),
+        "terminal was {:?}",
+        r.terminal
+    );
+    assert_eq!(
+        r.progress.last().map(|p| (p.0, p.2)),
+        Some((12, 12)),
+        "the last progress frame reads 12 of 12"
+    );
+    assert!(r.one_frame_per_message, "one frame per message");
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+#[tokio::test]
+async fn a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_granted() {
+    // C2. The first item is the failure; no credit is ever granted.
+    let dp = start(Arc::new(FailsAfterFactory(0))).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.contains(FAILURE_DETAIL),
+        "the source's own words survive: {detail}"
+    );
+    assert_eq!(r.batches, 0);
+    c.close(None).await.ok();
+    dp.shutdown().await;
+}
+
+#[tokio::test]
+async fn a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted() {
+    // C3. Three batches are queued ahead of the failure and no credit is ever granted.
+    let dp = start(Arc::new(FailsAfterFactory(3))).await;
+    let mut c = connect(&dp).await.expect("connect");
+    send_start(&mut c).await;
+    let produced = wait_until(Duration::from_secs(20), || {
+        dp.registry.snapshot().last().map(|s| s.batches_generated()) == Some(3)
+    })
+    .await;
+    assert!(produced, "the source never generated its 3 batches");
+    let state = dp.registry.snapshot().last().cloned().expect("a stream");
+    let r = drain(&mut c).await;
+
+    let (code, detail) = r.terminal.expect("a terminal frame");
+    assert_eq!(code, wire::TERM_PRODUCER_FAILED, "detail was: {detail}");
+    assert!(
+        detail.contains(FAILURE_DETAIL),
+        "the source's own words survive: {detail}"
+    );
+    assert_eq!(r.batches, 0, "no batch was ever licensed");
+    assert_eq!(state.resident_bytes(), 0, "nothing stays resident");
     c.close(None).await.ok();
     dp.shutdown().await;
 }
