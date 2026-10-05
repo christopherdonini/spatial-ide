@@ -976,6 +976,14 @@ and `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixt
 > sides' tests in one commit. The conformance harness's one reported divergence (D1) is resolved.
 > `protocol/data-plane/` has an empty diff.
 
+> **Dated note, no literal change (2026-10-05; PLAN node `b1-engine-kernel-half-followups`).** The
+> `skp/0.6` fixture-commit lists (§4 item 13; the mechanics under §8's `skp/0.6` entry; §9.1;
+> `SKP_VERSION`'s doc) name that version's two-sided wire fixtures only:
+> `protocol/skp/tests/data/*.json`, with `fixtures.rs` and `fixtures.test.ts`. The conformance
+> suite's spec-derived fixtures under `protocol/skp/tests/conformance/` are outside those lists;
+> they were updated for `skp/0.6` in `c9ec02e` (B1 §10, Amendment 9). No literal, key, value, code
+> or command changes, and `protocol/data-plane/` has an empty diff.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
