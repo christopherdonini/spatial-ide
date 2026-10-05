@@ -666,3 +666,19 @@ There is no measurement.
   - each false refusal is narrowed through the usual process.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index). Amendment 1 is P0b's record (§0.5); nothing precedes it.
+
+### Amendment 1 — P0b (class 1; I8 fired)
+
+*Written after P0b's outcomes were seen, by the custodian (§0.5). The record is the worker's report, `state/consults/2026-10-05-guardian-v1-p0b-report.md` (sha256 from its line 5 c3e12389b17cad7742ae095f696339f821ca0f81fa4d6e206c93521c19efb7c7), cited by section. No code or branch exists. Nothing below is a quotation.*
+
+1. **(i) The types,** typed at 2.1.288: the type file equals §0.1's sha256 in both 2.1.288 folders. `$.fs.write`'s rejection cases, its lack of a duration bound, `$.session.repo()` returning null outside a repository, `$.env.get` returning undefined for an unset name, and the test-kit events are in the report's section (i). Nothing contradicts §2, so I1 has not fired.
+2. **(ii) The CLI spellings,** observed at 2.1.289, are in the report's section (ii), including the group alias `plugins`, the aliases `i` and `rm`, and verbs outside §7's list.
+3. **(iii) No override name** is typed. §7's env list is `USERPROFILE` alone.
+4. **(iv)(a) The six commands:** each is refused by v0 and allowed by G1 v1, raw and redacted, with the sha256s in the report's table. I7 has not fired.
+5. **(iv)(b) The replay** counts are the report's tables, from 2026-09-20.
+6. **I8 fired.** Since 2026-09-27 the replay gives G7 19 refusals, G8 9 and G9 4, against §5's 1, 0 and 0.
+   - Beyond the §9 merge, these include the custodian's own flows: `gh pr create`, `view` and `checks` calls, and ledger writes, refused through §2.3's odd-quote reading.
+   - The piece stops before code (§5) and returns to the architect for an amendment.
+7. **For that amendment:** the report's two findings (the replay counts; the CLI spellings §2.5 and §7 omit), its round-57 additions section, round 57's rulings and Fable's round-57 advice.
+
+**Superseded index.** None.
