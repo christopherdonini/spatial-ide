@@ -438,3 +438,18 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
     - `kernel-close-races-followups` claims part of the same recorded-mutation cites;
     - a third nullable-only doc site that no gate named.
   - **The architect's draft** follows, with the read's path in its brief.
+- **Piece 2, the architect's draft** is `state/consults/2026-10-05-b1-engine-kernel-half-followups-architect-draft.md` (report sha256 f6d42b99, extracted from the hand-back).
+  - **Cost** (the harness's task notification): 179,997 subagent tokens, 49 tool uses, 570,825 ms. The run lasted 12:15:03Z to 12:24:34Z. Write audit PASS: zero writes.
+  - **Combined, impact read plus draft:** 343,458 tokens, 129 tool uses, 916,817 ms. Piece 1's combined figure was 508,657 tokens, and the baseline averages about 211,000 tokens per draft. No threshold is set; the human judges at the end.
+  - **The form** is committed at `engine/B1-FOLLOWUPS-PREREGISTRATION.md`, 58 pins at b438c587. It is a full form, because B1's form is closed to additions.
+  - **Pointers found wrong, by the architect:** none, beyond the range the lead itself disclosed (`kernel/tests/skp_projection.rs` 917-921, which ends at 922).
+  - **Pointers found missing, by the architect:** six.
+    - `kernel/tests/wire_bytes_invariant.rs` 368-372, a B1 comment inside the very claim the read cites at `PLAN.yaml:3098`.
+    - The gate-3 reviewer's row 9.6(a), which contradicts the architect note the read pointed to.
+    - The publish batch policy that decides question 2, and its two constants.
+    - `BatchStream`'s private `rx` field; the read gave only its use.
+    - The fixture's `text` column size.
+    - SKP-V0 §8's last dated note, the precedent for question 4.
+  - **Correction rounds caused by a pointer:** none so far. The form had no correction round before commit.
+  - **A report names something from the read that the form used:** yes. The draft's part 4 lists the pointers it used, from all six of the read's sections and all five questions.
+  - **The index update** is owed in the PR (the form's §2, Owner's index: `engine/README.md` only).
