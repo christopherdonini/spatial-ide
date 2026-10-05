@@ -1007,3 +1007,19 @@ A.9 **README (R-b) additions.**
 - §5's replay prediction → Part B (missed, not edited) and A.6.
 - §1's items 2 and 6, and its OPEN-conditional limits → Part K.
 - §7's estimate → Part K. The size line is not edited.
+
+### Amendment 3 — P0c (class 1)
+
+*Written after P0c's outcomes were seen, by the custodian (Amendment 2, A.7). The record is the worker's report, `state/consults/2026-10-05-guardian-v1-p0c-report.md` (sha256 from its line 5 51d3b7f3c923c16edf825094b5ec6f9e3cdcc54af25e51ec937227839e411e56), cited by section. No code or branch exists. Nothing below is a quotation.*
+
+1. **(a) The scratch rules** follow Amendment 2's Parts A, C, D, E, F and H, with round 58's OPEN-6 verbs on a switch. With every addition off, they refuse exactly P0b's rows (the report's fidelity check). The four readings the worker chose are in its section (a), for the build and the gates.
+2. **(b) The replay:**
+   - G1 v1 refuses 48 calls in all and 40 since 2026-09-27, as P0b did. I13 has not fired.
+   - G7 refuses 3, G8 1 and G9 1 since 2026-09-27, each matching A.6 by row.
+   - The subset count is 0. No main-loop row lies beyond A.6's, so I11 has not fired.
+3. **Round 58's OPEN-6 verbs** refuse no row beyond A.6's, and none from the main loop (the report's OPEN-6 subsection). Nothing returns to the human under round 58.
+4. **(c) F37 to F60:** no row Node can stand in for misses §3, so I12 has not fired. F46 (a) and F47 to F49 are left to `claude plugin test`.
+5. **One pre-window row is still refused:** G9 at 2026-09-24T02:00:07Z, a worker's commit-message text naming a rule spelling within one restart's text. It is outside A.6's window and is not a custodian flow (the report's section (b)).
+6. **The slowest call's scratch time** is evidence only (the report's section (b)). No claim is made from it.
+
+**Superseded index.** None.

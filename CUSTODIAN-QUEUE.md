@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6204d368962875e637077d8d60e7c310886a2fcc6595397dd9ab4be0c3c1e221`) at `2026-10-05T17:40:30.789Z`.
+Generated from `PLAN.yaml` (sha256 `334c33cd0aeb3bc2a96cd9d38c066745d4d4b143913a8755a1492e1c8b4bf6dd`) at `2026-10-05T18:23:48.346Z`.
 
 ## 1. Next
 
@@ -26,6 +26,8 @@ Generated from `PLAN.yaml` (sha256 `6204d368962875e637077d8d60e7c310886a2fcc6595
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
+- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected — blocked by: guardian-v1
+- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check — blocked by: compaction-record-and-resume-line
 
 ## 5. In progress
 

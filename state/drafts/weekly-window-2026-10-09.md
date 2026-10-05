@@ -481,3 +481,16 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
 - **The pilot runs unchanged** for pieces 3 and 4.
 - **A measure the evaluation proposes,** for the human to decide on at the result: whether each architect draft since the index existed, the baseline's included, read the Owner's index sections of `engine/README.md` or `kernel/README.md`, from the transcripts only. Not computed: nothing authorises it yet.
 - **Conditions if the option is ever tried:** the evaluation's item 4, by reference.
+
+### J, refreshed (2026-10-05, on Fable's note)
+
+- **Source:** `state/directives/2026-10-05-fable-note-item-j-refresh.md`. The block record for session 128d8fa3 reads 2026-10-05T11:30:44.895Z, later than the 00:16:52Z block the count used.
+- **One more automatic compaction** is on record, by the same records and the same rule as the count above:
+
+  | Compaction (boundary) | Session | The block | The flush state |
+  |---|---|---|---|
+  | 2026-10-05T11:33:48.981Z (trigger auto; 770,191 tokens before; 84,467 ms, so it started about 100 seconds after the block) | 128d8fa3 | 11:30:44.895Z | the last flush 9c40d22f (committed 11:21:49Z, `flushed_at` 11:21:10Z, within 10 minutes). A tracked file was modified: the custodian appended gate-log entry 404 to `state/gate-log.json` at 11:30:42Z, 2.5 seconds before the block, so the hook's no-modified-tracked-file condition failed |
+
+  - It went through on the second chance, as path item 1 describes.
+  - No N1 nudge text appears in the transcript. The fill was about 77% of a 1M window, below N1's 80, as path item 4 describes.
+- **The count is now E: 4, N1: 2.** The human's 2026-10-05 context-flush direction, item 4, replaces this count by the brief's measure from the first automatic compaction after piece A merges.
