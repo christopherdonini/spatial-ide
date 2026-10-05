@@ -473,3 +473,11 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - A worker applied it in the PR as 7b05dfd6 (26,054 tokens, 6 tool uses). All three current lines matched.
   - **Index updated in the PR: yes.**
 - **The PR:** #178. The gates' findings on pointers are logged here when they report.
+
+### B2, second pilot — a candidate configuration, for the result (not tried)
+
+- **Source:** `state/directives/2026-10-05-fable-evaluation-index-without-the-lead.md` (Fable, on the ideas advisor's follow-up; an evaluation that authorises nothing).
+- **The option, named for the pilot's result:** "the index without the lead". The implementing worker updates the Owner's index in the piece's PR, the reviewer checks it against the diff, and a pointer script checks every pointer on every PR, with no lead-data dispatch. It is a candidate next configuration, not a compared result: no piece has run that way.
+- **The pilot runs unchanged** for pieces 3 and 4.
+- **A measure the evaluation proposes,** for the human to decide on at the result: whether each architect draft since the index existed, the baseline's included, read the Owner's index sections of `engine/README.md` or `kernel/README.md`, from the transcripts only. Not computed: nothing authorises it yet.
+- **Conditions if the option is ever tried:** the evaluation's item 4, by reference.
