@@ -359,9 +359,9 @@ async fn raised(notice: &mut watch::Receiver<bool>) {
 /// The batches stop: release the held batch, then receive and discard every queued one, without
 /// credit, until the source's own failure arrives. The halt signal wins, as in every wait.
 ///
-/// The channel closing instead is **never** `Completed` once a batch was discarded: a consumer must
-/// not read a stream with batches missing as a whole one. This is reached holding a batch, which is
-/// counted first, so `Completed` is only the answer when nothing was discarded.
+/// The channel closing instead is **never** `Completed`: a consumer must not read a stream with
+/// batches missing as a whole one. This is reached holding a batch, which is counted first, so a
+/// batch has always been discarded by then and the close is a `ProducerFailed`.
 async fn discard_queued(
     rx: &mut mpsc::Receiver<PumpItem>,
     halt_rx: &mut watch::Receiver<Option<Terminal>>,
@@ -369,7 +369,6 @@ async fn discard_queued(
     held_bytes: usize,
 ) -> Terminal {
     state.note_discarded(held_bytes);
-    let mut discarded = 1u64;
     loop {
         tokio::select! {
             biased;
@@ -379,10 +378,8 @@ async fn discard_queued(
             m = rx.recv() => match m {
                 Some(PumpItem::Batch(b)) => {
                     state.note_discarded(b.len());
-                    discarded += 1;
                 }
                 Some(PumpItem::Failed(detail)) => return Terminal::ProducerFailed(detail),
-                None if discarded == 0 => return Terminal::Completed,
                 None => return Terminal::ProducerFailed(
                     "[P6 placeholder] the source ended without reporting a failure after its owner cancelled the stream; batches already generated were discarded and not delivered".into(),
                 ),

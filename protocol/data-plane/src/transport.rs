@@ -226,7 +226,10 @@ impl StreamState {
 
     /// A batch generated and then dropped unsent, because its stream ended first. It leaves
     /// `resident_bytes` and is counted in `batches_discarded`; `bytes_emitted` counts written bytes
-    /// only, and `batches_generated` and `rows_emitted` keep counting at generation.
+    /// only, and `batches_generated` and `rows_emitted` keep counting at generation. It is called
+    /// on the discard drain only (an owner's cancel with no prior data-plane cancel, or a pump
+    /// failure); a data-plane cancel, a peer close, a malformed frame, a receive error and the
+    /// deferral drop queued batches without counting them.
     pub fn note_discarded(&self, bytes: usize) {
         self.resident_bytes.fetch_sub(bytes, Ordering::SeqCst);
         self.batches_discarded.fetch_add(1, Ordering::SeqCst);
@@ -250,8 +253,10 @@ impl StreamState {
     /// `a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted` and
     /// `an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted`.
     /// The count must be proven of the shipped writer: no wire field may carry it, and the
-    /// terminal's detail is the source's own, unchanged. Sent batches plus this equal
-    /// `batches_generated` once a stream has ended.
+    /// terminal's detail is the source's own, unchanged. On the discard drain only (an owner's
+    /// cancel with no prior data-plane cancel, or a pump failure), sent batches plus this equal
+    /// `batches_generated` once a stream has ended; a data-plane cancel, a peer close, a malformed
+    /// frame, a receive error and the deferral drop queued batches without counting them.
     pub fn batches_discarded(&self) -> u64 {
         self.batches_discarded.load(Ordering::SeqCst)
     }

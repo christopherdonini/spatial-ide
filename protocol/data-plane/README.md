@@ -171,7 +171,10 @@ the source's own failure arrives. A source that ends instead gets a `TERM_PRODUC
 is a P6 placeholder, never `TERM_COMPLETED` after a discard. A data-plane CANCEL that arrived first
 still ends `TERM_CANCELLED`. `StreamState::batches_discarded` counts each batch dropped, the held one
 included, and `resident_bytes` falls with it; `rows_emitted` and `batches_generated` still count at
-generation, so once a stream has ended, batches sent plus batches discarded equal batches generated.
+generation, so once a stream has ended on the discard drain (an owner's cancel with no prior
+data-plane cancel, or a pump failure), batches sent plus batches discarded equal batches generated.
+A data-plane cancel, a peer close, a malformed frame, a receive error and the deferral drop queued
+batches without counting them.
 
 The zero-credit plateau is `MAX_INFLIGHT_BATCHES` + 1, because the writer now holds one batch while it
 waits. That is inside the declared bound, and no ceiling changes.

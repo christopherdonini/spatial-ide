@@ -941,7 +941,7 @@ async fn at_the_plateau(
 }
 
 /// RECORDED MUTATION (M4): delete the `is_cancelled` deferral. It fails at the code assertion.
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first() {
     // The source's cancel runs the owner notice at once and then keeps this adapter's own receive
     // half inside `cancel()` for 2 s, so the owner notice is raised long before the halt signal.
