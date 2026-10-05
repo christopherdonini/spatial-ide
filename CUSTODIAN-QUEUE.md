@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bb22fec58063b0348164e0994a56ae8ed6e7026574334c6bd95cfc009dacd536`) at `2026-10-05T20:30:48.035Z`.
+Generated from `PLAN.yaml` (sha256 `25ffc6f57a86ed09c5b3e4de20b55b52787d3751b149ea2e4f5b1f1ca5971e4f`) at `2026-10-05T20:36:28.406Z`.
 
 ## 1. Next
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`)
+- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration (lane `engine`, order 6, budget 480 min)
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
 - **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected (lane `governance`, order 22, budget 240 min)
 
@@ -32,7 +31,7 @@ Generated from `PLAN.yaml` (sha256 `bb22fec58063b0348164e0994a56ae8ed6e702657433
 
 ## 5. In progress
 
-- (none)
+- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
 
 ## 6. Proposed / unscheduled
 
