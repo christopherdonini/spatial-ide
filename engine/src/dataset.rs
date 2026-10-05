@@ -361,17 +361,11 @@ impl Dataset {
                 geo.encoding
             )));
         }
-        if !geo.geometry_types.is_empty()
-            && !geo
-                .geometry_types
-                .iter()
-                .all(|t| t.eq_ignore_ascii_case("Polygon"))
-        {
-            return Err(EngineError::GeoMetadata(format!(
-                "geometry_types {:?} include non-polygon types; this slice reads polygons only",
-                geo.geometry_types
-            )));
-        }
+        // **The encoding is a fact of this open** (ADR-034 Decisions 1, 2 and 7), chosen from the
+        // declared `geometry_types` here and nowhere else; the envelope below, `describe` and every
+        // batch of every stream carry the one value. A member outside the readable set is refused
+        // at open, by name.
+        let encoding = crate::geoarrow::encoding_for_declared_types(geo.geometry_types.as_deref())?;
 
         // SF3/SF4 (reviewer gate, admission-remediation cut): the assertion's own shape — a
         // non-blank identifier, a definition within `MAX_CRS_DEFINITION_BYTES` — is checked before
@@ -588,7 +582,13 @@ impl Dataset {
 
         Ok(Self {
             path: path.to_path_buf(),
-            envelope: BatchEnvelope::admitted(crs, geo.primary_column.clone(), identity, admission),
+            envelope: BatchEnvelope::admitted(
+                crs,
+                geo.primary_column.clone(),
+                identity,
+                admission,
+                encoding,
+            ),
             covering,
             covering_unusable_reason,
             geo,
@@ -953,6 +953,25 @@ impl Dataset {
 
     pub fn geometry_column(&self) -> &str {
         &self.geo.primary_column
+    }
+
+    /// The GeoArrow encoding this open fixed from the file's declared `geometry_types` (ADR-034
+    /// Decision 2): the value the envelope, every batch and `describe` carry. **The engine's fact,
+    /// never the file's** — see [`Self::declared_geometry_types`].
+    ///
+    /// Its product callers are `kernel::skp::describe_dataset` and the publish preflight
+    /// (`kernel::publish::preflight_pinless_parts`).
+    pub fn geometry_encoding(&self) -> crate::geoarrow::GeometryEncoding {
+        self.envelope.geometry_encoding()
+    }
+
+    /// The file's `geometry_types` as declared, in declared order and case as written: the source
+    /// fact beside [`Self::geometry_encoding`]. An empty list is kept empty, and `None` means the
+    /// key is absent (ADR-034 Decision 3). Never presented as the engine's encoding.
+    ///
+    /// Its product caller is `kernel::skp::describe_dataset`.
+    pub fn declared_geometry_types(&self) -> Option<&[String]> {
+        self.geo.geometry_types.as_deref()
     }
 
     /// The file's declared covering — **a usable one only** (§10 Amendment 12, 12.1(d)): `None`

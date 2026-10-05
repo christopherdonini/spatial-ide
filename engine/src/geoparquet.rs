@@ -349,7 +349,11 @@ pub struct GeoMeta {
     pub version: String,
     pub primary_column: String,
     pub encoding: String,
-    pub geometry_types: Vec<String>,
+    /// The column's `geometry_types` as declared, in declared order and case as written. **`None`
+    /// exactly when the key is absent**; `Some` of an empty list is an explicit empty declaration.
+    /// A file that declares a member that is not a string is refused at open, so a `Some` list is
+    /// always names.
+    pub geometry_types: Option<Vec<String>>,
     /// `(identifier, definition_json, axis_order)` — `None` when the file declares no CRS.
     ///
     /// The axis order here is **the definition's own**, exactly as it always was. The data's order
@@ -396,16 +400,32 @@ impl GeoMeta {
             .ok_or_else(|| EngineError::GeoMetadata("`geo.columns.*.encoding` missing".into()))?
             .to_string();
 
-        let geometry_types = col
-            .get("geometry_types")
-            .and_then(Value::as_array)
-            .map(|a| {
-                a.iter()
-                    .filter_map(Value::as_str)
-                    .map(str::to_string)
-                    .collect()
-            })
-            .unwrap_or_default();
+        // Three states, kept apart (ADR-034 Decisions 2 and 3): the key absent (`None`), an explicit
+        // empty list (`Some([])`), and a list of names. A value that is not a list of strings is a
+        // refusal and is never folded into either of the first two.
+        let geometry_types = match col.get("geometry_types") {
+            None => None,
+            Some(Value::Array(members)) => {
+                let mut names = Vec::with_capacity(members.len());
+                for (i, member) in members.iter().enumerate() {
+                    match member.as_str() {
+                        Some(name) => names.push(name.to_string()),
+                        None => {
+                            return Err(EngineError::GeoMetadata(format!(
+                                "[P6 placeholder] `geo.columns.*.geometry_types` member {i} is not \
+                                 a string"
+                            )))
+                        }
+                    }
+                }
+                Some(names)
+            }
+            Some(_) => {
+                return Err(EngineError::GeoMetadata(
+                    "[P6 placeholder] `geo.columns.*.geometry_types` is not a list".into(),
+                ))
+            }
+        };
 
         // Three distinguishable states, only one of which is "the file declares a CRS":
         //   key present and an object -> declared

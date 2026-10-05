@@ -18,7 +18,7 @@ use arrow::ipc::writer::{IpcWriteOptions, StreamWriter};
 
 use crate::crs::{CrsSource, DatasetCrs};
 use crate::error::{EngineError, Result};
-use crate::geoarrow;
+use crate::geoarrow::{self, GeometryEncoding};
 use crate::geoparquet::AdmissionRecord;
 use crate::identity::DatasetIdentity;
 
@@ -35,6 +35,10 @@ pub struct BatchEnvelope {
     geometry_column: String,
     identity: DatasetIdentity,
     attributes: Vec<Field>,
+    /// The GeoArrow encoding this open fixed (ADR-034 Decision 2): written to the envelope's
+    /// `geometry_encoding` key and to the geometry field, and the one every batch is validated
+    /// against. It never varies per batch.
+    encoding: GeometryEncoding,
     /// What admission recorded about *how* the CRS and the data's axis order were established
     /// (Brief A P1). `None` for an envelope assembled outside the open path, which has no admission
     /// to report — the keys are then absent rather than filled with a value nothing established.
@@ -49,7 +53,13 @@ impl BatchEnvelope {
     /// [`Self::with_attributes`]).
     #[cfg(test)]
     pub(crate) fn new(crs: DatasetCrs, geometry_column: String, identity: DatasetIdentity) -> Self {
-        Self::with_attributes(crs, geometry_column, identity, Vec::new())
+        Self::with_attributes(
+            crs,
+            geometry_column,
+            identity,
+            Vec::new(),
+            GeometryEncoding::Polygon,
+        )
     }
 
     /// As [`Self::new`], carrying the admission record the open path established.
@@ -62,8 +72,16 @@ impl BatchEnvelope {
         geometry_column: String,
         identity: DatasetIdentity,
         admission: AdmissionRecord,
+        encoding: GeometryEncoding,
     ) -> Self {
-        Self::build(crs, geometry_column, identity, Vec::new(), Some(admission))
+        Self::build(
+            crs,
+            geometry_column,
+            identity,
+            Vec::new(),
+            Some(admission),
+            encoding,
+        )
     }
 
     /// As [`Self::new`], carrying a **declared attribute projection** after the geometry column.
@@ -84,8 +102,9 @@ impl BatchEnvelope {
         geometry_column: String,
         identity: DatasetIdentity,
         attributes: Vec<Field>,
+        encoding: GeometryEncoding,
     ) -> Self {
-        Self::build(crs, geometry_column, identity, attributes, None)
+        Self::build(crs, geometry_column, identity, attributes, None, encoding)
     }
 
     fn build(
@@ -94,6 +113,7 @@ impl BatchEnvelope {
         identity: DatasetIdentity,
         attributes: Vec<Field>,
         admission: Option<AdmissionRecord>,
+        encoding: GeometryEncoding,
     ) -> Self {
         let mut md = HashMap::new();
 
@@ -209,7 +229,7 @@ impl BatchEnvelope {
         md.insert("geometry_column".to_string(), geometry_column.clone());
         md.insert(
             "geometry_encoding".to_string(),
-            geoarrow::EXT_NAME_POLYGON.to_string(),
+            encoding.as_str().to_string(),
         );
         md.insert(
             "coordinate_layout".to_string(),
@@ -232,7 +252,7 @@ impl BatchEnvelope {
 
         let mut fields: Vec<Arc<Field>> = Vec::with_capacity(2 + attributes.len());
         fields.push(Arc::new(Field::new(ID_COLUMN, DataType::UInt64, false)));
-        fields.push(geoarrow::geometry_field(&geometry_column, &crs));
+        fields.push(geoarrow::geometry_field(&geometry_column, &crs, encoding));
         fields.extend(attributes.iter().cloned().map(Arc::new));
 
         let schema = Arc::new(Schema::new_with_metadata(fields, md));
@@ -242,6 +262,7 @@ impl BatchEnvelope {
             geometry_column,
             identity,
             attributes,
+            encoding,
             admission,
             schema,
         }
@@ -264,6 +285,12 @@ impl BatchEnvelope {
 
     pub fn geometry_column(&self) -> &str {
         &self.geometry_column
+    }
+
+    /// The encoding this open fixed, the same value the `geometry_encoding` key and the geometry
+    /// field carry.
+    pub fn geometry_encoding(&self) -> GeometryEncoding {
+        self.encoding
     }
 
     pub fn identity(&self) -> &DatasetIdentity {
@@ -301,7 +328,7 @@ impl TaggedBatch {
         geometry: ArrayRef,
         attributes: Vec<ArrayRef>,
     ) -> Result<Self> {
-        geoarrow::validate_polygon_encoding(&geometry)?;
+        geoarrow::validate_encoding(&geometry, env.geometry_encoding())?;
 
         let declared = env.attributes();
         if attributes.len() != declared.len() {
@@ -568,6 +595,79 @@ mod tests {
         assert_eq!(&buf[..8], &[0xAA; 8], "pre-existing bytes are untouched");
         // Arrow IPC streams open with the 0xFFFFFFFF continuation marker.
         assert_eq!(&buf[8..12], &[0xFF, 0xFF, 0xFF, 0xFF]);
+    }
+
+    /// E-8. RECORDED MUTATION: in `BatchEnvelope::build`, write `geoarrow::EXT_NAME_POLYGON`
+    /// unconditionally as the `geometry_encoding` key. The multipolygon envelope then disagrees
+    /// with its own geometry field and this test fails by name at that comparison.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `the_envelopes_geometry_encoding_equals_the_fields_extension_name_for_both_values` FAILED
+    /// with the mutation applied, then reverted.
+    #[test]
+    fn the_envelopes_geometry_encoding_equals_the_fields_extension_name_for_both_values() {
+        use crate::wkb::MultiPolygonBuilder;
+        for encoding in [GeometryEncoding::Polygon, GeometryEncoding::MultiPolygon] {
+            let env = BatchEnvelope::with_attributes(
+                file_crs(),
+                "geometry".into(),
+                test_identity(),
+                Vec::new(),
+                encoding,
+            );
+            assert_eq!(env.geometry_encoding(), encoding);
+            let schema = env.schema();
+            let field = schema.field(1);
+            assert_eq!(
+                schema.metadata().get("geometry_encoding").unwrap(),
+                field.metadata().get(crate::geoarrow::EXT_NAME_KEY).unwrap(),
+                "the envelope key and the field's extension name are one value"
+            );
+            assert_eq!(
+                schema.metadata().get("geometry_encoding").unwrap(),
+                encoding.as_str()
+            );
+        }
+
+        // A batch is assembled and serialized under the envelope's own encoding, and only it.
+        let mut mb = MultiPolygonBuilder::new();
+        mb.push_wkb(&crate::fixture::encode_multipolygon(&[vec![vec![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 1.0],
+            [0.0, 0.0],
+        ]]]))
+        .unwrap();
+        let multi = crate::geoarrow::build_multipolygon_array(mb).unwrap();
+        let multi_env = BatchEnvelope::with_attributes(
+            file_crs(),
+            "geometry".into(),
+            test_identity(),
+            Vec::new(),
+            GeometryEncoding::MultiPolygon,
+        );
+        let ids = || Arc::new(UInt64Array::from(vec![1u64]));
+        let batch = TaggedBatch::assemble(&multi_env, ids(), multi.clone(), Vec::new()).unwrap();
+        let mut buf = Vec::new();
+        batch.write_ipc_into(&mut buf).unwrap();
+        let mut rdr =
+            arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+        let round = rdr.next().unwrap().unwrap();
+        assert_eq!(
+            round.schema().metadata().get("geometry_encoding").unwrap(),
+            "geoarrow.multipolygon"
+        );
+        assert!(TaggedBatch::assemble(
+            &BatchEnvelope::new(file_crs(), "geometry".into(), test_identity()),
+            ids(),
+            multi,
+            Vec::new()
+        )
+        .is_err());
+        assert!(
+            TaggedBatch::assemble(&multi_env, ids(), one_polygon(), Vec::new()).is_err(),
+            "a polygon array does not travel under a multipolygon envelope"
+        );
     }
 
     #[test]
