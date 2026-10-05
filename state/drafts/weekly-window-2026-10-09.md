@@ -308,3 +308,36 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **(b) M2 and M4.** Rewritable on the human's word. M2 changes a stated convention, so it is a rule change, not a fact.
   - **(c) M6.** A measured trial in place of deletion: the same small piece dispatched to a worker with and without the cap, comparing whether each hand-back keeps every required item (the audit's §4 probe).
   - **(d) outside CLAUDE.md:** H1, H3, H5, H6 and M5 in the agent definitions, and F4, are each for the human to place.
+
+### G, continued (2026-10-05): brought forward
+
+- **The human's 2026-10-05 direction, line 2** (`state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md`; RULED 2026-10-05) brings this item forward into `guardian-v1` (`state/directives/MODS-V1-2026-10-05.md`, §2.1). Parts 1 and 3 above are carried by that piece's README edits, and part 2 by its G1 fix.
+- **At the window,** this item is reported as moved, with the piece's state. Nothing here is for a ruling any more.
+
+## I. AUTONOMY §9's docs-only auto-merge, not used while Guardian is installed
+
+- **Source.** The human's 2026-10-05 direction, line 2, and Fable's step f in the same file.
+- **The rule in force.** Line 2: G7 refuses every agent pull-request merge, so §9's docs-only auto-merge is not used while Guardian is installed. That holds from 2026-10-05, whether or not `guardian-v1` has merged.
+- **The proposal.** An appended dated note at the end of `AUTONOMY.md` (the governing-doc append rule) recording the suspension and its condition, citing line 2. §9's own text is not edited. Nothing is applied before the human's answer.
+
+### B2, second pilot (2026-10-05): impact reads, never drafts
+
+- **Source.** `state/directives/LEAD-DATA-PILOT-V2-2026-10-05.md` (Fable; the human's 2026-10-05 direction, line 3; RULED 2026-10-05). Its §4 asks for the baseline before the first measured piece; this is it. The first pilot's log above stays as it is.
+- **The baseline,** named before the first measured piece (`data-plane-terminal-without-credit`): the six most recent architect drafts of pieces touching `engine/` or `kernel/` that had no impact read, newest first.
+  - **Touching** means the piece's PR changes a path under either folder (`gh pr view --json files`). For the piece in flight, the branch's three-dot diff is used.
+  - **Drafting cost** is the subagent tokens, tool uses and ms from each drafting run's task notification in the session transcript. A piece with two drafts lists both and their sum.
+
+  | Node | PR | Drafting consult(s) | Tokens | Tools | ms |
+  |---|---|---|---|---|---|
+  | `timing-assertions-under-contention` | #175 (open) | `state/consults/2026-10-04-timing-assertions-under-contention-architect-draft.md` | 210,168 | 79 | 684,375 |
+  | `timing-tests-assert-property-not-budget` | #174 | `state/consults/2026-10-04-timing-tests-assert-property-not-budget-architect-draft.md`, then `-architect-draft-2.md` | 169,330 + 105,944 = 275,274 | 68 + 34 = 102 | 539,818 + 446,542 = 986,360 |
+  | `watch-grandparent-spawn-signal` | #173 | `state/consults/2026-10-04-watch-grandparent-spawn-signal-architect-draft.md` | 143,028 | 37 | 405,054 |
+  | `type-walk-null-literal-arithmetic` | #170 | `state/consults/2026-10-03-type-walk-null-literal-arithmetic-architect-draft.md` | 213,452 | 42 | 751,713 |
+  | `skp-cancel-state-closed-set` | #160 | `state/consults/2026-10-02-skp-cancel-state-closed-set-architect-draft.md` | 230,855 | 83 | 646,683 |
+  | `workspace-rustfmt` | #157 | `state/consults/2026-10-02-workspace-rustfmt-architect-draft.md` | 193,165 | 61 | 618,516 |
+
+  - **Per piece:** about 211,000 tokens (1,265,942 over six), about 67 tool uses (404 over six) and about 682,000 ms.
+  - **One confound.** The `type-walk-null-literal-arithmetic` architect draft came after the first pilot's lead-data draft of the same node (B2, measured piece 2, above), so it may have had that draft to start from. It had no impact read, so the brief's definition includes it.
+  - **Excluded,** because their PRs change nothing under `engine/` or `kernel/`: `guardian-v0` (#169), `evidence-recorder-v0` (#172), `publish-attempt-lifecycle-src-tauri` (#165), `port-1-linux-l1` (#164), `stop-hook-stale-continuity` (#161), and the earlier 2026-10-02 governance forms.
+- **Per measured piece,** the log records the brief's §4 items: the impact read's cost and the architect's drafting cost; each wrong or missing pointer and who found it; each correction round, classed (C4), counted against the lead only when a pointer caused it; whether the index was updated in the PR; and whether a report names something from the impact read that the form used.
+- **C3 log:** for each lead-data dispatch, the custodian checkout's and the assigned worktree's `git status --porcelain`, before and after.

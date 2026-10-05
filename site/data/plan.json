@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-04T22:47:27.217Z",
-  "plan_hash": "93bb45d32f75e848ddd93b366934f38d12c962564c0e2b1ebbaf1a08cccffff2",
+  "generated_at": "2026-10-05T00:25:25.879Z",
+  "plan_hash": "1096b0e402ff2ae29923b165fa034ba9e28ba9f55347ba372788855b62c9826a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6396,7 +6396,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "proposed",
+      "status": "unscheduled",
       "order": null,
       "depends_on": [
         "evidence-recorder-v0"
@@ -6411,7 +6411,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Proposed on Fable 2026-10-04 advice, item 4 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md). tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 2, C2-d: recorder_ms before + after + write is a lower bound, because the line serialisation, its digest, the file name and the write call fall outside it; a p95 at or under the bound does not establish section 1 claim 7 until an amendment names how the write latency is measured. The human install approval of 2026-10-04 (state/directives/2026-10-04-recorder-install-approval.md) reads E5 that way: it can fire the overhead stop, and it establishes neither claim 7 nor the brief overhead acceptance measure. The piece: a new E-row with its own sample, declared in a form amendment before that sample is taken (one candidate, from the gate-1 architect S1-1: the record file mtime minus ended_at, added to before), so that the acceptance evaluation (two weeks after install, or the next six gated pieces) can read the overhead. E5 stays a lower bound. Never queued until the human places it.",
+      "summary": "SUPERSEDED 2026-10-05: folded into evidence-recorder-v0-1, the MODS-V1 brief section 3.3 (state/directives/MODS-V1-2026-10-05.md), by the human's 2026-10-05 direction, line 2, and Fable's step c (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). PLAN has no superseded status and deleting a node is the human's (AUTONOMY section 1), so the node is unscheduled and never queued. Before: Proposed on Fable 2026-10-04 advice, item 4 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md). tools/mods/EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 2, C2-d: recorder_ms before + after + write is a lower bound, because the line serialisation, its digest, the file name and the write call fall outside it; a p95 at or under the bound does not establish section 1 claim 7 until an amendment names how the write latency is measured. The human install approval of 2026-10-04 (state/directives/2026-10-04-recorder-install-approval.md) reads E5 that way: it can fire the overhead stop, and it establishes neither claim 7 nor the brief overhead acceptance measure. The piece: a new E-row with its own sample, declared in a form amendment before that sample is taken (one candidate, from the gate-1 architect S1-1: the record file mtime minus ended_at, added to before), so that the acceptance evaluation (two weeks after install, or the next six gated pieces) can read the overhead. E5 stays a lower bound. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-04",
         "done": null
@@ -6419,26 +6419,28 @@
     },
     {
       "id": "data-plane-terminal-without-credit",
-      "title": "Data plane: a producer failure reaches the client as a terminal frame without waiting for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R)",
+      "title": "Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R)",
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "blocked",
+      "order": 13,
       "depends_on": [
-        "timing-tests-assert-property-not-budget"
+        "timing-tests-assert-property-not-budget",
+        "timing-assertions-under-contention"
       ],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 15
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
+      "merge": "merge-commit",
       "evidence": null,
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it.",
+      "summary": "PLACED 2026-10-05 by the human's direction, line 1 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05): kernel-protocol order 13, after timing-assertions-under-contention, ahead of kernel-close-races-followups by the id tie-break; it takes the first free slot, and no code lands before timing-assertions-under-contention merges. THE SHAPE IS RULED there: credit gates batch frames only; a terminal frame of any code is never held for credit, after a producer failure, after an SKP cancel or at completion; on completion every batch is still delivered before the terminal; an SKP-cancelled stream keeps TERM_PRODUCER_FAILED, and kernel/tests/skp_admission.rs's cancel test stays unchanged as the end-to-end proof; no wire tag, code or frame layout change; the declared ceilings do not grow; ADR-012 stays Proposed and is not amended. OPEN items for the human before code: what happens to batches queued ahead of a failure, and any engine change. The first measured piece of the lead-data second pilot (state/directives/LEAD-DATA-PILOT-V2-2026-10-05.md): lead-data's impact read first, then the architect's draft (question round 43, item 2), full form. Before: Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-04",
         "done": null
@@ -6468,6 +6470,63 @@
       "summary": "Appended by question round 52, item 4 (RULED 2026-10-04), option (1), from kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md OPEN-4: kernel/tests/slice_budgets.rs scores its docs/08 cancellation p95 on the client pre-send to data-plane adapter receipt interval, not on ADR-018's pair (cancel_requested to PRODUCER_CANCELLED, on the producer's clock). The piece takes its own full form when placed: re-aim the harness cancellation cells to the engine trace pair, in a release build on reference hardware, and keep the adapter interval as a reported figure. Per ADR-018's no-retroactive-rescoring clause, nothing measured before is rescored. Per Fable's round-52 advice, item 2 (state/directives/2026-10-04-fable-advice-round-52.md), the form says how kernel/RESULTS.md's existing met rows for the cancellation budget are read: they name their interval (client pre-send to the adapter's receipt), which is not ADR-018's pair, so each gets a dated note beside it, never a rescoring. A docs/08 row's verdict is the human's (AI_DEVELOPMENT.md's red lines). Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-04",
+        "done": null
+      }
+    },
+    {
+      "id": "evidence-recorder-v0-1",
+      "title": "Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 20,
+      "depends_on": [
+        "evidence-recorder-v0"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "merge": "merge-commit",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's.",
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      }
+    },
+    {
+      "id": "guardian-v1",
+      "title": "Guardian v1 -- G1's heredoc false alarm fixed, one local log line per refusal, and three new rules: G7 (agent merges and history rewrites), G8 (plugin, marketplace and MCP installs, and writes to the user's Claude folder), G9 (wholesale cleans of the main checkout's target) (Fable's MODS-V1 brief, 2026-10-05)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": 21,
+      "depends_on": [
+        "guardian-v0",
+        "evidence-recorder-v0-1"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "merge": "merge-commit",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 2. After evidence-recorder-v0-1, which it depends on (section 4). It brings forward item G of the 2026-10-09 window, the G1 over-refusal (question round 50, item 3). No live G1 probe ever. P0 first (section 2.4), recorded in the form's section 0 before any code; full form; gates reviewer plus architect, with the claude plugin validate output in the PR body. Guardian is installed by reference from tools/mods/spatial-guardian in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live checks allowed (E7 to E10), before the click. While Guardian is installed, AUTONOMY section 9's docs-only auto-merge is not used (line 2); section 9 is not edited, and the suspension goes to the 2026-10-09 window for an appended note. Drafting is the architect's.",
+      "dates": {
+        "opened": "2026-10-05",
         "done": null
       }
     }
