@@ -284,3 +284,13 @@ Falsification: §0.5's custodian step resolving either failure to a different as
 - **Unchanged:** Part A1 and Part A2, selected by Amendment 1, may now be written (§8 item 2: the consult and this routing record are filed, and there is no STOP). Part B waits for OPEN-1's typed ruling.
 
 **Superseded index.** None.
+
+### Amendment 3 — the ruling row for OPEN-1 (class 5; D-3)
+
+*Written by the custodian after question round 53 was answered (its RULED block in `DECISIONS-PENDING.md`). Class 5: the ruling narrows Part B to the branch it selects. The typed ruling is referenced by its filed path, `state/directives/2026-10-04-round-53-open-1-ruling.md`, and not reproduced.*
+
+- **OPEN-1, round 53:** a red-line item, ruled in the human's typed words. Part B-keep is selected, so `engine/tests/slice.rs` is unchanged and Part B adds no code (§7: B-keep 0). The B-retry and B-move branches, and their §4 mutations, are closed.
+- **The ruling's re-run practice** for that assertion's failures stands as the human worded it. It binds operations, and no code of this piece.
+- **Unchanged:** Parts A1 and A2 (Amendment 1), and the routing record (Amendment 2).
+
+**Superseded index.** Amendment 1's OPEN-1 row (held for Phase R) is superseded by this row.
