@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T05:12:53.191Z",
-  "plan_hash": "57b121e6a6202261c8b0bd0eac0103da8c80d6905448a1d3d0d7ff936e204c5e",
+  "generated_at": "2026-10-05T07:19:06.252Z",
+  "plan_hash": "c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87e5c5aeace2218e24206b",
   "priorities_approved": true,
   "lanes": [
     {
@@ -4132,7 +4132,7 @@
         "pr": 174
       },
       "budget_minutes": 60,
-      "generation": 1,
+      "generation": 2,
       "felt_verdict": false,
       "entries": [],
       "summary": "Scope since question round 51 (RULED 2026-10-04): the node reproduces the skp_admission cancel-test stall (H-S) in scratch, files the Phase R consult, and routes the result; on S1 a proposed full-form protocol/data-plane node, on S2 a class-1 amendment redrafting the skp half; the publish half is closed by round 51, item 3, and the piece commits no code (kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md, the architect draft 2). Before: RULED 2026-09-26, question round 25, item 1, (a): kernel/tests/skp_admission.rs's cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock (not the ticket-drop defect) and kernel/tests/publish.rs's cancelling_mid_publish_leaves_no_bundle_and_no_staging_directory flake under CI load and pass on rerun. The ruling's words: \"For (a), the fix follows the slice.rs precedent: assert the property and its ordering, report the timing, and never assert a budget docs/08 doesn't declare\". Worked after catalog-open-drop-reproduction (RULED 2026-09-26, question round 25, item 1: reproduction first, before the other five). Placed by question round 31, item 1 (RULED 2026-09-30): position 12 of 16 in the human's order, order 12 in its lane. It depends on watch-grandparent-spawn-signal, position 11, so that the order holds across lanes.",
@@ -4659,7 +4659,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 14,
       "depends_on": [
         "timing-assertions-under-contention"
@@ -4715,7 +4715,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 13,
       "depends_on": [
         "timing-tests-assert-property-not-budget"
@@ -4727,16 +4727,16 @@
       "gate": "kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/timing-assertions-under-contention"
+        "pr": 175
       },
       "budget_minutes": 240,
-      "generation": 1,
+      "generation": 5,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Form committed 2026-10-04 (kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md, the architect draft): Phase R in scratch first; OPEN-1 (slice.rs, a docs/08 row, red line) and OPEN-3 (the sibling h2 test, a scope change, red line) are the human typed rulings; OPEN-2 (the h2_a reading) and OPEN-4 (the harness node) by option. Budget raised under the form section 0.10 (Phase R cold and load builds); budget_minutes carries the figure. Before: Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
+      "summary": "DONE 2026-10-05: #175 merged as a83e95f5 (merge commit); closing record Amendment 4 (references and hashes only); generation 5 after Amendments 1 to 4 (the bumps for Amendments 1 to 3 had lapsed and are made here, AUTONOMY section 15). Before: Form committed 2026-10-04 (kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md, the architect draft): Phase R in scratch first; OPEN-1 (slice.rs, a docs/08 row, red line) and OPEN-3 (the sibling h2 test, a scope change, red line) are the human typed rulings; OPEN-2 (the h2_a reading) and OPEN-4 (the harness node) by option. Budget raised under the form section 0.10 (Phase R cold and load builds); budget_minutes carries the figure. Before: Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
       "dates": {
         "opened": "2026-09-27",
-        "done": null
+        "done": "2026-10-05"
       }
     },
     {
@@ -6423,7 +6423,7 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 13,
       "depends_on": [
         "timing-tests-assert-property-not-budget",

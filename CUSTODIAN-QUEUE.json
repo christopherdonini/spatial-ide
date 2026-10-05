@@ -1,27 +1,65 @@
 {
-  "generated_at": "2026-10-05T05:12:53.012Z",
-  "plan_hash": "57b121e6a6202261c8b0bd0eac0103da8c80d6905448a1d3d0d7ff936e204c5e",
+  "generated_at": "2026-10-05T07:19:06.056Z",
+  "plan_hash": "c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87e5c5aeace2218e24206b",
   "priorities_approved": true,
   "next": {
-    "id": "evidence-recorder-v0-1",
-    "title": "Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05)",
-    "lane": "governance",
+    "id": "b1-engine-kernel-half-followups",
+    "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
+    "lane": "engine",
     "phase": "prototype",
     "status": "ready",
-    "order": 20,
-    "budget_minutes": 240,
+    "order": 14,
+    "budget_minutes": 90,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-10-05",
+      "opened": "2026-09-27",
       "done": null
     },
-    "summary": "Placed by the human's 2026-10-05 direction, line 2 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05). The brief is state/directives/MODS-V1-2026-10-05.md, section 3. Governance lane, beside the product piece under the two-pieces limit: it takes the next free slot (Fable's step d), when timing-assertions-under-contention merges. It folds in recorder-write-latency-measure (section 3.3), which is superseded. P0 first (section 3.5), recorded in the form's section 0 before any code; full form; gates reviewer plus architect. The Recorder is installed by reference from tools/mods/ in the main checkout, so the merge changes the live mod: it waits for the human's typed approval after both gates, naming the live rows allowed (E8, E9), before the click. From its merge on, worker and tester briefs run repeated evidence runs through the repeat-runner, never a shell loop (line 2). Drafting is the architect's."
+    "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes."
   },
   "ready": [
+    {
+      "id": "b1-engine-kernel-half-followups",
+      "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 14,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-27",
+        "done": null
+      },
+      "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes."
+    },
+    {
+      "id": "data-plane-terminal-without-credit",
+      "title": "Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R)",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 13,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-05 (protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md, the architect draft after lead-data impact read; full form under section 21a, the data plane and a stated guarantee, not the wire, correcting element (i) below). QUESTION ROUND 54 RULED 2026-10-05, both typed (state/directives/2026-10-05-round-54-open-1-open-2-ruling.md): OPEN-1 option A, discard (Part 2 kept); OPEN-2 option (a), no engine line (Part 3; the residual stated in the data-plane README; option (b) not placed); the form Amendment 1 (class 5). Fable round-54 advice (state/directives/2026-10-05-fable-advice-round-54.md) settled before code by the form Amendment 2 (the architect draft; rows A, B and D class 9, row C class 5: T5, the discard-then-close terminal; T6, EngineCancel in both registration orders under one mutex; the [P6 placeholder] mark with no brace; a batches_discarded count with its instrument accessor; its own added line ceilings, the section 7 figures unedited). No code before timing-assertions-under-contention merges. PLACED 2026-10-05 by the human's direction, line 1 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05): kernel-protocol order 13, after timing-assertions-under-contention, ahead of kernel-close-races-followups by the id tie-break; it takes the first free slot, and no code lands before timing-assertions-under-contention merges. THE SHAPE IS RULED there: credit gates batch frames only; a terminal frame of any code is never held for credit, after a producer failure, after an SKP cancel or at completion; on completion every batch is still delivered before the terminal; an SKP-cancelled stream keeps TERM_PRODUCER_FAILED, and kernel/tests/skp_admission.rs's cancel test stays unchanged as the end-to-end proof; no wire tag, code or frame layout change; the declared ceilings do not grow; ADR-012 stays Proposed and is not amended. OPEN items for the human before code: what happens to batches queued ahead of a failure, and any engine change. The first measured piece of the lead-data second pilot (state/directives/LEAD-DATA-PILOT-V2-2026-10-05.md): lead-data's impact read first, then the architect's draft (question round 43, item 2), full form. Before: Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it."
+    },
     {
       "id": "evidence-recorder-v0-1",
       "title": "Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05)",
@@ -73,28 +111,6 @@
   },
   "blocked_on_dependencies": [
     {
-      "id": "b1-engine-kernel-half-followups",
-      "title": "B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 14,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Routed by B1's gate 3 (reports under state/consults/gates/, 2026-09-27-b1-engine-kernel-half-gate3-*): a test that drives flush with the flag StreamPlan::for_publish declares, failing when flush ignores the flag (reviewer E2); the conformance DIVERGENCES.md header's credit for the 62/15/1 run (reviewer D2: fixtures updated after the merge at 37b3644, the fixture commit c9ec02e); the 'nullable' wording in two stream.rs docs, retain_or_compact_single_run's misplaced doc, single_run_retention's relative clause, MAX_ATTRIBUTE_RETENTION_FACTOR's 'this function's', RECORDED MUTATION comments with no commit or a bare self-line, one scoping clause for the fixture-commit lists that omit c9ec02e, and E-15's doc (reviewer D3-D6; architect's gate-3 notes). Placed by question round 31, item 1 (RULED 2026-09-30): position 14 of 16 in the human's order, order 14 in its lane. It depends on timing-assertions-under-contention, position 13, so that the order holds across lanes.",
-      "blocked_by": [
-        "timing-assertions-under-contention"
-      ]
-    },
-    {
       "id": "entry-79-b1-consult-items",
       "title": "Entry 79 — three items routed for Brief B stage B1's close",
       "lane": "kernel-protocol",
@@ -136,28 +152,6 @@
       "summary": "Returns at B2's preregistration, not after B2 completes (the human, 2026-09-22); B2 depends on this ruling. RULED 2026-09-18 (round 16, item 3), the human verbatim: 'defer -- ADR-029 stays Proposed, G1's facts recorded, the route returns with Brief B's B2'. G1 established (entry 111): a u64 rows-processed reading exists on the read_parquet path; the engine cannot reach it through the vendored Connection; the count must be latched engine-side; DuckDB's denominator is an estimate, which ADR-029 1(c) forbids forwarding. No route is dispatched before B2's preregistration carries the question back for the ruling",
       "blocked_by": [
         "geometry-types-beyond-polygons"
-      ]
-    },
-    {
-      "id": "data-plane-terminal-without-credit",
-      "title": "Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R)",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 13,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-04",
-        "done": null
-      },
-      "summary": "FORM COMMITTED 2026-10-05 (protocol/data-plane/TERMINAL-WITHOUT-CREDIT-PREREGISTRATION.md, the architect draft after lead-data impact read; full form under section 21a, the data plane and a stated guarantee, not the wire, correcting element (i) below). QUESTION ROUND 54 RULED 2026-10-05, both typed (state/directives/2026-10-05-round-54-open-1-open-2-ruling.md): OPEN-1 option A, discard (Part 2 kept); OPEN-2 option (a), no engine line (Part 3; the residual stated in the data-plane README; option (b) not placed); the form Amendment 1 (class 5). Fable round-54 advice (state/directives/2026-10-05-fable-advice-round-54.md) settled before code by the form Amendment 2 (the architect draft; rows A, B and D class 9, row C class 5: T5, the discard-then-close terminal; T6, EngineCancel in both registration orders under one mutex; the [P6 placeholder] mark with no brace; a batches_discarded count with its instrument accessor; its own added line ceilings, the section 7 figures unedited). No code before timing-assertions-under-contention merges. PLACED 2026-10-05 by the human's direction, line 1 (state/directives/2026-10-05-human-direction-data-plane-mods-v1-pilot-v2.md; RULED 2026-10-05): kernel-protocol order 13, after timing-assertions-under-contention, ahead of kernel-close-races-followups by the id tie-break; it takes the first free slot, and no code lands before timing-assertions-under-contention merges. THE SHAPE IS RULED there: credit gates batch frames only; a terminal frame of any code is never held for credit, after a producer failure, after an SKP cancel or at completion; on completion every batch is still delivered before the terminal; an SKP-cancelled stream keeps TERM_PRODUCER_FAILED, and kernel/tests/skp_admission.rs's cancel test stays unchanged as the end-to-end proof; no wire tag, code or frame layout change; the declared ceilings do not grow; ADR-012 stays Proposed and is not amended. OPEN items for the human before code: what happens to batches queued ahead of a failure, and any engine change. The first measured piece of the lead-data second pilot (state/directives/LEAD-DATA-PILOT-V2-2026-10-05.md): lead-data's impact read first, then the architect's draft (question round 43, item 2), full form. Before: Appended on S1 by kernel/TIMING-TESTS-PROPERTY-NOT-BUDGET-PREREGISTRATION.md section 2 (question round 51, item 2), from the Phase R consult state/consults/2026-10-04-timing-tests-reproduction.md (run at 1c71ebaf; R-1 no terminal within the 60 s after host.cancel's return in 10 of 10 runs, R-1b TERM_PRODUCER_FAILED in 10 of 10 after a u32::MAX credit grant). (i) The remedy: a producer failure reaches the client as a terminal frame without waiting for credit; kernel/tests/skp_admission.rs cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock stays unchanged as its end-to-end proof; full form, section 21a (wire and data plane); ADR-012 is Proposed, so the shape may need a decision from the human. (ii) Fable round-51 advice, item 1, whether TERM_COMPLETED is covered too: observed by R-3 and R-3b on the data plane synthetic source, 12 batches with credit exactly 12 gave no terminal before the 30 s deadline in 10 of 10 runs, and credit 13 gave TERM_COMPLETED in 10 of 10, so a normal completion also waits for one credit beyond the last batch. (iii) Fable item 2, batches queued before a failure: R-1b counted 0 TAG_BATCH frames between host.cancel's return and the terminal in each of 11 attempts. (iv) Fable item 3, read not run: the shell client (frontends/shell/src/streaming/adapterWs.ts) grants CREDIT_WINDOW (4) at start and tops up whenever outstanding is at or below half of it after a batch. (v) From the timing form section 0.3: the Failed item sits behind both the pump channel and the engine queue, and the engine producer's blocking send does not watch the cancel token, so the form must decide whether the data plane learns of an SKP cancel directly rather than waiting for the Failed item, and whether that reaches the engine boundary (section 21a, a cancellation guarantee). No code of this piece lands under the timing form. Never queued until the human places it.",
-      "blocked_by": [
-        "timing-assertions-under-contention"
       ]
     },
     {
@@ -315,30 +309,7 @@
       ]
     }
   ],
-  "in_progress": [
-    {
-      "id": "timing-assertions-under-contention",
-      "title": "Two latency assertions fail under concurrent build load and pass alone",
-      "lane": "engine",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 13,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/timing-assertions-under-contention"
-      },
-      "dates": {
-        "opened": "2026-09-27",
-        "done": null
-      },
-      "summary": "Form committed 2026-10-04 (kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md, the architect draft): Phase R in scratch first; OPEN-1 (slice.rs, a docs/08 row, red line) and OPEN-3 (the sibling h2 test, a scope change, red line) are the human typed rulings; OPEN-2 (the h2_a reading) and OPEN-4 (the harness node) by option. Budget raised under the form section 0.10 (Phase R cold and load builds); budget_minutes carries the figure. Before: Seen 2026-09-27: kernel/tests/end_to_end.rs h2_a_cancel_before_the_first_batch_still_stops_the_query (its latency assertion) failed twice while another cargo build ran, and passed alone and in CI (the exposure piece's closing-round worker report; its gate-3 reviewer: 281 passed, and 5/5 alone); engine/tests/slice.rs's latency budget was exceeded, narrowly, during a concurrent DuckDB build and passed alone and in CI (B1's gate-3 reviewer report). docs/07 names the first as carrying producer-side cancellation. A run under contention is not a docs/08 measurement; decide whether the assertions take a contention guard or stay as they are. Placed by question round 31, item 1 (RULED 2026-09-30): position 13 of 16 in the human's order, order 13 in its lane. It depends on timing-tests-assert-property-not-budget, position 12, so that the order holds across lanes.",
-      "evidence_label": "branch `cut/timing-assertions-under-contention`"
-    }
-  ],
+  "in_progress": [],
   "proposed": [
     {
       "id": "governance-hash-grammar-shared",

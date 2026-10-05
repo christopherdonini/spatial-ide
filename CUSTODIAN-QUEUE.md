@@ -1,13 +1,15 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `57b121e6a6202261c8b0bd0eac0103da8c80d6905448a1d3d0d7ff936e204c5e`) at `2026-10-05T05:12:53.012Z`.
+Generated from `PLAN.yaml` (sha256 `c421d96518eae6b2c0c9e9cc5b2e658746dd580dfd87e5c5aeace2218e24206b`) at `2026-10-05T07:19:06.056Z`.
 
 ## 1. Next
 
-- **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`)
+- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`)
 
 ## 2. Ready
 
+- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 (lane `engine`, order 14, budget 90 min)
+- **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) (lane `kernel-protocol`, order 13, budget 120 min)
 - **evidence-recorder-v0-1** — Evidence Recorder v0.1 -- a repeat-runner for repeated evidence runs (scripts/evidence/, with its own matcher row and the repeat count in the record), a declared write-latency measure with its own live row, and one declared ceiling on the wait before a command (Fable's MODS-V1 brief, 2026-10-05) (lane `governance`, order 20, budget 240 min)
 
 ## 3. Waiting on the human (total: 20 min)
@@ -18,10 +20,8 @@ Generated from `PLAN.yaml` (sha256 `57b121e6a6202261c8b0bd0eac0103da8c80d6905448
 
 ## 4. Blocked on dependencies
 
-- **b1-engine-kernel-half-followups** — B1 engine-kernel half's routed items -- the proof of publish's retention flag through flush, and the doc and record nits of gate 3 — blocked by: timing-assertions-under-contention
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
-- **data-plane-terminal-without-credit** — Data plane: credit gates batch frames only, so no terminal frame waits for credit (the skp cancel-test stall, H-S, confirmed in scratch by Phase R) — blocked by: timing-assertions-under-contention
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — blocked by: b1-engine-kernel-half-followups
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
@@ -32,7 +32,7 @@ Generated from `PLAN.yaml` (sha256 `57b121e6a6202261c8b0bd0eac0103da8c80d6905448
 
 ## 5. In progress
 
-- **timing-assertions-under-contention** — Two latency assertions fail under concurrent build load and pass alone — evidence: branch `cut/timing-assertions-under-contention`
+- (none)
 
 ## 6. Proposed / unscheduled
 

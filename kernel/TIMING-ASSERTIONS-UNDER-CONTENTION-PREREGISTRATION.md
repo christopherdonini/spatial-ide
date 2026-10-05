@@ -294,3 +294,25 @@ Falsification: §0.5's custodian step resolving either failure to a different as
 - **Unchanged:** Parts A1 and A2 (Amendment 1), and the routing record (Amendment 2).
 
 **Superseded index.** Amendment 1's OPEN-1 row (held for Phase R) is superseded by this row.
+
+### Amendment 4 — closing record (class 1; references and hashes only; the record cap)
+
+*Written after Phase R's outcome and the code's outcome were seen, by the custodian, after PR #175 merged as merge commit a83e95f5c2a80c55210c5ab9ba49bdf194447480 (parents b8bfaf45 and ede20044; never a squash) at 2026-10-05T07:16:06Z. It follows the gate-1 architect's closing-record list (`state/consults/gates/2026-10-05-timing-assertions-under-contention-gate1-architect.md`). Every commit named below is on main.*
+
+1. **D-1 and D-2:** Amendment 2, by amendment. It carries the consult's whole-file sha256. No W node arose.
+2. **D-3:** Amendments 1 and 3, by amendment (round 52, items 1 to 4; round 53).
+3. **D-4, the tests,** landed at 5bb2b10439b0d3b3477f3cd3f659842f14fcfd62:
+   - `kernel/tests/end_to_end.rs:380-437 @ 5bb2b10439b0d3b3477f3cd3f659842f14fcfd62 sha256:014802c6d5aed122137c77ccf706882ea9c31ebaa6f2d14c86cb82f11b34423c` (h2_cancellation_is_observed_by_the_producer_inside_the_budget, Part A2)
+   - `kernel/tests/end_to_end.rs:439-485 @ 5bb2b10439b0d3b3477f3cd3f659842f14fcfd62 sha256:27e0802aaa3124219601613f7e841f037d0b49e1d724f7bd42b8e4d81d89f8ab` (h2_a_cancel_before_the_first_batch_still_stops_the_query, Part A1)
+4. **D-4, the mutations,** each observed by name at 5bb2b104: M-A1a on h2_a; M-A1b on h2_a; M-A1b on h2.
+   - Worker report 1: `state/consults/2026-10-04-timing-assertions-under-contention-worker-report-1.md` @ 4398a779155c422211b44910fcf4807c0358d595, whole-file sha256 8814ed94cfdb25e031763d5af98c64244039cae8e88b1d2360c80c9ff0564d52.
+   - The reviewer's own observations are in its gate-1 report (item 7). It observed M-A1b with the path written as `std::time::Duration::from_secs(1)`, because §4's wording leaves `Duration` unqualified at a site that imports only `Instant`. The meaning is the same, and the observation stands (the reviewer's S2-1).
+5. **§7:** 48 changed lines by §7's command at the head, against ceilings of 40 and 30 (A1 28, A2 20, by hunk), and five files. No class 8.
+6. **Records:**
+   - Amendment 3 was written after Phase R's outcome had been seen, but its first line does not say so, as the header's Append-only line requires. The proof: acb3d035 (the consult) is an ancestor of 4398a779 (Amendment 3). This is the architect's S2-1 and the reviewer's S2-3. Amendment 3 is not edited.
+   - Amendment 1's rows (09827e41) precede the consult and Amendment 2 (acb3d035), against the Order line. This is read under the gate-1 architect's N-4 as no breach (the reviewer's S2-2).
+   - The consult names its runner as the tester agent (the architect's N-5).
+7. **The PR and gates:** #175, merged as a83e95f5. `kernel/README.md` is at that merge commit. Gate-log 400 (architect, gate 1, PASS) and 401 (reviewer, gate 1, PASS). The reports are `state/consults/gates/2026-10-05-timing-assertions-under-contention-gate1-architect.md` and `state/consults/gates/2026-10-05-timing-assertions-under-contention-gate1-reviewer.md`.
+8. **PLAN:** done, with evidence `{pr: 175}` set in this commit.
+
+**Superseded index.** None.
