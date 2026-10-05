@@ -1018,6 +1018,8 @@ test('precompact-flush: fresh tip/HEAD but no upstream is still stale (not pushe
   assert.match(fresh.reason, /no upstream/);
 });
 
+// RECORDED MUTATION: the lastBlockedAt write removed from decidePrecompact -> this test fails, first
+// failing assertion: second.decision, 'block' !== 'allow'. Observed at commit 562b7d84 (this branch).
 test('precompact-flush: a second PreCompact within 15 minutes is allowed whatever the freshness', () => {
   const dir = makeGitRepo();
   writeCutState(dir, '# CUT-STATE\n\nNo continuity block here.\n');
@@ -1068,6 +1070,9 @@ function blockFile(dir, sessionId) {
   return path.join(dir, '.claude', 'state', `precompact-${sessionId}.json`);
 }
 
+// RECORDED MUTATION: the append replaced by an overwrite (M1; appendFileSync -> writeFileSync) -> this
+// test fails, first failing assertion: 'the second call appends, it does not overwrite', 1 !== 2.
+// Observed at commit 562b7d84 (this branch).
 test('precompact-flush: each call appends one record line with its trigger, decision, reason and flushed_at', (t) => {
   const dir = noBlockRepo(t);
   const input = { session_id: 'rec-1', trigger: 'manual', custom_instructions: 'never recorded' };
@@ -1102,6 +1107,8 @@ test('precompact-flush: each call appends one record line with its trigger, deci
   assert.ok(!JSON.stringify(lines).includes('never recorded'), 'custom_instructions is never recorded');
 });
 
+// RECORDED MUTATION: the non-manual branch removed (M2; every call takes the manual path) -> this test
+// fails, first failing assertion: result.status, 2 !== 0. Observed at commit 562b7d84 (this branch).
 test('precompact-flush CLI: an automatic compaction with a stale block exits 0 and records it', (t) => {
   const dir = noBlockRepo(t);
   const result = spawnSync(process.execPath, [path.join(here, 'precompact-flush.mjs')], {
@@ -1123,6 +1130,8 @@ test('precompact-flush CLI: an automatic compaction with a stale block exits 0 a
   assert.equal(fs.existsSync(blockFile(dir, 'cli-auto')), false, 'no block record is written for an automatic call');
 });
 
+// RECORDED MUTATION: the non-manual branch condition changed to trigger !== 'auto' (M4) -> this test
+// fails, first failing assertion: 'p5-auto', 'block' !== 'allow'. Observed at commit 562b7d84 (this branch).
 test('precompact-flush: a call whose trigger is absent or not manual is judged, recorded and allowed', (t) => {
   // P4: a fresh block (injected git, as the fresh test above), automatic.
   const fresh = makeLedgerRepo(t, { ledger: false });
@@ -1175,6 +1184,9 @@ test('precompact-flush: a call whose trigger is absent or not manual is judged, 
   assert.deepEqual(recordLines(stale, 'mix').map((l) => l.decision), ['blocked', 'recorded-only']);
 });
 
+// RECORDED MUTATION: appendRecord's catch rethrows instead of returning the stderr line (M5; the
+// try/catch made inert) -> this test fails by throwing, EISDIR: illegal operation on a directory,
+// write, from decidePrecompact's call. Observed at commit 562b7d84 (this branch).
 test('precompact-flush: a record line that cannot be written leaves the decision unchanged', (t) => {
   const dir = noBlockRepo(t);
   // A directory sits where the record file belongs, so the append fails.
@@ -1227,6 +1239,8 @@ test('session-resume: never throws when state/CUT-STATE.md is missing', () => {
   assert.match(output, /could not be read|no SESSION-CONTINUITY block/);
 });
 
+// RECORDED MUTATION: the ?? filter dropped from the modified-tracked-files count (M6) -> this test
+// fails, first failing assertion: the modified count, '2' !== '1'. Observed at commit 562b7d84 (this branch).
 test('session-resume: prints the resume facts line after the block', (t) => {
   // R1: c0 README; c1 the ledger (flushed_at F, tip c0); c2 a README edit; the README modified
   // again, uncommitted; one untracked file.
@@ -1260,6 +1274,10 @@ test('session-resume: prints the resume facts line after the block', (t) => {
   assert.ok(output.includes(READING_ORDER));
 });
 
+// RECORDED MUTATION: a failed git answer returned as '0' (M7; resumeGit's catch returns 0 not null) ->
+// this test fails, first failing assertion: the last line matched against commits_past_tip=unknown,
+// got 'Resume facts: block_age_min=3 commits_past_tip=0 modified_tracked_files=1'. Observed at
+// commit 562b7d84 (this branch).
 test('session-resume CLI: an unreadable git answer prints unknown and exits 0', (t) => {
   // R2: a directory that is not a repository (git may not climb out of it), a valid flushed_at and a
   // hex tip; then a directory with no ledger at all.
