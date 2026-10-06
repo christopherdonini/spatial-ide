@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T17:09:21.301Z",
-  "plan_hash": "ab60dc00365ed6d4fe4b403802783398396dfb28d234178cc61f16a6ba2f46f0",
+  "generated_at": "2026-10-06T17:28:11.988Z",
+  "plan_hash": "d7b31d680cfd1f218216fed92d72fd2d8eadb928757ca65804ab65770a94eb5c",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6749,7 +6749,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-10-06, slot 2: branch cut/mods-readme-local-scope from main, worktree C:/dev/wt/readme-local; the worker edits the two READMEs. Before: PLACED 2026-10-06 in slot 2 by the human third direction of the day, item 3 (RULED 2026-10-06), ahead of kernel-close-races-followups, exempt from the freeze: docs only, the five-line form (committed before any change) and the single reviewer gate; no E-rows; the human click on the merge is the approval. Before: Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner.",
+      "summary": "READY FOR THE HUMAN 2026-10-06: PR #184 at 9d9b92db, CI green; the single reviewer gate PASS at 1eb82dba (gate-log 425); its D1 fixed at 9d9b92db and checked by the custodian; 14 of 24 lines; no E-rows; the human click on the merge (a merge commit) is the approval. Before: IN PROGRESS 2026-10-06, slot 2: branch cut/mods-readme-local-scope from main, worktree C:/dev/wt/readme-local; the worker edits the two READMEs. Before: PLACED 2026-10-06 in slot 2 by the human third direction of the day, item 3 (RULED 2026-10-06), ahead of kernel-close-races-followups, exempt from the freeze: docs only, the five-line form (committed before any change) and the single reviewer gate; no E-rows; the human click on the merge is the approval. Before: Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner.",
       "dates": {
         "opened": "2026-10-06",
         "done": null
