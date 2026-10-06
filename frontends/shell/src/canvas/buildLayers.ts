@@ -2,10 +2,10 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import { COORDINATE_SYSTEM, Position } from "@deck.gl/core";
-import { PathLayer, SolidPolygonLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
 import type { DrawParameters } from "../../../../renderer/style-ts/src/style";
-import type { ResidentBatch } from "./decodeBatch";
+import type { GeometryKind, ResidentBatch } from "./decodeBatch";
 import { checkPickCeiling } from "./limits";
 import type { OffsetFrame } from "./offsetFrame";
 
@@ -177,8 +177,51 @@ function outlinePositionsFor(geometry: CachedBatchGeometry): Position[][] {
 }
 
 /**
+ * **The point symbol's radius: 4 CSS pixels** (the points cut, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`
+ * OPEN-3, ruled (A) in question round 62). A declared shell constant, outside the style document: the
+ * document says polygon and carries no radius. The value is declared, not fitted: an 8 px diameter
+ * stays below the 9 px pick-resolution threshold (`pickResolution.ts`), so two symbols at the
+ * threshold's own spacing do not overlap. A walkthrough verdict may revise it.
+ */
+export const POINT_RADIUS_PX = 4;
+
+/**
+ * The point open's per-batch geometry: one offset-relative position per point, cached by
+ * `ResidentBatch` object identity and the frame origin it was last computed against, under the same
+ * rule as `geometryForBatch` above (`frame.toLocal` in f64 before any narrowing, ADR-010 rule 3; an
+ * unchanged batch at an unchanged origin hands deck.gl the same `data` reference). A separate cache
+ * and function, so the polygonal path above is untouched.
+ */
+interface CachedPointGeometry {
+  originX: number;
+  originY: number;
+  points: Position[];
+}
+
+const pointGeometryCache = new WeakMap<ResidentBatch, CachedPointGeometry>();
+
+function pointsForBatch(batch: ResidentBatch, frame: OffsetFrame): CachedPointGeometry {
+  const cached = pointGeometryCache.get(batch);
+  if (cached && cached.originX === frame.originX && cached.originY === frame.originY) {
+    return cached;
+  }
+  // A point row decodes to one part holding one single-position ring (`decodeBatch.ts`), so datum k
+  // is the k-th part's only vertex, in `partToRow`'s order: the datum index is the pick ordinal.
+  const points: Position[] = batch.parts.flatMap((featureParts) =>
+    featureParts.map((rings) => frame.toLocal(rings[0][0][0], rings[0][0][1]) as Position)
+  );
+  const fresh: CachedPointGeometry = { originX: frame.originX, originY: frame.originY, points };
+  pointGeometryCache.set(batch, fresh);
+  return fresh;
+}
+
+/** What `buildLayers` returns for a polygonal open. */
+export type PolygonalLayer = SolidPolygonLayer<Position[][]> | PathLayer<Position[]>;
+
+/**
  * One deck.gl layer per resident batch. **Never one layer for everything** -- a batch's own
- * part count (one deck.gl datum, one pick ordinal, per polygon part) is what the 24-bit pick
+ * part count (one deck.gl datum, one pick ordinal, per polygon part, or per point for a `point`
+ * open, whose `kind` the caller derives once from the open's encoding) is what the 24-bit pick
  * ceiling (ADR-010 rule 6) is checked against, and a batch is
  * bounded by the data plane's frame-size ceiling, so per-layer counts sit orders of magnitude below
  * 16,777,215 by construction.
@@ -262,11 +305,56 @@ function outlinePositionsFor(geometry: CachedBatchGeometry): Position[][] {
 export function buildLayers(
   batches: readonly ResidentBatch[],
   frame: OffsetFrame,
-  draw: ResolvedDrawParams
-): (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] {
-  const layers: (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] = [];
+  draw: ResolvedDrawParams,
+  kind: "polygonal"
+): PolygonalLayer[];
+export function buildLayers(
+  batches: readonly ResidentBatch[],
+  frame: OffsetFrame,
+  draw: ResolvedDrawParams,
+  kind: "point"
+): ScatterplotLayer<Position>[];
+export function buildLayers(
+  batches: readonly ResidentBatch[],
+  frame: OffsetFrame,
+  draw: ResolvedDrawParams,
+  kind: GeometryKind
+): (PolygonalLayer | ScatterplotLayer<Position>)[];
+export function buildLayers(
+  batches: readonly ResidentBatch[],
+  frame: OffsetFrame,
+  draw: ResolvedDrawParams,
+  kind: GeometryKind
+): (PolygonalLayer | ScatterplotLayer<Position>)[] {
+  const layers: (PolygonalLayer | ScatterplotLayer<Position>)[] = [];
   for (const batch of batches) {
     checkPickCeiling(batch.partCount);
+    if (kind === "point") {
+      // The points cut (SH-P2): one `ScatterplotLayer` per batch, never a `PathLayer`. The style's
+      // fill and outline are mapped onto the symbol as rendering plumbing (ADR-022 Decision 4, as
+      // ruled in question round 62, OPEN-3), and nothing here saves or reads a style document.
+      // `radiusUnits: "pixels"` makes `POINT_RADIUS_PX` an on-screen size at any zoom; the stroke is
+      // drawn only when the style has an outline (`outlineWidth > 0`), in pixels. Pickable: datum k
+      // is pick ordinal k, which `resolvePick` maps through `partToRow` (the identity for points).
+      layers.push(
+        new ScatterplotLayer<Position>({
+          id: layerId(batch),
+          data: pointsForBatch(batch, frame).points,
+          getPosition: (d) => d,
+          coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+          pickable: true,
+          filled: true,
+          radiusUnits: "pixels",
+          getRadius: POINT_RADIUS_PX,
+          getFillColor: draw.fillColor,
+          stroked: draw.outlineWidth > 0,
+          lineWidthUnits: "pixels",
+          getLineColor: draw.outlineColor,
+          getLineWidth: draw.outlineWidth,
+        })
+      );
+      continue;
+    }
     // P9 fix: `geometryForBatch` (above) returns the SAME `polygons` array reference across
     // renders for a batch whose object identity and frame origin have not changed -- the whole
     // point being that `data: geometry.polygons` below then reads as reference-unchanged to

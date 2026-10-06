@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import type { ResidentBatch } from "./decodeBatch";
 import {
   averageFeatureExtent,
+  averagePointSpacing,
   clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
@@ -14,6 +15,7 @@ import {
   isFramebufferIdentical,
   isPointerOnCanvas,
   mayRepickAtSettle,
+  pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
   shouldArmHoverRepick,
   SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX,
@@ -422,5 +424,67 @@ describe("cursorForPointerState (entry 89 §4.3)", () => {
 
   it("dragging: grabbing", () => {
     expect(cursorForPointerState(true)).toBe("grabbing");
+  });
+});
+
+/**
+ * SH-P4 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` section 4; OPEN-4 ruled (A), question round 62): the
+ * resident points' average spacing, branch by branch. A 10 x 10 grid at spacing 10 spans 90 x 90 over
+ * 100 points, so the spacing is the square root of 8100 / 100, which is 9; coincident points give 0
+ * (refused by the unchanged 9 px threshold at any zoom); collinear points give the span over (n - 1);
+ * one point, and no point, give +Infinity (nothing to confuse, never refused for spacing). The points
+ * are counted across batches, features and parts the way `decodeBatch` shapes them.
+ *
+ * RECORDED MUTATION: drop the division by n in the area branch (`Math.sqrt(w * h)`). The grid
+ * assertion then fails by name.
+ *
+ * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `the spacing branches: grid, coincident, collinear, one point and none`
+ * FAILED by name with the mutation applied, at the grid assertion (`expected 90 to be 9 // Object.is equality`), then reverted.
+ */
+describe("averagePointSpacing (SH-P4)", () => {
+  /** `positions` as one batch, each point one part holding one single-position ring. */
+  const pointsOf = (positions: Array<[number, number]>): Pick<ResidentBatch, "parts"> => ({
+    parts: positions.map((p) => [[[p]]]),
+  });
+
+  it("the spacing branches: grid, coincident, collinear, one point and none", () => {
+    const grid: Array<[number, number]> = [];
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) grid.push([i * 10, j * 10]);
+    expect(averagePointSpacing([pointsOf(grid)])).toBe(9);
+
+    expect(averagePointSpacing([pointsOf([[5, 5], [5, 5], [5, 5]])])).toBe(0);
+    expect(isBelowPickResolution(0, 1e9)).toBe(true); // 0 is below the threshold at any zoom
+
+    expect(averagePointSpacing([pointsOf([[0, 0], [10, 0], [20, 0], [30, 0], [40, 0]])])).toBe(10); // 40 / 4
+    expect(averagePointSpacing([pointsOf([[3, 0], [3, 8]])])).toBe(8); // vertical, 8 / 1
+
+    expect(averagePointSpacing([pointsOf([[1, 2]])])).toBe(Infinity);
+    expect(averagePointSpacing([])).toBe(Infinity);
+    expect(averagePointSpacing([pointsOf([])])).toBe(Infinity);
+    expect(isBelowPickResolution(Infinity, 0.001)).toBe(false);
+
+    // Counted across two batches: the same four points as one batch of four.
+    const split = averagePointSpacing([pointsOf([[0, 0], [10, 0]]), pointsOf([[0, 10], [10, 10]])]);
+    expect(split).toBe(averagePointSpacing([pointsOf([[0, 0], [10, 0], [0, 10], [10, 10]])]));
+    expect(split).toBe(5); // sqrt(100 / 4)
+  });
+});
+
+/**
+ * SH-P4's selector: a polygonal open compares the average feature extent (unchanged), a point open
+ * the average point spacing. The same batches give different values under the two kinds.
+ *
+ * RECORDED MUTATION: return `averageFeatureExtent` for points in `pickResolutionExtentFor`. The point
+ * assertion then fails by name.
+ *
+ * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `selects the average feature extent for a polygonal open and the average point spacing for a point open`
+ * FAILED by name with the mutation applied, at the point assertion (`expected 10 to be close to 36.666666666666664`), then reverted.
+ */
+describe("pickResolutionExtentFor (SH-P4)", () => {
+  it("selects the average feature extent for a polygonal open and the average point spacing for a point open", () => {
+    // Two features, each one ring of two vertices: extents 10 and 10; four points spanning 110 x 0.
+    const batches = [batchOf([[[0, 0], [10, 0]], [[100, 0], [110, 0]]])];
+    expect(pickResolutionExtentFor("polygonal", batches)).toBe(10);
+    expect(pickResolutionExtentFor("point", batches)).toBeCloseTo(110 / 3, 12);
   });
 });
