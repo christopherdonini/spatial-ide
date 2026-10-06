@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b541f0bd0bdd98faecb2848a7b9328d8c739d0999ecc352435527ff6398e8bfd`) at `2026-10-06T05:17:40.470Z`.
+Generated from `PLAN.yaml` (sha256 `d506c5151076475b6b0a08b84e3c0ef82d8c3cb9c7d1a6816cae6bffd5db4bd4`) at `2026-10-06T05:35:17.816Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `b541f0bd0bdd98faecb2848a7b9328d8c739d0999ecc
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
-- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check (lane `governance`, order 23, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -31,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `b541f0bd0bdd98faecb2848a7b9328d8c739d0999ecc
 ## 5. In progress
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
+- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check — evidence: branch `cut/guardian-n1-before-auto-compaction`
 
 ## 6. Proposed / unscheduled
 
