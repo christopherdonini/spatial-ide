@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `34c3b532cddd5c1ded0ce91a51b1c3412c63e228f55cdbbb793123714f8e0c70`) at `2026-10-06T19:02:24.210Z`.
+Generated from `PLAN.yaml` (sha256 `9a3694f014933a4e43002325ac9a53bdb25c159e36c8cd8340775c2ba44d903a`) at `2026-10-06T19:34:29.611Z`.
 
 ## 1. Next
 
@@ -30,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `34c3b532cddd5c1ded0ce91a51b1c3412c63e228f55c
 ## 5. In progress
 
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — evidence: branch `cut/geometry-points-cut`
-- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 — evidence: branch `cut/mods-readme-local-scope`
 
 ## 6. Proposed / unscheduled
 

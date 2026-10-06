@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T19:02:24.338Z",
-  "plan_hash": "34c3b532cddd5c1ded0ce91a51b1c3412c63e228f55cdbbb793123714f8e0c70",
+  "generated_at": "2026-10-06T19:34:29.841Z",
+  "plan_hash": "9a3694f014933a4e43002325ac9a53bdb25c159e36c8cd8340775c2ba44d903a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6736,7 +6736,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": 24,
       "depends_on": [],
       "needs_human": {
@@ -6746,16 +6746,16 @@
       "gate": "tools/mods/MODS-README-LOCAL-SCOPE-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/mods-readme-local-scope"
+        "pr": 184
       },
       "budget_minutes": 30,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "READY FOR THE HUMAN 2026-10-06: PR #184 at 9d9b92db, CI green; the single reviewer gate PASS at 1eb82dba (gate-log 425); its D1 fixed at 9d9b92db and checked by the custodian; 14 of 24 lines; no E-rows; the human click on the merge (a merge commit) is the approval. Before: IN PROGRESS 2026-10-06, slot 2: branch cut/mods-readme-local-scope from main, worktree C:/dev/wt/readme-local; the worker edits the two READMEs. Before: PLACED 2026-10-06 in slot 2 by the human third direction of the day, item 3 (RULED 2026-10-06), ahead of kernel-close-races-followups, exempt from the freeze: docs only, the five-line form (committed before any change) and the single reviewer gate; no E-rows; the human click on the merge is the approval. Before: Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner.",
+      "summary": "DONE 2026-10-06: #184 merged by the human at 19:15:56Z as 9721b23b (parents 415e1db3 and 9d9b92db), a merge commit; the click was the approval (no E-rows); the single gate PASS at 1eb82dba (gate-log 425), D1 fixed at 9d9b92db; 14 of 24 lines; the main checkout fast-forwarded, so the live mods folder holds the corrected READMEs. Before: READY FOR THE HUMAN 2026-10-06: PR #184 at 9d9b92db, CI green; the single reviewer gate PASS at 1eb82dba (gate-log 425); its D1 fixed at 9d9b92db and checked by the custodian; 14 of 24 lines; no E-rows; the human click on the merge (a merge commit) is the approval. Before: IN PROGRESS 2026-10-06, slot 2: branch cut/mods-readme-local-scope from main, worktree C:/dev/wt/readme-local; the worker edits the two READMEs. Before: PLACED 2026-10-06 in slot 2 by the human third direction of the day, item 3 (RULED 2026-10-06), ahead of kernel-close-races-followups, exempt from the freeze: docs only, the five-line form (committed before any change) and the single reviewer gate; no E-rows; the human click on the merge is the approval. Before: Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner.",
       "dates": {
         "opened": "2026-10-06",
-        "done": null
+        "done": "2026-10-06"
       }
     }
   ]
