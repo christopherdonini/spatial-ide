@@ -426,3 +426,27 @@ Assertions only:
 2. **The corrected reference:** `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md:5-228 @ 49d3f6321ab4c669767e350e0ba7a1e0d51b4d53 sha256:16be8a519dbd129ad9c738def68cf4ceb2264c8212c52b7090384fe05585bb31`. That span, read at that commit, hashes to the value Amendment 1 states.
 
 **Superseded index.** Amendment 1's italic note, its report reference → item 2.
+
+### Amendment 3 — E12, the live point (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 and §9, item 5 direct, under the human's typed approval naming E12 to E14 (`state/directives/2026-10-06-pr183-merge-approval.md`; its RULED block in `DECISIONS-PENDING.md`). Times are UTC, 2026-10-06, from the transcripts named, except where a process or file time is named. Nothing below is a quotation except the entry marked byte-copied. Folders outside the repository are named in words (round 29's exposure rule).*
+
+1. **The restart, not a reload.** The previous custodian session's transcript (128d8fa3) has its last entry from the old process at 10:43:44.492Z, at version 2.1.289. The new process was created at 16:07:25Z (its Windows process start time). It logged the `SessionStart:resume` hook at 16:07:31.045Z, at version 2.1.291. The human then cleared the context, and this session (da685a21) began with its `SessionStart:clear` hook at 16:10:45.219Z.
+2. **The version.** `claude --version` printed `2.1.291 (Claude Code)` at 16:31:50Z. This session transcript's version field reads 2.1.291 from its first entry. 2.1.291 is the build of record (Amendment 1, item 1).
+3. **The main checkout's `HEAD` at the restart** was 754f8d9e (reflog 10:34:04Z). It contains the merge commit 0f86b680, which the checkout fast-forwarded to at 10:16:28Z (reflog). The later commits, 39ccad91 (16:09:54Z) and b7df7b1c (16:30:38Z), touch only records. `tools/mods/` is unchanged from 0f86b680 to b7df7b1c.
+4. **`claude plugin list`'s entry for the mod,** run at 16:20:54Z, byte-copied by script (these five lines, each with its newline, sha256 f0fccbb21ebb92f6e350c6f10ea9a4aae0b35a3b4aa0aa9ad73b321648879c9b):
+
+```
+  ❯ spatial-guardian@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-guardian
+    Scope: local
+    Status: ✔ enabled
+```
+
+   - **The scope is local, not user.** The human moved both mods to local scope (the second direction of 2026-10-06, item 1). The plugin registry under the user's Claude folder records Guardian's local install at 16:15:33.300Z for the project path `C:\dev\spatial-ide`.
+   - **Before the move.** The process (item 1) was created before the move. Guardian loaded at user scope and read the main checkout's folder, as v0's E0 records (GUARDIAN-V0's Amendment 8).
+   - **After the move.** The Evidence Recorder, moved in the same way at 16:15:34.464Z, wrote records for this session's Bash calls at 16:23:16Z and 16:30:32Z, so the mods' hooks act in this session after the move. Guardian was not probed: §4 forces no probe.
+5. **E12 is the live point** for §4's N1 column. From here, each automatic compaction's row gives that cycle's N1 nudges. E13 and E14 stay open.
+
+**Superseded index.** None.

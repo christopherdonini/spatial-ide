@@ -876,3 +876,29 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
 - **Source:** the P0 report of `evidence-recorder-v0-1`, its observations section (`state/consults/2026-10-05-evidence-recorder-v0-1-p0-report.md`). The times are from the subagent's transcript.
 
 **Superseded index.** None.
+
+### Amendment 11 — the install row: local scope, from 2026-10-06 (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main on the human's second direction of 2026-10-06 (`state/directives/2026-10-06-boot-mods-local-and-machine-script.md`, item 1 and Fable's advice a; its RULED block in `DECISIONS-PENDING.md`). Times are UTC. Nothing below is a quotation except the entry marked byte-copied. Folders outside the repository are named in words (round 29's exposure rule).*
+
+1. **The human's act.** Before this session the human uninstalled the mod at user scope and installed it at local scope from the main checkout, for this repository.
+2. **The plugin registry** under the user's Claude folder records the install:
+   - scope local;
+   - project path `C:\dev\spatial-ide`;
+   - installed at 2026-10-06T16:15:33.300Z;
+   - an install path in the plugin cache under that folder, ending `spatial-ide-mods\spatial-guardian\unknown`.
+3. **The enable record** is the repository's `.claude/settings.local.json` (its `enabledPlugins`). `.gitignore` line 32 ignores that file, so no committed file declares the mod.
+4. **`claude plugin list`'s entry,** run at 2026-10-06T16:20:54Z, byte-copied by script (these five lines, each with its newline, sha256 f0fccbb21ebb92f6e350c6f10ea9a4aae0b35a3b4aa0aa9ad73b321648879c9b):
+
+```
+  ❯ spatial-guardian@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-guardian
+    Scope: local
+    Status: ✔ enabled
+```
+
+5. **The folder read is unchanged.** It is still the main checkout's `tools/mods/spatial-guardian`, as Amendment 8's E0 and Amendment 9 record, so a commit there still changes the live guard at the next load.
+6. **§2.11's install lines are not edited.** They name user scope and say never to use `project` or `local` scope, and from this amendment they describe the earlier install. §0, item 4's first reason for user scope, a record in no committed file, holds at local scope by item 3. The README's matching lines are corrected separately.
+
+**Superseded index.** §2.11, the install scope → items 1 to 4 (not edited).

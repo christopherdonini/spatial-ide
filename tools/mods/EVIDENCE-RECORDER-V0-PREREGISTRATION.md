@@ -629,3 +629,30 @@ with exit code 1
 - **What follows is the human's:** the custodian reports the stop to the human, who uninstalls (§9). Nothing is uninstalled, disabled or changed by the custodian.
 
 **Superseded index.** None.
+
+### Amendment 8 — the install row: local scope, from 2026-10-06 (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main on the human's second direction of 2026-10-06 (`state/directives/2026-10-06-boot-mods-local-and-machine-script.md`, item 1 and Fable's advice a; its RULED block in `DECISIONS-PENDING.md`). Times are UTC. Nothing below is a quotation except the entry marked byte-copied. Folders outside the repository are named in words (round 29's exposure rule).*
+
+1. **The human's act.** Before this session the human uninstalled the mod at user scope and installed it at local scope from the main checkout, for this repository.
+2. **The plugin registry** under the user's Claude folder records the install:
+   - scope local;
+   - project path `C:\dev\spatial-ide`;
+   - installed at 2026-10-06T16:15:34.464Z;
+   - an install path in the plugin cache under that folder, ending `spatial-ide-mods\spatial-evidence-recorder\unknown`.
+3. **The enable record** is the repository's `.claude/settings.local.json` (its `enabledPlugins`). `.gitignore` line 32 ignores that file, so no committed file declares the mod.
+4. **`claude plugin list`'s entry,** run at 2026-10-06T16:20:54Z, byte-copied by script (these five lines, each with its newline, sha256 38e8011efe7e42ef16707302f8f4494fcb822531f604d3a76a5094197b07ca2e):
+
+```
+  ❯ spatial-evidence-recorder@spatial-ide-mods
+    Version: unknown
+    Read from: C:\dev\spatial-ide\tools\mods\spatial-evidence-recorder
+    Scope: local
+    Status: ✔ enabled
+```
+
+5. **The folder read is unchanged:** the main checkout's `tools/mods/spatial-evidence-recorder`.
+6. **The mod acts after the move.** It wrote records for the custodian session's Bash calls at 16:23:16Z and 16:30:32Z (`2026-10-06/162316748-1a188183ee052224.json` and `2026-10-06/163032044-7c046d16e7b8576d.json` under the log root).
+7. **§2's install lines are not edited.** They name user scope only, and from this amendment they describe the earlier install. The README's matching lines are corrected separately.
+
+**Superseded index.** §2, the install scope → items 1 to 4 (not edited).
