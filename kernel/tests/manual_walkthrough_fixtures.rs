@@ -253,6 +253,44 @@ fn generate_the_point_p1_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The pile-of-points file for Part P's row P2 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md`
+/// Amendment 3, item 7): LV95, declared `["Point"]`, with a covering. It holds P-1's six points and a
+/// pile of five more, each `d` x 1 cm east and north of P-1's second point (`d` = 1 to 5), so the
+/// pile's own spread is at most about 7 cm and the extent is P-1's own. With eleven points over that
+/// extent (about 20.6 m x 9.9 m), `averagePointSpacing` is about 4.30 m, so the 9 px refusal starts
+/// below about 2.09 px per metre (zoom 1.06), and above it the pile's five 4 px symbols overlap (a
+/// spread of about 0.07 m x 2^zoom px, under 8 px up to zoom 6.8) while the average spacing stays at or
+/// above 9 px. No far-apart point is needed.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_point_pile_fixture() {
+    use spatial_engine::fixture::{
+        encode_point, point_p1, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let mut points = point_p1([E_LO, N_LO], 10.0);
+    let base = points[1];
+    for d in 1..=5u32 {
+        let step = f64::from(d) * 0.01;
+        points.push([base[0] + step, base[1] + step]);
+    }
+    let rows = points
+        .iter()
+        .map(|p| (encode_point(p[0], p[1]), [p[0], p[1], p[0], p[1]]))
+        .collect();
+    let path = dir().join("point-pile.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(rows),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the point pile fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The LineString-declared file for Part P's wording step (P7): LV95, `geometry_types` declares
 /// `["LineString"]`, and the open is refused with the sighted `engine.geo_metadata` template, whose
 /// readable-set clause renders Polygon, MultiPolygon and Point. The rows are P-1's points: the
