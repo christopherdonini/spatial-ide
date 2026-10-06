@@ -1599,3 +1599,62 @@ Fill in after running the rows above.
 - **S2:**
 - **S3:**
 - **S4:**
+
+**Dated note, 2026-10-06 (the points cut, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`; appended, not edited into S4).** From that cut's merge, corpus file #2 no longer reaches the engine's sighted refusal for a declared type outside the readable set: the geometry gate now admits `["Point"]`, and #2 is refused instead as `engine.crs_undeclared`, because its `crs` key is explicitly null. S4's last sentence, which names #2 for that refusal, therefore no longer holds for builds after that merge. The points cut's Part P (below), row P7, carries the sighted refusal, on a file that declares `["LineString"]`, and reads KNOWN-LIMITATIONS items 31 to 36.
+
+**Dated note, 2026-10-06 (the points cut, condition C-1 of that form's Amendment 1, item 6; appended, not edited into S2).** F-1 is written with no covering bounds, so a viewport query meets `engine.no_covering_bbox` on the canvas. That was read from the code by the points form, and the app run that confirms it is this sitting's. S2 should use F-1c: the same three rows with a covering, `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\multipolygon-f1-with-covering.parquet`, written by `generate_the_multipolygon_f1_with_covering_fixture` (run it as Part P's "Before P1" says). If S2 on F-1 shows the no-covering refusal, record that as the confirmation of C-1, then run S2 on F-1c.
+
+---
+
+## Part P — points: the P-1 fixture, the pick rule, and the wording of the new strings (geometry-points-cut)
+
+**This is the points cut's Part P.** An earlier Part P exists above (crs-unit-fact-and-bounds, the degrees tile grid); the two are told apart by their titles, and a row here is cited as "P2 (points)" where the earlier one could be meant.
+
+This Part is the Operator gate of `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, run in the same sitting as Part S. It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). The form's amendments are read last amendment first. The radius and the pick rule are the human's declared choices (question round 62, items 3 and 4), and a verdict recorded here may revise them.
+
+**Before P1:**
+- Read the form's §10, its last amendment first.
+- Generate the fixtures: from `C:\dev\spatial-ide`, run `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture generate_the_point_p1_fixture generate_the_declared_linestring_fixture generate_the_declared_polygon_and_point_fixture generate_the_multipolygon_f1_with_covering_fixture`.
+- Verify corpus files #2, #4 and #5 against `MANIFEST.json` as Part N's "Before N1" note describes.
+
+| Fixture | Path | Used by |
+|---|---|---|
+| P-1, six Point rows with distinct coordinates, LV95, declared `["Point"]`, with a covering | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\point-p1.parquet`, written by `generate_the_point_p1_fixture` | P1, P2, P3, P4 |
+| Compat-corpus file #5 (a `geoarrow.point` file in degrees, no `crs` key) | `C:\dev\spatial-ide\target\fixtures\compat-corpus\duckdb-spatial\duckdb-degreesrange-nokey.parquet` — sha256 `b471a90f2e87e91e83c2de6c5fd73bc9ea7ab83fbea1c733988eeaef725357af` (`MANIFEST.json`'s own `sha256` field) | P5 |
+| Compat-corpus file #2 (a Point file whose `crs` key is explicitly null) | `C:\dev\spatial-ide\target\fixtures\compat-corpus\geopandas\gp-nocrs-nokey.parquet` — sha256 `a55e41bbfd4c3e43d0771484ee99f2543a9089523e9ba90066499a2c136a46a6` | P6 |
+| Compat-corpus file #4 (a Point file in the LV95 range, no `crs` key) | `C:\dev\spatial-ide\target\fixtures\compat-corpus\duckdb-spatial\duckdb-lv95range-intkey.parquet` — sha256 `7a9da027167681ee04d7f4d25c85bbfff6795bed9829c5c3ab71addfc9a7e403` | P6 |
+| The LineString-declared file (P-1's rows, `geometry_types` declares `["LineString"]`) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-linestring.parquet`, written by `generate_the_declared_linestring_fixture` | P7 |
+| The Polygon-and-Point file (P-1's rows, `geometry_types` declares `["Polygon","Point"]`) | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\declared-polygon-and-point.parquet`, written by `generate_the_declared_polygon_and_point_fixture` | P7 |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| P1 | **P-1 opens and draws as symbols.** Click **Open GeoParquet…** and select P-1. Let the first view settle (Part A's A4 shows what "settled" looks like), and click **Zoom to layer** if the points are small. | The open is admitted and the canvas draws six round symbols, each with a fixed on-screen radius of 4 pixels, in the style's fill. The describe summary shows the geometry row as `geometry (geoarrow.point)` and, as a separate labelled row, the file's own declaration, `Point`. No refusal and no error banner appears after the stream settles. Record what the six symbols look like (size, colour, whether any is clipped), and whether the two summary rows read as two separate facts. |
+| P2 | **Hover, the refusal, and a pile of points.** With P-1 open: **(a)** hover the centre of one symbol. **(b)** Hover a place between symbols. **(c)** Zoom out with the wheel, a notch at a time, hovering over a symbol after each notch, until the hover shows the named refusal instead of an id. **(d)** Hover a visible pile of points, that is, a place where several symbols overlap on screen. P-1's own points sit at least 10 m apart and the refusal in (c) begins before their symbols touch, so P-1 shows no pile that the hover still answers. If this sitting has no file with a pile, write "no pile available" on the verdict line and report it: the verdict then stays open. | (a) One readout, one `id` line; the six symbols give six different ids, in the order the file holds them. (b) No readout appears. (c) At a coarse enough zoom the readout is the named refusal state (the same state and text that Part L's L7 shows for polygons), and it stays until you zoom back in. (d) Whatever the hover names, it is one id. **Record, on the last line of this row's result: whether naming the topmost symbol of a pile is acceptable to you.** Option (B) of question round 62, item 4 is the follow-up only if this verdict says it is not. |
+| P3 | **Style edits apply to the points.** With P-1 open, click the **▸ Style** disclosure and change **Fill colour**, **Fill opacity**, **Outline width** (to above 0) and **Outline colour**, as Part F's F2 and F4 do. | Each edit changes the symbols at once: the fill colour and opacity change the circles' fill, an outline width above 0 gives each circle an outline in the chosen colour and width, and an outline width of 0 removes it. The radius does not change. The text block at the bottom of the panel still reads `"geometry":"polygon"`, because the style document has no point geometry yet (KNOWN-LIMITATIONS item 35). Nothing is saved. Record whether the symbols read as the style you chose, and whether the 4 pixel radius is the size you want. |
+| P4 | **Publishing P-1 is refused.** With P-1 open, click **Publish…** and start a publish to a fresh destination under `C:\dev\spatial-ide\target\`. | The publish is refused before any approval prompt: a refusal carrying the code `publish.geometry_encoding_not_publishable` and a message that starts with `[P6 placeholder]` and names `geoarrow.point`. No approval dialog opens and the destination folder is not created. Record the code and the message verbatim, and whether it was clear why a point file cannot be published. |
+| P5 | **Corpus #5 opens, and the canvas refuses for want of a covering.** Click **Open GeoParquet…** and select corpus file #5. | The open is admitted under the format rule (`crs:format-default`): the CRS line reads `OGC:CRS84` with the format-rule source, the geometry row reads `geometry (geoarrow.point)`, and the declaration row reads `Point`. The canvas then shows a refusal with the code `engine.no_covering_bbox`, because this file declares no covering and a viewport query needs one. No point is drawn. Record the code and the message verbatim. |
+| P6 | **Corpus #2 and #4 are refused by name.** Open corpus file #2, then corpus file #4. | #2 is refused with the code `engine.crs_undeclared` (its `crs` key is explicitly null), and the CRS assertion form appears under it, as Part N's N4 shows for a no-CRS file. #4 is refused with the code `engine.format_default_contradicted`, because its `bbox` leaves the ±180 and ±90 range that the format's absent-key default would imply. Record each code and message verbatim. |
+| P7 | **The wording, for your decision.** **(a)** Open the LineString-declared file and read the refusal: the code is `engine.geo_metadata`, and the detail is the engine's sighted wording, whose readable-set clause now names Polygon, MultiPolygon and Point. **(b)** Open the Polygon-and-Point file and read the refusal: the code is `engine.geo_metadata`, and the detail is a `[P6 placeholder]` stating that this build reads one kind per geometry column. **(c)** Read every other new `[P6 placeholder]` string where it is written: `engine/src/wkb.rs` (the Point row refusals: EWKB flags, a type other than 1, a NaN coordinate, trailing bytes), `engine/src/geoarrow.rs` (`MIXED_KINDS_DRAFT`), `frontends/shell/src/canvas/decodeBatch.ts` (`UnexpectedEncodingError`) and `frontends/shell/src/canvas/limits.ts` (`PickCeilingExceeded`). **(d)** Read `KNOWN-LIMITATIONS.md` items 31 to 36, which are draft wording. | (a) The detail is not a placeholder; record whether it reads as honest and clear with three types in its clause. (b) The detail starts with `[P6 placeholder]`. For each string in (b) and (c) the log records either the wording you want in its place, or "keep". Until then every one stays a placeholder, and none ships as settled wording. For items 31 to 36, record whether each reads as honest to you; items 35 and 36 are the drafts of the radius and the pick rule. |
+
+**If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. In P1, the deviation this row exists to catch is a refusal, an error banner, or a point drawn at the wrong place (for instance, mirrored along a diagonal). In P4, it is an approval dialog opening, or a destination created.
+
+**Sitting estimate (scheduling only, not a claim about the app):** a few minutes for P1 to P6 and a reading pass for P7.
+
+---
+
+## Result log
+
+Fill in after running the rows above (the points cut's Part P).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **P1:**
+- **P2:**
+- **P2, the verdict on naming the topmost symbol of a pile (acceptable or not, or "no pile available"):**
+- **P3:**
+- **P4:**
+- **P5:**
+- **P6:**
+- **P7:**
