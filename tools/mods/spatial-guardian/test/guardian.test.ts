@@ -642,6 +642,8 @@ test('N1 appends no line below 80 percent and one line at 80 percent on a stale 
 // RECORDED MUTATION (B-T3, the form's section 4; T28 rewritten): M3a, N1 never recording a shown band
 // (`shownBands.add(band)` dropped, v0 T28's mutation); M3b, `N1_BAND = 10`; M3c, the top-band bound
 // dropped (the band `Math.min(...)` reduced to `Math.floor(p / N1_BAND)`).
+// Observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code): M3a, M3b and M3c each
+// -> fails: `N1 appends at most one line per 5-point band, from 80 to 95 percent`.
 test('N1 appends at most one line per 5-point band, from 80 to 95 percent', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -659,6 +661,11 @@ test('N1 appends at most one line per 5-point band, from 80 to 95 percent', asyn
 // --version 2.1.288 (Claude Code).
 // RECORDED MUTATION (B-T5): M5a, `N1_MAX_AGE_MS = 0`; M5b, `continuity.mjs` returning the first parent's
 // flushed_at as `flushedAt`.
+// Observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code): M5a and M5b each ->
+// fails: `N1 appends nothing on a fresh block`. The mutation above, re-observed at the same commit and
+// build -> fails: `every process call is git and carries the declared timeout`, `N1 appends nothing on
+// a fresh block`, `N1 judges a block stale when its flushed_at is more than 10 minutes old, and never
+// on an unparseable one`.
 test('N1 appends nothing on a fresh block', async ($, on) => {
   const state: { c: string; p?: string } = { c: recent(2), p: FLUSH_A } // a flush-only ledger commit, two minutes ago
   const world: World = { proc: gitWorld(state) }
@@ -672,6 +679,8 @@ test('N1 appends nothing on a fresh block', async ($, on) => {
 // RECORDED MUTATION: the `agentId` check dropped from N1's early return -> fails: `N1 appends nothing
 // for a subagent call or a refused call`. Observed at 54eba872 with this change, claude --version
 // 2.1.288 (Claude Code).
+// Re-observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code) -> fails: `N1
+// appends nothing for a subagent call or a refused call`.
 test('N1 appends nothing for a subagent call or a refused call', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }), percent: 85 }
   const probe = arm(on, world)
@@ -687,6 +696,10 @@ test('N1 appends nothing for a subagent call or a refused call', async ($, on) =
 // RECORDED MUTATION: N1 never clearing shownBands below the threshold (`shownBands.clear()` dropped)
 // -> fails: `N1 clears its bands after the fill falls below 80 percent`. Observed at 54eba872 with
 // this change, claude --version 2.1.288 (Claude Code).
+// Re-observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code) -> fails: `N1 clears
+// its bands after the fill falls below 80 percent`, `N1 falls back to the breakdown percentage when
+// auto-compaction is off or the threshold is absent`, `N1 judges a block stale when its flushed_at is
+// more than 10 minutes old, and never on an unparseable one`.
 test('N1 clears its bands after the fill falls below 80 percent', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -699,6 +712,8 @@ test('N1 clears its bands after the fill falls below 80 percent', async ($, on) 
 // RECORDED MUTATION: an unrounded percent in N1_TEXT (`Math.round(p)` replaced by `p`) -> fails: `N1's
 // line is the declared text with the integer percent`. Observed at 54eba872 with this change, claude
 // --version 2.1.288 (Claude Code).
+// Re-observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code) -> fails: `N1's line
+// is the declared text with the integer percent`.
 test("N1's line is the declared text with the integer percent", async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -753,6 +768,9 @@ function bashTokens($: any, world: World, totalTokens: number, percent = 10) {
 
 // RECORDED MUTATION (B-T1): M1a, the threshold route dropped, so the fill is always `percentage`; M1b,
 // v0's text used on the threshold route.
+// Observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code): M1a and M1b each ->
+// fails: `N1 measures the fill against the auto-compaction threshold when the breakdown carries it and
+// auto-compaction is on`, `N1 appends at most one line per 5-point band, from 80 to 95 percent`.
 test('N1 measures the fill against the auto-compaction threshold when the breakdown carries it and auto-compaction is on', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -764,6 +782,8 @@ test('N1 measures the fill against the auto-compaction threshold when the breakd
 })
 
 // RECORDED MUTATION (B-T2): M2, the `isAutoCompactEnabled === true` condition dropped.
+// Observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code) -> fails: `N1 falls back
+// to the breakdown percentage when auto-compaction is off or the threshold is absent`.
 test('N1 falls back to the breakdown percentage when auto-compaction is off or the threshold is absent', async ($, on) => {
   const world: World = { proc: gitWorld({ c: FLUSH_A, p: FLUSH_A }) }
   arm(on, world)
@@ -778,6 +798,9 @@ test('N1 falls back to the breakdown percentage when auto-compaction is off or t
 
 // RECORDED MUTATION (B-T4): M4a, the age clause dropped; M4b, the clause joined to the judgment by AND
 // (`verdict.stale === true && flushedLongAgo(...)`).
+// Observed at 2f8100bc with this change, claude --version 2.1.291 (Claude Code): M4a and M4b each ->
+// fails: `N1 judges a block stale when its flushed_at is more than 10 minutes old, and never on an
+// unparseable one`.
 test('N1 judges a block stale when its flushed_at is more than 10 minutes old, and never on an unparseable one', async ($, on) => {
   const state: { c: string; p?: string } = { c: recent(11), p: FLUSH_A } // a flush-only commit, 11 minutes ago
   const world: World = { proc: gitWorld(state) }
@@ -795,3 +818,14 @@ test('N1 judges a block stale when its flushed_at is more than 10 minutes old, a
   await bashAt($, world, 10)
   expect((await bashAt($, world, 85)).context).toBeUndefined()
 })
+
+// Re-observations of the v0 mutations of T26 and T27, whose tests sit above T28 and keep their lines (the
+// form's section 8, item 6), so their observation lines are recorded here and not under them.
+// RECORDED MUTATION (T26, re-observed): `timeoutMs` dropped from N1's git adapter -> fails: `every
+// process call is git and carries the declared timeout`. Observed at 2f8100bc with this change, claude
+// --version 2.1.291 (Claude Code).
+// RECORDED MUTATION (T27, re-observed): `<=` in place of `<` in N1's threshold test -> fails: `N1 appends
+// no line below 80 percent and one line at 80 percent on a stale block`, `N1 appends at most one line per
+// 5-point band, from 80 to 95 percent`, `N1 measures the fill against the auto-compaction threshold when
+// the breakdown carries it and auto-compaction is on`. Observed at 2f8100bc with this change, claude
+// --version 2.1.291 (Claude Code).
