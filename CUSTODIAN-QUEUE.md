@@ -1,27 +1,28 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d7b31d680cfd1f218216fed92d72fd2d8eadb928757ca65804ab65770a94eb5c`) at `2026-10-06T17:28:11.862Z`.
+Generated from `PLAN.yaml` (sha256 `80cfe8ad845141f9b361fec8e0aff19f6db980d2810ee25072d94671c4f68926`) at `2026-10-06T18:22:44.324Z`.
 
 ## 1. Next
 
-- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`)
+- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (lane `engine`)
 
 ## 2. Ready
 
+- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (lane `engine`, order 15, budget 0 min)
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
 
-## 3. Waiting on the human (total: 0 min)
+## 3. Waiting on the human (total: 10 min)
 
-- (none)
+### ruling
+
+- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 (10 min)
 
 ## 4. Blocked on dependencies
 
-- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — blocked by: geometry-types-beyond-polygons
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — blocked by: geometry-types-beyond-polygons, geometry-points-cut
+- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — blocked by: geometry-points-cut
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **decision-adr-029-scan-progress-route** — ADR-029's scan-progress route, given G1 (a minimal crate patch exposing the connection handle; raw ffi end to end on the scan path; upstream first) -- deferred to Brief B's B2 by the human, round 16 item 3 — blocked by: geometry-types-beyond-polygons
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
-- **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation — blocked by: geometry-types-beyond-polygons, decision-adr-029-scan-progress-route, geometry-lines-cut
+- **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation — blocked by: decision-adr-029-scan-progress-route, geometry-lines-cut
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -29,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `d7b31d680cfd1f218216fed92d72fd2d8eadb928757c
 
 ## 5. In progress
 
-- **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
 - **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 — evidence: branch `cut/mods-readme-local-scope`
 
 ## 6. Proposed / unscheduled

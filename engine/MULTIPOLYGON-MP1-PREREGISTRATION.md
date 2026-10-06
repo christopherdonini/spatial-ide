@@ -675,3 +675,45 @@ Budget overrun, §7 not edited. *Written by the custodian after the build's resu
 - ADR-034's O7, unnamed in this form → item 1.
 - Amendment 2, item 5.5, its statement that the BF writer is the one extra → item 2.
 - Amendment 4, item 4 → item 3 adds the engine-tests cause.
+
+### Amendment 6 — the closing record (class 1, with class 2 for DR-2)
+
+*Written after the outcomes were seen, by the custodian. PR #182 merged at 2026-10-06T10:11:06Z as merge commit c4c251d46e55f2c7de557e88f48ec60c6eb453ad, with parents 55cd588449c080b9806cc64723e2ec6461ffbc0f and f13c71364fa5be547996f2d1efa4440de2b60469. It follows §9's closing-record list and routes the gate-1 reviewer's findings. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #182, at the merge commit above;
+   - the architect's reviewed head, 228bd997eb762188da7901b76dfbd2a07c6abcea;
+   - the merged head, f13c71364fa5be547996f2d1efa4440de2b60469. It adds only the architect's D-4 and D-5 fixes, which the reviewer checked;
+   - the reviewer's reviewed commit, the merge commit itself (generation 6).
+2. **The order, as it happened:**
+   - §9 put both gates before the merge;
+   - the gate-1 reviewer at 228bd997 was stopped at 06:28Z on the human's morning request, with no verdict;
+   - the human merged at 10:11:06Z;
+   - on the human's direction (`state/directives/2026-10-06-merges-machine-and-mod-scope.md`, item 2; its RULED block), the reviewer ran on the merge commit from 16:46:42Z to 18:18:46Z, by its transcript, and passed.
+3. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-06-geometry-types-beyond-polygons-gate1-architect.md` (pass with notes; gate-log 422);
+   - `2026-10-06-geometry-types-beyond-polygons-gate1-reviewer.md` (pass; gate-log 426).
+4. **The worker reports:** `state/consults/2026-10-06-geometry-types-beyond-polygons-worker-report-1.md` to `-4.md`, and lead-data's index update, `state/consults/2026-10-06-geometry-types-beyond-polygons-index-update.md`.
+5. **The golden commit** is d8276158c49f7709126f9388fabfedec26d55b99. Its golden files are byte-identical at the merge commit:
+   - `engine/tests/data/golden/polygon-wire.golden`, sha256 d810e6a8659c82c322231d9c784e8d9fbb4e0f074bb325e3cebf1f94ddcab15d;
+   - `kernel/tests/data/golden/publish-partitions.golden`, sha256 5b10ddd64ca60db9009ab1453cf99098353e4a9b93bcf012dca089586b0c7e01.
+6. **The mutations:** each row's observation commit is in the reviewer report's Mutations section. Every §4 row was re-made at the merge commit and failed its test by name.
+   - The reviewer's EV-n2 is recorded: at the merge commit, §4's own mutation for G-1 and G-2 fails both tests before their golden comparison. The golden commit's estimate mutation, re-made there, fails both at their golden assertion, so the comparison is live.
+7. **The literal minted:** `skp/0.9` (W1).
+8. **The re-run's `engine/ADMISSION-RESULTS.md`** at the merge commit has sha256 11c02a516aa48d863418950899ac737f2814f956e0a9af24d4d9bb27670d7335. Its header names the tree fc346a8a37360999bd9c9b5cdb9c42b1b8b97707. The generator's edits behind the run were committed afterwards, in 3c29bc67f64634073373a28cd0ea24cc1280ed3e, so the run was made on an uncommitted tree over fc346a8a (the reviewer's DR-4). The re-run at the merge commit reproduces the file except its two commit-id lines.
+9. **The done items' proofs:**
+   - Decisions 1 to 10, by §4's rows;
+   - O3 to O8, by §2's items;
+   - acceptance item 1, by S-K2.
+
+   Each named test was re-observed by name at the merge commit (the reviewer's Mutations and P-5 sections).
+10. **§7:** 4,654 changed lines (4,270 insertions, 384 deletions) over 88 files, by `git diff --numstat 55cd5884 c4c251d4` with §7's two exclusions. This equals Amendment 4's figures. The form's own command counts nothing after the merge, because the merge base is then the head itself (the reviewer's DR-5).
+11. **The reviewer's DR-2, class 2:** P-5 has a third difference by name. The run set drops `skp_version_is_skp_0_8` and gains `skp_version_is_skp_0_9`, W2's rename (worker report 2, commit 4). Amendment 2, item 5.5, and Amendment 5, item 2, are not edited.
+12. **Routed to `geometry-points-cut`'s form,** whose drafting brief names both:
+    - C-n1, the reviewer's DR-1: two new `pub` items beyond §2 E3, still in the code;
+    - the reviewer's DR-3: L-1's recorded-mutation comment names a failure point that does not reproduce at the merge commit. The test still fails by name, at its `Err(other)` arm.
+13. **EV-n1:** the E2E step MP' and Part S of the walkthrough are unrun. KNOWN-LIMITATIONS item 33's statement rests on A-1, K-1, SH-1 and SH-8, not on a run of the app. Both stay operator rows for the next sitting.
+14. **O6:** `b1-shell-half`'s summary gains O6's line in this amendment's commit.
+15. **Done:** PLAN marks the node done, with evidence `{pr: 182}`, at generation 7, in this amendment's commit.
+
+**Superseded index.** §9, the order of gate and merge → item 2. §7's counting command after the merge → item 10. Neither is edited.

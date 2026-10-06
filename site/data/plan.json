@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T17:28:11.988Z",
-  "plan_hash": "d7b31d680cfd1f218216fed92d72fd2d8eadb928757ca65804ab65770a94eb5c",
+  "generated_at": "2026-10-06T18:22:44.456Z",
+  "plan_hash": "80cfe8ad845141f9b361fec8e0aff19f6db980d2810ee25072d94671c4f68926",
   "priorities_approved": true,
   "lanes": [
     {
@@ -2352,7 +2352,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "alpha",
-      "status": "in-progress",
+      "status": "done",
       "order": 6,
       "depends_on": [
         "briefa-p6-part-n-acceptances",
@@ -2367,19 +2367,19 @@
       "gate": "engine/MULTIPOLYGON-MP1-PREREGISTRATION.md",
       "merge": "merge-commit",
       "evidence": {
-        "branch": "cut/geometry-types-beyond-polygons"
+        "pr": 182
       },
       "budget_minutes": 480,
-      "generation": 6,
+      "generation": 7,
       "felt_verdict": false,
       "entries": [
         73,
         126
       ],
-      "summary": "AMENDMENT 5 APPENDED 2026-10-06 (generation 6): the gate-1 architect record findings D-1 (O7 named: met by describe facts, the human may overturn), D-2 (the second extra ignored test against P-5, class 2) and D-3 (the engine-tests overrun cause); gate 1 architect PASS with notes; the reviewer stopped on the human request, re-dispatched at generation 6 when the machine is free. Before: AMENDMENT 4 APPENDED 2026-10-06 (generation 5): budget overrun, section 7 not edited (class 8), at the gated head 228bd997: 4,654 lines over 88 files against 4,500 and 80; commit 7 applied the owner's-index update; next the PR and both gates. Before: AMENDMENT 3 APPENDED 2026-10-06 (generation 4): round 61 item 1, OPEN-2 ruled (A), the arm stands as built; phase B built (ac538440, fc346a8a, 3c29bc67); next the lead-data index update, the PR and both gates. Before: AMENDMENT 2 APPENDED 2026-10-06 (generation 3; the architect draft after phase A): C-12 and C-12S missed (corpus 12 refused at identity admission; class 2, no prediction edited); OPEN-2 for the human, a red line (a geometry_types value that is not a list; the PR ready state waits on it, phase B does not); the goldens unchanged; section 7 interim figures; the deviations; phase B next. Before: IN PROGRESS 2026-10-05, slot 1: branch cut/geometry-types-beyond-polygons from ff6bdddc (worktree C:/dev/wt/mp1, target D:/wt-targets/mp1); the worker-high dispatched for phase A (the form commits 1 to 3: golden, engine, kernel); phase B (wire, shell, docs) briefed after. Before: SLOT 1 NOW 2026-10-05 (the product-first direction, 8.a): round 59 item 4 ruled OPEN-1 (b1) and (c1), recorded as Amendment 1 (generation 2); the branch next, in its own commit. Before: FORM COMMITTED 2026-10-05 (engine/MULTIPOLYGON-MP1-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 4; full form and full gating from dispatch: wire, stated guarantees, an accepted ADR and size; one OPEN item for the human, a red line: an absent geometry_types key and a non-string member; no slot yet). Before: MP-1 IMPACT READ FILED 2026-10-05 (state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md, lead-data second pilot piece 4); the architect draft next, before a slot frees. Before: ADR-034 ACCEPTED 2026-10-05 (the human, typed; state/directives/2026-10-05-adr-034-acceptance.md; RULED 2026-10-05): as merged, architect-blockable; items 1 to 6 answer its acceptance section (O1 and O2 ruled for MP-1 by item 5; O3 to O8 open for the form; a KNOWN-LIMITATIONS row names item 1 loss). MP-1 preregistration may be written now: the lead-data impact read first (second pilot), then the architect draft. Before: RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider RULED 2026-09-24, question round 17, item 7 (entry 126): MP-1 as one vertical cut after crs-unit, the watcher and B1, all eight decisions as recommended (the P4 table: 5 of 12 corpus files refused on geometry type), with two riders verbatim in the RULED block -- an empty geometry_types admits under the MultiPolygon encoding but a row of an unread type is refused by name or counted as unread and shown, never silently dropped; Polygon promotion is declared as an encoding in describe.declared_types, never as the file's own type. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration; publishing rides B3; LOD stays out. ADR-034 filed Proposed 2026-09-27 on round 17 item 7 and the 2026-09-27 session order: PR #135, both gates PASS at attempt 4 (reports state/consults/gates/2026-09-27-adr-034-gate1..4). Acceptance is the human's (a red line); MP-1's preregistration only after acceptance (state/directives/2026-09-27-session-order.md).",
+      "summary": "DONE 2026-10-06: #182 merged at 10:11:06Z as c4c251d4, before its gate-1 reviewer verdict; the reviewer then ran on the merge commit on the human direction and PASSED (gate-log 426; no Correctness or Evidence finding); closing record Amendment 6 (generation 7): the order as it happened, the goldens pinned, skp/0.9, ADMISSION-RESULTS pinned (DR-4), section 7 4,654 over 88 (DR-5), DR-2 class 2, C-n1 (DR-1) and DR-3 routed to geometry-points-cut, MP prime and Part S unrun (EV-n1), O6 on b1-shell-half. Before: AMENDMENT 5 APPENDED 2026-10-06 (generation 6): the gate-1 architect record findings D-1 (O7 named: met by describe facts, the human may overturn), D-2 (the second extra ignored test against P-5, class 2) and D-3 (the engine-tests overrun cause); gate 1 architect PASS with notes; the reviewer stopped on the human request, re-dispatched at generation 6 when the machine is free. Before: AMENDMENT 4 APPENDED 2026-10-06 (generation 5): budget overrun, section 7 not edited (class 8), at the gated head 228bd997: 4,654 lines over 88 files against 4,500 and 80; commit 7 applied the owner's-index update; next the PR and both gates. Before: AMENDMENT 3 APPENDED 2026-10-06 (generation 4): round 61 item 1, OPEN-2 ruled (A), the arm stands as built; phase B built (ac538440, fc346a8a, 3c29bc67); next the lead-data index update, the PR and both gates. Before: AMENDMENT 2 APPENDED 2026-10-06 (generation 3; the architect draft after phase A): C-12 and C-12S missed (corpus 12 refused at identity admission; class 2, no prediction edited); OPEN-2 for the human, a red line (a geometry_types value that is not a list; the PR ready state waits on it, phase B does not); the goldens unchanged; section 7 interim figures; the deviations; phase B next. Before: IN PROGRESS 2026-10-05, slot 1: branch cut/geometry-types-beyond-polygons from ff6bdddc (worktree C:/dev/wt/mp1, target D:/wt-targets/mp1); the worker-high dispatched for phase A (the form commits 1 to 3: golden, engine, kernel); phase B (wire, shell, docs) briefed after. Before: SLOT 1 NOW 2026-10-05 (the product-first direction, 8.a): round 59 item 4 ruled OPEN-1 (b1) and (c1), recorded as Amendment 1 (generation 2); the branch next, in its own commit. Before: FORM COMMITTED 2026-10-05 (engine/MULTIPOLYGON-MP1-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 4; full form and full gating from dispatch: wire, stated guarantees, an accepted ADR and size; one OPEN item for the human, a red line: an absent geometry_types key and a non-string member; no slot yet). Before: MP-1 IMPACT READ FILED 2026-10-05 (state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md, lead-data second pilot piece 4); the architect draft next, before a slot frees. Before: ADR-034 ACCEPTED 2026-10-05 (the human, typed; state/directives/2026-10-05-adr-034-acceptance.md; RULED 2026-10-05): as merged, architect-blockable; items 1 to 6 answer its acceptance section (O1 and O2 ruled for MP-1 by item 5; O3 to O8 open for the form; a KNOWN-LIMITATIONS row names item 1 loss). MP-1 preregistration may be written now: the lead-data impact read first (second pilot), then the architect draft. Before: RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider RULED 2026-09-24, question round 17, item 7 (entry 126): MP-1 as one vertical cut after crs-unit, the watcher and B1, all eight decisions as recommended (the P4 table: 5 of 12 corpus files refused on geometry type), with two riders verbatim in the RULED block -- an empty geometry_types admits under the MultiPolygon encoding but a row of an unread type is refused by name or counted as unread and shown, never silently dropped; Polygon promotion is declared as an encoding in describe.declared_types, never as the file's own type. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration; publishing rides B3; LOD stays out. ADR-034 filed Proposed 2026-09-27 on round 17 item 7 and the 2026-09-27 session order: PR #135, both gates PASS at attempt 4 (reports state/consults/gates/2026-09-27-adr-034-gate1..4). Acceptance is the human's (a red line); MP-1's preregistration only after acceptance (state/directives/2026-09-27-session-order.md).",
       "dates": {
         "opened": "2026-09-14",
-        "done": null
+        "done": "2026-10-06"
       }
     },
     {
@@ -3787,7 +3787,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": 15,
       "depends_on": [
         "geometry-types-beyond-polygons"
@@ -3804,7 +3804,7 @@
       "entries": [
         110
       ],
-      "summary": "PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
+      "summary": "UNBLOCKED 2026-10-06 by MP-1 done (#182; its gate-1 reviewer PASS with no Correctness or Evidence finding, so no fix piece comes first). Routed here by MP-1 Amendment 6, item 12, for its form: C-n1 (two new pub items beyond MP-1 E3) and DR-3 (L-1 recorded-mutation comment). The form is the architect's to draft. Before: PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
       "dates": {
         "opened": "2026-09-22",
         "done": null
@@ -3918,7 +3918,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input.",
+      "summary": "O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input.",
       "dates": {
         "opened": "2026-09-25",
         "done": null
