@@ -557,3 +557,18 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - It went through on the second chance, under the pre-merge hook.
   - No N1 nudge text appears in the transcript. The fill was about 78% of a 1M window, below N1's 80.
   - **The old count ends at E: 5, N1: 3.**
+### J, corrected by piece B's P0 (2026-10-06)
+
+- **Source:** `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md`, its §2 and §3, recorded as that form's Amendment 1.
+- **A compaction the count missed.** By the same records and rule as the count above:
+
+  | Compaction (boundary) | Session | The block | The flush state |
+  |---|---|---|---|
+  | 2026-10-05T18:49:59.984Z (trigger auto; 769,990 tokens before; 76,134 ms, so it started at about 18:48:44Z) | 128d8fa3 | not on record: the session's block record was overwritten by the block at 2026-10-06T04:39:05Z | the last flush dd7d8ea0 (committed 18:40:58Z, `flushed_at` 18:39:21Z, about 9 minutes before the compaction started). Whether the hook judged it stale is not on record |
+
+- **The fill readings above do not hold.**
+  - The rows above read N1's fill as about 77% or 78% of a 1M window, below N1's 80. They are wrong.
+  - A user-settings key, `autoCompactWindow`, sets the compaction window to 800,000. The settings file was last written at 2026-10-04T18:24:19Z, and the 2026-10-04T11:19:22Z compaction's 767,403 tokens also fit that window.
+  - `percentage` is measured against that window, so it read 96 to 97 at the four compactions since N1 went live.
+  - v0's N1 stayed silent because the Stop hook's judgment read the block fresh at each call where the fill first reached 80 or 90, not because the fill was under 80 (the P0 report, §3). Path item 4 is settled that way.
+- **The old count:** E: 5 and N1: 3, as counted. One more compaction went through, at 18:49:59Z, and its block state is not on record.

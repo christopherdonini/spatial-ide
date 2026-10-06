@@ -385,3 +385,35 @@ Assertions only:
 - **Done:** PLAN marks the node done at the merge. E13 and E14 stay open, as piece A's E1 did.
 
 ## §10. Amendments — opens empty, append-only (classes 1 to 9; each correction round ends with a superseded index). Amendment 1 is P0's record (§0.3); nothing precedes it.
+
+### Amendment 1 — P0 (class 1), with the deviations from §5's P0 predictions (class 2)
+
+*Written after P0's outcomes were seen, by the custodian (§0.3). The record is the worker-high's report, filed at `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md`, cited by section. Its sha256, from that file's line 5 to the end, is 16be8a519dbd129ad9c738def68cf4ceb2264c8212c52b7090384fe05585bb31. No code exists. Nothing below is a quotation; the field and setting names are identifiers.*
+
+1. **The build of record: 2.1.291** (`claude --version`, the report's opening). The form's words "the 2.1.289 binary" (§0.3, item 1) are read as the build of record's binary, on the custodian's brief. The breakdown's declarations are byte-identical at 2.1.288, 2.1.289 and 2.1.291 (the report's §1, source 3).
+2. **The three fields** (the report's §1) are declared on the summary breakdown, the value of `context.breakdown`, at 2.1.291:
+   - `totalTokens`, a number;
+   - `isAutoCompactEnabled`, a boolean;
+   - `autoCompactThreshold`, an optional number, absent when auto-compaction is off.
+
+   `percentage` is `totalTokens` over `rawMaxTokens`, the compaction window, as a whole percentage. The summary call estimates locally and sends no request.
+3. **I1 does not fire.** The custodian reads the optional `autoCompactThreshold` as declared with its type, not as another type: §2.1 already sends an absent value to the fallback route. These three names are the ones §3's stubs and §8, item 19 use.
+4. **The live figures** (the report's §2), derived from the build's code and the settings, not read live:
+   - the model's window is 1,000,000;
+   - the compaction window is 800,000, from the user-settings key `autoCompactWindow`. No environment or project override was found in the worker's environment or the three settings files; the custodian's session environment was not readable;
+   - so the threshold is 767,000 (800,000 less 20,000 less 13,000), equal to the engine's trigger while no percentage override is set;
+   - every automatic compaction on record had at least 767,000 tokens before it.
+
+   E13 stays the live proof.
+5. **The fills** (the report's §3): four automatic compactions since 2026-10-04T11:31Z, all in session 128d8fa3. B1's route reads 99.78 to 100.97 at the last tool call before each.
+6. **I4 does not fire** (the report's §4).
+7. **Deviations from §5's P0 predictions (class 2; §5 is not edited):**
+   - **Today's route reads 96 to 97, not 77 to 78.** §5 assumed a window near 1,000,000, and the compaction window is 800,000.
+   - **Four compactions, not three.** The fourth, at 2026-10-05T18:49:59.984Z, is missing from the window draft's count.
+   - **At least one band would have nudged before each, but only through the age clause.** The judgment read the block fresh at all sixteen band crossings. Simulated, B1 gives 4, 3, 4 and 4 lines across the four cycles. v0's N1 gives none, because the judgment read fresh, not because the fill was under 80.
+   - **Three of the simulated lines** fall within 26 seconds of the 10-minute edge.
+   - **Held:** the threshold at or below each compaction's tokens, and B1 at 95 or more at the last call before each.
+8. **Noted, with no change:** the four compactions ran under the 2.1.289 engine, by the transcript's version field. Runs of record are at 2.1.291 (I2).
+9. **The build may start** (§0.3; §8, item 19). The node's generation becomes 2.
+
+**Superseded index.** §5's P0 predictions → item 7 (result; not edited).
