@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T19:34:29.841Z",
-  "plan_hash": "9a3694f014933a4e43002325ac9a53bdb25c159e36c8cd8340775c2ba44d903a",
+  "generated_at": "2026-10-06T20:58:27.919Z",
+  "plan_hash": "84aee354815d1900a6cc9a8dfa20666ef61bdc6041ead7be9976bde9989282d8",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3802,12 +3802,12 @@
         "branch": "cut/geometry-points-cut"
       },
       "budget_minutes": 0,
-      "generation": 2,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [
         110
       ],
-      "summary": "IN PROGRESS 2026-10-06, slot 1: branch cut/geometry-points-cut from d3fe6055 (base B), on origin; worktree C:/dev/wt/points, target D:/wt-targets/points; phase A (commits 1 to 3: engine, kernel tests and generators, wire) by worker-high; phase B (shell, docs, the P4 re-run) next. Before: AMENDMENT 1 2026-10-06 (generation 2): question round 62 ruled OPEN-1 (A) Point only, OPEN-2 (A) with the mixed-kind P6 placeholder, OPEN-3 (A) radius 4 px with no save path for a point layer style document, OPEN-4 (A) average spacing against 9 px with row P2 hovering a pile of points; C-1 applies (confirmed by code); dispatch next, commit 1 first. Before: FORM COMMITTED 2026-10-06 (the architect draft, alone, full form from dispatch, 67 pins at 7e3a00a6; wire skp/0.10, stated guarantees, ADR-034 inherited): OPEN-1 (MultiPoint scope) is ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; all four go to the human in one question round. Before: UNBLOCKED 2026-10-06 by MP-1 done (#182; its gate-1 reviewer PASS with no Correctness or Evidence finding, so no fix piece comes first). Routed here by MP-1 Amendment 6, item 12, for its form: C-n1 (two new pub items beyond MP-1 E3) and DR-3 (L-1 recorded-mutation comment). The form is the architect's to draft. Before: PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
+      "summary": "PHASE A BUILT 2026-10-06 (edbc0f3c; 1,809 lines over 35 files; workspace 885 passed): Amendment 2 (generation 3) records its class 2 deviations, the kernel group at 260 of 220 so far (class 8 at the gated head), and the clippy reading; phase B (shell, docs, the P4 re-run) next. Before: IN PROGRESS 2026-10-06, slot 1: branch cut/geometry-points-cut from d3fe6055 (base B), on origin; worktree C:/dev/wt/points, target D:/wt-targets/points; phase A (commits 1 to 3: engine, kernel tests and generators, wire) by worker-high; phase B (shell, docs, the P4 re-run) next. Before: AMENDMENT 1 2026-10-06 (generation 2): question round 62 ruled OPEN-1 (A) Point only, OPEN-2 (A) with the mixed-kind P6 placeholder, OPEN-3 (A) radius 4 px with no save path for a point layer style document, OPEN-4 (A) average spacing against 9 px with row P2 hovering a pile of points; C-1 applies (confirmed by code); dispatch next, commit 1 first. Before: FORM COMMITTED 2026-10-06 (the architect draft, alone, full form from dispatch, 67 pins at 7e3a00a6; wire skp/0.10, stated guarantees, ADR-034 inherited): OPEN-1 (MultiPoint scope) is ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; all four go to the human in one question round. Before: UNBLOCKED 2026-10-06 by MP-1 done (#182; its gate-1 reviewer PASS with no Correctness or Evidence finding, so no fix piece comes first). Routed here by MP-1 Amendment 6, item 12, for its form: C-n1 (two new pub items beyond MP-1 E3) and DR-3 (L-1 recorded-mutation comment). The form is the architect's to draft. Before: PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
       "dates": {
         "opened": "2026-09-22",
         "done": null

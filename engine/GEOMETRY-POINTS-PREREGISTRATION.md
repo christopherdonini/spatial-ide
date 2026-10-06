@@ -601,3 +601,20 @@ After the merge, B is the merge commit's first parent and H is the merge commit 
 - §9's note that commit 4 waits on OPEN-3 and OPEN-4 → item 7.
 - The [C-1] condition → item 6.
 - Part P's row P2 → item 5 adds a step.
+
+### Amendment 2 — phase A's outcomes: the build's deviations (class 2), the kernel group over its ceiling so far, and the clippy reading
+
+*Written by the custodian after phase A's results were seen, at the branch head edbc0f3c1e45adbc7e7c19e3131bba820faaca2e, before phase B and before either gate. The record is worker report 1, `state/consults/2026-10-06-geometry-points-cut-worker-report-1.md` (sha256 dfa3c82ea78701f358f61ef495890f8b9a5a0209624f2680d250fe492729058f, from its line 5 to the end), cited by section. Nothing below is a quotation.*
+
+1. **Phase A's commits:** b4a6fd9d8f6f9583e27149b30b149b5a789f6f7d (engine), ffa42b5d13650e9ea9bbbe6dee2adb6c39053316 (kernel tests and generators, F-1c included) and edbc0f3c (wire, `skp/0.10`).
+2. **Class 2, PE-6:** §4's registered mutation, returning the whole child, cannot fail its test, because Arrow's slice already windows a fixed-size list's child. The mutation that fails it reads only the first two values. The test's comment records both (the report's Deviations). §4 is not edited.
+3. **Class 2, failure points:** the observed failure points of PE-2, PE-4, PE-5 and A-3 differ from the drafted ones. Each test still fails by name, and its comment states what was observed (the report's Mutations table).
+4. **Class 2, two more:**
+   - S-P2's test is named so that it does not repeat an MP-1 test name;
+   - the batch regenerator's one added line changes an existing ignored test, whose mutation was re-observed.
+5. **OPEN-2's placeholder:** the code holds the ruling's draft (round 62, line 7) byte-copied by script, without the sentence's final period, behind the `[P6 placeholder]` tag. The declared list is substituted, and the kind labels are fixed text, not derived from E-P1's mapping at run time. The human sights the wording at P6. The reviewer checks the bytes against the directive file.
+6. **§7 so far:** 1,809 lines over 35 files, against 3,220 over 64. The kernel group is at 260 against 220, before phase B adds the kernel README's index lines. The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+7. **The clippy reading:** §9's suites name clippy without flags, and no CI workflow runs it. As MP-1's reviewer ran it, the reading is clippy over the workspace's targets with no new warning on an added line. Under `-D warnings` it fails at the base on code this diff does not touch (the report's Checks). The brief's `-D warnings` was the custodian's error.
+8. **Generation 3.**
+
+**Superseded index.** §4's PE-6 mutation → item 2. §4's drafted failure points for PE-2, PE-4, PE-5 and A-3 → item 3. §9's clippy line → item 7, read and not edited.
