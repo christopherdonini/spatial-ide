@@ -55,7 +55,7 @@ fn decode(buf: &[u8]) -> RecordBatch {
     batch
 }
 
-fn list<'a>(a: &'a dyn Array) -> &'a ListArray {
+fn list(a: &dyn Array) -> &ListArray {
     a.as_any()
         .downcast_ref::<ListArray>()
         .expect("a list level")
@@ -305,6 +305,20 @@ fn a_row_of_an_unread_type_stops_the_stream_at_that_row_by_name() {
 /// Observed over `d8276158` on the uncommitted tree of the engine commit:
 /// `every_multipolygon_batch_fits_its_target_under_the_unedited_estimate` FAILED with the mutation
 /// applied, then reverted.
+///
+/// The test also carries the row's own per-batch assertion (Amendment 2, item 5.7 of the form): the
+/// geometry bytes of every batch against the geometry share of the estimate's formula. The mutation
+/// above cannot fail it, because it reads the real encoding against the formula and not the
+/// estimate's code.
+///
+/// RECORDED MUTATION, the per-batch assertion: weaken `read_ring`'s refusal in `wkb.rs` from fewer
+/// than 4 positions to fewer than 1, and make this file's `square` return a one-vertex ring. Parts
+/// and rings then outnumber what the `vertices * 4` term bounds and this test fails by name at the
+/// per-batch assertion, with its "exceed the estimate's geometry share" message.
+///
+/// Observed over `fc346a8a` on the uncommitted tree of the docs commit: with that mutation applied
+/// `every_multipolygon_batch_fits_its_target_under_the_unedited_estimate` FAILED by name at the
+/// per-batch assertion, then reverted.
 #[test]
 fn every_multipolygon_batch_fits_its_target_under_the_unedited_estimate() {
     // 4 000 features of one to three parts, every fifth part holding a hole.
@@ -347,6 +361,24 @@ fn every_multipolygon_batch_fits_its_target_under_the_unedited_estimate() {
         let geometry_bytes =
             4 * (geoms.len() + 1) + 4 * (parts.len() + 1) + 4 * (rings.len() + 1) + 16 * vertices;
         assert_eq!(vertices, info.vertices, "the batch's own vertex count");
+        // The row's own per-batch bound (Amendment 2, item 5.7): the geometry bytes of every batch
+        // are at most the geometry share of the estimate, 16 B a vertex plus 4 B per row and per
+        // vertex, which is the formula in `estimate_bytes`' doc. It reads the real encoding's
+        // bytes against the declared formula, so it fails if the part and ring offsets outgrow the
+        // `vertices * 4` term that is declared to bound them (invalidator I-4).
+        let share = 16 * vertices + 4 * (batch.num_rows() + vertices);
+        assert!(
+            geometry_bytes <= share,
+            "batch {}: {} B of geometry exceed the estimate's geometry share of {} B ({} rows, \
+             {} parts, {} rings, {} vertices)",
+            info.batch_index,
+            geometry_bytes,
+            share,
+            batch.num_rows(),
+            parts.len(),
+            rings.len(),
+            vertices,
+        );
         if batch.num_rows() > 1 {
             multi_row_batches += 1;
             assert!(
