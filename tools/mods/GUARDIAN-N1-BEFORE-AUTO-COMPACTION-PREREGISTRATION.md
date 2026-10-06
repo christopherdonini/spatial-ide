@@ -485,3 +485,25 @@ Assertions only:
 11. **Done:** PLAN marks the node done, with evidence `{pr: 183}`, at generation 4, in this amendment's commit.
 
 **Superseded index.** §9, Operator item 2's order → item 2 (not edited).
+
+### Amendment 5 — E13, the first natural nudge (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 and §9, item 5 direct, under the human's typed approval naming E12 to E14 (`state/directives/2026-10-06-pr183-merge-approval.md`; its RULED block in `DECISIONS-PENDING.md`). Times are UTC, from the session transcript (da685a21), except where a commit time is named. Nothing below is a quotation except the line marked byte-copied.*
+
+1. **The time:** the nudge followed the tool result of a main-loop Bash call that wrote 2026-10-06T22:42:23.110Z. Its `tool.call` PostToolUse hook context was logged at 22:42:23.409Z.
+2. **The line,** byte-copied by script from the hook context in the transcript (119 bytes, sha256 055407995ab9b164b1bebb768e5d8ec0fe735dcd2a47d3c9ac0bf82ccd5e01aa):
+
+```
+Context at 80% of the auto-compaction threshold: flush the continuity block now (rewrite, commit, push), then continue.
+```
+
+3. **The route and the fill:** the threshold route, read from the text, at a fill of 80. As a cross-check, the transcript's usage at the call before it read 613,249 input tokens (input plus cache read plus cache creation). That is 79.95% of Amendment 1's threshold of 767,000, and the call's own result came on top of it.
+4. **The block's state:**
+   - the newest ledger commit was 4ea0c6c0, committed at 22:21:14Z;
+   - its `flushed_at` was 22:18:18Z;
+   - so the value was 24 minutes 5 seconds old at the nudge, stale by §2.3's age clause.
+5. **The flush that followed:** 0723892baf8da6047640da234a671feac5853048, committed at 22:45:05Z and published to main. It rewrote the block's `position` and in-flight fields.
+6. **The prediction held:** §7's threshold text, at a fill of 80, on a block stale by §2.3. No I10 condition fired: the line came in the main loop, not a subagent, and it is the only nudge so far in this cycle.
+7. **E13 is recorded,** and it replaces v0's E6 for N1, as §4 says. E14 stays open: the next three automatic compactions after E12, each with its N1 column.
+
+**Superseded index.** Amendment 4, item 10's E13 open → item 7.
