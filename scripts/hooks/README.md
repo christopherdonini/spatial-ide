@@ -127,10 +127,25 @@ parent when `HEAD` is a ledger-only flush commit — the one commit that cannot 
 (`git rev-parse @{u}` resolves, **and** `HEAD` is reachable from it —
 `git merge-base --is-ancestor HEAD @{u}`, not literal equality: the upstream ref can be further
 ahead from someone else's later push while `HEAD` is still, itself, pushed — reviewer finding 7).
-Fresh → allow. Stale → block once,
-recording `.claude/state/precompact-<session_id>.json`; a second `PreCompact` within 15 minutes
-(declared `SECOND_CHANCE_WINDOW_MS`) of that record is allowed whatever the freshness, "so a
-context-limit recovery is never blocked twice."
+Fresh → allow. Stale and `trigger` is `manual` → block once,
+recording `.claude/state/precompact-<session_id>.json`; a second manual `PreCompact` within 15
+minutes (declared `SECOND_CHANCE_WINDOW_MS`) of that record is allowed whatever the freshness.
+
+**An automatic compaction is never blocked.** A call whose `trigger` is not `manual` (an automatic
+compaction, a missing `trigger`, any other value) is judged for freshness, recorded and allowed
+(exit 0); it neither reads nor writes `precompact-<session_id>.json`, so it can neither consume nor
+grant a second chance. When the ledger is not fresh, stderr carries
+`allow: automatic compaction recorded, never blocked (<reason>).`
+
+**The record.** Every call that reaches the decision appends one line to
+`.claude/state/precompact-<session_id>.jsonl`, with these fields in this order: `at` (ISO-8601 UTC),
+`trigger` (a string as received, else `null`), `decision` (`allowed-fresh`, `allowed-second-chance`,
+`blocked` or `recorded-only`), `reason` (the freshness reason for `blocked` and `recorded-only`,
+else `null`) and `flushed_at` (the ledger block's value, else `null`). `custom_instructions` is
+never recorded. A line that cannot be written costs one stderr line
+(`precompact-flush: could not append the record line (<message>); the decision stands.`) and never
+changes the decision. A call that exits before the decision (the cloud guard, unparseable stdin, an
+unexpected error) writes no record line.
 
 **Ledger path (human's second directive, item 17):** reads `state/CUT-STATE.md` — the ledger
 relocated there on `main` (`a40ccfe`/`252585b`); nothing here reads the old root-level path.
@@ -151,6 +166,15 @@ Prints §0's reading order (its steps, in order: the ledger, the generated queue
 (heading through the next `#`-heading or end of file) — nothing summarized or reformatted. Never
 throws: a missing or unparseable `state/CUT-STATE.md` still prints the reading order, with a note
 in place of the block.
+
+After the block (or the note) it prints one last line of machine facts, read at SessionStart and not
+at the PreCompact call:
+`Resume facts: block_age_min=<n|unknown> commits_past_tip=<n|unknown> modified_tracked_files=<n|unknown>`.
+The age is the whole minutes, floored, from the block's `flushed_at` to now. The commits are
+`git rev-list --count <tip>..HEAD`, run only when `tip` is 7 to 40 lowercase hex characters. The
+modified tracked files are the `git status --porcelain` lines not starting `??`. Each git call runs
+with the project root as its working directory, a 2000 ms timeout and no shell; a fact whose source
+failed prints `unknown`, never a number.
 
 ## Notification — `notify-telegram.mjs`
 
@@ -262,7 +286,8 @@ existing round number) holding that call's own questions and options, and sends 
 
 All of the above keep their own state under `<project root>/.claude/state/` (gitignored —
 `.gitignore` gained a `.claude/state/` entry for this piece): `stop-hook-<session_id>.json`,
-`stop-hook-daily-<date>.json`, `precompact-<session_id>.json`, `telegram-sent.json`. Project root
+`stop-hook-daily-<date>.json`, `precompact-<session_id>.json`, `precompact-<session_id>.jsonl` (the
+record, one line per call), `telegram-sent.json`. Project root
 is resolved as `CLAUDE_PROJECT_DIR` (the environment variable `.claude/settings.json` already
 uses to locate each script) when set, falling back to the hook's own `cwd` input field, then
 `process.cwd()`.
@@ -278,7 +303,8 @@ Nothing in this directory depends on any of the three.
 
 `hooks.test.mjs` covers all four hooks plus `telegram.mjs`, both as direct unit tests of the
 exported decision functions (`decide`, `checkHalt`, `decidePrecompact`, `checkFreshness`,
-`buildOutput`, `buildMessage`) and, for `stop-queue.mjs` and `precompact-flush.mjs`, as literal
+`buildOutput`, `buildMessage`) and, for `stop-queue.mjs`, `precompact-flush.mjs` and
+`session-resume.mjs`, as literal
 `spawnSync` CLI invocations piping representative stdin JSON — the dry run of §3 in script form:
 block on the two-node fixture's ready node; allow when only its human-blocked node remains; allow
 on non-empty `background_tasks`; allow via the environment override; allow on a local
@@ -291,3 +317,8 @@ the shipped CLI). `checkFreshness`'s own git calls are injectable (`{ git: (args
 "fresh" branch can be tested deterministically — a real git commit's tracked content cannot state
 that same commit's own resulting hash (the hash is computed from the content), so the achievable,
 literal test of "fresh" uses an injected git rather than a self-referencing commit.
+
+The PreCompact record and the resume line add tests on real temporary git repositories and the
+shipped entries: each call's record line, the automatic path through the CLI, a record that cannot
+be written, and the resume facts (a repository with commits past the tip and a modified tracked
+file; a directory git cannot read).
