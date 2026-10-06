@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a88c9186456fc4b45c73ce1e1e2ea95c552ba0fdc72becc56fea94eb067d0a0e`) at `2026-10-06T06:33:39.216Z`.
+Generated from `PLAN.yaml` (sha256 `cf84a07e99bc68d187e63d4a8b66fed42cd27ba6fbb29f34eb3133c169f0c2d5`) at `2026-10-06T16:48:45.420Z`.
 
 ## 1. Next
 
@@ -30,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `a88c9186456fc4b45c73ce1e1e2ea95c552ba0fdc72b
 ## 5. In progress
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
-- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check — evidence: branch `cut/guardian-n1-before-auto-compaction`
 
 ## 6. Proposed / unscheduled
 

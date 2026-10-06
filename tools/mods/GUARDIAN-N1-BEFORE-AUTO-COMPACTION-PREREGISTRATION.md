@@ -450,3 +450,38 @@ Assertions only:
 5. **E12 is the live point** for §4's N1 column. From here, each automatic compaction's row gives that cycle's N1 nudges. E13 and E14 stay open.
 
 **Superseded index.** None.
+
+### Amendment 4 — the closing record (class 1, with class 2 for the build's deviations)
+
+*Written after the outcomes were seen, by the custodian. PR #183 merged at 2026-10-06T10:11:29Z (GitHub's merge time; the commit's own time is 10:11:28Z) as merge commit 0f86b6809538caa530d0f825b1f3b6b0a3b46682. Its parents are c4c251d46e55f2c7de557e88f48ec60c6eb453ad and 9065c1e0d021ff6be177b444cd1d6058caa54362. It covers both gate-1 reports' items for the closing record. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #183, at the merge commit above;
+   - the gated head, 6cd8454c55cd4572ac4c222b26a0508565636c03;
+   - the merged head, 9065c1e0d021ff6be177b444cd1d6058caa54362. It adds only the Documentation fixes, with no re-gate under the proportional-gates rule (§9).
+2. **The order, as it happened:**
+   - the human clicked the merge at 10:11:28Z;
+   - the human's typed approval arrived at 10:18:41Z. It names the merged head 9065c1e0 and allows E12 to E14 (`state/directives/2026-10-06-pr183-merge-approval.md`);
+   - the human approved the merge after the fact at 10:30:25Z (`state/directives/2026-10-06-merges-machine-and-mod-scope.md`, item 1).
+
+   Each is under its RULED block in `DECISIONS-PENDING.md`. §9, Operator item 2, put the approval before the click.
+3. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-06-guardian-n1-before-auto-compaction-gate1-architect.md` (pass with notes; gate-log 423);
+   - `2026-10-06-guardian-n1-before-auto-compaction-gate1-reviewer.md` (pass; gate-log 424).
+4. **The worker reports:**
+   - P0: `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md` (Amendments 1 and 2);
+   - the build: `state/consults/2026-10-06-guardian-n1-before-auto-compaction-worker-report-1.md`;
+   - the fixes: `state/consults/2026-10-06-guardian-n1-before-auto-compaction-worker-report-2.md`.
+5. **The fixes,** each checked by the custodian against its finding, by the diff at 9065c1e0:
+   - the architect's D-3, with the reviewer's D-1;
+   - the architect's D-4.
+
+   Amendment 2 is the architect's D-2. The PR body carried the architect's D-6.
+6. **The build's deviations 1, 2 and 3 are class 2** (the architect's D-1, the reviewer's D-2): `state/consults/2026-10-06-guardian-n1-before-auto-compaction-worker-report-1.md:110-112 @ e856a17e8f48ea49a5be2d9a52d6ef3015c697a8 sha256:21980de60f1c2e3be9942f42db5525b3ea8cf9830b71c048a797ab73c8f9f31e`. §2.6 is not edited.
+7. **R-1 to R-4** (the architect's D-5) are defined in the architect draft's readings list: `state/consults/2026-10-06-guardian-n1-before-auto-compaction-architect-draft.md:425-437 @ 8500ebefcddf6b52e0e324dd8e24632127cb8061 sha256:66a6c23ce22ebc302cbbbb5bb398961b696a9cdbf5207368ac3192554e45e003`. Each is taken as its option (a).
+8. **The mutations** were observed at 2f8100bc09b80f1cae73bfbd12ed8f488a06da73 (worker report 1). The reviewer re-observed them at the gated head, by its Mutations section. Commit 2 adds comment lines only.
+9. **§7:** 209 changed lines of 350, over 4 files, from 8500ebef to 9065c1e0 (worker report 2's recount).
+10. **E12** is recorded (Amendment 3). **E13 and E14 stay open,** and each is recorded as a class 1 row on main as it falls.
+11. **Done:** PLAN marks the node done, with evidence `{pr: 183}`, at generation 4, in this amendment's commit.
+
+**Superseded index.** §9, Operator item 2's order → item 2 (not edited).
