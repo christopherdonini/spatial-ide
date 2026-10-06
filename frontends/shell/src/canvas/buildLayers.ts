@@ -150,8 +150,14 @@ function geometryForBatch(batch: ResidentBatch, frame: OffsetFrame): CachedBatch
   // `polygon[0][0]` is itself a finite number -- a flat ring would satisfy that check and get
   // silently misread as one ring's flat vertex list, dropping every hole. Verified against the
   // installed deck.gl 9.3.9 source rather than assumed.
-  const polygons: Position[][][] = batch.rings.map((rings) =>
-    rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position))
+  //
+  // One datum per **part** (ADR-034 Decision 6): `SolidPolygonLayer` takes each datum as one polygon,
+  // so a multi-part feature is several datums, in `partToRow`'s own feature-then-part order, and the
+  // datum index deck.gl picks by is the part ordinal `resolvePick` maps back to a row. Verified at
+  // the installed 9.3.9 source (`solid-polygon-layer.js` encodes the datum index as the picking
+  // colour; `polygon.js` `normalize` takes one datum as one polygon, ring 0 outer, the rest holes).
+  const polygons: Position[][][] = batch.parts.flatMap((featureParts) =>
+    featureParts.map((rings) => rings.map((ring) => ring.map(([x, y]) => frame.toLocal(x, y) as Position)))
   );
   const fresh: CachedBatchGeometry = { originX: frame.originX, originY: frame.originY, polygons };
   geometryCache.set(batch, fresh);
@@ -172,7 +178,8 @@ function outlinePositionsFor(geometry: CachedBatchGeometry): Position[][] {
 
 /**
  * One deck.gl layer per resident batch. **Never one layer for everything** -- a batch's own
- * feature count is what the 24-bit pick ceiling (ADR-010 rule 6) is checked against, and a batch is
+ * part count (one deck.gl datum, one pick ordinal, per polygon part) is what the 24-bit pick
+ * ceiling (ADR-010 rule 6) is checked against, and a batch is
  * bounded by the data plane's frame-size ceiling, so per-layer counts sit orders of magnitude below
  * 16,777,215 by construction.
  *
@@ -259,7 +266,7 @@ export function buildLayers(
 ): (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] {
   const layers: (SolidPolygonLayer<Position[][]> | PathLayer<Position[]>)[] = [];
   for (const batch of batches) {
-    checkPickCeiling(batch.ids.length);
+    checkPickCeiling(batch.partCount);
     // P9 fix: `geometryForBatch` (above) returns the SAME `polygons` array reference across
     // renders for a batch whose object identity and frame origin have not changed -- the whole
     // point being that `data: geometry.polygons` below then reads as reference-unchanged to
@@ -283,7 +290,7 @@ export function buildLayers(
     // pick hazard this avoids). Built only when there is an outline to actually draw
     // (`outlineWidth > 0`) -- never an invisible zero-width layer sitting in deck.gl's own layer list
     // for nothing. Reuses `geometry`'s own cached, already frame-offset positions
-    // (`outlinePositionsFor`, above) flattened one level: every ring of every feature in this batch,
+    // (`outlinePositionsFor`, above) flattened one level: every ring of every part of every feature in this batch,
     // exterior and holes alike, becomes its own path -- a ring's own vertex list is already a closed
     // loop (GeoArrow/WKB-derived rings repeat their first vertex as their last), so `PathLayer` draws
     // it closed with no `_pathType`/`closeLoop` prop needed. Same P9 reference-stability fix as the

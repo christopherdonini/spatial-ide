@@ -1779,6 +1779,7 @@ export default function App() {
               dataset={admitted.dataset}
               ref={canvasRef}
               geometryColumn={admitted.describe.geometry.column}
+              geometryEncoding={admitted.describe.geometry.encoding}
               crsUnit={admitted.describe.crs.unit}
               style={style}
               /* P3b §2a(iv): the ONE pick-latch site, covering both arms, because hover is

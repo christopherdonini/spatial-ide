@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! GeoArrow polygon assembly, and the check that the claimed encoding matches the data.
+//! GeoArrow polygon and multipolygon assembly, and the check that the claimed encoding matches the
+//! data.
 //!
-//! Layout (GeoArrow, interleaved coordinates):
+//! Layouts (GeoArrow, interleaved coordinates). Which one a dataset travels in is fixed at open, from
+//! the file's declared `geometry_types` (ADR-034 Decision 2), and never varies per batch or stream:
 //!
 //! ```text
-//! List<rings: List<vertices: FixedSizeList<xy: double>[2]>>
+//! geoarrow.polygon       List<rings: List<vertices: FixedSizeList<xy: double>[2]>>
+//! geoarrow.multipolygon  List<polygons: List<rings: List<vertices: FixedSizeList<xy: double>[2]>>>
 //! ```
 //!
 //! Variable-width by construction — the offsets differ per feature and per ring, which is the
 //! shape the transport work had not yet met (the bake-off's payload was three fixed-width columns).
+//! The multipolygon encoding adds one offsets buffer and appends each coordinate once.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -21,9 +25,84 @@ use arrow::datatypes::{DataType, Field, FieldRef};
 
 use crate::crs::DatasetCrs;
 use crate::error::{EngineError, Result};
-use crate::wkb::PolygonBuilder;
+use crate::wkb::{MultiPolygonBuilder, PolygonBuilder};
 
 pub const EXT_NAME_POLYGON: &str = "geoarrow.polygon";
+pub const EXT_NAME_MULTIPOLYGON: &str = "geoarrow.multipolygon";
+
+/// The GeoArrow encoding a dataset's geometry travels in: **a fact of the open** (ADR-034
+/// Decision 2), chosen from the file's declared `geometry_types` and the same for the envelope,
+/// `describe` and every batch of every stream.
+///
+/// `encoding` is the engine's fact. A file's own declaration is a separate one
+/// ([`crate::Dataset::declared_geometry_types`]), and neither is ever presented as the other
+/// (Decision 3's rider).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GeometryEncoding {
+    /// `geoarrow.polygon`: a declared set of exactly Polygon.
+    Polygon,
+    /// `geoarrow.multipolygon`: a declared set that includes MultiPolygon, or an empty or absent
+    /// declaration. A Polygon row is then a one-part MultiPolygon.
+    MultiPolygon,
+}
+
+impl GeometryEncoding {
+    /// The GeoArrow extension name, as it travels on the geometry field, in the envelope's
+    /// `geometry_encoding` key and in `describe`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Polygon => EXT_NAME_POLYGON,
+            Self::MultiPolygon => EXT_NAME_MULTIPOLYGON,
+        }
+    }
+}
+
+/// **The readable geometry types, declared once per engine release** (ADR-034 Decision 1), in the
+/// order the refusal text states them. The admission gate and that text both read this, so the text
+/// can never state a set the gate does not admit.
+pub(crate) const READABLE_GEOMETRY_TYPES: [&str; 2] = ["Polygon", "MultiPolygon"];
+
+/// The readable set as prose: `A and B`, or `A, B and C`.
+fn readable_set_phrase() -> String {
+    match READABLE_GEOMETRY_TYPES.split_last() {
+        Some((last, [])) => (*last).to_string(),
+        Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+        None => String::new(),
+    }
+}
+
+/// The encoding a file's declared `geometry_types` selects, or the refusal (ADR-034 Decisions 2
+/// and 7). Type names compare case-insensitively.
+///
+/// - a set whose members are all `Polygon` gives [`GeometryEncoding::Polygon`];
+/// - a non-empty set within the readable set that includes `MultiPolygon` gives
+///   [`GeometryEncoding::MultiPolygon`];
+/// - an explicit empty list, **or an absent key** (`None`), gives [`GeometryEncoding::MultiPolygon`];
+/// - any member outside the readable set, mixed kinds and Z or M names included, is refused as
+///   `EngineError::GeoMetadata` with Decision 4's sighted wording, the declared list rendered as
+///   `{:?}` renders it and the readable set read from [`READABLE_GEOMETRY_TYPES`].
+pub(crate) fn encoding_for_declared_types(declared: Option<&[String]>) -> Result<GeometryEncoding> {
+    let types = match declared {
+        None | Some([]) => return Ok(GeometryEncoding::MultiPolygon),
+        Some(types) => types,
+    };
+    let readable = |t: &String| {
+        READABLE_GEOMETRY_TYPES
+            .iter()
+            .any(|r| r.eq_ignore_ascii_case(t))
+    };
+    if !types.iter().all(readable) {
+        return Err(EngineError::GeoMetadata(format!(
+            "geometry_types {types:?} include types this engine does not read; it reads {}",
+            readable_set_phrase()
+        )));
+    }
+    if types.iter().all(|t| t.eq_ignore_ascii_case("Polygon")) {
+        Ok(GeometryEncoding::Polygon)
+    } else {
+        Ok(GeometryEncoding::MultiPolygon)
+    }
+}
 
 /// Arrow's conventional extension-type keys. The geometry column is a GeoArrow extension type, so
 /// a reader that knows GeoArrow gets the CRS from the field itself, without knowing anything about
@@ -47,9 +126,67 @@ fn rings_field() -> FieldRef {
     Arc::new(Field::new("rings", DataType::List(vertices_field()), false))
 }
 
+fn polygons_field() -> FieldRef {
+    Arc::new(Field::new("polygons", DataType::List(rings_field()), false))
+}
+
 /// The storage type a `geoarrow.polygon` column must have.
 pub fn polygon_storage_type() -> DataType {
     DataType::List(rings_field())
+}
+
+/// The storage type a `geoarrow.multipolygon` column must have.
+pub(crate) fn multipolygon_storage_type() -> DataType {
+    DataType::List(polygons_field())
+}
+
+/// The storage type the open's encoding names.
+fn storage_type(encoding: GeometryEncoding) -> DataType {
+    match encoding {
+        GeometryEncoding::Polygon => polygon_storage_type(),
+        GeometryEncoding::MultiPolygon => multipolygon_storage_type(),
+    }
+}
+
+/// Build the GeoArrow multipolygon array from decoded geometries: three offset levels (geometry,
+/// part, ring) over one interleaved coordinate run, each checked rather than asserted.
+pub(crate) fn build_multipolygon_array(b: MultiPolygonBuilder) -> Result<ArrayRef> {
+    let n_coords = b.coords.len();
+    if !n_coords.is_multiple_of(2) {
+        return Err(EngineError::Arrow(format!(
+            "coordinate buffer has odd length {n_coords}"
+        )));
+    }
+
+    let flat = Float64Array::from(b.coords);
+    let coords = FixedSizeListArray::try_new(coord_field(), 2, Arc::new(flat), None)
+        .map_err(|e| EngineError::Arrow(format!("coordinates: {e}")))?;
+
+    let rings = ListArray::try_new(
+        vertices_field(),
+        checked_offsets(b.ring_offsets, "ring offsets")?,
+        Arc::new(coords),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("rings: {e}")))?;
+
+    let polygons = ListArray::try_new(
+        rings_field(),
+        checked_offsets(b.part_offsets, "part offsets")?,
+        Arc::new(rings),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("polygons: {e}")))?;
+
+    let multipolygons = ListArray::try_new(
+        polygons_field(),
+        checked_offsets(b.geom_offsets, "geometry offsets")?,
+        Arc::new(polygons),
+        None,
+    )
+    .map_err(|e| EngineError::Arrow(format!("multipolygons: {e}")))?;
+
+    Ok(Arc::new(multipolygons))
 }
 
 /// Build the GeoArrow polygon array from decoded rings.
@@ -96,9 +233,9 @@ pub fn build_polygon_array(b: PolygonBuilder) -> Result<ArrayRef> {
 /// `envelope.rs`, and only there. An earlier version of this comment claimed the two `crs_type`
 /// values carried it, which was never true of the `Some(definition)` path and gave a reader licence
 /// to infer provenance from a field that does not carry it.
-pub fn geometry_field(name: &str, crs: &DatasetCrs) -> FieldRef {
+pub fn geometry_field(name: &str, crs: &DatasetCrs, encoding: GeometryEncoding) -> FieldRef {
     let mut md = HashMap::new();
-    md.insert(EXT_NAME_KEY.to_string(), EXT_NAME_POLYGON.to_string());
+    md.insert(EXT_NAME_KEY.to_string(), encoding.as_str().to_string());
 
     let crs_meta = match crs.definition_json() {
         Some(def) => format!(r#"{{"crs":{def},"crs_type":"projjson"}}"#),
@@ -111,7 +248,7 @@ pub fn geometry_field(name: &str, crs: &DatasetCrs) -> FieldRef {
     };
     md.insert(EXT_META_KEY.to_string(), crs_meta);
 
-    Arc::new(Field::new(name, polygon_storage_type(), false).with_metadata(md))
+    Arc::new(Field::new(name, storage_type(encoding), false).with_metadata(md))
 }
 
 /// Build an `OffsetBuffer`, checking the invariant instead of asserting it.
@@ -163,15 +300,32 @@ fn json_string(s: &str) -> String {
 /// rows that are not in this batch into any bound computed from it — a wrong-but-plausible extent,
 /// with nothing raised.
 ///
-/// Returns `None` when the array is not a polygon array or the nesting cannot be walked; the caller
-/// treats that as "no bound established", never as an empty one.
+/// Walks either nesting: polygon (geometry → rings → vertices) or multipolygon (geometry → parts →
+/// rings → vertices), by offsets at every level.
+///
+/// Returns `None` when the array is neither or the nesting cannot be walked; the caller treats that
+/// as "no bound established", never as an empty one.
 pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
-    let polys = array.as_any().downcast_ref::<ListArray>()?;
-    let poly_offsets = polys.value_offsets();
-    let ring_lo = *poly_offsets.first()? as usize;
-    let ring_hi = *poly_offsets.last()? as usize;
+    let geoms = array.as_any().downcast_ref::<ListArray>()?;
+    let geom_offsets = geoms.value_offsets();
+    let lo = *geom_offsets.first()? as usize;
+    let hi = *geom_offsets.last()? as usize;
 
-    let rings = polys.values().as_any().downcast_ref::<ListArray>()?;
+    // The geometry's children are rings (polygon) or parts (multipolygon): which one is read off
+    // the array's own shape, never off a flag.
+    let level = geoms.values().as_any().downcast_ref::<ListArray>()?;
+    let (ring_lo, ring_hi, rings) = match level.values().as_any().downcast_ref::<ListArray>() {
+        // Multipolygon: the level just read is the parts; one more offsets walk reaches the rings.
+        Some(rings) => {
+            let part_offsets = level.value_offsets();
+            (
+                *part_offsets.get(lo)? as usize,
+                *part_offsets.get(hi)? as usize,
+                rings,
+            )
+        }
+        None => (lo, hi, level),
+    };
     let ring_offsets = rings.value_offsets();
     let vertex_lo = *ring_offsets.get(ring_lo)? as usize;
     let vertex_hi = *ring_offsets.get(ring_hi)? as usize;
@@ -232,6 +386,53 @@ pub fn validate_polygon_encoding(array: &ArrayRef) -> Result<()> {
         });
     }
     Ok(())
+}
+
+/// The same check for `geoarrow.multipolygon`: three list levels over a 2-dimensional coordinate.
+pub(crate) fn validate_multipolygon_encoding(array: &ArrayRef) -> Result<()> {
+    let found = array.data_type();
+    let want = multipolygon_storage_type();
+
+    // Structure, not field names, as for polygons: nesting depth and dimensionality are what make
+    // this array a multipolygon array.
+    let structural_eq = match found {
+        DataType::List(geoms) => match geoms.data_type() {
+            DataType::List(parts) => match parts.data_type() {
+                DataType::List(rings) => matches!(
+                    rings.data_type(),
+                    DataType::FixedSizeList(c, 2) if c.data_type() == &DataType::Float64
+                ),
+                _ => false,
+            },
+            _ => false,
+        },
+        _ => false,
+    };
+
+    if !structural_eq {
+        return Err(EngineError::EncodingMismatch {
+            claimed: format!("{EXT_NAME_MULTIPOLYGON} as {}", describe_nesting(&want)),
+            found: describe_nesting(found),
+        });
+    }
+    Ok(())
+}
+
+/// Validate against the open's encoding — the one the envelope claims.
+pub(crate) fn validate_encoding(array: &ArrayRef, encoding: GeometryEncoding) -> Result<()> {
+    match encoding {
+        GeometryEncoding::Polygon => validate_polygon_encoding(array),
+        GeometryEncoding::MultiPolygon => validate_multipolygon_encoding(array),
+    }
+}
+
+/// A nesting as `List<List<FixedSizeList<Float64>[2]>>`, to any depth.
+fn describe_nesting(dt: &DataType) -> String {
+    match dt {
+        DataType::List(f) => format!("List<{}>", describe_nesting(f.data_type())),
+        DataType::FixedSizeList(c, n) => format!("FixedSizeList<{}>[{}]", c.data_type(), n),
+        other => format!("{other}"),
+    }
 }
 
 #[cfg(test)]
@@ -321,7 +522,7 @@ mod tests {
             Some(def.to_string()),
             AxisOrder::EastingNorthing,
         );
-        let f = geometry_field("geometry", &crs);
+        let f = geometry_field("geometry", &crs, GeometryEncoding::Polygon);
         assert_eq!(f.metadata().get(EXT_NAME_KEY).unwrap(), EXT_NAME_POLYGON);
         let meta = f.metadata().get(EXT_META_KEY).unwrap();
         assert!(meta.contains("\"crs_type\":\"projjson\""));
@@ -329,5 +530,98 @@ mod tests {
             meta.contains("Bessel 1841"),
             "the definition travels, not just the code"
         );
+    }
+
+    /// One MultiPolygon row per entry of `rows`; each entry is that row's parts, each part its rings.
+    fn build_multi(rows: &[Vec<Vec<Vec<[f64; 2]>>>]) -> ArrayRef {
+        let mut b = MultiPolygonBuilder::new();
+        for parts in rows {
+            b.push_wkb(&crate::fixture::encode_multipolygon(parts))
+                .unwrap();
+        }
+        build_multipolygon_array(b).unwrap()
+    }
+
+    /// E-6. RECORDED MUTATION: in `validate_multipolygon_encoding`, drop the third list level from
+    /// the comparison (accept `List<List<FixedSizeList>>`). It accepts a polygon array, and this
+    /// test fails by name at the multipolygon validator's refusal of the polygon array.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `the_multipolygon_storage_type_is_three_lists_deep_and_each_validator_refuses_the_others_array`
+    /// FAILED with the mutation applied, then reverted.
+    #[test]
+    fn the_multipolygon_storage_type_is_three_lists_deep_and_each_validator_refuses_the_others_array(
+    ) {
+        assert_eq!(
+            describe_nesting(&multipolygon_storage_type()),
+            "List<List<List<FixedSizeList<Float64>[2]>>>"
+        );
+        let DataType::List(top) = multipolygon_storage_type() else {
+            panic!("not a list")
+        };
+        assert_eq!(top.name(), "polygons");
+
+        let multi = build_multi(&[vec![square(0.0, 0.0), square(5.0, 5.0)]]);
+        let poly = build(&[square(0.0, 0.0)]);
+        assert_eq!(multi.data_type(), &multipolygon_storage_type());
+
+        validate_multipolygon_encoding(&multi).unwrap();
+        validate_polygon_encoding(&poly).unwrap();
+        assert!(matches!(
+            validate_multipolygon_encoding(&poly),
+            Err(EngineError::EncodingMismatch { .. })
+        ));
+        assert!(matches!(
+            validate_polygon_encoding(&multi),
+            Err(EngineError::EncodingMismatch { .. })
+        ));
+
+        // The dispatch reads the open's encoding, and a flat array is neither.
+        validate_encoding(&multi, GeometryEncoding::MultiPolygon).unwrap();
+        validate_encoding(&poly, GeometryEncoding::Polygon).unwrap();
+        assert!(validate_encoding(&multi, GeometryEncoding::Polygon).is_err());
+        assert!(validate_encoding(&poly, GeometryEncoding::MultiPolygon).is_err());
+        let flat: ArrayRef = Arc::new(Float64Array::from(vec![1.0, 2.0]));
+        assert!(validate_multipolygon_encoding(&flat).is_err());
+    }
+
+    /// E-7. RECORDED MUTATION: in `coordinate_values`, return the whole child coordinate buffer
+    /// instead of the slice `vertex_lo..vertex_hi` walks. This test fails by name at the first
+    /// sliced assertion.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `coordinate_values_over_a_sliced_multipolygon_array_returns_the_slices_run_only` FAILED with
+    /// the mutation applied, then reverted.
+    #[test]
+    fn coordinate_values_over_a_sliced_multipolygon_array_returns_the_slices_run_only() {
+        let a = build_multi(&[
+            vec![square(0.0, 0.0), square(5.0, 5.0)],
+            vec![square(100.0, 100.0)],
+            vec![square(200.0, 200.0), square(300.0, 300.0)],
+        ]);
+        // Five squares of five vertices each.
+        assert_eq!(coordinate_values(&a).unwrap().len(), 5 * 5 * 2);
+
+        let middle = a.slice(1, 1);
+        let run = coordinate_values(&middle).unwrap();
+        assert_eq!(run.len(), 5 * 2, "one part of five vertices");
+        assert_eq!(run[0], 100.0);
+
+        let tail = a.slice(1, 2);
+        let run = coordinate_values(&tail).unwrap();
+        assert_eq!(run.len(), 3 * 5 * 2, "three parts across two rows");
+        assert_eq!(run[0], 100.0);
+        assert_eq!(
+            run[run.len() - 1],
+            300.0,
+            "the last vertex of the last part"
+        );
+
+        // The polygon walk is unchanged and slices the same way.
+        let p = build(&[square(0.0, 0.0), square(7.0, 7.0), square(9.0, 9.0)]);
+        let sliced = p.slice(1, 1);
+        let run = coordinate_values(&sliced).unwrap();
+        assert_eq!(run.len(), 5 * 2);
+        assert_eq!(run[0], 7.0);
     }
 }

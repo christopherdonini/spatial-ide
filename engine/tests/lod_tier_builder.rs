@@ -1485,3 +1485,66 @@ fn the_5gb_ladder_under_disk_discipline() {
     );
     println!("free disk after: {} B", free_bytes_on_c().unwrap_or(0));
 }
+
+// ---------------------------------------------------------------------------------------------
+// L-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4): the tier builder's by-name refusal of a
+// MultiPolygon feature stands (ADR-034 Decision 7; `engine/src/lod.rs` is not edited by MP-1).
+// ---------------------------------------------------------------------------------------------
+
+// RECORDED MUTATION: in `engine/src/lod.rs`'s per-feature read, accept a MultiPolygon by taking its
+// first part as the Polygon (`geo::Geometry::MultiPolygon(mp) => mp.0.into_iter().next()`...). The
+// build then succeeds on F-1 and this test fails by name at `expected a refusal`.
+// Observed over `d8276158` on the uncommitted tree of the engine commit:
+// `build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier` FAILED with the mutation
+// applied, then reverted.
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier() {
+    use spatial_engine::fixture::{multipolygon_f1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+
+    let dir = scratch_dir("mp1-l1");
+    let path = dir.join("f1.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(multipolygon_f1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write F-1");
+    let source = Dataset::open(&path).expect("open F-1");
+    let cancel = CancelToken::new();
+    clear_tier_directory(&source, &cancel);
+
+    let outcome = build_tiers(&source, LOD_BUILD_WORKERS, &cancel, None);
+    let detail = match outcome {
+        Err(EngineError::Wkb(d)) => d,
+        Err(other) => panic!("expected engine.wkb, got {other}"),
+        Ok(_) => panic!("expected a refusal: a MultiPolygon feature was tiered"),
+    };
+    assert!(
+        detail.contains("expected a Polygon, found MultiPolygon"),
+        "the refusal names the type met: {detail}"
+    );
+
+    // No tier was written: the source's tier directory holds no parquet file.
+    let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
+    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
+        .join("spatial-ide/tiers")
+        .join(hash);
+    let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|x| x == "parquet"))
+                .collect()
+        })
+        .unwrap_or_default();
+    assert!(written.is_empty(), "a tier was written: {written:?}");
+    let _ = std::fs::remove_dir_all(&tiers);
+}

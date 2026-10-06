@@ -15,23 +15,26 @@ import type { ResidentBatch } from "./decodeBatch";
  * it.
  */
 
-/** The bbox of every ring vertex in one decoded batch, or `null` if the batch carries no geometry
- * (an empty batch, or every feature's geometry is null) -- distinguished from a degenerate
- * zero-area bbox (a single point) so a caller can tell "nothing here yet" from "one point here". */
-export function extentOfBatch(batch: Pick<ResidentBatch, "rings">): AuthoritativeBbox | null {
+/** The bbox of every ring vertex of every part in one decoded batch, or `null` if the batch carries
+ * no geometry (an empty batch, or every feature's geometry is null) -- distinguished from a
+ * degenerate zero-area bbox (a single point) so a caller can tell "nothing here yet" from "one point
+ * here". */
+export function extentOfBatch(batch: Pick<ResidentBatch, "parts">): AuthoritativeBbox | null {
   let xmin = Infinity;
   let ymin = Infinity;
   let xmax = -Infinity;
   let ymax = -Infinity;
   let sawAny = false;
-  for (const featureRings of batch.rings) {
-    for (const ring of featureRings) {
-      for (const [x, y] of ring) {
-        sawAny = true;
-        if (x < xmin) xmin = x;
-        if (x > xmax) xmax = x;
-        if (y < ymin) ymin = y;
-        if (y > ymax) ymax = y;
+  for (const featureParts of batch.parts) {
+    for (const rings of featureParts) {
+      for (const ring of rings) {
+        for (const [x, y] of ring) {
+          sawAny = true;
+          if (x < xmin) xmin = x;
+          if (x > xmax) xmax = x;
+          if (y < ymin) ymin = y;
+          if (y > ymax) ymax = y;
+        }
       }
     }
   }

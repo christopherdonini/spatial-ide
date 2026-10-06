@@ -162,7 +162,8 @@ fn relative_out_path_resolves_under_the_workspace_root_not_kernel() {
 #[test]
 fn spec_5gb_matches_the_scale_pass() {
     use spatial_engine::fixture::{
-        AttributeMode, CoordinateDomain, CrsMode, IdentityMode, LicenseMode, StatisticsMode,
+        AttributeMode, CoordinateDomain, CrsMode, DeclaredTypes, GeometryMode, IdentityMode,
+        LicenseMode, StatisticsMode,
     };
 
     let expected = FixtureSpec {
@@ -182,6 +183,8 @@ fn spec_5gb_matches_the_scale_pass() {
         statistics: StatisticsMode::WriterDefault,
         covering_names_absent_column: false,
         geo_version: "1.1.0".to_string(),
+        geometry: GeometryMode::Polygon,
+        declared_types: DeclaredTypes::Polygon,
     };
 
     assert_eq!(

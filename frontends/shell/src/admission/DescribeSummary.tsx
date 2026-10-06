@@ -6,6 +6,7 @@ import {
   checksOnlyStatusLine,
   crsProvenanceLine,
   crsSummaryLine,
+  declaredTypesLine,
   degradedChecksLine,
   displayConventionLine,
   identitySummaryLine,
@@ -28,10 +29,17 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
         <dt>CRS</dt>
         <dd>{crsSummaryLine(describe.crs)}</dd>
 
-        <dt>Geometry</dt>
+        {/* ADR-034 Decision 3 and its rider (MP-1, SH-F): the encoding is the ENGINE's fact and the
+            declaration below is the FILE's, each labelled as what it is, never side by side
+            unlabelled and never calling the encoding the file's type. Both `<dt>` labels are
+            P6 placeholders; the Geometry `<dd>` text is unchanged. */}
+        <dt>[P6 placeholder] Geometry (encoding chosen by the engine)</dt>
         <dd>
           {describe.geometry.column} ({describe.geometry.encoding})
         </dd>
+
+        <dt>[P6 placeholder] Geometry types declared by the file</dt>
+        <dd>{declaredTypesLine(describe.geometry)}</dd>
 
         <dt>Identity</dt>
         <dd>{identitySummaryLine(describe.identity)}</dd>

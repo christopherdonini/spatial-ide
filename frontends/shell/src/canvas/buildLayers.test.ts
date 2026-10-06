@@ -9,6 +9,7 @@ import { PathLayer, SolidPolygonLayer } from "@deck.gl/layers";
 import { batchForLayerId, buildLayers, layerId, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import type { ResidentBatch } from "./decodeBatch";
+import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { PickCeilingExceeded } from "./limits";
 import { OffsetFrame } from "./offsetFrame";
 
@@ -29,13 +30,13 @@ function batch(streamHandle: string, batchSeq: number): ResidentBatch {
     streamHandle,
     batchSeq,
     ids: BigUint64Array.from([1n, 2n]),
-    rings: [
+    ...partsOfPolygons([
       [[[2_600_000, 1_200_000], [2_600_001, 1_200_000], [2_600_001, 1_200_001], [2_600_000, 1_200_000]]],
       [
         [[2_600_010, 1_200_010], [2_600_011, 1_200_010], [2_600_010, 1_200_010]],
         [[2_600_010.4, 1_200_010.4], [2_600_010.6, 1_200_010.4], [2_600_010.4, 1_200_010.4]],
       ],
-    ],
+    ]),
     totalVertices: 4 + 6,
   };
 }
@@ -104,11 +105,93 @@ describe("buildLayers (ADR-010 rules 3 and 6)", () => {
 
   it("propagates the 24-bit pick ceiling refusal rather than constructing an oversized layer", () => {
     const frame = new OffsetFrame(100);
-    // `checkPickCeiling` (and this test) only ever reads `.length` -- a real 16,777,216-element
-    // `BigUint64Array` would be a genuine 128 MiB allocation per test run for a value never read.
-    const oversizedIds = { length: 16_777_216 } as unknown as BigUint64Array;
-    const huge: ResidentBatch = { ...batch("sh_a", 0), ids: oversizedIds };
+    // `checkPickCeiling` is called with `partCount` (ADR-034 Decision 6), a plain number, so no
+    // 16,777,216-element array is allocated for a value never read.
+    const huge: ResidentBatch = { ...batch("sh_a", 0), partCount: 16_777_216 };
     expect(() => buildLayers([huge], frame, FIXED_DRAW)).toThrow(PickCeilingExceeded);
+  });
+
+  /**
+   * SH-5, the `buildLayers` site (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4): the pick
+   * ceiling is counted in parts. A batch of two features whose PART count is over the ceiling is
+   * refused, and a batch whose FEATURE count is over the ceiling but whose part count is not is not.
+   *
+   * RECORDED MUTATION: pass `batch.ids.length` to `checkPickCeiling` in `buildLayers`. The first
+   * assertion then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `counts the pick ceiling in
+   * parts, not features, at this site (SH-5)` FAILED by name with the mutation applied (the updated
+   * ceiling test above it failed with it), then reverted.
+   */
+  it("counts the pick ceiling in parts, not features, at this site (SH-5)", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const manyParts: ResidentBatch = { ...batch("sh_a", 0), partCount: 16_777_216 };
+    expect(manyParts.ids.length).toBe(2);
+    expect(() => buildLayers([manyParts], frame, FIXED_DRAW)).toThrow(PickCeilingExceeded);
+
+    const manyFeatures: ResidentBatch = {
+      ...batch("sh_a", 1),
+      ids: { length: 16_777_216 } as unknown as BigUint64Array,
+    };
+    expect(() => buildLayers([manyFeatures], frame, FIXED_DRAW)).not.toThrow();
+  });
+});
+
+/**
+ * SH-8 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4, styling): one deck.gl datum per PART,
+ * all drawn with the style's fill, and the outline holds every ring of every part. Row 0 has two
+ * parts (the first with a hole), row 1 has one: three datums, four outline paths. The datum order is
+ * `partToRow`'s feature-then-part order, which is what makes a datum index a part ordinal.
+ *
+ * RECORDED MUTATION: build one datum per feature in `geometryForBatch` (take only each feature's
+ * first part). The datum count and the outline path count then fail by name.
+ *
+ * Observed over `ac538440` on the uncommitted tree of the shell commit: `builds one datum per part
+ * with the style's fill, and an outline holding every ring of every part` FAILED by name with the
+ * mutation applied, then reverted.
+ */
+describe("buildLayers -- one datum per part (SH-8)", () => {
+  function multiPartBatch(): ResidentBatch {
+    return {
+      streamHandle: "sh_m",
+      batchSeq: 0,
+      ids: BigUint64Array.from([10n, 20n]),
+      ...partsOfFeatures([
+        [
+          [
+            [[2_600_000, 1_200_000], [2_600_004, 1_200_000], [2_600_004, 1_200_004], [2_600_000, 1_200_000]],
+            [[2_600_001, 1_200_001], [2_600_002, 1_200_001], [2_600_001, 1_200_002], [2_600_001, 1_200_001]],
+          ],
+          [[[2_600_100, 1_200_100], [2_600_101, 1_200_100], [2_600_101, 1_200_101], [2_600_100, 1_200_100]]],
+        ],
+        [[[[2_600_200, 1_200_200], [2_600_201, 1_200_200], [2_600_201, 1_200_201], [2_600_200, 1_200_200]]]],
+      ]),
+      totalVertices: 16,
+    };
+  }
+
+  it("builds one datum per part with the style's fill, and an outline holding every ring of every part", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const draw: ResolvedDrawParams = { fillColor: [9, 8, 7, 200], outlineColor: [1, 2, 3, 255], outlineWidth: 2 };
+    const b = multiPartBatch();
+    expect(b.partCount).toBe(3);
+    const [fill, outline] = buildLayers([b], frame, draw);
+
+    const data = asFillLayer(fill).props.data as Array<Array<Array<[number, number]>>>;
+    expect(data).toHaveLength(3); // one datum per part, never per feature
+    expect(data[0]).toHaveLength(2); // row 0's first part: exterior + hole
+    expect(data[1]).toHaveLength(1); // row 0's second part
+    expect(data[2]).toHaveLength(1); // row 1's only part
+    // Datum order is feature-then-part (`partToRow`'s order), offset-relative to the frame origin.
+    expect(data[0][0][0]).toEqual([0, 0]);
+    expect(data[1][0][0]).toEqual([100, 100]);
+    expect(data[2][0][0]).toEqual([200, 200]);
+    expect(asFillLayer(fill).props.getFillColor).toEqual([9, 8, 7, 200]);
+
+    const paths = (outline as PathLayer<Position[]>).props.data as Position[][];
+    expect(paths).toHaveLength(4); // 2 + 1 + 1 rings
   });
 });
 

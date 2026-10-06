@@ -68,8 +68,9 @@ crs      { identifier, definition_json, source: "file"|"caller_asserted"|"format
            axis_order, axis_normalization: "none-performed",
            provenance, axis_provenance, display_convention: Option<String>,
            unit: "degree"|"metre"|"other"|"unestablished" }
-geometry { column, encoding: "geoarrow.polygon", coordinate_layout: "interleaved-xy",
-           frame: "authoritative-project-crs" }
+geometry { column, encoding: "geoarrow.polygon"|"geoarrow.multipolygon",
+           declared_types: Option<[String]>,
+           coordinate_layout: "interleaved-xy", frame: "authoritative-project-crs" }
 identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
            uniqueness: "verified-at-open-full-file"|"declared-not-verified"|"by-construction-within-generation",
            verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool>,
@@ -983,6 +984,34 @@ and `frontends/shell/src/skp/__tests__/fixtures.test.ts`) and the new error fixt
 > suite's spec-derived fixtures under `protocol/skp/tests/conformance/` are outside those lists;
 > they were updated for `skp/0.6` in `c9ec02e` (B1 §10, Amendment 9). No literal, key, value, code
 > or command changes, and `protocol/data-plane/` has an empty diff.
+
+### skp/0.9 — MultiPolygon admission (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`, ADR-034)
+
+**The version's FULL field set, as §8's own discipline requires — no command, no request member,
+no error code.** Two changes to `describe`'s `geometry` member, both on `GeometryInfo`:
+
+- **`geometry.encoding` gains a second value, `"geoarrow.multipolygon"`**, beside
+  `"geoarrow.polygon"`. It is the engine's encoding for this open (ADR-034 Decision 2): fixed at
+  open from the file's declared `geometry_types`, and the value every batch's envelope carries.
+  It is the engine's fact, never the file's own type.
+- **`geometry.declared_types`, a new member after `encoding`: `Option<Vec<String>>`.** The file's
+  `geometry_types` as declared, in declared order and with its case as written (ADR-034
+  Decision 3). `null` means the key is absent from the file's metadata; `[]` means the file
+  declares an empty list; the two are different facts. The key is always present, never omitted
+  (question round 59, item 4's ruling (b1) and (c1): a non-string member is refused at open and
+  never reaches this field).
+
+§1's `describe` block is updated in place to name both (the in-place update this entry records).
+§5 is unchanged: `engine.geo_metadata` and `engine.wkb` keep their codes with no fields.
+`protocol/data-plane/` has an empty diff.
+
+Mechanics: one literal bumped once, `"skp/0.8"` → `"skp/0.9"`, in one commit, which carries both
+sides' fixtures for the literal and the new member (`protocol/skp/tests/data/*.json`,
+`protocol/skp/tests/conformance/fixtures/*.json`, `protocol/skp/tests/fixtures.rs` and
+`frontends/shell/src/skp/__tests__/fixtures.test.ts`) together; the version-refusal conformance
+fixture that named `skp/0.9` as an unsupported future version is renumbered to name `skp/0.10`
+instead. Plain `==` comparison retained; `deny_unknown_fields` kept both directions. `skp/1`
+stays RESERVED.
 
 ## 9. Attribute projection on `viewport_query`
 

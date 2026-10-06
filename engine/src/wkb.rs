@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! WKB → GeoArrow polygon decoding.
+//! WKB → GeoArrow polygon and multipolygon decoding.
+//!
+//! Two builders, one per encoding a dataset can be opened under (`geoarrow.rs`'s
+//! `GeometryEncoding`, fixed at open from the file's declared `geometry_types`): [`PolygonBuilder`]
+//! reads WKB type 3 only, and `MultiPolygonBuilder` reads types 3 and 6. A row of any other type is
+//! refused by name and stops the stream at that row; nothing is skipped.
 //!
 //! Real GeoParquet in the wild stores geometry as WKB (the 1.0 encoding, and still the default in
 //! 1.1), so this is the shape the engine actually meets. The decode is deliberately strict: every
@@ -15,14 +20,18 @@
 //! WKB and appended to the coordinate buffer with no arithmetic applied at all.
 
 use crate::error::{EngineError, Result};
+use crate::geoarrow::{EXT_NAME_MULTIPOLYGON, EXT_NAME_POLYGON};
 
 /// OGC WKB geometry code for a 2D polygon. Codes 1003/2003/3003 (Z, M, ZM) are refused.
 const WKB_POLYGON: u32 = 3;
+/// OGC WKB geometry code for a 2D MultiPolygon. Codes 1006/2006/3006 (Z, M, ZM) are refused.
+const WKB_MULTIPOLYGON: u32 = 6;
 /// PostGIS EWKB flag. A geometry-embedded SRID is a second CRS claim on a dataset that already has
 /// one, which is the "mixing CRS without a declared transform" case `docs/05` makes an error.
 const EWKB_SRID_FLAG: u32 = 0x2000_0000;
 const EWKB_Z_FLAG: u32 = 0x8000_0000;
 const EWKB_M_FLAG: u32 = 0x4000_0000;
+const EWKB_FLAGS: u32 = EWKB_SRID_FLAG | EWKB_Z_FLAG | EWKB_M_FLAG;
 
 /// Accumulates decoded polygons into the three buffers a GeoArrow polygon array is made of.
 ///
@@ -61,7 +70,7 @@ impl PolygonBuilder {
         let mut r = Reader::new(bytes)?;
 
         let raw_type = r.u32()?;
-        if raw_type & (EWKB_SRID_FLAG | EWKB_Z_FLAG | EWKB_M_FLAG) != 0 {
+        if raw_type & EWKB_FLAGS != 0 {
             return Err(EngineError::Wkb(
                 "EWKB flags (SRID/Z/M) present; a geometry-embedded CRS or a third dimension is \
                  refused rather than dropped"
@@ -70,7 +79,8 @@ impl PolygonBuilder {
         }
         if raw_type != WKB_POLYGON {
             return Err(EngineError::Wkb(format!(
-                "geometry type {raw_type} is not a 2D polygon (3); this slice reads polygons only"
+                "[P6 placeholder] WKB geometry type {raw_type} met; this open's encoding, \
+                 {EXT_NAME_POLYGON}, reads WKB type {WKB_POLYGON} (Polygon) only"
             )));
         }
 
@@ -80,29 +90,7 @@ impl PolygonBuilder {
         }
 
         for ring in 0..n_rings {
-            let n_pts = r.u32()? as usize;
-            // A closed ring needs at least 4 positions (3 distinct + the repeat).
-            if n_pts < 4 {
-                return Err(EngineError::Wkb(format!(
-                    "ring {ring} has {n_pts} positions; a closed ring needs at least 4"
-                )));
-            }
-            let first = self.coords.len();
-            for _ in 0..n_pts {
-                let x = r.f64()?;
-                let y = r.f64()?;
-                self.coords.push(x);
-                self.coords.push(y);
-            }
-            let last = self.coords.len() - 2;
-            // Bit-exact closure, not an epsilon: an "almost closed" ring is a defect the data
-            // doctor should show the user, not something this decoder decides to tolerate.
-            if self.coords[first] != self.coords[last]
-                || self.coords[first + 1] != self.coords[last + 1]
-            {
-                return Err(EngineError::Wkb(format!("ring {ring} is not closed")));
-            }
-            self.ring_offsets.push((self.coords.len() / 2) as i32);
+            read_ring(&mut r, ring, &mut self.coords, &mut self.ring_offsets)?;
         }
 
         self.geom_offsets.push((self.ring_offsets.len() - 1) as i32);
@@ -113,6 +101,150 @@ impl PolygonBuilder {
                 r.remaining()
             )));
         }
+        Ok(())
+    }
+}
+
+/// One ring: its position count, its coordinates appended with no arithmetic, bit-exact closure,
+/// and its end offset. Shared by both builders so a ring is read one way.
+fn read_ring(
+    r: &mut Reader<'_>,
+    ring: usize,
+    coords: &mut Vec<f64>,
+    ring_offsets: &mut Vec<i32>,
+) -> Result<()> {
+    let n_pts = r.u32()? as usize;
+    // A closed ring needs at least 4 positions (3 distinct + the repeat).
+    if n_pts < 4 {
+        return Err(EngineError::Wkb(format!(
+            "ring {ring} has {n_pts} positions; a closed ring needs at least 4"
+        )));
+    }
+    let first = coords.len();
+    for _ in 0..n_pts {
+        let x = r.f64()?;
+        let y = r.f64()?;
+        coords.push(x);
+        coords.push(y);
+    }
+    let last = coords.len() - 2;
+    // Bit-exact closure, not an epsilon: an "almost closed" ring is a defect the data
+    // doctor should show the user, not something this decoder decides to tolerate.
+    if coords[first] != coords[last] || coords[first + 1] != coords[last + 1] {
+        return Err(EngineError::Wkb(format!("ring {ring} is not closed")));
+    }
+    ring_offsets.push((coords.len() / 2) as i32);
+    Ok(())
+}
+
+/// Accumulates decoded geometries into the four buffers a GeoArrow multipolygon array is made of
+/// (ADR-034 Decision 3): geometry, part and ring offsets over one interleaved coordinate run.
+///
+/// **A Polygon row is a one-part MultiPolygon.** Its coordinate bit patterns are carried through
+/// with no arithmetic, exactly as [`PolygonBuilder`] carries them. One wire row per feature,
+/// always: parts never become rows (Decision 5).
+///
+/// **No allocation from a WKB count.** A part count or ring count only drives a loop that reads
+/// bytes, so a lying count ends at the first missing byte and never reserves memory.
+#[derive(Default)]
+pub(crate) struct MultiPolygonBuilder {
+    /// x0, y0, x1, y1, … across every ring of every part of every geometry.
+    pub(crate) coords: Vec<f64>,
+    /// Start index (in vertices, not floats) of each ring.
+    pub(crate) ring_offsets: Vec<i32>,
+    /// Start index (in rings) of each part.
+    pub(crate) part_offsets: Vec<i32>,
+    /// Start index (in parts) of each geometry.
+    pub(crate) geom_offsets: Vec<i32>,
+}
+
+impl MultiPolygonBuilder {
+    pub(crate) fn new() -> Self {
+        Self {
+            coords: Vec::new(),
+            ring_offsets: vec![0],
+            part_offsets: vec![0],
+            geom_offsets: vec![0],
+        }
+    }
+
+    pub(crate) fn vertices(&self) -> usize {
+        self.coords.len() / 2
+    }
+
+    /// Decode one WKB Polygon (type 3, one part) or MultiPolygon (type 6) and append it.
+    pub(crate) fn push_wkb(&mut self, bytes: &[u8]) -> Result<()> {
+        let mut r = Reader::new(bytes)?;
+
+        let raw_type = r.u32()?;
+        if raw_type & EWKB_FLAGS != 0 {
+            return Err(EngineError::Wkb(
+                "[P6 placeholder] EWKB flags (SRID/Z/M) present on the geometry type code; a \
+                 geometry-embedded CRS or a third dimension is refused rather than dropped"
+                    .into(),
+            ));
+        }
+        match raw_type {
+            WKB_POLYGON => self.push_part(&mut r, 0)?,
+            WKB_MULTIPOLYGON => {
+                let n_parts = r.u32()? as usize;
+                if n_parts == 0 {
+                    return Err(EngineError::Wkb(
+                        "[P6 placeholder] MultiPolygon with zero parts".into(),
+                    ));
+                }
+                for part in 0..n_parts {
+                    // Each part is a complete WKB geometry: its own byte-order byte, then its own
+                    // type code, which must be exactly 3.
+                    r.byte_order()?;
+                    let part_type = r.u32()?;
+                    if part_type & EWKB_FLAGS != 0 {
+                        return Err(EngineError::Wkb(format!(
+                            "[P6 placeholder] MultiPolygon part {part} carries EWKB flags \
+                             (SRID/Z/M); a geometry-embedded CRS or a third dimension is refused \
+                             rather than dropped"
+                        )));
+                    }
+                    if part_type != WKB_POLYGON {
+                        return Err(EngineError::Wkb(format!(
+                            "[P6 placeholder] MultiPolygon part {part} has WKB geometry type \
+                             {part_type}; a part must be WKB type {WKB_POLYGON} (Polygon)"
+                        )));
+                    }
+                    self.push_part(&mut r, part)?;
+                }
+            }
+            other => {
+                return Err(EngineError::Wkb(format!(
+                    "[P6 placeholder] WKB geometry type {other} met; this open's encoding, \
+                     {EXT_NAME_MULTIPOLYGON}, reads WKB type {WKB_POLYGON} (Polygon) and type \
+                     {WKB_MULTIPOLYGON} (MultiPolygon)"
+                )));
+            }
+        }
+
+        if !r.is_exhausted() {
+            return Err(EngineError::Wkb(format!(
+                "[P6 placeholder] {} trailing bytes after the geometry",
+                r.remaining()
+            )));
+        }
+        self.geom_offsets.push((self.part_offsets.len() - 1) as i32);
+        Ok(())
+    }
+
+    /// One part: a polygon body (ring count, then the rings), after its header has been read.
+    fn push_part(&mut self, r: &mut Reader<'_>, part: usize) -> Result<()> {
+        let n_rings = r.u32()? as usize;
+        if n_rings == 0 {
+            return Err(EngineError::Wkb(format!(
+                "[P6 placeholder] MultiPolygon part {part} has zero rings"
+            )));
+        }
+        for ring in 0..n_rings {
+            read_ring(r, ring, &mut self.coords, &mut self.ring_offsets)?;
+        }
+        self.part_offsets.push((self.ring_offsets.len() - 1) as i32);
         Ok(())
     }
 }
@@ -141,6 +273,22 @@ impl<'a> Reader<'a> {
             ))),
             None => Err(EngineError::Wkb("empty geometry".into())),
         }
+    }
+
+    /// A nested geometry's own byte-order byte. Every WKB geometry carries one, so a MultiPolygon's
+    /// parts may differ from the outer geometry and from each other.
+    fn byte_order(&mut self) -> Result<()> {
+        let [o] = self.take::<1>()?;
+        self.little = match o {
+            1 => true,
+            0 => false,
+            o => {
+                return Err(EngineError::Wkb(format!(
+                    "byte-order byte {o} is neither 0 nor 1"
+                )))
+            }
+        };
+        Ok(())
     }
 
     fn take<const N: usize>(&mut self) -> Result<[u8; N]> {
@@ -309,5 +457,227 @@ mod tests {
         let mut trailing = full.clone();
         trailing.push(0xAA);
         assert!(matches!(b.push_wkb(&trailing), Err(EngineError::Wkb(_))));
+    }
+
+    // ---- MultiPolygon (MP-1 preregistration §4, rows E-1 to E-5) -----------------------------
+
+    use crate::fixture::{encode_multipolygon, multipolygon_f1_rows};
+
+    /// Big-endian ISO WKB for a polygon, for a part whose byte order differs from its parent's.
+    fn encode_polygon_be(rings: &[Vec<[f64; 2]>]) -> Vec<u8> {
+        let mut out = vec![0u8];
+        out.extend_from_slice(&WKB_POLYGON.to_be_bytes());
+        out.extend_from_slice(&(rings.len() as u32).to_be_bytes());
+        for ring in rings {
+            out.extend_from_slice(&(ring.len() as u32).to_be_bytes());
+            for p in ring {
+                out.extend_from_slice(&p[0].to_be_bytes());
+                out.extend_from_slice(&p[1].to_be_bytes());
+            }
+        }
+        out
+    }
+
+    /// A refusal's text, which must be typed `Wkb` and carry the placeholder mark.
+    fn refusal(b: &mut MultiPolygonBuilder, wkb: &[u8]) -> String {
+        match b.push_wkb(wkb) {
+            Err(EngineError::Wkb(d)) => {
+                assert!(d.starts_with("[P6 placeholder] "), "{d}");
+                d
+            }
+            other => panic!("expected a typed Wkb refusal, got {other:?}"),
+        }
+    }
+
+    /// E-1. RECORDED MUTATION: in `MultiPolygonBuilder::push_part`, push the part offset before the
+    /// part's rings are read instead of after. The part offsets come out one ring short and this
+    /// test fails by name at the `part_offsets` assertion.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `a_multipolygon_row_keeps_its_three_offset_levels_exactly` FAILED with the mutation applied,
+    /// then reverted.
+    #[test]
+    fn a_multipolygon_row_keeps_its_three_offset_levels_exactly() {
+        // F-1's row 0: three parts, the second with a hole.
+        let rows = multipolygon_f1_rows([0.0, 0.0], 1.0);
+        let mut b = MultiPolygonBuilder::new();
+        b.push_wkb(&rows[0]).unwrap();
+        assert_eq!(
+            b.geom_offsets,
+            vec![0, 3],
+            "one geometry spanning three parts"
+        );
+        assert_eq!(
+            b.part_offsets,
+            vec![0, 1, 3, 4],
+            "parts span one, two and one rings"
+        );
+        assert_eq!(b.ring_offsets, vec![0, 5, 10, 15, 20]);
+        assert_eq!(b.vertices(), 20);
+
+        // The next row continues every level from where the last one ended.
+        b.push_wkb(&rows[1]).unwrap();
+        assert_eq!(b.geom_offsets, vec![0, 3, 4]);
+        assert_eq!(b.part_offsets, vec![0, 1, 3, 4, 5]);
+        assert_eq!(b.ring_offsets, vec![0, 5, 10, 15, 20, 25]);
+    }
+
+    /// E-2. RECORDED MUTATION: in `read_ring`, narrow each coordinate through `f32` (`x as f32 as
+    /// f64`). The promoted coordinates lose their low bits and this test fails by name at the
+    /// bit comparison.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `a_polygon_row_under_multipolygon_is_one_part_with_its_coordinate_bits_unchanged` FAILED
+    /// with the mutation applied, then reverted.
+    #[test]
+    fn a_polygon_row_under_multipolygon_is_one_part_with_its_coordinate_bits_unchanged() {
+        let e = 2_600_000.123_456_789_f64;
+        let n = 1_200_000.987_654_321_f64;
+        let ring = vec![[e, n], [e + 1.0, n], [e + 1.0, n + 1.0], [e, n]];
+        let mut b = MultiPolygonBuilder::new();
+        b.push_wkb(&encode_polygon(std::slice::from_ref(&ring)))
+            .unwrap();
+
+        assert_eq!(b.geom_offsets, vec![0, 1], "one geometry of one part");
+        assert_eq!(b.part_offsets, vec![0, 1]);
+        assert_eq!(b.ring_offsets, vec![0, 4]);
+        let want: Vec<u64> = ring
+            .iter()
+            .flat_map(|p| [p[0].to_bits(), p[1].to_bits()])
+            .collect();
+        let got: Vec<u64> = b.coords.iter().map(|v| v.to_bits()).collect();
+        assert_eq!(got, want);
+    }
+
+    /// E-3. RECORDED MUTATION: delete the per-part type check (`part_type != WKB_POLYGON`) in
+    /// `MultiPolygonBuilder::push_wkb`. A part typed 6 is then read as a polygon body and ends in a
+    /// truncation error that does not name the part's type, so this test fails by name at that
+    /// refusal's text.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `each_unreadable_multipolygon_row_is_a_typed_refusal_naming_what_was_met` FAILED with the
+    /// mutation applied, then reverted.
+    #[test]
+    fn each_unreadable_multipolygon_row_is_a_typed_refusal_naming_what_was_met() {
+        let mut b = MultiPolygonBuilder::new();
+        let sq = vec![vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]];
+
+        // Zero parts.
+        let mut zero_parts = vec![1u8];
+        zero_parts.extend_from_slice(&WKB_MULTIPOLYGON.to_le_bytes());
+        zero_parts.extend_from_slice(&0u32.to_le_bytes());
+        assert!(refusal(&mut b, &zero_parts).contains("zero parts"));
+
+        // A part with zero rings.
+        let mut zero_rings = vec![1u8];
+        zero_rings.extend_from_slice(&WKB_MULTIPOLYGON.to_le_bytes());
+        zero_rings.extend_from_slice(&1u32.to_le_bytes());
+        zero_rings.push(1u8);
+        zero_rings.extend_from_slice(&WKB_POLYGON.to_le_bytes());
+        zero_rings.extend_from_slice(&0u32.to_le_bytes());
+        assert!(refusal(&mut b, &zero_rings).contains("part 0 has zero rings"));
+
+        // A part that is itself a MultiPolygon (type 6).
+        let mut nested = vec![1u8];
+        nested.extend_from_slice(&WKB_MULTIPOLYGON.to_le_bytes());
+        nested.extend_from_slice(&1u32.to_le_bytes());
+        nested.extend_from_slice(&encode_multipolygon(std::slice::from_ref(&sq)));
+        let d = refusal(&mut b, &nested);
+        assert!(d.contains("part 0 has WKB geometry type 6"), "{d}");
+
+        // EWKB flags on a part, and on the header.
+        let mut flagged_part = vec![1u8];
+        flagged_part.extend_from_slice(&WKB_MULTIPOLYGON.to_le_bytes());
+        flagged_part.extend_from_slice(&1u32.to_le_bytes());
+        flagged_part.push(1u8);
+        flagged_part.extend_from_slice(&(WKB_POLYGON | EWKB_SRID_FLAG).to_le_bytes());
+        assert!(refusal(&mut b, &flagged_part).contains("part 0 carries EWKB flags"));
+        let mut flagged_header = vec![1u8];
+        flagged_header.extend_from_slice(&(WKB_MULTIPOLYGON | EWKB_Z_FLAG).to_le_bytes());
+        assert!(refusal(&mut b, &flagged_header).contains("EWKB flags"));
+
+        // A type that is neither 3 nor 6, ISO Z codes included, each naming the type met.
+        for (code, name) in [
+            (1u32, "Point"),
+            (7, "GeometryCollection"),
+            (1006, "MultiPolygon Z"),
+        ] {
+            let mut other = vec![1u8];
+            other.extend_from_slice(&code.to_le_bytes());
+            let d = refusal(&mut b, &other);
+            assert!(
+                d.contains(&format!("geometry type {code} met")),
+                "{name}: {d}"
+            );
+            assert!(d.contains(EXT_NAME_MULTIPOLYGON), "{d}");
+        }
+    }
+
+    /// E-4. RECORDED MUTATION: in `PolygonBuilder::push_wkb`, accept type 6 as well as 3
+    /// (`raw_type != WKB_POLYGON && raw_type != 6`). A MultiPolygon row is then read as a polygon
+    /// body and ends in a truncation error, so this test fails by name at the refusal's text.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `the_polygon_builder_still_refuses_a_multipolygon_row` FAILED with the mutation applied,
+    /// then reverted.
+    #[test]
+    fn the_polygon_builder_still_refuses_a_multipolygon_row() {
+        let rows = multipolygon_f1_rows([0.0, 0.0], 1.0);
+        let e = PolygonBuilder::new().push_wkb(&rows[1]).unwrap_err();
+        let EngineError::Wkb(d) = e else {
+            panic!("expected Wkb")
+        };
+        assert!(d.starts_with("[P6 placeholder] "), "{d}");
+        assert!(d.contains("geometry type 6 met"), "{d}");
+        assert!(d.contains(EXT_NAME_POLYGON), "{d}");
+    }
+
+    /// E-5. RECORDED MUTATION: in `MultiPolygonBuilder::push_wkb`, read each part's byte-order byte
+    /// but keep the outer geometry's order (replace `r.byte_order()?` with `r.take::<1>()?`). A
+    /// big-endian part is then misread and this test fails by name at the first `unwrap`.
+    ///
+    /// Observed over `d8276158` on the uncommitted tree of the engine commit:
+    /// `parts_with_mixed_byte_orders_decode_to_the_same_values` FAILED with the mutation applied,
+    /// then reverted.
+    #[test]
+    fn parts_with_mixed_byte_orders_decode_to_the_same_values() {
+        let a = vec![vec![[1.5, 2.5], [3.5, 2.5], [3.5, 4.5], [1.5, 2.5]]];
+        let b2 = vec![vec![
+            [10.25, 20.5],
+            [30.25, 20.5],
+            [30.25, 40.5],
+            [10.25, 20.5],
+        ]];
+
+        let mut reference = MultiPolygonBuilder::new();
+        reference
+            .push_wkb(&encode_multipolygon(&[a.clone(), b2.clone()]))
+            .unwrap();
+
+        // Outer little-endian, first part little-endian, second part big-endian.
+        let mut mixed = vec![1u8];
+        mixed.extend_from_slice(&WKB_MULTIPOLYGON.to_le_bytes());
+        mixed.extend_from_slice(&2u32.to_le_bytes());
+        mixed.extend_from_slice(&encode_polygon(&a));
+        mixed.extend_from_slice(&encode_polygon_be(&b2));
+
+        // Outer big-endian, first part little-endian, second part big-endian.
+        let mut outer_be = vec![0u8];
+        outer_be.extend_from_slice(&WKB_MULTIPOLYGON.to_be_bytes());
+        outer_be.extend_from_slice(&2u32.to_be_bytes());
+        outer_be.extend_from_slice(&encode_polygon(&a));
+        outer_be.extend_from_slice(&encode_polygon_be(&b2));
+
+        for wkb in [mixed, outer_be] {
+            let mut got = MultiPolygonBuilder::new();
+            got.push_wkb(&wkb).unwrap();
+            assert_eq!(got.geom_offsets, reference.geom_offsets);
+            assert_eq!(got.part_offsets, reference.part_offsets);
+            assert_eq!(got.ring_offsets, reference.ring_offsets);
+            let bits = |b: &MultiPolygonBuilder| -> Vec<u64> {
+                b.coords.iter().map(|v| v.to_bits()).collect()
+            };
+            assert_eq!(bits(&got), bits(&reference));
+        }
     }
 }

@@ -226,17 +226,31 @@ export class TileResidentSet {
     if (duplicatesDropped === 0) {
       trimmed = batch;
     } else {
+      // Every kept feature carries ALL of its parts, and `partToRow` is re-indexed to the kept
+      // rows' new positions (a duplicate is dropped whole, never part by part -- ADR-034 Decision 5).
       const ids = new BigUint64Array(keepIdx.length);
-      const rings: ResidentBatch["rings"] = new Array(keepIdx.length);
+      const parts: ResidentBatch["parts"] = new Array(keepIdx.length);
+      const partRows: number[] = [];
       let totalVertices = 0;
       keepIdx.forEach((srcIdx, dstIdx) => {
         ids[dstIdx] = batch.ids[srcIdx];
-        rings[dstIdx] = batch.rings[srcIdx];
-        for (const ring of rings[dstIdx]) {
-          totalVertices += ring.length;
+        parts[dstIdx] = batch.parts[srcIdx];
+        for (const rings of parts[dstIdx]) {
+          partRows.push(dstIdx);
+          for (const ring of rings) {
+            totalVertices += ring.length;
+          }
         }
       });
-      trimmed = { streamHandle: batch.streamHandle, batchSeq: batch.batchSeq, ids, rings, totalVertices };
+      trimmed = {
+        streamHandle: batch.streamHandle,
+        batchSeq: batch.batchSeq,
+        ids,
+        parts,
+        partToRow: Int32Array.from(partRows),
+        partCount: partRows.length,
+        totalVertices,
+      };
     }
 
     for (const id of trimmed.ids) {

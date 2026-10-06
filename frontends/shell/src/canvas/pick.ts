@@ -119,18 +119,25 @@ export function confirmingReadout(standing: PickResult): PickConfirming {
  * Resolve a GPU pick ordinal against the resident batch its layer was built from -- ADR-010 rule
  * 2's whole indirection, restated as code: **GPU ordinal → stable feature ID → authoritative f64**.
  *
- * `gpuOrdinal` is `info.index`, used for exactly one thing: indexing into the *same* `ids`/`rings`
- * arrays the picked layer was built from (`buildLayers.ts`). It never leaves this function as a
- * bare number, and the caller must pass the batch `info.layer.id` actually names — see
- * `batchForLayerId` in `buildLayers.ts` — never any other batch, since an ordinal is only meaningful
- * relative to the buffer it indexes.
+ * `gpuOrdinal` is `info.index`, the index of one deck.gl datum, and one datum is one polygon part
+ * (ADR-034 Decision 6; `PICKING.md`), so it is a **part** ordinal and never a row index. It is used
+ * for exactly one thing: indexing `partToRow`, built in the same pass as the `ids`/`parts` the picked
+ * layer was built from (`buildLayers.ts`), to reach the row and then its id. It never leaves this
+ * function as a bare number, and the caller must pass the batch `info.layer.id` actually names -- see
+ * `batchForLayerId` in `buildLayers.ts` -- never any other batch, since an ordinal is only
+ * meaningful relative to the buffer it indexes.
+ *
+ * **Every part of one feature resolves to the identical result**: the anchor is the row's first
+ * part's exterior ring's first vertex, never the picked part's own, so a re-pick landing on another
+ * part of the same feature confirms the same id and the same anchor (one feature, one hover).
  */
 export function resolvePick(batch: ResidentBatch, gpuOrdinal: number): PickResult | null {
-  if (!Number.isInteger(gpuOrdinal) || gpuOrdinal < 0 || gpuOrdinal >= batch.ids.length) {
+  if (!Number.isInteger(gpuOrdinal) || gpuOrdinal < 0 || gpuOrdinal >= batch.partCount) {
     return null;
   }
-  const id = batch.ids[gpuOrdinal];
-  const rings = batch.rings[gpuOrdinal];
-  const anchor = rings.length > 0 && rings[0].length > 0 ? rings[0][0] : null;
+  const row = batch.partToRow[gpuOrdinal];
+  const id = batch.ids[row];
+  const firstPart = batch.parts[row][0];
+  const anchor = firstPart !== undefined && firstPart.length > 0 && firstPart[0].length > 0 ? firstPart[0][0] : null;
   return { streamHandle: batch.streamHandle, batchSeq: batch.batchSeq, id, anchor };
 }

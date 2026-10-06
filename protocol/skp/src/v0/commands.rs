@@ -166,8 +166,17 @@ pub enum CrsUnit {
 #[serde(deny_unknown_fields)]
 pub struct GeometryInfo {
     pub column: String,
-    /// Always `"geoarrow.polygon"` in this slice.
+    /// The engine's encoding for this open, `"geoarrow.polygon"` or `"geoarrow.multipolygon"`
+    /// (ADR-034 Decision 2): the value every batch's envelope carries, fixed at open and never
+    /// varying per batch. It is the engine's fact, never the file's own type; see
+    /// [`Self::declared_types`] for the file's declaration.
     pub encoding: String,
+    /// **`skp/0.9`, ADR-034 Decision 3.** The file's `geometry_types` as declared, in declared
+    /// order and with its case as written: the source fact beside [`Self::encoding`]. `None`
+    /// (serialized as `null`, never omitted) means the key is absent; `Some` of an empty list
+    /// (`[]`) means the file declares an empty list. The two are different facts and stay distinct
+    /// on the wire (round 59, item 4's ruling (b1)).
+    pub declared_types: Option<Vec<String>>,
     /// Always `"interleaved-xy"` in this slice.
     pub coordinate_layout: String,
     /// ADR-010 rule 1's envelope tag, surfaced. Always `"authoritative-project-crs"` here — this is

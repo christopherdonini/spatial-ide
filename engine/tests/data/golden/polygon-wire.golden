@@ -1,0 +1,53 @@
+fixture.default.sha256 = 70e88947bbff25ba57a5c1b36021829003f0c58c8c731edb08d9483b2b7ce0de
+fixture.default.bytes = 1949289
+fixture.zoned.sha256 = 1f6e1df46703205f05b59b3b729798ca2e7ef55cdda541a96d1c92c8ae45ee2b
+publish.batch.0 = rows:2034 sha256:9cf67bc09580a4f3664d5aecdace9e5afa18ecda68600c8c049d3537fe3082c5
+publish.batch.1 = rows:2046 sha256:96bfc4d21feb2681bff759d395618140e4e59c008a3792a03e904b6c3cd08088
+publish.batch.2 = rows:920 sha256:09dea7254c1318afb37f8dd9f5d9988c1e333e269e016d926aa9f642d58e1df8
+publish.batches = 3
+viewport.schema.metadata.attribute_columns = []
+viewport.schema.metadata.axis_normalization = none-performed
+viewport.schema.metadata.axis_order = easting,northing
+viewport.schema.metadata.axis_provenance = axis:declared
+viewport.schema.metadata.coordinate_layout = interleaved-xy
+viewport.schema.metadata.coordinate_unit = metre
+viewport.schema.metadata.coordinate_unit_source = unit:definition
+viewport.schema.metadata.crs = EPSG:2056
+viewport.schema.metadata.crs_provenance = crs:declared
+viewport.schema.metadata.crs_source = file
+viewport.schema.metadata.declared_axis_order = easting,northing
+viewport.schema.metadata.frame = authoritative-project-crs
+viewport.schema.metadata.geometry_column = geometry
+viewport.schema.metadata.geometry_encoding = geoarrow.polygon
+viewport.schema.metadata.id_js_exact = true
+viewport.schema.metadata.id_source = file:id
+viewport.schema.metadata.id_uniqueness = verified-at-open-full-file
+viewport.schema.metadata.id_verified_rows = 5000
+viewport.schema.metadata.sanity_level = none
+viewport.schema.metadata.sanity_reason = no format rule was applied, so nothing about the coordinates was assumed and there is nothing to convict
+viewport.field.0 = id : UInt64 : nullable=false
+viewport.field.1 = geometry : List(Field { name: "rings", data_type: List(Field { name: "vertices", data_type: FixedSizeList(Field { name: "xy", data_type: Float64 }, 2) }) }) : nullable=false
+viewport.field.1.metadata.ARROW:extension:metadata = sha256:3b5f459e4fcbbb8a2290b8761fb9d51434f108caf074bcf230ea0d5692ffe680 (1763 bytes)
+viewport.field.1.metadata.ARROW:extension:name = geoarrow.polygon
+viewport.rows = 5000
+viewport.rows.sha256 = 8256357a123acfb4abfd5a8bb44deaf6cb8edc4a5dd671cba9af76b2eaf1a551
+projected.schema.metadata.attribute_columns = ["zone"]
+projected.schema.metadata.axis_normalization = none-performed
+projected.schema.metadata.axis_order = easting,northing
+projected.schema.metadata.coordinate_layout = interleaved-xy
+projected.schema.metadata.crs = EPSG:2056
+projected.schema.metadata.crs_source = file
+projected.schema.metadata.frame = authoritative-project-crs
+projected.schema.metadata.geometry_column = geometry
+projected.schema.metadata.geometry_encoding = geoarrow.polygon
+projected.schema.metadata.id_js_exact = true
+projected.schema.metadata.id_source = file:id
+projected.schema.metadata.id_uniqueness = verified-at-open-full-file
+projected.schema.metadata.id_verified_rows = 5000
+projected.field.0 = id : UInt64 : nullable=false
+projected.field.1 = geometry : List(Field { name: "rings", data_type: List(Field { name: "vertices", data_type: FixedSizeList(Field { name: "xy", data_type: Float64 }, 2) }) }) : nullable=false
+projected.field.1.metadata.ARROW:extension:metadata = sha256:3b5f459e4fcbbb8a2290b8761fb9d51434f108caf074bcf230ea0d5692ffe680 (1763 bytes)
+projected.field.1.metadata.ARROW:extension:name = geoarrow.polygon
+projected.field.2 = zone : Utf8 : nullable=true
+projected.rows = 5000
+projected.rows.sha256 = 8256357a123acfb4abfd5a8bb44deaf6cb8edc4a5dd671cba9af76b2eaf1a551

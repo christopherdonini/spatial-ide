@@ -413,3 +413,39 @@ fn a_publish_refusal_detail_begins_with_its_typed_code() {
         assert_ne!(other.code(), e.code());
     }
 }
+
+/// **K-4 (MP-1 preregistration §4).** The format-owned geometry-encoding refusal crosses the Tauri
+/// boundary as `"<code>: <display>"` like every other publish refusal, so the shell's generic
+/// `formatPublishRefusal` parses it without a case of its own. No shell guidance entry exists for
+/// it: guidance is new wording, and wording is the human's at P6.
+///
+/// Mutation: change the code's string in `PublishError::code()` (for example to
+/// `publish.geometry_encoding`). Expected failure: this test fails by name at the code assertion.
+///
+/// Observed over `1b978ee5` on the uncommitted tree of the kernel commit:
+/// `a_geometry_encoding_refusal_detail_begins_with_its_typed_code` FAILED with the mutation
+/// applied, then reverted.
+#[test]
+fn a_geometry_encoding_refusal_detail_begins_with_its_typed_code() {
+    let e = PublishError::GeometryEncodingNotPublishable {
+        encoding: "geoarrow.multipolygon".to_string(),
+        carried: "geoarrow.polygon".to_string(),
+    };
+    assert_eq!(e.code(), "publish.geometry_encoding_not_publishable");
+    let detail = e.refusal_detail();
+    assert!(
+        detail.starts_with("publish.geometry_encoding_not_publishable: "),
+        "{detail}"
+    );
+    assert!(
+        detail.ends_with(&e.to_string()),
+        "the refusal's own text is carried verbatim"
+    );
+    assert!(
+        e.to_string().starts_with("[P6 placeholder] "),
+        "a new operator string is a placeholder: {e}"
+    );
+    // It states the format fact and both encodings, and no consequence.
+    let text = e.to_string();
+    assert!(text.contains("geoarrow.polygon") && text.contains("geoarrow.multipolygon"));
+}

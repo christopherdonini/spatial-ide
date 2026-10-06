@@ -34,9 +34,9 @@ use crate::cancel::CancelToken;
 use crate::dataset::{lease_for_stream, Dataset};
 use crate::envelope::{BatchEnvelope, TaggedBatch, ID_COLUMN};
 use crate::error::{EngineError, Result};
-use crate::geoarrow::build_polygon_array;
+use crate::geoarrow::{build_multipolygon_array, build_polygon_array, GeometryEncoding};
 use crate::predicate::AdmittedPredicate;
-use crate::wkb::PolygonBuilder;
+use crate::wkb::{MultiPolygonBuilder, PolygonBuilder};
 
 /// Declared ceilings — ADR-010 rule 6: "A layer design states its ceiling … before approaching it."
 /// Declared here, asserted in `stream.rs`'s own tests, and reported by the binding that carries
@@ -940,6 +940,7 @@ impl Dataset {
             self.geometry_column().to_string(),
             self.identity().clone(),
             attributes.fields().to_vec(),
+            self.geometry_encoding(),
         );
         self.stream_inner(q, cancel, StreamPlan::for_publish(envelope))
     }
@@ -1001,6 +1002,7 @@ impl Dataset {
             self.geometry_column().to_string(),
             self.identity().clone(),
             projection.fields().to_vec(),
+            self.geometry_encoding(),
         );
         self.stream_inner(
             q,
@@ -1852,7 +1854,7 @@ fn produce(
     crate::trace::mark(crate::trace::EXECUTE_RETURNED, 0, 0);
 
     let attribute_fields = envelope.attributes().to_vec();
-    let mut pending = Pending::new(attribute_fields.len());
+    let mut pending = Pending::new(attribute_fields.len(), envelope.geometry_encoding());
     // Batches handed over so far — the policy's input, and the `batch_index` a consumer sees.
     let mut emitted: u64 = 0;
     let mut saw_first_chunk = false;
@@ -2130,7 +2132,7 @@ fn produce(
 /// Everything accumulated toward the next batch.
 struct Pending {
     ids: Vec<u64>,
-    builder: PolygonBuilder,
+    builder: GeometryBuilder,
     vertices: usize,
     est_bytes: usize,
     /// The first id in this batch — carried so an over-ceiling single feature can be *named*. An
@@ -2144,11 +2146,48 @@ struct Pending {
     attr_bytes: usize,
 }
 
+/// The geometry accumulator for the open's encoding — one arm, chosen once from the envelope and
+/// never varying per batch (ADR-034 Decision 2).
+enum GeometryBuilder {
+    Polygon(PolygonBuilder),
+    MultiPolygon(MultiPolygonBuilder),
+}
+
+impl GeometryBuilder {
+    fn new(encoding: GeometryEncoding) -> Self {
+        match encoding {
+            GeometryEncoding::Polygon => Self::Polygon(PolygonBuilder::new()),
+            GeometryEncoding::MultiPolygon => Self::MultiPolygon(MultiPolygonBuilder::new()),
+        }
+    }
+
+    fn vertices(&self) -> usize {
+        match self {
+            Self::Polygon(b) => b.vertices(),
+            Self::MultiPolygon(b) => b.vertices(),
+        }
+    }
+
+    fn push_wkb(&mut self, wkb: &[u8]) -> Result<()> {
+        match self {
+            Self::Polygon(b) => b.push_wkb(wkb),
+            Self::MultiPolygon(b) => b.push_wkb(wkb),
+        }
+    }
+
+    fn finish(self) -> Result<ArrayRef> {
+        match self {
+            Self::Polygon(b) => build_polygon_array(b),
+            Self::MultiPolygon(b) => build_multipolygon_array(b),
+        }
+    }
+}
+
 impl Pending {
-    fn new(attribute_columns: usize) -> Self {
+    fn new(attribute_columns: usize, encoding: GeometryEncoding) -> Self {
         Self {
             ids: Vec::new(),
-            builder: PolygonBuilder::new(),
+            builder: GeometryBuilder::new(encoding),
             vertices: 0,
             est_bytes: 0,
             first_id: None,
@@ -2211,6 +2250,14 @@ pub(crate) fn is_timing_dependent(ordering: RowOrdering, cut: BatchCutPolicy) ->
     ordering == RowOrdering::ByIdentityAscending && cut == BatchCutPolicy::TimeBudgetedFirstBatch
 }
 
+/// The bytes a batch of `rows` features and `vertices` vertices is estimated to occupy, and the
+/// quantity every batch cut and every declared ceiling is decided on.
+///
+/// **One estimate for both encodings, unedited by ADR-034** (MP-1 preregistration §2, E7). Its
+/// `vertices * 4` term is declared to bound the multipolygon encoding's extra part and ring
+/// offsets: each part has at least one ring and each ring at least 4 vertices, so parts plus rings
+/// is at most vertices divided by 2. A Polygon-only dataset's cut points therefore depend on
+/// unchanged inputs only. `engine/tests/multipolygon_stream.rs` asserts the bound on a real stream.
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
     // 16 B per interleaved xy pair, 8 B per id, 4 B per offset entry, both offset levels.
     vertices * 16 + rows * 8 + (rows + vertices) * 4
@@ -2391,7 +2438,10 @@ fn flush(
     compact_attribute_retention: bool,
     cut_by: BatchCut,
 ) -> Result<()> {
-    let mut p = std::mem::replace(pending, Pending::new(pending.attrs.len()));
+    let mut p = std::mem::replace(
+        pending,
+        Pending::new(pending.attrs.len(), envelope.geometry_encoding()),
+    );
 
     if p.est_bytes > MAX_BATCH_BYTES {
         // Because the loop cuts *before* appending, a batch holding more than one feature can
@@ -2414,7 +2464,7 @@ fn flush(
 
     let rows = p.ids.len();
     let ids: ArrayRef = Arc::new(UInt64Array::from(std::mem::take(&mut p.ids)));
-    let geometry = build_polygon_array(std::mem::take(&mut p.builder))?;
+    let geometry = p.builder.finish()?;
 
     // One run needs no concatenation — the common case when a batch is cut inside a single DuckDB
     // chunk, and the copy ADR-004 asks to be avoided rather than assumed away.
@@ -2836,6 +2886,7 @@ mod tests {
                 Some(0),
             ),
             vec![arrow::datatypes::Field::new("v", ty, true)],
+            GeometryEncoding::Polygon,
         )
     }
 

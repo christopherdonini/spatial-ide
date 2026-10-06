@@ -269,10 +269,13 @@ fn main_set_rows() -> Vec<RowSpec> {
             id: "#11",
             suffix: "geoparquet-spec/example.parquet",
             pipeline: "GeoParquet specification example",
-            citation: "ADMISSION-PREREGISTRATION.md §3 row 11",
-            prediction: Prediction::RefusedByName("engine.geo_metadata"),
+            // Registered by MULTIPOLYGON-MP1-PREREGISTRATION.md §3 (C-11), not by
+            // ADMISSION-PREREGISTRATION.md, which is append-only and registered this row under the
+            // held gate (its row 11: a refusal at the polygon gate).
+            citation: "MULTIPOLYGON-MP1-PREREGISTRATION.md §3 C-11",
+            prediction: Prediction::AdmittedAsDeclared,
             expect_sanity_reason_contains: None,
-            registered_sanity_level: None,
+            registered_sanity_level: Some("none"),
             registered_declared_axis_order: None,
             unrun_boundary8_reason: None,
         },
@@ -280,12 +283,17 @@ fn main_set_rows() -> Vec<RowSpec> {
             id: "#12",
             suffix: "overture/overture-2026-08-19.0-building-bern.parquet",
             pipeline: "Overture Maps CLI",
-            citation: "ADMISSION-PREREGISTRATION.md §3 row 12",
-            prediction: Prediction::RefusedByName("engine.geo_metadata"),
+            // C-12's registered prediction, entered as registered (MULTIPOLYGON-MP1-PREREGISTRATION.md
+            // §3, C-12): admitted under the format rule, `crs:format-default`. Amendment 2 item 1
+            // records that the observed open is a refusal at identity admission (the file's `id` is a
+            // nullable string), a deviation from this prediction that this generator reports as a
+            // DEVIATION and never edits the prediction to match.
+            citation: "MULTIPOLYGON-MP1-PREREGISTRATION.md §3 C-12 (Amendment 2 item 1)",
+            prediction: Prediction::AdmittedUnderFormatRule("crs:format-default"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
             registered_declared_axis_order: None,
-            unrun_boundary8_reason: None,
+            unrun_boundary8_reason: Some("a single Dataset::open cannot reach a publish preflight"),
         },
     ]
 }
@@ -1049,7 +1057,11 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         .filter(|r| r.main_set && r.refusal_code.as_deref() == Some("engine.geo_metadata"))
         .map(|r| r.spec_id)
         .collect();
-    let p1_expected: Vec<&str> = vec!["#2", "#4", "#5", "#11", "#12"];
+    // MULTIPOLYGON-MP1-PREREGISTRATION.md §5 P-1 and Amendment 2 item 1: the three Point files only.
+    // #11 and #12 declare mixed Polygon and MultiPolygon columns, which the readable set now admits
+    // at the geometry gate; #12's observed refusal is at identity admission, and is not a
+    // `engine.geo_metadata` refusal.
+    let p1_expected: Vec<&str> = vec!["#2", "#4", "#5"];
     let p1_status = if p1_refusals == p1_expected {
         "borne out"
     } else {
@@ -1150,12 +1162,12 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
          something a fixed corpus of this size samples"
     );
 
-    // B1(b): a component of §3's own per-row cells (rows #3, #8), not one of §5's six registered
-    // predictions — recorded here by name because it is a registered element this instrument does
-    // not reach (§8's `unrun — reason` rule).
+    // B1(b): a component of §3's own per-row cells (rows #3 and #8, and row #12 under C-12), not one
+    // of §5's six registered predictions — recorded here by name because it is a registered element
+    // this instrument does not reach (§8's `unrun — reason` rule).
     let p_boundary8_status = "unrun — a single Dataset::open cannot reach a publish preflight; \
-         §3's boundary-8 publish-preflight refusal and equirectangular statement for rows #3 and \
-         #8 are not reached by this instrument (see each row's own note, above)";
+         §3's boundary-8 publish-preflight refusal and equirectangular statement for rows #3, #8 \
+         and #12 (C-12) are not reached by this instrument (see each row's own note, above)";
 
     // ---- Write the GENERATED admission table --------------------------------------------------
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -1275,7 +1287,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(out, "| 6 | {p6_status} |").unwrap();
     writeln!(
         out,
-        "| §3 rows #3, #8 (boundary-8) | {p_boundary8_status} |"
+        "| §3 rows #3, #8, #12 (boundary-8) | {p_boundary8_status} |"
     )
     .unwrap();
 

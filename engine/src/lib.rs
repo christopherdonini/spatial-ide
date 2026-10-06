@@ -14,8 +14,12 @@
 //!   carry one. See [`crs`] for the admission policy, recorded as **ADR-015 (Proposed)**.
 //! - Filters with SQL over the GeoParquet 1.1 covering-bbox columns — a **linear scan**, not an
 //!   index. Server-side spatial indexing is `docs/07`'s other open gate and is not touched here.
-//! - Decodes WKB into **GeoArrow polygons**: `List<rings: List<vertices: FixedSizeList<xy>[2]>>`,
-//!   variable-width, holes included.
+//! - Decodes WKB into **GeoArrow polygons** (`geoarrow.polygon`:
+//!   `List<rings: List<vertices: FixedSizeList<xy>[2]>>`) or **GeoArrow multipolygons**
+//!   (`geoarrow.multipolygon`: `List<polygons: List<rings: List<vertices: FixedSizeList<xy>[2]>>>`),
+//!   variable-width, holes included. Which encoding a dataset travels in is a fact of the open
+//!   (ADR-034): a declared set of exactly Polygon gives the first, and a set that includes
+//!   MultiPolygon, or an empty or absent declaration, gives the second. It never varies per batch.
 //! - Emits Arrow IPC batches whose envelope names their frame, CRS, CRS source and axis order
 //!   (ADR-010 rule 1), by construction rather than by convention — see [`envelope`].
 //! - Streams and cancels: the DuckDB result is consumed lazily, and cancellation reaches DuckDB's
@@ -118,6 +122,7 @@ pub use dataset::Dataset;
 pub use descriptor::{SourceDescriptor, FOOTER_DESCRIPTOR_MAX_BYTES};
 pub use envelope::{BatchEnvelope, TaggedBatch, FRAME_AUTHORITATIVE, ID_COLUMN};
 pub use error::{EngineError, Result};
+pub use geoarrow::GeometryEncoding;
 pub use geoparquet::{
     AdmissionRecord, AxisProvenance, CoordinateUnit, CoordinateUnitSource, CrsProvenance,
     SanityLevel, MAX_UNIT_NAME_BYTES, PINNED_SPEC_VERSIONS, SANITY_SAMPLE_MAX_ROWS,

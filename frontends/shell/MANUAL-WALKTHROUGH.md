@@ -1557,3 +1557,45 @@ Fill in after running the row above.
 - **Build/commit:**
 - **Last amendment read (its number):**
 - **R1:**
+
+---
+
+## Part S — MultiPolygon: corpus #12, the F-1 fixture, and the wording of the new strings (geometry-types-beyond-polygons)
+
+This Part is the Operator gate of `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §9, with S1 as that form's Amendment 2, item 1 rewrites it. It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018).
+
+**Before S1:**
+- Read the form's §10, its last amendment first.
+- Generate the F-1 file: from `C:\dev\spatial-ide`, run `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_multipolygon_f1_fixture -- --ignored --nocapture`.
+- Verify corpus file #12's hash against `MANIFEST.json` as Part N's "Before N1" note describes.
+
+| Fixture | Path | Used by |
+|---|---|---|
+| Compat-corpus file #12 (an Overture building file, mixed Polygon and MultiPolygon, a nullable string `id`) | `C:\dev\spatial-ide\target\fixtures\compat-corpus\overture\overture-2026-08-19.0-building-bern.parquet` — sha256 `6cd47a3e6e31c842a969db18279deae92e8696488ad94e773850e59a15bd85c5` (`target\fixtures\compat-corpus\MANIFEST.json`'s own `sha256` field; first 12 hex `6cd47a3e6e31`) | S1 |
+| F-1, three MultiPolygon rows of three, one and two parts (the second part of row 0 has a hole), LV95, declared `["MultiPolygon"]` | `C:\dev\spatial-ide\target\fixtures\manual-walkthrough\multipolygon-f1.parquet`, written by `generate_the_multipolygon_f1_fixture` | S2, S3, S4 |
+
+| # | Step | Expected outcome |
+|---|---|---|
+| S1 | **Corpus #12 on the canvas.** Click **Open GeoParquet…** and select corpus file #12. | The open is refused, and the refusal panel shows the code `engine.identity_unusable` with a message that names the column `id`. This is ADR-016's identity rule, not a geometry refusal: the file's `id` is a nullable string, which does not widen into an unsigned 64-bit integer. No describe summary and no canvas appear. Whether a remediation form appears under the refusal is recorded, not asserted (the file has no unsigned 64-bit integer column to map). The multi-part hover on a real building file is not available, because this file cannot be opened without an identity declaration; S2 carries the hover. Record the code and the message verbatim, and whether it was clear that the refusal is about `id` and not about the geometry. |
+| S2 | **F-1: hover two parts of one feature.** Open the F-1 file and let its first view settle (Part A's A4 shows what "settled" looks like). Click **Zoom to layer** if the features are small. Row 0 is the cluster of three squares along the bottom, the middle one with a hole. Hover the left square of row 0, then the right square of row 0, and read the hover readout each time. Then hover the single square above them (row 1) and read it. | The two parts of row 0 give the **same readout**: the same `id` line, from one feature, and never two different ids. Row 1's readout is a different `id`. The canvas draws all six parts, with the hole in row 0's middle part open to the background. The describe summary shows two labelled rows, one for the engine's encoding and one for the file's declaration; S4 reads their wording. Record the three readouts, in the order hovered. |
+| S3 | **F-1: publish is refused.** With the F-1 file open, click **Publish…** and start a publish to a fresh destination under `C:\dev\spatial-ide\target\`. | The publish is refused before any approval prompt: a refusal is shown that carries the code `publish.geometry_encoding_not_publishable` and a message that starts with `[P6 placeholder]`. No approval dialog opens and the destination folder is not created. Record the code and the message verbatim, and whether it was clear why this file cannot be published and what would change that. |
+| S4 | **The describe labels and the new placeholder strings, for your wording.** With the F-1 file open, read the two describe rows added for the geometry (their labels start with `[P6 placeholder]`). Then read the other new `[P6 placeholder]` strings where they are written: `frontends/shell/src/admission/describeSummaryText.ts` (`declaredTypesLine`, for an empty list and for an absent key), `frontends/shell/src/canvas/decodeBatch.ts` (`UnexpectedEncodingError`), `frontends/shell/src/canvas/limits.ts` (`PickCeilingExceeded`), `engine/src/wkb.rs` (the row-decode refusals), `engine/src/geoparquet.rs` (the `geometry_types` refusals for a value that is not a list and for a non-string member) and `kernel/src/publish/error.rs` (`GeometryEncodingNotPublishable`'s `Display`). Last, read `KNOWN-LIMITATIONS.md` items 31 to 34, which are draft wording. | For each string, the log records either the wording you want in its place, or "keep". Until then every one stays a placeholder, and none ships as settled wording. The engine's refusal for a declared type outside the readable set (ADR-034 Decision 4's sighted wording) is not a placeholder, and is read by opening a Point file such as corpus file #2. |
+
+**If anything deviates:** stop, record the exact step, and report it, as in every earlier Part. In S2, the deviation this row exists to catch is a second id for one feature (a hover on one part and a hover on another part of row 0 giving different readouts), or a part drawn with its hole filled. In S3, it is an approval dialog opening, or a destination created.
+
+**Sitting estimate (scheduling only, not a claim about the app):** a few minutes for S1 to S3 and a reading pass for S4.
+
+---
+
+## Result log
+
+Fill in after running the rows above.
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **S1:**
+- **S2:**
+- **S3:**
+- **S4:**
