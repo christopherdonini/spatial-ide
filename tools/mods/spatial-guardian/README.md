@@ -48,19 +48,19 @@ R11. G6's refusal of a report-only subagent's shell call is a backstop, not the 
 Installing a mod is a security-posture change. It needs the human's typed approval after both gates, and he installs it himself. Nothing in this repository installs, enables or loads it.
 
 1. `claude plugin marketplace add <repository>/tools/mods --scope user`
-2. `claude plugin install spatial-guardian@spatial-ide-mods --scope user`
+2. `claude plugin install spatial-guardian@spatial-ide-mods --scope local`
 3. `/reload-plugins`
 4. Confirm the `/plugin` line the brief names (`state/directives/MODS-GUARDIAN-V0-2026-10-03.md:44` @ 1bb94e19 sha256:b446fb1dad9f228df029d8ffea2628f3a99f15239b9b44ce3e76aac99fdd7013).
 
-Install from a checkout on main, at user scope. Never use the `project` or `local` scope: a plugin enabled there would be declared by a repository file.
+Install from the main checkout, at local scope. Never use the `project` scope: a committed repository file would then declare the plugin. Local scope's enable record is `.claude/settings.local.json`, which git ignores.
 
 ## Turning it off
 
-- Guardian alone: disable it in `/plugin`, or run `claude plugin disable spatial-guardian --scope user`.
+- Guardian alone: disable it in `/plugin`, or run `claude plugin disable spatial-guardian --scope local`.
 - One session: start with `--safe-mode`. It also disables the user's other customizations.
 - Not `disableAllHooks`: it also stops the repository's settings hooks (the Stop hook and the round mirror).
 
-To remove it: `claude plugin uninstall spatial-guardian`.
+To remove it: `claude plugin uninstall spatial-guardian --scope local`.
 
 ## Acceptance, stop conditions, false refusals
 
