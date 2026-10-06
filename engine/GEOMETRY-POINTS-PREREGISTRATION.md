@@ -618,3 +618,36 @@ After the merge, B is the merge commit's first parent and H is the merge commit 
 8. **Generation 3.**
 
 **Superseded index.** §4's PE-6 mutation → item 2. §4's drafted failure points for PE-2, PE-4, PE-5 and A-3 → item 3. §9's clippy line → item 7, read and not edited.
+
+### Amendment 3 — phase B's outcomes (class 2 and class 3), and a pile-of-points fixture for row P2 (class 9)
+
+*Written by the custodian after phase B's results were seen, at the branch head 7620550a8a5cbf1bca5f9f43059c28fe834115af, before either gate. The record is worker report 2, `state/consults/2026-10-06-geometry-points-cut-worker-report-2.md` (sha256 42d59115baa75256c300a1f80f12c32c763fd5eb88bd3978a4911d46d1918207, from its line 5 to the end), cited by section. Nothing below is a quotation.*
+
+1. **Phase B's commits:**
+   - 70bcb3295970937c02105751ff8b9399bd3689e0, the shell;
+   - 55df46fd1b52de15f152439dd15664f75b1f04a6, the docs;
+   - ac54f4d399b0c05379f4a9e1145b6abac7927e65, the P4 generator edits;
+   - 7620550a, the P4 re-run at ac54f4d3.
+
+   §9's commit 5 is split into three, so that the re-run ran at a clean committed tree.
+2. **Class 2, the walkthrough's Part P.** `frontends/shell/MANUAL-WALKTHROUGH.md` already holds a Part P, for an earlier piece. The new Part keeps the form's name and rows P1 to P7, so that the form's and Amendment 1's references stand, and its first paragraph says which Part P it is.
+3. **Class 2, tests beyond §4's rows,** each with its own observed mutation (the report's Mutations table):
+   - SH-P2's cache-rule test;
+   - SH-P4, written as two tests: the spacing branches, and the selector.
+4. **Class 2, `buildLayers`'s `kind`.** It is a required parameter, as `geometryEncoding` is, so 25 existing call sites in its test file change. The polygonal path is unchanged in behaviour.
+5. **Class 2, KNOWN-LIMITATIONS items 31 to 33** are edited in place for Point, as §2 lists them. Items 35 and 36 are as drafted.
+6. **Class 3, the P4 generator's literals:** the boundary-8 line and its row label name #5. An empty set prints as none.
+7. **Class 9, a scope addition from the human's OPEN-4 ruling** (round 62, line 9; Amendment 1, item 5):
+   - **The gap:** row P2 must hover a visible pile of points, and no fixture draws one. P-1's six points are at least 10 m apart, and the spacing refusal starts before their symbols touch (the report's Deviations, item 2).
+   - **The addition:** one more ignored walkthrough generator in `kernel/tests/manual_walkthrough_fixtures.rs`. It writes P-1's rows and a pile at one point of P-1's extent, all with a covering, so that the average spacing stays above the 9 px threshold at a zoom where the pile's symbols overlap.
+   - **Row P2's pile step** names that file in place of its no-pile fallback. The test count is unchanged, because a generator carries no recorded mutation, as phase A's generators do not.
+   - It lands in one fix commit before either gate, and §7's class 8 record then gives the final figures.
+8. **Noticed by the worker and not done, for the gates** (the report's Noticed section):
+   - MP-1's E2E step MP' still opens F-1, which has no covering, so by Amendment 1's item 6 it is expected to meet the no-covering refusal. F-1c is its covered twin. The form keeps existing E2E steps unedited, so whether MP' moves to F-1c is for the gates to weigh.
+   - The generated P3 line names only #8 as excluded by the primary-provenance precedence, and #5 is now excluded too.
+   - The engine README's Declared-limits line does not list items 35 and 36; §8 item 18 keeps that line out of the index edit.
+   - No KNOWN-LIMITATIONS line names a Point file with no covering.
+9. **A timing-sensitive failure in a shared run,** not recorded as a failure: `src/notices/noticeDeterminism.test.ts` failed once while a held cargo build ran, and passed when the worker re-ran it with nothing else of this project running. The custodian's re-run alone under an exclusive hold gave up with 96 at 22:16:16Z, because another heavy run kept the machine busy. It is re-run when status shows none.
+10. **Generation 4.**
+
+**Superseded index.** §9's five-commit plan → item 1. Part P's row P2, its no-pile fallback → item 7. §4's row list → item 3 adds tests.
