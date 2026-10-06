@@ -13,18 +13,28 @@ import {
 } from "apache-arrow";
 import { describe, expect, it } from "vitest";
 
-import { decodeBatch, EXPECTED_FRAME, UnexpectedFrameError } from "./decodeBatch";
+import {
+  decodeBatch,
+  ENCODING_MULTIPOLYGON,
+  ENCODING_POLYGON,
+  EXPECTED_FRAME,
+  UnexpectedEncodingError,
+  UnexpectedFrameError,
+} from "./decodeBatch";
+import { loadBatchFixture } from "../testUtils/batchFixtures";
 
 /** Builds an IPC byte buffer matching `engine::envelope::TaggedBatch`'s wire shape closely enough
  * to exercise this decoder: `id: UInt64 not null`, `geometry: List<List<FixedSizeList<2,f64>>>`,
- * schema metadata carrying `frame`. */
+ * schema metadata carrying `frame` and `geometry_encoding`. */
 // `frame` is `string | null`, never `string | undefined`: passing `undefined` explicitly at a call
 // site would trigger this parameter's own default rather than mean "omit the tag" -- `null` is the
-// only value JS does not treat as "use the default" for a defaulted parameter.
+// only value JS does not treat as "use the default" for a defaulted parameter. The same holds for
+// `encoding`.
 function buildBatch(
   ids: bigint[],
   polygons: Array<Array<Array<[number, number]>>>,
-  frame: string | null = EXPECTED_FRAME
+  frame: string | null = EXPECTED_FRAME,
+  encoding: string | null = ENCODING_POLYGON
 ): Uint8Array {
   const idVec = vectorFromArray(ids, new Uint64());
   const fsl = new FixedSizeList(2, new Field("xy", new Float64(), false));
@@ -35,11 +45,22 @@ function buildBatch(
   if (frame !== null) {
     table.schema.metadata.set("frame", frame);
   }
+  if (encoding !== null) {
+    table.schema.metadata.set("geometry_encoding", encoding);
+  }
   return tableToIPC(table, "stream");
 }
 
+const SQUARE = (x: number, y: number, s: number): Array<[number, number]> => [
+  [x, y],
+  [x + s, y],
+  [x + s, y + s],
+  [x, y + s],
+  [x, y],
+];
+
 describe("decodeBatch", () => {
-  it("decodes ids and rings together, one feature per row, exterior + holes in order", () => {
+  it("decodes ids and parts together, one feature per row, a Polygon as one part, exterior + holes in order", () => {
     const ids = [7n, 9n];
     const polygons = [
       [[[0, 0], [1, 0], [1, 1], [0, 0]] as Array<[number, number]>], // one ring
@@ -50,13 +71,17 @@ describe("decodeBatch", () => {
     ];
     const ipc = buildBatch(ids, polygons);
 
-    const batch = decodeBatch("sh_test", 0, ipc, "geometry");
+    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON);
     expect(Array.from(batch.ids)).toEqual([7n, 9n]);
-    expect(batch.rings).toHaveLength(2);
-    expect(batch.rings[0]).toHaveLength(1);
-    expect(batch.rings[0][0]).toEqual([[0, 0], [1, 0], [1, 1], [0, 0]]);
-    expect(batch.rings[1]).toHaveLength(2); // exterior + hole
-    expect(batch.rings[1][1]).toEqual([[10.4, 10.4], [10.6, 10.4], [10.6, 10.6], [10.4, 10.4]]);
+    expect(batch.parts).toHaveLength(2);
+    expect(batch.parts[0]).toHaveLength(1); // a Polygon is one part
+    expect(batch.parts[0][0]).toHaveLength(1); // ... of one ring
+    expect(batch.parts[0][0][0]).toEqual([[0, 0], [1, 0], [1, 1], [0, 0]]);
+    expect(batch.parts[1]).toHaveLength(1);
+    expect(batch.parts[1][0]).toHaveLength(2); // exterior + hole
+    expect(batch.parts[1][0][1]).toEqual([[10.4, 10.4], [10.6, 10.4], [10.6, 10.6], [10.4, 10.4]]);
+    expect(Array.from(batch.partToRow)).toEqual([0, 1]);
+    expect(batch.partCount).toBe(2);
     expect(batch.totalVertices).toBe(4 + 4 + 4);
     expect(batch.streamHandle).toBe("sh_test");
     expect(batch.batchSeq).toBe(0);
@@ -65,23 +90,25 @@ describe("decodeBatch", () => {
   it("preserves ids exactly for values above Number.MAX_SAFE_INTEGER (ADR-016 §7)", () => {
     const huge = 18_446_744_073_709_551_615n; // u64::MAX
     const ipc = buildBatch([huge], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]]);
-    const batch = decodeBatch("sh_test", 0, ipc, "geometry");
+    const batch = decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON);
     expect(batch.ids[0]).toBe(huge);
   });
 
   it("refuses a batch whose schema does not carry the expected frame tag (ADR-010 rule 1)", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], "some-other-frame");
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry")).toThrow(UnexpectedFrameError);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedFrameError);
   });
 
   it("refuses a batch with no frame tag at all -- untagged is not tolerated as a default", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], null);
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry")).toThrow(UnexpectedFrameError);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedFrameError);
   });
 
   it("refuses a batch missing the named geometry column", () => {
     const ipc = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]]);
-    expect(() => decodeBatch("sh_test", 0, ipc, "the_wrong_column")).toThrow(/no `the_wrong_column`/);
+    expect(() => decodeBatch("sh_test", 0, ipc, "the_wrong_column", ENCODING_POLYGON)).toThrow(
+      /no `the_wrong_column`/
+    );
   });
 
   it("refuses a null id rather than silently coercing it to 0n", () => {
@@ -98,8 +125,106 @@ describe("decodeBatch", () => {
     );
     const table = new Table({ id: idVec, geometry: geomVec });
     table.schema.metadata.set("frame", EXPECTED_FRAME);
+    table.schema.metadata.set("geometry_encoding", ENCODING_POLYGON);
     const ipc = tableToIPC(table, "stream");
 
-    expect(() => decodeBatch("sh_test", 0, ipc, "geometry")).toThrow(/null id/);
+    expect(() => decodeBatch("sh_test", 0, ipc, "geometry", ENCODING_POLYGON)).toThrow(/null id/);
+  });
+
+  /**
+   * SH-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, real shape: the engine's own F-1 batch).
+   * F-1 is three MultiPolygon rows of 3, 1 and 2 parts, the second part of row 0 with a hole, so the
+   * part ordinals 0 to 5 differ from the row indices 0 to 2 from the second row on. The decode keeps
+   * every part, ring and vertex, maps each part to its row, and counts the vertices.
+   *
+   * RECORDED MUTATION: walk the multipolygon one level short in `decodeBatch` (treat the batch's
+   * geometry as a list of rings, as the polygon encoding is). This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `the engine's F-1 batch decodes to its parts, partToRow, partCount and totalVertices (SH-1)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("the engine's F-1 batch decodes to its parts, partToRow, partCount and totalVertices (SH-1)", () => {
+    const batch = decodeBatch("sh_f1", 0, loadBatchFixture("lv95-multipolygon-batch"), "geometry", ENCODING_MULTIPOLYGON);
+    const [ox, oy, u] = [2_600_000, 1_200_000, 10];
+    const at = (x: number, y: number, s: number) => SQUARE(ox + x * u, oy + y * u, s * u);
+
+    expect(Array.from(batch.ids)).toEqual([0n, 1n, 2n]);
+    expect(batch.parts.map((f) => f.length)).toEqual([3, 1, 2]);
+    expect(batch.parts[0]).toEqual([
+      [at(0, 0, 2)],
+      [at(4, 0, 4), at(5, 1, 2)], // the second part carries a hole
+      [at(10, 0, 2)],
+    ]);
+    expect(batch.parts[1]).toEqual([[at(0, 10, 3)]]);
+    expect(batch.parts[2]).toEqual([[at(6, 10, 2)], [at(10, 10, 2)]]);
+    expect(Array.from(batch.partToRow)).toEqual([0, 0, 0, 1, 2, 2]);
+    expect(batch.partCount).toBe(6);
+    expect(batch.totalVertices).toBe(5 * 4 + 5 + 5 * 2);
+  });
+
+  /**
+   * SH-2. A batch whose `geometry_encoding` is not the open's expected encoding, or is neither value,
+   * throws `UnexpectedEncodingError`; the check reads the batch's own metadata, never the data. A
+   * missing key is refused as well.
+   *
+   * RECORDED MUTATION: delete the encoding check in `decodeBatch`. This test then fails by name (the
+   * multipolygon batch is walked as polygon rings, or the unknown value passes).
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)", () => {
+    const polygon = loadBatchFixture("lv95-polygon-batch");
+    const multipolygon = loadBatchFixture("lv95-multipolygon-batch");
+    expect(() => decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_MULTIPOLYGON)).toThrow(UnexpectedEncodingError);
+    // Neither value the shell reads, even when the open's expectation names the same string.
+    const point = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.point");
+    expect(() => decodeBatch("sh", 0, point, "geometry", "geoarrow.point")).toThrow(UnexpectedEncodingError);
+    const untagged = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, null);
+    expect(() => decodeBatch("sh", 0, untagged, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
+
+    let thrown: unknown;
+    try {
+      decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(UnexpectedEncodingError);
+    expect((thrown as UnexpectedEncodingError).message).toMatch(/^\[P6 placeholder\]/);
+    expect((thrown as UnexpectedEncodingError).batchEncoding).toBe(ENCODING_MULTIPOLYGON);
+    expect((thrown as UnexpectedEncodingError).expectedEncoding).toBe(ENCODING_POLYGON);
+  });
+
+  /**
+   * SH-3 (real shape: the engine's own LV95 polygon batch). A `geoarrow.polygon` batch gives one part
+   * per feature, with no part level read from the data: three rows, three parts, `partToRow` the
+   * identity, the first row's two rings (exterior and hole) kept in one part, and the f64 coordinates
+   * at LV95 magnitude untouched.
+   *
+   * RECORDED MUTATION: read a part level under `geoarrow.polygon` in `decodeBatch` (walk polygon rows
+   * as a list of parts). This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `the engine's polygon batch gives one part per feature (SH-3)`
+   * FAILED by name with the mutation applied (the hand-built polygon decode test failed with it), then reverted.
+   */
+  it("the engine's polygon batch gives one part per feature (SH-3)", () => {
+    const batch = decodeBatch("sh_poly", 0, loadBatchFixture("lv95-polygon-batch"), "geometry", ENCODING_POLYGON);
+    expect(Array.from(batch.ids)).toEqual([0n, 1n, 2n]);
+    expect(batch.parts.map((f) => f.length)).toEqual([1, 1, 1]);
+    expect(Array.from(batch.partToRow)).toEqual([0, 1, 2]);
+    expect(batch.partCount).toBe(3);
+    expect(batch.parts[0][0].map((r) => r.length)).toEqual([30, 10]); // exterior, then a hole
+    for (const feature of batch.parts) {
+      for (const [x, y] of feature[0][0]) {
+        expect(x).toBeGreaterThan(2_500_000); // LV95 easting, in f64
+        expect(y).toBeGreaterThan(1_100_000);
+      }
+    }
+    let vertices = 0;
+    for (const feature of batch.parts) {
+      for (const ring of feature[0]) vertices += ring.length;
+    }
+    expect(batch.totalVertices).toBe(vertices);
   });
 });

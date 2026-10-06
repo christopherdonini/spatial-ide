@@ -3,30 +3,54 @@
 
 import { describe, expect, it } from "vitest";
 
+import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 
 describe("extentOfBatch", () => {
   it("returns null for a batch with zero features", () => {
-    expect(extentOfBatch({ rings: [] })).toBeNull();
+    expect(extentOfBatch(partsOfPolygons([]))).toBeNull();
   });
 
   it("returns null for a batch whose features all have null geometry", () => {
-    // decodeBatch.ts represents a null-geometry row as an empty featureRings array.
-    expect(extentOfBatch({ rings: [[], []] })).toBeNull();
+    // decodeBatch.ts represents a null-geometry row as a feature with no part at all.
+    expect(extentOfBatch(partsOfPolygons([null, null]))).toBeNull();
+    // ... and a polygon with no ring as one part with none.
+    expect(extentOfBatch(partsOfPolygons([[], []]))).toBeNull();
   });
 
   it("bounds every vertex across every ring and every feature", () => {
-    const bbox = extentOfBatch({
-      rings: [
+    const bbox = extentOfBatch(
+      partsOfPolygons([
         [[[0, 0], [10, 0], [10, 10], [0, 10]]], // feature 0, one ring
         [[[5, -5], [20, -5], [20, 5]]], // feature 1, one ring
-      ],
-    });
+      ])
+    );
     expect(bbox).toEqual({ xmin: 0, ymin: -5, xmax: 20, ymax: 10 });
   });
 
+  /**
+   * SH-6 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4): a feature with two distant parts
+   * has one extent spanning both, never part 0's alone.
+   *
+   * RECORDED MUTATION: read part 0 only in `extentOfBatch`. This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `a feature with two distant parts has one extent spanning both (SH-6)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("a feature with two distant parts has one extent spanning both (SH-6)", () => {
+    const bbox = extentOfBatch(
+      partsOfFeatures([
+        [
+          [[[0, 0], [1, 0], [1, 1], [0, 0]]], // part 0
+          [[[100, 200], [101, 200], [101, 201], [100, 200]]], // part 1, far away
+        ],
+      ])
+    );
+    expect(bbox).toEqual({ xmin: 0, ymin: 0, xmax: 101, ymax: 201 });
+  });
+
   it("a single-point ring still produces a (degenerate) bbox, not null", () => {
-    const bbox = extentOfBatch({ rings: [[[[7, 3]]]] });
+    const bbox = extentOfBatch(partsOfPolygons([[[[7, 3]]]]));
     expect(bbox).toEqual({ xmin: 7, ymin: 3, xmax: 7, ymax: 3 });
   });
 });

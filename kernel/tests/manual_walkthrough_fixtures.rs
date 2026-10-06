@@ -204,6 +204,30 @@ fn generate_the_absent_crs_contradicted_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The multipolygon file for the shell E2E's MP' step (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`
+/// section 3, fixture F-1; ADR-034): LV95, declared `["MultiPolygon"]`, three MultiPolygon rows of
+/// three, one and two parts (the second part of row 0 with a hole), no covering. It is what
+/// `spatial_engine::fixture::multipolygon_f1_rows` writes, so the shell E2E opens the same shape the
+/// engine's own tests and the committed batches (BF-1) carry. Admitted as `geoarrow.multipolygon`;
+/// publishing it is refused by name (ADR-034 Decision 10).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_multipolygon_f1_fixture() {
+    use spatial_engine::fixture::{multipolygon_f1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("multipolygon-f1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(multipolygon_f1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multipolygon F-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The "missing identity" refusing file: the shape most real GeoParquet has per ADR-016's own
 /// Context — a unique key under a different name (`parcel_key`) and **no `id` column at all**
 /// (`IdentityMode::ForeignKeyColumn`), refused as `EngineError::IdentityUnusable` (SKP code

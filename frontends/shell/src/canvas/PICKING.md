@@ -13,9 +13,13 @@ origin, a fixed offset no averaging or zooming touches.
 anywhere under `frontends/shell/src/` except in this file and in
 `noCoordinateLeak.test.ts` (which is the scan itself, and necessarily contains the string it is
 checking for). `WorkingCanvas.tsx`'s `onHover` handler resolves a pick through `resolvePick`
-(`pick.ts`) instead: **GPU ordinal → stable feature id → authoritative f64**, looked up from the
-exact same `ids`/`rings` arrays a layer was built from (`buildLayers.ts`), never through
-unprojection.
+(`pick.ts`) instead: **GPU ordinal → part → row → stable feature id → authoritative f64**, looked
+up from the exact same `ids`/`parts`/`partToRow` a layer was built from (`buildLayers.ts`), never
+through unprojection. The GPU ordinal is a **part** ordinal, not a row index: deck.gl's
+`SolidPolygonLayer` draws one datum per polygon part and picks by datum index, so a feature with
+several parts (a MultiPolygon, ADR-034 Decision 6) has several ordinals, and `partToRow` maps each
+back to its one row. Every part of one feature resolves to the identical result, and the pick
+ceiling (`limits.ts`) counts parts.
 
 Nothing in this cut needs `info.coordinate` for a legitimate reason (navigation, hover, or
 candidate-geometry creation, per ADR-010 rule 2's permitted uses) — cut 1 has no digitizing path and

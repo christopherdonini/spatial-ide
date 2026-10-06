@@ -8,13 +8,18 @@
  */
 
 /**
- * deck.gl's pick index is 24-bit: 16,777,215 features per layer, and past it
+ * deck.gl's pick index is 24-bit: 16,777,215 picking indices per layer, and past it
  * `encodePickingColor`/`decodePickingColor` truncate to a **wrong-but-plausible index with nothing
  * raised** (ADR-010 rule 6, read from deck.gl 9.3.7 source).
  *
+ * **The ceiling is counted in parts, not features** (ADR-034 Decision 6): one deck.gl datum is one
+ * polygon part and the pick index is the datum index, so a multi-part feature uses one index per
+ * part. `checkPickCeiling` is called with a batch's `partCount` at both product sites
+ * (`buildLayers.ts`, `residentSet.ts`).
+ *
  * **Sharding strategy, declared before it is approached:** one deck.gl layer per resident batch
  * (`ResidentBatch`). A batch is bounded by the data plane's `MAX_FRAME_BYTES` (16 MiB), so per-layer
- * feature counts sit orders of magnitude below this ceiling by construction. A batch that would
+ * part counts sit orders of magnitude below this ceiling by construction. A batch that would
  * exceed it anyway is refused and not rendered -- see `checkPickCeiling`.
  */
 export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
@@ -41,22 +46,29 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
  * stays resident. Bounded by this same ceiling via the cache's `WeakMap` keying (it cannot grow
  * past the resident set independently), but the actual heap delta this adds at the ceiling is not
  * measured anywhere in this cut. Named debt, not silently folded into "doubles" above.
+ *
+ * **Open, unmeasured cost (MP-1, ADR-034 Decision 6):** `ResidentBatch.parts` adds one array level
+ * per feature (a Polygon is one part), and `partToRow` is one `Int32Array` entry per part, resident
+ * with the batch. Their heap cost at this ceiling is not measured anywhere in this cut. The
+ * vertex ceiling itself counts vertices and is unchanged.
  */
 export const MAX_RESIDENT_VERTICES = 2_000_000;
 
 export class PickCeilingExceeded extends Error {
-  constructor(public readonly featureCount: number) {
+  constructor(public readonly pickOrdinalCount: number) {
     super(
-      `batch has ${featureCount} features, above the declared 24-bit picking ceiling of ` +
-        `${DECKGL_PICK_INDEX_CEILING} (ADR-010 rule 6) -- refused, not rendered`
+      `[P6 placeholder] batch has ${pickOrdinalCount} pick ordinals (polygon parts), above the declared ` +
+        `24-bit picking ceiling of ${DECKGL_PICK_INDEX_CEILING} (ADR-010 rule 6) -- refused, not rendered`
     );
     this.name = "PickCeilingExceeded";
   }
 }
 
-export function checkPickCeiling(featureCount: number): void {
-  if (featureCount > DECKGL_PICK_INDEX_CEILING) {
-    throw new PickCeilingExceeded(featureCount);
+/** `pickOrdinalCount` is a batch's `partCount`: one pick ordinal per polygon part, never the
+ * feature count (a multi-part feature uses several). */
+export function checkPickCeiling(pickOrdinalCount: number): void {
+  if (pickOrdinalCount > DECKGL_PICK_INDEX_CEILING) {
+    throw new PickCeilingExceeded(pickOrdinalCount);
   }
 }
 

@@ -82,28 +82,30 @@ export const SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX = 9;
 
 /**
  * The average resident feature's own bounding-box extent (the larger of its width/height, across
- * every ring/hole a feature carries), in the dataset's own CRS units -- `0` when `batches` carries no
+ * every ring/hole of every part a feature carries -- the union over its parts), in the dataset's own CRS units -- `0` when `batches` carries no
  * feature with any real geometry at all (nothing to average). Pure and O(total vertices), the same
  * order of work `buildLayers` already does over the same batches each render -- computed once per
  * render (`WorkingCanvas.tsx`'s own `averageFeatureExtentRef`), never per hover event.
  */
-export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "rings">[]): number {
+export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "parts">[]): number {
   let sumExtent = 0;
   let count = 0;
   for (const batch of batches) {
-    for (const featureRings of batch.rings) {
+    for (const featureParts of batch.parts) {
       let minX = Infinity;
       let minY = Infinity;
       let maxX = -Infinity;
       let maxY = -Infinity;
       let sawVertex = false;
-      for (const ring of featureRings) {
-        for (const [x, y] of ring) {
-          sawVertex = true;
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
+      for (const rings of featureParts) {
+        for (const ring of rings) {
+          for (const [x, y] of ring) {
+            sawVertex = true;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
         }
       }
       if (!sawVertex) continue;

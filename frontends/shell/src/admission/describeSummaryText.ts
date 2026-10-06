@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { CrsInfo, IdentityInfo, SourceChecks, SourceCoverage } from "../skp/types";
+import type { CrsInfo, GeometryInfo, IdentityInfo, SourceChecks, SourceCoverage } from "../skp/types";
 
 /**
  * `DescribeSummary`'s CRS line -- factored out as a pure function so the asserted-ness rendering
@@ -92,4 +92,23 @@ export function degradedChecksLine(checks: SourceChecks): string | null {
     return null;
   }
   return `[P6 placeholder] degraded — unestablished: ${checks.components.join(", ")}`;
+}
+
+/**
+ * `DescribeSummary`'s declared-types row (ADR-034 Decision 3 and its rider; MP-1, SH-F). Renders the
+ * file's own `geometry_types` declaration, which is a source fact and not the engine's `encoding`:
+ * a populated list is shown as declared, in declared order and with its case as written; an empty
+ * list `[]` and an absent key `null` are different facts and read differently. The two non-list
+ * texts are P6 placeholders, the human's wording at P6. No text here calls the encoding the file's
+ * type.
+ */
+export function declaredTypesLine(geometry: Pick<GeometryInfo, "declared_types">): string {
+  const declared = geometry.declared_types;
+  if (declared === null) {
+    return "[P6 placeholder] the file declares no geometry_types key";
+  }
+  if (declared.length === 0) {
+    return "[P6 placeholder] the file declares an empty geometry_types list";
+  }
+  return declared.join(", ");
 }

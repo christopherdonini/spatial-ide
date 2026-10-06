@@ -500,6 +500,11 @@ export interface WorkingCanvasProps {
    * in `[render-trace] canvas-lifecycle` lines. Not read for any rendering decision. */
   dataset: string;
   geometryColumn: string;
+  /** ADR-034 Decision 2, SH-B: this open's own `describe.geometry.encoding` -- the encoding every
+   * batch of this dataset must carry. `decodeBatch` refuses a batch whose `geometry_encoding` is
+   * anything else rather than walking it at a guessed nesting depth. REQUIRED, with no default: a
+   * defaulted expectation would be exactly the silent assumption the check exists to remove. */
+  geometryEncoding: string;
   /** `skp/0.4`, crs-unit-fact-and-bounds: this dataset's own `describe.crs.unit` fact -- REQUIRED,
    * with no default (this piece's preregistration §8 item 2 names a defaulted unit block-on-sight).
    * Selects `RECENTER_MAX_DRIFT[crsUnit]` at this component's four `recenterThresholdForBudget`
@@ -808,7 +813,7 @@ export function createHoverRepickScheduler(deps: HoverRepickDeps): HoverRepickSc
 }
 
 const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(function WorkingCanvas(
-  { dataset, geometryColumn, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
+  { dataset, geometryColumn, geometryEncoding, crsUnit, onHover, onCanvasRefusal, onResidentCeilingExceeded, onViewportChanged, style },
   ref
 ) {
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
@@ -1343,7 +1348,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
         } finally {
           end("frame-decode");
         }
@@ -1416,7 +1421,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         stats.vertices += batch.totalVertices;
         streamStatsRef.current.set(streamHandle, stats);
         traceStreamBatch(streamHandle, batchSeq, batch.ids.length, batch.totalVertices, stats.rows, stats.vertices);
-        const preOffsetSample = batch.rings.find((r) => r.length > 0 && r[0].length > 0)?.[0]?.slice(0, 3);
+        const preOffsetSample = batch.parts.find((p) => p.length > 0 && p[0].length > 0 && p[0][0].length > 0)?.[0]?.[0]?.slice(0, 3);
         if (preOffsetSample) {
           tracePositionsSample("pre-offset", streamHandle, batchSeq, preOffsetSample);
         }
@@ -1560,7 +1565,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         begin("frame-decode");
         let batch: ReturnType<typeof decodeBatch>;
         try {
-          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn);
+          batch = decodeBatch(streamHandle, batchSeq, ipcBytes, geometryColumn, geometryEncoding);
         } finally {
           end("frame-decode");
         }
@@ -1772,7 +1777,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [geometryColumn]
+    [geometryColumn, geometryEncoding]
   );
 
   // NEXT-CUT.md P3 / binding note 7: the ONLY effect this file runs on a style change. Fires on

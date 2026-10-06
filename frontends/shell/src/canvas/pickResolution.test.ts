@@ -21,9 +21,10 @@ import {
 import type { HoverPointerCapture } from "./pickResolution";
 import { confirmingReadout, isPickConfirming } from "./pick";
 
-function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "rings"> {
-  // One exterior ring per feature, no holes -- `features[i]` is that feature's own ring vertex list.
-  return { rings: features.map((ring) => [ring]) };
+function batchOf(features: Array<Array<[number, number]>>): Pick<ResidentBatch, "parts"> {
+  // One part per feature, one exterior ring, no holes -- `features[i]` is that feature's own ring
+  // vertex list.
+  return { parts: features.map((ring) => [[ring]]) };
 }
 
 describe("averageFeatureExtent", () => {
@@ -51,6 +52,28 @@ describe("averageFeatureExtent", () => {
   it("a feature with no vertex at all (e.g. a null geometry) is excluded from the average, not counted as 0", () => {
     const withNull = batchOf([[[0, 0], [10, 0]], []]); // one real (extent 10), one empty
     expect(averageFeatureExtent([withNull])).toBe(10); // not (10 + 0) / 2
+  });
+
+  /**
+   * SH-6 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4): a feature's extent is the union
+   * over its parts, one feature counted once. Two distant parts are one feature of extent 100, never
+   * two features of extent 1, and never part 0 alone.
+   *
+   * RECORDED MUTATION: read part 0 only in `averageFeatureExtent`. This test then fails by name.
+   *
+   * Observed over `ac538440` on the uncommitted tree of the shell commit: `a feature with two distant parts has one extent spanning both parts, counted once (SH-6)`
+   * FAILED by name with the mutation applied, then reverted.
+   */
+  it("a feature with two distant parts has one extent spanning both parts, counted once (SH-6)", () => {
+    const multi: Pick<ResidentBatch, "parts"> = {
+      parts: [
+        [
+          [[[0, 0], [1, 0], [1, 1], [0, 0]]], // part 0: extent 1
+          [[[99, 0], [100, 0], [100, 1], [99, 0]]], // part 1: far to the east
+        ],
+      ],
+    };
+    expect(averageFeatureExtent([multi])).toBe(100);
   });
 });
 
