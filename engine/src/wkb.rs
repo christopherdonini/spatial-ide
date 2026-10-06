@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! WKB → GeoArrow polygon and multipolygon decoding.
+//! WKB → GeoArrow polygon, multipolygon and point decoding.
 //!
-//! Two builders, one per encoding a dataset can be opened under (`geoarrow.rs`'s
+//! Three builders, one per encoding a dataset can be opened under (`geoarrow.rs`'s
 //! `GeometryEncoding`, fixed at open from the file's declared `geometry_types`): [`PolygonBuilder`]
-//! reads WKB type 3 only, and `MultiPolygonBuilder` reads types 3 and 6. A row of any other type is
-//! refused by name and stops the stream at that row; nothing is skipped.
+//! reads WKB type 3 only, `MultiPolygonBuilder` reads types 3 and 6, and `PointBuilder` reads
+//! type 1 only. A row of any other type is refused by name and stops the stream at that row;
+//! nothing is skipped.
 //!
 //! Real GeoParquet in the wild stores geometry as WKB (the 1.0 encoding, and still the default in
 //! 1.1), so this is the shape the engine actually meets. The decode is deliberately strict: every
@@ -20,8 +21,10 @@
 //! WKB and appended to the coordinate buffer with no arithmetic applied at all.
 
 use crate::error::{EngineError, Result};
-use crate::geoarrow::{EXT_NAME_MULTIPOLYGON, EXT_NAME_POLYGON};
+use crate::geoarrow::{EXT_NAME_MULTIPOLYGON, EXT_NAME_POINT, EXT_NAME_POLYGON};
 
+/// OGC WKB geometry code for a 2D point. Codes 1001/2001/3001 (Z, M, ZM) are refused.
+const WKB_POINT: u32 = 1;
 /// OGC WKB geometry code for a 2D polygon. Codes 1003/2003/3003 (Z, M, ZM) are refused.
 const WKB_POLYGON: u32 = 3;
 /// OGC WKB geometry code for a 2D MultiPolygon. Codes 1006/2006/3006 (Z, M, ZM) are refused.
@@ -245,6 +248,61 @@ impl MultiPolygonBuilder {
             read_ring(r, ring, &mut self.coords, &mut self.ring_offsets)?;
         }
         self.part_offsets.push((self.ring_offsets.len() - 1) as i32);
+        Ok(())
+    }
+}
+
+/// Accumulates decoded Points into the one buffer a GeoArrow point array is made of: interleaved
+/// coordinates, one pair per row, and no offsets. Coordinate bits are carried through with no
+/// arithmetic. **A refused row stops the stream at that row; none is skipped.**
+#[derive(Default)]
+pub(crate) struct PointBuilder {
+    /// x0, y0, x1, y1, … one pair per row.
+    pub(crate) coords: Vec<f64>,
+}
+
+impl PointBuilder {
+    pub(crate) fn new() -> Self {
+        Self { coords: Vec::new() }
+    }
+
+    /// Vertices appended: one per row.
+    pub(crate) fn vertices(&self) -> usize {
+        self.coords.len() / 2
+    }
+
+    /// Decode one WKB Point (type 1) and append it.
+    pub(crate) fn push_wkb(&mut self, bytes: &[u8]) -> Result<()> {
+        let mut r = Reader::new(bytes)?;
+        let raw_type = r.u32()?;
+        if raw_type & EWKB_FLAGS != 0 {
+            return Err(EngineError::Wkb(
+                "[P6 placeholder] EWKB flags (SRID/Z/M) present on the geometry type code; a \
+                 geometry-embedded CRS or a third dimension is refused rather than dropped"
+                    .into(),
+            ));
+        }
+        if raw_type != WKB_POINT {
+            return Err(EngineError::Wkb(format!(
+                "[P6 placeholder] WKB geometry type {raw_type} met; this open's encoding, \
+                 {EXT_NAME_POINT}, reads WKB type {WKB_POINT} (Point) only"
+            )));
+        }
+        let (x, y) = (r.f64()?, r.f64()?);
+        if x.is_nan() || y.is_nan() {
+            // WKB's empty-Point convention. It is refused, never drawn, dropped or skipped.
+            return Err(EngineError::Wkb(
+                "[P6 placeholder] a Point with a NaN coordinate (WKB's empty Point) was met".into(),
+            ));
+        }
+        if !r.is_exhausted() {
+            return Err(EngineError::Wkb(format!(
+                "[P6 placeholder] {} trailing bytes after the point",
+                r.remaining()
+            )));
+        }
+        self.coords.push(x);
+        self.coords.push(y);
         Ok(())
     }
 }
@@ -678,6 +736,136 @@ mod tests {
                 b.coords.iter().map(|v| v.to_bits()).collect()
             };
             assert_eq!(bits(&got), bits(&reference));
+        }
+    }
+
+    // ---- Point (points-cut preregistration §4, rows PE-1 to PE-4) ----------------------------
+
+    use crate::fixture::encode_point;
+
+    /// The text of a typed `Wkb` refusal of `wkb` by a fresh `PointBuilder`.
+    fn point_refusal(wkb: &[u8]) -> String {
+        let mut b = PointBuilder::new();
+        match b.push_wkb(wkb) {
+            Err(EngineError::Wkb(d)) => {
+                assert_eq!(b.vertices(), 0, "a refused row appends nothing");
+                d
+            }
+            other => panic!("expected a typed Wkb refusal, got {other:?}"),
+        }
+    }
+
+    /// PE-1. RECORDED MUTATION: in `PointBuilder::push_wkb`, narrow x through `f32` (`x as f32 as
+    /// f64`). The coordinate loses its low bits and this test fails by name at the bit comparison.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `a_point_row_is_one_coordinate_pair_with_its_bits_unchanged` FAILED with the mutation
+    /// applied, at its assertion `x then y, bits unchanged`, then reverted.
+    #[test]
+    fn a_point_row_is_one_coordinate_pair_with_its_bits_unchanged() {
+        let e = 2_600_000.123_456_789_f64;
+        let n = 1_200_000.987_654_321_f64;
+        let mut b = PointBuilder::new();
+        b.push_wkb(&encode_point(e, n)).unwrap();
+        b.push_wkb(&encode_point(n, e)).unwrap();
+        assert_eq!(b.vertices(), 2, "one vertex per row");
+        let got: Vec<u64> = b.coords.iter().map(|v| v.to_bits()).collect();
+        let want = [e, n, n, e].map(f64::to_bits);
+        assert_eq!(got, want, "x then y, bits unchanged");
+    }
+
+    /// PE-2. RECORDED MUTATION: delete the type-1 check (`raw_type != WKB_POINT`) in
+    /// `PointBuilder::push_wkb` (applied as `if false && raw_type != WKB_POINT`). The type-1001 row
+    /// is then read as a point (this test's rows carry no third coordinate) and this test fails by
+    /// name where it expects a refusal.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `each_unreadable_point_row_is_a_typed_refusal_naming_what_was_met` FAILED with the mutation
+    /// applied, at `expected a typed Wkb refusal, got Ok(())`, then reverted.
+    #[test]
+    fn each_unreadable_point_row_is_a_typed_refusal_naming_what_was_met() {
+        // EWKB flags: an embedded SRID, and the Z flag.
+        let mut srid = vec![1u8];
+        srid.extend_from_slice(&(WKB_POINT | EWKB_SRID_FLAG).to_le_bytes());
+        srid.extend_from_slice(&2056u32.to_le_bytes());
+        assert!(point_refusal(&srid).contains("EWKB flags"));
+        let mut flagged = encode_point(1.0, 2.0);
+        flagged[1..5].copy_from_slice(&(WKB_POINT | EWKB_Z_FLAG).to_le_bytes());
+        assert!(point_refusal(&flagged).contains("EWKB flags"));
+
+        // A type other than 1, ISO Z, M and ZM codes included, each naming the type met.
+        for (code, name) in [
+            (1001u32, "Point Z"),
+            (2001, "Point M"),
+            (3001, "Point ZM"),
+            (3, "Polygon"),
+            (4, "MultiPoint"),
+        ] {
+            let mut other = encode_point(1.0, 2.0);
+            other[1..5].copy_from_slice(&code.to_le_bytes());
+            let d = point_refusal(&other);
+            assert!(d.starts_with("[P6 placeholder] "), "{name}: {d}");
+            assert!(
+                d.contains(&format!("geometry type {code} met")),
+                "{name}: {d}"
+            );
+            assert!(d.contains(EXT_NAME_POINT), "{name}: {d}");
+        }
+
+        // Trailing bytes, and truncation.
+        let mut trailing = encode_point(1.0, 2.0);
+        trailing.push(0xAA);
+        assert!(point_refusal(&trailing).contains("1 trailing bytes"));
+        let full = encode_point(1.0, 2.0);
+        assert!(point_refusal(&full[..full.len() - 3]).contains("truncated"));
+    }
+
+    /// PE-3. RECORDED MUTATION: in `PointBuilder::push_wkb`, ignore the byte-order byte (set
+    /// `r.little = true` after `Reader::new`). The big-endian row is then misread and this test
+    /// fails by name at the first `unwrap`.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `a_big_endian_point_decodes_to_the_same_values` FAILED with the mutation applied, at its
+    /// first `unwrap`, an `Err` naming `geometry type 16777216`, then reverted.
+    #[test]
+    fn a_big_endian_point_decodes_to_the_same_values() {
+        let (x, y) = (1_234_567.891_f64, -2.5_f64);
+        let mut be = vec![0u8];
+        be.extend_from_slice(&WKB_POINT.to_be_bytes());
+        be.extend_from_slice(&x.to_be_bytes());
+        be.extend_from_slice(&y.to_be_bytes());
+        let mut got = PointBuilder::new();
+        got.push_wkb(&be).unwrap();
+        let mut reference = PointBuilder::new();
+        reference.push_wkb(&encode_point(x, y)).unwrap();
+        assert_eq!(
+            got.coords.iter().map(|v| v.to_bits()).collect::<Vec<_>>(),
+            reference
+                .coords
+                .iter()
+                .map(|v| v.to_bits())
+                .collect::<Vec<_>>()
+        );
+    }
+
+    /// PE-4. RECORDED MUTATION: delete the NaN check in `PointBuilder::push_wkb` (applied as
+    /// `if false && (x.is_nan() || y.is_nan())`). WKB's empty Point (NaN, NaN) is then appended as a
+    /// coordinate and this test fails by name where it expects a refusal for the first case.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `a_point_with_a_nan_in_either_coordinate_is_refused` FAILED with the mutation applied, at
+    /// `expected a typed Wkb refusal, got Ok(())`, then reverted.
+    #[test]
+    fn a_point_with_a_nan_in_either_coordinate_is_refused() {
+        for (x, y) in [
+            (f64::NAN, f64::NAN),
+            (f64::NAN, 2.0),
+            (1.0, f64::NAN),
+            (f64::from_bits(0x7FF8_0000_0000_0001), 0.0),
+        ] {
+            let d = point_refusal(&encode_point(x, y));
+            assert!(d.starts_with("[P6 placeholder] "), "{d}");
+            assert!(d.contains("NaN"), "{d}");
         }
     }
 }

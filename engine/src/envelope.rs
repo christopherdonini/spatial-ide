@@ -289,7 +289,7 @@ impl BatchEnvelope {
 
     /// The encoding this open fixed, the same value the `geometry_encoding` key and the geometry
     /// field carry.
-    pub fn geometry_encoding(&self) -> GeometryEncoding {
+    pub(crate) fn geometry_encoding(&self) -> GeometryEncoding {
         self.encoding
     }
 
@@ -667,6 +667,80 @@ mod tests {
         assert!(
             TaggedBatch::assemble(&multi_env, ids(), one_polygon(), Vec::new()).is_err(),
             "a polygon array does not travel under a multipolygon envelope"
+        );
+    }
+
+    /// PE-7. RECORDED MUTATION: in `BatchEnvelope::build`, write `geoarrow::EXT_NAME_POLYGON`
+    /// unconditionally as the `geometry_encoding` key. The point envelope then disagrees with its
+    /// own geometry field and this test fails by name at that comparison.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `a_point_envelopes_geometry_encoding_equals_the_fields_extension_name` FAILED with the
+    /// mutation applied, at the comparison `the envelope key and the field's extension name are one
+    /// value` (left `geoarrow.polygon`, right `geoarrow.point`), then reverted.
+    #[test]
+    fn a_point_envelopes_geometry_encoding_equals_the_fields_extension_name() {
+        use crate::wkb::PointBuilder;
+        let env = BatchEnvelope::with_attributes(
+            file_crs(),
+            "geometry".into(),
+            test_identity(),
+            Vec::new(),
+            GeometryEncoding::Point,
+        );
+        assert_eq!(env.geometry_encoding(), GeometryEncoding::Point);
+        let schema = env.schema();
+        assert_eq!(
+            schema.metadata().get("geometry_encoding").unwrap(),
+            schema
+                .field(1)
+                .metadata()
+                .get(crate::geoarrow::EXT_NAME_KEY)
+                .unwrap(),
+            "the envelope key and the field's extension name are one value"
+        );
+        assert_eq!(
+            schema.metadata().get("geometry_encoding").unwrap(),
+            "geoarrow.point"
+        );
+
+        // A point batch is assembled and serialized under the point envelope, and only under it.
+        let mut pb = PointBuilder::new();
+        for (x, y) in [(2_600_000.5, 1_200_000.25), (2_600_010.0, 1_199_990.0)] {
+            pb.push_wkb(&crate::fixture::encode_point(x, y)).unwrap();
+        }
+        let points = crate::geoarrow::build_point_array(pb).unwrap();
+        let ids = || Arc::new(UInt64Array::from(vec![1u64, 2]));
+        let batch = TaggedBatch::assemble(&env, ids(), points.clone(), Vec::new()).unwrap();
+        assert_eq!(
+            batch.xy_bounds(),
+            Some([2_600_000.5, 1_199_990.0, 2_600_010.0, 1_200_000.25])
+        );
+        let mut buf = Vec::new();
+        batch.write_ipc_into(&mut buf).unwrap();
+        let mut rdr =
+            arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None).unwrap();
+        let round = rdr.next().unwrap().unwrap();
+        assert_eq!(
+            round.schema().metadata().get("geometry_encoding").unwrap(),
+            "geoarrow.point"
+        );
+        assert!(TaggedBatch::assemble(
+            &BatchEnvelope::new(file_crs(), "geometry".into(), test_identity()),
+            ids(),
+            points,
+            Vec::new()
+        )
+        .is_err());
+        assert!(
+            TaggedBatch::assemble(
+                &env,
+                Arc::new(UInt64Array::from(vec![1u64])),
+                one_polygon(),
+                Vec::new()
+            )
+            .is_err(),
+            "a polygon array does not travel under a point envelope"
         );
     }
 

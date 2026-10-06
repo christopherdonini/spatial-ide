@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! GeoArrow polygon and multipolygon assembly, and the check that the claimed encoding matches the
-//! data.
+//! GeoArrow polygon, multipolygon and point assembly, and the check that the claimed encoding
+//! matches the data.
 //!
 //! Layouts (GeoArrow, interleaved coordinates). Which one a dataset travels in is fixed at open, from
 //! the file's declared `geometry_types` (ADR-034 Decision 2), and never varies per batch or stream:
@@ -10,11 +10,13 @@
 //! ```text
 //! geoarrow.polygon       List<rings: List<vertices: FixedSizeList<xy: double>[2]>>
 //! geoarrow.multipolygon  List<polygons: List<rings: List<vertices: FixedSizeList<xy: double>[2]>>>
+//! geoarrow.point         FixedSizeList<xy: double>[2]
 //! ```
 //!
 //! Variable-width by construction — the offsets differ per feature and per ring, which is the
 //! shape the transport work had not yet met (the bake-off's payload was three fixed-width columns).
-//! The multipolygon encoding adds one offsets buffer and appends each coordinate once.
+//! The multipolygon encoding adds one offsets buffer and appends each coordinate once. The point
+//! encoding appends each coordinate once and carries no offsets buffer.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -25,10 +27,11 @@ use arrow::datatypes::{DataType, Field, FieldRef};
 
 use crate::crs::DatasetCrs;
 use crate::error::{EngineError, Result};
-use crate::wkb::{MultiPolygonBuilder, PolygonBuilder};
+use crate::wkb::{MultiPolygonBuilder, PointBuilder, PolygonBuilder};
 
 pub const EXT_NAME_POLYGON: &str = "geoarrow.polygon";
-pub const EXT_NAME_MULTIPOLYGON: &str = "geoarrow.multipolygon";
+pub(crate) const EXT_NAME_MULTIPOLYGON: &str = "geoarrow.multipolygon";
+pub(crate) const EXT_NAME_POINT: &str = "geoarrow.point";
 
 /// The GeoArrow encoding a dataset's geometry travels in: **a fact of the open** (ADR-034
 /// Decision 2), chosen from the file's declared `geometry_types` and the same for the envelope,
@@ -44,6 +47,8 @@ pub enum GeometryEncoding {
     /// `geoarrow.multipolygon`: a declared set that includes MultiPolygon, or an empty or absent
     /// declaration. A Polygon row is then a one-part MultiPolygon.
     MultiPolygon,
+    /// `geoarrow.point`: a declared set of exactly Point. Nothing is promoted into it.
+    Point,
 }
 
 impl GeometryEncoding {
@@ -53,6 +58,7 @@ impl GeometryEncoding {
         match self {
             Self::Polygon => EXT_NAME_POLYGON,
             Self::MultiPolygon => EXT_NAME_MULTIPOLYGON,
+            Self::Point => EXT_NAME_POINT,
         }
     }
 }
@@ -60,7 +66,33 @@ impl GeometryEncoding {
 /// **The readable geometry types, declared once per engine release** (ADR-034 Decision 1), in the
 /// order the refusal text states them. The admission gate and that text both read this, so the text
 /// can never state a set the gate does not admit.
-pub(crate) const READABLE_GEOMETRY_TYPES: [&str; 2] = ["Polygon", "MultiPolygon"];
+pub(crate) const READABLE_GEOMETRY_TYPES: [&str; 3] = ["Polygon", "MultiPolygon", "Point"];
+
+/// The kind a readable type belongs to. One column holds one kind (ADR-034 Decision 7).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum GeometryKind {
+    /// Polygon and MultiPolygon.
+    Polygonal,
+    /// Point.
+    Point,
+}
+
+/// The kind of a declared type name (case-insensitive), or `None` outside the readable set.
+pub(crate) fn kind_of(name: &str) -> Option<GeometryKind> {
+    let readable = READABLE_GEOMETRY_TYPES
+        .iter()
+        .find(|r| r.eq_ignore_ascii_case(name))?;
+    Some(if *readable == "Point" {
+        GeometryKind::Point
+    } else {
+        GeometryKind::Polygonal
+    })
+}
+
+/// **[P6 placeholder]** The refusal of a set that mixes readable kinds, as the ruling drafted it
+/// (question round 62, item 2; byte-copied from the ruling's draft by script). The bracketed
+/// `<declared list>` is replaced by the declared list, rendered as `{:?}` renders it.
+const MIXED_KINDS_DRAFT: &str = "geometry_types [<declared list>] mix polygonal and point types; this engine reads one kind per geometry column";
 
 /// The readable set as prose: `A and B`, or `A, B and C`.
 fn readable_set_phrase() -> String {
@@ -77,30 +109,38 @@ fn readable_set_phrase() -> String {
 /// - a set whose members are all `Polygon` gives [`GeometryEncoding::Polygon`];
 /// - a non-empty set within the readable set that includes `MultiPolygon` gives
 ///   [`GeometryEncoding::MultiPolygon`];
+/// - a set whose members are all `Point` gives [`GeometryEncoding::Point`];
 /// - an explicit empty list, **or an absent key** (`None`), gives [`GeometryEncoding::MultiPolygon`];
-/// - any member outside the readable set, mixed kinds and Z or M names included, is refused as
+/// - any member outside the readable set, Z or M names included, is refused as
 ///   `EngineError::GeoMetadata` with Decision 4's sighted wording, the declared list rendered as
-///   `{:?}` renders it and the readable set read from [`READABLE_GEOMETRY_TYPES`].
+///   `{:?}` renders it and the readable set read from [`READABLE_GEOMETRY_TYPES`];
+/// - a set that mixes the polygonal kind with Point is refused as `EngineError::GeoMetadata` with
+///   the ruling's own detail ([`MIXED_KINDS_DRAFT`]).
 pub(crate) fn encoding_for_declared_types(declared: Option<&[String]>) -> Result<GeometryEncoding> {
     let types = match declared {
         None | Some([]) => return Ok(GeometryEncoding::MultiPolygon),
         Some(types) => types,
     };
-    let readable = |t: &String| {
-        READABLE_GEOMETRY_TYPES
-            .iter()
-            .any(|r| r.eq_ignore_ascii_case(t))
-    };
-    if !types.iter().all(readable) {
+    if !types.iter().all(|t| kind_of(t).is_some()) {
         return Err(EngineError::GeoMetadata(format!(
             "geometry_types {types:?} include types this engine does not read; it reads {}",
             readable_set_phrase()
         )));
     }
-    if types.iter().all(|t| t.eq_ignore_ascii_case("Polygon")) {
+    if types.iter().all(|t| t.eq_ignore_ascii_case("Point")) {
+        Ok(GeometryEncoding::Point)
+    } else if types.iter().all(|t| t.eq_ignore_ascii_case("Polygon")) {
         Ok(GeometryEncoding::Polygon)
-    } else {
+    } else if types
+        .iter()
+        .all(|t| kind_of(t) == Some(GeometryKind::Polygonal))
+    {
         Ok(GeometryEncoding::MultiPolygon)
+    } else {
+        Err(EngineError::GeoMetadata(format!(
+            "[P6 placeholder] {}",
+            MIXED_KINDS_DRAFT.replace("[<declared list>]", &format!("{types:?}"))
+        )))
     }
 }
 
@@ -140,12 +180,33 @@ pub(crate) fn multipolygon_storage_type() -> DataType {
     DataType::List(polygons_field())
 }
 
+/// The storage type a `geoarrow.point` column must have: one non-null coordinate pair per row.
+pub(crate) fn point_storage_type() -> DataType {
+    DataType::FixedSizeList(coord_field(), 2)
+}
+
 /// The storage type the open's encoding names.
 fn storage_type(encoding: GeometryEncoding) -> DataType {
     match encoding {
         GeometryEncoding::Polygon => polygon_storage_type(),
         GeometryEncoding::MultiPolygon => multipolygon_storage_type(),
+        GeometryEncoding::Point => point_storage_type(),
     }
+}
+
+/// Build the GeoArrow point array from decoded points: one interleaved coordinate pair per row and
+/// no offsets buffer.
+pub(crate) fn build_point_array(b: PointBuilder) -> Result<ArrayRef> {
+    let n_coords = b.coords.len();
+    if !n_coords.is_multiple_of(2) {
+        return Err(EngineError::Arrow(format!(
+            "coordinate buffer has odd length {n_coords}"
+        )));
+    }
+    let flat = Float64Array::from(b.coords);
+    let points = FixedSizeListArray::try_new(coord_field(), 2, Arc::new(flat), None)
+        .map_err(|e| EngineError::Arrow(format!("points: {e}")))?;
+    Ok(Arc::new(points))
 }
 
 /// Build the GeoArrow multipolygon array from decoded geometries: three offset levels (geometry,
@@ -301,11 +362,17 @@ fn json_string(s: &str) -> String {
 /// with nothing raised.
 ///
 /// Walks either nesting: polygon (geometry → rings → vertices) or multipolygon (geometry → parts →
-/// rings → vertices), by offsets at every level.
+/// rings → vertices), by offsets at every level; a point array is read directly.
 ///
 /// Returns `None` when the array is neither or the nesting cannot be walked; the caller treats that
 /// as "no bound established", never as an empty one.
 pub fn coordinate_values(array: &ArrayRef) -> Option<&[f64]> {
+    // A point array is its own coordinate run, over its own slice window only: Arrow's `slice`
+    // windows a fixed-size list's child, so `points.len()` rows are `points.len() * 2` values.
+    if let Some(points) = array.as_any().downcast_ref::<FixedSizeListArray>() {
+        let flat = points.values().as_any().downcast_ref::<Float64Array>()?;
+        return flat.values().get(..points.len() * 2);
+    }
     let geoms = array.as_any().downcast_ref::<ListArray>()?;
     let geom_offsets = geoms.value_offsets();
     let lo = *geom_offsets.first()? as usize;
@@ -418,11 +485,29 @@ pub(crate) fn validate_multipolygon_encoding(array: &ArrayRef) -> Result<()> {
     Ok(())
 }
 
+/// The same check for `geoarrow.point`: a fixed-size list of two `Float64`, with no list level.
+pub(crate) fn validate_point_encoding(array: &ArrayRef) -> Result<()> {
+    let found = array.data_type();
+    let want = point_storage_type();
+    let structural_eq = matches!(
+        found,
+        DataType::FixedSizeList(c, 2) if c.data_type() == &DataType::Float64
+    );
+    if !structural_eq {
+        return Err(EngineError::EncodingMismatch {
+            claimed: format!("{EXT_NAME_POINT} as {}", describe_nesting(&want)),
+            found: describe_nesting(found),
+        });
+    }
+    Ok(())
+}
+
 /// Validate against the open's encoding — the one the envelope claims.
 pub(crate) fn validate_encoding(array: &ArrayRef, encoding: GeometryEncoding) -> Result<()> {
     match encoding {
         GeometryEncoding::Polygon => validate_polygon_encoding(array),
         GeometryEncoding::MultiPolygon => validate_multipolygon_encoding(array),
+        GeometryEncoding::Point => validate_point_encoding(array),
     }
 }
 
@@ -623,5 +708,111 @@ mod tests {
         let run = coordinate_values(&sliced).unwrap();
         assert_eq!(run.len(), 5 * 2);
         assert_eq!(run[0], 7.0);
+    }
+
+    /// One Point row per entry of `points`.
+    fn build_points(points: &[[f64; 2]]) -> ArrayRef {
+        let mut b = PointBuilder::new();
+        for p in points {
+            b.push_wkb(&crate::fixture::encode_point(p[0], p[1]))
+                .unwrap();
+        }
+        build_point_array(b).unwrap()
+    }
+
+    /// PE-5. RECORDED MUTATION: in `validate_point_encoding`, also accept one list level (a
+    /// `List<FixedSizeList<Float64>[2]>`, the shape of a linestring column). The linestring-shaped
+    /// array is then admitted as points and this test fails by name at its refusal.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `the_point_storage_type_is_a_flat_pair_and_each_validator_refuses_the_others_array` FAILED
+    /// with the mutation applied, at the first refusal assertion, because the mutated validator
+    /// then also admits the polygon array (a list level), then reverted.
+    #[test]
+    fn the_point_storage_type_is_a_flat_pair_and_each_validator_refuses_the_others_array() {
+        assert_eq!(
+            describe_nesting(&point_storage_type()),
+            "FixedSizeList<Float64>[2]"
+        );
+        let points = build_points(&[[1.0, 2.0], [3.0, 4.0]]);
+        let poly = build(&[square(0.0, 0.0)]);
+        let multi = build_multi(&[vec![square(0.0, 0.0)]]);
+        assert_eq!(points.data_type(), &point_storage_type());
+        assert_eq!(points.len(), 2, "one row per point, no offsets buffer");
+
+        validate_point_encoding(&points).unwrap();
+        for other in [&poly, &multi] {
+            assert!(matches!(
+                validate_point_encoding(other),
+                Err(EngineError::EncodingMismatch { .. })
+            ));
+        }
+        assert!(validate_polygon_encoding(&points).is_err());
+        assert!(validate_multipolygon_encoding(&points).is_err());
+
+        // Not a point array: a flat run, one list level of pairs, three or `f32` coordinates.
+        let flat: ArrayRef = Arc::new(Float64Array::from(vec![1.0, 2.0]));
+        let pairs = FixedSizeListArray::try_new(
+            coord_field(),
+            2,
+            Arc::new(Float64Array::from(vec![0.0, 0.0, 1.0, 1.0])),
+            None,
+        )
+        .unwrap();
+        let lines: ArrayRef = Arc::new(
+            ListArray::try_new(
+                vertices_field(),
+                OffsetBuffer::new(ScalarBuffer::from(vec![0i32, 2])),
+                Arc::new(pairs),
+                None,
+            )
+            .unwrap(),
+        );
+        let xyz: ArrayRef = Arc::new(
+            FixedSizeListArray::try_new(
+                Arc::new(Field::new("xyz", DataType::Float64, false)),
+                3,
+                Arc::new(Float64Array::from(vec![0.0, 0.0, 0.0])),
+                None,
+            )
+            .unwrap(),
+        );
+        for not_points in [&flat, &lines, &xyz] {
+            assert!(validate_point_encoding(not_points).is_err());
+        }
+
+        // The dispatch reads the open's encoding.
+        validate_encoding(&points, GeometryEncoding::Point).unwrap();
+        assert!(validate_encoding(&points, GeometryEncoding::Polygon).is_err());
+        assert!(validate_encoding(&points, GeometryEncoding::MultiPolygon).is_err());
+        assert!(validate_encoding(&poly, GeometryEncoding::Point).is_err());
+        assert!(validate_encoding(&multi, GeometryEncoding::Point).is_err());
+    }
+
+    /// PE-6. RECORDED MUTATION: in the point arm of `coordinate_values`, read the first pair only
+    /// (`..points.len() * 2` to `..2`). The run is then one pair for any array of two or more rows
+    /// and this test fails by name at its first assertion, the unsliced array's length. The form's
+    /// own mutation, returning the whole child, cannot fail it: Arrow's `slice` windows a
+    /// fixed-size list's child, so the child is already the slice's run. Applied as
+    /// `Some(flat.values())`, this test passed over `d3fe6055` on the same uncommitted tree.
+    ///
+    /// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+    /// `coordinate_values_over_a_sliced_point_array_returns_the_slices_run_only` FAILED with the
+    /// mutation applied, at its `assert_eq!` of the run's length, left 2, right 8, then reverted.
+    #[test]
+    fn coordinate_values_over_a_sliced_point_array_returns_the_slices_run_only() {
+        let a = build_points(&[[10.0, 11.0], [20.0, 21.0], [30.0, 31.0], [40.0, 41.0]]);
+        assert_eq!(coordinate_values(&a).unwrap().len(), 4 * 2);
+
+        let middle = a.slice(1, 1);
+        assert_eq!(coordinate_values(&middle).unwrap(), &[20.0, 21.0]);
+
+        let tail = a.slice(1, 3);
+        assert_eq!(
+            coordinate_values(&tail).unwrap(),
+            &[20.0, 21.0, 30.0, 31.0, 40.0, 41.0],
+            "the window's rows, in order"
+        );
+        assert!(coordinate_values(&a.slice(2, 0)).unwrap().is_empty());
     }
 }

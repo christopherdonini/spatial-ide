@@ -1493,7 +1493,12 @@ fn the_5gb_ladder_under_disk_discipline() {
 
 // RECORDED MUTATION: in `engine/src/lod.rs`'s per-feature read, accept a MultiPolygon by taking its
 // first part as the Polygon (`geo::Geometry::MultiPolygon(mp) => mp.0.into_iter().next()`...). The
-// build then succeeds on F-1 and this test fails by name at `expected a refusal`.
+// mutated build is refused by the tier-size ceiling (`engine.lod_tier_larger_than_source`), not by
+// the `Wkb` arm, and this test fails by name at its `Err(other)` arm. The observation of record is
+// the PR #182 gate-1 reviewer report's Mutations table, row L-1, at `c4c251d46e55`. Re-observed
+// over `d3fe6055` on the uncommitted tree of the engine commit: the test FAILED at its `Err(other)`
+// arm with `expected engine.wkb, got declared ceiling engine.lod_tier_larger_than_source exceeded:
+// limit 3518, saw 4300`, then reverted.
 // Observed over `d8276158` on the uncommitted tree of the engine commit:
 // `build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier` FAILED with the mutation
 // applied, then reverted.
@@ -1529,6 +1534,71 @@ fn build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier() {
     };
     assert!(
         detail.contains("expected a Polygon, found MultiPolygon"),
+        "the refusal names the type met: {detail}"
+    );
+
+    // No tier was written: the source's tier directory holds no parquet file.
+    let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
+    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
+        .join("spatial-ide/tiers")
+        .join(hash);
+    let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|x| x == "parquet"))
+                .collect()
+        })
+        .unwrap_or_default();
+    assert!(written.is_empty(), "a tier was written: {written:?}");
+    let _ = std::fs::remove_dir_all(&tiers);
+}
+
+// ---------------------------------------------------------------------------------------------
+// L-P (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §4): the tier builder's by-name refusal of a
+// Point feature stands (ADR-034 Consequences, LOD; `engine/src/lod.rs` is not edited by the points
+// cut).
+// ---------------------------------------------------------------------------------------------
+
+// RECORDED MUTATION: in `engine/src/lod.rs`, make the `Point` arm of `geometry_type_name` return
+// `"Polygon"`. The refusal then names the wrong type and this test fails by name at the assertion
+// that the refusal names Point.
+//
+// Observed over `d3fe6055` on the uncommitted tree of the engine commit:
+// `build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier` FAILED with the mutation
+// applied, at `the refusal names the type met: feature 0: expected a Polygon, found Polygon`, then
+// reverted.
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+
+    let dir = scratch_dir("points-lp");
+    let path = dir.join("p1.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write P-1");
+    let source = Dataset::open(&path).expect("open P-1");
+    let cancel = CancelToken::new();
+    clear_tier_directory(&source, &cancel);
+
+    let detail = match build_tiers(&source, LOD_BUILD_WORKERS, &cancel, None) {
+        Err(EngineError::Wkb(d)) => d,
+        Err(other) => panic!("expected engine.wkb, got {other}"),
+        Ok(_) => panic!("expected a refusal: a Point feature was tiered"),
+    };
+    assert!(
+        detail.contains("expected a Polygon, found Point"),
         "the refusal names the type met: {detail}"
     );
 
