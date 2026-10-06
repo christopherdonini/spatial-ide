@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `40f3a1ac0f596f87d437304f5c5c476d166f5c1394fd6e5b1a04b2c14fc70699`) at `2026-10-06T17:06:47.265Z`.
+Generated from `PLAN.yaml` (sha256 `ab60dc00365ed6d4fe4b403802783398396dfb28d234178cc61f16a6ba2f46f0`) at `2026-10-06T17:09:21.129Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `40f3a1ac0f596f87d437304f5c5c476d166f5c1394fd
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
-- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 (lane `governance`, order 24, budget 30 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -31,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `40f3a1ac0f596f87d437304f5c5c476d166f5c1394fd
 ## 5. In progress
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
+- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 — evidence: branch `cut/mods-readme-local-scope`
 
 ## 6. Proposed / unscheduled
 
