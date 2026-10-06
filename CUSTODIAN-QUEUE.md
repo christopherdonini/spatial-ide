@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cf84a07e99bc68d187e63d4a8b66fed42cd27ba6fbb29f34eb3133c169f0c2d5`) at `2026-10-06T16:48:45.420Z`.
+Generated from `PLAN.yaml` (sha256 `a0aeaed78c130c232f34cef0cededa0a0ca5b6af4e19572247dd132162084026`) at `2026-10-06T16:53:38.046Z`.
 
 ## 1. Next
 
@@ -94,6 +94,7 @@ Generated from `PLAN.yaml` (sha256 `cf84a07e99bc68d187e63d4a8b66fed42cd27ba6fbb2
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
+- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

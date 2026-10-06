@@ -4185,3 +4185,20 @@ nodes:
     entries: []
     summary: "Seen 2026-10-05 committing tools/mods/EVIDENCE-RECORDER-V0-1-PREREGISTRATION.md: scripts/plan/verify-quotes.mjs, HASH_REF_RE, requires a path to start with a letter, digit or underscore, so .github/workflows/governance-ci.yml:81-83 @ 17063904 sha256:<hex> binds as github/workflows/governance-ci.yml and fails as unresolvable. The form writes its three such hashes as unchecked, in words, so that no raw sha256 token is left unbound. The same pins in state/consults pass only because that folder is not scanned. Test-only plus a one-character-class change is the likely size. Never queued until the human places it."
     dates: {opened: 2026-10-05, done: null}
+  - id: mods-readme-local-scope
+    title: "The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner."
+    dates: {opened: 2026-10-06, done: null}
