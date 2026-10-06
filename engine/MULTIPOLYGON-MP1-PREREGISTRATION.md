@@ -653,3 +653,25 @@ Budget overrun, §7 not edited. *Written by the custodian after the build's resu
 5. **No gate route opens:** the piece is already under full gating.
 
 **Superseded index.** Amendment 2, item 4, its interim figures → items 2 and 3. §7 is not edited.
+
+### Amendment 5 — PR #182 gate-1 architect's record findings D-1 to D-3 (classes 1, 2 and 1)
+
+*Written by the custodian after PR #182's gate-1 architect report (`state/consults/gates/2026-10-06-geometry-types-beyond-polygons-gate1-architect.md`, its D-1 to D-3), under the proportional-gates rule (`AUTONOMY.md` §22, as amended by #180): record fixes in the piece, with no re-gate. That gate's result at generation 5 stands, because this amendment records that gate's own findings. Nothing below is a quotation.*
+
+1. **O7, the architect's D-1 (class 1).** ADR-034 left O7 to this form: how `docs/01` principle 8's logging is met for the promotion. This form names it here.
+   - **The reading:** it is met by `describe`'s `encoding` beside `declared_types` (K1, W1), and by the per-batch envelope's `geometry_encoding` key (E6). These are the facts accepted Decision 3 names as the promotion's inspectable record. No separate log entry is added.
+   - **The proof:** K-1 and E-8, by name.
+   - **The human may overturn it.** It changes no behaviour and is not a red line. If the human reads principle 8's logging requirement as needing a log entry, that entry comes as its own follow-up piece.
+2. **P-5's second unlisted ignored test, the architect's D-2 (class 2; P-5 is not edited).**
+   - The F-1 generator `generate_the_multipolygon_f1_fixture`, in `kernel/tests/manual_walkthrough_fixtures.rs`, is a second ignored test that P-5 did not list (worker report 2, deviation 4).
+   - Amendment 2, item 5.5 called the BF writer the one known extra. It is not: there are two.
+   - The reviewer computes P-5 at the gated head against the base, by name, with both extras.
+3. **The cause of the engine-tests overrun, the architect's D-3 (class 1; adds the cause to Amendment 4, item 4).**
+   - The group stood at 1,188 lines after phase A, already 38 over its 1,150 (worker report 1, its §7 figures). The form's estimate for the five new test files fell short. The two largest are `engine/tests/multipolygon_stream.rs` (403 lines) and `engine/tests/geometry_admission.rs` (250), with 139 comment lines between them, their recorded-mutation comments among them.
+   - Phase B then changed `engine/tests/admission_p4_corpus.rs`, adding 25 lines and removing 13, for the P4 re-run's #12 row and strings (Amendment 2, item 1; worker report 2, deviation 7). It also added 33 lines and removed 1 in `multipolygon_stream.rs`: S-3's own assertion (Amendment 2, item 5.7) and the clippy fix.
+   - These figures are `git diff --numstat` between ff6bdddc and 228bd997, and between 5c3a9e09 and 228bd997.
+
+**Superseded index.**
+- ADR-034's O7, unnamed in this form → item 1.
+- Amendment 2, item 5.5, its statement that the BF writer is the one extra → item 2.
+- Amendment 4, item 4 → item 3 adds the engine-tests cause.
