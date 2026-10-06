@@ -166,9 +166,9 @@ pub enum CrsUnit {
 #[serde(deny_unknown_fields)]
 pub struct GeometryInfo {
     pub column: String,
-    /// The engine's encoding for this open, `"geoarrow.polygon"` or `"geoarrow.multipolygon"`
-    /// (ADR-034 Decision 2): the value every batch's envelope carries, fixed at open and never
-    /// varying per batch. It is the engine's fact, never the file's own type; see
+    /// The engine's encoding for this open, `"geoarrow.polygon"`, `"geoarrow.multipolygon"` or
+    /// `"geoarrow.point"` (ADR-034 Decision 2; the third value is `skp/0.10`): the value every
+    /// batch's envelope carries, fixed at open and never varying per batch. It is the engine's fact, never the file's own type; see
     /// [`Self::declared_types`] for the file's declaration.
     pub encoding: String,
     /// **`skp/0.9`, ADR-034 Decision 3.** The file's `geometry_types` as declared, in declared
