@@ -70,7 +70,7 @@ The mod never deletes. At the weekly window, the custodian prunes by hand the da
 
 Installing a mod is a security-posture change. It needs the human's typed approval after both gates, and he installs it himself. Nothing in this repository installs, enables or loads it.
 
-1. From a checkout on main, at local scope: `claude plugin install spatial-evidence-recorder@spatial-ide-mods --scope local`. The marketplace is the directory source at `tools/mods`; whether it needs a refresh first is the live row E0's to record.
+1. From the main checkout, at local scope: `claude plugin install spatial-evidence-recorder@spatial-ide-mods --scope local`. The marketplace is the directory source at `tools/mods`; whether it needs a refresh first is the live row E0's to record.
 2. `/reload-plugins`
 3. Confirm the entry in `/plugin`.
 4. Start the session after the binary of record is in place.
