@@ -651,3 +651,23 @@ After the merge, B is the merge commit's first parent and H is the merge commit 
 10. **Generation 4.**
 
 **Superseded index.** §9's five-commit plan → item 1. Part P's row P2, its no-pile fallback → item 7. §4's row list → item 3 adds tests.
+
+### Amendment 4 — budget overrun, §7 not edited (class 8), at the gated head
+
+Budget overrun, §7 not edited. *Written by the custodian after the build's results were seen, at the head 2e481e743e48a73b402acdf51c02ade172cce0dc, before either gate. The figures are §7's command from d3fe60558568d2db8ffdc09220134442acff8144 to that head, grouped by §7's table. The fix commit is worker report 3, `state/consults/2026-10-06-geometry-points-cut-worker-report-3.md` (sha256 bf97e536764b463e04373e55782c52c05a608cca0af4b4cd845428407e156155, from its line 5 to the end). Nothing below is a quotation.*
+
+1. **Declared:** at most 3,220 changed lines over at most 64 files (§7).
+2. **Final:** 2,660 lines over 53 files, within both totals.
+3. **By group:**
+   - engine product: 573 over 6, against 750;
+   - engine tests: 806 over 7, against 850;
+   - **kernel: 306 over 4, against 220, over by 86.** It is phase A's tests and generators (260), the kernel README's index lines (8), and Amendment 3's pile generator (38);
+   - protocol: 209 over 17, against 260;
+   - shell product: 245 over 7, against 380;
+   - shell tests and seams: 425 over 9, against 560;
+   - docs: 96 over 3, against 200.
+4. **Why the kernel group grew:** the generators for F-1c and the pile, which §7's ceiling did not foresee (C-1 was conditional, and the pile is a class 9 addition), and phase A's kernel tests. No kernel product line changed: the 78 lines in `kernel/src/skp.rs` are one hunk inside its `mod tests`.
+5. **The fix commit (2e481e74):** `generate_the_point_pile_fixture` writes `point-pile.parquet`. It holds P-1's six points and five more within about 7 cm of P-1's second point, with a covering. By worker report 3's figures, the average spacing reaches the 9 px threshold at about zoom 1.07, and the pile's symbols overlap up to about zoom 6.8. Row P2 names the file. No helper or `pub` item was added. The workspace gives 885 passed and 50 ignored.
+6. **Generation 5.**
+
+**Superseded index.** None. §7 is not edited.
