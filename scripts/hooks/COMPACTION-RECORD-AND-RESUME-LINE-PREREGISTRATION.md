@@ -297,3 +297,34 @@ Assertions only:
 3. **The proof:** that span, read at that commit, hashes to the value Amendment 1 states.
 
 **Superseded index.** Amendment 1's italic note, its report reference → item 2.
+
+### Amendment 3 — the closing record (class 1)
+
+*Written after the outcomes were seen, by the custodian. PR #181 merged at 2026-10-06T04:39:52Z as merge commit af8790a618ebbf3e2a2e5f2762756d60873e64ef, with parents d704c7e0615ffe4d057c2a2a8714ada1773305b5 and c9b2816a5004847115acb05c884c4a65a93f72bd. It covers the gate-1 architect's items for the closing record and question round 61's items 2 and 3. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:** PR #181; the merge commit above; the gated head 59394e498577b7d359d150970cba908421833fcc; and the merged head c9b2816a5004847115acb05c884c4a65a93f72bd, which adds only the four Documentation fixes, with no re-gate under the proportional-gates rule (§9).
+2. **The gate reports,** under `state/consults/gates/`: `2026-10-05-compaction-record-and-resume-line-gate1-architect.md` (pass with notes; gate-log 420) and `2026-10-05-compaction-record-and-resume-line-gate1-reviewer.md` (pass; gate-log 421).
+3. **The worker reports:**
+   - P0: `state/consults/2026-10-05-compaction-record-and-resume-line-p0-report.md` (Amendments 1 and 2);
+   - the build: `state/consults/2026-10-05-compaction-record-and-resume-line-worker-report-1.md`;
+   - the fixes: `state/consults/2026-10-06-compaction-record-and-resume-line-worker-report-2.md`.
+4. **The fixes,** each checked by the custodian against its finding by the diff at c9b2816a: the reviewer's D1, D2, and D3 with the architect's C-1; and the architect's D-4 (the ledger entry of 2026-10-05T22:11Z).
+5. **The mutations:** M1 to M7 were each observed at 562b7d848b7127ccd0549403be67f416bd7f4de0, by worker report 1's Mutations section. Their `RECORDED MUTATION` comments are in 59394e498577b7d359d150970cba908421833fcc (§4).
+6. **The architect's D-1:** recorded. The recorded-only stderr line is built as §7 declares it, so the wording defect is §7's. The code does not change.
+7. **The architect's D-3:** recorded. T3, and the CLI test that finding names, leave their temporary directories behind. I2 governs T3. The code does not change.
+8. **The G1 refusal** (the architect's note 4), resolved against the worker's transcript (`agent-a70964710c7d75fe4.jsonl` in the session's subagents folder; the call at 2026-10-05T21:34:37.417Z, refused at 21:34:37.429Z):
+   - the refused call was a heredoc writing a scratch edit script for `scripts/hooks/session-resume.mjs`, not a git command. Its text held the JavaScript array call on `parts` after open quotes;
+   - so both records hold: the filing note gives G1's refusal text, and the worker's attribution to quoted heredoc text is right;
+   - the call did not run (§8, item 14).
+9. **T4's extra cases** (the architect's note 1): sound and necessary. They are what make M4 observable. The defect was in the form's T4 fixture list, not in the build.
+10. **Round 61** (`state/directives/2026-10-06-round-61-rulings.md`, line 7, sha256 9540fcae69b823dafa61d7811047f09e08411faafc68be0d93d41d091eedd194, and line 8, sha256 68c4b9f8350bff7909ba7630b150860544b771e8dc85514d8a1aec3f9a3e06bc, each at the commit that adds it; its RULED block in `DECISIONS-PENDING.md`):
+    - item 2 rules OPEN-1 (§2, item 6): the measure's rows are first reported at the 2026-10-09 window;
+    - item 3 keeps, as built, both readings the form put to the human.
+11. **§7:** 408 of 450 lines over 5 files at c9b2816a (worker report 2). The reviewer's recount at 59394e498577b7d359d150970cba908421833fcc is 405.
+12. **E1:** open.
+    - This session's automatic compaction (boundary 2026-10-06T04:41:54Z, by the transcript) ran under the pre-merge hook. That hook blocked it once at 04:39:05.712Z, by its state file. The main checkout reached the merge at 04:42:09Z, by its reflog.
+    - It is counted with the old count (§2, item 6; the window draft's item J).
+    - E1 is recorded at the next automatic compaction, as a class 1 row on main.
+13. **Done:** PLAN marks the node done, with evidence `{pr: 181}`, at generation 4, in this amendment's commit. Amendment 2's generation bump had lapsed and is made here with this one's.
+
+**Superseded index.** §2, item 6, its OPEN-1 → item 10.

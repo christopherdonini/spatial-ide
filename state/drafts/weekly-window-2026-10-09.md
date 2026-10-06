@@ -541,3 +541,13 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - the days the critical path waited on a person.
 - **Section 3's won't-fix bar:** each use at triage is listed here.
 - **The lead-data second pilot** (B2 above) has run its four reads. Its result is judged when the freeze lifts, not at this window.
+- **The compaction measure** (round 61, item 2; `scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md`, §2, item 6): its rows are reported at this window. They start at the first automatic compaction with #181's merge in the main checkout. #181 merged at 2026-10-06T04:39:52Z, and the main checkout reached it at 04:42:09Z. No row yet.
+- **Item J's old count, its last row,** by the same records and rule as the count above:
+
+  | Compaction (boundary) | Session | The block | The flush state |
+  |---|---|---|---|
+  | 2026-10-06T04:41:54.040Z (trigger auto; 775,563 tokens before; 128,121 ms, so it started about 40 seconds after the block) | 128d8fa3 | 04:39:05.712Z | the last flush 3969abc6 (committed 2026-10-05T23:36:51Z, `flushed_at` 23:32:29Z, about 5 hours before the block) |
+
+  - It went through on the second chance, under the pre-merge hook.
+  - No N1 nudge text appears in the transcript. The fill was about 78% of a 1M window, below N1's 80.
+  - **The old count ends at E: 5, N1: 3.**

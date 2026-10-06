@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-05T23:32:29.573Z",
-  "plan_hash": "a7068b874c685038345fcbad42751b8f5b061f8d20fb802f1dfaf30feab90229",
+  "generated_at": "2026-10-06T04:52:36.681Z",
+  "plan_hash": "b3b179d5b0ceb4666336b37a1e82aec4265f5b4577fb3b11c8a2d2a4c996fc05",
   "priorities_approved": true,
   "next": {
     "id": "kernel-close-races-followups",
@@ -40,6 +40,25 @@
         "done": null
       },
       "summary": "SLOT 2 AFTER THE TWO CONTEXT-FLUSH PIECES 2026-10-05 (the product-first direction 8.e and the human fragment): it yields slot 1 to MP-1 and starts only when its paths are disjoint from slot 1 piece; round 59 items 1 to 3 recorded as Amendment 1 (generation 2). Before: FORM COMMITTED 2026-10-05 (kernel/GENERATION-CLOSE-RACES-FOLLOWUPS-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 3; full form and full gating from dispatch, for its protocol/skp edits and the close_dataset property; OPEN-1 to OPEN-3 for the human, the form written for the recommendations; no branch yet). Before: UNBLOCKED 2026-10-05: b1-engine-kernel-half-followups is done (#178). It also takes the item that piece routed here (engine/B1-FOLLOWUPS-PREREGISTRATION.md, Amendment 1, item 7: kernel/README.md's line for kernel halves filed elsewhere). Before: Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in this node's own SKP-V0 change-log entry (not in skp-cancel-state-closed-set's, per its drafting consult, point 3), not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change. Its stale line cites into kernel/src/skp.rs move again with workspace-rustfmt; the cite fixes belong after that merge (the workspace-rustfmt drafting consult, (c) 2)."
+    },
+    {
+      "id": "guardian-n1-before-auto-compaction",
+      "title": "Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 23,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates."
     }
   ],
   "waiting_on_human": {
@@ -274,28 +293,6 @@
       "blocked_by": [
         "governance-ci-built-site"
       ]
-    },
-    {
-      "id": "guardian-n1-before-auto-compaction",
-      "title": "Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 23,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates.",
-      "blocked_by": [
-        "compaction-record-and-resume-line"
-      ]
     }
   ],
   "in_progress": [
@@ -318,30 +315,8 @@
         "opened": "2026-09-14",
         "done": null
       },
-      "summary": "AMENDMENT 2 APPENDED 2026-10-06 (generation 3; the architect draft after phase A): C-12 and C-12S missed (corpus 12 refused at identity admission; class 2, no prediction edited); OPEN-2 for the human, a red line (a geometry_types value that is not a list; the PR ready state waits on it, phase B does not); the goldens unchanged; section 7 interim figures; the deviations; phase B next. Before: IN PROGRESS 2026-10-05, slot 1: branch cut/geometry-types-beyond-polygons from ff6bdddc (worktree C:/dev/wt/mp1, target D:/wt-targets/mp1); the worker-high dispatched for phase A (the form commits 1 to 3: golden, engine, kernel); phase B (wire, shell, docs) briefed after. Before: SLOT 1 NOW 2026-10-05 (the product-first direction, 8.a): round 59 item 4 ruled OPEN-1 (b1) and (c1), recorded as Amendment 1 (generation 2); the branch next, in its own commit. Before: FORM COMMITTED 2026-10-05 (engine/MULTIPOLYGON-MP1-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 4; full form and full gating from dispatch: wire, stated guarantees, an accepted ADR and size; one OPEN item for the human, a red line: an absent geometry_types key and a non-string member; no slot yet). Before: MP-1 IMPACT READ FILED 2026-10-05 (state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md, lead-data second pilot piece 4); the architect draft next, before a slot frees. Before: ADR-034 ACCEPTED 2026-10-05 (the human, typed; state/directives/2026-10-05-adr-034-acceptance.md; RULED 2026-10-05): as merged, architect-blockable; items 1 to 6 answer its acceptance section (O1 and O2 ruled for MP-1 by item 5; O3 to O8 open for the form; a KNOWN-LIMITATIONS row names item 1 loss). MP-1 preregistration may be written now: the lead-data impact read first (second pilot), then the architect draft. Before: RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider RULED 2026-09-24, question round 17, item 7 (entry 126): MP-1 as one vertical cut after crs-unit, the watcher and B1, all eight decisions as recommended (the P4 table: 5 of 12 corpus files refused on geometry type), with two riders verbatim in the RULED block -- an empty geometry_types admits under the MultiPolygon encoding but a row of an unread type is refused by name or counted as unread and shown, never silently dropped; Polygon promotion is declared as an encoding in describe.declared_types, never as the file's own type. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration; publishing rides B3; LOD stays out. ADR-034 filed Proposed 2026-09-27 on round 17 item 7 and the 2026-09-27 session order: PR #135, both gates PASS at attempt 4 (reports state/consults/gates/2026-09-27-adr-034-gate1..4). Acceptance is the human's (a red line); MP-1's preregistration only after acceptance (state/directives/2026-09-27-session-order.md).",
+      "summary": "AMENDMENT 3 APPENDED 2026-10-06 (generation 4): round 61 item 1, OPEN-2 ruled (A), the arm stands as built; phase B built (ac538440, fc346a8a, 3c29bc67); next the lead-data index update, the PR and both gates. Before: AMENDMENT 2 APPENDED 2026-10-06 (generation 3; the architect draft after phase A): C-12 and C-12S missed (corpus 12 refused at identity admission; class 2, no prediction edited); OPEN-2 for the human, a red line (a geometry_types value that is not a list; the PR ready state waits on it, phase B does not); the goldens unchanged; section 7 interim figures; the deviations; phase B next. Before: IN PROGRESS 2026-10-05, slot 1: branch cut/geometry-types-beyond-polygons from ff6bdddc (worktree C:/dev/wt/mp1, target D:/wt-targets/mp1); the worker-high dispatched for phase A (the form commits 1 to 3: golden, engine, kernel); phase B (wire, shell, docs) briefed after. Before: SLOT 1 NOW 2026-10-05 (the product-first direction, 8.a): round 59 item 4 ruled OPEN-1 (b1) and (c1), recorded as Amendment 1 (generation 2); the branch next, in its own commit. Before: FORM COMMITTED 2026-10-05 (engine/MULTIPOLYGON-MP1-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 4; full form and full gating from dispatch: wire, stated guarantees, an accepted ADR and size; one OPEN item for the human, a red line: an absent geometry_types key and a non-string member; no slot yet). Before: MP-1 IMPACT READ FILED 2026-10-05 (state/consults/2026-10-05-geometry-types-beyond-polygons-impact-read.md, lead-data second pilot piece 4); the architect draft next, before a slot frees. Before: ADR-034 ACCEPTED 2026-10-05 (the human, typed; state/directives/2026-10-05-adr-034-acceptance.md; RULED 2026-10-05): as merged, architect-blockable; items 1 to 6 answer its acceptance section (O1 and O2 ruled for MP-1 by item 5; O3 to O8 open for the form; a KNOWN-LIMITATIONS row names item 1 loss). MP-1 preregistration may be written now: the lead-data impact read first (second pilot), then the architect draft. Before: RE-SEQUENCED 2026-09-22 by the human: after Brief A's actual close and after B1 (B1 first); MultiPolygon first -- the architect assesses it explicitly, not as an admission-check edit only; points and lines are their own proposed cuts (geometry-points-cut, geometry-lines-cut). RULED 2026-09-14 (question set B, B4 and question set D, D4): filed as its own node with the corpus numbers as its problem statement (8 of 12 corpus files refuse on geometry type) and its own preregistration before code; placed by the human directly after Brief A P3-P6 in the engine lane, phase alpha; not a Brief A rider RULED 2026-09-24, question round 17, item 7 (entry 126): MP-1 as one vertical cut after crs-unit, the watcher and B1, all eight decisions as recommended (the P4 table: 5 of 12 corpus files refused on geometry type), with two riders verbatim in the RULED block -- an empty geometry_types admits under the MultiPolygon encoding but a row of an unread type is refused by name or counted as unread and shown, never silently dropped; Polygon promotion is declared as an encoding in describe.declared_types, never as the file's own type. ADR-034 (geometry admission and encoding selection) is filed Proposed before MP-1's preregistration; publishing rides B3; LOD stays out. ADR-034 filed Proposed 2026-09-27 on round 17 item 7 and the 2026-09-27 session order: PR #135, both gates PASS at attempt 4 (reports state/consults/gates/2026-09-27-adr-034-gate1..4). Acceptance is the human's (a red line); MP-1's preregistration only after acceptance (state/directives/2026-09-27-session-order.md).",
       "evidence_label": "branch `cut/geometry-types-beyond-polygons`"
-    },
-    {
-      "id": "compaction-record-and-resume-line",
-      "title": "The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": 22,
-      "budget_minutes": 240,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/compaction-record-and-resume-line"
-      },
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "P0 RECORDED 2026-10-05 as Amendment 1 (generation 2): trigger declared manual or auto at 2.1.288 and in the 2.1.289 binary; I1 does not fire; the build next. Before: IN PROGRESS 2026-10-05, slot 2: branch cut/compaction-record-and-resume-line from 30f127a4 (worktree C:/dev/wt/crr); the worker-high runs P0 (read-only) first, recorded as Amendment 1, then the build. Before: FORM COMMITTED 2026-10-05 (scripts/hooks/COMPACTION-RECORD-AND-RESUME-LINE-PREREGISTRATION.md, the architect draft, drafted alone; full form and full gating: a property under test, size, new behaviour; OPEN-1, when the measure rows are first reported, for the next question round, no code waits on it; P0 read-only before code, recorded as Amendment 1). Before: SLOT 2 NEXT 2026-10-05 (the product-first direction, sections 1 and 8.f): no longer depends on guardian-v1; the architect drafts its form, alone. Before: PLACED 2026-10-05 by the human context-flush direction (state/directives/2026-10-05-human-direction-context-flush.md; RULED 2026-10-05), piece A of Fable brief CONTEXT-FLUSH-2026-10-05.md (state/directives/CONTEXT-FLUSH-2026-10-05.md, sha256 checked). It takes the second slot when guardian-v1 frees it, ahead of the second-slot queue. The PreCompact hook no longer blocks an automatic compaction: it records the call and its reason and lets it through; a manual /compact is blocked once, as today. It changes the human 2026-09-15 word in AUTONOMY section 7, whose text is corrected in the same pull request, with its freshness figure brought to the hook's own. The brief measure replaces window item J count from the first automatic compaction after this piece merges. Usual forms and gates.",
-      "evidence_label": "branch `cut/compaction-record-and-resume-line`"
     }
   ],
   "proposed": [

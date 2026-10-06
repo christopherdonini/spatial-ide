@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a7068b874c685038345fcbad42751b8f5b061f8d20fb802f1dfaf30feab90229`) at `2026-10-05T23:32:29.573Z`.
+Generated from `PLAN.yaml` (sha256 `b3b179d5b0ceb4666336b37a1e82aec4265f5b4577fb3b11c8a2d2a4c996fc05`) at `2026-10-06T04:52:36.681Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `a7068b874c685038345fcbad42751b8f5b061f8d20fb
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
+- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check (lane `governance`, order 23, budget 240 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -26,12 +27,10 @@ Generated from `PLAN.yaml` (sha256 `a7068b874c685038345fcbad42751b8f5b061f8d20fb
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
 - **site-design-v1** — Landing page redesign — DRAFT-4 (status strip, milestone banner, waiting-on-you cards with unblocks counts, the swimlane board) — blocked by: governance-ci-built-site
-- **guardian-n1-before-auto-compaction** — Guardian N1 measured against the auto-compaction threshold, with its bands re-centred and a flush-age staleness check — blocked by: compaction-record-and-resume-line
 
 ## 5. In progress
 
 - **geometry-types-beyond-polygons** — Geometry types beyond polygons -- MultiPolygon first, by an architect assessment; reading, rendering, picking, attributes, styling and publishing agree; its own preregistration — evidence: branch `cut/geometry-types-beyond-polygons`
-- **compaction-record-and-resume-line** — The PreCompact hook records an automatic compaction and lets it through; a manual /compact is blocked once; AUTONOMY section 7 corrected — evidence: branch `cut/compaction-record-and-resume-line`
 
 ## 6. Proposed / unscheduled
 

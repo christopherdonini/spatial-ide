@@ -624,3 +624,13 @@ All quantities are assertions. None is a measurement.
    - §5 P-5 → item 5.5.
    - §4 row S-3 → item 5.7.
    - §9 closing record item 5 → item 5.11.
+
+### Amendment 3 — question round 61, item 1: OPEN-2 ruled (A)
+
+*Written by the custodian after question round 61 was answered. Phase B is built on the branch, at 3c29bc67f64634073373a28cd0ea24cc1280ed3e, and no pull request is open. The ruling is `state/directives/2026-10-06-round-61-rulings.md`, line 6 (sha256 5c3e30903211fbe1dfa90408c5c04af34db685f3f417e424923e6b993a2a8fc5, at the commit that adds it), a red line answered in typed text, with its RULED block in `DECISIONS-PENDING.md` under round 61, referenced and not restated. Nothing below is a quotation.*
+
+1. **OPEN-2: (A).** The refusal described in Amendment 2, item 2 stands as built: at open, as `engine.geo_metadata` with a P6-placeholder detail, for every present `geometry_types` value that is not a list. No engine commit follows from the ruling, and A-4's lines stand.
+2. **What the ruling releases:** OPEN-2 no longer holds the pull request's ready state or its final gate. The pull request body names this ruling beside OPEN-1's (§9, PR body).
+3. **Still owed before the final gate:** the owner's-index update (Amendment 1, item 4), and class 8 at the gated head (Amendment 2, item 4).
+
+**Superseded index.** Amendment 2, item 2, its list of what holds until the ruling → items 1 and 2.
