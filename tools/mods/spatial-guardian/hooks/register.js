@@ -12,7 +12,7 @@
 //   G4  a rewrite of an existing file under state/directives/ (filed verbatim, once)
 //   G6  a write by a report-only subagent outside the REPORT PATH its brief declares (question
 //       round 41, item 3; round 43, item 4)
-//   N1  one appended line when the context passes 80% and the continuity block is stale
+//   N1  one appended line per 5-point band from 80% of the auto-compaction threshold (or of the compaction window, when the breakdown gives no threshold), on a stale or old block
 // G5 (the profile-path refusal) is not in v0 (question round 43, item 3).
 
 import { judgeContinuity } from './continuity.mjs';
@@ -20,7 +20,7 @@ import { judgeContinuity } from './continuity.mjs';
 // Declared values (the form's section 7).
 const PROCESS_TIMEOUT_MS = 2000;
 const N1_THRESHOLD = 80;
-const N1_BAND = 10;
+const N1_BAND = 5;
 const REPORT_ONLY_TYPES = ['architect', 'lead-data', 'evidence-reader'];
 const REPORT_LINE = /^REPORT PATH: (.+)$/;
 
@@ -418,14 +418,44 @@ async function guardPowerShell($, e, next) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// N1: the one nudge. The compaction-window percentage from the summary breakdown, which estimates
-// locally and sends nothing; absent when no breakdown comes back.
+// N1: the one nudge. Its fill comes from the summary breakdown, which estimates locally and sends
+// nothing: measured against the auto-compaction threshold when the breakdown carries one, else the
+// breakdown's percentage; absent when no breakdown comes back.
 // ---------------------------------------------------------------------------------------------
 
+// Declared values (GUARDIAN-N1-BEFORE-AUTO-COMPACTION-PREREGISTRATION.md section 7). The bands are
+// 80, 85, 90 and 95; a fill past 95 stays in the top band (the form's R-1).
+const N1_TOP_BAND = 95;
+const N1_MAX_AGE_MS = 10 * 60 * 1000;
+
+// The threshold route's sentence (the form's section 7), with N replaced by the integer percent.
+const N1_THRESHOLD_TEXT = (p) => `Context at ${Math.round(p)}% of the auto-compaction threshold: flush the continuity block now (rewrite, commit, push), then continue.`;
+
+// The fill and the route it came by: { p, route: 'threshold' } when auto-compaction is on and the
+// breakdown carries a positive threshold and a token count, else { p, route: 'percentage' } from the
+// breakdown's percentage as at v0; undefined when neither is a finite number.
 async function contextFill($) {
   const usage = await $.session.usage({ breakdown: 'summary' });
-  const p = usage?.context?.breakdown?.percentage;
-  return typeof p === 'number' && Number.isFinite(p) ? p : undefined;
+  const breakdown = usage?.context?.breakdown;
+  const threshold = breakdown?.autoCompactThreshold;
+  const tokens = breakdown?.totalTokens;
+  if (
+    breakdown?.isAutoCompactEnabled === true &&
+    typeof threshold === 'number' && Number.isFinite(threshold) && threshold > 0 &&
+    typeof tokens === 'number' && Number.isFinite(tokens) && tokens >= 0
+  ) {
+    return { p: (100 * tokens) / threshold, route: 'threshold' };
+  }
+  const p = breakdown?.percentage;
+  return typeof p === 'number' && Number.isFinite(p) ? { p, route: 'percentage' } : undefined;
+}
+
+// The age clause (the form's section 2.3): the committed flushed_at, parsed as the PreCompact hook
+// parses it, is more than N1_MAX_AGE_MS before now. null, unparseable and future values are not old.
+function flushedLongAgo(flushedAt) {
+  if (typeof flushedAt !== 'string') return false;
+  const flushed = new Date(flushedAt).getTime();
+  return Number.isFinite(flushed) && Date.now() - flushed > N1_MAX_AGE_MS;
 }
 
 // The bands already nudged: a module variable, lost on a hot reload (no store).
@@ -437,19 +467,20 @@ async function nudge($, e, next) {
   const ran = await next(e);
   if (ran.deny !== undefined || e.agentId !== undefined) return ran;
 
-  const p = await contextFill($);
-  if (p === undefined) return ran;
+  const fill = await contextFill($);
+  if (fill === undefined) return ran;
+  const { p, route } = fill;
   if (p < N1_THRESHOLD) {
     shownBands.clear();
     return ran;
   }
-  const band = Math.floor(p / N1_BAND);
+  const band = Math.min(Math.floor(p / N1_BAND), N1_TOP_BAND / N1_BAND);
   if (shownBands.has(band)) return ran;
 
   const verdict = await judgeContinuity((args) => $.process.run(['git', ...args], { timeoutMs: PROCESS_TIMEOUT_MS }));
-  if (verdict.judged === true && verdict.stale === true) {
+  if (verdict.judged === true && (verdict.stale === true || flushedLongAgo(verdict.flushedAt))) {
     shownBands.add(band);
-    return { ...ran, context: [...(ran.context ?? []), N1_TEXT(p)] };
+    return { ...ran, context: [...(ran.context ?? []), route === 'threshold' ? N1_THRESHOLD_TEXT(p) : N1_TEXT(p)] };
   }
   return ran;
 }

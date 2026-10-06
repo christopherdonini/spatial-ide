@@ -41,12 +41,15 @@ async function readGit(run, args) {
 
 /**
  * `run(args)` runs git with `args` and resolves { exitCode, stdout, stderr, isStdoutTruncated,
- * isStderrTruncated }. Returns { judged: false } or { judged: true, stale }.
+ * isStderrTruncated }. Returns { judged: false } or { judged: true, stale, flushedAt }. `flushedAt` is
+ * the flushed_at the newest ledger commit holds (GUARDIAN-N1-BEFORE-AUTO-COMPACTION-PREREGISTRATION.md
+ * section 2.3), whatever the parent read gave; null when no ledger commit exists. It is not part of
+ * the judgment, which the Stop hook's predicate shares: only N1's age clause reads it.
  */
 export async function judgeContinuity(run) {
   const c = await readGit(run, ['log', '-1', '--format=%H', 'HEAD', '--', LEDGER]);
   if (c === null) return { judged: false };
-  if (c === '') return { judged: true, stale: false };
+  if (c === '') return { judged: true, stale: false, flushedAt: null };
 
   const blob = await readGit(run, ['show', `${c}:${LEDGER}`]);
   if (blob === null) return { judged: false };
@@ -54,9 +57,9 @@ export async function judgeContinuity(run) {
   if (current === null) return { judged: false };
 
   const parentBlob = await readGit(run, ['show', `${c}^1:${LEDGER}`]);
-  if (parentBlob === null) return { judged: true, stale: false };
+  if (parentBlob === null) return { judged: true, stale: false, flushedAt: current };
   const parent = flushedAtOf(parentBlob);
-  if (parent === null) return { judged: true, stale: false };
+  if (parent === null) return { judged: true, stale: false, flushedAt: current };
 
-  return { judged: true, stale: current === parent };
+  return { judged: true, stale: current === parent, flushedAt: current };
 }
