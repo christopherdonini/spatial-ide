@@ -902,3 +902,29 @@ Budget overrun, §7 not edited (class 8, round 25, item 2 (a)), recorded by the 
 6. **§2.11's install lines are not edited.** They name user scope and say never to use `project` or `local` scope, and from this amendment they describe the earlier install. §0, item 4's first reason for user scope, a record in no committed file, holds at local scope by item 3. The README's matching lines are corrected separately.
 
 **Superseded index.** §2.11, the install scope → items 1 to 4 (not edited).
+
+### Amendment 12 — E1 to E3 after #182's reviewer, at local scope (class 1)
+
+*Class 1, post-result rows, recorded by the custodian on main as the human's third direction of 2026-10-06, item 1 directs (`state/directives/2026-10-06-probes-readme-node-and-script-adoption.md`; its RULED block in `DECISIONS-PENDING.md`): after #182's reviewer had finished, with no agent running. Times are the session transcript's, 2026-10-06 UTC. The reason texts below are byte-copied by script from the tool results. Nothing else below is a quotation.*
+
+- **The setting:**
+  - the session is da685a21, on 2.1.291, in the process created at 16:07:25Z;
+  - the mod is at local scope (Amendment 11);
+  - the main checkout's `HEAD` is 2e7e6494, and `tools/mods/spatial-guardian/` is unchanged since 0f86b680;
+  - no agent was running: #182's reviewer handed back at 18:18:46Z, and #184's last worker at 17:26:26Z.
+- **The method, as Amendment 9:**
+  - each file was Read first;
+  - each Edit's `old_string` occurs nowhere in its file (grep count 0 at 18:27:21Z).
+- **The results:**
+  - **E1,** `docs/01_Principles.md`, at 18:27:29.178Z: `spatial-guardian G2: refused, because docs/01 is never edited.`
+  - **E2,** `state/directives/2026-10-04-guardian-install-approval.md`, at 18:27:30.381Z: `spatial-guardian G4: refused, because an existing directive is never rewritten.`
+  - **E3,** `docs/adr/ADR-021-row-filter-on-viewport-query.md` (Accepted), at 18:27:31.570Z: `spatial-guardian G3: refused, because an accepted ADR or a filed preregistration changes only by appending.`
+
+  As predicted, each is Guardian's reason, never the Edit tool's not-found error. Each result came within 30 milliseconds of its call.
+- **Each file's sha256 is equal before (18:27:21Z) and after (18:27:38Z),** and equal to Amendment 8's three values (as Amendment 9 also found), in its order:
+  - d42499dcf9c0941b8b1b2198817b6c8f3ead514023032066634be6b230fb14b8;
+  - a012063603b347e365822ea2bdb633dfd0963f57b8c2bc9dec717da13fa53b3a;
+  - 79a03c483c4bc9934887e04ac6f10e1e46515bfc21afc3d77c33ce93730316ae.
+- **The second run,** at the next session start, is recorded as its own amendment.
+
+**Superseded index.** None.
