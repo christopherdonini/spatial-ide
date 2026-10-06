@@ -567,3 +567,37 @@ After the merge, B is the merge commit's first parent and H is the merge commit 
 - **OPEN-2:** the refusal wording: the sighted template with three types, and a mixed-kind placeholder. Rule before the PR is set ready.
 - **OPEN-3:** styling and `POINT_RADIUS_PX`. Rule before commit 4.
 - **OPEN-4:** the pick-resolution rule for points. Rule before commit 4.
+
+### Amendment 1 — question round 62's rulings (OPEN-1 to OPEN-4); row P2's pile of points (class 7); C-1 confirmed by code
+
+*Written by the custodian after question round 62 was answered and before any code: no branch exists. It is appended at the file's end, below the OPEN list, and belongs to §10. The rulings are `state/directives/2026-10-06-round-62-rulings.md`, lines 6 to 9 (sha256 ab74437d85a8720bd274cf7f26f372d96f4032e3dcf5bae5f2964606f38e7577, a9f46581a22ba3635c46637674f2eb7eb6f94c1823777e2fac2b1fcfd07ec9fd, 31b0a7ad439283bff4e2e5189e1ba0fcf2809b77fcabd35249186138aca44982 and d5c6424f95c7eb5b4531251fc7cb0819c256f85b4b3499483e47e1ab798356f3, one per line, at the commit that adds it), with their RULED block in `DECISIONS-PENDING.md` under round 62, referenced and not restated. Nothing below is a quotation.*
+
+1. **OPEN-1, (A).** Point only. The parts marked [OPEN-1] are binding as drafted for (A): MultiPoint is refused at open with the sighted template, whose set renders three types (P-4).
+2. **OPEN-2, (A).** The parts marked [OPEN-2] are binding.
+   - A member outside the readable set keeps the sighted template, with its code unchanged.
+   - A set that mixes readable kinds stays refused at open as `engine.geo_metadata`, with its own detail. That detail is a `[P6 placeholder]`, and the human sights it at P6. The worker's placeholder text is the draft in the ruling (line 7), byte-copied from the directive file by script, and marked as the placeholder.
+   - The PR's ready state no longer waits on OPEN-2, because the wording is sighted at P6.
+3. **OPEN-3, (A), with `POINT_RADIUS_PX` = 4 CSS pixels.** The parts marked [OPEN-3] are binding, read as the ruling reads ADR-022 Decision 4:
+   - the mapping onto the point symbol is rendering plumbing, in the working canvas only;
+   - the style document's meaning does not change: it still says polygon, and the radius is a shell constant outside it;
+   - **this cut adds no path that saves a point layer's style document.** Saving one as a polygon document needs the human's ruling, and B2's form says what Save does. Adding such a path is block-on-sight for both gates, as an addition to §8;
+   - KNOWN-LIMITATIONS item 35 is as drafted, for the human's P6 sight;
+   - a walkthrough verdict may revise the radius.
+4. **OPEN-4, (A).** The parts marked [OPEN-4] are binding:
+   - ADR-028 item 4's 9 px threshold is compared with the average on-screen spacing of the resident points, computed once per render, with the same named refusal state and text;
+   - deck's `pickingRadius` stays unset;
+   - KNOWN-LIMITATIONS item 36 is as drafted, for the human's P6 sight.
+5. **Class 7, a sight-list addition from the OPEN-4 ruling:** operator row P2 also hovers a visible pile of points, and the human records whether naming the topmost symbol is acceptable. Option (B) is the follow-up only if that verdict says it is not. The worker writes this step into Part P's P2 row, with a blank result line.
+6. **C-1 applies.** The custodian confirmed by reading the code at 7e3a00a6, not by an app run, that MP-1's F-1 meets the no-covering refusal on the canvas:
+   - F-1's generator writes rows with no covering;
+   - the engine refuses a bbox query on a file without one;
+   - the shell's viewport path always sends a bbox.
+
+   So the [C-1] parts are in scope: the covered F-1c generator, and Part S's second dated note naming F-1c for S2. The app run that confirms it is the operator's, at the sitting.
+7. **Generation 2.** Dispatch may start, beginning with commit 1. Commit 4 no longer waits.
+
+**Superseded index.**
+- The OPEN list and every [OPEN-1] to [OPEN-4] mark → items 1 to 4, binding.
+- §9's note that commit 4 waits on OPEN-3 and OPEN-4 → item 7.
+- The [C-1] condition → item 6.
+- Part P's row P2 → item 5 adds a step.
