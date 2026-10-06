@@ -4142,14 +4142,14 @@ nodes:
     order: 23
     depends_on: [compaction-record-and-resume-line]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: tools/mods/GUARDIAN-N1-BEFORE-AUTO-COMPACTION-PREREGISTRATION.md
     merge: merge-commit
     evidence: null
     budget_minutes: 240
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates."
+    summary: "FORM COMMITTED 2026-10-06 (the architect draft, full form, 48 pins at 7ce9dab2; four readings R-1 to R-4 the human may overturn before the build, none a red line): P0 first, read-only, then Amendment 1; the merge waits for the human typed approval naming E12 to E14. Before: PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates."
     dates: {opened: 2026-10-05, done: null}
   - id: typed-terminal-codes-post-check-race
     title: "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source"
