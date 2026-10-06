@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-06T06:11:12.549Z",
-  "plan_hash": "dae2a02be0e9f03666fcc2721e2515a5f32fb7663ad31e24677666a9b43a5fe5",
+  "generated_at": "2026-10-06T06:14:21.754Z",
+  "plan_hash": "5653ff88e60b9602aeaf9bbe4a230d943229a090601270b5a1b443cda43804bc",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6668,10 +6668,10 @@
         "branch": "cut/guardian-n1-before-auto-compaction"
       },
       "budget_minutes": 240,
-      "generation": 2,
+      "generation": 3,
       "felt_verdict": false,
       "entries": [],
-      "summary": "BUILT 2026-10-06 at 6cd8454c (the change 2f8100bc, the observations 6cd8454c; 209 of 350 lines over 4 files; plugin test 42 of 42); PR #183 open; CI, then gate 1 of both; the merge waits for the human typed approval naming E12 to E14. Before: P0 RECORDED 2026-10-06 as Amendment 1 (generation 2): build of record 2.1.291; the three fields declared (the threshold optional, read as declared); compaction window 800,000 by a user setting, threshold 767,000; I1 and I4 do not fire; class 2: today route reads 96 to 97, four compactions not three, the age clause alone carries the simulated nudges; the build next. Before: IN PROGRESS 2026-10-06, slot 2: branch cut/guardian-n1-before-auto-compaction from 8500ebef, on origin; worktree C:/dev/wt/gn1; P0 running (worker-high, read-only; the build is 2.1.291). Before: FORM COMMITTED 2026-10-06 (the architect draft, full form, 48 pins at 7ce9dab2; four readings R-1 to R-4 the human may overturn before the build, none a red line): P0 first, read-only, then Amendment 1; the merge waits for the human typed approval naming E12 to E14. Before: PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates.",
+      "summary": "GATE 1 BOTH PASS 2026-10-06 (architect with notes, gate-log 423; reviewer PASS, gate-log 424); AMENDMENT 2 APPENDED (generation 3; class 3, the architect D-2: Amendment 1 report reference pinned at 49d3f632); the D-3 and D-4 wording fixes to the branch next; then the human typed approval naming E12 to E14. Before: BUILT 2026-10-06 at 6cd8454c (the change 2f8100bc, the observations 6cd8454c; 209 of 350 lines over 4 files; plugin test 42 of 42); PR #183 open; CI, then gate 1 of both; the merge waits for the human typed approval naming E12 to E14. Before: P0 RECORDED 2026-10-06 as Amendment 1 (generation 2): build of record 2.1.291; the three fields declared (the threshold optional, read as declared); compaction window 800,000 by a user setting, threshold 767,000; I1 and I4 do not fire; class 2: today route reads 96 to 97, four compactions not three, the age clause alone carries the simulated nudges; the build next. Before: IN PROGRESS 2026-10-06, slot 2: branch cut/guardian-n1-before-auto-compaction from 8500ebef, on origin; worktree C:/dev/wt/gn1; P0 running (worker-high, read-only; the build is 2.1.291). Before: FORM COMMITTED 2026-10-06 (the architect draft, full form, 48 pins at 7ce9dab2; four readings R-1 to R-4 the human may overturn before the build, none a red line): P0 first, read-only, then Amendment 1; the merge waits for the human typed approval naming E12 to E14. Before: PLACED 2026-10-05 by the human context-flush direction (RULED 2026-10-05), piece B of Fable brief CONTEXT-FLUSH-2026-10-05.md, after piece A. N1 fill is measured against the auto-compaction threshold, its bands are re-centred on it as the direction item 3 states, and it also judges the block stale on the age of flushed_at by the hook's own freshness figure. It changes round 44, item 1 for N1. Its merge waits for the human typed approval. Usual forms and gates.",
       "dates": {
         "opened": "2026-10-05",
         "done": null

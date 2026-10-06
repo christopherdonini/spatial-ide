@@ -417,3 +417,12 @@ Assertions only:
 9. **The build may start** (§0.3; §8, item 19). The node's generation becomes 2.
 
 **Superseded index.** §5's P0 predictions → item 7 (result; not edited).
+
+### Amendment 2 — a correction of Amendment 1's report reference (class 3; PR #183's gate-1 architect, D-2)
+
+*Written by the custodian after PR #183's gate-1 architect report (`state/consults/gates/2026-10-06-guardian-n1-before-auto-compaction-gate1-architect.md`, its D-2), under the proportional-gates rule: a record fix in the piece, with no re-gate. Nothing below is a quotation.*
+
+1. **The defect:** Amendment 1 names its report's hash by a line of that report, with no revision, and the same commit adds that report.
+2. **The corrected reference:** `state/consults/2026-10-06-guardian-n1-before-auto-compaction-p0-report.md:5-228 @ 49d3f6321ab4c669767e350e0ba7a1e0d51b4d53 sha256:16be8a519dbd129ad9c738def68cf4ceb2264c8212c52b7090384fe05585bb31`. That span, read at that commit, hashes to the value Amendment 1 states.
+
+**Superseded index.** Amendment 1's italic note, its report reference → item 2.
