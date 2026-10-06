@@ -228,6 +228,114 @@ fn generate_the_multipolygon_f1_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The points file for the shell E2E's PT' step and Part P (`engine/GEOMETRY-POINTS-PREREGISTRATION.md`
+/// section 3, fixture P-1 with its covering; ADR-034): LV95, declared `["Point"]`, six Point rows
+/// from `spatial_engine::fixture::point_p1_rows`, **with a covering**, so a viewport query reaches
+/// the canvas (a file with no covering meets `engine.no_covering_bbox` there). Admitted as
+/// `geoarrow.point`; publishing it is refused by name (ADR-034 Decision 10).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_point_p1_fixture() {
+    use spatial_engine::fixture::{
+        point_p1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("point-p1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(point_p1_rows_with_bounds([E_LO, N_LO], 10.0)),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the point P-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The LineString-declared file for Part P's wording step (P7): LV95, `geometry_types` declares
+/// `["LineString"]`, and the open is refused with the sighted `engine.geo_metadata` template, whose
+/// readable-set clause renders Polygon, MultiPolygon and Point. The rows are P-1's points: the
+/// refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_linestring_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-linestring.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-LineString fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The Polygon-and-Point file for Part P's wording step (P7): LV95, `geometry_types` declares
+/// `["Polygon", "Point"]`, and the open is refused as `engine.geo_metadata` with the mixed-kinds
+/// `[P6 placeholder]` detail (ruled in question round 62, item 2). The rows are P-1's points: the
+/// refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_polygon_and_point_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-polygon-and-point.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["Polygon","Point"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-Polygon-and-Point fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// **[C-1]** F-1 with a covering, for the shell E2E's MP' step and Part S's S2: the same three
+/// MultiPolygon rows as `generate_the_multipolygon_f1_fixture` (LV95, declared `["MultiPolygon"]`),
+/// each with the covering bounds of its own parts, so a viewport query reaches the canvas. F-1's own
+/// generator writes no covering and meets `engine.no_covering_bbox` there (Amendment 1, item 6 of
+/// the points form). Admitted as `geoarrow.multipolygon`; publishing it is refused by name.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_multipolygon_f1_with_covering_fixture() {
+    use spatial_engine::fixture::{
+        encode_multipolygon, multipolygon_f1, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let rows = multipolygon_f1([E_LO, N_LO], 10.0)
+        .iter()
+        .map(|parts| {
+            let (mut xmin, mut ymin) = (f64::INFINITY, f64::INFINITY);
+            let (mut xmax, mut ymax) = (f64::NEG_INFINITY, f64::NEG_INFINITY);
+            for p in parts.iter().flatten().flatten() {
+                xmin = xmin.min(p[0]);
+                ymin = ymin.min(p[1]);
+                xmax = xmax.max(p[0]);
+                ymax = ymax.max(p[1]);
+            }
+            (encode_multipolygon(parts), [xmin, ymin, xmax, ymax])
+        })
+        .collect();
+    let path = dir().join("multipolygon-f1-with-covering.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(rows),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["MultiPolygon"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multipolygon F-1 with-covering fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The "missing identity" refusing file: the shape most real GeoParquet has per ADR-016's own
 /// Context — a unique key under a different name (`parcel_key`) and **no `id` column at all**
 /// (`IdentityMode::ForeignKeyColumn`), refused as `EngineError::IdentityUnusable` (SKP code
