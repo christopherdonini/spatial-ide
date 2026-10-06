@@ -45,3 +45,8 @@ This directory's fixtures were updated again in place, to the `skp/0.8` literal 
 `cut/filter-bind-coercions` into `main`, PLAN node `filter-bind-admission-implicit-coercions`
 (`engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md` §2.8); no implementation file changed for that
 update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.9` literal of PLAN node
+`geometry-types-beyond-polygons` (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §2 W2); the
+version-refusal fixture that named `skp/0.9` as an unsupported future version was renumbered to
+name `skp/0.10` instead. No implementation file changed for that update either.

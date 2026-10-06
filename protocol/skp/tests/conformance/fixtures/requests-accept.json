@@ -6,7 +6,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
@@ -20,7 +20,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": {
@@ -39,7 +39,7 @@
   "expect": "accept",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1"
   }
@@ -51,18 +51,18 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef"
   }
  },
  {
   "id": "req-viewport-all-null",
-  "spec": "\u00a71 viewport_query; \u00a77.2 (filter: null declares no filter); \u00a78's skp/0.8 entry",
+  "spec": "\u00a71 viewport_query; \u00a77.2 (filter: null declares no filter); \u00a78's skp/0.9 entry",
   "wire_type": "viewport_query.request",
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -73,12 +73,12 @@
  },
  {
   "id": "req-viewport-populated",
-  "spec": "\u00a71 viewport_query; \u00a73 HexF64/DecU64; \u00a77.2 dialect duckdb-expr/0; \u00a78's skp/0.8 entry",
+  "spec": "\u00a71 viewport_query; \u00a73 HexF64/DecU64; \u00a77.2 dialect duckdb-expr/0; \u00a78's skp/0.9 entry",
   "wire_type": "viewport_query.request",
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": {
     "xmin": "4142f58400000000",
@@ -97,12 +97,12 @@
  },
  {
   "id": "req-viewport-hex-zero-and-negzero",
-  "spec": "\u00a73 HexF64 (finite bit patterns, lowercase, 16 digits); \u00a78's skp/0.8 entry",
+  "spec": "\u00a73 HexF64 (finite bit patterns, lowercase, 16 digits); \u00a78's skp/0.9 entry",
   "wire_type": "viewport_query.request",
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": {
     "xmin": "8000000000000000",
@@ -118,12 +118,12 @@
  },
  {
   "id": "req-viewport-decu64-max",
-  "spec": "\u00a73 DecU64 (every u64 as a decimal string); \u00a78's skp/0.8 entry",
+  "spec": "\u00a73 DecU64 (every u64 as a decimal string); \u00a78's skp/0.9 entry",
   "wire_type": "viewport_query.request",
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -139,7 +139,7 @@
   "expect": "accept",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "limit": null
@@ -152,7 +152,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "handle": "sh_fedcba9876543210fedcba9876543210"
   }
  },
@@ -163,7 +163,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "handle": "open-1"
   }
  },
@@ -174,7 +174,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "path": "/data/zurich.parquet",
    "cancel_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz0_-9",
    "crs_assertion": null,
@@ -188,7 +188,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "path": "/data/zurich.parquet",
    "cancel_key": "k",
    "crs_assertion": null,
@@ -202,7 +202,7 @@
   "expect": "accept",
   "roundtrip": true,
   "document": {
-   "skp": "skp/0.8",
+   "skp": "skp/0.9",
    "dataset": "ds_0123456789abcdef0123456789abcdef"
   }
  }

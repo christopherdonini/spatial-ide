@@ -457,11 +457,58 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.8` (bind admission's type rules, `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`).
-/// Mutation: the literal back to `"skp/0.7"`. Expected failure: this test fails by name.
+/// `skp/0.9` (MultiPolygon admission, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`).
+/// Mutation: the literal back to `"skp/0.8"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_8() {
-    assert_eq!(SKP_VERSION, "skp/0.8");
+fn skp_version_is_skp_0_9() {
+    assert_eq!(SKP_VERSION, "skp/0.9");
+}
+
+/// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row
+/// P-2).** `geometry.declared_types` is the file's declaration and nothing else: a populated list
+/// keeps its order and case, an empty list `[]` round-trips as `[]`, and an absent key (`None`)
+/// round-trips as `null`. The key is never omitted, so the two states stay distinct on the wire.
+/// The committed fixtures carry the populated lists; the empty and null states are built from the
+/// first fixture in place, since the key set is what `deny_unknown_fields` makes significant.
+///
+/// RECORDED MUTATION: on `GeometryInfo::declared_types`, `skip_serializing_if` a predicate that is
+/// true for an empty list. The `[]` case then loses its key and this test fails by name.
+///
+/// Observed over `5c3a9e09` on the uncommitted tree of the wire commit:
+/// `declared_types_keeps_a_populated_list_and_round_trips_empty_as_empty_and_absent_as_null`
+/// FAILED with the mutation applied, then reverted.
+#[test]
+fn declared_types_keeps_a_populated_list_and_round_trips_empty_as_empty_and_absent_as_null() {
+    let caller_asserted = fixture("v0-describe-response-caller-asserted");
+    let parsed: DescribeResponse = serde_json::from_value(caller_asserted)
+        .expect("the caller-asserted fixture deserializes as DescribeResponse");
+    assert_eq!(
+        parsed.geometry.declared_types,
+        Some(vec!["polygon".to_string()]),
+        "case as written is preserved"
+    );
+
+    let base = fixture("v0-describe-response");
+    for (state, wire) in [
+        ("an empty list", serde_json::json!([])),
+        ("an absent key", serde_json::json!(null)),
+    ] {
+        let mut v = base.clone();
+        v["geometry"]["declared_types"] = wire.clone();
+        let parsed: DescribeResponse = serde_json::from_value(v)
+            .unwrap_or_else(|e| panic!("{state}: does not deserialize as DescribeResponse: {e}"));
+        assert_eq!(
+            parsed.geometry.declared_types.is_none(),
+            wire.is_null(),
+            "{state}: the Rust value"
+        );
+        let out = serde_json::to_value(&parsed).unwrap();
+        assert_eq!(
+            out["geometry"].get("declared_types"),
+            Some(&wire),
+            "{state}: the key is present on the wire with its own value"
+        );
+    }
 }
 
 /// B-T8 (`FILTER-BIND-COERCIONS-PREREGISTRATION.md` §4). Mutation: FX-4's `reason` key renamed. It

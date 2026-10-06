@@ -85,6 +85,7 @@ function describeFixture(): DescribeResponse {
     geometry: {
       column: "geometry",
       encoding: "geoarrow.polygon",
+      declared_types: ["Polygon"],
       coordinate_layout: "interleaved-xy",
       frame: "authoritative-project-crs",
     },

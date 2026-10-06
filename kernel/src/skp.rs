@@ -1926,6 +1926,9 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
             // The engine's fact for this open (ADR-034 Decision 2), read from the dataset and never
             // restated here: the same value the envelope and every batch carry.
             encoding: ds.geometry_encoding().as_str().to_string(),
+            // The file's declaration as written (ADR-034 Decision 3), the source fact beside the
+            // engine's `encoding`: `None` is an absent key and an empty list is kept empty.
+            declared_types: ds.declared_geometry_types().map(<[String]>::to_vec),
             coordinate_layout: "interleaved-xy".to_string(),
             frame: "authoritative-project-crs".to_string(),
         },
@@ -3004,19 +3007,28 @@ mod tests {
         );
     }
 
-    /// **MP-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row K-1; ADR-034 Decision 2).**
-    /// The real `describe` response of a real open carries the engine's encoding for that open: F-1
-    /// (`["MultiPolygon"]`) and F-3 (an explicit `[]` over Polygon rows) are `geoarrow.multipolygon`,
-    /// and an ordinary Polygon fixture is `geoarrow.polygon`. The `geometry` key set equals the
-    /// shared fixture's, so the response has no member the wire fixtures do not.
+    /// **MP-1 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row K-1; ADR-034 Decisions 2 and
+    /// 3).** The real `describe` response of a real open carries the engine's encoding for that
+    /// open and the file's declaration beside it: F-1 (`["MultiPolygon"]`) and F-3 (an explicit `[]`
+    /// over Polygon rows, kept empty) are `geoarrow.multipolygon`, F-4 (the key absent) is
+    /// `geoarrow.multipolygon` with `declared_types` `None`, and an ordinary Polygon fixture is
+    /// `geoarrow.polygon` declaring `["Polygon"]`. The `geometry` key set equals the shared
+    /// fixture's, so the response has no member the wire fixtures do not.
     ///
-    /// The `declared_types` half of K-1 lands with the wire field it reads (the preregistration's
-    /// commit 4); until then this asserts `encoding` and the key set only.
+    /// The `encoding` half was committed with the kernel commit; the `declared_types` half lands
+    /// with the wire field it reads, in the wire commit (Amendment 2, item 5.1 of the form).
     ///
-    /// Mutation: hard-code `geoarrow.polygon` in `describe_dataset`. Expected failure: this test
-    /// fails by name at F-1's `encoding`.
+    /// RECORDED MUTATION, `encoding` half: hard-code `geoarrow.polygon` in `describe_dataset`.
+    /// Expected failure: this test fails by name at F-1's `encoding`.
     ///
     /// Observed over `1b978ee5` on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_geometry_carries_the_engines_encoding_for_each_open` FAILED with the
+    /// mutation applied, then reverted.
+    ///
+    /// RECORDED MUTATION, `declared_types` half: write `None` in `describe_dataset` in place of the
+    /// dataset's list. Expected failure: this test fails by name at F-1's `declared_types`.
+    ///
+    /// Observed over `5c3a9e09` on the uncommitted tree of the wire commit:
     /// `the_real_describe_geometry_carries_the_engines_encoding_for_each_open` FAILED with the
     /// mutation applied, then reverted.
     #[test]
@@ -3048,7 +3060,7 @@ mod tests {
                 ]])
             })
             .collect();
-        let cases: [(&str, FixtureSpec, &str); 3] = [
+        let cases: [(&str, FixtureSpec, &str, Option<Vec<&str>>); 4] = [
             (
                 "f1",
                 rows_spec(
@@ -3056,8 +3068,25 @@ mod tests {
                     multipolygon_f1_rows([E_LO, N_LO], 10.0),
                 ),
                 "geoarrow.multipolygon",
+                Some(vec!["MultiPolygon"]),
             ),
-            ("f3", rows_spec("[]", polygon_rows), "geoarrow.multipolygon"),
+            (
+                "f3",
+                rows_spec("[]", polygon_rows.clone()),
+                "geoarrow.multipolygon",
+                Some(vec![]),
+            ),
+            (
+                "f4",
+                FixtureSpec {
+                    geometry: GeometryMode::Rows(polygon_rows),
+                    with_covering_bbox: false,
+                    declared_types: DeclaredTypes::Absent,
+                    ..Default::default()
+                },
+                "geoarrow.multipolygon",
+                None,
+            ),
             (
                 "polygon",
                 FixtureSpec {
@@ -3067,6 +3096,7 @@ mod tests {
                     ..Default::default()
                 },
                 "geoarrow.polygon",
+                Some(vec!["Polygon"]),
             ),
         ];
 
@@ -3084,7 +3114,7 @@ mod tests {
             .cloned()
             .collect();
 
-        for (name, spec, want) in cases {
+        for (name, spec, want, want_declared) in cases {
             let path = dir.join(format!("{name}.parquet"));
             write_geoparquet(&path, &spec).expect("write fixture");
             let host = SkpHost::new(
@@ -3112,6 +3142,11 @@ mod tests {
             assert_eq!(
                 describe.geometry.encoding, want,
                 "{name}: describe.encoding"
+            );
+            assert_eq!(
+                describe.geometry.declared_types,
+                want_declared.map(|l| l.into_iter().map(str::to_string).collect::<Vec<_>>()),
+                "{name}: describe.declared_types, as declared (an empty list kept empty, an absent key None)"
             );
             let real_keys: std::collections::BTreeSet<String> =
                 serde_json::to_value(&describe.geometry)
