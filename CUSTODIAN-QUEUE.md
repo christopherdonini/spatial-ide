@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `9a615a81284d6007cb994292e6c38f1177018c225b459fa70965d9492fa228d1`) at `2026-10-06T18:58:40.012Z`.
+Generated from `PLAN.yaml` (sha256 `34c3b532cddd5c1ded0ce91a51b1c3412c63e228f55cdbbb793123714f8e0c70`) at `2026-10-06T19:02:24.210Z`.
 
 ## 1. Next
 
-- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (lane `engine`)
+- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut (lane `engine`, order 15, budget 0 min)
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
 
 ## 3. Waiting on the human (total: 10 min)
@@ -30,6 +29,7 @@ Generated from `PLAN.yaml` (sha256 `9a615a81284d6007cb994292e6c38f1177018c225b45
 
 ## 5. In progress
 
+- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — evidence: branch `cut/geometry-points-cut`
 - **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 — evidence: branch `cut/mods-readme-local-scope`
 
 ## 6. Proposed / unscheduled
