@@ -530,6 +530,12 @@ Drafting returned to the architect at the stop. The rows below are the piece's l
   - **found wrong:** two readings, not pointers. One: the read says KNOWN-LIMITATIONS item 9 and a README line become untrue under MP-1, but both describe the v0.1.0 artifact and stay true. Two: the read gives a deck.gl version from a line that records an older version than the lock resolves; the architect calls the pointer accurate and the fact historical.
   - **missing:** the envelope's constructors and their call sites; the stream's `Pending` builder; the unordered streams' lack of reproducible cuts; the view query's covering-bbox refusal; the installed deck.gl version; more `.rings` sites, eight test files among them; the Tauri prepare-refusal precedent; that KNOWN-LIMITATIONS has no item 29; and the red-line list that makes question 1 the human's.
 - **Combined cost of piece 4** (read plus draft): 618,276 subagent tokens, 262 tool uses, 1,536,930 ms.
+- **Piece 4, the index update** (`state/consults/2026-10-06-geometry-types-beyond-polygons-index-update.md`): 220 lines, sha256 8f723ca0adc75076d463770e1ca9d3c3f828f99330c90496bbc5366c402093a3, filed byte-identical as lead-data wrote it, read at the branch's 3c29bc67.
+  - **Cost** (the harness's task notification): 126,759 subagent tokens, 43 tool uses, 294,503 ms. The run lasted 04:58:25Z to 05:03:20Z on 2026-10-06.
+  - **Write audit PASS:** one Write, at its REPORT PATH line's path (Grep 25, Read 11, Glob 5, the hand-back 1).
+  - **C3:** before, the checkout held only its two pre-existing untracked items. After, it held those and the report.
+  - **Content:** 13 lines replaced in place across both READMEs, 26 changed lines; the docs group stands at 88 of 130 once applied. It found no pointer made wrong. It adds three items to the engine's Open and admission row beyond the form's list, within that row, and leaves them to the final review.
+  - **This is the lead's last dispatch** under the 2026-10-05 clarification. The pilot's result is judged when the freeze lifts.
 
 ## Reduced by the 2026-10-05 product-first direction
 
