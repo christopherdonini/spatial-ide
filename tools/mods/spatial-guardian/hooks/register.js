@@ -12,7 +12,7 @@
 //   G4  a rewrite of an existing file under state/directives/ (filed verbatim, once)
 //   G6  a write by a report-only subagent outside the REPORT PATH its brief declares (question
 //       round 41, item 3; round 43, item 4)
-//   N1  one appended line per 5-point band from 80% of the auto-compaction threshold, on a stale or old block
+//   N1  one appended line per 5-point band from 80% of the auto-compaction threshold (or of the compaction window, when the breakdown gives no threshold), on a stale or old block
 // G5 (the profile-path refusal) is not in v0 (question round 43, item 3).
 
 import { judgeContinuity } from './continuity.mjs';
