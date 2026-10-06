@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// V-2 of `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4 (ADR-034 Consequences: "the viewer
+// V-2 of `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` section 4 (ADR-034 Consequences: "The viewer
 // already refuses a foreign encoding"). The viewer's product code is unchanged by this piece; this
 // test proves the refusal the Consequences rely on, against the real shape: the engine's own F-1
 // batch, committed by `engine/tests/geoarrow_batch_fixtures.rs` (BF-1) from a real `Dataset::open`

@@ -1565,7 +1565,7 @@ Fill in after running the row above.
 This Part is the Operator gate of `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §9, with S1 as that form's Amendment 2, item 1 rewrites it. It is discharged only once it has been run and its result log filled in. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018).
 
 **Before S1:**
-- Read the form's §10, its last amendment first (Amendment 2).
+- Read the form's §10, its last amendment first.
 - Generate the F-1 file: from `C:\dev\spatial-ide`, run `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_multipolygon_f1_fixture -- --ignored --nocapture`.
 - Verify corpus file #12's hash against `MANIFEST.json` as Part N's "Before N1" note describes.
 
