@@ -4190,15 +4190,16 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: proposed
-    order: null
+    status: ready
+    order: 24
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: tools/mods/MODS-README-LOCAL-SCOPE-PREREGISTRATION.md
+    merge: merge-commit
     evidence: null
     budget_minutes: 30
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner."
+    summary: "PLACED 2026-10-06 in slot 2 by the human third direction of the day, item 3 (RULED 2026-10-06), ahead of kernel-close-races-followups, exempt from the freeze: docs only, the five-line form (committed before any change) and the single reviewer gate; no E-rows; the human click on the merge is the approval. Before: Seen 2026-10-06 recording the install rows (GUARDIAN-V0-PREREGISTRATION.md Amendment 11; EVIDENCE-RECORDER-V0-PREREGISTRATION.md Amendment 8) on the human's second direction of 2026-10-06, item 1, and Fable's advice a: tools/mods/spatial-guardian/README.md (its install steps, the never-project-or-local line and the disable line) and tools/mods/spatial-evidence-recorder/README.md (its install and disable lines) name user scope. The forms are superseded by amendment; the READMEs are corrected in a docs pull request, which the governance freeze holds until it lifts, unless the human places it sooner."
     dates: {opened: 2026-10-06, done: null}

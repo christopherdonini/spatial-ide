@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a0aeaed78c130c232f34cef0cededa0a0ca5b6af4e19572247dd132162084026`) at `2026-10-06T16:53:38.046Z`.
+Generated from `PLAN.yaml` (sha256 `40f3a1ac0f596f87d437304f5c5c476d166f5c1394fd6e5b1a04b2c14fc70699`) at `2026-10-06T17:06:47.265Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `a0aeaed78c130c232f34cef0cededa0a0ca5b6af4e19
 ## 2. Ready
 
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
+- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 (lane `governance`, order 24, budget 30 min)
 
 ## 3. Waiting on the human (total: 0 min)
 
@@ -94,7 +95,6 @@ Generated from `PLAN.yaml` (sha256 `a0aeaed78c130c232f34cef0cededa0a0ca5b6af4e19
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
-- **mods-readme-local-scope** — The two mods' READMEs still give the install at user scope and say never to use local scope; both mods have been installed at local scope since 2026-10-06 (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
