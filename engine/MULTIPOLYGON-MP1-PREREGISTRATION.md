@@ -634,3 +634,22 @@ All quantities are assertions. None is a measurement.
 3. **Still owed before the final gate:** the owner's-index update (Amendment 1, item 4), and class 8 at the gated head (Amendment 2, item 4).
 
 **Superseded index.** Amendment 2, item 2, its list of what holds until the ruling → items 1 and 2.
+
+### Amendment 4 — budget overrun, §7 not edited (class 8), at the gated head
+
+Budget overrun, §7 not edited. *Written by the custodian after the build's results were seen, at the head 228bd997eb762188da7901b76dfbd2a07c6abcea, before either gate. The figures are worker report 2's §7 table at 3c29bc67f64634073373a28cd0ea24cc1280ed3e and worker report 3's step 6 at the head, recounted by the custodian with the same command. Nothing below is a quotation.*
+
+1. **Declared:** at most 4,500 changed lines over at most 80 files (§7).
+2. **Final, by §7's command at 228bd997:** 4,654 lines (4,270 insertions, 384 deletions) over 88 files. The merge base is ff6bdddc1dfe71e7b1e2dcf2353ed398d3dd788b.
+3. **By group** (worker report 2's table, with commit 7's 26 lines added to the docs group):
+   - engine product: 1,190 lines over 8 files, against 1,200;
+   - engine tests: 1,258 over 10, against 1,150, over by 108;
+   - kernel: 620 over 11, against 560, over by 60. The 8 listed files give 588, and the 3 unlisted test files the rest;
+   - protocol: 271 over 20, against 330;
+   - shell product: 369 over 15, against 460;
+   - shell tests and seams: 858 over 20, against 820, over by 38;
+   - docs: 88 over 4, against 130.
+4. **The reason:** engine product, protocol, shell product and docs stay within their ceilings. The overrun lies in engine tests, the kernel group, and shell tests and seams, and in the files those groups added beyond the form's lists (worker report 2, its §7 figures and its deviations 4 and 5).
+5. **No gate route opens:** the piece is already under full gating.
+
+**Superseded index.** Amendment 2, item 4, its interim figures → items 2 and 3. §7 is not edited.
