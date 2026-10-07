@@ -421,3 +421,27 @@ None is a red line. Each answer is recorded as Amendment 1 before dispatch.
 ## §12. Heavy runs
 
 The worker's and tester's briefs carry, as written, the paragraph at state/directives/2026-10-06-machine-script-adopted.md:12-22 @ 30e77c10 sha256:7350977156bed7c94b0da4e8db806ba34c25c6678e65c46447a62d791ba9e8e1. This form names no other rule for builds.
+
+### Amendment 1 — question rounds 66 and 67's rulings (OPEN-1 to OPEN-7), with the human's two clarifications
+
+*Written by the custodian after the rounds were answered and before any code: no branch exists. It is appended at the file's end and belongs to §10. The rulings are `state/directives/2026-10-07-round-66-and-67-rulings.md` at the commit that adds it: lines 6-12, sha256 93303ab09414917295841ccf30b289f391d8f02fadd92689dc73b425794ad2a6; lines 13-23, sha256 1ab500f879476da9e4669a9502298b1029babf89e0154b28e2f16fa0b172d903; lines 24-29, sha256 479cf1dcc5e450af01e47b4ecdeec9219d65105380471aa4a79402f03adfe077. Their RULED block is in `DECISIONS-PENDING.md`, referenced and not restated. Nothing below is a quotation.*
+
+1. **OPEN-1, (A).** App renders DescribeSummary from the dataset on the map, and KNOWN-LIMITATIONS 18 retires. The parts marked for OPEN-1 (A) are binding. The clarification adds that walkthrough row I1, which carries the same no-summary wording, is updated with row B2. The PR body lists both rows.
+2. **OPEN-2, (a).** The registry holds the three toggles and Zoom to layer only. Open and export join in milestone 3.
+3. **OPEN-3, (a).** style.mjs gains one real click on the Style tab.
+4. **OPEN-4, (a), as clarified:**
+   - Sighted now: only the eleven headings and the export label. The Export section's heading is the plain word Export, and the button reads Export interactive map followed by an ellipsis.
+   - The toggle labels, the empty-Inspector text and the console row statements stay P6 markers until the human has read their text.
+   - The purpose line, the colours and the watcher texts are sighted at the sitting.
+   - The success headline changes from Published. to Exported., because the export writes a folder and publishes nothing. The walkthrough rows that quote the old headline are updated.
+   - The approval dialog, and the headline beginning Bundle written, but, stay as they are.
+   - §2.8's list is read this way, and §8 item 10 applies to it.
+5. **OPEN-5, (a).** One piece, at §7's declared figure.
+6. **OPEN-6, (a).** A read-only scan-liveness mirror in the status bar. Cancel stays in FilterPanel.
+7. **OPEN-7, (a), as clarified.** If H1 holds:
+   - the KNOWN-LIMITATIONS line says what the human will see, and that a pan or zoom fills the area;
+   - the fix does not wait for milestone 2. It is its own small piece, the proposed node `shell-map-refill-after-resize`, placed directly after this milestone merges;
+   - milestone 2's form and question round are prepared meanwhile, and its code starts when that piece has merged.
+8. **Generation 2.** Dispatch waits only for the lines cut's merge (§0.2; the awaiting-merge direction, item 3).
+
+**Superseded index.** §11's OPEN list and every OPEN-conditional part → items 1 to 7, binding. §2.8's placeholder list → item 4. §2.11's conditional line → item 7.

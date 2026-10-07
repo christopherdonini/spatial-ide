@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T20:00:30.624Z",
-  "plan_hash": "14154d1187f4c8731c55e2bace3a04e6ea625154d0c38baeac43e16a4e56490a",
+  "generated_at": "2026-10-07T20:21:01.229Z",
+  "plan_hash": "8048893599eb88e2f53e98e1dfffc421fda2551cfbf19aba02fa5118d5495c00",
   "priorities_approved": true,
   "next": {
     "id": "data-plane-crowded-start-detail-spaces",
@@ -77,7 +77,7 @@
         "opened": "2026-10-05",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
+      "summary": "RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
     }
   ],
   "waiting_on_human": {
@@ -1486,7 +1486,7 @@
         "opened": "2026-10-07",
         "done": null
       },
-      "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way."
+      "summary": "Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way."
     },
     {
       "id": "shell-migration-milestone-3",
@@ -1544,6 +1544,25 @@
         "done": null
       },
       "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed."
+    },
+    {
+      "id": "shell-map-refill-after-resize",
+      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
     },
     {
       "id": "b2-piece-1b-recording",

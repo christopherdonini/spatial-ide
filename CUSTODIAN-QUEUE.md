@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `14154d1187f4c8731c55e2bace3a04e6ea625154d0c38baeac43e16a4e56490a`) at `2026-10-07T20:00:30.624Z`.
+Generated from `PLAN.yaml` (sha256 `8048893599eb88e2f53e98e1dfffc421fda2551cfbf19aba02fa5118d5495c00`) at `2026-10-07T20:21:01.229Z`.
 
 ## 1. Next
 
@@ -102,6 +102,7 @@ Generated from `PLAN.yaml` (sha256 `14154d1187f4c8731c55e2bace3a04e6ea625154d0c3
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
+- **shell-map-refill-after-resize** — The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom (phase `prototype`) — never queued until placed
 - **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (phase `prototype`) — never queued until placed
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
