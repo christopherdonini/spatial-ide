@@ -55,6 +55,7 @@ import {
   isPointerOnCanvas,
   hoverRepickActionForCameraChange,
   mayRepickAtSettle,
+  pickingRadiusFor,
   pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
 } from "./pickResolution";
@@ -1178,12 +1179,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         isBelowPickResolution(averageFeatureExtentRef.current, pixelsPerWorldUnitAtZoom(currentZoomRef.current)),
       // The SAME two steps `onHover` takes, in the same order, against the SAME arm-selected batch
       // list (`activeBatches()`, Defect B's one accessor): `deck.pickObject` at the stored pixel,
-      // then the batch the picked layer was actually built from. Default radius -- this piece
-      // changes no pick radius.
+      // then the batch the picked layer was actually built from. The radius is the line open's
+      // tolerance (`pickingRadiusFor`, the lines cut, SH-L4) -- the same value deck's own hover
+      // `pickingRadius` carries -- and is passed only when defined, so a polygonal or point open
+      // calls `pickObject` with no radius, as before.
       pickCandidateAt: (x, y) => {
         const deck = deckRef.current;
         if (!deck) return null;
-        const info = deck.pickObject({ x, y });
+        const radius = pickingRadiusFor(geometryKindRef.current);
+        const info = deck.pickObject(radius === undefined ? { x, y } : { x, y, radius });
         if (!info || info.index === undefined || info.index < 0 || !info.layer) return null;
         const batch = batchForLayerId(activeBatches(), info.layer.id);
         return batch === undefined ? null : { batch, gpuOrdinal: info.index };
@@ -1897,8 +1901,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
     if (!canvas) return;
 
     begin("deck-init");
+    // The lines cut (SH-L4): deck's hover tolerance for a line open, set only when defined so a
+    // polygonal or point open leaves `pickingRadius` at deck's own default (round 62, item 4).
+    const pickingRadius = pickingRadiusFor(geometryKindRef.current);
     const deck = new Deck({
       canvas,
+      ...(pickingRadius === undefined ? {} : { pickingRadius }),
       views: new OrthographicView({ id: "working", flipY: false }),
       initialViewState: { target: [0, 0, 0], zoom: INITIAL_ZOOM },
       controller: true,

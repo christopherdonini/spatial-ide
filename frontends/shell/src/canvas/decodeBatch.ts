@@ -18,29 +18,35 @@ export class UnexpectedFrameError extends Error {
   }
 }
 
-/** The three geometry encodings the engine writes (ADR-034 Decision 2; the third is the points cut's,
- * `skp/0.10`), as the batch schema's `geometry_encoding` key and `describe.geometry.encoding` both
- * carry them. */
+/** The five geometry encodings the engine writes (ADR-034 Decision 2; the third is the points cut's,
+ * `skp/0.10`, the fourth and fifth the lines cut's, `skp/0.11`), as the batch schema's
+ * `geometry_encoding` key and `describe.geometry.encoding` both carry them. */
 export const ENCODING_POLYGON = "geoarrow.polygon";
 export const ENCODING_MULTIPOLYGON = "geoarrow.multipolygon";
 export const ENCODING_POINT = "geoarrow.point";
+export const ENCODING_LINESTRING = "geoarrow.linestring";
+export const ENCODING_MULTILINESTRING = "geoarrow.multilinestring";
 
-/** What an open draws: polygons (the polygon and multipolygon encodings) or points. */
-export type GeometryKind = "polygonal" | "point";
+/** What an open draws: polygons (the polygon and multipolygon encodings), points, or lines (the
+ * linestring and multilinestring encodings). */
+export type GeometryKind = "polygonal" | "point" | "line";
 
 /**
- * The kind an open's encoding draws as -- pure, and derived from the encoding string alone. Only
- * `geoarrow.point` is `point`; every other value is `polygonal`, the path that existed before the
- * points cut, so that path is unchanged. A value the shell does not read at all is still refused by
- * `decodeBatch` (`UnexpectedEncodingError`) before any layer is built from it.
+ * The kind an open's encoding draws as -- pure, and derived from the encoding string alone. The point
+ * encoding is `point` and the two line encodings are `line`; every other value is `polygonal`, the
+ * path that existed before the points cut, so that path is unchanged. A value the shell does not read
+ * at all is still refused by `decodeBatch` (`UnexpectedEncodingError`) before any layer is built from
+ * it.
  */
 export function geometryKindOf(encoding: string): GeometryKind {
-  return encoding === ENCODING_POINT ? "point" : "polygonal";
+  if (encoding === ENCODING_POINT) return "point";
+  if (encoding === ENCODING_LINESTRING || encoding === ENCODING_MULTILINESTRING) return "line";
+  return "polygonal";
 }
 
 /**
  * A batch whose `geometry_encoding` is not the encoding this open fixed (`describe.geometry
- * .encoding`), or is none of the three encodings this shell reads. Refused rather than walked: a
+ * .encoding`), or is none of the five encodings this shell reads. Refused rather than walked: a
  * multipolygon batch read as polygon rings is walked one nesting level short, misread, with no error
  * raised (ADR-034 Consequences). The text is a P6 placeholder (the human's wording at P6, ADR-034
  * Acceptance item 6) and states the shell's own fact only.
@@ -53,8 +59,8 @@ export class UnexpectedEncodingError extends Error {
     super(
       `[P6 placeholder] batch schema names geometry encoding ${JSON.stringify(batchEncoding)}; this open's ` +
         `encoding is ${JSON.stringify(expectedEncoding)}, and the shell reads ${ENCODING_POLYGON}, ` +
-        `${ENCODING_MULTIPOLYGON} and ${ENCODING_POINT} -- refusing rather than walking the batch at a ` +
-        "guessed nesting depth"
+        `${ENCODING_MULTIPOLYGON}, ${ENCODING_POINT}, ${ENCODING_LINESTRING} and ` +
+        `${ENCODING_MULTILINESTRING} -- refusing rather than walking the batch at a guessed nesting depth`
     );
     this.name = "UnexpectedEncodingError";
   }
@@ -80,6 +86,12 @@ export type Part = Ring[];
  * **A Point row is one part holding one single-position ring**: `parts[row] = [[[[x, y]]]]` in the
  * `parts[feature][part][ring]` order above, so `partToRow` is the identity, and `partCount` and
  * `totalVertices` both equal the row count. The type is unchanged.
+ *
+ * **A line is one part holding one path** (the lines cut, ADR-034 Decision 6): the part's only ring
+ * is the path, its positions in order, and it is not closed. A LineString row is one part, so for a
+ * linestring open `partToRow` is the identity. A MultiLineString row is one such part per linestring,
+ * in the engine's order, so its pick ordinals differ from its row indices. `totalVertices` counts every
+ * position of every path. The type is unchanged.
  */
 export interface ResidentBatch {
   streamHandle: string;
@@ -105,7 +117,7 @@ export interface ResidentBatch {
  * Decode one self-contained Arrow IPC batch (`engine::envelope::TaggedBatch`'s wire form) into a
  * `ResidentBatch`. Throws `UnexpectedFrameError` if the schema's `frame` metadata is not what rule
  * 1 requires, `UnexpectedEncodingError` if its `geometry_encoding` is not `expectedEncoding` (the
- * open's own, from `describe`) or is none of the three encodings the shell reads, and propagates a decode error
+ * open's own, from `describe`) or is none of the five encodings the shell reads, and propagates a decode error
  * rather than returning a partial batch.
  */
 export function decodeBatch(
@@ -122,7 +134,11 @@ export function decodeBatch(
   }
   const encoding = table.schema.metadata.get("geometry_encoding");
   if (
-    (encoding !== ENCODING_POLYGON && encoding !== ENCODING_MULTIPOLYGON && encoding !== ENCODING_POINT) ||
+    (encoding !== ENCODING_POLYGON &&
+      encoding !== ENCODING_MULTIPOLYGON &&
+      encoding !== ENCODING_POINT &&
+      encoding !== ENCODING_LINESTRING &&
+      encoding !== ENCODING_MULTILINESTRING) ||
     encoding !== expectedEncoding
   ) {
     throw new UnexpectedEncodingError(encoding, expectedEncoding);
@@ -162,6 +178,24 @@ export function decodeBatch(
       featureParts.push([[[x, y]]]);
       partRows.push(i);
       totalVertices += 1;
+    } else if (geometry !== null && (encoding === ENCODING_LINESTRING || encoding === ENCODING_MULTILINESTRING)) {
+      // A line is one part holding one path (the lines cut): a `geoarrow.linestring` row is a list of
+      // vertices, so one part; a `geoarrow.multilinestring` row is a list of linestrings, one part
+      // each. The branch is the batch's own encoding, checked above, never the data's shape.
+      const sourceLines: Iterable<Iterable<Iterable<number>>> =
+        encoding === ENCODING_MULTILINESTRING
+          ? (geometry as Iterable<Iterable<Iterable<number>>>)
+          : [geometry as Iterable<Iterable<number>>];
+      for (const sourceLine of sourceLines) {
+        const path: Ring = [];
+        for (const vertex of sourceLine) {
+          const [x, y] = Array.from(vertex);
+          path.push([x, y]);
+        }
+        featureParts.push([path]);
+        partRows.push(i);
+        totalVertices += path.length;
+      }
     } else if (geometry !== null) {
       // `geoarrow.polygon` rows are a list of rings (one part); `geoarrow.multipolygon` rows are a
       // list of parts, each a list of rings. The level count is the batch's own encoding, checked

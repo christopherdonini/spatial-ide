@@ -3,14 +3,27 @@
 
 import { describe, expect, it } from "vitest";
 
+import { COORDINATE_SYSTEM } from "@deck.gl/core";
 import type { Position } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
-import { batchForLayerId, buildLayers, layerId, POINT_RADIUS_PX, toResolvedDrawParams } from "./buildLayers";
+import {
+  batchForLayerId,
+  buildLayers,
+  layerId,
+  LINE_WIDTH_PX,
+  POINT_RADIUS_PX,
+  toResolvedDrawParams,
+} from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
-import { decodeBatch, ENCODING_POINT } from "./decodeBatch";
+import { decodeBatch, ENCODING_LINESTRING, ENCODING_MULTILINESTRING, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
-import { loadBatchFixture, pointP1Positions } from "../testUtils/batchFixtures";
+import {
+  lineL1Positions,
+  loadBatchFixture,
+  multilinestringMl1Positions,
+  pointP1Positions,
+} from "../testUtils/batchFixtures";
 import { partsOfFeatures, partsOfPolygons } from "../testUtils/partsOfPolygons";
 import { PickCeilingExceeded } from "./limits";
 import { OffsetFrame } from "./offsetFrame";
@@ -320,6 +333,122 @@ describe("buildLayers -- a point open (SH-P2)", () => {
     const third = buildLayers([b], frame, FIXED_DRAW, "point")[0].props.data as Array<[number, number]>;
     expect(third).not.toBe(first);
     expect(third[0]).not.toEqual((first as Array<[number, number]>)[0]);
+  });
+});
+
+/**
+ * SH-L2 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4; real shape: the engine's own
+ * `lv95-linestring-batch` and `lv95-multilinestring-batch`, decoded by the product `decodeBatch`). A
+ * line open gives one pickable `PathLayer` per batch, id'd by `layerId`, and no `SolidPolygonLayer`:
+ * width `LINE_WIDTH_PX` (2) in pixels, the style's fill colour passed through, rounded joints and caps,
+ * CARTESIAN. Its data is one offset-relative path per part, in `partToRow`'s order (L-1's five rows,
+ * ML-1's six parts). With an outline in the style a non-pickable casing comes first, id'd
+ * `${layerId}-casing`, sharing the line's data and of width `LINE_WIDTH_PX + 2 * outlineWidth` in the
+ * outline colour. The pick ceiling is counted from `partCount`, never the row count.
+ *
+ * RECORDED MUTATION: build a `SolidPolygonLayer` for lines (the line branch of `buildLayers` not taken,
+ * so the batch falls to the polygon path). The first `PathLayer` assertion then fails by name.
+ *
+ * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `a line batch gives one pickable PathLayer with the pixel width, colour and rounding, no SolidPolygonLayer, a casing first only with an outline, and the ceiling counted in partCount (SH-L2)`
+ * FAILED by name with the mutation applied, at `expect(layer).toBeInstanceOf(PathLayer)` (`expected SolidPolygonLayer{ …(6) } to be an instance of PathLayer`), then reverted.
+ */
+describe("buildLayers -- a line open (SH-L2)", () => {
+  function l1(streamHandle: string, batchSeq: number): ResidentBatch {
+    return decodeBatch(streamHandle, batchSeq, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING);
+  }
+
+  it("a line batch gives one pickable PathLayer with the pixel width, colour and rounding, no SolidPolygonLayer, a casing first only with an outline, and the ceiling counted in partCount (SH-L2)", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const b = l1("sh_l", 2);
+
+    const plain = buildLayers([b], frame, FIXED_DRAW, "line");
+    expect(plain).toHaveLength(1);
+    const layer = plain[0];
+    expect(layer).toBeInstanceOf(PathLayer);
+    expect(plain.some((l) => (l as unknown) instanceof SolidPolygonLayer)).toBe(false);
+    expect(layer.id).toBe("sh_l:2");
+    expect(layer.props.pickable).toBe(true);
+    expect(LINE_WIDTH_PX).toBe(2);
+    expect(layer.props.widthUnits).toBe("pixels");
+    expect(layer.props.getWidth).toBe(LINE_WIDTH_PX);
+    expect(layer.props.getColor).toBe(FIXED_DRAW.fillColor); // the style's own array, not cloned
+    expect(layer.props.jointRounded).toBe(true);
+    expect(layer.props.capRounded).toBe(true);
+    expect(layer.props.coordinateSystem).toBe(COORDINATE_SYSTEM.CARTESIAN);
+
+    // One path per part, offset-relative, in partToRow's order (datum k is pick ordinal k).
+    const data = layer.props.data as Array<Array<[number, number]>>;
+    expect(data).toHaveLength(5);
+    lineL1Positions().forEach((positions, k) => {
+      expect(data[k]).toEqual(positions.map(([x, y]) => [x - 2_600_000, y - 1_200_000]));
+    });
+
+    // An outline in the style adds the casing, first, non-pickable, wider by twice the outline width.
+    const outlined = buildLayers([b], frame, { ...FIXED_DRAW, outlineColor: [17, 17, 17, 255], outlineWidth: 3 }, "line");
+    expect(outlined).toHaveLength(2);
+    const [casing, line] = outlined;
+    expect(casing).toBeInstanceOf(PathLayer);
+    expect(casing.id).toBe("sh_l:2-casing");
+    expect(casing.props.pickable).toBe(false);
+    expect(casing.props.widthUnits).toBe("pixels");
+    expect(casing.props.getWidth).toBe(LINE_WIDTH_PX + 2 * 3);
+    expect(casing.props.getColor).toEqual([17, 17, 17, 255]);
+    expect(casing.props.data).toBe(line.props.data); // the same cached data
+    expect(line.id).toBe("sh_l:2");
+    expect(line.props.pickable).toBe(true);
+    expect(line.props.getWidth).toBe(LINE_WIDTH_PX);
+    expect(line.props.getColor).toBe(FIXED_DRAW.fillColor);
+    // The casing's id never resolves to a batch: only the line does.
+    expect(batchForLayerId([b], casing.id)).toBeUndefined();
+    expect(batchForLayerId([b], line.id)).toBe(b);
+
+    // A multilinestring batch gives one path per part: ML-1's six parts, so ordinals differ from rows.
+    const ml = decodeBatch(
+      "sh_m",
+      0,
+      loadBatchFixture("lv95-multilinestring-batch"),
+      "geometry",
+      ENCODING_MULTILINESTRING
+    );
+    const mlData = buildLayers([ml], frame, FIXED_DRAW, "line")[0].props.data as Array<Array<[number, number]>>;
+    expect(mlData).toHaveLength(6);
+    expect(mlData.map((path) => path.length)).toEqual([2, 3, 2, 2, 2, 4]);
+    const flat = multilinestringMl1Positions().flat();
+    flat.forEach((positions, k) => {
+      expect(mlData[k]).toEqual(positions.map(([x, y]) => [x - 2_600_000, y - 1_200_000]));
+    });
+
+    // The ceiling is `partCount`: a batch over it is refused; a batch with only its ROW count over it is not.
+    const manyParts: ResidentBatch = { ...b, partCount: 16_777_216 };
+    expect(() => buildLayers([manyParts], frame, FIXED_DRAW, "line")).toThrow(PickCeilingExceeded);
+    const manyRows: ResidentBatch = { ...b, ids: { length: 16_777_216 } as unknown as BigUint64Array };
+    expect(() => buildLayers([manyRows], frame, FIXED_DRAW, "line")).not.toThrow();
+  });
+
+  /**
+   * SH-L2c's cache rule: a line batch's `data` is cached per batch object and frame origin, as the
+   * polygon path's is (`geometryForBatch`), so deck.gl's reference-only data diff skips regeneration for
+   * an unchanged batch; a recenter recomputes it from the authoritative f64 positions.
+   *
+   * RECORDED MUTATION: delete the cache hit in `pathsForBatch` (always recompute). The reference
+   * assertion then fails by name.
+   *
+   * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `a line batch's data is reference-stable at an unchanged origin and recomputed after a recenter (SH-L2c, the cache rule)`
+   * FAILED by name with the mutation applied, at `expect(second).toBe(first)` (`expected [ [ …(2) ], [ [ …(2) ], …(2) ], …(3) ] to be [ [ …(2) ], [ [ …(2) ], …(2) ], …(3) ] // Object.is equality`), then reverted.
+   */
+  it("a line batch's data is reference-stable at an unchanged origin and recomputed after a recenter (SH-L2c, the cache rule)", () => {
+    const frame = new OffsetFrame(100);
+    frame.maybeRecenter(2_600_000, 1_200_000);
+    const b = l1("sh_l", 0);
+    const first = buildLayers([b], frame, FIXED_DRAW, "line")[0].props.data;
+    const second = buildLayers([b], frame, FIXED_DRAW, "line")[0].props.data;
+    expect(second).toBe(first);
+
+    frame.maybeRecenter(2_600_500, 1_200_500); // past the threshold; forces a recenter
+    const third = buildLayers([b], frame, FIXED_DRAW, "line")[0].props.data as Array<Array<[number, number]>>;
+    expect(third).not.toBe(first);
+    expect(third[0][0]).not.toEqual((first as Array<Array<[number, number]>>)[0][0]);
   });
 });
 

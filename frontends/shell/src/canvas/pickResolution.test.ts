@@ -14,7 +14,9 @@ import {
   isBelowPickResolution,
   isFramebufferIdentical,
   isPointerOnCanvas,
+  LINE_PICK_RADIUS_PX,
   mayRepickAtSettle,
+  pickingRadiusFor,
   pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
   shouldArmHoverRepick,
@@ -486,5 +488,31 @@ describe("pickResolutionExtentFor (SH-P4)", () => {
     const batches = [batchOf([[[0, 0], [10, 0]], [[100, 0], [110, 0]]])];
     expect(pickResolutionExtentFor("polygonal", batches)).toBe(10);
     expect(pickResolutionExtentFor("point", batches)).toBeCloseTo(110 / 3, 12);
+  });
+});
+
+/**
+ * SH-L4 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4, OPEN-4 ruled (A)). A line open's selector
+ * gives the average feature extent, as a polygonal open's does (ADR-028 item 4 as written, not the point
+ * spacing), and `pickingRadiusFor` gives `LINE_PICK_RADIUS_PX` (4) for `line` and `undefined` for
+ * `polygonal` and `point`, so a polygonal or point open sets no radius at either wiring site.
+ *
+ * RECORDED MUTATION: return the radius for `polygonal` in `pickingRadiusFor` (the line check becomes
+ * "not a point"). The polygonal assertion then fails by name.
+ *
+ * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `selects the average feature extent for a line open and gives the radius for a line open only`
+ * FAILED by name with the mutation applied, at `expect(pickingRadiusFor("polygonal")).toBeUndefined()` (`expected 4 to be undefined`), then reverted.
+ */
+describe("the line open's pick tolerance and selector (SH-L4)", () => {
+  it("selects the average feature extent for a line open and gives the radius for a line open only", () => {
+    // The same batches as above: the average feature extent is 10, the average point spacing 110 / 3.
+    const batches = [batchOf([[[0, 0], [10, 0]], [[100, 0], [110, 0]]])];
+    expect(pickResolutionExtentFor("line", batches)).toBe(10);
+    expect(pickResolutionExtentFor("line", batches)).toBe(pickResolutionExtentFor("polygonal", batches));
+
+    expect(LINE_PICK_RADIUS_PX).toBe(4);
+    expect(pickingRadiusFor("line")).toBe(4);
+    expect(pickingRadiusFor("polygonal")).toBeUndefined();
+    expect(pickingRadiusFor("point")).toBeUndefined();
   });
 });

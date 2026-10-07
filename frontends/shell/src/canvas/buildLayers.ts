@@ -215,13 +215,61 @@ function pointsForBatch(batch: ResidentBatch, frame: OffsetFrame): CachedPointGe
   return fresh;
 }
 
+/**
+ * **The line symbol's width: 2 CSS pixels** (the lines cut, `engine/GEOMETRY-LINES-PREREGISTRATION.md`
+ * OPEN-3, ruled (A) in question round 63). A declared shell constant, outside the style document: the
+ * document says polygon and carries no line width (a line geometry and a width stay with style v2).
+ * The line is drawn in the style's fill colour and opacity, with rounded joins and caps. When the
+ * style has an outline (`outlineWidth > 0`) a casing in the outline colour is drawn beneath, of width
+ * `LINE_WIDTH_PX + 2 * outlineWidth`. The value is declared, not fitted: a walkthrough verdict (Part T,
+ * row T4) may revise it.
+ */
+export const LINE_WIDTH_PX = 2;
+
+/**
+ * The line open's per-batch geometry: one offset-relative path per part, cached by `ResidentBatch`
+ * object identity and the frame origin it was last computed against, under the same rule as
+ * `geometryForBatch` above (`frame.toLocal` in f64 before any narrowing, ADR-010 rule 3; an unchanged
+ * batch at an unchanged origin hands deck.gl the same `data` reference, for the line layer and the
+ * casing alike). A separate cache and function, so the polygonal path above is untouched.
+ */
+interface CachedLineGeometry {
+  originX: number;
+  originY: number;
+  paths: Position[][];
+}
+
+const lineGeometryCache = new WeakMap<ResidentBatch, CachedLineGeometry>();
+
+function pathsForBatch(batch: ResidentBatch, frame: OffsetFrame): CachedLineGeometry {
+  const cached = lineGeometryCache.get(batch);
+  if (cached && cached.originX === frame.originX && cached.originY === frame.originY) {
+    return cached;
+  }
+  // A line part holds one ring, which is the path (`decodeBatch.ts`), so datum k is the k-th part's
+  // path, in `partToRow`'s order: the datum index is the pick ordinal. Nested `[x, y]` pairs, as the
+  // polygon ring above, which `PathLayer` flattens itself. Read at the installed 9.3.9 source
+  // (`path-layer.js`, `path-tesselator.js`): one datum is one path, and the datum index is the
+  // picking colour.
+  const paths: Position[][] = batch.parts.flatMap((featureParts) =>
+    featureParts.map((rings) => rings[0].map(([x, y]) => frame.toLocal(x, y) as Position))
+  );
+  const fresh: CachedLineGeometry = { originX: frame.originX, originY: frame.originY, paths };
+  lineGeometryCache.set(batch, fresh);
+  return fresh;
+}
+
 /** What `buildLayers` returns for a polygonal open. */
 export type PolygonalLayer = SolidPolygonLayer<Position[][]> | PathLayer<Position[]>;
 
+/** What `buildLayers` returns for a line open: per batch, the casing (only with an outline) and then
+ * the pickable line, both `PathLayer`s. */
+export type LineLayer = PathLayer<Position[]>;
+
 /**
  * One deck.gl layer per resident batch. **Never one layer for everything** -- a batch's own
- * part count (one deck.gl datum, one pick ordinal, per polygon part, or per point for a `point`
- * open, whose `kind` the caller derives once from the open's encoding) is what the 24-bit pick
+ * part count (one deck.gl datum, one pick ordinal, per polygon part, per line part, or per point
+ * for a `point` open, whose `kind` the caller derives once from the open's encoding) is what the 24-bit pick
  * ceiling (ADR-010 rule 6) is checked against, and a batch is
  * bounded by the data plane's frame-size ceiling, so per-layer counts sit orders of magnitude below
  * 16,777,215 by construction.
@@ -318,6 +366,12 @@ export function buildLayers(
   batches: readonly ResidentBatch[],
   frame: OffsetFrame,
   draw: ResolvedDrawParams,
+  kind: "line"
+): LineLayer[];
+export function buildLayers(
+  batches: readonly ResidentBatch[],
+  frame: OffsetFrame,
+  draw: ResolvedDrawParams,
   kind: GeometryKind
 ): (PolygonalLayer | ScatterplotLayer<Position>)[];
 export function buildLayers(
@@ -329,6 +383,50 @@ export function buildLayers(
   const layers: (PolygonalLayer | ScatterplotLayer<Position>)[] = [];
   for (const batch of batches) {
     checkPickCeiling(batch.partCount);
+    if (kind === "line") {
+      // The lines cut (SH-L2): one pickable `PathLayer` per batch, never a `SolidPolygonLayer`. The
+      // style's fill and outline are mapped onto the symbol as rendering plumbing (ADR-022 Decision 4,
+      // as ruled in question round 63, OPEN-3), and nothing here saves or reads a style document.
+      // `widthUnits: "pixels"` makes `LINE_WIDTH_PX` an on-screen size at any zoom. Pickable: datum k
+      // is pick ordinal k, which `resolvePick` maps through `partToRow`.
+      const { paths } = pathsForBatch(batch, frame);
+      // The casing, only with an outline: a separate, standalone, non-pickable layer drawn before the
+      // line so that it sits beneath it, of width `LINE_WIDTH_PX + 2 * outlineWidth`, so that the
+      // outline shows `outlineWidth` pixels on each side. `pickable: false` removes it from deck.gl's
+      // pick-index space, as the polygon outline above is, so its id never reaches `batchForLayerId`.
+      // Its vertices cross to the GPU a second time (an unmeasured cost, `limits.ts`).
+      if (draw.outlineWidth > 0) {
+        layers.push(
+          new PathLayer<Position[]>({
+            id: `${layerId(batch)}-casing`,
+            data: paths,
+            getPath: (d) => d,
+            coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+            pickable: false,
+            widthUnits: "pixels",
+            getColor: draw.outlineColor,
+            getWidth: LINE_WIDTH_PX + 2 * draw.outlineWidth,
+            jointRounded: true,
+            capRounded: true,
+          })
+        );
+      }
+      layers.push(
+        new PathLayer<Position[]>({
+          id: layerId(batch),
+          data: paths,
+          getPath: (d) => d,
+          coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+          pickable: true,
+          widthUnits: "pixels",
+          getColor: draw.fillColor,
+          getWidth: LINE_WIDTH_PX,
+          jointRounded: true,
+          capRounded: true,
+        })
+      );
+      continue;
+    }
     if (kind === "point") {
       // The points cut (SH-P2): one `ScatterplotLayer` per batch, never a `PathLayer`. The style's
       // fill and outline are mapped onto the symbol as rendering plumbing (ADR-022 Decision 4, as

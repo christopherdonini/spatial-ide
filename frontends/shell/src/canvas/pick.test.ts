@@ -3,9 +3,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import { decodeBatch, ENCODING_MULTIPOLYGON, ENCODING_POINT } from "./decodeBatch";
+import { decodeBatch, ENCODING_MULTILINESTRING, ENCODING_MULTIPOLYGON, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
-import { loadBatchFixture, pointP1Positions } from "../testUtils/batchFixtures";
+import { loadBatchFixture, multilinestringMl1Positions, pointP1Positions } from "../testUtils/batchFixtures";
 import { partsOfPolygons } from "../testUtils/partsOfPolygons";
 import type { HoverReadout } from "./pick";
 import {
@@ -123,6 +123,52 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
       expect(picked!.batchSeq).toBe(4);
     });
     expect(resolvePick(p1, 6)).toBeNull();
+  });
+
+  /**
+   * SH-L3 (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 4, real shape: the engine's own
+   * `lv95-multilinestring-batch`, BF-ML, decoded by the product `decodeBatch`). The ordinal is a line
+   * PART ordinal: ML-1 has three rows and six parts (2, 1 and 3 per row), so ordinal 2 is row 1's only
+   * part (its id is 1n, and 2 is not a row index), and the parts of one row resolve to one identical
+   * result, anchored at the row's first part's first vertex. The bound is `partCount` (6), not the row
+   * count (3). `resolvePick` is unchanged.
+   *
+   * RECORDED MUTATION: index `ids` by the ordinal in `resolvePick` (take the row as the ordinal itself).
+   * This test then fails by name.
+   *
+   * Observed over `26d4ccc0` on the uncommitted tree of the shell commit: `an ordinal on a line part resolves that part's row, and two parts of one feature resolve identically (SH-L3)`
+   * FAILED by name with the mutation applied, at `expect(onRow1!.id).toBe(1n)` (`expected 2n to be 1n`), then reverted.
+   */
+  it("an ordinal on a line part resolves that part's row, and two parts of one feature resolve identically (SH-L3)", () => {
+    const ml1 = decodeBatch(
+      "sh_ml1",
+      6,
+      loadBatchFixture("lv95-multilinestring-batch"),
+      "geometry",
+      ENCODING_MULTILINESTRING
+    );
+    expect(ml1.partCount).toBe(6);
+    const rows = multilinestringMl1Positions();
+
+    const onRow1 = resolvePick(ml1, 2);
+    expect(onRow1).not.toBeNull();
+    expect(onRow1!.id).toBe(1n);
+    expect(onRow1!.anchor).toEqual(rows[1][0][0]); // row 1's first part's first vertex
+    expect(onRow1!.streamHandle).toBe("sh_ml1");
+    expect(onRow1!.batchSeq).toBe(6);
+
+    const parts0 = [resolvePick(ml1, 0), resolvePick(ml1, 1)];
+    expect(parts0[1]).toEqual(parts0[0]);
+    expect(parts0[0]!.id).toBe(0n);
+    // The anchor is the row's FIRST part's first vertex, even when the pick landed on its second part.
+    expect(parts0[0]!.anchor).toEqual(rows[0][0][0]);
+
+    const parts2 = [resolvePick(ml1, 3), resolvePick(ml1, 4), resolvePick(ml1, 5)];
+    expect(parts2[1]).toEqual(parts2[0]);
+    expect(parts2[2]).toEqual(parts2[0]);
+    expect(parts2[0]!.id).toBe(2n);
+    expect(parts2[0]!.anchor).toEqual(rows[2][0][0]);
+    expect(resolvePick(ml1, 6)).toBeNull(); // past partCount, though ids.length is 3
   });
 });
 
