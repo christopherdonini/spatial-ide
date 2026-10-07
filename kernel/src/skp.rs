@@ -536,7 +536,7 @@ pub enum NotLive {
 /// What the **dataset-session generation registry** knows about one ticket handle — three-valued,
 /// deliberately, because two values would make the kernel fabricate a diagnosis.
 ///
-/// The P3 attempt-2 defect this type exists to prevent, as the ADMISSION form words it
+/// The P3 attempt-2 defect this type exists to prevent, as the ADMISSION form records it
 /// (`engine/ADMISSION-PREREGISTRATION.md:742-744`, recording question round 4, item 1): the guard's
 /// source-change refusal told a caller its source was observed to have changed for any handle the
 /// map did not know (expired, already redeemed, never minted), a diagnosis the kernel had not made

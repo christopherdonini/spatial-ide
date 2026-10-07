@@ -68,8 +68,10 @@ export function isSessionEndedTerminal(terminal: Terminal): boolean {
  * G-A2's own wording requires both routes -- *"Asserted at the pre-check and at the post-check paths
  * separately"* (`engine/ADMISSION-PREREGISTRATION.md:221`). The post-check arrives as a data-plane
  * terminal (`isSessionEndedTerminal` above); the pre-check arrives synchronously, as a thrown
- * `SkpCallError`, from `SkpHost::viewport_query`'s own live-generation check, reaching this client
- * through `skp/client.ts:58-65`.
+ * `SkpCallError`, reaching this client through `skp/client.ts:58-65`. The first refusal after a
+ * change is `viewport_query_mint`'s `open_engine_stream` arm (it ends the generation on
+ * `SourceChanged`); later ones are `SkpHost::viewport_query`'s live-generation check; the mint-race
+ * arm is `viewport_query_attribute`'s refusal when `attribute_ticket` returns false.
  *
  * **Matched on `.skpError.code`, never on prose** -- the precedent `RETRYABLE_ENGINE_CODE`/
  * `isRetryableRefusal` already sets (`tileViewportStreamManager.ts:316`/`:324`). The message's wording
