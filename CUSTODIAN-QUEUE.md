@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `bc9b360ed162257554c6802241bda979d84a362a3f9a2a5784a4d73552c8beaf`) at `2026-10-07T19:28:57.162Z`.
+Generated from `PLAN.yaml` (sha256 `14154d1187f4c8731c55e2bace3a04e6ea625154d0c38baeac43e16a4e56490a`) at `2026-10-07T20:00:30.624Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `bc9b360ed162257554c6802241bda979d84a362a3f9a
 ## 2. Ready
 
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
+- **b2-piece-1a-step-record-and-dataset-reference** — B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference (lane `kernel-protocol`, order 16, budget 0 min)
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar (lane `shell`, order 11, budget 0 min)
 
 ## 3. Waiting on the human (total: 10 min)
@@ -101,6 +102,8 @@ Generated from `PLAN.yaml` (sha256 `bc9b360ed162257554c6802241bda979d84a362a3f9a
 - **shell-migration-milestone-3** — Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
+- **b2-piece-1b-recording** — B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note (phase `prototype`) — never queued until placed
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
 ### Unscheduled

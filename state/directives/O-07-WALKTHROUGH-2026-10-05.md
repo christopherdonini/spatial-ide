@@ -156,7 +156,10 @@ One row per step. Short answers are enough.
 - **The lineage always matches the project as saved.** Closing without saving adds nothing to it.
 - **When the session ends, its history is cleared.** The next session shows the lineage of everything before, plus a fresh session history.
 - **Restore:** to any lineage step from earlier sessions, and to any step of the current session.
-- **Within a session, history is the lineage plus the dead ends. Once saved, history and lineage are the same thing.**
+- **Saving mid-session changes nothing you see.** The session history stays complete, dead ends and undo included, until the session ends; Save project only writes a cleaned copy of the new steps into the lineage. Within a session, history is the lineage plus the dead ends. Once the session ends, only the lineage remains.
+- **A "saved here" mark** in the session history shows which steps are already in the lineage and which are new since the last save.
+- **Going back after a save:** if you save, then go back to an earlier step and continue from there, the saved steps you left behind are a dead end. They leave the lineage at the next Save project, and stay in the session history until the session ends. *(This answers the migration plan's §10.9, question 6.)*
+  - **Open, the advisor's suggestion:** if an export was made from the steps you left behind, the export's audit record keeps its own copy of the steps it was made from. The lineage stays clean, and the export can still say how it was made.
 - **The honest limit:** a step that depends on data which has changed since can't be restored exactly, and the app says so. With a snapshot, every step stays restorable.
 
 **4.3 Privacy follows from the design**

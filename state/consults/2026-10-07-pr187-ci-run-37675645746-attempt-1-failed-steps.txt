@@ -1,0 +1,961 @@
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	﻿2026-10-07T19:36:34.5904799Z ##[group]Run cargo test --workspace --locked
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5905040Z ^[[36;1mcargo test --workspace --locked^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5956695Z shell: /usr/bin/bash -e {0}
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5956844Z env:
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5956963Z   CARGO_HOME: /home/runner/.cargo
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5957113Z   CARGO_INCREMENTAL: 0
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5957243Z   CARGO_TERM_COLOR: always
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5957381Z   CACHE_ON_FAILURE: false
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.5957513Z ##[endgroup]
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7135764Z ^[[1m^[[33mwarning^[[0m^[[1m: constant `WATCH_BUFFER_BYTES` is never used^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7136083Z   ^[[1m^[[94m--> ^[[0mengine/src/watch.rs:73:18
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7136259Z    ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7136487Z ^[[1m^[[94m73^[[0m ^[[1m^[[94m|^[[0m pub(crate) const WATCH_BUFFER_BYTES: usize = 65536;
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7136787Z    ^[[1m^[[94m|^[[0m                  ^[[1m^[[33m^^^^^^^^^^^^^^^^^^^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7136973Z    ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7137206Z    ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7137417Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7137553Z ^[[1m^[[33mwarning^[[0m: `spatial-engine` (lib) generated 1 warning
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7143985Z ^[[1m^[[92m   Compiling^[[0m spatial-kernel v0.0.0 (/home/runner/work/spatial-ide/spatial-ide/kernel)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7145012Z ^[[1m^[[33mwarning^[[0m^[[1m: field `peak_working_set` is never read^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7145411Z    ^[[1m^[[94m--> ^[[0mkernel/tests/indexed_budgets.rs:209:13
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7145712Z     ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7145970Z ^[[1m^[[94m208^[[0m ^[[1m^[[94m|^[[0m     pub struct Counters {
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7146367Z     ^[[1m^[[94m|^[[0m                ^[[1m^[[94m--------^[[0m ^[[1m^[[94mfield in this struct^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7146779Z ^[[1m^[[94m209^[[0m ^[[1m^[[94m|^[[0m         pub peak_working_set: usize,
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7147116Z     ^[[1m^[[94m|^[[0m             ^[[1m^[[33m^^^^^^^^^^^^^^^^^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7147376Z     ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7147876Z     ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7148498Z     ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7148753Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7149153Z ^[[1m^[[33mwarning^[[0m: `spatial-kernel` (test "indexed_budgets") generated 1 warning
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7149586Z ^[[1m^[[33mwarning^[[0m^[[1m: field `peak_working_set` is never read^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7149940Z    ^[[1m^[[94m--> ^[[0mkernel/tests/slice_budgets.rs:186:13
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7150202Z     ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7150450Z ^[[1m^[[94m185^[[0m ^[[1m^[[94m|^[[0m     pub struct Counters {
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7150813Z     ^[[1m^[[94m|^[[0m                ^[[1m^[[94m--------^[[0m ^[[1m^[[94mfield in this struct^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7151190Z ^[[1m^[[94m186^[[0m ^[[1m^[[94m|^[[0m         pub peak_working_set: usize,
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7151513Z     ^[[1m^[[94m|^[[0m             ^[[1m^[[33m^^^^^^^^^^^^^^^^^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7151766Z     ^[[1m^[[94m|^[[0m
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7152236Z     ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `Counters` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7152836Z     ^[[1m^[[94m= ^[[0m^[[1mnote^[[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7153077Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7159217Z ^[[1m^[[33mwarning^[[0m: `spatial-kernel` (test "slice_budgets") generated 1 warning
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7174870Z ^[[1m^[[92m   Compiling^[[0m spatial-engine v0.0.0 (/home/runner/work/spatial-ide/spatial-ide/engine)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:34.7183429Z ^[[1m^[[33mwarning^[[0m: `spatial-engine` (lib test) generated 1 warning (1 duplicate)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8729407Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized + debuginfo] target(s) in 1.24s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8901242Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/spatial_data_plane-a17add1132f837ee)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8913244Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8914008Z running 24 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8919711Z test adapter_ws::tests::an_unknown_total_is_a_sentinel_not_a_zero ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8920304Z test adapter_ws::tests::parses_credit_and_cancel_control_frames ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8920974Z test server::tests::a_terminal_record_older_than_its_declared_age_is_pruned_on_the_next_record ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8921728Z test server::tests::a_terminal_record_survives_its_terminal_and_is_kept_within_its_declared_age ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8922370Z test session::tests::absent_origin_needs_a_positive_same_origin_signal ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8923007Z test session::tests::new_and_with_origin_produce_the_same_shape_for_the_port_derived_case ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8923557Z test session::tests::origin_null_and_foreign_are_explicitly_rejected ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8923899Z test session::tests::redaction_removes_the_token ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8924223Z test session::tests::rejects_wrong_and_absent_credentials ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8924603Z test session::tests::the_credential_is_read_out_of_the_offered_subprotocols ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8924988Z test session::tests::tokens_are_full_entropy_and_differ_between_sessions ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8925405Z test session::tests::with_origin_admits_a_declared_non_same_origin_consumer_and_nothing_else ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8925845Z test transport::tests::batches_generated_after_cancellation_are_counted_separately ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8926246Z test transport::tests::checkpoints_name_the_phase_that_never_finished ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8926624Z test transport::tests::identifiers_are_opaque_and_binding_independent ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8926992Z test transport::tests::resident_bytes_track_a_peak_and_return_to_zero ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8927373Z test wire::tests::a_payload_serialized_in_place_is_framed_without_a_second_pass ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8927720Z test wire::tests::frame_layout_roundtrips ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8928028Z test wire::tests::payload_starts_eight_byte_aligned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8928379Z test wire::tests::progress_and_terminal_payloads_are_fixed_layout_binary ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8928746Z test wire::tests::start_payloads_roundtrip_with_opaque_parameters ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8929253Z test wire::tests::the_json_detector_actually_catches_json ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8936285Z test adapter_ws::tests::cancel_observation_records_the_first_instant_only ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8941967Z test transport::tests::cancel_observation_is_idempotent_and_keeps_the_first_instant ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8942273Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8942485Z test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8942732Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8944005Z ^[[1m^[[92m     Running^[[0m tests/candidate_a.rs (target/debug/deps/candidate_a-0ec204d35a133de0)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8954353Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.8954501Z running 16 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9089789Z test a_cancel_control_frame_reaches_the_source_and_is_observed_producer_side ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9255378Z test a_batch_over_the_declared_frame_ceiling_terminates_with_the_ceiling_named ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9494159Z test a_completed_stream_is_recorded_with_its_terminal_outcome ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9922325Z test a_producer_failure_behind_queued_batches_is_a_terminal_with_no_credit_granted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9985562Z test a_peer_that_closes_without_cancelling_still_stops_the_producer ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:35.9996718Z test a_source_refusal_reaches_the_consumer_as_a_typed_terminal ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.0342148Z test a_producer_failure_with_no_batch_ahead_is_a_terminal_with_no_credit_granted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.0843823Z test an_idle_connection_holds_no_stream_slot_and_the_idle_ceiling_is_its_own ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.0866570Z test credentials_and_origins_are_enforced_on_the_data_channel ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.1282402Z test credit_equal_to_the_batch_count_delivers_every_batch_then_the_terminal ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.1702045Z test every_batch_and_a_terminal_frame_are_delivered ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.1846101Z test the_declared_concurrency_ceiling_refuses_rather_than_queues ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.3238076Z test an_owner_cancel_on_a_source_that_then_ends_without_failure_is_a_producer_failed_terminal_with_no_credit_granted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.4743395Z test withholding_credit_bounds_producer_memory ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:36.7528466Z test a_grant_of_n_moves_exactly_n_batches ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1875830Z test a_data_plane_cancel_still_ends_cancelled_when_the_owner_notice_fires_first ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1876113Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1876268Z test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.29s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1876510Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1882857Z ^[[1m^[[92m     Running^[[0m tests/no_transport_leakage.rs (target/debug/deps/no_transport_leakage-ddd36d5673ff9b29)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1893903Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1894001Z running 4 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1897912Z test the_scan_is_not_vacuous ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1899138Z test the_neutral_interface_still_covers_its_declared_vocabulary ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1903685Z test only_one_construction_site_names_the_adapter ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1904536Z test the_neutral_interface_names_no_transport ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1904734Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1904943Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1905234Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1906855Z ^[[1m^[[92m     Running^[[0m tests/origin_header_encoding.rs (target/debug/deps/origin_header_encoding-a7489d1770cb12a2)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1916324Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1916413Z running 5 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1940508Z test a_stated_foreign_ascii_origin_with_a_same_origin_claim_is_refused_as_an_origin ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1941121Z test a_stated_origin_with_a_non_utf8_byte_is_refused_as_a_foreign_origin ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1946885Z test a_stated_non_ascii_origin_is_refused_under_a_host_declared_expected_origin ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1947535Z test a_stated_origin_with_a_utf8_non_ascii_character_is_refused_as_a_foreign_origin ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1956025Z test an_absent_origin_with_a_same_origin_claim_is_still_admitted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1956307Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1956555Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1956857Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1964510Z ^[[1m^[[92m     Running^[[0m tests/stream_registry_bound.rs (target/debug/deps/stream_registry_bound-d87fd829ad776b09)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1971961Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.1972889Z running 3 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:42.2837006Z test a_cancel_after_the_terminal_frame_is_still_observed_by_the_producer ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:45.6508274Z test a_live_stream_is_never_pruned_at_the_count_ceiling ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7435216Z test the_registry_retains_at_most_the_declared_count_of_finished_streams ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7435582Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7435858Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.55s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7436160Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7440049Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/spatial_engine-3637f2fd6184abcd)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7466312Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7466393Z running 189 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7469314Z test attributes::tests::a_refused_dictionary_takes_the_final_arms_text_and_no_text_of_its_own ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7469768Z test attributes::tests::admit_projection_column_refuses_the_reserved_id_name_even_under_a_mapped_identity ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7470780Z test attributes::tests::an_admitted_projection_carries_each_columns_source_type_beside_its_emitted_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7471796Z test attributes::tests::every_admitted_projection_column_comes_back_nullable_whatever_the_source_said ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7472419Z test attributes::tests::dictionary_is_admitted_under_its_value_types_rule_and_emitted_as_the_value_type ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7473090Z test attributes::tests::each_projection_refusal_is_its_own_variant ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7473515Z test attributes::tests::every_type_still_refused_is_refused_by_the_gate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7473972Z test attributes::tests::names_resolve_before_per_column_rules_in_declared_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7474390Z test attributes::tests::float32_is_admitted_as_its_own_type_and_never_widened ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7474879Z test attributes::tests::the_count_ceiling_is_checked_before_any_name_is_resolved ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7475447Z test attributes::tests::the_live_admissible_set_admits_float32_and_a_dictionary_over_an_admitted_value_type ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7476037Z test attributes::tests::the_multi_failure_order_is_count_then_names_then_per_column_rules ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7476471Z test attributes::tests::the_reserved_id_name_refuses_as_identity_even_when_the_file_has_no_such_column ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7489885Z test attributes::tests::the_reserved_id_refusal_states_the_reserved_name_on_the_wire_and_keeps_publishs_text ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7490569Z test attributes::tests::projectable_is_the_per_column_admission ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7491269Z test attributes::tests::from_projection_error_renders_a_dictionary_sources_own_text_and_the_final_arm_otherwise ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7609687Z test cancel::tests::a_cancel_after_execution_returns_is_seen_by_the_post_return_check ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7734926Z test cancel::tests::a_cancel_landing_before_execution_begins_is_re_raised_once_it_has ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7759898Z test cancel::tests::a_token_refuses_a_second_stream_rather_than_disarming_the_first ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7769742Z test cancel::tests::an_interrupt_on_an_idle_connection_is_not_latched ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7770403Z test cancel::tests::cancellation_is_visible_and_sticky ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7770894Z test crs::tests::a_blank_identifier_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7781592Z test crs::tests::a_blank_identifier_is_refused_even_alongside_an_oversized_definition ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7782308Z test crs::tests::a_definition_at_exactly_the_ceiling_is_admitted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7788228Z test crs::tests::a_definition_one_byte_over_the_ceiling_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7791275Z test crs::tests::a_non_blank_identifier_with_no_definition_passes_shape_validation ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7791907Z test crs::tests::a_whitespace_only_identifier_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7798265Z test cancel::tests::an_interrupt_raised_after_prepare_is_cleared_when_execution_begins ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7799599Z test crs::tests::an_assertion_over_an_undeclared_crs_is_admitted_and_stays_marked ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7800453Z test crs::tests::an_assertion_that_establishes_no_axis_order_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7801077Z test crs::tests::an_undeclared_crs_with_no_assertion_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7807889Z test crs::tests::definition_provenance_is_carried_through_for_an_assertion_and_absent_for_a_file_crs ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7809168Z test crs::tests::file_declared_crs_is_admitted_as_a_file_fact ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7811467Z test crs_catalog::tests::a_catalog_supplied_definition_gets_catalog_provenance ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7812128Z test crs_catalog::tests::an_arbitrary_valid_definition_is_pasted_never_matched ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7812834Z test crs_catalog::tests::catalog_entries_establish_easting_northing_not_longitude_latitude ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7813466Z test crs_catalog::tests::catalog_parses_and_is_not_empty ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7814990Z test crs::tests::an_assertion_over_a_declared_crs_is_refused_without_comparing_them ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7936037Z test crs_catalog::tests::entries_are_in_file_order_not_sorted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7936627Z test crs_catalog::tests::epsg_2056_catalog_entry_is_byte_identical_to_the_fixture_generators_own_definition ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7937189Z test crs_catalog::tests::epsg_2056_entry_hash_is_pinned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7937886Z test crs_catalog::tests::epsg_3857_catalog_entry_is_byte_identical_to_the_engine_test_fixture ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7938392Z test crs_catalog::tests::epsg_3857_entry_hash_is_pinned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7938847Z test crs_catalog::tests::every_entry_definition_carries_coordinate_system_axis ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7939521Z test crs_catalog::tests::every_epsg_authority_entry_carries_attribution_with_the_terms_url ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7940174Z test crs_catalog::tests::no_definition_text_is_none_supplied_not_pasted_nor_a_panic_nor_a_false_match ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7940815Z test crs_catalog::tests::one_whitespace_change_loses_catalog_provenance_no_normalization ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7941417Z test crs_catalog::tests::schema_field_matches_the_definitions_own_schema_url_version ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7941975Z test descriptor::tests::a_footer_hash_not_taken_is_an_unestablished_component ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7942571Z test descriptor::tests::a_footer_hash_that_was_never_taken_is_not_reported_as_a_changed_component ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7943177Z test descriptor::tests::an_absent_modification_time_is_an_unestablished_component ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7943689Z test descriptor::tests::an_identical_descriptor_names_no_component ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7944308Z test descriptor::tests::an_unobservable_modification_time_degrades_while_an_observable_change_in_it_still_differs ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7944969Z test descriptor::tests::one_component_alone_is_enough_and_is_the_only_one_named ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7945510Z test descriptor::tests::the_declared_footer_ceiling_is_the_preregistered_value ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7946074Z test descriptor::tests::the_refusal_names_every_component_that_differed_not_the_first ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7946661Z test envelope::tests::a_geometry_array_of_the_wrong_shape_cannot_be_assembled_into_a_batch ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7947267Z test envelope::tests::a_point_envelopes_geometry_encoding_equals_the_fields_extension_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7976644Z test envelope::tests::an_asserted_crs_stays_marked_as_asserted_on_the_wire ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7977166Z test envelope::tests::every_batch_carries_frame_crs_and_axis_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7977750Z test descriptor::tests::a_filesystem_with_no_modification_time_degrades_rather_than_refusing_forever ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7983249Z test envelope::tests::ipc_bytes_are_appended_so_a_caller_may_reserve_a_prefix ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7993522Z test envelope::tests::the_envelopes_geometry_encoding_equals_the_fields_extension_name_for_both_values ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7997417Z test envelope::tests::two_envelopes_built_separately_serialize_to_identical_bytes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.7998957Z test envelope::tests::the_tag_survives_ipc_serialization ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8011070Z test geoarrow::tests::a_file_declared_crs_travels_as_its_own_definition_not_as_a_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8011950Z test geoarrow::tests::a_non_polygon_array_fails_the_encoding_check ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8012784Z test geoarrow::tests::built_array_has_the_geoarrow_polygon_storage_type_and_row_count ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8013772Z test geoarrow::tests::coordinate_values_over_a_sliced_point_array_returns_the_slices_run_only ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8014749Z test geoarrow::tests::coordinates_are_reachable_and_bit_exact_through_the_nesting ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8015509Z test geoarrow::tests::the_multipolygon_storage_type_is_three_lists_deep_and_each_validator_refuses_the_others_array ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8016329Z test geoarrow::tests::the_point_storage_type_is_a_flat_pair_and_each_validator_refuses_the_others_array ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8017669Z test geoparquet::tests::a_declared_crs_yields_identifier_definition_and_axis_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8018647Z test geoparquet::tests::a_definition_without_a_coordinate_system_is_refused_not_guessed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8021011Z test geoparquet::tests::a_definition_without_an_id_is_not_identified_by_its_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8021993Z test geoparquet::tests::a_name_that_is_neither_degree_nor_metre_is_recorded_exactly_as_read ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8023305Z test geoarrow::tests::coordinate_values_over_a_sliced_multipolygon_array_returns_the_slices_run_only ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8026280Z test geoparquet::tests::an_absent_crs_key_is_not_silently_ogc_crs84 ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8027607Z test geoparquet::tests::an_explicit_null_crs_is_not_a_declaration_either ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8028285Z test geoparquet::tests::disagreeing_a_missing_member_and_an_unreadable_form_all_record_unestablished ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8029169Z test geoparquet::tests::epsg2056s_conversion_parameters_and_base_crs_are_not_a_unit_source ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8029839Z test geoparquet::tests::covering_paths_render_as_quoted_sql_identifiers ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8030453Z test geoparquet::tests::no_definition_records_unestablished_with_no_source_at_all ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8031097Z test geoparquet::tests::latitude_first_geographic_axes_are_established_as_such ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8031747Z test geoparquet::tests::the_unit_comes_from_the_coordinate_system_axes_in_either_form ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8032407Z test geoparquet::tests::the_provenance_class_decides_which_source_supplies_the_unit ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8033130Z test identity::tests::a_comma_bearing_column_is_omitted_from_candidates_but_still_declarable_by_free_text ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8033901Z test identity::tests::candidate_columns_are_the_64_bit_integer_columns_in_schema_order_unranked ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8034619Z test identity::tests::js_exactness_is_unknown_rather_than_assumed_when_nothing_was_verified ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8054306Z test identity::tests::only_value_preserving_integer_types_are_admitted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8069894Z test identity::tests::uniqueness_is_reported_as_what_was_checked ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8079526Z test identity::tests::the_envelope_value_names_the_column_a_mapped_identity_came_from ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8080088Z test index::tests::a_key_that_differs_in_any_component_is_a_different_derived_object ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8087733Z test cancel::tests::the_re_interrupter_exits_when_the_execute_window_closes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8088796Z test index::tests::ranges_compress_contiguous_ids_and_refuse_to_explode ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8089470Z test index::tests::the_validity_heuristic_fails_closed_on_anything_it_cannot_confirm ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8090503Z test layout::tests::a_degenerate_declared_extent_is_refused_rather_than_divided_by ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8109957Z test layout::tests::quantization_clamps_and_says_so ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8120114Z test layout::tests::the_curve_is_a_bijection_over_the_grid ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8149336Z test layout::tests::the_curve_is_continuous_which_is_the_property_morton_lacks ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8151549Z test lod::tests::a_non_metre_crs_squares_the_conversion_factor_for_an_area ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8152393Z test lod::tests::the_preflight_fails_closed_when_free_space_is_unknown ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8340968Z test pin::tests::a_cancelled_pin_is_a_typed_cancellation_and_not_a_partial_hash ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8369659Z test index::tests::a_cancelled_progress_observed_hash_reports_no_progress_at_all ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8379630Z test pin::tests::a_cancelled_progress_pin_is_a_typed_cancellation_and_not_a_partial_hash ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8834372Z test cancel::tests::an_in_flight_query_is_interrupted_not_merely_flagged ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.8840225Z test pin::tests::the_finalize_heuristic_fails_closed_when_it_cannot_confirm ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9096769Z test index::tests::a_progress_observed_hash_reports_monotone_bytes_ending_at_the_total ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9192103Z test pool::tests::a_connection_from_the_fixture_helper_opens_with_extension_autoload_and_autoinstall_off ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9202335Z test pin::tests::take_with_progress_produces_the_same_pin_as_take_and_reports_progress_ending_at_the_total ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9249883Z test pin::tests::a_pin_verifies_against_unchanged_bytes_and_refuses_changed_ones ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9288327Z test pool::tests::a_configuration_failure_is_a_typed_error_and_leaks_no_capacity ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9369721Z test pool::tests::a_returned_connection_is_the_same_physical_connection_next_time ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9390396Z test pool::tests::a_dropped_lease_is_discarded_rather_than_returned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9558354Z test pool::tests::a_known_extension_reference_fails_closed_on_every_lease_class ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9628624Z test pool::tests::the_measurement_control_keeps_nothing_and_creates_every_time ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9653018Z test pool::tests::the_shared_configuration_sets_all_three_settings_on_a_fresh_connection ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9653691Z test pool::tests::every_lease_class_opens_with_extension_autoload_and_autoinstall_off ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9655190Z test predicate::tests::a_dictionary_encoded_column_is_refused_as_not_filterable_with_a_reason_naming_the_encoding ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9679773Z test predicate::tests::a_float32_column_is_filterable ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9784535Z test predicate::tests::a_chained_not_deeper_than_the_ceiling_is_refused_as_too_deep ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9852667Z test pool::tests::two_concurrent_leases_are_two_different_physical_connections ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9879524Z test predicate::tests::a_function_call_is_refused_by_construct_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9900743Z test predicate::tests::a_nul_named_column_is_refused_as_not_filterable_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:51.9949672Z test predicate::tests::a_group_by_having_breakout_is_refused_even_though_where_clause_alone_looks_innocuous ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0005884Z test predicate::tests::a_predicate_over_the_byte_ceiling_is_refused_before_parsing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0009550Z test predicate::tests::a_forged_trailing_sentinel_eaten_by_a_comment_is_refused_by_the_differential_probe ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0009998Z test predicate::tests::a_predicate_that_closes_the_wrapper_paren_early_and_reassociates_as_or_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0100814Z test predicate::tests::a_predicate_that_is_itself_a_top_level_and_chain_still_admits_with_every_column_collected ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0159766Z test predicate::tests::a_predicate_that_legitimately_ends_in_its_own_one_equals_one_still_admits ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0160606Z test predicate::tests::a_subquery_is_refused_by_construct_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0199872Z test predicate::tests::a_trailing_comment_that_would_eat_compositions_and_bbox_also_eats_the_sentinel_and_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0201098Z test predicate::tests::an_unrecognized_select_node_key_is_refused_rather_than_silently_passed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0202219Z test predicate::tests::an_untyped_node_or_literal_type_is_refused_by_the_type_walk ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0217977Z test predicate::tests::a_trailing_line_comment_breaks_the_wrapper_itself_and_is_refused_as_unparsable ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0258278Z test predicate::tests::every_type_the_filter_namespace_admits_carries_a_surrogate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0269820Z test predicate::tests::a_union_breakout_is_refused_because_the_top_level_statement_is_no_longer_a_select ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0299614Z test predicate::tests::the_text_comes_back_exactly_as_given_never_rewritten ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0329557Z test pool::tests::each_class_is_bounded_on_its_own_and_neither_starves_the_other ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0341509Z test rowgroup::tests::a_group_with_no_envelope_is_always_retained ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0359827Z test rowgroup::tests::a_missing_identity_statistic_refuses_rather_than_guessing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0381920Z test rowgroup::tests::a_null_bearing_identity_column_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0429412Z test rowgroup::tests::a_viewport_this_index_will_not_reason_about_narrows_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0438898Z test rowgroup::tests::an_unparseable_bbox_statistic_retains_the_group_and_does_not_refuse_the_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0469593Z test rowgroup::tests::keeping_every_group_is_admissible_and_excludes_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0482434Z test rowgroup::tests::overlapping_id_intervals_refuse_the_whole_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0491335Z test rowgroup::tests::surviving_groups_merge_only_when_contiguous ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0491973Z test rowgroup::tests::the_answered_predicate_is_not_the_feature_indexs ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0492602Z test stream::tests::a_budget_cut_is_free_to_land_below_the_minimum_batch_size ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0493387Z test stream::tests::a_compacted_and_a_sliced_single_run_serialize_to_identical_ipc_bytes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0494182Z test stream::tests::a_compacted_single_run_decodes_equal_to_the_slice_it_replaces_nulls_included ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0494902Z test stream::tests::a_declared_row_order_and_a_time_budget_are_never_combinable ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0495691Z test stream::tests::a_dictionary_chunk_is_decoded_before_the_declared_type_check_and_no_index_reaches_the_envelope ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0496452Z test stream::tests::a_full_row_batch_fits_inside_the_declared_frame_ceiling ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0497165Z test predicate::tests::dollar_quoting_is_structurally_indistinguishable_from_a_normal_string_literal ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0497866Z test stream::tests::a_non_dictionary_chunk_column_passes_through_the_decode_step_unchanged ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0498541Z test predicate::tests::redundant_grouping_parens_add_no_depth_at_all ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0499311Z test stream::tests::every_emitted_attribute_column_retains_at_most_the_declared_factor ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0559732Z test stream::tests::filter_composition::the_predicate_text_rides_verbatim_never_rewritten_or_case_folded ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0709664Z test stream::tests::filter_composition::the_projected_select_prefix_places_declared_columns_after_geometry_and_leaves_where_verbatim ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0829998Z test stream::tests::filter_composition::the_where_composition_matrix_matches_the_declared_rule_exactly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0859439Z test stream::tests::float32_costs_four_bytes_in_the_estimate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0859954Z test stream::tests::identifiers_are_quoted_not_interpolated ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0919840Z test stream::tests::publish_emits_a_nullable_byte_aligned_single_run_with_the_uncompacted_slices_ipc_bytes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0929522Z test stream::tests::the_cut_precedence_makes_a_time_budget_count_mean_what_it_says ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0930423Z test stream::tests::the_publish_policy_is_size_only_and_cannot_acquire_a_clock_by_default ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0931204Z test trace::tests::a_disabled_mark_records_nothing_and_a_started_trace_records_in_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0931909Z test trace::tests::a_second_trace_is_refused_rather_than_replacing_the_first ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0932576Z test trace::tests::jsonl_is_one_object_per_line_and_escapes_its_strings ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0933214Z test trace::tests::spans_table_has_unique_names_and_unique_event_pairs ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0933837Z test trace::tests::the_query_windows_events_telescope_exactly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0934423Z test trace::tests::the_spans_table_telescopes_by_construction ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0934997Z test wkb::tests::a_big_endian_point_decodes_to_the_same_values ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0935623Z test wkb::tests::a_multipolygon_row_keeps_its_three_offset_levels_exactly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0936280Z test wkb::tests::a_point_row_is_one_coordinate_pair_with_its_bits_unchanged ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0937174Z test wkb::tests::a_point_with_a_nan_in_either_coordinate_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0937882Z test wkb::tests::a_polygon_row_under_multipolygon_is_one_part_with_its_coordinate_bits_unchanged ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0938696Z test wkb::tests::big_endian_wkb_decodes_to_the_same_values ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0939382Z test wkb::tests::coordinate_bit_patterns_survive_the_decode_exactly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0940024Z test wkb::tests::decodes_a_polygon_with_a_hole_and_keeps_the_ring_structure ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0940739Z test wkb::tests::each_unreadable_multipolygon_row_is_a_typed_refusal_naming_what_was_met ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0941460Z test wkb::tests::each_unreadable_point_row_is_a_typed_refusal_naming_what_was_met ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0942134Z test wkb::tests::parts_with_mixed_byte_orders_decode_to_the_same_values ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0942719Z test wkb::tests::refusals_are_typed_and_specific ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0943287Z test wkb::tests::the_polygon_builder_still_refuses_a_multipolygon_row ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.0943918Z test wkb::tests::variable_width_is_the_point_offsets_differ_per_feature ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.5388308Z test stream::tests::a_live_projected_text_stream_emits_every_attribute_column_within_the_declared_retention_bound ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:52.7017767Z test stream::tests::a_publish_stream_keeps_its_attribute_runs_uncompacted_through_flush ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0567397Z test predicate::tests::the_walk_types_every_arithmetic_node_as_the_binder_does ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0567784Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0568006Z test result: ok. 189 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.31s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0602701Z ^[[1m^[[92m     Running^[[0m tests/admission_format_semantics.rs (target/debug/deps/admission_format_semantics-4af23ed13b1d6ab2)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0603006Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0626222Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0626307Z running 23 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0890257Z test a_contradicted_file_still_opens_under_a_caller_assertion ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0920104Z test a_declared_crs84_definition_in_degrees_records_the_degree_unit_and_is_the_instance ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.0941560Z test a_covering_naming_an_absent_column_records_none_and_the_open_still_succeeds ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1059500Z test a_missing_unit_member_records_unestablished_and_is_never_defaulted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1075652Z test a_declared_x_first_crs_records_crs_declared_and_axis_declared ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1173462Z test a_declared_definition_records_the_definition_source_and_never_the_rule ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1209784Z test an_unpinned_spec_version_takes_no_format_rule_and_the_refusal_names_the_version ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1219717Z test an_unpinned_version_with_a_lat_first_declaration_still_refuses_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1270274Z test an_identifier_only_change_does_not_flip_the_instance_predicate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1378824Z test axes_declaring_different_units_record_unestablished_and_the_open_still_succeeds ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1417387Z test f1_an_absent_crs_key_admits_under_the_formats_own_rule_with_that_provenance ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1432554Z test f2_coordinates_outside_the_domain_convict_the_format_default ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1609830Z test f3_an_explicit_null_crs_is_unchanged_and_still_needs_an_assertion ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1649851Z test f5_with_neither_bbox_nor_covering_the_level_is_none_and_says_not_checked ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1734562Z test f4_a_declared_lat_first_crs_admits_under_the_wkb_override_with_its_declared_order_retained ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1761922Z test f6_without_statistics_the_level_is_the_bounded_sample_of_the_covering_columns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1819911Z test the_degrees_on_epsg2056s_conversion_parameters_do_not_leak_into_the_recorded_unit ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1895843Z test the_display_convention_sentence_is_carried_verbatim_and_no_surface_here_consumes_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1919767Z test the_format_default_admission_records_degrees_sourced_from_the_pinned_rule ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.1924015Z test the_metadata_level_is_also_reached_from_covering_column_statistics ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2083664Z test the_object_form_of_a_unit_records_what_the_string_form_records ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2136937Z test the_sample_level_reads_the_first_row_group_and_not_a_fixed_row_count ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2222810Z test the_two_format_rule_routes_are_distinguishable_on_the_envelope ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2223228Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2223555Z test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2223857Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2235185Z ^[[1m^[[92m     Running^[[0m tests/admission_instruments.rs (target/debug/deps/admission_instruments-05d2bcedfda29f79)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2257361Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2257462Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2627336Z test session_ordinal_reads_nothing_native_and_mapped_run_exactly_the_verification_scan ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2627782Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2628004Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2628300Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2639885Z ^[[1m^[[92m     Running^[[0m tests/admission_p4_corpus.rs (target/debug/deps/admission_p4_corpus-703775a43a234590)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2659989Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2660153Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2661310Z test the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admission_results ... ignored, opens real on-disk fixtures under target/fixtures/compat-corpus; run explicitly, on a quiet machine (no spatial-ide-shell.exe running) — Brief A P4
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2662139Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2662354Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2662655Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2664333Z ^[[1m^[[92m     Running^[[0m tests/admission_property_campaign.rs (target/debug/deps/admission_property_campaign-cbb5275eb37ee8ed)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2686935Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.2687030Z running 2 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:36:54.3317798Z test b1_an_implicit_coercion_is_admitted_and_fails_in_the_scan_carrying_file_data ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4647137Z test filter_admission_property_campaign ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4647503Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4647669Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.20s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4647898Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4664763Z ^[[1m^[[92m     Running^[[0m tests/b1_nul_declared_identity_no_scan.rs (target/debug/deps/b1_nul_declared_identity_no_scan-082ce150e38b7af5)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4686962Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4801451Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4801709Z test a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4802141Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4802345Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4802577Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4811245Z ^[[1m^[[92m     Running^[[0m tests/b1_nul_native_id_scan_once.rs (target/debug/deps/b1_nul_native_id_scan_once-52ff9de98dc35704)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4831057Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4831152Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4967176Z test the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4967670Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4967934Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4968230Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.4978363Z ^[[1m^[[92m     Running^[[0m tests/b1_projection_hostile_covering.rs (target/debug/deps/b1_projection_hostile_covering-c6900da58db1dee6)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5002043Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5002240Z running 2 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5272983Z test a_nul_covering_under_the_format_default_records_not_checked_with_the_true_reason ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5287507Z test a_covering_whose_path_contains_u0000_is_unusable_and_a_bbox_query_refuses_before_any_lease ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5289607Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5289838Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5290052Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5300253Z ^[[1m^[[92m     Running^[[0m tests/b1_projection_hostile_names.rs (target/debug/deps/b1_projection_hostile_names-ce76736c30400fcd)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5327384Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5327483Z running 12 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5499767Z test a_geometry_column_whose_name_contains_u0000_refuses_open_naming_that_fact ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5517615Z test a_declared_identity_naming_the_truncated_prefix_is_an_absent_column ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5592322Z test a_filter_types_the_column_duckdb_binds_when_a_nul_named_column_shares_its_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5650249Z test a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5690131Z test a_nul_in_a_column_name_is_refused_by_admission_before_any_stream_opens ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5720340Z test a_filter_on_a_file_with_a_nul_named_column_binds_and_streams_its_other_columns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5851195Z test hostile_names_colliding_after_case_folding_bind_one_column_each ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.5934950Z test hostile_names_an_uppercase_id_under_a_mapped_identity_is_admitted_beside_id ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.6080029Z test a_nul_named_column_never_makes_admission_type_a_column_duckdb_does_not_bind ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.6188598Z test hostile_names_round_trip_to_their_own_columns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.6244810Z test a_nul_in_a_name_renders_as_a_visible_escape_in_every_engine_message_and_detail ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7226662Z test the_schema_probe_classifies_by_position_and_keeps_duckdbs_own_renames ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7226945Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7227099Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7227295Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7240357Z ^[[1m^[[92m     Running^[[0m tests/batch_sizing.rs (target/debug/deps/batch_sizing-532d29a2a348fe01)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7267591Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7267743Z running 5 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7273228Z test the_first_target_is_the_declared_first_target_and_growth_is_the_declared_factor ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7273747Z test the_policy_stays_inside_its_ceiling_in_every_state_it_can_reach ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:05.7501077Z test the_floor_is_above_the_per_batch_envelope_so_a_small_batch_is_not_mostly_metadata ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0090375Z test shrinking_the_first_batch_does_not_cost_the_eight_byte_alignment ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0419695Z test the_first_batch_is_smaller_than_the_steady_state_and_the_stream_grows_into_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0420121Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0420362Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0420654Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0434927Z ^[[1m^[[92m     Running^[[0m tests/cancel_execute_window.rs (target/debug/deps/cancel_execute_window-538bd8098dc56dad)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0462198Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:06.0462392Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4120897Z test a_cancel_inside_the_producers_execute_window_ends_the_stream_cancelled ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4121315Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4121554Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.36s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4121913Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4122613Z ^[[1m^[[92m     Running^[[0m tests/connection_reuse.rs (target/debug/deps/connection_reuse-6f622ada6f2f0af1)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4149499Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.4149764Z running 12 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.5460356Z test a_bbox_query_on_a_reused_connection_returns_what_it_always_did ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:17.5600911Z test a_connection_that_skipped_the_identity_scan_is_still_safe_to_reuse ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:19.5710350Z test a_lease_in_flight_keeps_the_pool_alive_after_the_dataset_is_dropped ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:19.8963290Z test capacity_exhaustion_is_a_typed_refusal_rather_than_a_queue ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:19.9629954Z test a_query_after_a_cancellation_completes_on_a_replaced_connection ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:20.0580005Z test dropping_the_dataset_closes_its_idle_connections ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:20.0609512Z test cancellation_before_the_first_batch_binds_a_recycled_connection_and_delivers_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:20.2040148Z test the_measurement_control_creates_a_connection_for_every_query ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:20.4170092Z test two_sequential_streams_run_on_one_physical_connection ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.1663512Z test dropping_a_stream_releases_its_lease_and_detaches_the_interrupt_handle ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.6597879Z test midstream_cancellation_still_stops_the_producer_on_a_recycled_connection ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7291708Z test two_concurrent_streams_hold_separate_leases_and_cancelling_one_leaves_the_other_alone ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7292008Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7292258Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.31s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7292521Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7338432Z ^[[1m^[[92m     Running^[[0m tests/filter_composition.rs (target/debug/deps/filter_composition-1d3a73b2d7550218)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7364664Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.7364762Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8698834Z test a_filtered_stream_is_an_id_keyed_subset_with_byte_identical_rows_and_envelope ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8699342Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8699551Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8699838Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8709711Z ^[[1m^[[92m     Running^[[0m tests/filter_type_admission.rs (target/debug/deps/filter_type_admission-03c2960aba0f2c0e)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8733358Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.8733444Z running 3 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:21.9084770Z test a_float32_column_compared_with_16777217_matches_a_stored_16777216 ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:37:22.2259930Z test each_corpus_row_is_admitted_or_refused_with_its_code_reason_and_operand_types ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2380249Z test the_type_walk_agrees_with_the_binder_over_the_p0_matrix ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2380652Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2380874Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 46.36s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2381138Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2396591Z ^[[1m^[[92m     Running^[[0m tests/first_batch_and_pruning.rs (target/debug/deps/first_batch_and_pruning-cde48b9360d4e8c7)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2420903Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.2420991Z running 17 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.3750883Z test a_file_whose_identity_is_not_row_group_ordered_is_refused_and_says_which_way ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.4276315Z test a_size_only_stream_never_reports_a_time_budget_cut ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.5930141Z test a_viewport_outside_the_extent_excludes_every_group_and_still_injects_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.7924609Z test a_whole_file_query_does_no_metadata_work_at_all ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.7995744Z test a_shuffled_variant_carries_the_same_features_and_the_same_geo_metadata ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.8820439Z test a_clustered_variant_carries_the_same_features_and_the_same_geo_metadata ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:08.9583540Z test an_inadmissible_file_still_returns_the_scan_s_rows_through_the_pruned_planner ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.0206073Z test metadata_paths_match_what_duckdb_reports_for_a_struct_child ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.0260134Z test clustering_reorders_the_file_and_that_costs_it_lever_b2 ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.0300086Z test the_curve_orders_the_plane_and_not_the_row_number ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.0300745Z test the_publish_path_refuses_a_time_budget_rather_than_ignoring_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.0972046Z test both_levers_at_once_still_return_the_scan_s_rows ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.2000803Z test the_budgeted_stream_returns_exactly_what_the_size_only_stream_returns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.3955694Z test the_shuffled_order_is_exactly_hash_id_then_id_in_file_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.4399570Z test the_row_group_index_returns_exactly_what_the_scan_returns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.4560323Z test the_shuffled_order_is_deterministic_across_two_independent_rewrites ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6446968Z test the_control_layout_differs_from_a_clustered_one_only_in_the_row_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6447347Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6447580Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.40s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6448388Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6475186Z ^[[1m^[[92m     Running^[[0m tests/fixture_generation.rs (target/debug/deps/fixture_generation-02318e65dc66b105)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6494898Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6494984Z running 6 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6530150Z test a_generation_cancelled_before_it_starts_writes_nothing_and_leaves_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6541941Z test a_cancelled_generation_returns_cancelled_and_removes_the_partial_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6656100Z test a_cancel_during_the_final_chunk_still_refuses_rather_than_closing_a_valid_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.6824280Z test generation_reports_progress_once_per_chunk_with_monotonic_counts ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.7417775Z test the_default_spec_produces_byte_identical_files_through_both_entry_points ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8165788Z test changing_the_row_group_size_changes_the_file_and_is_therefore_part_of_the_spec ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8166164Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8166416Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8166698Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8176657Z ^[[1m^[[92m     Running^[[0m tests/geoarrow_batch_fixtures.rs (target/debug/deps/geoarrow_batch_fixtures-35e7f4a8c4258c69)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8201603Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8201841Z running 3 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8203252Z test regenerate_the_committed_batches ... ignored, rewrites the committed fixtures under engine/tests/data/geoarrow/
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8362533Z test the_committed_point_batch_equals_the_engines_output_from_a_real_open_and_stream ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8435762Z test the_committed_batches_equal_the_engines_output_from_a_real_open_and_stream ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8436139Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8436359Z test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8436653Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8446525Z ^[[1m^[[92m     Running^[[0m tests/geometry_admission.rs (target/debug/deps/geometry_admission-4bd3c678ad46e0be)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8467333Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8782104Z running 6 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.8782564Z test a_set_that_mixes_kinds_is_refused_with_the_rulings_placeholder_detail ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9030595Z test the_refusal_detail_is_the_sighted_wording_with_the_declared_list_rendered ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9160312Z test an_absent_key_is_multipolygon_with_no_declaration_and_a_non_string_member_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9482365Z test a_declared_point_set_selects_the_point_encoding_and_other_sets_are_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9618854Z test the_refusal_names_exactly_the_types_the_gate_admits_in_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9690881Z test a_declared_set_selects_the_encoding_or_is_refused_at_open ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9691254Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9691474Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9691774Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9702623Z ^[[1m^[[92m     Running^[[0m tests/identity.rs (target/debug/deps/identity-3bcf105db79f6207)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9728347Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:09.9728432Z running 8 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0259544Z test a_declared_mapping_to_a_non_integer_column_is_refused_not_hashed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0270075Z test a_native_id_column_is_verified_unique_rather_than_trusted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0289693Z test a_duplicate_id_column_is_refused_rather_than_admitted_as_identity ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0577147Z test a_file_whose_key_is_not_called_id_is_refused_until_a_mapping_is_declared ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0660442Z test skipping_the_uniqueness_check_is_recorded_rather_than_hidden ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0733851Z test identities_above_the_js_exact_limit_are_admitted_but_flagged_on_the_envelope ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.0800751Z test a_negative_identity_value_is_refused_because_it_cannot_widen_into_u64 ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4831312Z test the_uniqueness_scan_is_cancellable_because_it_reads_a_whole_column ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4831929Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4832086Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4832276Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4852131Z ^[[1m^[[92m     Running^[[0m tests/import_layout_5gb_digest.rs (target/debug/deps/import_layout_5gb_digest-dba0cbd820274712)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4862458Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4862547Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4863518Z test the_5gb_cross_file_digest_correctness_pass ... ignored, correctness pass; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 7
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4864103Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4864325Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4864570Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4865330Z ^[[1m^[[92m     Running^[[0m tests/import_layout_5gb_fixtures.rs (target/debug/deps/import_layout_5gb_fixtures-9220ddcb23c8eac6)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4873792Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4873942Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4874804Z test generate_the_5gb_fixture_set ... ignored, writes up to one ~5 GB file and re-hashes up to three; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 5
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4875429Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4875634Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4875824Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4876282Z ^[[1m^[[92m     Running^[[0m tests/import_layout_digest.rs (target/debug/deps/import_layout_digest-8389426e4c504764)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4883744Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4883833Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4884641Z test the_cross_file_digest_correctness_pass ... ignored, correctness pass; run explicitly with --release, --features fixture; kernel/IMPORT-LAYOUT-PREREGISTRATION.md phase 3
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4885220Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4885439Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4885692Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4886086Z ^[[1m^[[92m     Running^[[0m tests/import_layout_fixtures.rs (target/debug/deps/import_layout_fixtures-12fff6a07e995e25)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4893975Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4894066Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4894684Z test generate_the_145mb_fixture_matrix ... ignored, writes ~1.5 GB of 145 MB-class fixtures; run explicitly with --release, --features fixture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4895105Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4895309Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4895499Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4896209Z ^[[1m^[[92m     Running^[[0m tests/index_build_cancellation.rs (target/debug/deps/index_build_cancellation-2eef058734c58917)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4918821Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:10.4919095Z running 9 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:11.9450101Z test a_build_cancelled_during_the_content_hash_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:12.3075947Z test a_build_cancelled_entering_extent_reduction_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:12.3110004Z test a_build_cancelled_entering_grid_population_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:12.3310031Z test a_build_cancelled_entering_bbox_validation_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:12.3759934Z test a_cancel_after_the_last_poll_still_refuses_and_caches_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:13.8564697Z test the_inner_cell_insertion_loop_polls_too ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.1030219Z test a_build_cancelled_entering_the_duckdb_scan_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.1573457Z test an_uncancelled_build_passes_every_phase_in_order_and_still_produces_the_same_index ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6849643Z test a_cancelled_build_frees_the_maintenance_lease_it_held ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6849893Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6850321Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.19s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6850909Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6927071Z ^[[1m^[[92m     Running^[[0m tests/live_projection.rs (target/debug/deps/live_projection-4cac008f635342e2)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6957706Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.6957846Z running 4 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7579574Z test how_a_float32_column_compares_with_a_numeric_literal_is_pinned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7660010Z test a_file_with_a_float32_column_binds_every_predicate_without_panicking ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7660609Z test projection_leaves_frame_crs_axis_and_identity_metadata_byte_identical ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7892908Z test a_live_projected_stream_emits_id_geometry_then_the_declared_columns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7893967Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7894228Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7894533Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7913130Z ^[[1m^[[92m     Running^[[0m tests/lod_tier_builder.rs (target/debug/deps/lod_tier_builder-52496db579f1c334)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7937077Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7937186Z running 18 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7937977Z test a_build_measures_the_largest_single_feature_simplify ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7939482Z test a_stale_tier_batch_cannot_exist_without_the_stale_label ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7940775Z test a_tier_altered_on_disk_is_not_reused_and_the_disclosure_is_the_on_disk_size ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7942088Z test build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7943366Z test build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7944525Z test engine_opens_its_own_tier ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7945916Z test the_5gb_ladder_under_disk_discipline ... ignored, reads the 5 GB fixture and writes GB-scale tiers; run explicitly with --release: cargo test --release -p spatial-engine --test lod_tier_builder -- --ignored --exact the_5gb_ladder_under_disk_discipline --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7947370Z test the_built_sets_size_is_disclosed_with_the_tiers ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7948518Z test tier_build_emits_zero_invalid_polygons ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7949757Z test tier_is_not_served_when_source_content_hash_changes ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7950904Z test tier_larger_than_its_source_is_refused ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7952015Z test tier_preserves_identity_for_every_row ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7953105Z test tier_writer_does_not_reorder_rows ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7955665Z test two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file ... ignored, moves the one polygons-100k.parquet every test in this binary (and the other two LOD suites) shares aside and restores it on exit paths the process unwinds through; no other cargo test anywhere on this machine may read C:\dev\spatial-ide\target\fixtures\slice-budgets\polygons-100k.parquet, whatever its CARGO_TARGET_DIR (the path is absolute and shared by the three LOD binaries and kernel/tests/slice_budgets.rs): cargo test -p spatial-engine --test lod_tier_builder -- --ignored --exact two_concurrent_callers_of_an_absent_fixture_both_get_the_complete_file --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.7958694Z test wkb_writer_round_trips_the_first_tier_written ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.8210536Z test crs_without_a_declared_linear_unit_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:14.8211023Z test geographic_crs_source_is_refused_for_tier_building ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3737566Z test the_rejected_simplifier_is_the_one_that_emits_invalid_polygons ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3737905Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3738105Z test result: ok. 3 passed; 0 failed; 15 ignored; 0 measured; 0 filtered out; finished in 6.58s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3738299Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3755690Z ^[[1m^[[92m     Running^[[0m tests/lod_tier_cancellation.rs (target/debug/deps/lod_tier_cancellation-87d0c9df1bb9670f)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3781163Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3781278Z running 2 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3781948Z test cancel_observed_within_the_declared_ceiling ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3782933Z test cancel_observed_within_the_declared_ceiling_at_5gb ... ignored, reads the 5 GB fixture; run explicitly with --release: cargo test --release -p spatial-engine --test lod_tier_cancellation -- --ignored --exact cancel_observed_within_the_declared_ceiling_at_5gb --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3783462Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3783601Z test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3783795Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3785629Z ^[[1m^[[92m     Running^[[0m tests/lod_tier_measurements.rs (target/debug/deps/lod_tier_measurements-e093db585c2ff3dd)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3801219Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3801364Z running 5 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3803053Z test the_5gb_ladder_outcomes_o1_to_o4 ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact the_5gb_ladder_outcomes_o1_to_o4 --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3803968Z test wall_time_arm_p_over_parcels_5gb ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_p_over_parcels_5gb --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3804797Z test wall_time_arm_s_and_arm_p_over_polygons_100k ... ignored, measurement harness, the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_s_and_arm_p_over_polygons_100k --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3805691Z test wall_time_arm_s_over_parcels_5gb ... ignored, reads the 5 GB fixture and writes GB-scale tiers; the tester's: cargo test --release -p spatial-engine --test lod_tier_measurements -- --ignored --exact wall_time_arm_s_over_parcels_5gb --nocapture
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3806465Z ^[[1m^[[92m     Running^[[0m tests/lod_tier_preflight.rs (target/debug/deps/lod_tier_preflight-8a6db9e93d7cd1ca)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3806759Z test the_row_order_check_fires_on_a_permutation ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3806889Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3807025Z test result: ok. 1 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3807208Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3826152Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3826222Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3827179Z test the_preflight_refuses_before_the_first_tier_is_written ... ignored, boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3828194Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3828409Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3828697Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3830708Z ^[[1m^[[92m     Running^[[0m tests/multipolygon_corpus.rs (target/debug/deps/multipolygon_corpus-9218ba7179e47c68)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3850591Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3850732Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3851344Z test streaming_corpus_row_12_whole_file_yields_one_row_per_feature_with_unique_ids ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3851906Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3852112Z test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3852400Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3854595Z ^[[1m^[[92m     Running^[[0m tests/multipolygon_stream.rs (target/debug/deps/multipolygon_stream-076b2d7ee9fd0bf8)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3874290Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.3874370Z running 3 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4413929Z test f1_and_f2_stream_one_row_per_feature_with_bit_identical_parts ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4526873Z test every_multipolygon_batch_fits_its_target_under_the_unedited_estimate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4544422Z test a_row_of_an_unread_type_stops_the_stream_at_that_row_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4547185Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4547499Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4547780Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4568899Z ^[[1m^[[92m     Running^[[0m tests/planner_seam.rs (target/debug/deps/planner_seam-2033a6a1acf1a536)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4593657Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.4593780Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5361009Z test the_product_planner_never_reaches_the_index_seam ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5361320Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5361471Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5361662Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5377756Z ^[[1m^[[92m     Running^[[0m tests/point_corpus.rs (target/debug/deps/point_corpus-e1092b3647b36156)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5402135Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5402205Z running 2 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5406248Z test streaming_corpus_row_4_with_the_catalog_assertion_yields_300_points_inside_its_bbox ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5407316Z test streaming_corpus_row_5_whole_file_yields_one_point_per_feature_inside_its_bbox ... ignored, reads the on-disk compatibility corpus (C:\dev\spatial-ide\target\fixtures\compat-corpus)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5407860Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5408069Z test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5408353Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5408692Z ^[[1m^[[92m     Running^[[0m tests/point_stream.rs (target/debug/deps/point_stream-0ff7c46ac8dadf3b)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5429106Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5429377Z running 3 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5665718Z test p1_streams_one_row_per_feature_with_bit_identical_coordinates ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.5826203Z test a_row_of_an_unread_type_stops_a_point_stream_at_that_row_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6545104Z test every_point_batch_fits_its_target_under_the_unedited_estimate ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6545464Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6545730Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6546032Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6557126Z ^[[1m^[[92m     Running^[[0m tests/polygon_wire_golden.rs (target/debug/deps/polygon_wire_golden-5ab6f4baa0ca620b)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6582144Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:21.6582338Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0678048Z test the_polygon_only_wire_matches_the_golden_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0678352Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0678506Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0678700Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0689940Z ^[[1m^[[92m     Running^[[0m tests/predicate_admission.rs (target/debug/deps/predicate_admission-ec51ce55ab8c638a)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0711781Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.0711858Z running 6 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1031280Z test dollar_quoting_and_a_positive_control_both_admit ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1205784Z test a_residual_admission_lease_exhaustion_surfaces_as_connections_exhausted_never_rejected_by_binder ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1232355Z test a_stage_one_or_two_refusal_releases_its_connection_healthy_but_a_stage_three_refusal_still_discards ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1249607Z test n_concurrent_admit_calls_at_the_declared_ceiling_all_succeed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1393818Z test the_positive_controls_from_the_design_note_all_admit ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1491630Z test the_adversarial_corpus_each_row_refused_with_its_specific_code ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1492912Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1493172Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1505933Z ^[[1m^[[92m     Running^[[0m tests/publish_stream.rs (target/debug/deps/publish_stream-f10fa81a3a1e4ce6)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1506249Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1531353Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1531432Z running 12 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.1801898Z test a_mapped_identity_orders_by_the_identity_the_stream_actually_emits ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.2790565Z test a_batch_reports_the_bounds_of_the_rows_it_actually_carries ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.3599954Z test a_publish_partition_is_one_batch_and_its_boundaries_are_reproducible ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.3799910Z test an_inadmissible_or_reserved_column_is_refused_before_anything_is_written ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.3829666Z test adding_the_categorical_column_leaves_the_fixtures_geometry_bit_identical ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.3949626Z test duckdb_resolves_order_by_and_where_in_opposite_directions ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.4490166Z test an_attribute_run_that_is_shifted_by_one_row_would_be_caught ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.4840294Z test the_categorical_column_produces_every_branch_a_style_must_declare ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.5514511Z test the_publish_stream_orders_by_identity_and_the_query_path_still_does_not ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.5627168Z test a_publish_stream_is_cancellable_like_any_other ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.5748840Z test the_zone_of_a_feature_is_a_function_of_the_feature_and_not_of_its_position ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7574874Z test the_publish_stream_emits_the_declared_projection_in_declared_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7575230Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7575384Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7575577Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7600173Z ^[[1m^[[92m     Running^[[0m tests/row_group_seam.rs (target/debug/deps/row_group_seam-924b8d14d2e4a7f5)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7625207Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.7625369Z running 1 test
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.8965870Z test the_product_planner_never_reaches_the_row_group_seam ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.8966208Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.8966362Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.8966591Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.8976786Z ^[[1m^[[92m     Running^[[0m tests/session_identity.rs (target/debug/deps/session_identity-b6ce16bf5e4d4309)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9000957Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9001095Z running 18 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9241029Z test a_declared_mapping_to_a_missing_column_still_refuses_rather_than_falling_to_the_session_tier ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9245434Z test a_directory_source_is_refused_by_name_rather_than_as_an_unreadable_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9255035Z test a_cancelled_stream_keeps_its_cancelled_terminal_while_the_change_is_still_recorded ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9329734Z test a_clean_stream_whose_source_changed_terminates_as_source_changed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9330354Z test a_change_the_descriptor_cannot_see_is_not_reported_and_is_not_a_check_that_passed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9440156Z test a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9469809Z test every_glob_metacharacter_read_parquet_expands_is_refused_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9475359Z test a_source_deleted_mid_session_refuses_as_source_changed_not_as_an_unreadable_file ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9489871Z test the_footer_ceiling_is_declared_in_code_and_degrades_rather_than_refusing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9493151Z test a_glob_source_is_refused_by_name_and_a_plain_missing_path_is_not ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9579634Z test an_unchanged_source_records_no_post_check_finding ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9660192Z test the_descriptor_is_read_at_open_and_reports_the_footer_bytes_it_read ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9679943Z test the_post_check_reports_the_footer_bytes_it_read ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9690047Z test the_source_changed_message_states_its_limit_and_makes_no_snapshot_claim ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9690649Z test the_ordinal_stays_attached_to_its_row_under_a_reordered_scan_on_this_fixture ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9822969Z test the_pre_check_refuses_by_name_when_the_source_is_replaced_under_an_open_dataset ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9854421Z test the_vendored_duckdb_exposes_file_row_number_on_read_parquet ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9856442Z test the_session_tier_record_says_neither_unique_nor_snapshot ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9856708Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9856933Z test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9857174Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9868369Z ^[[1m^[[92m     Running^[[0m tests/slice.rs (target/debug/deps/slice-f535b8bc2ac9e28e)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9893366Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:22.9893450Z running 22 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0410164Z test a_definition_that_establishes_no_axis_order_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0436584Z test a_declared_crs_is_admitted_as_a_file_fact ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0457240Z test a_caller_may_assert_a_crs_for_a_file_that_declares_none_and_it_stays_marked ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0473788Z test a_latitude_first_source_is_admitted_under_the_formats_override_with_its_declared_order_kept ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0960339Z test a_viewport_cannot_name_a_definition_only_crs_because_that_identifier_names_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.0994666Z test a_viewport_in_another_crs_is_refused_because_nothing_here_reprojects ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.1040362Z test a_viewport_filter_selects_a_subset_and_every_selected_feature_intersects_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.1379847Z test an_assertion_over_a_file_that_declares_a_crs_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.1448172Z test a_viewport_without_a_covering_bbox_column_is_refused_not_silently_scanned ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.1810005Z test an_assertion_with_a_blank_identifier_is_refused_end_to_end ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.1957564Z test an_assertion_with_an_oversized_definition_is_refused_before_it_is_parsed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.2589966Z test an_absent_crs_key_and_an_explicit_null_are_two_different_outcomes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.8729649Z test cancelling_before_the_first_batch_stops_the_stream_without_producing_anything ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.9273671Z test cancelling_mid_stream_stops_production_promptly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.9615292Z test dropping_the_stream_cancels_the_query ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:23.9637116Z test every_batch_carries_the_envelope_not_just_the_first ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.0215085Z test streaming_the_whole_file_returns_every_feature_with_bit_identical_coordinates ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.0343077Z test h6_the_engine_module_names_no_transport ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.0343687Z test the_recorded_arrow_version_is_the_one_the_workspace_pins ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.0395285Z test the_payload_is_variable_width_geoarrow_with_holes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.0709730Z test a_paused_consumer_bounds_producer_resident_memory ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7576854Z test the_first_batch_is_handed_over_before_the_result_is_materialized ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7577193Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7577397Z test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.77s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7577666Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7598561Z ^[[1m^[[92m     Running^[[0m tests/source_watch_adapter.rs (target/debug/deps/source_watch_adapter-a57d6f2fd0327d57)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7608823Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7609142Z running 0 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7609265Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7609407Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7609745Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7611027Z ^[[1m^[[92m     Running^[[0m tests/spatial_index.rs (target/debug/deps/spatial_index-c7c464437fb57251)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7633990Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7634073Z running 10 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.7637988Z test a_fragmented_candidate_set_falls_back_to_the_scan_and_says_so ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.9165943Z test a_viewport_that_selects_nothing_is_answered_without_inventing_rows ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.9195487Z test a_mapped_identity_and_an_index_agree_with_the_unindexed_scan ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.9534749Z test an_indexed_query_returns_exactly_what_the_scan_returns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.9800222Z test a_stale_index_cannot_serve_a_newer_revision ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:24.9810673Z test the_key_refuses_a_different_builder_predicate_or_parameter_set ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.0402013Z test the_validity_heuristic_is_never_an_identity_and_fails_closed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.0637166Z test build_cost_and_reuse_are_separate_numbers_and_a_reuse_is_reported_as_one ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.0873433Z test the_declared_memory_bound_counts_the_buckets_not_just_the_features ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3620495Z test index_build_is_cancellable_because_it_reads_every_row ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3649502Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3659619Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3659989Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3669169Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/spatial_kernel-b71c35de7b96a396)
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3695665Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3695762Z running 144 tests
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3725611Z test bundle::redaction::tests::a_declared_string_shorter_than_the_printable_run_threshold_excuses_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3726403Z test bundle::redaction::tests::a_declaration_never_excuses_a_credential_or_a_filesystem_path ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3727847Z test bundle::redaction::tests::a_finding_carries_enough_context_to_act_on ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3728467Z test bundle::redaction::tests::it_finds_each_class_docs_09_names ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3729272Z test bundle::redaction::tests::it_does_not_fire_on_the_things_a_manifest_legitimately_contains ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3730022Z test bundle::redaction::tests::the_drive_letter_rule_is_anchored_so_a_url_scheme_does_not_match ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3730835Z test bundle::redaction::tests::an_operator_declared_string_attributes_a_match_inside_it_and_nothing_outside_it ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3731649Z test bundle::redaction::tests::the_printable_run_threshold_is_where_the_constant_says_it_is ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3732905Z test bundle::tests::a_partition_name_is_a_function_of_its_ordinal_and_nothing_else ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3734566Z test bundle::tests::a_source_declared_license_with_no_name_is_null_and_never_a_placeholder ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3735457Z test bundle::tests::absent_license_is_not_declared_and_invents_no_attribution ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3736286Z test bundle::tests::an_operator_declared_license_is_always_a_string ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3737424Z test bundle::tests::an_unknown_resource_ref_member_is_a_named_state_and_never_a_bare_null ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3739205Z test bundle::tests::the_operation_digest_excludes_itself_and_moves_with_every_declared_input ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3740523Z test params::tests::a_viewport_without_a_crs_is_rejected_at_decode ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3741403Z test bundle::tests::two_different_definition_only_crs_do_not_digest_identically ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3742088Z test cancel_notice_tests::engine_cancel_runs_the_registered_notice_once_in_either_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3742708Z test params::tests::truncated_parameters_do_not_half_parse ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3753771Z test permission::approval::tests::a_refusal_carries_the_expected_phrase ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3754357Z test permission::approval::tests::anything_that_is_not_the_phrase_refuses ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3755187Z test permission::approval::tests::the_exact_phrase_approves_and_surrounding_whitespace_is_tolerated ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3755912Z test permission::approval::tests::the_flag_source_is_checked_by_the_same_function_as_the_interactive_one ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3756658Z test permission::approval::tests::the_prompt_shows_class_reversibility_source_hash_destination_and_style ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3757328Z test permission::audit::clock::tests::known_instants_convert_correctly ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3757982Z test permission::audit::clock::tests::the_live_clock_produces_the_declared_shape ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3758659Z test permission::audit::log::tests::a_log_resolving_inside_the_destination_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3759517Z test permission::audit::log::tests::a_name_matching_the_key_text_rather_than_the_value_declares_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3760244Z test permission::audit::log::tests::a_name_that_is_not_in_the_record_declares_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3761039Z test permission::audit::log::tests::a_short_username_is_still_attributable_because_the_member_is_declared_not_the_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3761718Z test params::tests::parameters_round_trip ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3762341Z test permission::audit::normalize::tests::a_non_ascii_root_or_destination_normalizes_instead_of_panicking ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3763162Z test permission::audit::normalize::tests::a_root_that_is_a_string_prefix_but_not_a_path_prefix_does_not_match ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3763866Z test params::tests::viewport_edges_cross_as_exact_bit_patterns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3809925Z test permission::audit::normalize::tests::a_unc_path_keeps_its_share_form ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3822327Z test permission::audit::normalize::tests::a_username_component_after_the_root_is_also_normalized ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3823217Z test permission::audit::normalize::tests::a_username_inside_a_longer_component_is_deliberately_not_normalized ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3823905Z test permission::audit::normalize::tests::a_user_profile_destination_becomes_a_token ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3831941Z test permission::audit::normalize::tests::case_differences_collapse_on_windows ... ignored, boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3871362Z test bundle::redaction::tests::a_short_pattern_in_binary_noise_is_not_reported_but_a_real_path_in_binary_is ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3872297Z test permission::audit::normalize::tests::the_longest_matching_root_wins ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3873064Z test permission::audit::reader::tests::a_pre_rename_approval_field_is_read_as_approval_route_not_reported_as_corrupt ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3873930Z test permission::audit::reader::tests::a_record_declaring_an_unrecognized_schema_is_reported_as_corrupt ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3874811Z test permission::audit::reader::tests::a_timestamp_cut_by_a_multibyte_character_at_byte_16_is_returned_verbatim_not_sliced ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3875490Z test permission::audit::reader::tests::a_success_pair_reads_as_one_plain_sentence ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3875929Z test permission::audit::reader::tests::a_refused_pair_names_the_plain_reason_not_the_bare_variant ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3876485Z test permission::audit::reader::tests::an_orphan_intent_is_reported_honestly_not_dropped ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3877005Z test permission::audit::reader::tests::each_sentence_whose_at_cuts_a_character_at_byte_16_starts_with_the_stored_value ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3877644Z test permission::audit::reader::tests::exactly_four_output_lines_for_four_attempts_nothing_merged_nothing_lost ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3878381Z test permission::audit::record::tests::a_control_character_in_a_field_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3879496Z test permission::audit::reader::tests::an_unparseable_line_is_reported_as_corrupt_not_skipped_silently ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3881125Z test permission::audit::record::tests::absent_members_are_null_rather_than_missing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3881983Z test permission::audit::reader::tests::blank_lines_are_ignored_without_being_reported_as_corrupt ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3882722Z test permission::audit::record::tests::both_shapes_declare_a_fixed_key_set_in_a_fixed_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3888270Z test permission::audit::record::tests::a_rendered_record_occupies_exactly_one_line ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3889252Z test permission::audit::record::tests::shell_dialog_serializes_as_shell_dialog_and_the_key_set_is_unchanged ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3889921Z test permission::boundary::tests::refusals_and_failures_are_not_conflated ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3890530Z test permission::boundary::tests::the_confirmation_phrase_is_the_final_component ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3891254Z test permission::boundary::tests::a_cleanup_failure_is_classified_by_what_it_wraps_and_still_names_itself ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3891960Z test permission::grant::tests::a_lifetime_over_the_declared_ceiling_is_refused_at_issue_time ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3892627Z test permission::grant::tests::an_empty_set_refuses_with_no_grant_rather_than_a_scope_mismatch ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3893282Z test permission::grant::tests::debug_prints_a_normalized_destination_and_never_a_raw_path ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3893970Z test permission::grant::tests::each_scope_predicate_refuses_independently_and_says_which_one_failed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3894672Z test permission::grant::tests::a_destination_class_grant_covers_direct_children_only ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3906941Z test permission::grant::tests::a_grant_removed_the_instant_its_attempt_is_consumed_never_grows_the_set_across_many_more_than_the_ceiling ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3907841Z test permission::grant::tests::expiry_is_reported_as_expiry_rather_than_as_a_scope_mismatch ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3908492Z test permission::grant::tests::remove_matching_evicts_exactly_the_consumed_grant_ignoring_expiry ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3909150Z test permission::grant::tests::the_grant_ceiling_is_enforced ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3909749Z test publish::ceilings::tests::a_feature_count_above_the_ceiling_refuses_typed_and_names_the_viewport_bbox_alternative ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3910373Z test publish::ceilings::tests::a_feature_count_at_or_below_the_ceiling_is_not_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3910913Z test publish::ceilings::tests::an_attribute_column_count_above_the_ceiling_refuses_typed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3911469Z test publish::ceilings::tests::an_attribute_column_count_at_the_ceiling_is_not_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3912425Z test publish::ceilings::tests::ceilings_json_bytes_are_pinned_by_content_hash ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3912973Z test publish::ceilings::tests::ceilings_json_is_pinned_to_the_five_values_both_readers_share ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3913749Z test publish::error::tests::a_cancelled_engine_stream_reaches_the_caller_as_a_cancelled_publish ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3914306Z test publish::error::tests::an_unclassified_io_error_keeps_its_raw_code_visible ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3914876Z test publish::error::tests::permission_denied_classifies_even_when_the_raw_code_is_unknown_here ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3915482Z test publish::tests::a_dataset_name_that_could_carry_a_path_is_refused_rather_than_escaped ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3916059Z test publish::tests::a_forbidden_redistribution_term_refuses_the_publish_from_either_side ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3916615Z test publish::tests::a_source_and_an_operator_declaring_license_together_is_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3917185Z test publish::tests::a_source_declaring_nothing_publishes_as_not_declared_and_invents_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3917832Z test publish::tests::a_source_that_names_no_license_but_declares_attribution_carries_a_null_not_a_placeholder ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3918686Z test publish::tests::admit_bundle_format_refuses_a_dictionary_column_with_todays_admit_attribute_type_text ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3919378Z test publish::tests::admit_bundle_format_refuses_a_float32_column_with_todays_text ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3920061Z test publish::tests::an_operator_declaring_a_blank_license_is_refused_rather_than_recorded ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3920660Z test publish::tests::an_unrecognised_redistribution_word_is_unknown_and_never_assumed_permitted ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3921184Z test publish::tests::two_staging_names_in_one_process_differ ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3921687Z test publish::viewer_assets::tests::a_duplicate_asset_path_is_refused_rather_than_last_one_wins ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3922318Z test publish::viewer_assets::tests::assets_are_sorted_so_the_manifest_does_not_depend_on_directory_order ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3922978Z test publish::viewer_assets::tests::traversal_and_absolute_paths_are_refused_before_anything_is_written ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3923712Z test skp::tests::a_residual_admission_lease_exhaustion_maps_to_engine_connections_exhausted_never_filter_rejected_by_binder ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3924282Z test skp::tests::a_ticket_redeems_exactly_once ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3932636Z test permission::grant::tests::prune_expired_removes_only_grants_whose_lifetime_has_elapsed ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3933297Z test skp::tests::cancel_on_an_unknown_handle_is_unknown_not_an_error ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3933916Z test skp::tests::cancelling_a_redeemed_ticket_twice_is_already_terminal_the_second_time ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3935145Z test skp::tests::cancelling_before_redemption_refuses_the_later_redemption ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3935986Z test skp::tests::close_dataset_cancels_every_ticket_for_that_dataset_only ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3936628Z test skp::tests::crs_assertion_shape_refusals_map_to_distinct_engine_dot_codes ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3937462Z test skp::tests::every_engine_error_variant_maps_to_a_distinct_engine_dot_code ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3938043Z test skp::tests::filter_column_not_filterable_maps_to_its_code_and_fields ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3938600Z test skp::tests::filter_construct_not_admitted_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3939384Z test skp::tests::filter_dialect_unsupported_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3939957Z test skp::tests::filter_identity_alias_ambiguous_maps_to_its_code_and_fields ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3940520Z test skp::tests::filter_not_a_single_expression_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3941086Z test skp::tests::filter_not_boolean_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3941592Z test skp::tests::filter_rejected_by_binder_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3942145Z test skp::tests::filter_too_deep_maps_to_its_code_and_fields ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3942614Z test skp::tests::filter_too_long_maps_to_its_code_and_fields ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3943153Z test skp::tests::filter_type_not_admitted_maps_to_its_code_and_fields ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3943679Z test skp::tests::filter_unknown_column_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3944223Z test skp::tests::filter_unparsable_maps_to_its_code_and_field ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3944726Z test skp::tests::named_unit_projects_to_other_never_to_unestablished ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3945350Z test skp::tests::sweep_expired_reclaims_a_stale_pending_ticket_without_any_other_call ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3945954Z test skp::tests::sweep_expired_reclaims_an_old_cancelled_before_redeem_entry ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3946534Z test skp::tests::the_pending_ceiling_is_per_dataset_and_declared ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3947010Z test skp::tests::the_real_cancel_responses_match_the_shared_fixtures ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.3969744Z test permission::audit::log::tests::concurrent_audit_log_instances_never_interleave_a_line ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4124797Z test skp::tests::the_real_describe_crs_shape_matches_the_shared_fixture ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4176837Z test skp::tests::an_engine_produced_lod_refusal_reaches_the_wire_as_engine_dot_lod_refused ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4200509Z test skp::tests::version_mismatch_is_refused_before_anything_else ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4360253Z test skp::tests::the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4414253Z test skp::ticket_drop_under_lock_regression::a_client_cancel_between_liveness_and_redeem_keeps_redeems_wording ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4470834Z test skp::tests::the_real_describe_geometry_carries_the_engines_encoding_for_each_open ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4505006Z test skp::ticket_drop_under_lock_regression::a_close_between_liveness_and_redeem_keeps_redeems_wording ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4540119Z test skp::ticket_drop_under_lock_regression::a_closing_dataset_refuses_new_attributions_but_still_records_an_end ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4600501Z test skp::ticket_drop_under_lock_regression::a_close_drops_its_watch_before_it_returns ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4623582Z test skp::ticket_drop_under_lock_regression::a_close_whose_catalog_entry_is_already_gone_still_drops_its_watch ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4689660Z test skp::ticket_drop_under_lock_regression::a_coverage_loss_between_liveness_and_redeem_keeps_its_own_code ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.4912747Z test skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang ... FAILED
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5085621Z test skp::ticket_drop_under_lock_regression::a_ticket_minted_before_close_and_attributed_after_it_refuses_as_unknown_dataset ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5232597Z test skp::ticket_drop_under_lock_regression::a_viewport_query_inside_close_is_refused_before_it_builds_or_mints ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5343857Z test permission::grant::tests::prune_expired_keeps_a_long_lived_set_under_the_ceiling_across_many_more_grants_than_it_holds ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5496207Z test skp::ticket_drop_under_lock_regression::an_end_between_liveness_and_redeem_refuses_by_its_code ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5603081Z test skp::ticket_drop_under_lock_regression::after_cancelling_a_ticket_whose_source_changed_the_next_viewport_query_refuses_by_name ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5635013Z test skp::ticket_drop_under_lock_regression::an_end_reaching_invalidate_after_close_leaves_no_mark_and_emits_nothing ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.5860113Z test skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_retired_source_after_releasing_the_guard ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6050159Z test skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_all_for_dataset_drops_its_swept_source_after_releasing_the_guard ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6260207Z test skp::ticket_drop_under_lock_regression::an_unwind_through_cancel_drops_its_swept_source_after_releasing_the_guard ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6450288Z test skp::ticket_drop_under_lock_regression::cancel_all_for_dataset_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6660157Z test skp::ticket_drop_under_lock_regression::cancel_of_a_pending_ticket_whose_post_check_found_a_change_does_not_hang ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6840766Z test skp::ticket_drop_under_lock_regression::a_coverage_loss_racing_admission_refuses_with_its_own_code_and_leaves_no_mark ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.6866978Z test skp::ticket_drop_under_lock_regression::sweep_of_an_expired_pending_ticket_whose_post_check_found_a_change_does_not_hang ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7135268Z test skp::ticket_drop_under_lock_regression::the_close_race_mints_no_generation_so_no_unheld_reference_exists ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7194518Z test skp::ticket_drop_under_lock_regression::a_pending_drop_inside_close_emits_once_with_its_session_reference ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7729465Z test skp::ticket_drop_under_lock_regression::an_end_recorded_before_forget_dataset_and_enqueued_after_it_carries_its_reference ... ok
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7730356Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7730419Z failures:
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7730506Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7730723Z ---- skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang stdout ----
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7731087Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7731346Z thread 'skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang' (28401) panicked at kernel/src/skp.rs:3363:9:
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732049Z setup did not force a real post-check finding — every test in this module would pass vacuously
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732366Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732534Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732537Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732583Z failures:
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7732808Z     skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7733022Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7733172Z test result: FAILED. 142 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.40s
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7733380Z 
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7753278Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `-p spatial-kernel --lib`
+L1 portable correctness · cargo test --workspace (ubuntu-24.04)	Run the ordinary suite	2026-10-07T19:38:25.7799834Z ##[error]Process completed with exit code 101.

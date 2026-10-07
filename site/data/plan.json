@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T19:28:57.446Z",
-  "plan_hash": "bc9b360ed162257554c6802241bda979d84a362a3f9a2a5784a4d73552c8beaf",
+  "generated_at": "2026-10-07T20:00:30.780Z",
+  "plan_hash": "14154d1187f4c8731c55e2bace3a04e6ea625154d0c38baeac43e16a4e56490a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -3209,7 +3209,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
+      "summary": "RE-DESCRIBED 2026-10-07 (evening) to cite state/directives/B2-BRIEF-2026-10-07.md, which replaces the migration plan's section 10 as the brief for B2's forms (state/directives/2026-10-07-b2-brief-and-evening-rulings.md); the rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c (the nodes b2-piece-1a-step-record-and-dataset-reference, b2-piece-1b-recording and b2-piece-1c-save-and-reopen), and stage 3 as 3a and 3b, per the brief's section 9; piece 1a's form is stage 1's form. Stages 2 to 5 stay in this node for now. The evening rulings: the session history is on the machine, found by the project's identity, with crash recovery offered at the next open; the docs/07 note lands with stage 1 or just before it, typed by the human; no kept branches, the parent field stays; steps left behind after a save leave the lineage at the next Save project, an export keeps its own copy of its steps, and the session history has a saved-here mark; an incomplete lineage keeps the data's grade with a recipe-incomplete marker, no ADR-005 amendment, the format ADR defining the marker. Its dependencies stand. Before: RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
       "dates": {
         "opened": null,
         "done": null
@@ -5070,13 +5070,14 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": null,
       "budget_minutes": 0,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
+      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
       "dates": {
         "opened": "2026-10-05",
         "done": null
@@ -6978,6 +6979,86 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed.",
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      }
+    },
+    {
+      "id": "b2-piece-1a-step-record-and-dataset-reference",
+      "title": "B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 16,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone.",
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      }
+    },
+    {
+      "id": "b2-piece-1b-recording",
+      "title": "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "b2-piece-1a-step-record-and-dataset-reference",
+        "shell-migration-milestone-2"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed.",
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      }
+    },
+    {
+      "id": "b2-piece-1c-save-and-reopen",
+      "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
+      "kind": "task",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [
+        "b2-piece-1b-recording"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 0,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed.",
       "dates": {
         "opened": "2026-10-07",
         "done": null
