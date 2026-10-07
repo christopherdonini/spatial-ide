@@ -696,3 +696,28 @@ After the merge, B is the merge commit's first parent and H is the merge commit.
 9. **Generation 3.**
 
 **Superseded index.** §2's E-L9 helper list → item 2. §4's A-2 mutation site → item 4. Neither is edited.
+
+### Amendment 3 — phase B's outcomes: the build's deviations (class 2 and class 3), and §7 at the build's head
+
+*Written by the custodian after phase B's results were seen, at the branch head e89bf9bf6c2c90965ff75a7fd892bc7b1bae3d40, before either gate. The records are worker report 2 (`state/consults/2026-10-07-geometry-lines-cut-worker-report-2.md`, stage 1) and worker report 3 (`state/consults/2026-10-07-geometry-lines-cut-worker-report-3.md`, stage 2), each pinned by hash in its filing note, cited by section. Nothing below is a quotation.*
+
+1. **Phase B's commits:** ba648a9a, the shell (V-L, SH-L1 to SH-L7, V-T-L, LN'), and e89bf9bf, the docs. V-L holds on all five points, at deck.gl 9.3.9, the lock's version (report 2, V-L).
+2. **Class 2, the casing's ends.** The casing is drawn with rounded joints and caps, as the line is, so that a square-capped casing shows no corners beside a round-capped line. SH-L2 named rounding for the line only.
+3. **Class 2, one E2E line.** `e2e/regression.mjs`'s fixture-existence list gains the L-1 file beside LN', so that a missing file fails early. MP' and PT' are not edited.
+4. **Class 3, `decodeBatch.ts`'s doc.** The custodian's brief said its `skp/0.10` for the point value was stale. It is not: `skp/0.10` is the entry that gave the point value. The stale part was the doc's count of encodings, which now names five: the third from `skp/0.10`, and the fourth and fifth from `skp/0.11`.
+5. **Class 2, Part T's T6(c).** `declared-linestring.parquet` has no covering, so a canvas viewport query may meet the no-covering refusal before the engine reaches row 0. T6(c) says so, and asks for the code shown. The generator's code is not edited.
+6. **Class 3, the indexes' Last verified at** is ba648a9a, commit 4's head, because commit 5 cannot name its own hash.
+7. **§7 at e89bf9bf, by its command:** 3,561 lines over 52 files, against 3,750 over 66.
+   - Engine product (1,220 against 950) and engine tests (960 against 900) are over, as Amendment 2 recorded.
+   - Every other group is within its ceiling: kernel 307, protocol 221, shell product 242, shell tests and seams 521, and docs 90.
+
+   The class 8 record is made once, at the gated head. §7 is not edited.
+8. **The suites at e89bf9bf, all exit 0** (report 3):
+   - workspace 903 passed and 54 ignored, with §6's four instruments green and the five files byte-identical;
+   - clippy shows no warning on an added line;
+   - src-tauri 68, shell 1,125 and viewer 84 passed;
+   - the scripts suite passed 450;
+   - the four verifiers exit 0.
+9. **Generation 4.**
+
+**Superseded index.** SH-L2's casing ends → item 2. §2's Operator LN' paragraph → item 3 adds one fixture-existence line. Part T's T6(c) → item 5. None is edited.
