@@ -2304,13 +2304,14 @@ nodes:
     order: 16
     depends_on: [geometry-types-beyond-polygons, geometry-points-cut]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: engine/GEOMETRY-LINES-PREREGISTRATION.md
+    merge: merge-commit
     evidence: null
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: [110]
-    summary: "PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    summary: "FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
     dates: {opened: 2026-09-22, done: null}
 
   - id: kernel-generation-close-races
@@ -4185,6 +4186,40 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Routed 2026-10-07 by geometry-points-cut's closing record (engine/GEOMETRY-POINTS-PREREGISTRATION.md, Amendment 5, item 13; the gate-1 architect's noticed item 1; worker report 2's Noticed section): frontends/shell/e2e/regression.mjs's MP' step (MP-1, merged) opens multipolygon-f1.parquet, which has no covering, so by the points form's Amendment 1, item 6 it is expected to meet the no-covering refusal at its next run. F-1c, the covered twin, is written by kernel/tests/manual_walkthrough_fixtures.rs since the points cut. Existing E2E steps stay unedited, so a new step on F-1c is a class 9 addition in its own form. Waiting on the human's placement."
+    dates: {opened: 2026-10-07, done: null}
+  - id: shell-owners-index
+    title: "An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 2, Owner's index, the routed item settled; the points form's Amendment 5, item 13, second bullet): the engine and kernel owner's indexes list module-caused limits only, so the shell-owned KNOWN-LIMITATIONS items (34 to 38 once the lines cut lands) are indexed nowhere, because no shell owner's index exists. Creating one is a governance piece under the product-first freeze, so it waits for the freeze to lift or the human's call."
+    dates: {opened: 2026-10-07, done: null}
+  - id: corpus-line-files
+    title: "A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file"
+    kind: task
+    lane: engine
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [geometry-lines-cut]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 3, the corpus): no file in engine/compat-corpus/of-record/MANIFEST.json declares a line type, so the lines cut may not claim that any real-world line file opens, and no P4 row waits for it. A corpus addition is its own preregistered piece. Waiting on the human's placement."
     dates: {opened: 2026-10-07, done: null}
   - id: verify-quotes-dotted-paths
     title: "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked"
