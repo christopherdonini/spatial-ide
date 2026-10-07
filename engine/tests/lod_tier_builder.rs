@@ -1618,3 +1618,68 @@ fn build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier() {
     assert!(written.is_empty(), "a tier was written: {written:?}");
     let _ = std::fs::remove_dir_all(&tiers);
 }
+
+// ---------------------------------------------------------------------------------------------
+// L-L (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §4): the tier builder's by-name refusal of a
+// LineString feature stands (ADR-034 Consequences, LOD; `engine/src/lod.rs` is not edited by the
+// lines cut, and already names LineString and MultiLineString in its refusal).
+// ---------------------------------------------------------------------------------------------
+
+// RECORDED MUTATION: in `engine/src/lod.rs`, make the `LineString` arm of `geometry_type_name`
+// return `"Polygon"`. The refusal then names the wrong type and this test fails by name at the
+// assertion that the refusal names LineString.
+//
+// Observed over `6f4cc949` on the uncommitted tree of the engine commit:
+// `build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier` FAILED with the mutation
+// applied, at `the refusal names the type met: feature 0: expected a Polygon, found Polygon`, then
+// reverted.
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories (engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
+    use spatial_engine::fixture::{line_l1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+
+    let dir = scratch_dir("lines-ll");
+    let path = dir.join("l1.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(line_l1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write L-1");
+    let source = Dataset::open(&path).expect("open L-1");
+    let cancel = CancelToken::new();
+    clear_tier_directory(&source, &cancel);
+
+    let detail = match build_tiers(&source, LOD_BUILD_WORKERS, &cancel, None) {
+        Err(EngineError::Wkb(d)) => d,
+        Err(other) => panic!("expected engine.wkb, got {other}"),
+        Ok(_) => panic!("expected a refusal: a LineString feature was tiered"),
+    };
+    assert!(
+        detail.contains("expected a Polygon, found LineString"),
+        "the refusal names the type met: {detail}"
+    );
+
+    // No tier was written: the source's tier directory holds no parquet file.
+    let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
+    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
+        .join("spatial-ide/tiers")
+        .join(hash);
+    let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
+        .map(|rd| {
+            rd.filter_map(|e| e.ok())
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|x| x == "parquet"))
+                .collect()
+        })
+        .unwrap_or_default();
+    assert!(written.is_empty(), "a tier was written: {written:?}");
+    let _ = std::fs::remove_dir_all(&tiers);
+}

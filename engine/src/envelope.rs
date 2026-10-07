@@ -744,6 +744,116 @@ mod tests {
         );
     }
 
+    /// LE-9. RECORDED MUTATION: in `BatchEnvelope::build`, write `geoarrow::EXT_NAME_POLYGON`
+    /// unconditionally as the `geometry_encoding` key. The linestring envelope then disagrees with
+    /// its own geometry field and this test fails by name at that comparison.
+    ///
+    /// Observed over `6f4cc949` on the uncommitted tree of the engine commit:
+    /// `a_line_envelopes_geometry_encoding_equals_the_fields_extension_name` FAILED with the
+    /// mutation applied, at the comparison `the envelope key and the field's extension name are one
+    /// value` (left `geoarrow.polygon`, right `geoarrow.linestring`), then reverted.
+    #[test]
+    fn a_line_envelopes_geometry_encoding_equals_the_fields_extension_name() {
+        use crate::wkb::{LineStringBuilder, MultiLineStringBuilder};
+        let ids = |n: u64| Arc::new(UInt64Array::from((1..=n).collect::<Vec<u64>>()));
+        let env_for = |encoding| {
+            BatchEnvelope::with_attributes(
+                file_crs(),
+                "geometry".into(),
+                test_identity(),
+                Vec::new(),
+                encoding,
+            )
+        };
+
+        let mut lb = LineStringBuilder::new();
+        for row in [
+            [[2_600_000.5, 1_200_000.25], [2_600_010.0, 1_199_990.0]],
+            [[2_600_005.0, 1_200_003.0], [2_600_002.0, 1_200_001.0]],
+        ] {
+            lb.push_wkb(&crate::fixture::encode_linestring(&row))
+                .unwrap();
+        }
+        let lines = crate::geoarrow::build_linestring_array(lb).unwrap();
+        let mut mb = MultiLineStringBuilder::new();
+        mb.push_wkb(&crate::fixture::encode_multilinestring(&[
+            vec![[2_600_000.5, 1_200_000.25], [2_600_010.0, 1_199_990.0]],
+            vec![[2_600_005.0, 1_200_003.0], [2_600_002.0, 1_200_001.0]],
+        ]))
+        .unwrap();
+        let multi = crate::geoarrow::build_multilinestring_array(mb).unwrap();
+
+        for (encoding, name, array, rows) in [
+            (
+                GeometryEncoding::LineString,
+                "geoarrow.linestring",
+                lines.clone(),
+                2,
+            ),
+            (
+                GeometryEncoding::MultiLineString,
+                "geoarrow.multilinestring",
+                multi.clone(),
+                1,
+            ),
+        ] {
+            let env = env_for(encoding);
+            assert_eq!(env.geometry_encoding(), encoding);
+            let schema = env.schema();
+            assert_eq!(
+                schema.metadata().get("geometry_encoding").unwrap(),
+                schema
+                    .field(1)
+                    .metadata()
+                    .get(crate::geoarrow::EXT_NAME_KEY)
+                    .unwrap(),
+                "the envelope key and the field's extension name are one value"
+            );
+            assert_eq!(schema.metadata().get("geometry_encoding").unwrap(), name);
+
+            // A batch is assembled and serialized under the envelope's own encoding, and its
+            // extent is the vertices' minimum and maximum, read through `coordinate_values`.
+            let batch = TaggedBatch::assemble(&env, ids(rows), array, Vec::new()).unwrap();
+            assert_eq!(
+                batch.xy_bounds(),
+                Some([2_600_000.5, 1_199_990.0, 2_600_010.0, 1_200_003.0])
+            );
+            let mut buf = Vec::new();
+            batch.write_ipc_into(&mut buf).unwrap();
+            let mut rdr =
+                arrow::ipc::reader::StreamReader::try_new(std::io::Cursor::new(&buf), None)
+                    .unwrap();
+            let round = rdr.next().unwrap().unwrap();
+            assert_eq!(
+                round.schema().metadata().get("geometry_encoding").unwrap(),
+                name
+            );
+        }
+
+        // Neither line array travels under the other's envelope, or under a polygon envelope.
+        assert!(TaggedBatch::assemble(
+            &env_for(GeometryEncoding::LineString),
+            ids(1),
+            multi.clone(),
+            Vec::new()
+        )
+        .is_err());
+        assert!(TaggedBatch::assemble(
+            &env_for(GeometryEncoding::MultiLineString),
+            ids(2),
+            lines.clone(),
+            Vec::new()
+        )
+        .is_err());
+        assert!(TaggedBatch::assemble(
+            &BatchEnvelope::new(file_crs(), "geometry".into(), test_identity()),
+            ids(2),
+            lines,
+            Vec::new()
+        )
+        .is_err());
+    }
+
     #[test]
     fn a_geometry_array_of_the_wrong_shape_cannot_be_assembled_into_a_batch() {
         use arrow::array::Float64Array;
