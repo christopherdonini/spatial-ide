@@ -1979,3 +1979,77 @@ fn a_degrees_multipolygon_dataset_still_refuses_as_the_degrees_dataset() {
         other => panic!("F-13 must refuse as the degrees dataset, got {other:?}"),
     }
 }
+
+/// **K-P2 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §4; ADR-034 Decision 10).** A point-encoded
+/// dataset is a valid open that a version-1 bundle cannot carry, so publish refuses it at
+/// preflight, by name, as the format's refusal and not as an engine failure, before the pin and
+/// before any destination exists. P-1 is the way in; P-11 is P-1 in CRS84 degrees, which refuses as
+/// the degrees dataset because that check runs first. The source is opened and deliberately **not**
+/// pinned: a refusal that waited for the pin would answer `SourceNotPinned` instead.
+///
+/// RECORDED MUTATION: in `publish::preflight_pinless_parts`, compare the dataset's encoding against
+/// `geoarrow.multipolygon` only (refuse when it equals that, not when it differs from the format's
+/// declared one). P-1 then falls through to a different refusal and this test fails by name.
+///
+/// Observed over `b4a6fd9d` (the engine commit) on the uncommitted tree of the kernel commit:
+/// `a_point_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write` FAILED with the
+/// mutation applied, at `expected GeometryEncodingNotPublishable` (the request fell through to a
+/// different refusal, about a `zone` attribute), then reverted.
+#[test]
+fn a_point_encoded_dataset_refuses_at_preflight_by_name_before_any_pin_or_write() {
+    use spatial_engine::fixture::{point_p1_rows, E_LO, LAT_LO, LON_LO, N_LO};
+
+    let d = workspace("points-k-p2");
+    let path = multipolygon_fixture(
+        &d,
+        r#"["Point"]"#,
+        point_p1_rows([E_LO, N_LO], 10.0),
+        CrsMode::DeclaredLv95,
+        CoordinateDomain::Lv95Metres,
+    );
+    let fixture_sha_before = sha256_file(&path);
+    let ds = Dataset::open(&path).unwrap();
+    assert_eq!(
+        ds.geometry_encoding(),
+        spatial_engine::GeometryEncoding::Point
+    );
+    let v = viewer();
+    let dest = d.join("bundle");
+
+    let e = preflight_pinless(&request(&ds, &v, dest.clone())).unwrap_err();
+    match &e {
+        PublishError::GeometryEncodingNotPublishable { encoding, carried } => {
+            assert_eq!(encoding, "geoarrow.point");
+            assert_eq!(carried, "geoarrow.polygon");
+        }
+        other => panic!("expected GeometryEncodingNotPublishable, got {other}"),
+    }
+    assert_eq!(e.code(), "publish.geometry_encoding_not_publishable");
+    assert!(!dest.exists(), "a destination exists");
+    assert!(ds.content_pin().is_none(), "the source was pinned");
+    match publish_unguarded(&request(&ds, &v, dest.clone()), &CancelToken::new(), None) {
+        Err(PublishError::GeometryEncodingNotPublishable { .. }) => {}
+        other => panic!("publish_unguarded gave {other:?}"),
+    }
+    assert!(!dest.exists(), "a destination exists after publish");
+    assert_eq!(
+        sha256_file(&path),
+        fixture_sha_before,
+        "the fixture changed"
+    );
+
+    // P-11: the same points in CRS84 degrees refuse as the degrees dataset, not as the encoding.
+    let d = workspace("points-k-p2-p11");
+    let path = multipolygon_fixture(
+        &d,
+        r#"["Point"]"#,
+        point_p1_rows([LON_LO, LAT_LO], 0.001),
+        CrsMode::DeclaredCrs84Degrees,
+        CoordinateDomain::Wgs84Degrees,
+    );
+    let ds = Dataset::open(&path).unwrap();
+    match preflight_pinless(&request(&ds, &v, d.join("bundle"))) {
+        Err(PublishError::GeographicCrsNotPublishable { .. }) => {}
+        other => panic!("P-11 must refuse as the degrees dataset, got {other:?}"),
+    }
+}

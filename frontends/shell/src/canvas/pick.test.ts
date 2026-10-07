@@ -3,9 +3,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import { decodeBatch, ENCODING_MULTIPOLYGON } from "./decodeBatch";
+import { decodeBatch, ENCODING_MULTIPOLYGON, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
-import { loadBatchFixture } from "../testUtils/batchFixtures";
+import { loadBatchFixture, pointP1Positions } from "../testUtils/batchFixtures";
 import { partsOfPolygons } from "../testUtils/partsOfPolygons";
 import type { HoverReadout } from "./pick";
 import {
@@ -98,6 +98,31 @@ describe("resolvePick (ADR-010 rule 2's indirection)", () => {
     expect(resolvePick(f1, 4)!.id).toBe(2n);
     expect(resolvePick(f1, 5)).toEqual(resolvePick(f1, 4));
     expect(resolvePick(f1, 6)).toBeNull(); // past partCount, though ids.length is 3
+  });
+
+  /**
+   * SH-P3 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` section 4, real shape: the engine's own
+   * `lv95-point-batch`, decoded by the product `decodeBatch`). For a point open a pick ordinal is the
+   * row: ordinal k resolves row k's id, anchored at the point itself, and an ordinal past `partCount`
+   * resolves to nothing. `resolvePick` is unchanged.
+   *
+   * RECORDED MUTATION: decode a point row into no part in `decodeBatch` (push no part for the row).
+   * This test then fails by name.
+   *
+   * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `an ordinal on a point resolves that row's id, anchored at the point (SH-P3)`
+   * FAILED by name with the mutation applied, at `expect(picked).not.toBeNull()` (`expected null not to be null`), then reverted.
+   */
+  it("an ordinal on a point resolves that row's id, anchored at the point (SH-P3)", () => {
+    const p1 = decodeBatch("sh_p1", 4, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT);
+    pointP1Positions().forEach((position, k) => {
+      const picked = resolvePick(p1, k);
+      expect(picked).not.toBeNull();
+      expect(picked!.id).toBe(BigInt(k));
+      expect(picked!.anchor).toEqual(position);
+      expect(picked!.streamHandle).toBe("sh_p1");
+      expect(picked!.batchSeq).toBe(4);
+    });
+    expect(resolvePick(p1, 6)).toBeNull();
   });
 });
 

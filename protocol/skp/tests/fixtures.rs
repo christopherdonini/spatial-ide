@@ -457,11 +457,15 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.9` (MultiPolygon admission, `engine/MULTIPOLYGON-MP1-PREREGISTRATION.md`).
-/// Mutation: the literal back to `"skp/0.8"`. Expected failure: this test fails by name.
+/// `skp/0.10` (Point admission, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`).
+/// Mutation: the literal back to `"skp/0.9"`. Expected failure: this test fails by name.
+///
+/// Observed over `ffa42b5d` (the kernel commit) on the uncommitted tree of the wire commit:
+/// `skp_version_is_skp_0_10` FAILED with the mutation applied, at its `assert_eq!` (left `skp/0.9`,
+/// right `skp/0.10`), then reverted.
 #[test]
-fn skp_version_is_skp_0_9() {
-    assert_eq!(SKP_VERSION, "skp/0.9");
+fn skp_version_is_skp_0_10() {
+    assert_eq!(SKP_VERSION, "skp/0.10");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

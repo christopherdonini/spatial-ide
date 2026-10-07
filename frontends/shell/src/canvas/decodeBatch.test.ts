@@ -16,12 +16,14 @@ import { describe, expect, it } from "vitest";
 import {
   decodeBatch,
   ENCODING_MULTIPOLYGON,
+  ENCODING_POINT,
   ENCODING_POLYGON,
   EXPECTED_FRAME,
+  geometryKindOf,
   UnexpectedEncodingError,
   UnexpectedFrameError,
 } from "./decodeBatch";
-import { loadBatchFixture } from "../testUtils/batchFixtures";
+import { loadBatchFixture, pointP1Positions } from "../testUtils/batchFixtures";
 
 /** Builds an IPC byte buffer matching `engine::envelope::TaggedBatch`'s wire shape closely enough
  * to exercise this decoder: `id: UInt64 not null`, `geometry: List<List<FixedSizeList<2,f64>>>`,
@@ -163,24 +165,33 @@ describe("decodeBatch", () => {
   });
 
   /**
-   * SH-2. A batch whose `geometry_encoding` is not the open's expected encoding, or is neither value,
-   * throws `UnexpectedEncodingError`; the check reads the batch's own metadata, never the data. A
-   * missing key is refused as well.
+   * SH-2. A batch whose `geometry_encoding` is not the open's expected encoding, or is none of the
+   * three values the shell reads, throws `UnexpectedEncodingError`; the check reads the batch's own
+   * metadata, never the data. A missing key is refused as well. The points cut changed this test: the
+   * unknown-value case is `geoarrow.linestring` (`geoarrow.point` is now read), and a point batch under
+   * a polygon expectation, and the reverse, throw.
    *
    * RECORDED MUTATION: delete the encoding check in `decodeBatch`. This test then fails by name (the
    * multipolygon batch is walked as polygon rings, or the unknown value passes).
    *
    * Observed over `ac538440` on the uncommitted tree of the shell commit: `a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)`
    * FAILED by name with the mutation applied, then reverted.
+   *
+   * Re-observed over `edbc0f3c` on the uncommitted tree of the shell commit, with the test as the points cut changed it: `a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)`
+   * FAILED by name with the mutation applied, at its first assertion (the multipolygon batch under a polygon expectation: `expected function to throw an error, but it didn't`), then reverted.
    */
   it("a mismatched, unknown or missing geometry_encoding throws UnexpectedEncodingError (SH-2)", () => {
     const polygon = loadBatchFixture("lv95-polygon-batch");
     const multipolygon = loadBatchFixture("lv95-multipolygon-batch");
     expect(() => decodeBatch("sh", 0, multipolygon, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
     expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_MULTIPOLYGON)).toThrow(UnexpectedEncodingError);
-    // Neither value the shell reads, even when the open's expectation names the same string.
-    const point = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.point");
-    expect(() => decodeBatch("sh", 0, point, "geometry", "geoarrow.point")).toThrow(UnexpectedEncodingError);
+    // None of the three values the shell reads, even when the open's expectation names the same string.
+    const linestring = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, "geoarrow.linestring");
+    expect(() => decodeBatch("sh", 0, linestring, "geometry", "geoarrow.linestring")).toThrow(UnexpectedEncodingError);
+    // A point batch under a polygon expectation is refused, and a polygon batch under a point one.
+    const point = loadBatchFixture("lv95-point-batch");
+    expect(() => decodeBatch("sh", 0, point, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
+    expect(() => decodeBatch("sh", 0, polygon, "geometry", ENCODING_POINT)).toThrow(UnexpectedEncodingError);
     const untagged = buildBatch([1n], [[[[0, 0], [1, 0], [0, 1], [0, 0]]]], EXPECTED_FRAME, null);
     expect(() => decodeBatch("sh", 0, untagged, "geometry", ENCODING_POLYGON)).toThrow(UnexpectedEncodingError);
 
@@ -192,6 +203,7 @@ describe("decodeBatch", () => {
     }
     expect(thrown).toBeInstanceOf(UnexpectedEncodingError);
     expect((thrown as UnexpectedEncodingError).message).toMatch(/^\[P6 placeholder\]/);
+    expect((thrown as UnexpectedEncodingError).message).toContain(ENCODING_POINT); // names all three
     expect((thrown as UnexpectedEncodingError).batchEncoding).toBe(ENCODING_MULTIPOLYGON);
     expect((thrown as UnexpectedEncodingError).expectedEncoding).toBe(ENCODING_POLYGON);
   });
@@ -226,5 +238,42 @@ describe("decodeBatch", () => {
       for (const ring of feature[0]) vertices += ring.length;
     }
     expect(batch.totalVertices).toBe(vertices);
+  });
+
+  /**
+   * SH-P1 (real shape: the engine's own `lv95-point-batch`, BF-P, decoded by the product `decodeBatch`).
+   * Six point rows decode to one part each, the part holding one single-position ring: `partToRow` is
+   * the identity, `partCount` and `totalVertices` equal the row count, and each coordinate carries
+   * the bits the engine wrote (compared with `Object.is`, and each is not representable in `f32`, so a
+   * narrowing shows). `geometryKindOf` maps the three encodings to their kind.
+   *
+   * RECORDED MUTATION: walk a point row as a ring list in `decodeBatch` (delete its point branch, so
+   * the row falls into the polygon ring walk). This test then fails by name.
+   *
+   * Observed over `edbc0f3c` on the uncommitted tree of the shell commit: `the engine's point batch decodes to one single-position part per row, partToRow the identity, bits unchanged (SH-P1)`
+   * FAILED by name with the mutation applied (`TypeError: ring is not iterable`, thrown in the ring walk at this test's decode call, before any assertion), then reverted.
+   */
+  it("the engine's point batch decodes to one single-position part per row, partToRow the identity, bits unchanged (SH-P1)", () => {
+    const batch = decodeBatch("sh_p1", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT);
+    const positions = pointP1Positions();
+
+    expect(Array.from(batch.ids)).toEqual([0n, 1n, 2n, 3n, 4n, 5n]);
+    expect(batch.parts).toHaveLength(6);
+    positions.forEach(([x, y], k) => {
+      expect(batch.parts[k]).toHaveLength(1); // one part
+      expect(batch.parts[k][0]).toHaveLength(1); // holding one ring
+      expect(batch.parts[k][0][0]).toHaveLength(1); // of one position
+      const [bx, by] = batch.parts[k][0][0][0];
+      expect(Math.fround(x)).not.toBe(x); // the fixture is bit-sensitive
+      expect(Object.is(bx, x)).toBe(true);
+      expect(Object.is(by, y)).toBe(true);
+    });
+    expect(Array.from(batch.partToRow)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(batch.partCount).toBe(6);
+    expect(batch.totalVertices).toBe(6);
+
+    expect(geometryKindOf(ENCODING_POINT)).toBe("point");
+    expect(geometryKindOf(ENCODING_POLYGON)).toBe("polygonal");
+    expect(geometryKindOf(ENCODING_MULTIPOLYGON)).toBe("polygonal");
   });
 });

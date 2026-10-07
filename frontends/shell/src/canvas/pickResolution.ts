@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { ResidentBatch } from "./decodeBatch";
+import type { GeometryKind, ResidentBatch } from "./decodeBatch";
 import {
   confirmingReadout,
   isPickBelowResolution,
@@ -114,6 +114,62 @@ export function averageFeatureExtent(batches: readonly Pick<ResidentBatch, "part
     }
   }
   return count > 0 ? sumExtent / count : 0;
+}
+
+/**
+ * **The point open's counterpart of `averageFeatureExtent` (the points cut, OPEN-4 ruled (A) in
+ * question round 62; `engine/GEOMETRY-POINTS-PREREGISTRATION.md` SH-P4):** the average spacing of the
+ * resident points, in the dataset's own CRS units. A point has no extent of its own, so what a pick
+ * can confuse is how closely the points sit. Over n resident points with a bounding box of width w
+ * and height h:
+ *
+ * - n <= 1: `+Infinity` -- there is nothing to confuse, so a hover is never refused for spacing;
+ * - w x h > 0: the square root of (w x h) / n -- the side of the cell each point holds on average;
+ * - otherwise (all points on one line, or all coincident): the larger of w and h over (n - 1). Fully
+ *   coincident points give `0`, which the unchanged 9 px threshold refuses by name.
+ *
+ * It is the **average**, never a per-pair nearest neighbour: clustered or coincident points among
+ * widely spread ones can leave the average above the threshold, and a hover there names the topmost
+ * symbol (KNOWN-LIMITATIONS item 36, for the human's P6 sight). Pure, O(resident points), computed
+ * once per render by the same site as `averageFeatureExtent`, never per hover event. Every vertex of
+ * every resident part counts as a point (`decodeBatch.ts`: one point is one single-position ring).
+ */
+export function averagePointSpacing(batches: readonly Pick<ResidentBatch, "parts">[]): number {
+  let n = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const batch of batches) {
+    for (const featureParts of batch.parts) {
+      for (const rings of featureParts) {
+        for (const ring of rings) {
+          for (const [x, y] of ring) {
+            n++;
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+    }
+  }
+  if (n <= 1) return Infinity;
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w * h > 0) return Math.sqrt((w * h) / n);
+  return Math.max(w, h) / (n - 1);
+}
+
+/**
+ * The one value `WorkingCanvas.tsx` compares with the threshold, chosen by the open's kind: the
+ * average feature extent for a polygonal open (unchanged), the average point spacing for a point open.
+ * The threshold (`SUB_PIXEL_PICK_REFUSAL_THRESHOLD_PX`), the refusal state and its text are the same
+ * for both.
+ */
+export function pickResolutionExtentFor(kind: GeometryKind, batches: readonly Pick<ResidentBatch, "parts">[]): number {
+  return kind === "point" ? averagePointSpacing(batches) : averageFeatureExtent(batches);
 }
 
 /**

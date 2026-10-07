@@ -34,9 +34,11 @@ use crate::cancel::CancelToken;
 use crate::dataset::{lease_for_stream, Dataset};
 use crate::envelope::{BatchEnvelope, TaggedBatch, ID_COLUMN};
 use crate::error::{EngineError, Result};
-use crate::geoarrow::{build_multipolygon_array, build_polygon_array, GeometryEncoding};
+use crate::geoarrow::{
+    build_multipolygon_array, build_point_array, build_polygon_array, GeometryEncoding,
+};
 use crate::predicate::AdmittedPredicate;
-use crate::wkb::{MultiPolygonBuilder, PolygonBuilder};
+use crate::wkb::{MultiPolygonBuilder, PointBuilder, PolygonBuilder};
 
 /// Declared ceilings — ADR-010 rule 6: "A layer design states its ceiling … before approaching it."
 /// Declared here, asserted in `stream.rs`'s own tests, and reported by the binding that carries
@@ -2151,6 +2153,7 @@ struct Pending {
 enum GeometryBuilder {
     Polygon(PolygonBuilder),
     MultiPolygon(MultiPolygonBuilder),
+    Point(PointBuilder),
 }
 
 impl GeometryBuilder {
@@ -2158,6 +2161,7 @@ impl GeometryBuilder {
         match encoding {
             GeometryEncoding::Polygon => Self::Polygon(PolygonBuilder::new()),
             GeometryEncoding::MultiPolygon => Self::MultiPolygon(MultiPolygonBuilder::new()),
+            GeometryEncoding::Point => Self::Point(PointBuilder::new()),
         }
     }
 
@@ -2165,6 +2169,7 @@ impl GeometryBuilder {
         match self {
             Self::Polygon(b) => b.vertices(),
             Self::MultiPolygon(b) => b.vertices(),
+            Self::Point(b) => b.vertices(),
         }
     }
 
@@ -2172,6 +2177,7 @@ impl GeometryBuilder {
         match self {
             Self::Polygon(b) => b.push_wkb(wkb),
             Self::MultiPolygon(b) => b.push_wkb(wkb),
+            Self::Point(b) => b.push_wkb(wkb),
         }
     }
 
@@ -2179,6 +2185,7 @@ impl GeometryBuilder {
         match self {
             Self::Polygon(b) => build_polygon_array(b),
             Self::MultiPolygon(b) => build_multipolygon_array(b),
+            Self::Point(b) => build_point_array(b),
         }
     }
 }
@@ -2258,6 +2265,8 @@ pub(crate) fn is_timing_dependent(ordering: RowOrdering, cut: BatchCutPolicy) ->
 /// offsets: each part has at least one ring and each ring at least 4 vertices, so parts plus rings
 /// is at most vertices divided by 2. A Polygon-only dataset's cut points therefore depend on
 /// unchanged inputs only. `engine/tests/multipolygon_stream.rs` asserts the bound on a real stream.
+/// For points, vertices equals rows and no offsets are written, so the estimate bounds a point
+/// batch; `engine/tests/point_stream.rs` asserts it.
 fn estimate_bytes(rows: usize, vertices: usize) -> usize {
     // 16 B per interleaved xy pair, 8 B per id, 4 B per offset entry, both offset levels.
     vertices * 16 + rows * 8 + (rows + vertices) * 4

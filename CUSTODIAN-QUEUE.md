@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `1e118293b29123aec79e7a825051434ee3d6cc5d24bc947e95f782555022b58d`) at `2026-10-07T01:08:38.133Z`.
+Generated from `PLAN.yaml` (sha256 `b8ff220bd05af7488fdea668787a85293bd2ac6c7bbf6e68274198945880c712`) at `2026-10-07T03:12:37.355Z`.
 
 ## 1. Next
 
-- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines (lane `kernel-protocol`, order 13, budget 45 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -30,6 +30,7 @@ Generated from `PLAN.yaml` (sha256 `1e118293b29123aec79e7a825051434ee3d6cc5d24bc
 ## 5. In progress
 
 - **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — evidence: branch `cut/geometry-points-cut`
+- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — evidence: branch `cut/kernel-close-races-followups`
 
 ## 6. Proposed / unscheduled
 

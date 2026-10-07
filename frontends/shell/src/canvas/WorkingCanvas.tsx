@@ -32,7 +32,7 @@ import { resolveDrawParameters } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import { coalesceOncePerFrame } from "./coalesceOncePerFrame";
-import { decodeBatch } from "./decodeBatch";
+import { decodeBatch, geometryKindOf } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import type { FitViewState } from "./extent";
@@ -47,7 +47,6 @@ import type { HoverReadout, PickResult } from "./pick";
 import { isPickBelowResolution, isPickConfirming, isPickSessionEnded, resolvePick } from "./pick";
 import { HOVER_REPICK_ON_PAN, HOVER_REPICK_SETTLE_MS } from "./hoverRepickConstants";
 import {
-  averageFeatureExtent,
   clearLabelledStateWithoutRepick,
   cursorForPointerState,
   decideHoverReadoutAtSettle,
@@ -56,6 +55,7 @@ import {
   isPointerOnCanvas,
   hoverRepickActionForCameraChange,
   mayRepickAtSettle,
+  pickResolutionExtentFor,
   reevaluateStandingHoverOnCameraChange,
 } from "./pickResolution";
 import type { FramebufferIdentity, HoverPointerCapture } from "./pickResolution";
@@ -1028,6 +1028,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * actually resident and drawn (`onHover`'s own `info.index` guard runs first). */
   const averageFeatureExtentRef = useRef(0);
 
+  /** The points cut (SH-P2, SH-P4): what this open draws, derived ONCE from `geometryEncoding`
+   * (`decodeBatch.ts`'s `geometryKindOf`) and read by `render()` for both the layer kind
+   * (`buildLayers`) and the value `averageFeatureExtentRef` holds (`pickResolutionExtentFor`: the
+   * average feature extent for a polygonal open, the average point spacing for a point open -- the 9 px
+   * threshold, the refusal state and its text are the same for both). `App`'s `key={admitted.dataset}`
+   * remounts this component per open, so the encoding is fixed for a mount's whole life. */
+  const geometryKindRef = useRef(geometryKindOf(geometryEncoding));
+
   /** Viewport-residency cut P6a, decision 24(c): the current camera zoom, mirrored into a ref so the
    * hover site (a `Deck` callback closed over at construction, `onHover` below) can read it without a
    * component re-render -- the same "route every live value through a ref" discipline this file's own
@@ -1241,7 +1249,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       // branch it already did, byte-identical. Defect B: now the SAME `activeBatches()` accessor the
       // hover site also calls.
       const batches = activeBatches();
-      const layers = buildLayers(batches, frameRef.current, drawParamsRef.current);
+      const layers = buildLayers(batches, frameRef.current, drawParamsRef.current, geometryKindRef.current);
       deck.setProps({ layers });
       // Vertex count actually handed to `getPolygon` this render, not a re-derivation from deck.gl's
       // own internal layer state -- the same total `buildLayers` fed the GPU from, computed once by
@@ -1250,7 +1258,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
       traceLayerUpdate(layers.length, totalPositions);
       // Decision 24(c): recomputed here, once per render, never per hover event -- see
       // `averageFeatureExtentRef`'s own doc comment.
-      averageFeatureExtentRef.current = averageFeatureExtent(batches);
+      averageFeatureExtentRef.current = pickResolutionExtentFor(geometryKindRef.current, batches);
     } finally {
       end("layer-construct");
     }

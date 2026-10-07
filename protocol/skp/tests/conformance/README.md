@@ -50,3 +50,8 @@ This directory's fixtures were updated again in place, to the `skp/0.9` literal 
 `geometry-types-beyond-polygons` (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §2 W2); the
 version-refusal fixture that named `skp/0.9` as an unsupported future version was renumbered to
 name `skp/0.10` instead. No implementation file changed for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.10` literal of PLAN node
+`geometry-points-cut` (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §2 W-P2); the version-refusal
+fixture that named `skp/0.10` as an unsupported future version was renumbered to name `skp/0.11`
+instead. No implementation file changed for that update either.

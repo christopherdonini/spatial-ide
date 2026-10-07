@@ -14,7 +14,8 @@
  *
  * **The ceiling is counted in parts, not features** (ADR-034 Decision 6): one deck.gl datum is one
  * polygon part and the pick index is the datum index, so a multi-part feature uses one index per
- * part. `checkPickCeiling` is called with a batch's `partCount` at both product sites
+ * part. For a point open one datum is one point, so the ceiling counts points (a point row is one
+ * part). `checkPickCeiling` is called with a batch's `partCount` at both product sites
  * (`buildLayers.ts`, `residentSet.ts`).
  *
  * **Sharding strategy, declared before it is approached:** one deck.gl layer per resident batch
@@ -51,21 +52,26 @@ export const DECKGL_PICK_INDEX_CEILING = 16_777_215;
  * per feature (a Polygon is one part), and `partToRow` is one `Int32Array` entry per part, resident
  * with the batch. Their heap cost at this ceiling is not measured anywhere in this cut. The
  * vertex ceiling itself counts vertices and is unchanged.
+ *
+ * **Points (the points cut):** a point counts one vertex against this ceiling. Each point row still
+ * decodes to its own part array (one part, one single-position ring, `decodeBatch.ts`), so a point
+ * open carries three small array levels per vertex on top of the coordinate pair. That per-point heap
+ * cost is **unmeasured** and disclosed here as such, not folded into the ceiling.
  */
 export const MAX_RESIDENT_VERTICES = 2_000_000;
 
 export class PickCeilingExceeded extends Error {
   constructor(public readonly pickOrdinalCount: number) {
     super(
-      `[P6 placeholder] batch has ${pickOrdinalCount} pick ordinals (polygon parts), above the declared ` +
+      `[P6 placeholder] batch has ${pickOrdinalCount} pick ordinals (polygon parts or points), above the declared ` +
         `24-bit picking ceiling of ${DECKGL_PICK_INDEX_CEILING} (ADR-010 rule 6) -- refused, not rendered`
     );
     this.name = "PickCeilingExceeded";
   }
 }
 
-/** `pickOrdinalCount` is a batch's `partCount`: one pick ordinal per polygon part, never the
- * feature count (a multi-part feature uses several). */
+/** `pickOrdinalCount` is a batch's `partCount`: one pick ordinal per polygon part or per point,
+ * never the feature count (a multi-part feature uses several). */
 export function checkPickCeiling(pickOrdinalCount: number): void {
   if (pickOrdinalCount > DECKGL_PICK_INDEX_CEILING) {
     throw new PickCeilingExceeded(pickOrdinalCount);

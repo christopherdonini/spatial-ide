@@ -18,8 +18,9 @@ up from the exact same `ids`/`parts`/`partToRow` a layer was built from (`buildL
 through unprojection. The GPU ordinal is a **part** ordinal, not a row index: deck.gl's
 `SolidPolygonLayer` draws one datum per polygon part and picks by datum index, so a feature with
 several parts (a MultiPolygon, ADR-034 Decision 6) has several ordinals, and `partToRow` maps each
-back to its one row. Every part of one feature resolves to the identical result, and the pick
-ceiling (`limits.ts`) counts parts.
+back to its one row. A point row is one part, so for a point open (`ScatterplotLayer`, one datum per
+point) the ordinal is the row and `partToRow` is the identity. Every part of one feature resolves to
+the identical result, and the pick ceiling (`limits.ts`) counts parts, or points for a point open.
 
 Nothing in this cut needs `info.coordinate` for a legitimate reason (navigation, hover, or
 candidate-geometry creation, per ADR-010 rule 2's permitted uses) — cut 1 has no digitizing path and
