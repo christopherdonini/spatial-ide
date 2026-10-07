@@ -507,3 +507,24 @@ Context at 80% of the auto-compaction threshold: flush the continuity block now 
 7. **E13 is recorded,** and it replaces v0's E6 for N1, as §4 says. E14 stays open: the next three automatic compactions after E12, each with its N1 column.
 
 **Superseded index.** Amendment 4, item 10's E13 open → item 7.
+
+### Amendment 6 — E14, the first automatic compaction's row (class 1)
+
+*Class 1, a post-result row, recorded by the custodian on main as §4 and §9, item 5 direct, under the human's typed approval naming E12 to E14 (`state/directives/2026-10-06-pr183-merge-approval.md`; its RULED block in `DECISIONS-PENDING.md`). Times are UTC, read by script from the session transcript (da685a21). Nothing below is a quotation.*
+
+1. **The compaction:** the transcript's compact boundary at 2026-10-07T04:23:27.129Z, trigger `auto`, at 767,353 tokens before compaction, against Amendment 1's threshold of 767,000. It is this session's first boundary.
+2. **The cycle** runs from the session's first entry, 2026-10-06T16:10:45.219Z, to that boundary. There is no earlier boundary in the session, and E12's restart (Amendment 3, item 1) precedes the session's start.
+3. **The N1 column:** four nudges, all in the main loop. Each carried the threshold text, which is the text Amendment 5, item 2 byte-copies, with its own percent.
+
+| Tool result | Percent | Text |
+|---|---|---|
+| 2026-10-06T22:42:23.110Z | 80 | threshold (E13, Amendment 5) |
+| 2026-10-07T00:39:23.576Z | 85 | threshold |
+| 2026-10-07T01:59:36.281Z | 90 | threshold |
+| 2026-10-07T03:12:18.425Z | 97 | threshold (the 95 band) |
+
+   The count is 4. That is one nudge per band from 80 to 95, and no band is shown twice.
+4. **§5's E14 prediction held for this compaction:** at least one nudge preceded it.
+5. **E14 stays open** for the next two automatic compactions.
+
+**Superseded index.** Amendment 5, item 7's E14 open → item 5 (not edited).
