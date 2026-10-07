@@ -100,6 +100,7 @@ async function stepOpen(page) {
   const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_FILTER);
   if (outcome.kind !== "admitted") throw new Error(`OPEN: openPath(filter fixture) returned ${JSON.stringify(outcome)}`);
   await page.waitForSelector(".working-canvas", { timeout: 30_000 });
+  await page.click("#inspector-tab-layer"); // an earlier suite (e2e:style) leaves the Style tab selected
   await page.evaluate(() => {
     window.__layoutE2eCanvas = document.querySelector(".working-canvas");
   });
