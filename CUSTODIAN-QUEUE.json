@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T07:02:06.839Z",
-  "plan_hash": "0756bcda6ab356c41884322397e1f17276a620055c73ffc863b6681c472a90a8",
+  "generated_at": "2026-10-07T10:15:02.649Z",
+  "plan_hash": "862b28c1ac0ac610a98911117ca0228fbde0daaf405034f2ea04c7233cfb0c59",
   "priorities_approved": true,
   "next": {
     "id": "geometry-lines-cut",
@@ -19,7 +19,7 @@
       "opened": "2026-09-22",
       "done": null
     },
-    "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    "summary": "RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-09-22",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+      "summary": "RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
     }
   ],
   "waiting_on_human": {
@@ -1411,6 +1411,25 @@
         "done": null
       },
       "summary": "Recorded 2026-10-07 by geometry-lines-cut's form (engine/GEOMETRY-LINES-PREREGISTRATION.md, section 3, the corpus): no file in engine/compat-corpus/of-record/MANIFEST.json declares a line type, so the lines cut may not claim that any real-world line file opens, and no P4 row waits for it. A corpus addition is its own preregistered piece. Waiting on the human's placement."
+    },
+    {
+      "id": "lines-class-budget-measurement",
+      "title": "Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 under geometry-lines-cut's OPEN-5 (A), ruled in question round 64 (state/directives/2026-10-07-round-63-and-64-rulings.md; engine/GEOMETRY-LINES-PREREGISTRATION.md, Amendment 1, item 5): the lines cut makes no performance claim, and docs/08 defines a Lines class it does not measure. A measurement needs a scale fixture and a harness row, preregistered on its own. Waiting on the human's placement."
     },
     {
       "id": "verify-quotes-dotted-paths",

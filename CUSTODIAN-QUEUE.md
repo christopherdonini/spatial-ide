@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0756bcda6ab356c41884322397e1f17276a620055c73ffc863b6681c472a90a8`) at `2026-10-07T07:02:06.839Z`.
+Generated from `PLAN.yaml` (sha256 `862b28c1ac0ac610a98911117ca0228fbde0daaf405034f2ea04c7233cfb0c59`) at `2026-10-07T10:15:02.649Z`.
 
 ## 1. Next
 
@@ -95,6 +95,7 @@ Generated from `PLAN.yaml` (sha256 `0756bcda6ab356c41884322397e1f17276a620055c73
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
+- **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
 ### Unscheduled

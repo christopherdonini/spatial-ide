@@ -641,3 +641,35 @@ After the merge, B is the merge commit's first parent and H is the merge commit.
   - (A) No: no claim, and the proposed node `lines-class-budget-measurement`. Recommended.
   - (B) Yes.
   - Rule before dispatch.
+
+### Amendment 1 — question rounds 63 and 64's rulings (OPEN-1 to OPEN-5); a row T4 sight (class 7); the proposed node for the Lines class
+
+*Written by the custodian after question rounds 63 and 64 were answered and before any code: no branch exists. It is appended at the file's end, below the OPEN list, and belongs to §10. The rulings are `state/directives/2026-10-07-round-63-and-64-rulings.md`, lines 6 to 12, at the commit that adds it: line 6, sha256 8590d29a4b2a7dffa9581fbf6f9eec4032f9771cfa6e4fb123bd6a80071c0d92; line 7, sha256 445ec63c10bf05fb0024bbc9a0792cbae603153e8164e1e7c7c77b84fb1d44bd; lines 8 to 10, sha256 a40a9a6ebbe696945bd923e704043160f1349ac7f9db192734ccbaddf69f6471; line 11, sha256 1c6a27b603988da223219d3b640d9f2a4f7cdf9f4ba7a2e4d139d19ecc9b9a82; line 12, sha256 39a173334d96baf873a473e061b194183bc6a44c99066a0b760c5bb966702e0a. Their RULED block is in `DECISIONS-PENDING.md` under rounds 63 and 64, referenced and not restated. Each ruling is read by its own OPEN label, as the directive's filing note says. Nothing below is a quotation.*
+
+1. **OPEN-1, (A).** LineString and MultiLineString. The parts marked [OPEN-1] are binding as drafted for (A):
+   - a LineString row under a declared set that includes MultiLineString is read as a one-part MultiLineString;
+   - the sighted refusal's set renders five types;
+   - §7's ceilings stand as declared for (A).
+2. **OPEN-2, (A).** The parts marked [OPEN-2] are binding.
+   - A member outside the readable set keeps the sighted template, with its code unchanged and its set rendering five types.
+   - The mixed-kind detail keeps round 62's draft byte-identical except for the span naming the kinds. That span names the kinds present, in the order polygonal, point, line, joined as the readable set is joined. So a polygonal-and-point set reads exactly as today.
+   - The detail stays a `[P6 placeholder]`, and the human sights it at P6. The PR's ready state no longer waits on OPEN-2.
+3. **OPEN-3, (A), with `LINE_WIDTH_PX` = 2 CSS pixels and the casing.** The parts marked [OPEN-3] are binding. Round 62 item 3's reading of ADR-022 Decision 4 applies unchanged:
+   - the mapping onto the line symbol is rendering plumbing, in the working canvas only;
+   - the style document still says polygon;
+   - **this cut adds no path that saves a line layer's style document.** Saving one needs the human's ruling. §8 item 20 already blocks it on sight;
+   - KNOWN-LIMITATIONS item 37 is as drafted, for the human's P6 sight;
+   - a line geometry and a width in the style document stay with style v2 (B3), as §2 says.
+4. **OPEN-4, (A).** `LINE_PICK_RADIUS_PX` = 4 CSS pixels, for line opens only, set as deck's hover `pickingRadius` and as the settle re-pick's radius. The parts marked [OPEN-4] are binding:
+   - polygon and point opens are unchanged;
+   - the 9 px refusal stays ADR-028 item 4 as written, on the average line extent;
+   - KNOWN-LIMITATIONS item 38 is as drafted, for the human's P6 sight;
+   - row T2 records whether naming the topmost of two crossing lines is acceptable, as drafted.
+5. **OPEN-5, (A).** No measurement and no performance claim. The proposed node `lines-class-budget-measurement` is recorded in this amendment's commit.
+6. **Class 7, a sight-list addition from the OPEN-3 ruling:** row T4 also records whether the casing looks right at the default opacity. The worker writes this into Part T's T4 row, with a blank result line.
+7. **Generation 2.** Dispatch may start, beginning with commit 1. Commit 4 no longer waits, and §8 item 13's conditions on unruled items are met.
+
+**Superseded index.**
+- The OPEN list and every [OPEN-1] to [OPEN-5] mark → items 1 to 5, binding.
+- §9's notes that commit 1 waits on OPEN-1 and OPEN-5, and commit 4 on OPEN-3 and OPEN-4 → item 7.
+- Part T's row T4 → item 6 adds a sight.
