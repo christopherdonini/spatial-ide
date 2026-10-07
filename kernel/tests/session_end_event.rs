@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec};
-use spatial_engine::WatchSignal;
+use spatial_engine::{WatchSignal, MAX_QUEUED_BATCHES};
 use spatial_kernel::skp::{
     session_end_channel, GenerationRegistry, SessionEndReason, SessionInvalidator, SkpHost,
     StreamRegistry, SESSION_END_EVENT_QUEUE_BOUND,
@@ -31,11 +31,15 @@ fn dir() -> PathBuf {
 }
 
 fn fixture(name: &str) -> PathBuf {
+    fixture_with_features(name, 300)
+}
+
+fn fixture_with_features(name: &str, features: usize) -> PathBuf {
     let path = dir().join(format!("{name}.parquet"));
     write_geoparquet(
         &path,
         &FixtureSpec {
-            features: 300,
+            features,
             avg_vertices: 10,
             hole_every: 0,
             ..Default::default()
@@ -145,10 +149,19 @@ fn a_pre_check_end_emits_once_and_refuses_its_call() {
 /// (`typed_terminal_codes.rs`'s own precedent) — "clean" in the sense that nothing about the read
 /// itself failed.
 ///
-/// RECORDED MUTATION: same as E1.
+/// **Ordering.** The producer is spawned inside `viewport_query` and its queue holds
+/// `MAX_QUEUED_BATCHES` batches, each sent blocking. With more batches than that, it waits on a
+/// send until the first `next_into`, which comes after the touch, and its post-check runs only
+/// after its last send. The 5,000-feature fixture gives that many batches, and the batch-count
+/// assertion states the condition.
+///
+/// RECORDED MUTATION: same as E1; and change this test's `5_000` to `300` (at most two batches).
+/// Observed over `92884cc4` on the uncommitted tree of the commit that adds this line: FAILED at
+/// the batch-count assertion ("the ordering argument needs more than MAX_QUEUED_BATCHES batches;
+/// got 1"), then reverted.
 #[test]
 fn a_post_check_end_on_a_clean_terminal_emits_once() {
-    let path = fixture("e2");
+    let path = fixture_with_features("e2", 5_000);
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(
         Arc::new(Catalog::new()),
@@ -174,13 +187,19 @@ fn a_post_check_end_on_a_clean_terminal_emits_once() {
 
     let mut buf = Vec::new();
     let mut terminal = None;
+    let mut batches = 0usize;
     while let Some(item) = source.next_into(&mut buf) {
         if let Err(detail) = item {
             terminal = Some(detail);
             break;
         }
+        batches += 1;
         buf.clear();
     }
+    assert!(
+        batches > MAX_QUEUED_BATCHES,
+        "the ordering argument needs more than MAX_QUEUED_BATCHES batches; got {batches}"
+    );
     let detail = terminal.expect("the changed source ends this stream with a typed refusal");
     assert!(detail.starts_with("engine.source_changed: "), "{detail}");
 
@@ -201,10 +220,19 @@ fn a_post_check_end_on_a_clean_terminal_emits_once() {
 /// cancelled one, which keeps its own `cancelled` terminal while the change still ends the
 /// session").
 ///
-/// RECORDED MUTATION: same as E1.
+/// **Ordering.** The 20,000-feature fixture gives at least `MAX_QUEUED_BATCHES + 2` batches, so
+/// the producer waits on a send that is not its last until the first `next_into`, which comes
+/// after the touch and the cancel. Every later path to the producer's return passes a cancel
+/// check, so the terminal is the cancellation and the post-check, which runs after the touch,
+/// still records the change.
+///
+/// RECORDED MUTATION: same as E1; and move `cancel.cancel()` after the drain loop. Observed over
+/// `92884cc4` on the uncommitted tree of the commit that adds this line: FAILED at "cancellation
+/// keeps its own terminal" with the terminal `engine.source_changed: refused: ...`, then
+/// reverted.
 #[test]
 fn a_post_check_end_on_an_error_terminal_emits_once() {
-    let path = fixture("e3");
+    let path = fixture_with_features("e3", 20_000);
     let (tx, rx) = session_end_channel();
     let host = SkpHost::new(
         Arc::new(Catalog::new()),
