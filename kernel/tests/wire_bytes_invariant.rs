@@ -369,7 +369,8 @@ async fn collect_frames_via_ticket(path: &std::path::Path) -> Vec<Frame> {
 // `attribute_columns` metadata insert behind `if crate::trace::is_enabled() { .. }`. Observed:
 // this test fails by name -- "frame 1 (tag 16) differs between the traced and untraced projected
 // runs — the projected schema metadata (`attribute_columns`) must ride the wire identically either
-// way" at `kernel/tests/wire_bytes_invariant.rs:350`. Reverted.
+// way". Re-observed at 99f4c437e81ad3286a9f388ea466e3f76d322556: mutation applied, this test run
+// alone by name, failure recorded, mutation reverted.
 #[tokio::test(flavor = "multi_thread")]
 async fn wire_bytes_invariant_holds_for_the_projected_ticket_path_case_too() {
     let path = projected_fixture();
