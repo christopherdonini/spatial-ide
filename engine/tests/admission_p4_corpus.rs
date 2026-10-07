@@ -170,8 +170,8 @@ fn main_set_rows() -> Vec<RowSpec> {
             id: "#2",
             suffix: "geopandas/gp-nocrs-nokey.parquet",
             pipeline: "GeoPandas / pyarrow",
-            citation: "ADMISSION-PREREGISTRATION.md §3 row 2",
-            prediction: Prediction::RefusedByName("engine.geo_metadata"),
+            citation: "GEOMETRY-POINTS-PREREGISTRATION.md §3 row C-2",
+            prediction: Prediction::RefusedByName("engine.crs_undeclared"),
             expect_sanity_reason_contains: None,
             registered_sanity_level: None,
             registered_declared_axis_order: None,
@@ -192,10 +192,10 @@ fn main_set_rows() -> Vec<RowSpec> {
             id: "#4",
             suffix: "duckdb-spatial/duckdb-lv95range-intkey.parquet",
             pipeline: "DuckDB spatial",
-            citation: "ADMISSION-PREREGISTRATION.md §3 row 4",
-            prediction: Prediction::RefusedByName("engine.geo_metadata"),
+            citation: "GEOMETRY-POINTS-PREREGISTRATION.md §3 row C-4",
+            prediction: Prediction::RefusedByName("engine.format_default_contradicted"),
             expect_sanity_reason_contains: None,
-            registered_sanity_level: None,
+            registered_sanity_level: Some("metadata"),
             registered_declared_axis_order: None,
             unrun_boundary8_reason: None,
         },
@@ -203,12 +203,12 @@ fn main_set_rows() -> Vec<RowSpec> {
             id: "#5",
             suffix: "duckdb-spatial/duckdb-degreesrange-nokey.parquet",
             pipeline: "DuckDB spatial",
-            citation: "ADMISSION-PREREGISTRATION.md §3 row 5",
-            prediction: Prediction::RefusedByName("engine.geo_metadata"),
+            citation: "GEOMETRY-POINTS-PREREGISTRATION.md §3 row C-5",
+            prediction: Prediction::AdmittedUnderFormatRule("crs:format-default"),
             expect_sanity_reason_contains: None,
-            registered_sanity_level: None,
+            registered_sanity_level: Some("metadata"),
             registered_declared_axis_order: None,
-            unrun_boundary8_reason: None,
+            unrun_boundary8_reason: Some("a single Dataset::open cannot reach a publish preflight"),
         },
         RowSpec {
             id: "#6",
@@ -1057,11 +1057,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         .filter(|r| r.main_set && r.refusal_code.as_deref() == Some("engine.geo_metadata"))
         .map(|r| r.spec_id)
         .collect();
-    // MULTIPOLYGON-MP1-PREREGISTRATION.md §5 P-1 and Amendment 2 item 1: the three Point files only.
-    // #11 and #12 declare mixed Polygon and MultiPolygon columns, which the readable set now admits
-    // at the geometry gate; #12's observed refusal is at identity admission, and is not a
-    // `engine.geo_metadata` refusal.
-    let p1_expected: Vec<&str> = vec!["#2", "#4", "#5"];
+    // GEOMETRY-POINTS-PREREGISTRATION.md §5 PP-2: the re-run's P1 set is empty. Point is in the
+    // readable set from that cut's merge, so #2, #4 and #5 are no longer geometry-gate refusals
+    // (MULTIPOLYGON-MP1-PREREGISTRATION.md §5 P-1 named the three Point files before it).
+    let p1_expected: Vec<&str> = Vec::new();
     let p1_status = if p1_refusals == p1_expected {
         "borne out"
     } else {
@@ -1075,7 +1074,10 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
         })
         .map(|r| r.spec_id)
         .collect();
-    let p2_status = if p2_rows == vec!["#6"] {
+    // GEOMETRY-POINTS-PREREGISTRATION.md §5 PP-2: P2 is #4 and #6 (#4 is now read as a Point file
+    // and meets the format rule's contradiction).
+    let p2_expected: Vec<&str> = vec!["#4", "#6"];
+    let p2_status = if p2_rows == p2_expected {
         "borne out"
     } else {
         "not borne out"
@@ -1097,8 +1099,8 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     let p3_status = if p3_rows == vec!["#3"] {
         "borne out (primary-provenance precedence applied: a row whose crs_provenance is \
          crs:format-default is counted under prediction 2, not here, even where its \
-         axis_provenance is also axis:format-override — #8 is excluded from this count on that \
-         precedence)"
+         axis_provenance is also axis:format-override — #5 and #8 are excluded from this count on \
+         that precedence)"
     } else {
         "not borne out (primary-provenance precedence applied: a row whose crs_provenance is \
          crs:format-default is counted under prediction 2, not here, even where its \
@@ -1162,12 +1164,12 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
          something a fixed corpus of this size samples"
     );
 
-    // B1(b): a component of §3's own per-row cells (rows #3 and #8, and row #12 under C-12), not one
+    // B1(b): a component of §3's own per-row cells (rows #3, #5 and #8, and row #12 under C-12), not one
     // of §5's six registered predictions — recorded here by name because it is a registered element
     // this instrument does not reach (§8's `unrun — reason` rule).
     let p_boundary8_status = "unrun — a single Dataset::open cannot reach a publish preflight; \
-         §3's boundary-8 publish-preflight refusal and equirectangular statement for rows #3, #8 \
-         and #12 (C-12) are not reached by this instrument (see each row's own note, above)";
+         §3's boundary-8 publish-preflight refusal and equirectangular statement for rows #3, #5, \
+         #8 and #12 (C-12) are not reached by this instrument (see each row's own note, above)";
 
     // ---- Write the GENERATED admission table --------------------------------------------------
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -1254,17 +1256,25 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(out).unwrap();
     writeln!(out, "| # | status |").unwrap();
     writeln!(out, "|---|---|").unwrap();
+    let or_none = |names: &[&str]| {
+        if names.is_empty() {
+            "none".to_string()
+        } else {
+            names.join(", ")
+        }
+    };
     writeln!(
         out,
-        "| 1 | {p1_status} — polygon-gate refusals (main set, engine.geo_metadata): {} (§5 names: {}) |",
-        p1_refusals.join(", "),
-        p1_expected.join(", "),
+        "| 1 | {p1_status} — geometry-gate refusals (main set, engine.geo_metadata): {} (GEOMETRY-POINTS-PREREGISTRATION.md §5 PP-2 names: {}) |",
+        or_none(&p1_refusals),
+        or_none(&p1_expected),
     )
     .unwrap();
     writeln!(
         out,
-        "| 2 | {p2_status} — engine.format_default_contradicted rows (main set): {} (§5 names: #6) |",
-        p2_rows.join(", "),
+        "| 2 | {p2_status} — engine.format_default_contradicted rows (main set): {} (GEOMETRY-POINTS-PREREGISTRATION.md §5 PP-2 names: {}) |",
+        or_none(&p2_rows),
+        or_none(&p2_expected),
     )
     .unwrap();
     writeln!(
@@ -1287,7 +1297,7 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     writeln!(out, "| 6 | {p6_status} |").unwrap();
     writeln!(
         out,
-        "| §3 rows #3, #8, #12 (boundary-8) | {p_boundary8_status} |"
+        "| §3 rows #3, #5, #8, #12 (boundary-8) | {p_boundary8_status} |"
     )
     .unwrap();
 

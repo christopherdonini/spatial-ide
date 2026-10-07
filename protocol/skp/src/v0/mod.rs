@@ -92,4 +92,10 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// command, request member or error code; `protocol/data-plane/` has an empty diff. Same discipline
 /// again: `deny_unknown_fields` both directions, `==` unchanged, both sides' fixtures updated in
 /// the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.9` entry).
-pub const SKP_VERSION: &str = "skp/0.9";
+///
+/// `skp/0.10` (Point admission, ADR-034, `engine/GEOMETRY-POINTS-PREREGISTRATION.md`, node
+/// `geometry-points-cut`): `describe`'s `geometry.encoding` gains a third value, `geoarrow.point`.
+/// No new member, command, request member or error code; `protocol/data-plane/` has an empty diff.
+/// Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, both sides'
+/// fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.10` entry).
+pub const SKP_VERSION: &str = "skp/0.10";

@@ -3159,6 +3159,84 @@ mod tests {
             assert_eq!(real_keys, fixture_keys, "{name}: the geometry key set");
         }
     }
+
+    /// **K-P1 (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §4; ADR-034 Decision 3).** The real
+    /// `describe` response of a real open of P-1 (`["Point"]`, six LV95 point rows) carries the
+    /// engine's encoding `geoarrow.point` beside the file's declaration `["Point"]`, and the
+    /// `geometry` key set equals the shared fixture's: the third value adds no member to the wire.
+    ///
+    /// RECORDED MUTATION: in `GeometryEncoding::as_str`, return `EXT_NAME_POLYGON` for `Point`.
+    /// `describe_dataset` then reports `geoarrow.polygon` for the point open and this test fails by
+    /// name at `describe.encoding`.
+    ///
+    /// Observed over `b4a6fd9d` (the engine commit) on the uncommitted tree of the kernel commit:
+    /// `the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set` FAILED with the
+    /// mutation applied, at `describe.encoding` (left `geoarrow.polygon`, right `geoarrow.point`),
+    /// then reverted.
+    #[test]
+    fn the_real_describe_of_a_point_open_is_geoarrow_point_with_the_shared_key_set() {
+        use spatial_engine::fixture::{
+            point_p1_rows, write_geoparquet, DeclaredTypes, FixtureSpec, GeometryMode, E_LO, N_LO,
+        };
+
+        let dir = std::env::temp_dir().join("spatial-kernel-skp-describe-point");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("fixture dir");
+        let path = dir.join("p1.parquet");
+        write_geoparquet(
+            &path,
+            &FixtureSpec {
+                geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+                with_covering_bbox: false,
+                declared_types: DeclaredTypes::Json(r#"["Point"]"#.to_string()),
+                ..Default::default()
+            },
+        )
+        .expect("write fixture");
+
+        let host = SkpHost::new(
+            Arc::new(Catalog::new()),
+            StreamRegistry::new(),
+            no_watch_arm(),
+            discard_session_end_events(),
+        );
+        let open = host
+            .open_dataset(OpenDatasetRequest {
+                skp: SKP_VERSION.to_string(),
+                path: path.display().to_string(),
+                cancel_key: "describe-point".to_string(),
+                crs_assertion: None,
+                identity: None,
+            })
+            .expect("open");
+        let describe = host
+            .describe(DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: open.dataset,
+            })
+            .expect("describe");
+        assert_eq!(describe.geometry.encoding, "geoarrow.point");
+        assert_eq!(
+            describe.geometry.declared_types,
+            Some(vec!["Point".to_string()])
+        );
+
+        let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("workspace root")
+            .join("protocol/skp/tests/data/v0-describe-response.json");
+        let fixture_json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+                .expect("shared fixture is valid JSON");
+        let keys = |v: &serde_json::Value| -> std::collections::BTreeSet<String> {
+            v.as_object().unwrap().keys().cloned().collect()
+        };
+        assert_eq!(
+            keys(&serde_json::to_value(&describe.geometry).unwrap()),
+            keys(&fixture_json["geometry"]),
+            "the geometry key set"
+        );
+    }
 }
 
 /// **DECISIONS-PENDING.md entry 132 — a `Pending` ticket's `EngineSource` dropped under

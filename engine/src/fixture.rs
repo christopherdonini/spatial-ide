@@ -505,6 +505,12 @@ pub enum GeometryMode {
     /// no covering `bbox`, so `with_covering_bbox` must be `false`, and the facts that describe the
     /// generated geometry (`vertices`, `rings`, `extent` and the rest) are not computed.
     Rows(Vec<Vec<u8>>),
+    /// These WKB rows with the covering bounds each declares, `[xmin, ymin, xmax, ymax]`, so a
+    /// fixture can carry a covering (points-cut preregistration §2, E-P9). Otherwise as
+    /// [`GeometryMode::Rows`]: the rows are written verbatim, [`FixtureSpec::features`] is ignored,
+    /// and the facts that describe generated geometry are not computed. The bounds are written as
+    /// given; they are not checked against the rows.
+    RowsWithBounds(Vec<(Vec<u8>, [f64; 4])>),
 }
 
 /// What a fixture's `geo` metadata declares for the column's `geometry_types`.
@@ -994,6 +1000,7 @@ fn generate(
     let total = match &spec.geometry {
         GeometryMode::Polygon => spec.features,
         GeometryMode::Rows(rows) => rows.len(),
+        GeometryMode::RowsWithBounds(rows) => rows.len(),
     };
     let mut written = 0usize;
     let mut chunk_index = 0usize;
@@ -1042,6 +1049,7 @@ fn generate(
             // nothing about itself: its bounds are never read (no covering is written for it).
             let (wkb, [xmin, ymin, xmax, ymax]) = match &spec.geometry {
                 GeometryMode::Rows(rows) => (rows[written + i].clone(), [0.0; 4]),
+                GeometryMode::RowsWithBounds(rows) => rows[written + i].clone(),
                 GeometryMode::Polygon => {
                     let rings = parcel(&mut rng, spec, id);
 
@@ -1272,6 +1280,47 @@ pub fn encode_multipolygon(parts: &[Vec<Vec<[f64; 2]>>]) -> Vec<u8> {
         out.extend_from_slice(&encode_polygon(part));
     }
     out
+}
+
+/// Little-endian ISO WKB for a Point: type 1, then x and y (points-cut preregistration §2, E-P9;
+/// test support, like [`crate::wkb::encode_polygon`]). A test that needs a hostile row builds its
+/// bytes by hand.
+pub fn encode_point(x: f64, y: f64) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&1u32.to_le_bytes());
+    out.extend_from_slice(&x.to_le_bytes());
+    out.extend_from_slice(&y.to_le_bytes());
+    out
+}
+
+/// §3's fixture P-1 as positions: six points laid out from `origin` in steps of `unit`, each with a
+/// fraction in its low bits that an `f32` narrowing or a swapped axis changes, and no two alike.
+pub fn point_p1(origin: [f64; 2], unit: f64) -> Vec<[f64; 2]> {
+    let [ox, oy] = origin;
+    (0..6u32)
+        .map(|k| {
+            let (i, j) = (f64::from(k % 3), f64::from(k / 3));
+            let frac = f64::from(k + 1) * 0.123_456_789;
+            [ox + i * unit + frac, oy + j * unit + 1.0 - frac]
+        })
+        .collect()
+}
+
+/// [`point_p1`] as WKB rows, each a type-1 Point.
+pub fn point_p1_rows(origin: [f64; 2], unit: f64) -> Vec<Vec<u8>> {
+    point_p1(origin, unit)
+        .iter()
+        .map(|p| encode_point(p[0], p[1]))
+        .collect()
+}
+
+/// [`point_p1`] as WKB rows with the covering each declares, a point's own bounds, for
+/// [`GeometryMode::RowsWithBounds`].
+pub fn point_p1_rows_with_bounds(origin: [f64; 2], unit: f64) -> Vec<(Vec<u8>, [f64; 4])> {
+    point_p1(origin, unit)
+        .iter()
+        .map(|p| (encode_point(p[0], p[1]), [p[0], p[1], p[0], p[1]]))
+        .collect()
 }
 
 /// A closed square ring of side `s` with its lower-left corner at `(x, y)`.
