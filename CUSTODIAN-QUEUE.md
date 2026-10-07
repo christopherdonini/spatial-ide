@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `58f27d9c12ab835e4763865acde08c99b25f226a50c33716b788a6ae8d6a713c`) at `2026-10-07T20:31:28.748Z`.
+Generated from `PLAN.yaml` (sha256 `f058e507340247f09d73e5566cc9e9895dba07abe2ed459cb5c6bf6fc053e6c6`) at `2026-10-07T20:47:26.855Z`.
 
 ## 1. Next
 
@@ -30,7 +30,6 @@ Generated from `PLAN.yaml` (sha256 `58f27d9c12ab835e4763865acde08c99b25f226a50c3
 ## 5. In progress
 
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
-- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source — evidence: branch `cut/typed-terminal-codes-post-check-race`
 
 ## 6. Proposed / unscheduled
 

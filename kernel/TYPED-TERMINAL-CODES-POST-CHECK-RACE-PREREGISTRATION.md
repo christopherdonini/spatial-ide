@@ -195,3 +195,34 @@ All assertions are structural: the batch count, the terminal's code, and the eve
 4. **Generation 2.** Dispatch may start. Its heavy runs go one at a time with the lines cut's.
 
 **Superseded index.** §2's condition on Part B, and §8 item 9 → item 2. §8 item 2's mention of OPEN-1 → item 1 (not edited).
+
+### Amendment 2 — the closing record (class 1)
+
+*Written by the custodian after the outcomes were seen. PR #187 merged at 2026-10-07T20:46:26Z as merge commit 0b624143f138e8b5e73817efac4e26f4d851d126, with parents ed8b89380e4a8704690f683a87ed5b0d04875e66 and 1f5eef496b3b306a3daf8de00a885c546222fff0. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #187, at the merge commit above;
+   - both gates' reviewed head, 0c94dcb033b8b5f3b961329a7525ab1484ffd297;
+   - the merged head, 1f5eef49. Over the reviewed head it adds three merges of main (61e00e8f, 050b5f3b and 1f5eef49), records only, under the awaiting-merge direction's item 4 and question round 68.
+   - CI was green at the merged head. Attempt 1 at 050b5f3b failed on ubuntu in a test this PR does not touch (item 6).
+2. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-07-typed-terminal-codes-post-check-race-gate1-architect.md`, pass with notes, gate-log 431, sha256 686597771e571687696cc361d6404c99953c71f3a38b721bfb7ad7b2e516af14, added in 5924956c;
+   - `2026-10-07-typed-terminal-codes-post-check-race-gate1-reviewer.md`, pass, gate-log 432, sha256 852b7f24551acbc5fcc64e8cbd51de79d310ade886eeb1643de2593d06fb35d8, added in 04c4849a.
+3. **The worker report:** `state/consults/2026-10-07-typed-terminal-codes-post-check-race-worker-report-1.md`, whole-file sha256 d57afb893a13518c3f7ffcb49cee16a8282b8ae5f2879aa2391d5dbe60c96f08, added in 10f400af. Its line saying no changed test has a timeout is superseded by the PR body's Timing line (the architect's D-1).
+4. **The changed files at the merge commit:**
+   - `kernel/tests/typed_terminal_codes.rs`, sha256 0ca767b908a4ca1a0e24e9e1b006cb5b92efa56eda3a3f3508caae93b3e8fec6 (Part A, 150ea7d7);
+   - `kernel/tests/session_end_event.rs`, sha256 3d452bc7e84bab42fcc8a3cba922913f2c9fde5f36521d1c7b42a7b1afc545ae (Part B, 0c94dcb0).
+
+   **The mutations:** M-0, M-1, M-2, M-B2 and M-B3 were observed over 92884cc4, as the tests' comments record. The reviewer re-made each at 0c94dcb0. **The predictions:** P-1 and P-3 each passed 20 of 20, from both the worker and the reviewer.
+5. **§7:** 92 changed lines over 2 files (Part A 52 against 80; Part B 40 against 70).
+6. **The sibling F-1 seen in CI:** attempt 1 at 050b5f3b failed in `skp::ticket_drop_under_lock_regression::a_pending_ticket_retired_by_sweep_emits_once_and_does_not_hang`, at the guard of the `kernel/src/skp.rs` helper that §0.4 routes out. The log is `state/consults/2026-10-07-pr187-ci-run-37675645746-attempt-1-failed-steps.txt`, sha256 3ce416ed79f3a6deda62c39f364760f877847b4ccb2917b3a98996b12550b052. Its node is `skp-drained-stream-helper-post-check-race`, which waits for the lines cut.
+7. **D-2, the round-65 ruling pinned by rev:** `state/directives/2026-10-07-round-65-rulings.md:6 @ 92884cc4 sha256:83a8126f41aaca3f660c2e92f102d138c83bc88860d6704e3db98dadf5b79f73`.
+8. **Still owed:** this form's line in `kernel/README.md`'s list of the module's preregistrations, after the lines cut merges (Amendment 1, item 1).
+9. **Routed:**
+   - N-1: E3's doc credits a quoted comment to `kernel/src/lib.rs`, but the text is in `kernel/src/skp.rs`;
+   - the worker's noticed item: older comments still describe M-0's restore as a `Some(Err(e.to_string()))` shape.
+
+   Both go to the next piece that edits these test files. N-2's carve-outs stand.
+10. **Done:** PLAN marks the node done, with evidence `{pr: 187}`, at generation 3, in this amendment's commit.
+
+**Superseded index.** Amendment 1, the round-65 pin's rev → item 7. Not edited.
