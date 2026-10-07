@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a227410a5eb52f0c4522e9ce711a96ff7836f50966a2c9029f8f7190bf429047`) at `2026-10-07T17:46:47.597Z`.
+Generated from `PLAN.yaml` (sha256 `e47ba3917786770df190f8dd5dc88930b97959500f66f154d7a6e0cf2ad0baae`) at `2026-10-07T18:01:13.752Z`.
 
 ## 1. Next
 
@@ -95,6 +95,8 @@ Generated from `PLAN.yaml` (sha256 `a227410a5eb52f0c4522e9ce711a96ff7836f50966a2
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
 - **lines-class-budget-measurement** — Measure docs/08's Lines class (1M features / 10M vertices) for the working canvas, once lines are drawn (phase `prototype`) — never queued until placed
+- **skp-drained-stream-helper-post-check-race** — kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test (phase `prototype`) — never queued until placed
+- **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
 ### Unscheduled
