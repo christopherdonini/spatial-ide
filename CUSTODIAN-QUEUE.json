@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T10:20:20.085Z",
-  "plan_hash": "da76b966f1188b7a5bbc2924ceaa95b4ec75b7df824426c609e7c3f4da5b6bd8",
+  "generated_at": "2026-10-07T16:12:28.083Z",
+  "plan_hash": "e807c3596ad9f28f16d73651e4fecc662d319e711c5516775a00d2278abfd7ff",
   "priorities_approved": true,
   "next": null,
   "ready": [],
@@ -73,7 +73,7 @@
         "opened": "2026-09-26",
         "done": null
       },
-      "summary": "SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
+      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
       "blocked_by": [
         "kernel-close-races-followups"
       ]

@@ -2666,13 +2666,14 @@ nodes:
     order: 14
     depends_on: [kernel-close-races-followups]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: protocol/data-plane/CROWDED-START-DETAIL-SPACES-PREREGISTRATION.md
+    merge: merge-commit
     evidence: null
     budget_minutes: 20
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
+    summary: "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
     dates: {opened: 2026-09-26, done: null}
 
   - id: engine-cancel-before-execute-siblings
