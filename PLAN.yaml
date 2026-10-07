@@ -2300,18 +2300,18 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: ready
+    status: in-progress
     order: 16
     depends_on: [geometry-types-beyond-polygons, geometry-points-cut]
     needs_human: {kind: none, minutes: 0}
     gate: engine/GEOMETRY-LINES-PREREGISTRATION.md
     merge: merge-commit
-    evidence: null
+    evidence: {branch: cut/geometry-lines-cut}
     budget_minutes: 0
     generation: 2
     felt_verdict: false
     entries: [110]
-    summary: "RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    summary: "IN CODE 2026-10-07: branch cut/geometry-lines-cut from 6f4cc949, worktree C:/dev/wt/lines, target D:/wt-targets/lines; phase A (commits 1 to 3) by worker-high. Before: RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
     dates: {opened: 2026-09-22, done: null}
 
   - id: kernel-generation-close-races

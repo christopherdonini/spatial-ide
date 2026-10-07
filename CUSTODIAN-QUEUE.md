@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `862b28c1ac0ac610a98911117ca0228fbde0daaf405034f2ea04c7233cfb0c59`) at `2026-10-07T10:15:02.649Z`.
+Generated from `PLAN.yaml` (sha256 `da76b966f1188b7a5bbc2924ceaa95b4ec75b7df824426c609e7c3f4da5b6bd8`) at `2026-10-07T10:20:20.085Z`.
 
 ## 1. Next
 
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (lane `engine`)
+- (nothing ready)
 
 ## 2. Ready
 
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (lane `engine`, order 16, budget 0 min)
+- (none)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -28,6 +28,7 @@ Generated from `PLAN.yaml` (sha256 `862b28c1ac0ac610a98911117ca0228fbde0daaf4050
 
 ## 5. In progress
 
+- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — evidence: branch `cut/kernel-close-races-followups`
 
 ## 6. Proposed / unscheduled
