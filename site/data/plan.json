@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T19:54:32.464Z",
-  "plan_hash": "11b81c5c7be7358cfe2e29f40d75d01c502d71722f27a1ceb3d3152c59ab6505",
+  "generated_at": "2026-10-07T20:00:30.780Z",
+  "plan_hash": "14154d1187f4c8731c55e2bace3a04e6ea625154d0c38baeac43e16a4e56490a",
   "priorities_approved": true,
   "lanes": [
     {
@@ -5070,13 +5070,14 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "frontends/shell/SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md",
+      "merge": "merge-commit",
       "evidence": null,
       "budget_minutes": 0,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
+      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged.",
       "dates": {
         "opened": "2026-10-05",
         "done": null
