@@ -2285,16 +2285,15 @@ async function stepRefusal(page, stepId, fixturePath, expectedCode, expectedMess
       throw new Error(`${stepId}: candidate list missing "${candidate}". Actual: ${JSON.stringify(form.candidates)}`);
     }
   }
-  // The "No summary" half of the walkthrough's own claim (B2/C2): `AdmissionPanel`'s local `state`
-  // is replaced wholesale on a refusal (`state.kind === "admitted"` is what gates rendering
-  // `DescribeSummary`), so `.describe-summary` must be gone the instant a refusal lands -- assertable
-  // regardless of whether a *previous* admission had shown one. The "no canvas change" half is not
-  // asserted here; see `MANUAL-WALKTHROUGH.md`'s own coverage table for that named gap.
-  const summaryPresent = await page.evaluate(() => document.querySelector(".describe-summary") !== null);
-  if (summaryPresent) throw new Error(`${stepId}: .describe-summary still present after a refusal`);
+  // The "No summary" half of the walkthrough's own claim (B2/C2), re-aimed by milestone 1 (OPEN-1 (A)):
+  // `App` renders `DescribeSummary` from the dataset on the map, in the Inspector, so a previous
+  // admission's summary stands across a refusal. A refusal must still show no summary in the Layers
+  // region, where it is drawn. The "no canvas change" half is not asserted; see the coverage table.
+  const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
+  if (summaryPresent) throw new Error(`${stepId}: .describe-summary present in the Layers region after a refusal`);
   return `refused ${expectedCode}; message verbatim; ${formSelector} present${
     expectedCandidates?.length ? ` (candidates include ${expectedCandidates.join(", ")})` : ""
-  }; no dismiss button on the panel; no describe-summary`;
+  }; no dismiss button on the panel; no describe-summary in the Layers region`;
 }
 
 /**
@@ -2346,8 +2345,8 @@ async function stepAbsentCrs(page) {
     crsForm: document.querySelector(".crs-assertion-form") !== null,
     identityForm: document.querySelector(".identity-declaration-form") !== null,
   }));
-  const summaryPresent = await page.evaluate(() => document.querySelector(".describe-summary") !== null);
-  if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary still present after a refusal");
+  const summaryPresent = await page.evaluate(() => document.querySelector(".admission-panel .describe-summary") !== null);
+  if (summaryPresent) throw new Error("ABSENTCRS': .describe-summary present in the Layers region after a refusal");
   return `refused engine.format_default_contradicted; message verbatim; no dismiss button on the panel; no describe-summary; INFO: .crs-assertion-form present=${formInfo.crsForm}, .identity-declaration-form present=${formInfo.identityForm} (not asserted either way)`;
 }
 
