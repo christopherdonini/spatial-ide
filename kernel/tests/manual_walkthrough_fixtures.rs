@@ -291,10 +291,11 @@ fn generate_the_point_pile_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// The LineString-declared file for Part P's wording step (P7): LV95, `geometry_types` declares
-/// `["LineString"]`, and the open is refused with the sighted `engine.geo_metadata` template, whose
-/// readable-set clause renders Polygon, MultiPolygon and Point. The rows are P-1's points: the
-/// refusal is at the declaration and never reaches a row.
+/// The LineString-declared file of L-9, for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3): LV95, `geometry_types` declares `["LineString"]`. Since the lines cut the open is
+/// admitted, as `geoarrow.linestring`, and the stream stops at row 0 with `engine.wkb`, because the
+/// rows are P-1's points (WKB type 1) and a linestring open reads WKB type 2 only. (Before the lines
+/// cut the open was refused with the sighted `engine.geo_metadata` template.)
 #[test]
 #[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
 fn generate_the_declared_linestring_fixture() {
@@ -332,6 +333,105 @@ fn generate_the_declared_polygon_and_point_fixture() {
         },
     )
     .expect("write the declared-Polygon-and-Point fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The lines file for the shell E2E's LN' step and Part T's T1, T2 and T4
+/// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture L-1 with its covering; ADR-034):
+/// LV95, declared `["LineString"]`, five LineString rows from `spatial_engine::fixture::line_l1_rows_with_bounds`,
+/// rows 1 and 3 crossing, **with a covering**, so a viewport query reaches the canvas (a file with
+/// no covering meets `engine.no_covering_bbox` there). Admitted as `geoarrow.linestring`;
+/// publishing it is refused by name (ADR-034 Decision 10).
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_line_l1_fixture() {
+    use spatial_engine::fixture::{
+        line_l1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("line-l1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(line_l1_rows_with_bounds([E_LO, N_LO], 10.0)),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the line L-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The multilinestring file for the shell E2E's LN' step and Part T's T3
+/// (`engine/GEOMETRY-LINES-PREREGISTRATION.md` section 3, fixture ML-1 with its covering): LV95,
+/// declared `["MultiLineString"]`, three rows of 2, 1 and 3 parts from
+/// `spatial_engine::fixture::multilinestring_ml1_rows_with_bounds`, **with a covering**. Admitted as
+/// `geoarrow.multilinestring`; publishing it is refused by name.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_multilinestring_ml1_fixture() {
+    use spatial_engine::fixture::{
+        multilinestring_ml1_rows_with_bounds, DeclaredTypes, GeometryMode, E_LO, N_LO,
+    };
+    let path = dir().join("multilinestring-ml1.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::RowsWithBounds(multilinestring_ml1_rows_with_bounds(
+                [E_LO, N_LO],
+                10.0,
+            )),
+            with_covering_bbox: true,
+            declared_types: DeclaredTypes::Json(r#"["MultiLineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the multilinestring ML-1 fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The GeometryCollection-declared file for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3, L-6): LV95, `geometry_types` declares `["GeometryCollection"]`, and the open is
+/// refused as `engine.geo_metadata` with the sighted template, whose readable-set clause renders
+/// five types. The rows are P-1's points: the refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_geometrycollection_fixture() {
+    use spatial_engine::fixture::{point_p1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-geometrycollection.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(point_p1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["GeometryCollection"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-GeometryCollection fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
+/// The Polygon-and-LineString file for Part T's T6 (`engine/GEOMETRY-LINES-PREREGISTRATION.md`
+/// section 3, L-3): LV95, `geometry_types` declares `["Polygon", "LineString"]`, and the open is
+/// refused as `engine.geo_metadata` with the mixed-kinds `[P6 placeholder]` detail, its span naming
+/// the kinds present (polygonal and line; question round 63, OPEN-2). The rows are L-1's lines: the
+/// refusal is at the declaration and never reaches a row.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_declared_polygon_and_linestring_fixture() {
+    use spatial_engine::fixture::{line_l1_rows, DeclaredTypes, GeometryMode, E_LO, N_LO};
+    let path = dir().join("declared-polygon-and-linestring.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            geometry: GeometryMode::Rows(line_l1_rows([E_LO, N_LO], 10.0)),
+            with_covering_bbox: false,
+            declared_types: DeclaredTypes::Json(r#"["Polygon","LineString"]"#.to_string()),
+            ..Default::default()
+        },
+    )
+    .expect("write the declared-Polygon-and-LineString fixture");
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
