@@ -226,3 +226,12 @@ All assertions are structural: the batch count, the terminal's code, and the eve
 10. **Done:** PLAN marks the node done, with evidence `{pr: 187}`, at generation 3, in this amendment's commit.
 
 **Superseded index.** Amendment 1, the round-65 pin's rev → item 7. Not edited.
+
+### Amendment 3 — the kernel index line (class 1)
+
+*Written by the custodian after the lines cut merged (PR #188, merge commit e888787eeec1e5ce63adf56a9aff1b087951e889). References only. Nothing below is a quotation.*
+
+1. **Amendment 2, item 8 is discharged:** this form's path joins the list of the module's preregistrations in `kernel/README.md`, last in that list, in this amendment's commit. No other line of the README changes.
+2. **Generation 4.**
+
+**Superseded index.** Amendment 2, item 8's owed line → item 1. Not edited.

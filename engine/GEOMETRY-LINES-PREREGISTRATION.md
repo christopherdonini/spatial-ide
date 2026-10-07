@@ -721,3 +721,45 @@ After the merge, B is the merge commit's first parent and H is the merge commit.
 9. **Generation 4.**
 
 **Superseded index.** SH-L2's casing ends → item 2. §2's Operator LN' paragraph → item 3 adds one fixture-existence line. Part T's T6(c) → item 5. None is edited.
+
+### Amendment 4 — the closing record (class 1, with class 8 for the engine groups)
+
+*Written by the custodian after the outcomes were seen. PR #188 merged at 2026-10-07T22:19:35Z as merge commit e888787eeec1e5ce63adf56a9aff1b087951e889, with parents aa00e565f61f5633170b0efdd723448121d9d6f5 and c3acb40b095784738d4b77e1eededa77963f7dae. It follows §9's closing-record list and routes the gates' record items. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #188, at the merge commit above;
+   - both gates' reviewed head, e89bf9bf6c2c90965ff75a7fd892bc7b1bae3d40, at generation 4;
+   - the merged head, c3acb40b. Over the reviewed head it adds the merge of main at 248d5f33, whose two conflicts the custodian resolved (the reviewer's D-1: `skp/0.11` last before section 9 of `protocol/skp/SKP-V0.md`, and the union of the kernel README's list), and the architect's D-1, D-4 and D-5 fixed at c3acb40b. The custodian checked each fix against its finding (worker report 4). CI was green there.
+2. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-07-geometry-lines-cut-gate1-architect.md`, pass with notes, gate-log 433, sha256 9ccb506931a4bb4d07e4ca0368172b6fe5c81e02b3379ae0f4e092dd51f312b6, added in ed8b89380e4a8704690f683a87ed5b0d04875e66;
+   - `2026-10-07-geometry-lines-cut-gate1-reviewer.md`, pass, gate-log 434, sha256 b6897e491527f0a53b7049de3018d4955bb27978383350a65afb7a5cd95458b5, added in 8c20aeb4e454b2d60e4cb2f0454cf1b8cf8d3187.
+3. **The worker reports, each pinned at the commit that added it.** Each hash is of the file from its line 5 to the end, and each file is byte-identical at the merge commit:
+   - `state/consults/2026-10-07-geometry-lines-cut-worker-report-1.md`, phase A, at 6079bca41940233a77544ef73dc83313a46486b3, sha256 06de309693fa6975f2a3569caa26959c999ffffefe2a0dab6e89c54e3b50306e (Amendment 2);
+   - `-report-2.md`, phase B stage 1, at 5924956c3e10e1c98f80bde80bb34207de3108a9, sha256 63b39d93da65d4ab119fba4f5ff30a7b9fa816b13f29f19f29d20de27150dc05 (Amendment 3);
+   - `-report-3.md`, phase B stage 2, at 7dd0315db6c62932b96256cf30224fd62136a5e8, sha256 c018db0aa11dc64d1f3b489800a7c4c6404bc26c62cac291a576500afe1a5bb2 (Amendment 3);
+   - `-report-4.md`, the gate fixes, at 9ca9055ecb64b0e56d57df6f3a5ebf5da7a35630, sha256 04e4c99034d079f6d95ed2d3c3251288bd83753f69cad1d40663b4d7b2d2ebbb.
+4. **§6's files at the merge commit.** The first five are byte-identical to the base B, 6f4cc949:
+   - `engine/tests/data/golden/polygon-wire.golden`, sha256 d810e6a8659c82c322231d9c784e8d9fbb4e0f074bb325e3cebf1f94ddcab15d;
+   - `kernel/tests/data/golden/publish-partitions.golden`, sha256 5b10ddd64ca60db9009ab1453cf99098353e4a9b93bcf012dca089586b0c7e01;
+   - `engine/tests/data/geoarrow/lv95-polygon-batch.arrows`, sha256 d0afe93e143c0e2de16f7fad6eb9272a687195dfec6f68999e7dc7b24ba78197;
+   - `engine/tests/data/geoarrow/lv95-multipolygon-batch.arrows`, sha256 831eb54076cf565eac33b673749f8fa3a6a2f481ff3c831a371f740abf6673fa;
+   - `engine/tests/data/geoarrow/lv95-point-batch.arrows`, sha256 10c17431583bc49d772ddffe92e59a8644397103f140b055fb38ffd1d65f267f;
+   - BF-L, `engine/tests/data/geoarrow/lv95-linestring-batch.arrows`, new in 719d2b04, sha256 6b4f03b16b3cf18592b33e883d0fe75dd821c50f8f0d980a647d05d368c24120;
+   - BF-ML, `engine/tests/data/geoarrow/lv95-multilinestring-batch.arrows`, new in 719d2b04, sha256 31f10a83c62623bac4c7a18fc5b7844939a529823ca5b094e253b86fd980b1f5.
+5. **The mutations.** Each row's observation commit is in its test's recorded-mutation comment and in the worker reports' Mutations sections: the engine rows over 6f4cc949, the kernel rows over 719d2b04 and W-L2 over 534dd647 (report 1), and the shell rows over 26d4ccc0 (report 2). The reviewer re-made every row at e89bf9bf, and each failed its test by name (the reviewer report's Mutations section).
+6. **The literal minted:** `skp/0.11`, at `protocol/skp/src/v0/mod.rs:109 @ e888787e sha256:565dc56ac0b2f54024ba5a8d167c79c72d256d5b69835bd55c0e95f43b187a8b`. Its §8 entry is `protocol/skp/SKP-V0.md:1051-1073 @ e888787e sha256:3b0dd134c78bb5d0663cf6e35365015f8d8d8760e2078bf69fa3f9fb5624902c`.
+7. **PL-2 holds:** the reviewer's re-run at e89bf9bf (the reviewer report's Evidence section). `engine/ADMISSION-RESULTS.md` is byte-identical to B at the merge commit, sha256 74b408b520e84692d3664b89ccc594e56120d614389a98f1262a1888cb8f2c43.
+8. **The done items' proofs:** §4's rows, by name, each re-observed by name at e89bf9bf (the reviewer report's Mutations section).
+9. **§7, budget overrun, §7 not edited (class 8; the architect's D-2 and the reviewer's D-2).** By §7's command with B = aa00e565, the merge commit's first parent, and H = the merge commit: 3,561 changed lines over 52 files, against at most 3,750 over 66. That equals Amendment 3, item 7's count at e89bf9bf, since the gate fixes edit lines the branch added.
+   - Engine product: 1,220 against 950. Engine tests: 960 against 900. These two are the class 8 record that Amendment 2, item 6 and Amendment 3, item 7 deferred to the gated head. The reason, read from the diff: the two line decoders and their in-file tests in `engine/src/wkb.rs` and `engine/src/geoarrow.rs` (910 of the 1,220), and in the tests group `engine/tests/line_stream.rs` (513) and the changed admission tests (302). §7's basis was the points cut, which added one encoding.
+   - Every other group is within its ceiling: kernel 307, protocol 221, shell product 242, shell tests and seams 521, and docs 90.
+10. **The checks the worker reports did not run** (the architect's D-3): `queue --check` and `site --check` passed in Governance CI run 37693075014, job `test · verify:plan · queue/site drift`, at the merged head c3acb40b. Governance CI did not run at e89bf9bf. On main, it passed at the merge commit in run 37695450260.
+11. **Two hash references' revs** (the reviewer's D-3): Amendment 1's directive hashes are at 6f4cc949, and Amendment 2's worker report hash is at 6079bca4. Both commits are on main, and every hash matches (the reviewer report's Documentation section). Neither amendment is edited.
+12. **The proposed nodes recorded:** `shell-owners-index` and `corpus-line-files` (the form commit), and `lines-class-budget-measurement` (Amendment 1). All three stay proposed, for the human's placement.
+13. **Routed:**
+    - `frontends/shell/src/canvas/pick.ts`'s doc still describes a polygon part and an exterior ring. It goes to the next piece that edits `pick.ts` (the architect's noticed item).
+    - KNOWN-LIMITATIONS item 31's mixed-kinds sentence can be read as refusing Polygon with MultiPolygon, which the engine admits. It is draft wording for the human's P6 sight at the sitting (the reviewer's noted item).
+14. **Operator:** Part T and the E2E step LN' are unrun. They are queued for the sitting with MP-1's Part S and the points cut's Part P.
+15. **Done:** PLAN marks the node done, with evidence `{pr: 188}`, at generation 5, in this amendment's commit.
+
+**Superseded index.** Amendment 2, item 6 and Amendment 3, item 7's deferred class 8 record → item 9. None is edited.

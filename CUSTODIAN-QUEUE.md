@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `ee4a1d1c48298f192a20a179cb0cd324d3ae4d78cf3e7891cc792560af70398e`) at `2026-10-07T22:38:54.120Z`.
+Generated from `PLAN.yaml` (sha256 `1cf832b8e70d738a3b0a3559516c8356c4127e21fe6e43b9dc19bdb69eed21b7`) at `2026-10-07T22:53:52.903Z`.
 
 ## 1. Next
 
@@ -19,7 +19,7 @@ Generated from `PLAN.yaml` (sha256 `ee4a1d1c48298f192a20a179cb0cd324d3ae4d78cf3e
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route, geometry-lines-cut
+- **briefb-b2-save-reopen** — B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form — blocked by: decision-adr-029-scan-progress-route
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
 - **signpath-application-draft** — Entry 77 — the SignPath OSS application and disclosure text drafted for the human sight, once a release is CI-built — blocked by: release-v0-1-1
@@ -27,7 +27,6 @@ Generated from `PLAN.yaml` (sha256 `ee4a1d1c48298f192a20a179cb0cd324d3ae4d78cf3e
 
 ## 5. In progress
 
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — evidence: branch `cut/data-plane-crowded-start-detail-spaces`
 - **shell-migration-milestone-1** — Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar — evidence: branch `cut/shell-migration-milestone-1`
 
