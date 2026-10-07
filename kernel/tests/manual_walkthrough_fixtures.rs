@@ -335,7 +335,7 @@ fn generate_the_declared_polygon_and_point_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
-/// **[C-1]** F-1 with a covering, for the shell E2E's MP' step and Part S's S2: the same three
+/// **[C-1]** F-1 with a covering, for Part S's S2 note: the same three
 /// MultiPolygon rows as `generate_the_multipolygon_f1_fixture` (LV95, declared `["MultiPolygon"]`),
 /// each with the covering bounds of its own parts, so a viewport query reaches the canvas. F-1's own
 /// generator writes no covering and meets `engine.no_covering_bbox` there (Amendment 1, item 6 of

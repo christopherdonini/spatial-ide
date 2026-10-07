@@ -105,7 +105,7 @@ export interface ResidentBatch {
  * Decode one self-contained Arrow IPC batch (`engine::envelope::TaggedBatch`'s wire form) into a
  * `ResidentBatch`. Throws `UnexpectedFrameError` if the schema's `frame` metadata is not what rule
  * 1 requires, `UnexpectedEncodingError` if its `geometry_encoding` is not `expectedEncoding` (the
- * open's own, from `describe`) or is neither encoding the shell reads, and propagates a decode error
+ * open's own, from `describe`) or is none of the three encodings the shell reads, and propagates a decode error
  * rather than returning a partial batch.
  */
 export function decodeBatch(
