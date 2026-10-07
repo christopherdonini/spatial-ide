@@ -673,3 +673,26 @@ After the merge, B is the merge commit's first parent and H is the merge commit.
 - The OPEN list and every [OPEN-1] to [OPEN-5] mark → items 1 to 5, binding.
 - §9's notes that commit 1 waits on OPEN-1 and OPEN-5, and commit 4 on OPEN-3 and OPEN-4 → item 7.
 - Part T's row T4 → item 6 adds a sight.
+
+### Amendment 2 — phase A's outcomes: the build's deviations (class 2 and class 3), the engine groups over their ceilings so far, and the clippy reading
+
+*Written by the custodian after phase A's results were seen, at the branch head 26d4ccc0924d97a4af3f2272f735750fa016e4b8, before phase B and before either gate. The record is worker report 1, `state/consults/2026-10-07-geometry-lines-cut-worker-report-1.md` (sha256 06de309693fa6975f2a3569caa26959c999ffffefe2a0dab6e89c54e3b50306e, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Phase A's commits:**
+   - 719d2b04, the engine;
+   - 534dd647, the kernel tests and generators;
+   - 26d4ccc0, the wire, `skp/0.11`.
+2. **Class 2, E-L9's helpers.** E-L9 gains `line_l1_rows_with_bounds` and `multilinestring_ml1_rows_with_bounds`, feature-gated, because the ML-1 walkthrough generator needs a covering. §2 names the with-and-without-bounds pair for L-1 only. Both are among E-L9's feature-gated helpers that §8 item 11 allows, and each has a test or generator caller.
+3. **Class 2, one rename.** LE-6's test renames one local variable, because the engine's transport-name scan refuses the identifier the first draft used. LE-6's mutation was observed before the rename, and the behaviour is the same.
+4. **Class 3, A-2's mutation site.** A-2's recorded mutation now lives in the new `join_phrase` helper, which `readable_set_phrase` calls. A-3's stays in `readable_set_phrase`. Both were re-observed (the report's Mutations table).
+5. **Class 3, the declared-LineString generator's doc** is corrected as §2 says, and names Part T's T6. Its code is not edited.
+6. **§7 so far:** 2,721 lines over 35 files, against 3,750 over 66. Two groups are over their ceilings so far:
+   - engine product: 1,220, against 950;
+   - engine tests: 960, against 900.
+
+   The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+7. **The clippy reading,** as §9 sets it: no warning on a line this branch adds. 44 warning sites remain, all on lines the branch did not add.
+8. **The run set:** 903 passed and 54 ignored. That is 18 more passed than the base, the new rows, and 4 more ignored, the four walkthrough generators (PL-5).
+9. **Generation 3.**
+
+**Superseded index.** §2's E-L9 helper list → item 2. §4's A-2 mutation site → item 4. Neither is edited.

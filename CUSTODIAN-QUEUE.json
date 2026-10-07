@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T18:08:17.005Z",
-  "plan_hash": "d6eaaf1e69cdb707a4c152ed19b360c62705cfc4fc60a5f8fd6f814bb3a97285",
+  "generated_at": "2026-10-07T18:17:29.083Z",
+  "plan_hash": "ab1abc2c43ec295dd97fd33aef960cc451f05fbed2970eebc0015db4b846e04d",
   "priorities_approved": true,
   "next": {
     "id": "data-plane-crowded-start-detail-spaces",
@@ -40,25 +40,6 @@
         "done": null
       },
       "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
-    },
-    {
-      "id": "typed-terminal-codes-post-check-race",
-      "title": "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "ready",
-      "order": 15,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "RULED 2026-10-07 (question round 65, both recommended: the kernel index line deferred to the closing record after the lines cut merges; Part B included): Amendment 1, generation 2; dispatch after the lines cut phase A hands back (heavy runs one at a time). Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form, the test being a stated guarantee proof; 43 pins at 3d740f7b): Part A edits kernel/tests/typed_terminal_codes.rs only, so the human stop condition is not met by the fix. OPEN-1 (the kernel index line, kernel/README.md being a lines-cut file) and OPEN-2 (Part B, the E2 and E3 siblings in kernel/tests/session_end_event.rs) go to the human before any code. Corrected by the form (section 0.3): the producer is spawned in viewport_query, not at redeem. The declared budget is exceeded by the full form and its gates (section 0.5). Before: PLACED 2026-10-07 by the human in slot 2 (state/directives/2026-10-07-typed-terminal-codes-race-placed.md), under item 3 of the 2026-10-07 awaiting-merge direction: test-only; it stops and goes back to the human if it needs a protocol/ edit or a file in the lines cut section 7 list. The architect drafts its form alone. Before: Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
     }
   ],
   "waiting_on_human": {
@@ -245,8 +226,30 @@
         "opened": "2026-09-22",
         "done": null
       },
-      "summary": "IN CODE 2026-10-07: branch cut/geometry-lines-cut from 6f4cc949, worktree C:/dev/wt/lines, target D:/wt-targets/lines; phase A (commits 1 to 3) by worker-high. Before: RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
+      "summary": "PHASE A DONE 2026-10-07 at 26d4ccc0 (719d2b04 engine, 534dd647 kernel tests and generators, 26d4ccc0 wire skp/0.11; worker report 1; Amendment 2, generation 3: class 2 and 3 deviations, the engine groups over their ceilings so far, class 8 at the gated head); phase B next. Before: IN CODE 2026-10-07: branch cut/geometry-lines-cut from 6f4cc949, worktree C:/dev/wt/lines, target D:/wt-targets/lines; phase A (commits 1 to 3) by worker-high. Before: RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
       "evidence_label": "branch `cut/geometry-lines-cut`"
+    },
+    {
+      "id": "typed-terminal-codes-post-check-race",
+      "title": "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": 15,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/typed-terminal-codes-post-check-race"
+      },
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "IN CODE 2026-10-07: branch from 92884cc4, worktree C:/dev/wt/ttc, target D:/wt-targets/ttc; Parts A and B by worker-high from 18:16:06Z. Before: RULED 2026-10-07 (question round 65, both recommended: the kernel index line deferred to the closing record after the lines cut merges; Part B included): Amendment 1, generation 2; dispatch after the lines cut phase A hands back (heavy runs one at a time). Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form, the test being a stated guarantee proof; 43 pins at 3d740f7b): Part A edits kernel/tests/typed_terminal_codes.rs only, so the human stop condition is not met by the fix. OPEN-1 (the kernel index line, kernel/README.md being a lines-cut file) and OPEN-2 (Part B, the E2 and E3 siblings in kernel/tests/session_end_event.rs) go to the human before any code. Corrected by the form (section 0.3): the producer is spawned in viewport_query, not at redeem. The declared budget is exceeded by the full form and its gates (section 0.5). Before: PLACED 2026-10-07 by the human in slot 2 (state/directives/2026-10-07-typed-terminal-codes-race-placed.md), under item 3 of the 2026-10-07 awaiting-merge direction: test-only; it stops and goes back to the human if it needs a protocol/ edit or a file in the lines cut section 7 list. The architect drafts its form alone. Before: Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it.",
+      "evidence_label": "branch `cut/typed-terminal-codes-post-check-race`"
     }
   ],
   "proposed": [
