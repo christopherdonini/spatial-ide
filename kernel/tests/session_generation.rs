@@ -307,14 +307,14 @@ fn the_registry_is_consistent_when_two_threads_use_it_at_once() {
 // These three extend the file rather than opening a new one because the rule under test is
 // `GenerationRegistry`'s: what it records when a generation ends, and what a redemption is
 // therefore entitled to say. The first is an END-TO-END test from the real product shape (the
-// human's class fix, `DECISIONS-PENDING.md:46`): a real `SkpHost`, a real `viewport_query`, the
-// real `EngineSourceFactory` constructor `frontends/shell/src-tauri/src/lib.rs:373-377` installs, and
-// the real `SourceFactory::create` the data plane calls at
-// `protocol/data-plane/src/server.rs:384`. Nothing is fabricated and `end_generation` is never
+// human's class fix, question round 4, item 1): a real `SkpHost`, a real `viewport_query`, the
+// real `EngineSourceFactory::ticket_only` constructor the shell's `run` setup installs, and the real
+// `SourceFactory::create` the data plane's START arm calls (its `factory.create` call in
+// `protocol/data-plane/src/server.rs`). Nothing is fabricated and `end_generation` is never
 // called by a test.
 // ---------------------------------------------------------------------------------------------
 
-/// A fixture written per test, in the shape `kernel/tests/typed_terminal_codes.rs:40-55` uses.
+/// A fixture written per test, in the shape `typed_terminal_codes.rs`'s `fixture` uses.
 fn dead_ticket_fixture(name: &str) -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/typed-terminals");
     std::fs::create_dir_all(&dir).expect("fixture dir");
@@ -333,7 +333,7 @@ fn dead_ticket_fixture(name: &str) -> PathBuf {
 }
 
 /// Move a file's modification time forward without touching a byte of it — the same single-component
-/// mutation `kernel/tests/typed_terminal_codes.rs:60-68` performs, and the only one a test can make
+/// mutation `typed_terminal_codes.rs`'s `touch_modification_time` performs, and the only one a test can make
 /// while DuckDB holds the file open without making DuckDB fail on a truncated read first.
 fn touch_modification_time(path: &Path) {
     let later = std::time::SystemTime::now() + std::time::Duration::from_secs(120);
@@ -350,8 +350,8 @@ fn touch_modification_time(path: &Path) {
 /// The window this exercises is the only one in which the dead-ticket arm is reachable at all
 /// (§5 prediction 1): a ticket minted, its generation ended while the ticket is still pending, and
 /// the redemption arriving afterwards. Every step runs through the product path — the ticket comes
-/// from `SkpHost::viewport_query` (`kernel/src/skp.rs:760`), the generation is ended by
-/// `viewport_query`'s own pre-check refusal (`kernel/src/skp.rs:797-803`) and not by this test, and
+/// from `SkpHost::viewport_query`, the generation is ended by the `open_engine_stream` refusal arm
+/// that ends it on `EngineError::SourceChanged` and not by this test, and
 /// the redemption goes through `SourceFactory::create` on the constructor the shell installs.
 ///
 /// RECORDED MUTATION: delete the `TicketLiveness::EndedBySourceChange` arm from
@@ -403,8 +403,8 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
         .expect_err("the pre-check refuses");
     assert_eq!(refused.code, "engine.source_changed", "{}", refused.message);
 
-    // 4. The redemption, through the constructor `frontends/shell/src-tauri/src/lib.rs:373-377`
-    //    installs and the call `protocol/data-plane/src/server.rs:384` makes.
+    // 4. The redemption, through the `ticket_only` constructor the shell's `run` setup installs
+    //    and the `factory.create` call the data plane's START arm makes.
     let factory = EngineSourceFactory::ticket_only(catalog, tickets, host.generations());
     let detail = factory
         .create(&OpenRequest {
@@ -417,14 +417,14 @@ fn a_ticket_whose_generation_ended_refuses_at_redemption_with_its_typed_code() {
     assert!(
         detail.starts_with("engine.source_changed: "),
         "the refusal must carry its typed code as a prefix, which is what the shell's own \
-         `isSourceChangedTerminal` matches: {detail}"
+         `isSessionEndedTerminal` matches: {detail}"
     );
 }
 
 /// **T2 — the fabrication this arm exists to prevent.**
 ///
 /// A syntactically valid handle that was never minted. The kernel has no record of it, so it says
-/// what `StreamRegistry::redeem` says (`kernel/src/skp.rs:176-187`) and makes no statement about any
+/// what `StreamRegistry::redeem` says and makes no statement about any
 /// file. This is the P3 attempt-2 defect the human's round-4 ruling removed
 /// (`engine/ADMISSION-PREREGISTRATION.md:742-744`), asserted negatively so that re-introducing it
 /// fails here by name.
@@ -473,8 +473,8 @@ fn an_unknown_handle_falls_through_to_the_ticket_registrys_own_refusal() {
 /// **T3 — the dead-ticket record is bounded**, by the same two levers every other per-dataset map in
 /// this registry is bounded by.
 ///
-/// The age half of the bound (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, `kernel/src/skp.rs:517`,
-/// documented `:506-508`) is
+/// The age half of the bound (`TICKET_TTL + TERMINAL_ENTRY_MAX_AGE`, per
+/// `GenerationRegistry::prune_locked` and its doc's condition 1) is
 /// **not** asserted here for the same reason
 /// `dead_generation_attributions_are_pruned_rather_than_accumulating` above does not assert its own:
 /// it would need a clock this file must not take (ADR-018). It is stated at `prune_locked`'s own

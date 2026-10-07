@@ -673,3 +673,51 @@ After the merge, B is the merge commit's first parent and H is the merge commit.
 - The OPEN list and every [OPEN-1] to [OPEN-5] mark → items 1 to 5, binding.
 - §9's notes that commit 1 waits on OPEN-1 and OPEN-5, and commit 4 on OPEN-3 and OPEN-4 → item 7.
 - Part T's row T4 → item 6 adds a sight.
+
+### Amendment 2 — phase A's outcomes: the build's deviations (class 2 and class 3), the engine groups over their ceilings so far, and the clippy reading
+
+*Written by the custodian after phase A's results were seen, at the branch head 26d4ccc0924d97a4af3f2272f735750fa016e4b8, before phase B and before either gate. The record is worker report 1, `state/consults/2026-10-07-geometry-lines-cut-worker-report-1.md` (sha256 06de309693fa6975f2a3569caa26959c999ffffefe2a0dab6e89c54e3b50306e, from its line 5 to the end, at the commit that adds it), cited by section. Nothing below is a quotation.*
+
+1. **Phase A's commits:**
+   - 719d2b04, the engine;
+   - 534dd647, the kernel tests and generators;
+   - 26d4ccc0, the wire, `skp/0.11`.
+2. **Class 2, E-L9's helpers.** E-L9 gains `line_l1_rows_with_bounds` and `multilinestring_ml1_rows_with_bounds`, feature-gated, because the ML-1 walkthrough generator needs a covering. §2 names the with-and-without-bounds pair for L-1 only. Both are among E-L9's feature-gated helpers that §8 item 11 allows, and each has a test or generator caller.
+3. **Class 2, one rename.** LE-6's test renames one local variable, because the engine's transport-name scan refuses the identifier the first draft used. LE-6's mutation was observed before the rename, and the behaviour is the same.
+4. **Class 3, A-2's mutation site.** A-2's recorded mutation now lives in the new `join_phrase` helper, which `readable_set_phrase` calls. A-3's stays in `readable_set_phrase`. Both were re-observed (the report's Mutations table).
+5. **Class 3, the declared-LineString generator's doc** is corrected as §2 says, and names Part T's T6. Its code is not edited.
+6. **§7 so far:** 2,721 lines over 35 files, against 3,750 over 66. Two groups are over their ceilings so far:
+   - engine product: 1,220, against 950;
+   - engine tests: 960, against 900.
+
+   The class 8 record is made once, at the gated head, with the final figures. §7 is not edited.
+7. **The clippy reading,** as §9 sets it: no warning on a line this branch adds. 44 warning sites remain, all on lines the branch did not add.
+8. **The run set:** 903 passed and 54 ignored. That is 18 more passed than the base, the new rows, and 4 more ignored, the four walkthrough generators (PL-5).
+9. **Generation 3.**
+
+**Superseded index.** §2's E-L9 helper list → item 2. §4's A-2 mutation site → item 4. Neither is edited.
+
+### Amendment 3 — phase B's outcomes: the build's deviations (class 2 and class 3), and §7 at the build's head
+
+*Written by the custodian after phase B's results were seen, at the branch head e89bf9bf6c2c90965ff75a7fd892bc7b1bae3d40, before either gate. The records are worker report 2 (`state/consults/2026-10-07-geometry-lines-cut-worker-report-2.md`, stage 1) and worker report 3 (`state/consults/2026-10-07-geometry-lines-cut-worker-report-3.md`, stage 2), each pinned by hash in its filing note, cited by section. Nothing below is a quotation.*
+
+1. **Phase B's commits:** ba648a9a, the shell (V-L, SH-L1 to SH-L7, V-T-L, LN'), and e89bf9bf, the docs. V-L holds on all five points, at deck.gl 9.3.9, the lock's version (report 2, V-L).
+2. **Class 2, the casing's ends.** The casing is drawn with rounded joints and caps, as the line is, so that a square-capped casing shows no corners beside a round-capped line. SH-L2 named rounding for the line only.
+3. **Class 2, one E2E line.** `e2e/regression.mjs`'s fixture-existence list gains the L-1 file beside LN', so that a missing file fails early. MP' and PT' are not edited.
+4. **Class 3, `decodeBatch.ts`'s doc.** The custodian's brief said its `skp/0.10` for the point value was stale. It is not: `skp/0.10` is the entry that gave the point value. The stale part was the doc's count of encodings, which now names five: the third from `skp/0.10`, and the fourth and fifth from `skp/0.11`.
+5. **Class 2, Part T's T6(c).** `declared-linestring.parquet` has no covering, so a canvas viewport query may meet the no-covering refusal before the engine reaches row 0. T6(c) says so, and asks for the code shown. The generator's code is not edited.
+6. **Class 3, the indexes' Last verified at** is ba648a9a, commit 4's head, because commit 5 cannot name its own hash.
+7. **§7 at e89bf9bf, by its command:** 3,561 lines over 52 files, against 3,750 over 66.
+   - Engine product (1,220 against 950) and engine tests (960 against 900) are over, as Amendment 2 recorded.
+   - Every other group is within its ceiling: kernel 307, protocol 221, shell product 242, shell tests and seams 521, and docs 90.
+
+   The class 8 record is made once, at the gated head. §7 is not edited.
+8. **The suites at e89bf9bf, all exit 0** (report 3):
+   - workspace 903 passed and 54 ignored, with §6's four instruments green and the five files byte-identical;
+   - clippy shows no warning on an added line;
+   - src-tauri 68, shell 1,125 and viewer 84 passed;
+   - the scripts suite passed 450;
+   - the four verifiers exit 0.
+9. **Generation 4.**
+
+**Superseded index.** SH-L2's casing ends → item 2. §2's Operator LN' paragraph → item 3 adds one fixture-existence line. Part T's T6(c) → item 5. None is edited.

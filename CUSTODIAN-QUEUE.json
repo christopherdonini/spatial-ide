@@ -1,31 +1,50 @@
 {
-  "generated_at": "2026-10-07T10:15:02.649Z",
-  "plan_hash": "862b28c1ac0ac610a98911117ca0228fbde0daaf405034f2ea04c7233cfb0c59",
+  "generated_at": "2026-10-07T20:47:26.855Z",
+  "plan_hash": "f058e507340247f09d73e5566cc9e9895dba07abe2ed459cb5c6bf6fc053e6c6",
   "priorities_approved": true,
   "next": {
-    "id": "geometry-lines-cut",
-    "title": "Geometry -- lines, its own bounded vertical cut",
-    "lane": "engine",
+    "id": "data-plane-crowded-start-detail-spaces",
+    "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
+    "lane": "kernel-protocol",
     "phase": "prototype",
     "status": "ready",
-    "order": 16,
-    "budget_minutes": 0,
+    "order": 14,
+    "budget_minutes": 20,
     "needs_human": {
       "kind": "none",
       "minutes": 0
     },
     "evidence": null,
     "dates": {
-      "opened": "2026-09-22",
+      "opened": "2026-09-26",
       "done": null
     },
-    "summary": "RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
   },
   "ready": [
     {
-      "id": "geometry-lines-cut",
-      "title": "Geometry -- lines, its own bounded vertical cut",
-      "lane": "engine",
+      "id": "data-plane-crowded-start-detail-spaces",
+      "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 14,
+      "budget_minutes": 20,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-09-26",
+        "done": null
+      },
+      "summary": "FORM COMMITTED 2026-10-07 (the architect draft, alone; full form from dispatch, for the data-plane wire category, the detail being TERMINAL payload bytes; no OPEN item; 18 pins at a21435ed; at most 68 lines over 2 files): code only after kernel-close-races-followups (#186) merges. Before: SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes."
+    },
+    {
+      "id": "b2-piece-1a-step-record-and-dataset-reference",
+      "title": "B2 piece 1a -- the design (the full step record and the format ADR, as Proposed) and the code of the lasting dataset reference",
+      "lane": "kernel-protocol",
       "phase": "prototype",
       "status": "ready",
       "order": 16,
@@ -36,10 +55,29 @@
       },
       "evidence": null,
       "dates": {
-        "opened": "2026-09-22",
+        "opened": "2026-10-07",
         "done": null
       },
-      "summary": "RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+      "summary": "PLACED 2026-10-07 (evening) by the human in slot 2's order, after the pieces already there (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9). Needs no shell milestone. Its form is stage 1's form: it fixes the full step record and proposes the format ADR, and its open items are the brief's section 10 rows for 1a (the step record's fields and file format; two folders with one identity after a hand copy; a session that never saved). Its form confirms whether it needs the ADR-029 scan-progress ruling. The architect drafts it alone."
+    },
+    {
+      "id": "shell-migration-milestone-1",
+      "title": "Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": 11,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-05",
+        "done": null
+      },
+      "summary": "RULED 2026-10-07 (rounds 66 and 67, all recommended, with two clarifications; state/directives/2026-10-07-round-66-and-67-rulings.md): Amendment 1, generation 2; dispatch waits only for the lines cut merge. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone; full form; 69 pins at 30e77c10; at most 3,250 lines over 25 files against the plan estimate of 1,500, OPEN-5): OPEN-1 to OPEN-7 go to the human in one question round, none a red line; code after the lines cut merges. Before: PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
     }
   ],
   "waiting_on_human": {
@@ -95,30 +133,8 @@
       ]
     },
     {
-      "id": "data-plane-crowded-start-detail-spaces",
-      "title": "The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b))",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": 14,
-      "budget_minutes": 20,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-09-26",
-        "done": null
-      },
-      "summary": "SLOT 2 AFTER kernel-close-races-followups 2026-10-05 (the product-first direction 8.e). Before: RULED 2026-09-26, question round 26, item 4 (b): main's data-plane crowded-start detail string, operator-visible, carries two runs of spaces from a lost line continuation in protocol/data-plane/src/server.rs. Found by data-plane-stream-registry-bound's architect gate (state/consults/2026-09-26-stream-registry-bound-gate1-architect.md, note N7). Placed by question round 31, item 1 (RULED 2026-09-30): position 16 of 16 in the human's order, order 14 in its lane. It depends on kernel-close-races-followups, position 15, so that the order holds across lanes.",
-      "blocked_by": [
-        "kernel-close-races-followups"
-      ]
-    },
-    {
       "id": "briefb-b2-save-reopen",
-      "title": "Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation",
+      "title": "B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form",
       "lane": "shell",
       "phase": "prototype",
       "status": "blocked",
@@ -133,7 +149,7 @@
         "opened": null,
         "done": null
       },
-      "summary": "PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
+      "summary": "RE-DESCRIBED 2026-10-07 (evening) to cite state/directives/B2-BRIEF-2026-10-07.md, which replaces the migration plan's section 10 as the brief for B2's forms (state/directives/2026-10-07-b2-brief-and-evening-rulings.md); the rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c (the nodes b2-piece-1a-step-record-and-dataset-reference, b2-piece-1b-recording and b2-piece-1c-save-and-reopen), and stage 3 as 3a and 3b, per the brief's section 9; piece 1a's form is stage 1's form. Stages 2 to 5 stay in this node for now. The evening rulings: the session history is on the machine, found by the project's identity, with crash recovery offered at the next open; the docs/07 note lands with stage 1 or just before it, typed by the human; no kept branches, the parent field stays; steps left behind after a save leave the lineage at the next Save project, an export keeps its own copy of its steps, and the session history has a saved-here mark; an incomplete lineage keeps the data's grade with a recipe-incomplete marker, no ADR-005 amendment, the format ADR defining the marker. Its dependencies stand. Before: RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's.",
       "blocked_by": [
         "decision-adr-029-scan-progress-route",
         "geometry-lines-cut"
@@ -230,26 +246,26 @@
   ],
   "in_progress": [
     {
-      "id": "kernel-close-races-followups",
-      "title": "kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines",
-      "lane": "kernel-protocol",
+      "id": "geometry-lines-cut",
+      "title": "Geometry -- lines, its own bounded vertical cut",
+      "lane": "engine",
       "phase": "prototype",
       "status": "in-progress",
-      "order": 13,
-      "budget_minutes": 45,
+      "order": 16,
+      "budget_minutes": 0,
       "needs_human": {
         "kind": "none",
         "minutes": 0
       },
       "evidence": {
-        "branch": "cut/kernel-close-races-followups"
+        "branch": "cut/geometry-lines-cut"
       },
       "dates": {
-        "opened": "2026-09-27",
+        "opened": "2026-09-22",
         "done": null
       },
-      "summary": "READY FOR THE HUMAN 2026-10-07: PR #186 at a1ab83ec, CI green; gate 1 BOTH PASS at 78e52eea (architect 429 with notes, reviewer 430); the Documentation fixes at f1432674 and a1ab83ec checked against each finding (worker report 3); 115 lines over 7 files; the human click (a merge commit) is the approval. Before: PR #186 OPEN 2026-10-07 at 78e52eea (C1 to C10, W-1 re-observed at 99f4c437, the owner index lines; SKP-V0 invalid byte fixed; 112 lines over 7 files): gate 1 of both dispatched (architect reading C:/dev/wt/kcrf; reviewer in C:/dev/wt/kcrf-rev). Before: IN PROGRESS 2026-10-07, slot 2: branch cut/kernel-close-races-followups from 99f4c437, on origin; worktree C:/dev/wt/kcrf, target D:/wt-targets/kcrf; the build worker dispatched with the machine paragraph; lead-data writes the owed index lines after the build. Before: SLOT 2 AFTER THE TWO CONTEXT-FLUSH PIECES 2026-10-05 (the product-first direction 8.e and the human fragment): it yields slot 1 to MP-1 and starts only when its paths are disjoint from slot 1 piece; round 59 items 1 to 3 recorded as Amendment 1 (generation 2). Before: FORM COMMITTED 2026-10-05 (kernel/GENERATION-CLOSE-RACES-FOLLOWUPS-PREREGISTRATION.md, the architect draft after lead-data impact read, the second pilot measured piece 3; full form and full gating from dispatch, for its protocol/skp edits and the close_dataset property; OPEN-1 to OPEN-3 for the human, the form written for the recommendations; no branch yet). Before: UNBLOCKED 2026-10-05: b1-engine-kernel-half-followups is done (#178). It also takes the item that piece routed here (engine/B1-FOLLOWUPS-PREREGISTRATION.md, Amendment 1, item 7: kernel/README.md's line for kernel halves filed elsewhere). Before: Routed by kernel/GENERATION-CLOSE-RACES-PREREGISTRATION.md Amendment 2, row 11: the worker's noticed-but-not-done items (state/consults/2026-09-27-kernel-generation-close-races-worker-report-1.md, its 'Noticed but not done' list: a comment in open_dataset's sink still names a reference no client holds, declared unchanged by that piece; some line cites into skp.rs in session_generation.rs and skp.rs were already stale at base) and Amendment 1, 1.4 (B1's recorded-mutation comments in kernel/tests/skp_projection.rs and wire_bytes_invariant.rs carry rooted line cites that the eight inserted lines shift). Comment and cite text only; test text is class 3 and follows the commit-named span rule. Placed by question round 31, item 1 (RULED 2026-09-30): position 15 of 16 in the human's order, order 13 in its lane. It depends on b1-engine-kernel-half-followups, position 14, so that the order holds across lanes. Also carried here (PR #147's gate-1 architect, N5 and item 6; state/consults/gates/2026-09-30-ticket-liveness-redeem-gate1-architect.md): SkpHost::generations's doc in kernel/src/skp.rs carries two stale references, a frontends/shell/src-tauri/src/lib.rs line cite that now lands on origin derivation, and a bare line cite for SkpHost::new that was already wrong at base. Also routed, 2026-09-30, by PR #148's gate-1 architect, N1 (state/consults/gates/2026-09-30-raw-path-refusal-code-gate1-architect.md): SKP-V0's refusal-surfaces bullet and frontends/shell/src/streaming/formatTerminalRefusal.ts's doc name EngineSource::next_into as the only site that applies the engine-code prefix, and create_from_raw_params is a second since PR #148. Neither text is false. The TS doc is comment text; the SKP-V0 bullet sits in its append-only change log, so the second site is named in this node's own SKP-V0 change-log entry (not in skp-cancel-state-closed-set's, per its drafting consult, point 3), not by editing the bullet. Also routed, 2026-10-01, by node 5 form intake (kernel/CATALOG-OPEN-REPLACE-DROP-NOTE-PREREGISTRATION.md, its intake table): the close_dataset paragraph in SKP-V0 (its §1) says each live stream registry entry holds its own Arc<Dataset> clone; TicketState holds the dataset by name, and no stream holds one. A spec text, for the next SKP-V0 change. Its stale line cites into kernel/src/skp.rs move again with workspace-rustfmt; the cite fixes belong after that merge (the workspace-rustfmt drafting consult, (c) 2).",
-      "evidence_label": "branch `cut/kernel-close-races-followups`"
+      "summary": "BUILD DONE 2026-10-07 at e89bf9bf (phase B: ba648a9a shell, e89bf9bf docs; reports 2 and 3; Amendment 3, generation 4; every suite green); its PR and gate 1 next. Before: PHASE A DONE 2026-10-07 at 26d4ccc0 (719d2b04 engine, 534dd647 kernel tests and generators, 26d4ccc0 wire skp/0.11; worker report 1; Amendment 2, generation 3: class 2 and 3 deviations, the engine groups over their ceilings so far, class 8 at the gated head); phase B next. Before: IN CODE 2026-10-07: branch cut/geometry-lines-cut from 6f4cc949, worktree C:/dev/wt/lines, target D:/wt-targets/lines; phase A (commits 1 to 3) by worker-high. Before: RULED 2026-10-07 (question rounds 63 and 64, all (A): LineString and MultiLineString; the mixed-kind detail names the kinds present; LINE_WIDTH_PX 2 with the casing; LINE_PICK_RADIUS_PX 4 for line opens only; no Lines-class measurement): Amendment 1, generation 2; dispatch may start. Before: FORM COMMITTED 2026-10-07 (the architect draft, alone, full form from dispatch, 78 pins at 0053ced0; wire skp/0.11, stated guarantees, ADR-034 inherited; ceiling 3,750 lines over 66 files): OPEN-1 (MultiLineString scope) and OPEN-5 (the docs/08 Lines class) are ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; question round 63. Proposed nodes recorded in the form commit: shell-owners-index, corpus-line-files. Before: PLACED 2026-10-05 (the product-first direction 8.c): after the points cut in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut",
+      "evidence_label": "branch `cut/geometry-lines-cut`"
     }
   ],
   "proposed": [
@@ -445,7 +461,7 @@
     },
     {
       "id": "b1-shell-half",
-      "title": "Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable)",
+      "title": "Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table",
       "lane": "shell",
       "phase": "prototype",
       "status": "proposed",
@@ -460,7 +476,7 @@
         "opened": "2026-09-25",
         "done": null
       },
-      "summary": "O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
+      "summary": "RE-DESCRIBED 2026-10-07 as the migration's milestone 4 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 8): on the new shell, after milestones 1 to 3; attributes of the inspected feature in the Feature tab, colour by category in the Style tab with its legend (the one match of ADR-017, its section 5a), and the table in Activity with features and the three scope options. Its form settles where the table's features come from, a second consumer of the dataset's stream connections, and proposes no new SKP command without the human's ruling. Its depends_on is unchanged in this step. Before: O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
     },
     {
       "id": "verify-mutation-test-temp-dirs",
@@ -727,25 +743,6 @@
         "done": null
       },
       "summary": "Found by the architect while drafting audit-reader-char-boundary (state/consults/2026-10-01-audit-reader-char-boundary-architect-draft.md, the second report): audit_show_lines reads the log with read_to_string, which errors on any invalid UTF-8, and the CLI then refuses the whole log naming its path, so one bad byte hides every record rather than showing one CORRUPT line. Not a panic; trusted, local input; not reproduced. The architect suggests S2, or S3 under the unreproduced tie-breaker; graded at placement. Any fix that adds a CORRUPT form for such a line is new operator wording, which is the human ruling."
-    },
-    {
-      "id": "shell-migration-milestone-1",
-      "title": "Shell migration, milestone 1 -- the first milestone of Fable migration plan for the Map Studio direction",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
     },
     {
       "id": "skp-line-cites-outside-close-races",
@@ -1337,25 +1334,6 @@
       "summary": "Appended by question round 52, item 4 (RULED 2026-10-04), option (1), from kernel/TIMING-ASSERTIONS-UNDER-CONTENTION-PREREGISTRATION.md OPEN-4: kernel/tests/slice_budgets.rs scores its docs/08 cancellation p95 on the client pre-send to data-plane adapter receipt interval, not on ADR-018's pair (cancel_requested to PRODUCER_CANCELLED, on the producer's clock). The piece takes its own full form when placed: re-aim the harness cancellation cells to the engine trace pair, in a release build on reference hardware, and keep the adapter interval as a reported figure. Per ADR-018's no-retroactive-rescoring clause, nothing measured before is rescored. Per Fable's round-52 advice, item 2 (state/directives/2026-10-04-fable-advice-round-52.md), the form says how kernel/RESULTS.md's existing met rows for the cancellation budget are read: they name their interval (client pre-send to the adapter's receipt), which is not ADR-018's pair, so each gets a dated note beside it, never a rescoring. A docs/08 row's verdict is the human's (AI_DEVELOPMENT.md's red lines). Never queued until the human places it."
     },
     {
-      "id": "typed-terminal-codes-post-check-race",
-      "title": "kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-05",
-        "done": null
-      },
-      "summary": "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
-    },
-    {
       "id": "mp-prime-e2e-covered-fixture",
       "title": "E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin",
       "lane": "shell",
@@ -1430,6 +1408,177 @@
         "done": null
       },
       "summary": "Recorded 2026-10-07 under geometry-lines-cut's OPEN-5 (A), ruled in question round 64 (state/directives/2026-10-07-round-63-and-64-rulings.md; engine/GEOMETRY-LINES-PREREGISTRATION.md, Amendment 1, item 5): the lines cut makes no performance claim, and docs/08 defines a Lines class it does not measure. A measurement needs a scale fixture and a harness row, preregistered on its own. Waiting on the human's placement."
+    },
+    {
+      "id": "skp-drained-stream-helper-post-check-race",
+      "title": "kernel/src/skp.rs tests: drained_stream_with_a_recorded_change has the same post-check race as typed_terminal_codes' end-to-end test",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-1; the form, section 0.4): the test helper in kernel/src/skp.rs touches the file after opening the engine stream and asserts the post-check found the change, with a 50-feature fixture, so the producer can finish before the touch. kernel/src/skp.rs is in the lines cut's file list, so this waits for the lines cut. Test-only. Waiting on the human's placement."
+    },
+    {
+      "id": "dataset-stream-doc-producer-runs-ahead",
+      "title": "engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-2): a doc behaviour claim the code does not support (prepare runs on the producer thread, and the producer runs ahead up to MAX_QUEUED_BATCHES). engine/src/stream.rs is in the lines cut's file list, so this waits for the lines cut. Doc-only. Waiting on the human's placement."
+    },
+    {
+      "id": "shell-migration-milestone-2",
+      "title": "Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Its form and question round are prepared while milestone 1 is under way; its code starts when shell-map-refill-after-resize has merged, if that piece is needed (the OPEN-7 clarification, state/directives/2026-10-07-round-66-and-67-rulings.md). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way."
+    },
+    {
+      "id": "shell-migration-milestone-3",
+      "title": "Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+    },
+    {
+      "id": "shell-migration-milestone-5",
+      "title": "Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
+    },
+    {
+      "id": "shell-real-app-run-macos-linux",
+      "title": "Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds",
+      "lane": "platform",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed."
+    },
+    {
+      "id": "shell-map-refill-after-resize",
+      "title": "The map refills after a resize: a layout change that uncovers map area issues a viewport query, so the area fills without a pan or zoom",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 by the human clarification of milestone 1 OPEN-7 (state/directives/2026-10-07-round-66-and-67-rulings.md, lines 24-29): if milestone 1 finds H1 holds (a layout resize issues no viewport query), this small piece of its own fixes it, placed directly after milestone 1 merges; milestone 2 code starts when it has merged. Until then a KNOWN-LIMITATIONS line says what the human will see and that a pan or zoom fills the area. Proposed."
+    },
+    {
+      "id": "b2-piece-1b-recording",
+      "title": "B2 piece 1b -- recording: the kernel's step commands for filter, scope and style, the session history on the machine, safe against a crash, and the docs/07 note",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1a and migration milestone 2. The docs/07 note lands with it or in its own commit just before, typed by the human (the brief, section 11). Open items at its form: the ADR-022 grant, and how large the session history may grow. Proposed."
+    },
+    {
+      "id": "b2-piece-1c-save-and-reopen",
+      "title": "B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "Recorded 2026-10-07 (evening) by the human's rulings (state/directives/2026-10-07-b2-brief-and-evening-rulings.md; state/directives/B2-BRIEF-2026-10-07.md, section 9): needs 1b, and the format ADR accepted by the human. Open item at its form: what Save does with the style of a point or line layer (rounds 62 and 63). Proposed."
     },
     {
       "id": "verify-quotes-dotted-paths",

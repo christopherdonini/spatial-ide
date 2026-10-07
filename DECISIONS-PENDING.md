@@ -29,6 +29,78 @@ three sentences or fewer, a recommendation, and what applying it touches. Newest
 
 **DIRECTIVE 2026-09-19 — generated files regenerate on merge (the human, mid-turn; recorded verbatim at `state/directives/2026-09-19-generated-files.md`, line 5 (its sha256 d268f9e53e4644885c55ff3fb6d44b6bbd7b88d3d96b93d8cc1c54903affc1df at the commit that adds it)):** resolve PR #90's conflicts on the generated files and `PLAN.yaml` by regeneration, not by hand — merge `origin/main`, take main's version of the generated set, resolve `PLAN.yaml` semantically with both sides' node changes kept, run the generators so the regenerated files match the merged plan, commit, push, CI; the same for any sibling PR that conflicts the same way; mechanic, permanent: generated files are never conflict-resolved by hand and a PR touching `PLAN.yaml` regenerates on merge with main; and consider a `.gitattributes` merge strategy or moving generated outputs out of PRs (CI regenerating on main after merge). Applied: PR #90 merged with main at 2c5bb0b and PR #91 at 245d4b0, each with the generated set taken from main and regenerated from the merged plan (`PLAN.yaml` on #90 resolved by keeping main's P3b hold and the branch's test-names node; on #91 it auto-merged), `verify.mjs` and the four gates green, both MERGEABLE with CI running; the mechanic entered `AUTONOMY.md` §2 and `AI_DEVELOPMENT.md`'s merges subsection by reference to the directive file; the consideration is entry 114 and PLAN node `decision-generated-outputs-merge-strategy`, the human's ruling. Correction, 2026-09-19: those two insertions shifted every line below them (AUTONOMY.md §21c's line 357 to 359; AI_DEVELOPMENT.md's line 223 to 230), which closed records cite by line and which the checker's own record pins by hash — PR #91's governance CI failed on `AUTONOMY.md:357`; the mechanic was moved to the end of each file (AUTONOMY.md §23; AI_DEVELOPMENT.md Amendment 3 to the Custodian role) so the cited lines are back where the records read them, and the open PRs were re-merged.
 
+**RULED 2026-10-07 — question round 68: when a waiting PR needs main merged into it (AskUserQuestion, answered in typed words at 20:27:41Z by the transcript; recorded verbatim at `state/directives/2026-10-07-round-68-ruling.md`, line 6, sha256 cd4b73c1a9bc959dc21470ff82d722fccfff0902d2137893e0fe7e214dec8466 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated. It refines item 4 of the 2026-10-07 awaiting-merge direction.
+- **When main is merged into a waiting PR:**
+  - another PR merges;
+  - main changes a file the waiting PR touches;
+  - main changes anything CI runs or builds: workflows, governance scripts, tools, or dependency files.
+- **Record commits outside those cases need no re-merge.**
+- **After the human's click,** the custodian checks main's CI on the merge commit, and tells the human only if it is red.
+- **Applied:** since #187's last re-merge (1f5eef49, over main 7dd0315d), main's commit bdf85948 changed records only. So #187 is ready, and awaits the human's merge-commit click.
+
+**RULED 2026-10-07 — question rounds 66 and 67, shell-migration-milestone-1's OPEN-1 to OPEN-7, all recommended, with two clarifications (AskUserQuestion, answered by option label at 20:17:33Z and 20:19:49Z; the clarifications typed as pasted content, enqueued at 20:17:41Z and 20:19:56Z; recorded verbatim at `state/directives/2026-10-07-round-66-and-67-rulings.md`: lines 6-12, sha256 93303ab09414917295841ccf30b289f391d8f02fadd92689dc73b425794ad2a6; lines 13-23, sha256 1ab500f879476da9e4669a9502298b1029babf89e0154b28e2f16fa0b172d903; lines 24-29, sha256 479cf1dcc5e450af01e47b4ecdeec9219d65105380471aa4a79402f03adfe077; each at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated.
+- **Applied:**
+  - the form's Amendment 1 (generation 2);
+  - the proposed node `shell-map-refill-after-resize`, the OPEN-7 clarification's own small piece, placed directly after milestone 1 merges if H1 holds;
+  - milestone 2's summary: its form and question round are prepared meanwhile, and its code waits for that piece.
+
+**RULED 2026-10-07 (evening) — B2's brief, and the human's rulings on it (the human, typed, received at 19:52:44Z by the transcript; recorded verbatim at `state/directives/2026-10-07-b2-brief-and-evening-rulings.md`, lines 6-42, sha256 a34fc97c09af8ab7fa3dd2d2ac8d13221a187365e23d3b3014e81462e296fa28 at the commit that adds it):**
+- **The rulings** are the text, referenced and not restated. They refine those of 19:23Z, and where they differ these hold.
+- **Filed byte-identical, each matching the human's sha256 and size:**
+  - `state/directives/B2-BRIEF-2026-10-07.md`;
+  - `state/directives/O-07-WALKTHROUGH-2026-10-05.md`, which replaces the copy filed at 30e77c10. The change is its decisions' §4.2.
+- **The brief replaces the plan's §10** as the brief for B2's forms. The rest of the plan stands. Stage 1 runs as pieces 1a, 1b and 1c, and stage 3 as 3a and 3b, per the brief's §9. Piece 1a's form is stage 1's form.
+- **Applied:**
+  - `briefb-b2-save-reopen` is re-described to cite the brief. Stages 2 to 5 stay in it for now.
+  - The proposed nodes `b2-piece-1b-recording` and `b2-piece-1c-save-and-reopen` carry the brief's §9 needs in their summaries and dependencies.
+  - `b2-piece-1a-step-record-and-dataset-reference` is placed in slot 2's order after the pieces already there (kernel-protocol lane, order 16, ready). Its form confirms whether it needs the ADR-029 ruling.
+  - No ADR status, no docs/ text, and no existing node's `depends_on` is changed.
+
+**RULED 2026-10-07 — the shell-migration plan, second version (the human, typed as pasted content, received at 19:23:41Z by the transcript; recorded verbatim at `state/directives/2026-10-07-migration-plan-v2-ruled.md`, lines 6-30, sha256 b91857b1b06b6aff584ce8b3b50a42fb5d3ad44047fc39b90b7d70792f245eaa at the commit that adds it; the plan and the O-07 walkthrough filed byte-identical, each matching the human's stated sha256 and size):**
+- **The ruling** is the text, referenced and not restated.
+- **The plan:** `state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md` is the migration's order. Its §13 items 1 to 8 are ruled as written.
+- **The answers to §10.9:**
+  - question 1: the session history is kept on the machine, keyed to the project, not in the project folder. This replaces that row of the human's decisions' §1 in `state/directives/O-07-WALKTHROUGH-2026-10-05.md`, which is filed unedited;
+  - question 2: one dated note in docs/07, in B2's pull request, typed by the human then;
+  - question 3: keeping a branch stays out of B2;
+  - question 4: B2 goes in §10.8's five stages, each with its own form;
+  - questions 5 to 11 come to the human as open items in B2's forms.
+- **Applied:**
+  - `shell-migration-milestone-1` is placed (ready, first in slot 1's order). Its full form by the architect and its question round come now. Its code starts when the lines cut has merged, under the 2026-10-07 awaiting-merge direction, item 3.
+  - `b1-shell-half` is re-described as milestone 4.
+  - `briefb-b2-save-reopen` is re-described per §10.
+  - Proposed nodes: `shell-migration-milestone-2`, `-3`, `-5`, and `shell-real-app-run-macos-linux` (§13 item 8).
+  - The holds of 2026-09-23 item (b), and the 2026-09-27 session order's hold on these nodes, lift by milestone, as §13 item 7 says.
+- **Not changed in this step:** no ADR status, no docs/ text and no dependency. The custodian reads "dependency" as a software dependency, and also changes no existing node's `depends_on`.
+
+**RULED 2026-10-07 — question round 65 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-65.md`; the human rejected the call and typed the ruling in the next message at 18:07:11Z by the transcript; recorded verbatim at `state/directives/2026-10-07-round-65-rulings.md`, line 6, sha256 83a8126f41aaca3f660c2e92f102d138c83bc88860d6704e3db98dadf5b79f73 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated. It selects the recommended option of each item in the mirror.
+- **OPEN-1, (1):** the custodian adds the kernel index line for `kernel/TYPED-TERMINAL-CODES-POST-CHECK-RACE-PREREGISTRATION.md` in that piece's closing record, after the lines cut merges. The PR never edits `kernel/README.md`.
+- **OPEN-2, (1):** Part B, the E2 and E3 siblings in `kernel/tests/session_end_event.rs`, is included.
+- **Applied:** the form's Amendment 1 (generation 2); then dispatch, with heavy runs one at a time with the lines cut's.
+
+**RULED 2026-10-07 — `typed-terminal-codes-post-check-race` placed in slot 2 (the human, typed, received at 17:45:53Z by the transcript; recorded verbatim at `state/directives/2026-10-07-typed-terminal-codes-race-placed.md`, line 6, sha256 f73f58d56b4ab68a84ab11d2bae4738e1491769563801b9f7678f868fba6e149 at the commit that adds it):**
+- **The ruling** is the text, referenced and not restated.
+- **Applied:**
+  - the node is placed, and is ready for slot 2, under item 3 of the 2026-10-07 awaiting-merge direction;
+  - the architect drafts its form alone, because the lead-data pilot is paused;
+  - the form is committed before any code.
+- **The stop condition:** the piece is test-only. The work stops, and the human is told, if it needs:
+  - a `protocol/` edit;
+  - or any file in the lines cut's §7 list (`engine/GEOMETRY-LINES-PREREGISTRATION.md`), `kernel/README.md` and `engine/src/fixture.rs` among them.
+
+**DIRECTIVE 2026-10-07 — a piece that only waits for the human's click leaves its slot (the human, typed, received mid-turn and enqueued at 16:34:47Z by the transcript; recorded verbatim at `state/directives/2026-10-07-awaiting-merge-leaves-the-slot.md`, lines 6-13, sha256 00353cd347f51be7d5840b269525cca1295a00067739f31cc8207381d02682bf at the commit that adds it):**
+- **The direction** is the text, referenced and not restated. It amends part 2 of the 2026-10-03 trial directive from its receipt.
+- **As applied at receipt:**
+  - no PR awaits merge: #185 merged at 04:12:28Z, and #186 at 16:24:08Z;
+  - in progress: `geometry-lines-cut`, slot 1, phase A, which edits `protocol/skp`;
+  - `data-plane-crowded-start-detail-spaces` is the only ready piece, and it edits `protocol/data-plane`. By item 3, the trial's rule of at most one piece touching `protocol/` holds, so its code waits until the lines cut has merged. Its form is committed and needs no question round. Slot 2 stays empty until a ready piece passes item 3.
+  - From the next merge, every PR awaiting merge is brought up to date by merging main into it, CI is waited on, and the human is told it is ready again (item 4). The closing record takes no slot (item 5).
+  - Item 7 goes to the next window's report.
+- **Disclosed by the custodian:** before this direction, the trial's rules of disjoint paths and at most one piece touching `protocol/` were not applied when `kernel-close-races-followups` started its code while the points cut's PR #185 awaited merge. Both edited `protocol/skp/SKP-V0.md` and `kernel/README.md`, which is what gave #186 its conflict after #185 merged.
+
 **RULED 2026-10-07 — question rounds 63 and 64 (AskUserQuestion, mirrored by the round-mirror hook as `state/questions/round-63.md` and `state/questions/round-64.md`; round 63's red-line items offered as holds only and answered in typed text at 10:11:00Z by the transcript; round 64 answered by option label at 10:11:16Z; recorded verbatim at `state/directives/2026-10-07-round-63-and-64-rulings.md`: line 6, sha256 8590d29a4b2a7dffa9581fbf6f9eec4032f9771cfa6e4fb123bd6a80071c0d92; line 7, sha256 445ec63c10bf05fb0024bbc9a0792cbae603153e8164e1e7c7c77b84fb1d44bd; lines 8 to 10, sha256 a40a9a6ebbe696945bd923e704043160f1349ac7f9db192734ccbaddf69f6471; line 11, sha256 1c6a27b603988da223219d3b640d9f2a4f7cdf9f4ba7a2e4d139d19ecc9b9a82; line 12, sha256 39a173334d96baf873a473e061b194183bc6a44c99066a0b760c5bb966702e0a; each at the commit that adds it):**
 - **The rulings** are the text, referenced and not restated. They resolve OPEN-1 to OPEN-5 of `engine/GEOMETRY-LINES-PREREGISTRATION.md`. Each is read by its own OPEN label, not by its slot (the directive's filing note).
 - **OPEN-1:** (A), LineString and MultiLineString, with the budget of the form's §7 as declared for (A).

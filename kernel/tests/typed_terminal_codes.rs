@@ -26,7 +26,7 @@ use std::sync::Arc;
 
 use spatial_data_plane::transport::{OpenRequest, SourceFactory};
 use spatial_engine::fixture::{write_geoparquet, FixtureSpec, IdentityMode};
-use spatial_engine::{EngineError, WatchSignal};
+use spatial_engine::{EngineError, WatchSignal, MAX_QUEUED_BATCHES};
 use spatial_kernel::publish::error::PublishError;
 use spatial_kernel::skp::{
     error_of, session_end_channel, terminal_detail_of, SkpHost, StreamRegistry,
@@ -47,13 +47,17 @@ const SOURCE_CHANGED_CODE: &str = "engine.source_changed";
 const SOURCE_COVERAGE_LOST_CODE: &str = "engine.source_coverage_lost";
 
 fn fixture(name: &str) -> PathBuf {
+    fixture_with_features(name, 200)
+}
+
+fn fixture_with_features(name: &str, features: usize) -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/typed-terminals");
     std::fs::create_dir_all(&dir).expect("fixture dir");
     let path = dir.join(format!("{name}.parquet"));
     write_geoparquet(
         &path,
         &FixtureSpec {
-            features: 200,
+            features,
             avg_vertices: 12,
             identity: IdentityMode::NativeUnique,
             ..Default::default()
@@ -83,13 +87,32 @@ fn touch_modification_time(path: &Path) {
 /// `BatchSource::next_into` hands the data plane. If `EngineSource::next_into` stopped prefixing
 /// the code, this fails — and so would the shell, which is the point.
 ///
+/// **Why the post-check cannot beat the touch.** The producer is spawned inside `viewport_query`,
+/// and its queue holds `MAX_QUEUED_BATCHES` batches, each sent blocking. With more batches than
+/// that, the producer waits on a send until this test's first `next_into`, which comes after
+/// `touch_modification_time`; the post-check runs only after the last send. The 5,000-feature
+/// fixture gives that many batches, and the batch-count assertion states the condition.
+///
 /// Mutation: restore `Some(Err(e.to_string()))` in `kernel/src/lib.rs`'s `EngineSource::next_into`.
 /// Expected failure: `the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code`
 /// fails on the prefix assertion — exactly the defect that shipped at attempt 1, caught this time
-/// from the shape the product actually produces.
+/// from the shape the product actually produces. Observed over `92884cc4` on the uncommitted tree
+/// of the commit that adds this line, with `skp::terminal_detail_of(&e)` replaced by
+/// `e.to_string()` there: FAILED at the prefix assertion ("the terminal the data plane receives
+/// must open with the typed code"), then reverted.
+///
+/// Mutation: change this test's `5_000` to `200`. Expected failure: the batch-count assertion,
+/// because 200 features give at most two batches. Observed over `92884cc4` on the uncommitted tree
+/// of the commit that adds this line: FAILED at the batch-count assertion ("the ordering argument
+/// needs more than MAX_QUEUED_BATCHES batches; got 1"), then reverted.
+///
+/// Not a test of record: moving `touch_modification_time(&path)` after the drain loop was observed
+/// over `92884cc4` on the same tree to fail at the terminal `expect` ("a changed source terminates
+/// this stream with a typed refusal"), then reverted. That is consistent with the CI failure and
+/// does not show that this was its cause.
 #[test]
 fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code() {
-    let path = fixture("terminal-carries-code");
+    let path = fixture_with_features("terminal-carries-code", 5_000);
     let handle = DatasetHandle::mint();
     let catalog = Arc::new(Catalog::new());
     catalog
@@ -128,16 +151,31 @@ fn the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_cod
 
     // Change the source under the open stream. The post-check finds it after the scan is drained
     // and the lease released, and the clean terminal becomes the typed refusal (§13 C rule (i)).
+    // The producer was spawned inside `viewport_query`, not at redeem, so this touch must come
+    // before the post-check reads the source. It does: with more batches than
+    // `MAX_QUEUED_BATCHES`, the producer is blocked sending one of them until the first
+    // `next_into` below, and the post-check runs only after its last send.
     touch_modification_time(&path);
 
     let mut buf = Vec::new();
     let mut terminal = None;
+    let mut batches = 0usize;
     while let Some(item) = source.next_into(&mut buf) {
-        if let Err(detail) = item {
-            terminal = Some(detail);
-            break;
+        match item {
+            Ok(_) => {
+                batches += 1;
+                buf.clear();
+            }
+            Err(detail) => {
+                terminal = Some(detail);
+                break;
+            }
         }
     }
+    assert!(
+        batches > MAX_QUEUED_BATCHES,
+        "the ordering argument needs more than MAX_QUEUED_BATCHES batches; got {batches}"
+    );
 
     let detail = terminal.expect("a changed source terminates this stream with a typed refusal");
     assert!(
