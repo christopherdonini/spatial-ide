@@ -67,7 +67,7 @@ function extremes(range: { min: number; max: number; default: number }): number[
 // RECORDED MUTATION for "U1": delete `effectiveSizes`' shrink step (`if (excess > 0) {` becomes
 // `if (false && excess > 0) {`). Expected failure: the fit no longer gives width back, so the map falls
 // below 480 px wide at 1024 x 640.
-// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- both U1 cases that sweep states fail; the first, "holds over every
+// OBSERVED AT 64eb6e7689731eab0dc529cc0632a22d58fc288f: FAILED -- both U1 cases that sweep states fail; the first, "holds over every
 // open combination x tab x section x size extreme, at every viewport", prints
 //   AssertionError: expected [ ...(3) ] to deeply equal []
 // with its first offender a map of 458 x 424 at 1024 x 640 (Layers closed, Inspector open at its 560 maximum).
