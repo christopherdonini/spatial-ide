@@ -98,4 +98,12 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// No new member, command, request member or error code; `protocol/data-plane/` has an empty diff.
 /// Same discipline again: `deny_unknown_fields` both directions, `==` unchanged, both sides'
 /// fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.10` entry).
-pub const SKP_VERSION: &str = "skp/0.10";
+///
+/// `skp/0.11` (LineString and MultiLineString admission, ADR-034,
+/// `engine/GEOMETRY-LINES-PREREGISTRATION.md`, node `geometry-lines-cut`): `describe`'s
+/// `geometry.encoding` gains a fourth and a fifth value, `geoarrow.linestring` and
+/// `geoarrow.multilinestring`. No new member, command, request member or error code;
+/// `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both
+/// directions, `==` unchanged, both sides' fixtures updated in the same commit as the literal bump
+/// (`SKP-V0.md` §8's `skp/0.11` entry).
+pub const SKP_VERSION: &str = "skp/0.11";

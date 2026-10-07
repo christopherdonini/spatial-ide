@@ -55,3 +55,8 @@ This directory's fixtures were updated again in place, to the `skp/0.10` literal
 `geometry-points-cut` (`engine/GEOMETRY-POINTS-PREREGISTRATION.md` §2 W-P2); the version-refusal
 fixture that named `skp/0.10` as an unsupported future version was renumbered to name `skp/0.11`
 instead. No implementation file changed for that update either.
+
+This directory's fixtures were updated again in place, to the `skp/0.11` literal of PLAN node
+`geometry-lines-cut` (`engine/GEOMETRY-LINES-PREREGISTRATION.md` §2 W-L2); the version-refusal
+fixture that named `skp/0.11` as an unsupported future version was renumbered to name `skp/0.12`
+instead. No implementation file changed for that update either.
