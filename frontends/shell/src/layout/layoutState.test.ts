@@ -63,6 +63,14 @@ function extremes(range: { min: number; max: number; default: number }): number[
   return [range.min, range.default, range.max];
 }
 
+// RECORDED MUTATION for "U1": delete `effectiveSizes`' shrink step (`if (excess > 0) {` becomes
+// `if (false && excess > 0) {`). Expected failure: the fit no longer gives width back, so the map falls
+// below 480 px wide at 1024 x 640.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- both U1 cases that sweep states fail; the first, "holds over every
+// open combination x tab x section x size extreme, at every viewport", prints
+//   AssertionError: expected [ ...(3) ] to deeply equal []
+// with its first offender a map of 458 x 424 at 1024 x 640 (Layers closed, Inspector open at its 560 maximum).
+// Reverted after observing.
 describe("U1: no reachable state hides the map (effectiveSizes keeps MAP_MIN at every viewport at or above the floor)", () => {
   it("holds over every open combination x tab x section x size extreme, at every viewport", () => {
     const failures: string[] = [];
@@ -125,6 +133,11 @@ describe("U1: no reachable state hides the map (effectiveSizes keeps MAP_MIN at 
   });
 });
 
+// RECORDED MUTATION for "U2": `toggle` of Layers also closes Activity (the v7 defect, walkthrough step
+// 10). Expected failure: Activity's open flag differs from the untouched expectation.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- "toggle(layers) flips that region's open and leaves everything else
+// deep-equal": AssertionError: expected { layers: { open: false, ...(1) }, ...(3) } to deeply equal
+// { layers: ... }; the diff is activity.open (expected true, received false). Reverted after observing.
 describe("U2: each toggle changes only its own region's open flag", () => {
   const starts: LayoutState[] = [initialLayoutState()];
   const random = seededRandom(0x7091e);
@@ -167,6 +180,11 @@ function allKeys(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
+// RECORDED MUTATION for "U3": remove the maximum clamp (`Math.min(range.max, ...)` dropped from
+// `clampTo`). Expected failure: a resize far above the range is stored as asked.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- "resize(layers) clamps below the minimum, above the maximum, and keeps an
+// in-range value" and its inspector and activity twins: AssertionError: expected 980 to be 480 (layers;
+// 1060 to be 560 for the inspector) // Object.is equality. Reverted after observing.
 describe("U3: resize clamps to the declared range, and the state has no map key", () => {
   it.each(REGIONS)("resize(%s) clamps below the minimum, above the maximum, and keeps an in-range value", (region) => {
     const range = sizeRangeOf(region);

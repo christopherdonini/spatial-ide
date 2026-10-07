@@ -40,6 +40,11 @@ function forbiddenImports(file: string): string[] {
   return offenders;
 }
 
+// RECORDED MUTATION for "U4": add `import "../skp/client";` to layoutState.ts. Expected failure: the scan
+// names the file and the specifier.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- "no layout source file has a forbidden import":
+//   AssertionError: expected [ 'layout/layoutState.ts imports ../skp/client' ] to deeply equal []
+// Reverted after observing.
 describe("U4: nothing under src/layout/ imports from skp/, streaming/, residency/ or canvas/", () => {
   it("found the layout's source files -- otherwise this scan proves nothing", () => {
     expect(layoutSourceFiles()).toEqual(expect.arrayContaining(["layoutState.ts", "actionRegistry.ts"]));

@@ -20,6 +20,12 @@ function facts(over: Partial<WatcherFacts> = {}): WatcherFacts {
   };
 }
 
+// RECORDED MUTATION for "U6": drop the session-ended guard (`if (facts === null || sessionEnded) return
+// null;` becomes `if (facts === null) return null;`). Expected failure: the watcher item still shows while
+// the session-ended statement stands.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- "is null while the session-ended item stands, whatever the facts":
+//   AssertionError: expected '[P6 placeholder] source watch: watchi...' to be null
+// Reverted after observing.
 describe("U6: the watcher item's text", () => {
   it("watching with full checks: the coverage state as the engine wrote it, marked a P6 placeholder", () => {
     expect(watcherStatusText(facts(), false)).toBe("[P6 placeholder] source watch: watching");

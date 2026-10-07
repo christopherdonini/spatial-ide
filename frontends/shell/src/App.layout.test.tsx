@@ -277,6 +277,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
   // RECORDED MUTATION for "R1": key the map region on `inspector.open` (StudioLayout.tsx's `<main>`
   // gets `key={String(state.inspector.open)}`). Expected failure: the first Ctrl+I remounts the map, so
   // the canvas stand-in's mount list reaches 2 for the same handle.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- "mounts after every layout action": AssertionError: expected [ ...(5) ] to
+  // deeply equal [ Array(1) ] (the same handle mounted five times). Reverted after observing.
   it("R1: the map is mounted exactly once per handle across every layout action; a reopen mounts the new handle once and unmounts the old one once", async () => {
     await open(PATH_A);
     const [handleA] = mocks.canvas.mounted;
@@ -297,6 +299,9 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
   // RECORDED MUTATION for "R2": render closed content as null (StudioLayout.tsx's section content div
   // draws `state.inspector.open ? slots[...] : null`). Expected failure: closing the Inspector unmounts
   // `FilterPanel`, so the reopened input is a fresh one and its text is gone.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- at the node-identity assertion after the second Ctrl+I: AssertionError:
+  // expected <input class="filter-predicate" value="" ...> to be <input ... value="zone = 'residential'">
+  // (Object.is equality; the reopened input is a fresh one with no text). Reverted after observing.
   it("R2: after Ctrl+I twice, the FilterPanel input's text and PublishPanel's aria-expanded survive", async () => {
     await open(PATH_A);
     const input = q<HTMLInputElement>(".filter-predicate")!;
@@ -317,6 +322,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
   // RECORDED MUTATION for "R3": remove the focus relocation (StudioLayout.tsx's
   // `if (holdsFocus) mapRef.current?.focus();`). Expected failure: the focused filter input is still the
   // active element after its region is hidden, so it is not the map.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- AssertionError: expected <input class="filter-predicate" ...> to be
+  // <main id="region-map" ...> (Object.is equality). Reverted after observing.
   it("R3: with focus in the filter input, Ctrl+I hides the Inspector, focus is on the map region, and the text is kept", async () => {
     await open(PATH_A);
     const input = q<HTMLInputElement>(".filter-predicate")!;
@@ -332,6 +339,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
 
   // RECORDED MUTATION for "R4": place the Inspector before the map in the DOM (StudioLayout.tsx's
   // Inspector `<aside>` and its splitter moved above `<main>`). Expected failure: the order assertion.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- "region 4 follows region 3 in the DOM": AssertionError: expected +0 to be
+  // truthy (the Inspector no longer follows the map). Reverted after observing.
   it("R4: landmark roles and names, the DOM order of the regions, hidden on closed regions and never on the map", () => {
     const header = q("header")!;
     const layers = region("Layers");
@@ -376,6 +385,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
   // RECORDED MUTATION for "R5": wire the row to a no-op (App.tsx's
   // `onZoomToLayer={() => void canvasRef.current?.fitToBounds()}` becomes `() => {}`). Expected
   // failure: the canvas handle's `fitToBounds` call count stays 0.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- AssertionError: expected +0 to be 1 // Object.is equality (the
+  // `fitToBounds` call count after the click). Reverted after observing.
   it("R5: the Layers row's .zoom-to-layer calls fitToBounds once; there is no row before admission", async () => {
     expect(q(".layers-row")).toBeNull();
     expect(q(".zoom-to-layer")).toBeNull();
@@ -393,6 +404,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
 
   // RECORDED MUTATION for "R6": key StudioLayout on the dataset (App.tsx's `<StudioLayout>` gets
   // `key={admitted?.dataset}`). Expected failure: the reopen resets the layout, so Layers is open again.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- "Layers still closed after the reopen": AssertionError: expected false to
+  // be true // Object.is equality. Reverted after observing.
   it("R6: the layout survives a reopen, and the SKP client's call count is unchanged across every layout action", async () => {
     await open(PATH_A);
     const callsBefore = mocks.skpCalls;
@@ -415,6 +428,8 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
 
   // RECORDED MUTATION for "R7": delete the recordNamed call for `layout.toggleLayers`
   // (StudioLayout.tsx's `recordLayoutAction`). Expected failure: no `layout.toggleLayers` row appears.
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- AssertionError: expected [] to deeply equal [ 'layout.toggleLayers' ].
+  // Reverted after observing.
   it("R7: Ctrl+B records one layout.toggleLayers gui-action (and a drag one layout.resizeRegion, never one per move)", async () => {
     await open(PATH_A);
     const before = layoutRows().length;
@@ -434,6 +449,9 @@ describe("App: the Map Studio frame, through the real App (milestone 1)", () => 
   // admitted state and drop App's `section.source` render. Expected failure: after the refused second
   // open the Source section holds no summary (the restored render lives in Layers and goes with the
   // panel's own state, which is now the refusal).
+  // OBSERVED AT 420bc3153ed2ec4623c89e88eb13ae78da304463: FAILED -- at the first Source assertion: AssertionError: the given combination of
+  // arguments (undefined and string) is invalid for this assertion (`#section-source .describe-summary`
+  // does not exist). Reverted after observing.
   it("R8: after a refused second open, Source still shows the first dataset's summary while Layers shows the refusal", async () => {
     await open(PATH_A);
     expect(q("#section-source .describe-summary")?.textContent).toContain("EPSG:2056");

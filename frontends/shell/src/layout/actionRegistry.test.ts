@@ -28,6 +28,11 @@ function key(letter: string, over: Partial<KeyEventLike> = {}): KeyEventLike {
 const ctrl = (letter: string, over: Partial<KeyEventLike> = {}) => key(letter, { ctrlKey: true, ...over });
 const meta = (letter: string, over: Partial<KeyEventLike> = {}) => key(letter, { metaKey: true, ...over });
 
+// RECORDED MUTATION for "U5": swap the I and J bindings in actionRegistry.ts (the Inspector entry takes
+// J's chord, the Activity entry takes I's). Expected failure: the test named for Mod+I fails.
+// OBSERVED AT d19c84a6c455029a7ec4bdca077ac1e9295f8b8a: FAILED -- 4 cases, the first "Mod+I toggles the Inspector (Ctrl)":
+//   AssertionError: expected 'layout.toggleActivity' to be 'layout.toggleInspector' // Object.is equality
+// Reverted after observing.
 describe("U5: Mod+B, Mod+I and Mod+J map to the three toggles", () => {
   it("Mod+B toggles Layers (Ctrl)", () => {
     expect(matchChord(ctrl("b"), "other")).toBe("layout.toggleLayers");
