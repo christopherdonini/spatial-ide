@@ -671,3 +671,46 @@ Budget overrun, §7 not edited. *Written by the custodian after the build's resu
 6. **Generation 5.**
 
 **Superseded index.** None. §7 is not edited.
+
+### Amendment 5 — the closing record (class 1, with class 3 for T-1's span)
+
+*Written by the custodian after the outcomes were seen. PR #185 merged at 2026-10-07T04:12:28Z as merge commit 37b420029d3482c654e62f6e1db5d1ad1f994ead, with parents dec87a1d62c411c915637ef4945a56c55408b6b2 and 6d5a6cf33da92135cb48104b129f11e8667824f6. It follows §9's closing-record list and routes the gates' record items. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #185, at the merge commit above;
+   - both gates' reviewed head, 2e481e743e48a73b402acdf51c02ade172cce0dc, at generation 5;
+   - the merged head, 6d5a6cf3. It adds only the gate-1 Documentation fixes, in 2ff9a8e67fb3472172974755bb182c486bc97e44, 0a6324e09e64baa3cf6bc3c38ee9ee1b721dbee3 and 6d5a6cf3. The custodian checked each against its finding (worker report 4), and CI was green there.
+2. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-07-geometry-points-cut-gate1-architect.md`, pass with notes, gate-log 427, sha256 56b937d7f7c484e4a8ccd681ed628258074746f47fc3028156380f9fe0f23e46, added in 54f304193a76f3ff90593513da5dbe5910c16819;
+   - `2026-10-07-geometry-points-cut-gate1-reviewer.md`, pass, gate-log 428, sha256 3c083f8ddae3ee01bf7edee1919999f80699b5e65fdb113b438948657f41910d, added in a14aceb6b2f96e2e84d61d55e1daddf6b0193ea3.
+3. **The worker reports, each pinned at the commit that added it** (the reviewer's D-5). Each hash is of the file from its line 5 to the end, and each file is byte-identical at the merge commit:
+   - `state/consults/2026-10-06-geometry-points-cut-worker-report-1.md`, at ff6d05a54a55ac5605c3efb9f0fd9da238dde09a, sha256 dfa3c82ea78701f358f61ef495890f8b9a5a0209624f2680d250fe492729058f (Amendment 2);
+   - `-report-2.md`, at 4ea0c6c0cb949a3f39897cf95a6b379abdd5dcbb, sha256 42d59115baa75256c300a1f80f12c32c763fd5eb88bd3978a4911d46d1918207 (Amendment 3);
+   - `-report-3.md`, at 0723892baf8da6047640da234a671feac5853048, sha256 bf97e536764b463e04373e55782c52c05a608cca0af4b4cd845428407e156155 (Amendment 4);
+   - `state/consults/2026-10-07-geometry-points-cut-worker-report-4.md`, the gate fixes, at 99f4c437e81ad3286a9f388ea466e3f76d322556, sha256 cd27bcab2418d9436f2439c18d654a444c2bc188ba442f2b234c01d6ec2c4ea1.
+4. **§6's files at the merge commit.** Each of the first four is byte-identical to the base d3fe6055:
+   - `engine/tests/data/golden/polygon-wire.golden`, sha256 d810e6a8659c82c322231d9c784e8d9fbb4e0f074bb325e3cebf1f94ddcab15d;
+   - `kernel/tests/data/golden/publish-partitions.golden`, sha256 5b10ddd64ca60db9009ab1453cf99098353e4a9b93bcf012dca089586b0c7e01;
+   - `engine/tests/data/geoarrow/lv95-polygon-batch.arrows`, sha256 d0afe93e143c0e2de16f7fad6eb9272a687195dfec6f68999e7dc7b24ba78197;
+   - `engine/tests/data/geoarrow/lv95-multipolygon-batch.arrows`, sha256 831eb54076cf565eac33b673749f8fa3a6a2f481ff3c831a371f740abf6673fa;
+   - BF-P, `engine/tests/data/geoarrow/lv95-point-batch.arrows`, which is new in b4a6fd9d, sha256 10c17431583bc49d772ddffe92e59a8644397103f140b055fb38ffd1d65f267f.
+5. **The mutations:** each row's observation commit is in its test's recorded-mutation comment and in the worker reports' Mutations tables. The reviewer re-made every row at 2e481e74, and each failed its test by name except PE-6's registered mutation, as Amendment 2, item 2 records (the reviewer report's Mutations section).
+6. **The literal minted:** `skp/0.10`, at `protocol/skp/src/v0/mod.rs:101 @ 37b42002 sha256:a8309142dd0c7612f3b7fbbb69439604013081d476792ac5f58500c2f7e86de6`. Its §8 entry is `protocol/skp/SKP-V0.md:1016-1036 @ 37b42002 sha256:bbcd090cb13fa3fa3d24cb3bb0e7fbf1921e14ba1e8553162e88e1f1af948226`.
+7. **`engine/ADMISSION-RESULTS.md`** has sha256 74b408b520e84692d3664b89ccc594e56120d614389a98f1262a1888cb8f2c43 at the merge commit. Its header names the tree 0a6324e0, a committed branch commit, and 6d5a6cf3 committed the output.
+8. **T-1's new span, class 3:** `engine/tests/lod_tier_builder.rs:1494-1501 @ 37b42002 sha256:48c8e24ef2bc76a5fa5a8426f522d9f949c21c63b58d9e7d5a27a0a9cddd8bce`. It was changed in b4a6fd9d and replaces §2's superseded span.
+9. **The done items' proofs:**
+   - §4's rows, by name, with Amendment 3, item 3's added tests;
+   - each one re-observed by name at 2e481e74 (the reviewer report's Mutations and P-5 sections).
+10. **§7:** 2,666 changed lines (2,400 insertions, 266 deletions) over 53 files, against at most 3,220 over 64. The count is `git diff --numstat dec87a1d 37b42002` with §7's two exclusions.
+    - This is Amendment 4's 2,660 plus the gate fixes' 6 lines: engine tests reach 810 against 850, and shell product reaches 247 against 380.
+    - The kernel group stays at 306 against 220 (Amendment 4, class 8).
+11. **Amendment 3, item 7's spacing figure, corrected by reference** (the architect's D-3): the closest pairs of P-1's points, k and k+3 in `point_p1`, are about 9.64 m apart, not at least 10 m. The conclusion stands, because they are about 15 px apart where the spacing refusal starts. Row P2 was fixed in 2ff9a8e6, and Amendment 3 is not edited.
+12. **PP-5's ignored set** (the architect's D-6): its closed list gains one more ignored test, the pile generator `generate_the_point_pile_fixture`, under Amendment 3, item 7. That makes 50 ignored at 2e481e74 (Amendment 4, item 5). §5 is not edited.
+13. **Routed:**
+    - MP' still opens F-1, which has no covering, and is predicted to meet the no-covering refusal at its next run (Amendment 1, item 6). The proposed node `mp-prime-e2e-covered-fixture` is appended to PLAN in this amendment's commit, for the human's placement (Amendment 3, item 8; the architect's noticed item 1).
+    - The engine README's Declared-limits line and the shell-owned items 35 and 36 go to the next piece that touches the indexes (the architect's noticed item 3).
+    - `noticeDeterminism.test.ts`'s re-run, alone under an exclusive hold, is still owed (Amendment 3, item 9).
+14. **Operator:** Part P (the points one) and the E2E step PT' are unrun. They are queued for the sitting with MP-1's Part S.
+15. **Done:** PLAN marks the node done, with evidence `{pr: 185}`, at generation 6, in this amendment's commit.
+
+**Superseded index.** Amendment 3, item 7's spacing figure → item 11. §5's PP-5 ignored set → item 12. §2's T-1 superseded span → item 8. None is edited.

@@ -2281,26 +2281,26 @@ nodes:
     kind: task
     lane: engine
     phase: prototype
-    status: in-progress
+    status: done
     order: 15
     depends_on: [geometry-types-beyond-polygons]
     needs_human: {kind: none, minutes: 0}
     gate: engine/GEOMETRY-POINTS-PREREGISTRATION.md
     merge: merge-commit
-    evidence: {branch: cut/geometry-points-cut}
+    evidence: {pr: 185}
     budget_minutes: 0
-    generation: 5
+    generation: 6
     felt_verdict: false
     entries: [110]
-    summary: "READY FOR THE HUMAN 2026-10-07: PR #185 at 6d5a6cf3, CI green; gate 1 BOTH PASS at 2e481e74 (architect 427 with notes, reviewer 428); the Documentation fixes at 6d5a6cf3 checked against each finding (worker report 4); no E-rows; the human click (a merge commit) is the approval. Before: PR #185 OPEN 2026-10-06 at 2e481e74 (a merge commit asked): gate 1 of both dispatched (architect reading C:/dev/wt/points; reviewer in C:/dev/wt/points-rev with target D:/wt-targets/points-rev). Before: BUILT 2026-10-06 at 2e481e74 (the pile fixture added; 2,660 lines over 53 files; Amendment 4 class 8, the kernel group 306 of 220; generation 5): the PR and both gates next. Before: PHASE B BUILT 2026-10-06 (7620550a; 2,621 lines over 53 files; workspace 885 passed, shell 1,119, src-tauri 68): Amendment 3 (generation 4) records its class 2 and 3 deviations and a class 9 pile-of-points fixture for row P2 (the OPEN-4 ruling), one fix commit before the gates; then class 8 at the gated head, the PR and both gates. Before: PHASE A BUILT 2026-10-06 (edbc0f3c; 1,809 lines over 35 files; workspace 885 passed): Amendment 2 (generation 3) records its class 2 deviations, the kernel group at 260 of 220 so far (class 8 at the gated head), and the clippy reading; phase B (shell, docs, the P4 re-run) next. Before: IN PROGRESS 2026-10-06, slot 1: branch cut/geometry-points-cut from d3fe6055 (base B), on origin; worktree C:/dev/wt/points, target D:/wt-targets/points; phase A (commits 1 to 3: engine, kernel tests and generators, wire) by worker-high; phase B (shell, docs, the P4 re-run) next. Before: AMENDMENT 1 2026-10-06 (generation 2): question round 62 ruled OPEN-1 (A) Point only, OPEN-2 (A) with the mixed-kind P6 placeholder, OPEN-3 (A) radius 4 px with no save path for a point layer style document, OPEN-4 (A) average spacing against 9 px with row P2 hovering a pile of points; C-1 applies (confirmed by code); dispatch next, commit 1 first. Before: FORM COMMITTED 2026-10-06 (the architect draft, alone, full form from dispatch, 67 pins at 7e3a00a6; wire skp/0.10, stated guarantees, ADR-034 inherited): OPEN-1 (MultiPoint scope) is ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; all four go to the human in one question round. Before: UNBLOCKED 2026-10-06 by MP-1 done (#182; its gate-1 reviewer PASS with no Correctness or Evidence finding, so no fix piece comes first). Routed here by MP-1 Amendment 6, item 12, for its form: C-n1 (two new pub items beyond MP-1 E3) and DR-3 (L-1 recorded-mutation comment). The form is the architect's to draft. Before: PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
-    dates: {opened: 2026-09-22, done: null}
+    summary: "DONE 2026-10-07: #185 merged at 04:12:28Z as 37b42002; closing record Amendment 5 (generation 6); MP prime on F-1 routed to the proposed node mp-prime-e2e-covered-fixture; Part P and PT prime unrun, queued with MP-1 Part S; the noticeDeterminism re-run alone under an exclusive hold still owed. Before: READY FOR THE HUMAN 2026-10-07: PR #185 at 6d5a6cf3, CI green; gate 1 BOTH PASS at 2e481e74 (architect 427 with notes, reviewer 428); the Documentation fixes at 6d5a6cf3 checked against each finding (worker report 4); no E-rows; the human click (a merge commit) is the approval. Before: PR #185 OPEN 2026-10-06 at 2e481e74 (a merge commit asked): gate 1 of both dispatched (architect reading C:/dev/wt/points; reviewer in C:/dev/wt/points-rev with target D:/wt-targets/points-rev). Before: BUILT 2026-10-06 at 2e481e74 (the pile fixture added; 2,660 lines over 53 files; Amendment 4 class 8, the kernel group 306 of 220; generation 5): the PR and both gates next. Before: PHASE B BUILT 2026-10-06 (7620550a; 2,621 lines over 53 files; workspace 885 passed, shell 1,119, src-tauri 68): Amendment 3 (generation 4) records its class 2 and 3 deviations and a class 9 pile-of-points fixture for row P2 (the OPEN-4 ruling), one fix commit before the gates; then class 8 at the gated head, the PR and both gates. Before: PHASE A BUILT 2026-10-06 (edbc0f3c; 1,809 lines over 35 files; workspace 885 passed): Amendment 2 (generation 3) records its class 2 deviations, the kernel group at 260 of 220 so far (class 8 at the gated head), and the clippy reading; phase B (shell, docs, the P4 re-run) next. Before: IN PROGRESS 2026-10-06, slot 1: branch cut/geometry-points-cut from d3fe6055 (base B), on origin; worktree C:/dev/wt/points, target D:/wt-targets/points; phase A (commits 1 to 3: engine, kernel tests and generators, wire) by worker-high; phase B (shell, docs, the P4 re-run) next. Before: AMENDMENT 1 2026-10-06 (generation 2): question round 62 ruled OPEN-1 (A) Point only, OPEN-2 (A) with the mixed-kind P6 placeholder, OPEN-3 (A) radius 4 px with no save path for a point layer style document, OPEN-4 (A) average spacing against 9 px with row P2 hovering a pile of points; C-1 applies (confirmed by code); dispatch next, commit 1 first. Before: FORM COMMITTED 2026-10-06 (the architect draft, alone, full form from dispatch, 67 pins at 7e3a00a6; wire skp/0.10, stated guarantees, ADR-034 inherited): OPEN-1 (MultiPoint scope) is ruled before dispatch, OPEN-3 and OPEN-4 before the shell commit, OPEN-2 before the PR is set ready; all four go to the human in one question round. Before: UNBLOCKED 2026-10-06 by MP-1 done (#182; its gate-1 reviewer PASS with no Correctness or Evidence finding, so no fix piece comes first). Routed here by MP-1 Amendment 6, item 12, for its form: C-n1 (two new pub items beyond MP-1 E3) and DR-3 (L-1 recorded-mutation comment). The form is the architect's to draft. Before: PLACED 2026-10-05 (the product-first direction 8.c): after MP-1 in the engine lane, with its own preregistration. Before: Split out by the human 2026-09-22; not dispatched as part of the MultiPolygon cut"
+    dates: {opened: 2026-09-22, done: 2026-10-07}
 
   - id: geometry-lines-cut
     title: "Geometry -- lines, its own bounded vertical cut"
     kind: task
     lane: engine
     phase: prototype
-    status: blocked
+    status: ready
     order: 16
     depends_on: [geometry-types-beyond-polygons, geometry-points-cut]
     needs_human: {kind: none, minutes: 0}
@@ -4169,6 +4169,23 @@ nodes:
     entries: []
     summary: "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it."
     dates: {opened: 2026-10-05, done: null}
+  - id: mp-prime-e2e-covered-fixture
+    title: "E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [geometry-points-cut]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Routed 2026-10-07 by geometry-points-cut's closing record (engine/GEOMETRY-POINTS-PREREGISTRATION.md, Amendment 5, item 13; the gate-1 architect's noticed item 1; worker report 2's Noticed section): frontends/shell/e2e/regression.mjs's MP' step (MP-1, merged) opens multipolygon-f1.parquet, which has no covering, so by the points form's Amendment 1, item 6 it is expected to meet the no-covering refusal at its next run. F-1c, the covered twin, is written by kernel/tests/manual_walkthrough_fixtures.rs since the points cut. Existing E2E steps stay unedited, so a new step on F-1c is a class 9 addition in its own form. Waiting on the human's placement."
+    dates: {opened: 2026-10-07, done: null}
   - id: verify-quotes-dotted-paths
     title: "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked"
     kind: task

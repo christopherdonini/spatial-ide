@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `b8ff220bd05af7488fdea668787a85293bd2ac6c7bbf6e68274198945880c712`) at `2026-10-07T03:12:37.355Z`.
+Generated from `PLAN.yaml` (sha256 `f0c8524069f0b703a41d6e6c300391bd4975f3046ec90ebf8f990845216d2e2f`) at `2026-10-07T04:35:10.619Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (lane `engine`)
 
 ## 2. Ready
 
-- (none)
+- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut (lane `engine`, order 16, budget 0 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -18,7 +18,6 @@ Generated from `PLAN.yaml` (sha256 `b8ff220bd05af7488fdea668787a85293bd2ac6c7bbf
 
 ## 4. Blocked on dependencies
 
-- **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — blocked by: geometry-points-cut
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation — blocked by: decision-adr-029-scan-progress-route, geometry-lines-cut
@@ -29,7 +28,6 @@ Generated from `PLAN.yaml` (sha256 `b8ff220bd05af7488fdea668787a85293bd2ac6c7bbf
 
 ## 5. In progress
 
-- **geometry-points-cut** — Geometry -- points, its own bounded vertical cut — evidence: branch `cut/geometry-points-cut`
 - **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — evidence: branch `cut/kernel-close-races-followups`
 
 ## 6. Proposed / unscheduled
@@ -94,6 +92,7 @@ Generated from `PLAN.yaml` (sha256 `b8ff220bd05af7488fdea668787a85293bd2ac6c7bbf
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
 - **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
+- **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 
 ### Unscheduled
