@@ -1867,7 +1867,7 @@ nodes:
     dates: {opened: 2026-09-09, done: null}
 
   - id: briefb-b2-save-reopen
-    title: "Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation"
+    title: "B2 — Save project, Snapshot data, session history, lineage and preferences, in five stages, each with its own form"
     kind: task
     lane: shell
     phase: prototype
@@ -1881,7 +1881,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's."
+    summary: "RE-DESCRIBED 2026-10-07 per the migration plan's section 10 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 10), which is the brief for B2's preregistration. Five stages, each with its own form (section 10.8; the human's answer to question 4): 1 Save project (linked) and reopen, with the lasting dataset reference, the kernel step commands and the session history with its crash safety; 2 the lineage file, compaction at Save project and the step record; 3 Snapshot data and the freeze-a-snapshot choice; 4 the views and restore (Data lineage, Map recipe, Sources); 5 sharing levels, tracking settings and the two-layer preferences. The human's answers: question 1, the session history is kept on the machine, keyed to the project, not in the project folder; question 2, one dated note in docs/07 in B2's pull request, typed by the human then; question 3, keeping a branch stays out of B2; questions 5 to 11 come to the human as open items in B2's forms. Its dependencies stand, the ADR-029 scan-progress ruling among them. Before: PLACED 2026-10-05 (the product-first direction 8.d): after the points and lines cuts; its dependencies stand, the ADR-029 scan-progress ruling among them. Before: Shell direction item (b), RULED 2026-09-23 (late): B2's screens wait for the new shell structure (shell-redesign-map-studio). They are also held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): they wait for the shell migration plan. The human, 2026-09-22: reference Save/reopen, then verified Prepare, as separately reviewable pieces; Save performs no whole-file scan; Prepare explicitly acquires or selects an eligible immutable revision (explicit operator intent; reuse without recopying; never silently rebind a mutable preview); verified operations read that artifact; rebinding creates a fresh generation; saved-work inputs have retention distinct from the rendering cache; missing/cancelled/failed/mismatched never display success; a single-dataset recipe, not a multi-layer project; one focused Save/Prepare design exercise resolves interaction choices before coding: a clickable prototype on synthetic data with a state/transition table, keyboard and accessibility behaviour, the failure states, and explicit selection of an eligible immutable revision; no whole-app redesign. the typed spatial-recipe schema, its atomic save and its preview/verified/mismatch state machine, once B1 closes PORTABILITY section 4 (Prepare's coherent-acquisition guarantee, defined without the OS) binds B2's preregistration when B2 starts (state/directives/2026-09-30-portability-and-handoff.md, item 1). Round 33 (RULED 2026-10-02, DECISIONS-PENDING.md, question round 33), item 10: the coherent-acquisition guarantee lives in a short Proposed ADR, drafted with B2's preregistration; its acceptance stays the human's."
     dates: {opened: null, done: null}
 
   - id: briefb-b3-publish-v2
@@ -2351,7 +2351,7 @@ nodes:
     dates: {opened: 2026-09-25, done: 2026-09-25}
 
   - id: b1-shell-half
-    title: "Brief B, stage B1 -- the shell half (the hover readout and match per ADR-023, the panel consuming projectable)"
+    title: "Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table"
     kind: task
     lane: shell
     phase: prototype
@@ -2365,7 +2365,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
+    summary: "RE-DESCRIBED 2026-10-07 as the migration's milestone 4 (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 8): on the new shell, after milestones 1 to 3; attributes of the inspected feature in the Feature tab, colour by category in the Style tab with its legend (the one match of ADR-017, its section 5a), and the table in Activity with features and the three scope options. Its form settles where the table's features come from, a second consumer of the dataset's stream connections, and proposes no new SKP command without the human's ruling. Its depends_on is unchanged in this step. Before: O6 (MP-1 done 2026-10-06, #182; engine/MULTIPOLYGON-MP1-PREREGISTRATION.md section 2, O6, and its Amendment 6): b1-shell-half lands second, writes its lookup against MP-1 merged partToRow and resolvePick, and proves it end to end. Before: RULED 2026-09-25, question round 22, item 2 (B1's O7 as recommended): the named consumer of the engine half's non-null columns path and projectable, under round 8's producer exemption; gated by shell-redesign-map-studio. Held by the 2026-09-27 session order until the human says otherwise (state/directives/2026-09-27-session-order.md, its last paragraph): it waits for the shell migration plan, which Fable writes after the O-07 walkthrough, with state/drafts/design/LAYER-MODEL-DECISIONS-2026-09-28.md as an input."
     dates: {opened: 2026-09-25, done: null}
 
   - id: governance-hooks-cloud-inert
@@ -3104,12 +3104,12 @@ nodes:
     dates: {opened: 2026-09-27, done: 2026-10-07}
 
   - id: shell-migration-milestone-1
-    title: "Shell migration, milestone 1 -- the first milestone of Fable migration plan for the Map Studio direction"
+    title: "Shell migration, milestone 1 -- the frame: Map Studio regions, panel toggles, separated sections, an attention strip and a status bar"
     kind: task
     lane: shell
     phase: prototype
-    status: proposed
-    order: null
+    status: ready
+    order: 11
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: none
@@ -3118,7 +3118,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
+    summary: "PLACED 2026-10-07 by the human's ruling of the migration plan's second version (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5, scope and acceptance, and 5.7, placement): first in slot 1 order. Its full form, by the architect, and its question round now; its code starts when the lines cut has merged, since it shares frontends/shell/e2e/regression.mjs and frontends/shell/MANUAL-WALKTHROUGH.md with it (the 2026-10-07 awaiting-merge direction, item 3). No engine, kernel or protocol file; no new dependency (the plan, section 2). The governance freeze lifts when it merges. Before: PROPOSED 2026-10-05 by the product-first direction 8.b: proposed until the human rules Fable migration plan (written after the O-07 walkthrough); from that ruling it is first in slot 1 order. The freeze lifts when this milestone and MP-1 have both merged."
     dates: {opened: 2026-10-05, done: null}
   - id: skp-line-cites-outside-close-races
     title: "Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test"
@@ -4273,6 +4273,74 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "Found 2026-10-07 by the typed-terminal-codes-post-check-race drafting (state/consults/2026-10-07-typed-terminal-codes-post-check-race-architect-draft.md, finding F-2): a doc behaviour claim the code does not support (prepare runs on the producer thread, and the producer runs ahead up to MAX_QUEUED_BATCHES). engine/src/stream.rs is in the lines cut's file list, so this waits for the lines cut. Doc-only. Waiting on the human's placement."
+    dates: {opened: 2026-10-07, done: null}
+  - id: shell-migration-milestone-2
+    title: "Shell migration, milestone 2 -- selection and scope: the Select tool, a selection that survives filter and pan, the hidden count, a stated scope"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [shell-migration-milestone-1]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 6): follows milestone 1 directly; seams 3, 4, 5 and 6; no backend change; its own full form. Proposed, for placement when milestone 1 is under way."
+    dates: {opened: 2026-10-07, done: null}
+  - id: shell-migration-milestone-3
+    title: "Shell migration, milestone 3 -- command bar and filter clauses: Ctrl+K, slash commands, typed /filter with field completion, clause cards with on and off"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [shell-migration-milestone-2]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 7, bounded): seams 1 (full) and 2; the kernel stays the only authority on filter admission; no new SKP schema; the human may swap milestones 3 and 4. Proposed."
+    dates: {opened: 2026-10-07, done: null}
+  - id: shell-migration-milestone-5
+    title: "Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [b1-shell-half]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
+    dates: {opened: 2026-10-07, done: null}
+  - id: shell-real-app-run-macos-linux
+    title: "Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds"
+    kind: task
+    lane: platform
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: [shell-migration-milestone-1]
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 0
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed."
     dates: {opened: 2026-10-07, done: null}
   - id: verify-quotes-dotted-paths
     title: "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked"
