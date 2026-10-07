@@ -1099,8 +1099,8 @@ fn the_p4_admission_table_runs_against_the_preregistered_corpus_and_writes_admis
     let p3_status = if p3_rows == vec!["#3"] {
         "borne out (primary-provenance precedence applied: a row whose crs_provenance is \
          crs:format-default is counted under prediction 2, not here, even where its \
-         axis_provenance is also axis:format-override — #8 is excluded from this count on that \
-         precedence)"
+         axis_provenance is also axis:format-override — #5 and #8 are excluded from this count on \
+         that precedence)"
     } else {
         "not borne out (primary-provenance precedence applied: a row whose crs_provenance is \
          crs:format-default is counted under prediction 2, not here, even where its \
