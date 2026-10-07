@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d6eaaf1e69cdb707a4c152ed19b360c62705cfc4fc60a5f8fd6f814bb3a97285`) at `2026-10-07T18:08:17.005Z`.
+Generated from `PLAN.yaml` (sha256 `f3b3d546ab6c09ebc9a712a914ebf978bcbe0566f4ccdb860d147769167f9b5b`) at `2026-10-07T19:07:34.282Z`.
 
 ## 1. Next
 
@@ -9,7 +9,6 @@ Generated from `PLAN.yaml` (sha256 `d6eaaf1e69cdb707a4c152ed19b360c62705cfc4fc60
 ## 2. Ready
 
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
-- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (lane `kernel-protocol`, order 15, budget 45 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -29,6 +28,7 @@ Generated from `PLAN.yaml` (sha256 `d6eaaf1e69cdb707a4c152ed19b360c62705cfc4fc60
 ## 5. In progress
 
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
+- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source — evidence: branch `cut/typed-terminal-codes-post-check-race`
 
 ## 6. Proposed / unscheduled
 
