@@ -1,14 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e807c3596ad9f28f16d73651e4fecc662d319e711c5516775a00d2278abfd7ff`) at `2026-10-07T16:12:28.083Z`.
+Generated from `PLAN.yaml` (sha256 `e1073fef5b02979511f7c8ebf2b7b402e20f87174c9e1731df91955bc39f0498`) at `2026-10-07T16:28:55.957Z`.
 
 ## 1. Next
 
-- (nothing ready)
+- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`)
 
 ## 2. Ready
 
-- (none)
+- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -19,7 +19,6 @@ Generated from `PLAN.yaml` (sha256 `e807c3596ad9f28f16d73651e4fecc662d319e711c55
 ## 4. Blocked on dependencies
 
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close — blocked by: b1-shell-half
-- **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) — blocked by: kernel-close-races-followups
 - **briefb-b2-save-reopen** — Brief B, stage B2 — recipe save / reopen / verification / rebind / cancellation — blocked by: decision-adr-029-scan-progress-route, geometry-lines-cut
 - **entry-77-code-signing** — Entry 77 — code signing for the Windows installer — blocked by: signpath-application-draft
 - **m13-bracketed-values** — Part M row M13's two bracketed values — blocked by: release-v0-1-1
@@ -29,7 +28,6 @@ Generated from `PLAN.yaml` (sha256 `e807c3596ad9f28f16d73651e4fecc662d319e711c55
 ## 5. In progress
 
 - **geometry-lines-cut** — Geometry -- lines, its own bounded vertical cut — evidence: branch `cut/geometry-lines-cut`
-- **kernel-close-races-followups** — kernel-generation-close-races' routed items -- the open_dataset sink comment still naming a reference no client holds, stale line cites into skp.rs, and B1's recorded-mutation comment cites shifted by the close-races Amendment 1 lines — evidence: branch `cut/kernel-close-races-followups`
 
 ## 6. Proposed / unscheduled
 

@@ -333,3 +333,46 @@ Conditional rows: OPEN-1 (B) adds `frontends/shell/src/streaming/liveTicketSet.t
 - §2's parts conditional on OPEN-1 (B) and OPEN-2 (A) → items 1 and 2, binding.
 - §7's conditional rows → item 1. The OPEN-1 row applies, and the OPEN-3 row does not.
 - §9's gates → item 5 adds section 2, by reference.
+
+### Amendment 2 — the closing record (class 1, with a class 2 correction of §0's mint-race premise)
+
+*Written by the custodian after the outcomes were seen. PR #186 merged at 2026-10-07T16:24:08Z as merge commit 6288cccc08b56b0c975812a5632165b98e60ee0e, with parents d87cdc3c2e891e64d91967f9551b7203490f6933 and 82140fe0142b0f1a5d72ba65f9aaee5558ac17f6. It follows §9's closing-record list. References and hashes only. Nothing below is a quotation.*
+
+1. **The PR and its heads:**
+   - PR #186, at the merge commit above;
+   - both gates' reviewed head, 78e52eea6460f9eb0dcffa3af3cb37a25b1f85ca, at generation 2;
+   - the merged head, 82140fe0. Over the reviewed head it adds:
+     - the gate-1 Documentation fixes, f143267473cc5e956fca704c512e8a6876389836 and a1ab83ec6440cb03d7f3a641faafd4f5eca32ac1, each checked by the custodian against its finding (worker report 3);
+     - the merge of main, a06f69f8f28b549cedb9b1d6e44d95995e1b72ba (item 8);
+     - one wording line, 82140fe0.
+
+     CI was green at 82140fe0.
+2. **The gate reports,** under `state/consults/gates/`:
+   - `2026-10-07-kernel-close-races-followups-gate1-architect.md`, pass with notes, gate-log 429, sha256 f1639bc0e984c687246d25d7d6bbd0944699d644be24c119b5a94420abfbaecd, added in d6e3801ae16dd8d1465f782203b5708d75ba18f7;
+   - `2026-10-07-kernel-close-races-followups-gate1-reviewer.md`, pass, gate-log 430, sha256 01f49b70c4c8cc7c80896de40ba3269fb6eab4f571fd1cf028c21cf6ad063e82, added in f646f0c05c908541d5561ab8b9b41feca06319e6.
+3. **The worker reports, each pinned at the commit that added it.** Each hash is of the whole file, and each file is byte-identical at the merge commit:
+   - `state/consults/2026-10-07-kernel-close-races-followups-worker-report-1.md`, at 3cf310ef94e5ca679d4246acd2e883231f7dcd01, sha256 6477ab689693a28815302895054054188a185852d9e36eeaf917fe96e3ce8164;
+   - `-report-2.md`, at 19bc2c22ffe06f379747963ecf547aaad552f29b, sha256 7d1f743d808efed92bc2dd81f64e975a02947d395f8012b939142ba13d7e9226;
+   - `-report-3.md`, the gate fixes, at bf9aff4982a4790aad85735f81581d7f21354cae, sha256 94b3c2b535845a2b8f18fe29ec4e48a51a964a0ab4e08f8a5edd6f7b2e1d37c1.
+
+   Lead-data's owner's-index update is `state/consults/2026-10-07-kernel-close-races-followups-index-update.md`, at 6930c1fb16fe9ea2d56127ef201fd0968c08abd8, sha256 1e2ff8492024e4b8fedbcac7be345e10aabee32b44c43cd1960ef21d0ca55b56.
+4. **W-1:**
+   - **Observed** at 99f4c437e81ad3286a9f388ea466e3f76d322556 (worker report 1).
+   - **Re-made by the reviewer** at that same commit, as the gate-1 architect asked this record to cite. The mutation was applied, the test run alone by name, and it failed as recorded (the reviewer report's W-1 section and its checks table).
+   - **The rewritten comment:** `kernel/tests/wire_bytes_invariant.rs:368-373 @ 6288cccc sha256:2f5229b5da72d2c885cf29663fd78e93850c3ebc573702be164320a278e5e021`.
+5. **The routed items are done,** each with the proof §9's closing-record item 5 names for it, at the merge commit. C10 (Amendment 1, item 1) discharges the OPEN-1 (B) addition.
+6. **§7:** 113 changed lines (68 insertions, 45 deletions) over 7 files, against at most 168 over 7 (Amendment 1, item 1). Each file is within its row. The count is `git diff --numstat d87cdc3c 6288cccc`, which lists the 7 files and no other.
+7. **Class 2, §0's mint-race premise is corrected** (the reviewer's D1). §0's noticed list says close-races removed a mint-race arm. It did not: the arm is still in `SkpHost::viewport_query_attribute`. The fix names it by item in `isSessionEndedRefusal`'s doc (the architect's D-3 and the reviewer's D1). §0 is not edited.
+8. **The merge of main** (a06f69f8), after PR #185 merged. The custodian resolved two conflicts:
+   - in SKP-V0 §8, #185's `skp/0.10` entry comes first, and this piece's dated note follows it, directly before §9;
+   - in `kernel/README.md`, the kernel-halves line is the union, and Last verified at keeps main's 70bcb329, where both added files exist.
+
+   No product line moved, so the gate verdicts carry forward. The custodian's ledger entry of 2026-10-07, 04:19Z, records the checks.
+9. **The Documentation findings fixed before the merge:**
+   - the architect's D-1 to D-3;
+   - the reviewer's D1 and D2.
+
+   They were fixed in f1432674 and a1ab83ec, each checked against its finding.
+10. **Done:** PLAN marks the node done, with evidence `{pr: 186}`, at generation 3, in this amendment's commit.
+
+**Superseded index.** §0's noticed list, its mint-race clause → item 7. §9's closing-record list → items 1 to 10. Neither is edited.
