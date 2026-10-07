@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-07T16:28:56.652Z",
-  "plan_hash": "e1073fef5b02979511f7c8ebf2b7b402e20f87174c9e1731df91955bc39f0498",
+  "generated_at": "2026-10-07T17:46:47.776Z",
+  "plan_hash": "a227410a5eb52f0c4522e9ce711a96ff7836f50966a2c9029f8f7190bf429047",
   "priorities_approved": true,
   "lanes": [
     {
@@ -6692,8 +6692,8 @@
       "kind": "task",
       "lane": "kernel-protocol",
       "phase": "prototype",
-      "status": "proposed",
-      "order": null,
+      "status": "ready",
+      "order": 15,
       "depends_on": [],
       "needs_human": {
         "kind": "none",
@@ -6705,7 +6705,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it.",
+      "summary": "PLACED 2026-10-07 by the human in slot 2 (state/directives/2026-10-07-typed-terminal-codes-race-placed.md), under item 3 of the 2026-10-07 awaiting-merge direction: test-only; it stops and goes back to the human if it needs a protocol/ edit or a file in the lines cut section 7 list. The architect drafts its form alone. Before: Seen 2026-10-05 on main (Product CI, Rust workspace, run 37264494821 at 23aa18fc, a docs-only commit): attempt 1 failed on ubuntu-24.04 only, the_data_plane_terminal_a_real_redeemed_stream_produces_carries_its_typed_code panicking at its expect that a changed source ends the stream with a typed refusal (the stream ended clean); windows-latest passed. The failed-step log is filed byte-identical before the re-run at state/consults/2026-10-05-main-ci-run-37264494821-attempt-1-failed-steps.txt; attempt 2 passed on both platforms. Cause read from code, not observed: redeeming the ticket opens the engine stream and spawns its producer thread (engine/src/stream.rs, the thread builder after the sync_channel), and the post-check runs on that thread after its scan; the fixture is 200 features, about one batch, and the queue holds MAX_QUEUED_BATCHES, so the producer can finish its scan and post-check before the test touches the file's modification time, and the stream then completes clean. Test-only: no product change is implied. Never queued until the human places it.",
       "dates": {
         "opened": "2026-10-05",
         "done": null

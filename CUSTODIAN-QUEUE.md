@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e1073fef5b02979511f7c8ebf2b7b402e20f87174c9e1731df91955bc39f0498`) at `2026-10-07T16:28:55.957Z`.
+Generated from `PLAN.yaml` (sha256 `a227410a5eb52f0c4522e9ce711a96ff7836f50966a2c9029f8f7190bf429047`) at `2026-10-07T17:46:47.597Z`.
 
 ## 1. Next
 
@@ -9,6 +9,7 @@ Generated from `PLAN.yaml` (sha256 `e1073fef5b02979511f7c8ebf2b7b402e20f87174c9e
 ## 2. Ready
 
 - **data-plane-crowded-start-detail-spaces** — The data plane's crowded-start detail string loses its runs of spaces (round 26, item 4 (b)) (lane `kernel-protocol`, order 14, budget 20 min)
+- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (lane `kernel-protocol`, order 15, budget 45 min)
 
 ## 3. Waiting on the human (total: 10 min)
 
@@ -90,7 +91,6 @@ Generated from `PLAN.yaml` (sha256 `e1073fef5b02979511f7c8ebf2b7b402e20f87174c9e
 - **pre-admission-change-detail-braces** — Four kernel P6-placeholder detail strings are wrapped in literal braces, which reach the operator message; the watcher form declares each such string starts with the bracketed placeholder tag (phase `prototype`) — never queued until placed
 - **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown (phase `prototype`) — never queued until placed
 - **slice-budgets-cancel-cells-on-trace-pair** — The docs/08 measurement harness scores its cancellation cells on ADR-018's pair (cancel_requested to the producer's cancel_observed, from the engine trace), with the client-to-adapter interval kept as a reported figure (phase `prototype`) — never queued until placed
-- **typed-terminal-codes-post-check-race** — kernel/tests/typed_terminal_codes.rs: the real-redeemed-stream test can lose a race with its own producer, whose post-check may run before the test touches the source (phase `prototype`) — never queued until placed
 - **mp-prime-e2e-covered-fixture** — E2E: MP-1's step MP' opens F-1, which has no covering, so it is predicted to meet the no-covering refusal; a step on F-1c, its covered twin (phase `prototype`) — never queued until placed
 - **shell-owners-index** — An owner's index for the shell (frontends/shell), so that shell-owned KNOWN-LIMITATIONS items and pointers are indexed somewhere (phase `prototype`) — never queued until placed
 - **corpus-line-files** — A line file (LineString or MultiLineString) in the preregistered compatibility corpus, so that line admission is tried on a real-world file (phase `prototype`) — never queued until placed
